@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 from pathlib import Path
 
 __all__ = ["IOHandlerSingleton", "IOHandler"]
@@ -59,18 +60,22 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.data_path = data_path
         self.model_path = model_path
 
-    def get_output_directory(self, label=None, dir_type=None, test=False):
+    def get_output_directory(self, label=None, sub_dir=None, dir_type="simtools"):
         """
-        Get the output directory for the directory type dir_type
+        Return path to output directory
 
         Parameters
         ----------
         label: str
             Instance label.
-        dir_type: str
+        sub_dir: str
             Name of the subdirectory (ray-tracing, model etc)
-        test: bool
-            If true, return test output location
+        dir_type: str
+            The type of directory (e.g., 'simtools', 'test', 'simtools-result').
+            If 'simtools-result' is used, the output directory will be returned
+            without appending a subdirectory string when using the
+            use_plain_output_path option. For the cause of not using use_plain_output_path,
+            output paths appended by 'simtools-output'.
 
         Returns
         -------
@@ -85,16 +90,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
         if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
-            if test:
-                output_directory_prefix = Path(self.output_path).joinpath("test-output")
-            else:
-                output_directory_prefix = Path(self.output_path).joinpath("simtools-output")
-
-            today = datetime.date.today()
-            label_dir = label if label is not None else "d-" + str(today)
+            try:
+                output_directory_prefix = Path(self.output_path).joinpath(
+                    re.sub(r"\-result$", "", dir_type) + "-output"
+                )
+            except TypeError:
+                self._logger.error(f"Error creating output directory name from {dir_type}")
+                raise
+            label_dir = label if label is not None else "d-" + str(datetime.date.today())
             path = output_directory_prefix.joinpath(label_dir)
-            if dir_type is not None:
-                path = path.joinpath(dir_type)
+        if sub_dir is not None:
+            if not self.use_plain_output_path:
+                path = path.joinpath(sub_dir)
+            elif dir_type != "simtools-result":
+                path = path.joinpath(sub_dir)
 
         try:
             path.mkdir(parents=True, exist_ok=True)
@@ -104,7 +113,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         return path.absolute()
 
-    def get_output_file(self, file_name, label=None, dir_type=None, test=False):
+    def get_output_file(self, file_name, label=None, sub_dir=None, dir_type="simtools"):
         """
         Get path of an output file.
 
@@ -114,17 +123,20 @@ class IOHandler(metaclass=IOHandlerSingleton):
             File name.
         label: str
             Instance label.
-        dir_type: str
+        sub_dir: str
             Name of the subdirectory (ray-tracing, model etc)
-        test: bool
-            If true, return test output location
+        dir_type: str
+            Directory type (e.g., 'simtools', 'test', 'simtools-result')
+            If 'simtools-result' is used, the output directory will be returned
+            without appending a subdirectory string when using the
+            use_plain_output_path option.
 
         Returns
         -------
         Path
         """
         return (
-            self.get_output_directory(label=label, dir_type=dir_type, test=test)
+            self.get_output_directory(label=label, sub_dir=sub_dir, dir_type=dir_type)
             .joinpath(file_name)
             .absolute()
         )

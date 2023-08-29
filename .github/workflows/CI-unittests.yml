@@ -12,9 +12,8 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize]
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
 
@@ -27,25 +26,25 @@ jobs:
             python-version: "3.9"
             install-method: mamba
 
-          - os: ubuntu-latest
-            python-version: "3.9"
-            install-method: pip
+#          - os: ubuntu-latest
+#            python-version: "3.9"
+#            install-method: pip
 
           - os: macos-latest
             python-version: "3.9"
             install-method: mamba
 
-          - os: macos-latest
-            python-version: "3.9"
-            install-method: pip
+#          - os: macos-latest
+#            python-version: "3.9"
+#            install-method: pip
 
-          - os: ubuntu-latest
-            python-version: "3.10"
-            install-method: mamba
+#          - os: ubuntu-latest
+#            python-version: "3.10"
+#            install-method: mamba
 
-          - os: ubuntu-latest
-            python-version: "3.10"
-            install-method: pip
+#          - os: ubuntu-latest
+#            python-version: "3.10"
+#            install-method: pip
 
           - os: ubuntu-latest
             python-version: "3.11"

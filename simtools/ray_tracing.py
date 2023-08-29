@@ -67,12 +67,10 @@ class RayTracing:
 
         self._telescope_model = self._validate_telescope_model(telescope_model)
 
-        _config_data_in = gen.collect_data_from_yaml_or_dict(config_file, config_data)
-        _parameter_file = self._io_handler.get_input_data_file(
-            parent_dir="parameters", file_name="ray-tracing_parameters.yml"
+        self.config = gen.validate_config_data(
+            gen.collect_data_from_yaml_or_dict(config_file, config_data),
+            SimtelRunnerRayTracing.ray_tracing_default_configuration(False),
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         # Due to float representation, round the off-axis angles so the values in results table
         # are the same as provided.
@@ -80,7 +78,9 @@ class RayTracing:
 
         self.label = label if label is not None else self._telescope_model.label
 
-        self._output_directory = self._io_handler.get_output_directory(self.label, "ray-tracing")
+        self._output_directory = self._io_handler.get_output_directory(
+            label=self.label, sub_dir="ray-tracing"
+        )
 
         # Loading relevant attributes in case of single mirror mode.
         if self.config.single_mirror_mode:
@@ -182,10 +182,10 @@ class RayTracing:
                         "zenith_angle": self.config.zenith_angle * u.deg,
                         "source_distance": self._source_distance * u.km,
                         "off_axis_angle": this_off_axis * u.deg,
-                        "mirror_number": this_mirror,
+                        "mirror_numbers": this_mirror,
                         "use_random_focal_length": self.config.use_random_focal_length,
+                        "single_mirror_mode": self.config.single_mirror_mode,
                     },
-                    single_mirror_mode=self.config.single_mirror_mode,
                     force_simulate=force,
                 )
                 simtel.run(test=test, force=force)

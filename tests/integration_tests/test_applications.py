@@ -102,9 +102,9 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
             " --test",
@@ -121,9 +121,9 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--rnda",
             "0.0063",
             "--no_tuning",
@@ -141,7 +141,7 @@ APP_LIST = {
             "--containment_fraction",
             "0.8",
             "--mirror_list",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--psf_measurement_containment_mean",
             "1.4",
             "--rnda",
@@ -509,8 +509,8 @@ APP_LIST = {
     "add_file_to_db": [
         [
             "--file_name",
-            "TESTMODELDIR/MLTdata-preproduction.usermeta.yml",
-            "TESTMODELDIR/MLTdata-preproduction.ecsv",
+            "./tests/resources/MLTdata-preproduction.meta.yml",
+            "./tests/resources/MLTdata-preproduction.ecsv",
             "--db",
             "sandbox",
         ]
@@ -638,14 +638,14 @@ def test_applications(application, io_handler, monkeypatch, db):
     def prepare_one_file(file_name):
         db.export_file_db(
             db_name="test-data",
-            dest=io_handler.get_output_directory(dir_type="model", test=True),
+            dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             file_name=file_name,
         )
 
     def download_file(url):
         response = requests.get(url)
         output_file_path = (
-            io_handler.get_output_directory(dir_type="model", test=True) / Path(url).name
+            io_handler.get_output_directory(sub_dir="model", dir_type="test") / Path(url).name
         )
         if response.status_code == 200:
             with open(output_file_path, "wb") as file:
@@ -654,10 +654,8 @@ def test_applications(application, io_handler, monkeypatch, db):
             print("Failed to download the file.")
 
     prepare_one_file("PSFcurve_data_v2.txt")
-    prepare_one_file("MLTdata-preproduction.ecsv")
-    # TODO - temporary path until workflows/documentation PR is merged
     download_file(
-        "https://raw.githubusercontent.com/gammasim/workflows/documentation/schemas/jsonschema.yml"
+        "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/jsonschema.yml"
     )
 
     def make_command(app, args):
@@ -667,7 +665,8 @@ def test_applications(application, io_handler, monkeypatch, db):
             cmd = app
         for aa in args:
             aa = aa.replace(
-                "TESTMODELDIR", str(io_handler.get_output_directory(dir_type="model", test=True))
+                "TESTMODELDIR",
+                str(io_handler.get_output_directory(sub_dir="model", dir_type="test")),
             )
             cmd += " " + aa
         return cmd

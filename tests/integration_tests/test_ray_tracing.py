@@ -76,7 +76,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler):
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
     plot_file_PSF = io_handler.get_output_file(
-        file_name="d80_test_rx.pdf", dir_type="plots", test=True
+        file_name="d80_test_rx.pdf", sub_dir="plots", dir_type="test"
     )
     plt.savefig(plot_file_PSF)
 
@@ -90,7 +90,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler):
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
     plot_file_area = io_handler.get_output_file(
-        file_name="eff_area_test_rx.pdf", dir_type="plots", test=True
+        file_name="eff_area_test_rx.pdf", sub_dir="plots", dir_type="test"
     )
     plt.savefig(plot_file_area)
 
@@ -127,13 +127,12 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler):
         ax.set_ylabel("Y [cm]")
         image.plot_image(psf_color="b")
         plot_file = io_handler.get_output_file(
-            file_name=f"test_plot_image_{ii}.pdf", dir_type="plots", test=True
+            file_name=f"test_plot_image_{ii}.pdf", sub_dir="plots", dir_type="test"
         )
         plt.savefig(plot_file)
 
 
 def test_single_mirror(db_config, simtel_path_no_mock, io_handler, plot=False):
-
     # Test MST, single mirror PSF simulation
     version = "prod3"
     config_data = {"mirror_numbers": list(range(1, 5)), "single_mirror_mode": True}
@@ -159,7 +158,7 @@ def test_single_mirror(db_config, simtel_path_no_mock, io_handler, plot=False):
 
     ray.plot_histogram("d80_cm", color="r", bins=10)
     plot_file = io_handler.get_output_file(
-        file_name="d80_hist_test.pdf", dir_type="plots", test=True
+        file_name="d80_hist_test.pdf", sub_dir="plots", dir_type="test"
     )
     plt.savefig(plot_file)
 
@@ -197,6 +196,6 @@ def test_integral_curve(db_config, simtel_path_no_mock, io_handler):
     for im in ray.images():
         im.plot_cumulative(color="b")
     plot_file = io_handler.get_output_file(
-        file_name="test_cumulative_psf.pdf", dir_type="plots", test=True
+        file_name="test_cumulative_psf.pdf", sub_dir="plots", dir_type="test"
     )
     plt.savefig(plot_file)

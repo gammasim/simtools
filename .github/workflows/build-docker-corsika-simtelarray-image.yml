@@ -3,6 +3,15 @@ name: docker-corsika-simtelarray
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
 
 env:
   REGISTRY: ghcr.io
@@ -10,23 +19,7 @@ env:
 
 jobs:
 
-  corsikasimtelpackage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: download corsikasimtelpackage
-        run: |
-          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
-          mv download corsika7.7_simtelarray.tar.gz
-
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: corsika7.7_simtelarray.tar.gz
-          path: corsika7.7_simtelarray.tar.gz
-          retention-days: 1
-
-  build-simtools-container:
-    needs: corsikasimtelpackage
+  corsika-simtelarray-container:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,14 +29,13 @@ jobs:
         type: ['simtelarray']
 
     steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: corsika7.7_simtelarray.tar.gz
-          path: corsika7.7_simtelarray.tar.gz
-
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: download corsikasimtelpackage
+        run: |
+          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
+          mv download corsika7.7_simtelarray.tar.gz
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
