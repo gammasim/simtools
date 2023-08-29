@@ -8,12 +8,11 @@ from pathlib import Path, PosixPath
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from astropy.io.misc.hdf5 import write_table_hdf5
 from astropy.table import QTable
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
+from ctapipe.io import write_table
 from eventio import IACTFile
-from h5py import File, Group
 
 from simtools import io_handler, version
 from simtools.utils.general import (
@@ -22,6 +21,7 @@ from simtools.utils.general import (
     rotate,
     save_dict_to_file,
 )
+from simtools.utils.names import sanitize_name
 
 
 class HistogramNotCreated(Exception):
@@ -1121,8 +1121,7 @@ class CorsikaHistograms:
         """
         Export the histograms to hdf5 files.
         """
-        self._export_1D_histograms()  # Attention: `self._export_1D_histograms()` has to come before
-        # `self._export_2D_histograms()` due to the creation ('w') and append ('a') to the file
+        self._export_1D_histograms()
         self._export_2D_histograms()
 
     @property
@@ -1138,12 +1137,12 @@ class CorsikaHistograms:
 
         if self.__meta_dict is None:
             self.__meta_dict = {
-                "CORSIKA version": self.corsika_version,
-                "simtools version": version.__version__,
-                "Original IACT file": self.input_file.name,
+                "corsika_version": self.corsika_version,
+                "simtools_version": version.__version__,
+                "iact_file": self.input_file.name,
                 "telescope_indices": list(self.telescope_indices),
                 "individual_telescopes": self.individual_telescopes,
-                "Note": "Only lower bin edges are given.",
+                "note": "Only lower bin edges are given.",
             }
         return self.__meta_dict
 
@@ -1215,45 +1214,51 @@ class CorsikaHistograms:
         Auxiliary function to export only the 1D histograms.
         """
 
-        with File(self.hdf5_file_name, "w") as f_hdf5:  # The 'w' makes sure a new file is created
-            for _, function_dict in self._dict_1D_distributions.items():
-                self._meta_dict["Title"] = function_dict["title"]
-                function = getattr(self, function_dict["function"])
-                hist_1D_list, x_edges_list = function()
-                x_edges_list = x_edges_list * function_dict["edges unit"]
-                if function_dict["function"] == "get_photon_density_distr":
-                    histogram_value_unit = 1 / (function_dict["edges unit"] ** 2)
+        for _, function_dict in self._dict_1D_distributions.items():
+            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
+            function = getattr(self, function_dict["function"])
+            hist_1D_list, x_edges_list = function()
+            x_edges_list = x_edges_list * function_dict["edges unit"]
+            if function_dict["function"] == "get_photon_density_distr":
+                histogram_value_unit = 1 / (function_dict["edges unit"] ** 2)
+            else:
+                histogram_value_unit = u.dimensionless_unscaled
+            hist_1D_list = hist_1D_list * histogram_value_unit
+            for i_histogram, _ in enumerate(x_edges_list):
+                if self.individual_telescopes:
+                    hdf5_table_name = (
+                        f"{function_dict['file name']}_"
+                        f"tel_index_{self.telescope_indices[i_histogram]}"
+                    )
                 else:
-                    histogram_value_unit = u.dimensionless_unscaled
-                hist_1D_list = hist_1D_list * histogram_value_unit
-                for i_histogram, _ in enumerate(x_edges_list):
-                    if self.individual_telescopes:
-                        hdf5_table_name = (
-                            f"{function_dict['file name']}_"
-                            f"tel_index_{self.telescope_indices[i_histogram]}"
-                        )
-                    else:
-                        hdf5_table_name = f"{function_dict['file name']}_all_tels"
+                    hdf5_table_name = f"{function_dict['file name']}_all_tels"
 
-                    table = self.fill_hdf5_table(
-                        hist_1D_list[i_histogram],
-                        x_edges_list[i_histogram],
-                        None,
-                        function_dict["edges"],
-                        None,
-                    )
-                    self._logger.info(
-                        f"Writing 1D histogram with name {hdf5_table_name} to "
-                        f"{self.hdf5_file_name}."
-                    )
-                    group = f_hdf5.create_group(hdf5_table_name)
-                    # Add data to dataset
-                    for name, column in table.columns.items():
-                        group.create_dataset(name, data=column)
+                table = self.fill_hdf5_table(
+                    hist_1D_list[i_histogram],
+                    x_edges_list[i_histogram],
+                    None,
+                    function_dict["edges"],
+                    None,
+                )
+                self._logger.info(
+                    f"Writing 1D histogram with name {hdf5_table_name} to "
+                    f"{self.hdf5_file_name}."
+                )
+                write_table(table, self.hdf5_file_name, hdf5_table_name, append=True)
 
-                    # Add metadata to dataset
-                    for key, value in table.meta.items():
-                        group.attrs[key] = value
+            """group = f_hdf5.create_group(hdf5_table_name)
+            # Add data to dataset
+            for name, column in table.columns.items():
+                if isinstance(column, u.Quantity):
+                    data_group = group.create_group(name)
+                    data_group.create_dataset('data', data=column.value)
+                    data_group.attrs['unit'] = str(column.unit)
+                else:
+                    group.create_dataset(name, data=column)
+
+            # Add metadata to dataset
+            for key, value in table.meta.items():
+                group.attrs[key] = value"""
 
     @property
     def _dict_2D_distributions(self):
@@ -1319,63 +1324,53 @@ class CorsikaHistograms:
         """
         Auxiliary function to export only the 2D histograms.
         """
-        with File(self.hdf5_file_name, "a") as f_hdf5:  # the 'a' makes sure the 2D histograms are
-            # appended to the 1D histograms and do not overwrite them
-            for property_name, function_dict in self._dict_2D_distributions.items():
-                self._meta_dict["Title"] = function_dict["title"]
-                function = getattr(self, function_dict["function"])
+        for property_name, function_dict in self._dict_2D_distributions.items():
+            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
+            function = getattr(self, function_dict["function"])
 
-                hist_2D_list, x_edges_list, y_edges_list = function()
-                if function_dict["function"] == "get_2D_photon_density_distr":
-                    histogram_value_unit = 1 / (
-                        self._dict_2D_distributions[property_name]["x edges unit"]
-                        * self._dict_2D_distributions[property_name]["y edges unit"]
+            hist_2D_list, x_edges_list, y_edges_list = function()
+            if function_dict["function"] == "get_2D_photon_density_distr":
+                histogram_value_unit = 1 / (
+                    self._dict_2D_distributions[property_name]["x edges unit"]
+                    * self._dict_2D_distributions[property_name]["y edges unit"]
+                )
+            else:
+                histogram_value_unit = u.dimensionless_unscaled
+
+            hist_2D_list, x_edges_list, y_edges_list = (
+                hist_2D_list * histogram_value_unit,
+                x_edges_list * self._dict_2D_distributions[property_name]["x edges unit"],
+                y_edges_list * self._dict_2D_distributions[property_name]["y edges unit"],
+            )
+
+            for i_histogram, _ in enumerate(x_edges_list):
+                if self.individual_telescopes:
+                    hdf5_table_name = (
+                        f"{self._dict_2D_distributions[property_name]['file name']}"
+                        f"_tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
-                    histogram_value_unit = u.dimensionless_unscaled
-
-                hist_2D_list, x_edges_list, y_edges_list = (
-                    hist_2D_list * histogram_value_unit,
-                    x_edges_list * self._dict_2D_distributions[property_name]["x edges unit"],
-                    y_edges_list * self._dict_2D_distributions[property_name]["y edges unit"],
+                    hdf5_table_name = (
+                        f"{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
+                    )
+                table = self.fill_hdf5_table(
+                    hist_2D_list[i_histogram],
+                    x_edges_list[i_histogram],
+                    y_edges_list[i_histogram],
+                    function_dict["x edges"],
+                    function_dict["y edges"],
                 )
 
-                for i_histogram, _ in enumerate(x_edges_list):
-                    if self.individual_telescopes:
-                        hdf5_table_name = (
-                            f"{self._dict_2D_distributions[property_name]['file name']}"
-                            f"_tel_index_{self.telescope_indices[i_histogram]}"
-                        )
-                    else:
-                        hdf5_table_name = (
-                            f"{self._dict_2D_distributions[property_name]['file name']}"
-                            f"_all_tels"
-                        )
-                    table = self.fill_hdf5_table(
-                        hist_2D_list[i_histogram],
-                        x_edges_list[i_histogram],
-                        y_edges_list[i_histogram],
-                        function_dict["x edges"],
-                        function_dict["y edges"],
-                    )
+                self._logger.info(
+                    f"Writing 2D histogram with name {hdf5_table_name} to "
+                    f"{self.hdf5_file_name}."
+                )
 
-                    self._logger.info(
-                        f"Writing 2D histogram with name {hdf5_table_name} to "
-                        f"{self.hdf5_file_name}."
-                    )
-
-                    group = f_hdf5.create_group(hdf5_table_name)
-                    # Add data to dataset
-                    for name, column in table.columns.items():
-                        group.create_dataset(name, data=column)
-
-                    # Add metadata to dataset
-                    for key, value in table.meta.items():
-                        group.attrs[key] = value
+                write_table(table, self.hdf5_file_name, hdf5_table_name, append=True)
 
     def read_hdf5(self, hdf5_file_name):
         """
-        Read a hdf5 output file, as resulted from `self.export_histograms`
+        Read a hdf5 output file, as resulted from `self.export_histograms`.
 
         Parameters
         ----------
@@ -1390,7 +1385,12 @@ class CorsikaHistograms:
         """
         if isinstance(hdf5_file_name, PosixPath):
             hdf5_file_name = hdf5_file_name.absolute().as_posix()
-        with File(hdf5_file_name, "r") as f_hdf5:
+
+        # read_table(
+        # hdf5_file_name, path, start=None, stop=None, step=None, condition=None, table_cls=Table
+        # )
+
+        """with File(hdf5_file_name, "r") as f_hdf5:
             restored_tables = []
             for key in f_hdf5.keys():
                 current_group = f_hdf5[key]
@@ -1407,8 +1407,8 @@ class CorsikaHistograms:
 
                 # Load metadata
                 table.meta = {key: value for key, value in current_group.attrs.items()}
-                restored_tables.append(table)
-        return restored_tables
+                restored_tables.append(table)"""
+        # return restored_tables
 
     def fill_hdf5_table(self, hist, x_edges, y_edges, x_label, y_label):
         """
@@ -1430,12 +1430,24 @@ class CorsikaHistograms:
             Y edges label.
             Use None if dealing with 1D histogram.
         """
+
+        # Complement metadata
+        meta_data = self._meta_dict
+        meta_data["x_edges"] = sanitize_name(x_label)
+        meta_data["x_edges_unit"] = (
+            x_edges.unit if isinstance(x_edges, u.Quantity) else u.dimensionless_unscaled
+        )
+
         if y_edges is not None:
-            names = [y_edges[i] for i in range(len(y_edges.value[:-1]))]
+            meta_data["y_edges"] = sanitize_name(y_label)
+            meta_data["y_edges_unit"] = (
+                x_edges.unit if isinstance(x_edges, u.Quantity) else u.dimensionless_unscaled
+            )
+            # names = [y_edges[i] for i in range(len(y_edges.value[:-1]))]
             table = QTable(
                 [hist[i, :] for i in range(len(y_edges[:-1].value))],
-                names=names,
-                meta=self._meta_dict,
+                # names=names,
+                meta=meta_data,
             )
 
         else:
@@ -1444,8 +1456,8 @@ class CorsikaHistograms:
                     x_edges[:-1],
                     hist,
                 ],
-                names=(x_label, "Values"),
-                meta=self._meta_dict,
+                names=(sanitize_name(x_label), sanitize_name("Values")),
+                meta=meta_data,
             )
         return table
 
@@ -1474,7 +1486,7 @@ class CorsikaHistograms:
             f"event_1D_histograms_{event_header_element}.hdf5"
         )
         self._logger.info(f"Exporting histogram to {hdf5_table_name}.")
-        write_table_hdf5(table, hdf5_table_name.absolute().as_posix(), overwrite=True)
+        write_table(table, hdf5_table_name.absolute().as_posix(), overwrite=True)
 
     def export_event_header_2D_histogram(
         self,
@@ -1515,7 +1527,7 @@ class CorsikaHistograms:
         )
 
         self._logger.info(f"Exporting histogram to {hdf5_table_name}.")
-        write_table_hdf5(table, hdf5_table_name.absolute().as_posix(), overwrite=True)
+        write_table(table, hdf5_table_name.absolute().as_posix(), overwrite=True)
 
     @property
     def num_photons_per_telescope(self):

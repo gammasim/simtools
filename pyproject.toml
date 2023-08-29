@@ -28,8 +28,8 @@ requires-python = ">=3.9"
 dependencies = [
     "astropy",
     "boost-histogram",
+    "ctapipe",
     "eventio",
-    "h5py",
     "jsonschema",
     "matplotlib",
     "numpy",
