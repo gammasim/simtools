@@ -573,8 +573,8 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\
-    config_data. This function is specific for methods from_kwargs in classes which use the \
+    Separate kwargs into the arguments expected for instancing a class and the dict to be given as
+    config_data. This function is specific for methods from_kwargs in classes which use the
     validate_config_data system.
 
     Parameters
