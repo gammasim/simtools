@@ -352,8 +352,8 @@ class CorsikaConfig:
             the output directly to sim_telarray or not.
         """
 
-        dir_type = "corsika_simtel" if use_multipipe else "corsika"
-        self._set_output_file_and_directory(dir_type)
+        sub_dir = "corsika_simtel" if use_multipipe else "corsika"
+        self._set_output_file_and_directory(sub_dir)
         self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
 
         def _get_text_single_line(pars):
@@ -496,9 +496,9 @@ class CorsikaConfig:
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def _set_output_file_and_directory(self, dir_type="corsika"):
+    def _set_output_file_and_directory(self, sub_dir="corsika"):
         config_file_name = self.get_file_name(file_type="config")
-        file_directory = self.io_handler.get_output_directory(label=self.label, dir_type=dir_type)
+        file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
         self._logger.info(f"Creating directory {file_directory}, if needed.")
         file_directory.mkdir(parents=True, exist_ok=True)
         self._config_file_path = file_directory.joinpath(config_file_name)
