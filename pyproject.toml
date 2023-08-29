@@ -44,6 +44,7 @@ dependencies = [
 "tests" = [
     "pytest",
     "pytest-cov",
+    "pytest-xdist",
 ]
 "dev" = [
     "pre-commit",
