@@ -70,6 +70,17 @@ def test_validate_config_data(args_dict, io_handler, caplog) -> None:
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
 
+    validated_data = gen.validate_config_data(
+        config_data=None,
+        parameters={
+            "zenith_angle": {
+                "len": 1,
+                "default": 20.0,
+            }
+        },
+    )
+    assert validated_data.zenith_angle == 20.0
+
     # Test missing entry
     config_data = {
         "cscat": [0, 10 * u.m, 3 * u.km],
@@ -361,3 +372,12 @@ def test_get_log_excerpt(tmp_test_directory) -> None:
         "This is the second line of the log file.\n\n"
         "====================================================================\n"
     )
+
+
+def test_file_has_text(tmp_test_directory) -> None:
+    file = tmp_test_directory / "test_file_has_text.txt"
+    text = "test"
+    with open(file, "w") as f:
+        f.write(text)
+    assert gen.file_has_text(file, text)
+    assert not gen.file_has_text(file, "test2")
