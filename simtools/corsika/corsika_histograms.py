@@ -1259,20 +1259,6 @@ class CorsikaHistograms:
                     table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
                 )
 
-            """group = f_hdf5.create_group(hdf5_table_name)
-            # Add data to dataset
-            for name, column in table.columns.items():
-                if isinstance(column, u.Quantity):
-                    data_group = group.create_group(name)
-                    data_group.create_dataset('data', data=column.value)
-                    data_group.attrs['unit'] = str(column.unit)
-                else:
-                    group.create_dataset(name, data=column)
-
-            # Add metadata to dataset
-            for key, value in table.meta.items():
-                group.attrs[key] = value"""
-
     @property
     def _dict_2D_distributions(self, overwrite=False):
         """
