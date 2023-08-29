@@ -7,11 +7,12 @@ from pathlib import Path, PosixPath
 
 import boost_histogram as bh
 import numpy as np
+import tables
 from astropy import units as u
 from astropy.table import QTable
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
-from ctapipe.io import write_table
+from ctapipe.io import read_table, write_table
 from eventio import IACTFile
 
 from simtools import io_handler, version
@@ -1386,29 +1387,14 @@ class CorsikaHistograms:
         if isinstance(hdf5_file_name, PosixPath):
             hdf5_file_name = hdf5_file_name.absolute().as_posix()
 
-        # read_table(
-        # hdf5_file_name, path, start=None, stop=None, step=None, condition=None, table_cls=Table
-        # )
+        tables_list = []
 
-        """with File(hdf5_file_name, "r") as f_hdf5:
-            restored_tables = []
-            for key in f_hdf5.keys():
-                current_group = f_hdf5[key]
-                table = QTable()
-
-                for col_name, item in current_group.items():
-                    if isinstance(item, Group) and "data" in item:
-                        # If there's a unit, we reconstruct the column with its unit
-                        data = item["data"][:]
-                        unit = u.Unit(item.attrs["unit"])
-                        table[col_name] = data * unit
-                    else:
-                        table[col_name] = item[:]
-
-                # Load metadata
-                table.meta = {key: value for key, value in current_group.attrs.items()}
-                restored_tables.append(table)"""
-        # return restored_tables
+        with tables.open_file(hdf5_file_name, mode="r") as file:
+            for node in file.walk_nodes("/", "Table"):
+                table_path = node._v_pathname
+                table = read_table(hdf5_file_name, table_path)
+                tables_list.append(table)
+        return tables_list
 
     def fill_hdf5_table(self, hist, x_edges, y_edges, x_label, y_label):
         """

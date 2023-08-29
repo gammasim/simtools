@@ -8,6 +8,7 @@ import boost_histogram as bh
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.table import Table
 
 from simtools import version
 from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
@@ -797,13 +798,14 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     corsika_histograms_instance_set_histograms.export_histograms()
     output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.hdf5")
     assert output_file.exists()
-    assert False
-    """# Read hdf5 file
+
+    # Read hdf5 file
     list_of_tables = corsika_histograms_instance_set_histograms.read_hdf5(output_file)
     assert len(list_of_tables) == 12
     for table in list_of_tables:
-        assert isinstance(table, QTable)
-    assert False"""
+        assert isinstance(table, Table)
+    # Check piece of metadata
+    assert list_of_tables[-1].meta["corsika_version"] == 7.741
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
