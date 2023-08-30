@@ -440,13 +440,28 @@ def test_get_log_excerpt(tmp_test_directory) -> None:
     )
 
 
-def test_file_has_text(tmp_test_directory) -> None:
+def test_file_has_text(tmp_test_directory, caplog) -> None:
+    """Test the file_has_text function."""
+
+    # Test with file that has text.
     file = tmp_test_directory / "test_file_has_text.txt"
     text = "test"
     with open(file, "w") as f:
         f.write(text)
     assert gen.file_has_text(file, text)
     assert not gen.file_has_text(file, "test2")
+
+    # Test with empty file.
+    file = tmp_test_directory / "test_file_is_empty.txt"
+    with open(file, "w") as f:
+        f.write("")
+    assert not gen.file_has_text(file, text)
+    assert "is empty" in caplog.text
+
+    # Test with file that does not exist.
+    file = tmp_test_directory / "test_file_does_not_exist.txt"
+    assert not gen.file_has_text(file, text)
+    assert "not found" in caplog.text
 
 
 def test_collect_kwargs() -> None:
