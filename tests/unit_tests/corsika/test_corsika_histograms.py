@@ -805,7 +805,10 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     for table in list_of_tables:
         assert isinstance(table, Table)
     # Check piece of metadata
-    assert list_of_tables[-1].meta["corsika_version"] == 7.741
+    assert (
+        list_of_tables[-1].meta["corsika_version"]
+        == corsika_histograms_instance_set_histograms.corsika_version
+    )
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
