@@ -20,10 +20,12 @@ Provide a container for simtools users, which includes:
 
 ### Run a simtools-prod container
 
+Prepare a file for the simulation model database access (see simtools documentation) similar to the [template example](https://github.com/gammasim/simtools/blob/main/.env_template) provided with simtools.
+
 To run the container in bash
 
 ```bash
-docker run --rm -it -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
+docker run --rm -it --env-file .dotenv -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-print-array-elements -h`).
@@ -33,7 +35,8 @@ This example uses the docker syntax to mount your local directory.
 The following example runs an application inside the container and writes the output into a directory of the local files system,
 
 ```bash
-docker run --rm -it -v "$(pwd):/workdir/external" \
+docker run --rm -it --env-file .dotenv \
+    -v "$(pwd):/workdir/external" \
     ghcr.io/gammasim/simtools-prod:latest \
     simtools-print-array-elements \
     --array_element_list ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
@@ -78,10 +81,8 @@ git clone git@github.com:gammasim/simtools.git
 To download and run a prepared container in bash:
 
 ```bash
-docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "$(cat ./simtools/docker/entrypoint.sh) && bash"
+docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "cd /workdir/external/simtools && pip install -e . && bash"
 ```
-
-This additionally executes the `entrypoint.sh` script (e.g., for pip install or to set the database environment). For access to the simulation model database, a script named `set_DB_environ.sh` to set the DB access vales is required (see simtools documentation).
 
 Remember you need to `docker login` to the GitHub package repository with a personal token in order to download an image (follow [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
 
