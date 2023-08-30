@@ -4,23 +4,25 @@ channels:
   - conda-forge
 dependencies:
   - python=3.9
-  - pyyaml
-  - numpy
   - astropy
+  - boost-histogram
+  - eventio
+  - jsonschema
   - matplotlib-base
+  - numpy
+  - numpydoc
   - pre-commit
+  - pyflakes
+  - pymongo
+  - pyproj
   - pytest
   - pytest-cov
+  - pytest-xdist
+  - python-dotenv
+  - pyyaml
   - scipy
-  - pymongo
-  - numpydoc
   - sphinx
   - sphinx_rtd_theme
-  - pyproj
-  - pyflakes
-  - eventio
-  - boost-histogram
-  - jsonschema
 
 # cheatsheet
 # create: conda env create -f environment.yml
