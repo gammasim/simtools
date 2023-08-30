@@ -1126,8 +1126,8 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-        self._export_1D_histograms(overwrite)
-        self._export_2D_histograms(overwrite)
+        self._export_1D_histograms(overwrite=overwrite)
+        self._export_2D_histograms(overwrite=False)
 
     @property
     def _meta_dict(self):
