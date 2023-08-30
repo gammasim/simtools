@@ -623,6 +623,7 @@ def program_is_executable(program):
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:
+            _logger.debug("PATH environment variable is not set.")
             return None
 
     return None
@@ -667,6 +668,7 @@ def find_file(name, loc):
             return None
 
         for subdir in Path(directory).iterdir():
+            print(subdir)
             if not subdir.is_dir():
                 continue
             file = _search_directory(subdir, filename, True)
@@ -721,8 +723,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
             else:
                 _return_dict[_key_changed] = data_dict[key]
     except AttributeError:
-        _logger = logging.getLogger(__name__)
-        _logger.error(f"Invalid method argument: {data_dict}")
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
 
     return _return_dict
