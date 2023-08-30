@@ -388,6 +388,20 @@ def main():
             raise
     else:
         indices = None
+    # If the hdf5 output file already exists, the results are appended to it.
+    if (
+        Path(corsika_histograms_instance.hdf5_file_name).exists()
+        and args_dict["hdf5"]
+        or args_dict["event_1D_histograms"]
+        or args_dict["event_2D_histograms"]
+    ):
+        msg = (
+            f"Output hdf5 file {corsika_histograms_instance.hdf5_file_name} already exists."
+            f"Please delete it first or change the name of the output file through the "
+            f"--hdf5_file_name argument."
+        )
+        logger.error(msg)
+        raise FileExistsError
     corsika_histograms_instance.set_histograms(
         telescope_indices=indices,
         individual_telescopes=args_dict["individual_telescopes"],
