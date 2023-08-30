@@ -254,8 +254,16 @@ def _parse(label, description):
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
-    if not config_parser["png"] and not config_parser["hdf5"]:
-        config.parser.error("At least one argument between `--png` and `--hdf5` is required.")
+    if not config_parser["png"]:
+        if (
+            not config_parser["hdf5"]
+            or not config_parser["event_1D_histograms"]
+            or not config_parser["event_2D_histograms"]
+        ):
+            config.parser.error(
+                "At least one argument between `--png`, `--hdf5`, `--event_1D_histograms`, and "
+                "`--event_2D_histograms` is required."
+            )
 
     return config_parser, _
 
