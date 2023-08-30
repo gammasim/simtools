@@ -766,8 +766,13 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
 
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
-    if not all(isinstance(variable, allowed_types) for variable in [x, y]):
+    if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")
+
+    if not isinstance(x, (list, np.ndarray)):
+        x = [x]
+    if not isinstance(y, (list, np.ndarray)):
+        y = [y]
 
     if (
         np.sum(
@@ -777,11 +782,6 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
         == 0
     ):
         raise TypeError("x and y are not from the same type! Cannot perform transformation.")
-
-    if not isinstance(x, (list, np.ndarray)):
-        x = [x]
-    if not isinstance(y, (list, np.ndarray)):
-        y = [y]
 
     if len(x) != len(y):
         raise RuntimeError(
