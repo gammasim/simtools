@@ -290,7 +290,7 @@ def test_change_dict_keys_case(caplog) -> None:
         assert "Input is not a proper dictionary" in caplog.text
 
 
-def test_rotate_telescope_position() -> None:
+def test_rotate_telescope_position(caplog) -> None:
     x = np.array([-10, -10, 10, 10]).astype(float)
     y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
     angle_deg = 30 * u.deg
@@ -300,12 +300,19 @@ def test_rotate_telescope_position() -> None:
     def check_results(x_to_test, y_to_test, x_right, y_right, angle, theta=0 * u.deg):
         x_rot, y_rot = gen.rotate(x_to_test, y_to_test, angle, theta)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
-        for element, _ in enumerate(x):
+        if not isinstance(x_right, (list, np.ndarray)):
+            x_right = [x_right]
+        if not isinstance(y_right, (list, np.ndarray)):
+            y_right = [y_right]
+        for element, _ in enumerate(x_right):
             assert x_right[element] == x_rot[element]
             assert y_right[element] == y_rot[element]
 
     # Testing without units
     check_results(x, y, x_rot_manual, y_rot_manual, angle_deg)
+
+    # Testing with scalars
+    check_results(-10.0, -10.0, -3.7, -13.7, 30 * u.deg)
 
     x_new_array, y_new_array = x * u.m, y * u.m
     x_rot_new_array, y_rot_new_array = x_rot_manual * u.m, y_rot_manual * u.m
@@ -323,6 +330,9 @@ def test_rotate_telescope_position() -> None:
 
     with pytest.raises(TypeError):
         gen.rotate(x, y[0], angle_deg)
+    with pytest.raises(TypeError):
+        gen.rotate("1", "2", angle_deg)
+        assert "x and y types are not valid! Cannot perform transformation" in caplog.text
     with pytest.raises(TypeError):
         gen.rotate(str(x[0]), y[0], angle_deg)
     with pytest.raises(TypeError):
