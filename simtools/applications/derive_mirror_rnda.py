@@ -3,43 +3,63 @@
 """
     Summary
     -------
-    This application derives the parameter mirror_reflection_random_angle \
-    (mirror roughness, also called rnda here) \
-    for a given set of measured photon containment diameter (e.g. 80 percent containment) \
-    of individual mirrors.  The mean value of the measured containment diameters \
-    in cm is required and its sigma can be given optionally but will only be used for plotting. \
+    Derive the simulation model parameter **mirror_reflection_random_angle** \
+    (sometimes called mirror roughness) to match the measured containment diameter \
+    of the optical point-spread function (PSF) of individual mirror panels.
 
-    The individual mirror focal length can be taken into account if a mirror list which contains \
-    this information is used from the :ref:`Model Parameters DB` or if a new mirror list is given \
-    through the argument mirror_list. Random focal lengths can be used by turning on the argument \
-    use_random_focal length and a new value for it can be given through the argument random_flen.
+    Description
+    -----------
 
-    The algorithm works as follow: A starting value of rnda is first defined as the one taken \
-    from the :ref:`Model Parameters DB` \
-    (or alternatively one may want to set it using the argument rnda).\
-    Secondly, ray tracing simulations are performed for single mirror configurations for each \
+    This application derives the value of the simulation model parameter \
+    *mirror_reflection_random_angle* using measurements of the focal length \
+    and PSF of individual mirror panels.
+     
+    PSF measurements are provided by one of the following options:
+
+    * mean and sigma value obtained from the measurement of containment diameters of a number of \
+     mirror panels in cm (``--psf_measurement_containment_mean`` and \
+     ``--psf_measurement_containment_sigma``)
+    * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
+
+    The containment fraction used for the PSF diameter calculation is set through \
+    the argument ``--containment_fraction`` (typically 0.8 = 80%).
+
+    Mirror panels are simulated individually, using one of the following options to set the \
+    mirror panel focal length:
+
+    * file (table) with measured focal lengths per mirror panel (provided through ``--mirror_list``)
+    * randomly generated focal lengths using an expected spread (value given through \
+     ``--random_flen``) around the mean focal length (provided through the \
+     :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
+
+    The tuning algorithm requires a starting value for the random reflection angle. This is either
+    taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
+
+    Ray-tracing simulations are performed for single mirror configurations for each \
     mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors \
-    is compared with the mean measured containment diameter. A new value of rnda is then defined \
-    based on the sign of the difference between measured and simulated containment diameters and a \
-    new set of simulations is performed. This process repeat until the sign of the \
-    difference changes, meaning that the two final values of rnda brackets the optimal. These \
-    two values are used to find the optimal one by a linear \
-    interpolation. Finally, simulations are performed by using the the interpolated value \
-    of rnda, which is defined as the desired optimal.
+    is compared with the mean measured containment diameter. The algorithm defines a new value for \
+    the random reflection angle based on the sign of the difference between measured and simulated \
+    containment diameters and a new set of simulations is performed. This process is repeated \
+    until the sign of the difference changes, meaning that the two final values of the random \
+    reflection angle brackets the optimal. These two values are used to find the optimal one by \
+    a linear interpolation. Finally, simulations are performed by using the interpolated value, \
+    which is defined as the desired optimal.
 
-    A option no_tuning can be used if one only wants to simulate one value of rnda and compare \
-    the results with the measured ones.
+    The option ``--no_tuning`` can be used if one only wants to simulate one value for the random \
+    reflection angle and compare the results with the measured ones.
 
-    The results of the tuning are plotted. See examples of the containment diameter \
-    D80 vs rnda plot, on the left, and the D80 distributions, on the right.
+    Results of the tuning are plotted. See examples of the PSF containment diameter \
+    D80 vs random reflection angle plot, on the left, and the D80 distributions \
+    (per mirror panel), on the right.
 
-    .. _deriva_rnda_plot:
+    .. _derive_rnda_plot:
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
       :width: 49 %
     .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
       :width: 49 %
 
-    This application uses the following simulation software tools:
+    This application uses the following :ref:`SimulationSoftware` tools:
+
         - sim_telarray/bin/sim_telarray
         - sim_telarray/bin/rx (optional)
 
@@ -50,20 +70,18 @@
     model_version (str, optional)
         Model version (default='Current')
     psf_measurement (str, optional)
-        Results from PSF measurements for each mirror panel spot size
+        Table with results from PSF measurements for each mirror panel spot size
     psf_measurement_containment_mean (float, required)
         Mean of measured containment diameter [cm]
     psf_measurement_containment_sigma (float, optional)
         Std dev of measured containment diameter [cm]
     containment_fraction (float, required)
-        Containment fraction for diameter calculation (typically 0.8)
+        Containment fraction for diameter calculation (default: 0.8)
     rnda (float, optional)
-        Starting value of mirror_reflection_random_angle. If not given, the value from the \
-        default model will be used.
+        Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the \
+        default model is read from the simulation model database.
     mirror_list (file, optional)
-        Mirror list file to replace the default one. It should be used if measured mirror focal \
-        lengths need to be taken into account. It contains the following information about the \
-        mirrors: ID, panel radius, optical PSF (d80), PSF (d80) and surface reflectivity.
+        Table with mirror ID and panel radius.
     use_random_flen (activation mode, optional)
         Use random focal lengths, instead of the measured ones. The argument random_flen can be \
         used to replace the default random_focal_length from the model.
@@ -79,23 +97,24 @@
 
     Example
     -------
-    MST - Prod5
-
-    Get mirror list and PSF data from DB:
-
-     .. code-block:: console
-
-        simtools-get-file-from-db --file_name MLTdata-preproduction.ecsv
-
-    Run the application. Runtime about 4 min.
+    Derive mirror random reflection angle for a mid-sized telescope (MST),
+    simulation production Prod5.
 
     .. code-block:: console
 
-        simtools-derive-mirror-rnda --site North --telescope MST-FlashCam-D \
-            --containment_fraction 0.8 --mirror_list MLTdata-preproduction.ecsv
-            --psf_measurement MLTdata-preproduction.ecsv --rnda 0.0063 --test
+        simtools-derive-mirror-rnda \\
+            --site North \\
+            --telescope MST-FlashCam-D \\
+            --containment_fraction 0.8 \\
+            --mirror_list MLTdata-preproduction.ecsv \\
+            --psf_measurement MLTdata-preproduction.ecsv \\
+            --rnda 0.0063 \\
+            --test
 
-    The output is saved in simtools-output/derive_mirror_rnda.
+    Runtime about 4 min.
+
+    The output is saved in `simtools-output/derive_mirror_rnda`.
+    Use the parameter ``--output_path`` to change the output directory.
 
     Expected final print-out message:
 
@@ -111,11 +130,6 @@
         Previous value = 0.006300
         New value = 0.004975
 
-
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -245,7 +259,7 @@ def _print_and_write_results(
     args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
     """
-    Print results to screen write metadata and data files
+    Print results to screen and write metadata and data files
     in the requested format
 
     """
