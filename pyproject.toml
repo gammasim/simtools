@@ -32,11 +32,11 @@ dependencies = [
     "jsonschema",
     "matplotlib",
     "numpy",
-    "pyyaml",
     "pymongo",
     "pyproj",
+    "python-dotenv",
+    "pyyaml",
     "scipy",
-    "zstandard",
 ]
 
 [project.optional-dependencies]
