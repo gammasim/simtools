@@ -8,11 +8,8 @@ __pycache__
 # Sphinx
 docs/build
 
-# DB config gfile
-dbDetails.yml
-
-# set environment
-set_env_db.sh
+# environmental variables
+.env
 
 # Mac users
 .DS_Store
