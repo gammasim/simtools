@@ -42,7 +42,7 @@ class CorsikaHistograms:
     output_path: str
         Path where to save the output of the class methods.
     hdf5_file_name: str
-        Name of the hdf5 file where to save the histograms.
+        HDF5 file name for histogram storage.
 
     Raises
     ------
@@ -71,8 +71,7 @@ class CorsikaHistograms:
             self.output_path = Path(output_path)
 
         if hdf5_file_name is None:
-            default_hdf5_file_name = re.split(r"\.", self.input_file.name)[0] + ".hdf5"
-            self.hdf5_file_name = default_hdf5_file_name
+            self.hdf5_file_name = re.split(r"\.", self.input_file.name)[0] + ".hdf5"
         else:
             self.hdf5_file_name = hdf5_file_name
 
@@ -1414,17 +1413,17 @@ class CorsikaHistograms:
         Parameters
         ----------
         hist: numpy.ndarray
-            The counts of the histogram.
+            The counts of the histograms.
         x_edges: numpy.array
             The x edges of the histograms.
         y_edges: numpy.array
             The y edges of the histograms.
-            Use None if dealing with 1D histogram.
+            Use None for 1D histograms.
         x_label: str
             X edges label.
         y_label: str
             Y edges label.
-            Use None if dealing with 1D histogram.
+            Use None for 1D histograms.
         """
 
         # Complement metadata
