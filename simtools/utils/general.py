@@ -450,6 +450,8 @@ def sort_arrays(*args):
         Sorted args.
     """
 
+    if len(args) == 0:
+        return args
     order_array = copy.copy(args[0])
     new_args = []
     for arg in args:
