@@ -66,15 +66,23 @@ def file_has_text(file, text):
     bool
         True if file has text.
     """
-    with open(file, "rb", 0) as string_file, mmap.mmap(
-        string_file.fileno(), 0, access=mmap.ACCESS_READ
-    ) as text_file_input:
-        re_search_1 = re.compile(f"{text}".encode())
-        search_result_1 = re_search_1.search(text_file_input)
-        if search_result_1 is None:
-            return False
 
-        return True
+    try:
+        with open(file, "rb", 0) as string_file, mmap.mmap(
+            string_file.fileno(), 0, access=mmap.ACCESS_READ
+        ) as text_file_input:
+            re_search_1 = re.compile(f"{text}".encode())
+            search_result_1 = re_search_1.search(text_file_input)
+            if search_result_1 is None:
+                return False
+
+            return True
+    except FileNotFoundError:
+        _logger.warning(f"File {file} not found.")
+        return False
+    except ValueError:
+        _logger.warning(f"File {file} is empty.")
+        return False
 
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False):
