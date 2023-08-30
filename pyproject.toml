@@ -36,7 +36,6 @@ dependencies = [
     "pyproj",
     "pyyaml",
     "scipy",
-    "zstandard",
 ]
 
 [project.optional-dependencies]
