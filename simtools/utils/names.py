@@ -844,6 +844,11 @@ def sanitize_name(name):
     -------
     str:
         Sanitized name.
+
+    Raises
+    ------
+    ValueError:
+        if the string `name` can not be sanitized.
     """
 
     # Convert to lowercase
@@ -854,5 +859,8 @@ def sanitize_name(name):
 
     # Remove characters that are not alphanumerics or underscores
     sanitized = re.sub(r"\W|^(?=\d)", "_", sanitized)
-
+    if not sanitized.isidentifier():
+        msg = f"The string {name} could not be sanitized."
+        _logger.error(msg)
+        raise ValueError
     return sanitized
