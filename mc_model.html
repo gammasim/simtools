@@ -1,53 +1,114 @@
-
-
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g921fad9 Manual</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=532c1bf3" />
-    
-    <script src="_static/documentation_options.js?v=10e3e8b2"></script>
+    <title>MC Model &#8212; simtools v0.1.dev1+g3820f37</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
+    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
+    <script src="_static/documentation_options.js?v=dbe54056"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="PSF Analysis" href="psf_analysis.html" />
     <link rel="prev" title="Layout" href="layout_array.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <!--[if lt IE 9]>
-    <script src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="psf_analysis.html" title="PSF Analysis"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="layout_array.html" title="Layout"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g921fad9 Manual</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="library.html" accesskey="U">API</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">MC Model</a></li> 
-      </ul>
-    </div>  
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-    <div class="document">
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">simtools</a></h1>
+
+
+
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g3820f37</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="library.html">API</a><ul>
+      <li>Previous: <a href="layout_array.html" title="previous chapter">Layout</a></li>
+      <li>Next: <a href="psf_analysis.html" title="next chapter">PSF Analysis</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mc_model.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <section id="mc-model">
@@ -78,12 +139,6 @@
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="model.array_model.ArrayModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize ArrayModel.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.export_all_simtel_config_files">
 <span class="sig-name descname"><span class="pre">export_all_simtel_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_all_simtel_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_all_simtel_config_files" title="Link to this definition">¶</a></dt>
@@ -177,13 +232,6 @@
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="model.camera.Camera.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,
-calculating FoV and plotting the camera.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="model.camera.Camera.calc_fov">
 <span class="sig-name descname"><span class="pre">calc_fov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.calc_fov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.calc_fov" title="Link to this definition">¶</a></dt>
@@ -403,12 +451,6 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="model.mirrors.Mirrors.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_list_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize Mirrors.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model.mirrors.Mirrors.get_single_mirror_parameters">
 <span class="sig-name descname"><span class="pre">get_single_mirror_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/mirrors.html#Mirrors.get_single_mirror_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.Mirrors.get_single_mirror_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>Get parameters for a single mirror given by number.</p>
@@ -571,12 +613,6 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Current'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize TelescopeModel.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.add_parameter">
 <span class="sig-name descname"><span class="pre">add_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_aplicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.add_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.add_parameter" title="Link to this definition">¶</a></dt>
@@ -1091,85 +1127,22 @@ in the file.</p>
 </section>
 
 
-            <div class="clearer"></div>
           </div>
+          
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h3><a href="index.html">Table of Contents</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
-<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
-</ul>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      
+      
+      
+      <a href="_sources/mc_model.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
 
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/mc_model.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="psf_analysis.html" title="PSF Analysis"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="layout_array.html" title="Layout"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">simtools v0.1.dev1+g921fad9 Manual</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="library.html" >API</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">MC Model</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-    &#169; Copyright 2022, gammasim-tools, simtools developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.4.
-    </div>
+    
+
+    
   </body>
 </html>
