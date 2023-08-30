@@ -200,7 +200,7 @@ def test_fill_from_environmental_variables(configurator):
     # _fill_from_environmental_variables() should not change it
     os.environ["LOG_LEVEL"] = "DEBUG"
     configurator._fill_from_environmental_variables()
-    assert configurator.config["log_level"] == _config_save["log_level"]
+    assert configurator.config["log_level"] == _config_save["log_level"] == "info"
     if "LOG_LEVEL" in os.environ:
         del os.environ["LOG_LEVEL"]
 
