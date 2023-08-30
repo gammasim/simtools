@@ -154,14 +154,19 @@ def test_check_value_entry_length() -> None:
 
 def test_validate_and_convert_value_with_units() -> None:
     _parname = "cscat"
-    _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
-    _value = [0, 10 * u.m, 3 * u.km, None]
-    _value_keys = ["a", "b", "c", "d"]
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
+    _value = [0, 10 * u.m, 3 * u.km, "4 m", None]
+    _value_keys = ["a", "b", "c", "d", "e"]
 
     assert gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo) == [
         0,
         10.0,
         3000.0,
+        4.0,
         None,
     ]
 
@@ -169,7 +174,8 @@ def test_validate_and_convert_value_with_units() -> None:
         "a": 0,
         "b": 10.0,
         "c": 3000.0,
-        "d": None,
+        "d": 4.0,
+        "e": None,
     }
 
     _parinfo = {"len": None, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
@@ -201,6 +207,13 @@ def test_validate_and_convert_value_without_units() -> None:
     _value = [0, 10.0 * u.m, 3.0]
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo)
+
+    assert (
+        gen._validate_and_convert_value_without_units(
+            ["all"], None, "nightsky_background", {"len": 1}
+        )
+        == "all"
+    )
 
 
 def test_program_is_executable() -> None:
