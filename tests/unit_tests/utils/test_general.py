@@ -2,6 +2,7 @@
 
 import gzip
 import logging
+import os
 import time
 from copy import copy
 from pathlib import Path
@@ -244,23 +245,33 @@ def test_validate_and_convert_value_without_units() -> None:
     )
 
 
-def test_program_is_executable() -> None:
+def test_program_is_executable(caplog) -> None:
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
+    assert gen.program_is_executable("/bin/ls") is not None  # The actual path should not matter
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
+    os.environ.pop("PATH", None)
+    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
+    assert "PATH environment variable is not set." in caplog.text
 
 
-def test_change_dict_keys_case() -> None:
+def test_change_dict_keys_case(caplog) -> None:
     # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
         "DATA_COLUMNS": {"ATTRIBUTE": ["remove_duplicates", "SORT"]},
+        "DICT_IN_LIST": {
+            "KEY_OF_FIRST_DICT": ["FIRST_ITEM", {"KEY_OF_NESTED_DICT": "VALUE_OF_SECOND_DICT"}]
+        },
     }
     _lower_dict = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
         "data_columns": {"attribute": ["remove_duplicates", "SORT"]},
+        "dict_in_list": {
+            "key_of_first_dict": ["FIRST_ITEM", {"key_of_nested_dict": "VALUE_OF_SECOND_DICT"}]
+        },
     }
     _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
     assert _no_change_dict_upper == _upper_dict
@@ -273,6 +284,10 @@ def test_change_dict_keys_case() -> None:
 
     _changed_to_upper = gen.change_dict_keys_case(copy(_lower_dict), False)
     assert _changed_to_upper == _upper_dict
+
+    with pytest.raises(AttributeError):
+        gen.change_dict_keys_case([2], False)
+        assert "Input is not a proper dictionary" in caplog.text
 
 
 def test_rotate_telescope_position() -> None:
@@ -546,7 +561,7 @@ def test_collect_final_lines(tmp_test_directory) -> None:
     assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
 
 
-def test_log_level_from_user():
+def test_log_level_from_user() -> None:
     """
     Test get_log_level_from_user() function.
     """
@@ -565,3 +580,81 @@ def test_log_level_from_user():
         gen.get_log_level_from_user(None)
     with pytest.raises(AttributeError):
         gen.get_log_level_from_user(True)
+
+
+def test_copy_as_list() -> None:
+    """
+    Test the copy_as_list function.
+    """
+
+    # Test with a string.
+    assert gen.copy_as_list("str") == ["str"]
+
+    # Test with a list.
+    assert gen.copy_as_list([1, 2, 3]) == [1, 2, 3]
+
+    # Test with a tuple.
+    assert gen.copy_as_list((1, 2, 3)) == [1, 2, 3]
+
+    # Test with a dictionary (probably not really a useful case, but should test anyway).
+    assert gen.copy_as_list({"a": 1, "b": 2}) == ["a", "b"]
+
+    # Test with a non-iterable object.
+    assert gen.copy_as_list(123) == [123]
+
+
+def test_find_file_in_current_directory(tmp_test_directory) -> None:
+    """
+    Test finding a file in the temp test directory directory.
+    """
+    file_name = tmp_test_directory / "test.txt"
+    with open(file_name, "w") as file:
+        file.write("Test data")
+    file_path = gen.find_file(file_name, tmp_test_directory)
+    assert file_path == file_name
+
+
+def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
+    """
+    Test finding a file in a non-existing directory.
+    """
+    file_name = tmp_test_directory / "test.txt"
+
+    loc = Path("non_existing_directory")
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
+
+
+def test_find_file_recursively(tmp_test_directory) -> None:
+    """
+    Test finding a file recursively.
+    """
+    file_name = "test_1.txt"
+    test_directory_sub_dir = tmp_test_directory / "test"
+    Path(test_directory_sub_dir).mkdir(parents=True, exist_ok=True)
+    with open(test_directory_sub_dir / file_name, "w", encoding="utf-8") as file:
+        file.write("Test data")
+    loc = tmp_test_directory
+    file_path = gen.find_file(file_name, loc)
+    assert file_path == Path(loc).joinpath("test").joinpath(file_name)
+
+    # Test also the case in which we recursively find unrelated files.
+    file_name = "test_2.txt"
+    Path(test_directory_sub_dir / "unrelated_sub_dir").mkdir(parents=True, exist_ok=True)
+    with open(
+        test_directory_sub_dir / "unrelated_sub_dir" / "unrelated_file.txt", "w", encoding="utf-8"
+    ) as file:
+        file.write("Test data")
+    loc = tmp_test_directory
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
+
+
+def test_find_file_not_found(tmp_test_directory) -> None:
+    """
+    Test finding a file that does not exist.
+    """
+    file_name = "not_existing_file.txt"
+    loc = Path(tmp_test_directory)
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
