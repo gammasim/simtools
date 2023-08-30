@@ -257,12 +257,12 @@ def _parse(label, description):
     if not config_parser["png"]:
         if (
             not config_parser["hdf5"]
-            or not config_parser["event_1D_histograms"]
-            or not config_parser["event_2D_histograms"]
+            and not config_parser["event_1D_histograms"]
+            and not config_parser["event_2D_histograms"]
         ):
             config.parser.error(
-                "At least one argument between `--png`, `--hdf5`, `--event_1D_histograms`, and "
-                "`--event_2D_histograms` is required."
+                "At least one argument is required: `--png`, `--hdf5`, `--event_1D_histograms`, or "
+                "`--event_2D_histograms`."
             )
 
     return config_parser, _
@@ -294,7 +294,9 @@ def _plot_figures(corsika_histograms_instance):
             figure.savefig(output_file_name, bbox_inches="tight")
 
 
-def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_keys, png, hdf5):
+def _derive_event_1D_histograms(
+    corsika_histograms_instance, event_1D_header_keys, png, hdf5, overwrite=False
+):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
 
@@ -309,6 +311,8 @@ def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_key
         If true, histograms are saved into png files.
     hdf5: bool
         If true, histograms are saved into hdf5 files.
+    overwrite: bool
+        If true, overwrites the current output hdf5 file.
     """
     for event_header_element in event_1D_header_keys:
         if png:
@@ -320,11 +324,13 @@ def _derive_event_1D_histograms(corsika_histograms_instance, event_1D_header_key
             figure.savefig(output_file_name, bbox_inches="tight")
         if hdf5:
             corsika_histograms_instance.export_event_header_1D_histogram(
-                event_header_element, bins=50, hist_range=None
+                event_header_element, bins=50, hist_range=None, overwrite=overwrite
             )
 
 
-def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_keys, png, hdf5):
+def _derive_event_2D_histograms(
+    corsika_histograms_instance, event_2D_header_keys, png, hdf5, overwrite=False
+):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1D_histograms.
     If an odd number of event header keys are given, the last one is discarded.
@@ -340,6 +346,8 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
         If true, histograms are saved into png files.
     hdf5: bool
         If true, histograms are saved into hdf5 files.
+    overwrite: bool
+        If true, overwrites the current output hdf5 file.
     """
     for i_event_header_element, _ in enumerate(event_2D_header_keys[::2]):
         # [::2] to discard the last one in case an odd number of keys are passed
@@ -366,6 +374,7 @@ def _derive_event_2D_histograms(corsika_histograms_instance, event_2D_header_key
                 event_2D_header_keys[i_event_header_element + 1],
                 bins=50,
                 hist_range=None,
+                overwrite=overwrite,
             )
 
 
@@ -397,19 +406,17 @@ def main():
     else:
         indices = None
     # If the hdf5 output file already exists, the results are appended to it.
-    if (
-        Path(corsika_histograms_instance.hdf5_file_name).exists()
-        and args_dict["hdf5"]
-        or args_dict["event_1D_histograms"]
-        or args_dict["event_2D_histograms"]
+    if (Path(corsika_histograms_instance.hdf5_file_name).exists()) and (
+        args_dict["hdf5"] or args_dict["event_1D_histograms"] or args_dict["event_2D_histograms"]
     ):
         msg = (
-            f"Output hdf5 file {corsika_histograms_instance.hdf5_file_name} already exists."
-            f"Please delete it first or change the name of the output file through the "
-            f"--hdf5_file_name argument."
+            f"Output hdf5 file {corsika_histograms_instance.hdf5_file_name} already exists. "
+            f"Overwriting it."
         )
-        logger.error(msg)
-        raise FileExistsError
+        logger.warning(msg)
+        overwrite = True
+    else:
+        overwrite = False
     corsika_histograms_instance.set_histograms(
         telescope_indices=indices,
         individual_telescopes=args_dict["individual_telescopes"],
@@ -420,7 +427,7 @@ def main():
     if args_dict["png"]:
         _plot_figures(corsika_histograms_instance=corsika_histograms_instance)
     if args_dict["hdf5"]:
-        corsika_histograms_instance.export_histograms()
+        corsika_histograms_instance.export_histograms(overwrite=overwrite)
 
     # Event information
     if args_dict["event_1D_histograms"] is not None:
@@ -429,6 +436,7 @@ def main():
             args_dict["event_1D_histograms"],
             args_dict["png"],
             args_dict["hdf5"],
+            overwrite=False if args_dict["hdf5"] else True,
         )
     if args_dict["event_2D_histograms"] is not None:
         _derive_event_2D_histograms(
@@ -436,6 +444,7 @@ def main():
             args_dict["event_2D_histograms"],
             args_dict["png"],
             args_dict["hdf5"],
+            overwrite=False if args_dict["hdf5"] or args_dict["event_1D_histograms"] else True,
         )
 
     final_time = time.time()
