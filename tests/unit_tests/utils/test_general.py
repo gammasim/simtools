@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import gzip
 import logging
 import time
 from copy import copy
@@ -13,6 +14,7 @@ from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools.utils.general import (
+    InvalidConfigData,
     InvalidConfigEntry,
     MissingRequiredConfigEntry,
     UnableToIdentifyConfigEntry,
@@ -21,7 +23,7 @@ from simtools.utils.general import (
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(args_dict, io_handler) -> None:
+def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(
@@ -41,6 +43,13 @@ def test_collect_dict_data(args_dict, io_handler) -> None:
 
     d3 = gen.collect_data_from_yaml_or_dict(test_yaml_file, in_dict)
     assert d3 == d2
+
+    assert gen.collect_data_from_yaml_or_dict(None, None, allow_empty=True) is None
+    assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+
+    with pytest.raises(InvalidConfigData):
+        gen.collect_data_from_yaml_or_dict(None, None, allow_empty=False)
+        assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
 
 
 def test_collect_dict_from_file() -> None:
@@ -152,7 +161,7 @@ def test_check_value_entry_length() -> None:
         gen._check_value_entry_length([1, 4], "test_1", _par_info)
 
 
-def test_validate_and_convert_value_with_units() -> None:
+def test_validate_and_convert_value_with_units(caplog) -> None:
     _parname = "cscat"
     _parinfo = {
         "len": 5,
@@ -178,12 +187,31 @@ def test_validate_and_convert_value_with_units() -> None:
         "e": None,
     }
 
-    _parinfo = {"len": None, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
+    _parinfo = {
+        "len": None,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
-    _parinfo = {"len": 4, "unit": [None, u.Unit("kg"), u.Unit("m"), None], "names": ["scat"]}
+        assert "Config entry given with wrong unit" in caplog.text
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("kg"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
+        assert "Config entry given with wrong unit" in caplog.text
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
+    _value = [0, 10 * u.m, 3 * u.km, 4, None]
+    with pytest.raises(InvalidConfigEntry):
+        gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
+        assert "Config entry given without unit" in caplog.text
 
 
 def test_validate_and_convert_value_without_units() -> None:
@@ -394,3 +422,146 @@ def test_file_has_text(tmp_test_directory) -> None:
         f.write(text)
     assert gen.file_has_text(file, text)
     assert not gen.file_has_text(file, "test2")
+
+
+def test_collect_kwargs() -> None:
+    """
+    Test the collect_kwargs function.
+    """
+
+    # Test with no kwargs.
+    kwargs = {}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {}
+
+    # Test with one kwargs.
+    kwargs = {"label_a": 1}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"a": 1}
+
+    # Test with multiple kwargs.
+    kwargs = {"label_a": 1, "label_b": 2, "label_c": 3}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"a": 1, "b": 2, "c": 3}
+
+    # Test with kwargs where only one starts with label_.
+    kwargs = {"a": 1, "b": 2, "label_c": 3, "d": 4}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"c": 3}
+
+    # Test with kwargs that do not start with label_.
+    kwargs = {"a": 1, "b": 2, "c": 3, "d": 4}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {}
+
+
+def test_set_default_kwargs() -> None:
+    """
+    Test the set_default_kwargs function.
+    """
+
+    in_kwargs = {"a": 1, "b": 2}
+    out_kwargs = gen.set_default_kwargs(in_kwargs, c=3, d=4)
+    assert out_kwargs == {"a": 1, "b": 2, "c": 3, "d": 4}
+
+
+def test_sort_arrays() -> None:
+    """
+    Test the sort_arrays function.
+    """
+
+    # Test with no arguments.
+    args = []
+    new_args = gen.sort_arrays(*args)
+    assert not new_args
+
+    # Test with one argument.
+    args = [list(range(10))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10))]
+
+    # Test with multiple arguments.
+    args = [list(range(10)), list(range(10, 20))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10)), list(range(10, 20))]
+
+    # Test with arguments of different lengths.
+    args = [list(range(10)), list(range(5))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10)), list(range(5))]
+
+    # Test with arguments that are not arrays.
+    args = [1, 2, 3]
+    with pytest.raises(TypeError):
+        gen.sort_arrays(*args)
+
+    # Test with the input array not in the right order.
+    args = [list(reversed(range(10)))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10))]
+
+
+def test_collect_final_lines(tmp_test_directory) -> None:
+    """
+    Test the collect_final_lines function.
+    """
+
+    # Test with no file.
+    with pytest.raises(FileNotFoundError):
+        gen.collect_final_lines("no_such_file.txt", 10)
+
+    # Test with empty file.
+    file = tmp_test_directory / "empty_file.txt"
+    with open(file, "w"):
+        pass
+    assert gen.collect_final_lines(file, 10) == ""
+
+    # Test with one line file.
+    file = tmp_test_directory / "one_line_file.txt"
+    with open(file, "w") as f:
+        f.write("Line 1")
+    assert gen.collect_final_lines(file, 1) == "Line 1"
+
+    # In the following tests the \n in the output are removed, but in the actual print statements,
+    # where the original function is used, they are still present in the string representation.
+
+    # Test with multiple lines file.
+    file = tmp_test_directory / "multiple_lines_file.txt"
+    with open(file, "w") as f:
+        f.write("Line 1\nLine 2\nLine 3")
+    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+
+    # Test with file with n_lines lines.
+    file = tmp_test_directory / "n_lines_file.txt"
+    with open(file, "w") as f:
+        for i in range(10):
+            f.write(f"Line {i}\n")
+        f.write("Line 10")
+    assert gen.collect_final_lines(file, 3) == "Line 8Line 9Line 10"
+
+    # Test with file compressed in gzip.
+    file = tmp_test_directory / "compressed_file.txt.gz"
+    with gzip.open(file, "wb") as f:
+        f.write(b"Line 1\nLine 2\nLine 3")
+    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+
+
+def test_log_level_from_user():
+    """
+    Test get_log_level_from_user() function.
+    """
+    assert gen.get_log_level_from_user("info") == logging.INFO
+    assert gen.get_log_level_from_user("debug") == logging.DEBUG
+    assert gen.get_log_level_from_user("warn") == logging.WARNING
+    assert gen.get_log_level_from_user("warning") == logging.WARNING
+    assert gen.get_log_level_from_user("error") == logging.ERROR
+    assert gen.get_log_level_from_user("critical") == logging.CRITICAL
+
+    with pytest.raises(ValueError):
+        gen.get_log_level_from_user("invalid")
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(1)
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(None)
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(True)
