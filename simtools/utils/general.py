@@ -668,7 +668,6 @@ def find_file(name, loc):
             return None
 
         for subdir in Path(directory).iterdir():
-            print(subdir)
             if not subdir.is_dir():
                 continue
             file = _search_directory(subdir, filename, True)
