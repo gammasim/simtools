@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 from astropy import units as u
+from dotenv import dotenv_values
 
 import simtools.io_handler
 from simtools import db_handler
@@ -125,12 +126,17 @@ def configurator(tmp_test_directory, simtel_path):
 @pytest.fixture
 def db_config():
     """
-    Read DB configuration from tests from environmental variables
+    Read DB configuration from tests from .env file and from environmental variables.
+    (this ensures that tests run both locally and with github secrets)
+
     """
-    mongo_db_config = {}
+
+    mongo_db_config = dict(dotenv_values(".env"))
+    mongo_db_config = {key.lower(): value for key, value in mongo_db_config.items()}
     _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
-        mongo_db_config[_para] = os.environ.get(_para.upper())
+        if _para not in mongo_db_config:
+            mongo_db_config[_para] = os.environ.get(_para.upper())
     if mongo_db_config["db_api_port"] is not None:
         mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
     return mongo_db_config
