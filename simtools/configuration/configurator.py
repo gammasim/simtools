@@ -5,6 +5,7 @@ import uuid
 
 import astropy.units as u
 import yaml
+from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools import io_handler
@@ -261,11 +262,15 @@ class Configurator:
     def _fill_from_environmental_variables(self):
         """
         Fill any unconfigured configuration parameters (i.e., parameter is None) \
-        from environmental variables.
+        from environmental variables or from file (default: ".env").
 
         """
 
         _env_dict = {}
+        try:
+            load_dotenv(self.config["env_file"])
+        except KeyError:
+            pass
         try:
             for key, value in self.config.items():
                 if value is None:
