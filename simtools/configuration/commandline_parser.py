@@ -79,6 +79,13 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             required=False,
         )
+        _job_group.add_argument(
+            "--env_file",
+            help="file with environment variables",
+            default=".env",
+            type=str,
+            required=False,
+        )
 
     def initialize_path_arguments(self):
         """
