@@ -29,7 +29,7 @@ simtools
 .. image:: https://codecov.io/gh/gammasim/simtools/branch/master/graph/badge.svg?token=AYAIRPARCH
    :target: https://codecov.io/gh/gammasim/simtools
 
-Simulation tools and applications for the `Cherenkov Telescope Array (CTAO) <www.cta-observatory.org>`_.
+Simulation tools and applications for the `Cherenkov Telescope Array (CTAO) <https://www.cta-observatory.org>`_.
 
 License: `BSD-3 <https://github.com/gammasim/simtools/blob/main/LICENSE>`_
 
@@ -51,8 +51,8 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 
 - `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code
 - `workflows <https://github.com/gammasim/workflows>`_ for setting, derivation and validation of simulation model parameters
-- `simulation model parameter and input data schema <https://github.com/gammasim/workflows>`_
-- databases, especially the model parameter database
+- `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
+- :ref:`databases <Databases>`, especially the model parameter database
 
 simtools is under rapid development with continuous changes and additions planned. 
 Please contact the developers before using it: simtools-developer@desy.de
@@ -60,6 +60,11 @@ Please contact the developers before using it: simtools-developer@desy.de
 
 Quickstart
 ==========
+
+.. warning::
+
+    The pip-installation of simtools provides limited functionality only
+    and is not as well tested as the conda/mamba installation.
 
 Install simtools with pypi (recommended for users):
 
