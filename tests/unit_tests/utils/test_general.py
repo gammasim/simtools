@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
+import gzip
 import logging
+import os
 import time
 from copy import copy
 from pathlib import Path
@@ -13,6 +15,7 @@ from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools.utils.general import (
+    InvalidConfigData,
     InvalidConfigEntry,
     MissingRequiredConfigEntry,
     UnableToIdentifyConfigEntry,
@@ -21,7 +24,7 @@ from simtools.utils.general import (
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(args_dict, io_handler):
+def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(
@@ -42,8 +45,15 @@ def test_collect_dict_data(args_dict, io_handler):
     d3 = gen.collect_data_from_yaml_or_dict(test_yaml_file, in_dict)
     assert d3 == d2
 
+    assert gen.collect_data_from_yaml_or_dict(None, None, allow_empty=True) is None
+    assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
 
-def test_collect_dict_from_file():
+    with pytest.raises(InvalidConfigData):
+        gen.collect_data_from_yaml_or_dict(None, None, allow_empty=False)
+        assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+
+
+def test_collect_dict_from_file() -> None:
     # Test 1: file_path is a yaml file
     file_path = "tests/resources/test_parameters.yml"
     file_name = None
@@ -66,9 +76,20 @@ def test_collect_dict_from_file():
     assert len(_dict) == 0
 
 
-def test_validate_config_data(args_dict, io_handler, caplog):
+def test_validate_config_data(args_dict, io_handler, caplog) -> None:
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
     parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
+
+    validated_data = gen.validate_config_data(
+        config_data=None,
+        parameters={
+            "zenith_angle": {
+                "len": 1,
+                "default": 20.0,
+            }
+        },
+    )
+    assert validated_data.zenith_angle == 20.0
 
     # Test missing entry
     config_data = {
@@ -127,7 +148,7 @@ def test_validate_config_data(args_dict, io_handler, caplog):
         gen.validate_config_data(config_data=config_data | {"test": "blah"}, parameters=parameters)
 
 
-def test_check_value_entry_length():
+def test_check_value_entry_length() -> None:
     _par_info = {}
     _par_info["len"] = 2
     assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, False)
@@ -141,16 +162,21 @@ def test_check_value_entry_length():
         gen._check_value_entry_length([1, 4], "test_1", _par_info)
 
 
-def test_validate_and_convert_value_with_units():
+def test_validate_and_convert_value_with_units(caplog) -> None:
     _parname = "cscat"
-    _parinfo = {"len": 4, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
-    _value = [0, 10 * u.m, 3 * u.km, None]
-    _value_keys = ["a", "b", "c", "d"]
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
+    _value = [0, 10 * u.m, 3 * u.km, "4 m", None]
+    _value_keys = ["a", "b", "c", "d", "e"]
 
     assert gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo) == [
         0,
         10.0,
         3000.0,
+        4.0,
         None,
     ]
 
@@ -158,18 +184,38 @@ def test_validate_and_convert_value_with_units():
         "a": 0,
         "b": 10.0,
         "c": 3000.0,
-        "d": None,
+        "d": 4.0,
+        "e": None,
     }
 
-    _parinfo = {"len": None, "unit": [None, u.Unit("m"), u.Unit("m"), None], "names": ["scat"]}
+    _parinfo = {
+        "len": None,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
-    _parinfo = {"len": 4, "unit": [None, u.Unit("kg"), u.Unit("m"), None], "names": ["scat"]}
+        assert "Config entry given with wrong unit" in caplog.text
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("kg"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
+        assert "Config entry given with wrong unit" in caplog.text
+    _parinfo = {
+        "len": 5,
+        "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
+        "names": ["scat"],
+    }
+    _value = [0, 10 * u.m, 3 * u.km, 4, None]
+    with pytest.raises(InvalidConfigEntry):
+        gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
+        assert "Config entry given without unit" in caplog.text
 
 
-def test_validate_and_convert_value_without_units():
+def test_validate_and_convert_value_without_units() -> None:
     _parname = "cscat"
     _parinfo = {"len": 3, "names": ["scat"]}
     _value = [0, 10.0, 3.0]
@@ -191,24 +237,41 @@ def test_validate_and_convert_value_without_units():
     with pytest.raises(InvalidConfigEntry):
         gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo)
 
+    assert (
+        gen._validate_and_convert_value_without_units(
+            ["all"], None, "nightsky_background", {"len": 1}
+        )
+        == "all"
+    )
 
-def test_program_is_executable():
+
+def test_program_is_executable(caplog) -> None:
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("ls") is not None
+    assert gen.program_is_executable("/bin/ls") is not None  # The actual path should not matter
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
+    os.environ.pop("PATH", None)
+    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
+    assert "PATH environment variable is not set." in caplog.text
 
 
-def test_change_dict_keys_case():
+def test_change_dict_keys_case(caplog) -> None:
     # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
         "DATA_COLUMNS": {"ATTRIBUTE": ["remove_duplicates", "SORT"]},
+        "DICT_IN_LIST": {
+            "KEY_OF_FIRST_DICT": ["FIRST_ITEM", {"KEY_OF_NESTED_DICT": "VALUE_OF_SECOND_DICT"}]
+        },
     }
     _lower_dict = {
         "reference": {"version": "0.1.0"},
         "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
         "data_columns": {"attribute": ["remove_duplicates", "SORT"]},
+        "dict_in_list": {
+            "key_of_first_dict": ["FIRST_ITEM", {"key_of_nested_dict": "VALUE_OF_SECOND_DICT"}]
+        },
     }
     _no_change_dict_upper = gen.change_dict_keys_case(copy(_upper_dict), False)
     assert _no_change_dict_upper == _upper_dict
@@ -222,8 +285,12 @@ def test_change_dict_keys_case():
     _changed_to_upper = gen.change_dict_keys_case(copy(_lower_dict), False)
     assert _changed_to_upper == _upper_dict
 
+    with pytest.raises(AttributeError):
+        gen.change_dict_keys_case([2], False)
+        assert "Input is not a proper dictionary" in caplog.text
 
-def test_rotate_telescope_position():
+
+def test_rotate_telescope_position(caplog) -> None:
     x = np.array([-10, -10, 10, 10]).astype(float)
     y = np.array([-10.0, 10.0, -10.0, 10.0]).astype(float)
     angle_deg = 30 * u.deg
@@ -233,12 +300,19 @@ def test_rotate_telescope_position():
     def check_results(x_to_test, y_to_test, x_right, y_right, angle, theta=0 * u.deg):
         x_rot, y_rot = gen.rotate(x_to_test, y_to_test, angle, theta)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
-        for element, _ in enumerate(x):
+        if not isinstance(x_right, (list, np.ndarray)):
+            x_right = [x_right]
+        if not isinstance(y_right, (list, np.ndarray)):
+            y_right = [y_right]
+        for element, _ in enumerate(x_right):
             assert x_right[element] == x_rot[element]
             assert y_right[element] == y_rot[element]
 
     # Testing without units
     check_results(x, y, x_rot_manual, y_rot_manual, angle_deg)
+
+    # Testing with scalars
+    check_results(-10.0, -10.0, -3.7, -13.7, 30 * u.deg)
 
     x_new_array, y_new_array = x * u.m, y * u.m
     x_rot_new_array, y_rot_new_array = x_rot_manual * u.m, y_rot_manual * u.m
@@ -257,6 +331,9 @@ def test_rotate_telescope_position():
     with pytest.raises(TypeError):
         gen.rotate(x, y[0], angle_deg)
     with pytest.raises(TypeError):
+        gen.rotate("1", "2", angle_deg)
+        assert "x and y types are not valid! Cannot perform transformation" in caplog.text
+    with pytest.raises(TypeError):
         gen.rotate(str(x[0]), y[0], angle_deg)
     with pytest.raises(TypeError):
         gen.rotate(u.Quantity(10), 10, angle_deg)
@@ -270,7 +347,7 @@ def test_rotate_telescope_position():
         gen.rotate(x_new_array, y_new_array, 30 * u.m)
 
 
-def test_convert_2D_to_radial_distr(caplog):
+def test_convert_2D_to_radial_distr(caplog) -> None:
     # Test normal functioning
     max_dist = 100
     bins = 100
@@ -294,13 +371,12 @@ def test_convert_2D_to_radial_distr(caplog):
     assert msg in caplog.text
 
 
-def test_save_dict_to_file(tmp_test_directory, caplog):
-    # str
+def test_save_dict_to_file(tmp_test_directory, caplog) -> None:
     paths = ["test_file", "test_file.yml"]
     example_dict = {"key": 12}
     for path in paths:
         gen.save_dict_to_file(example_dict, f"{tmp_test_directory}/{path}")
-        with open(f"{tmp_test_directory}/test_file.yml") as file:
+        with open(f"{tmp_test_directory}/test_file.yml", encoding="utf-8") as file:
             new_example_dict = yaml.load(file)
             assert new_example_dict == example_dict
 
@@ -308,7 +384,7 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
     path = tmp_test_directory / "test_file_2.yml"
     example_dict = {"key": 12}
     gen.save_dict_to_file(example_dict, path)
-    with open(path) as file:
+    with open(path, encoding="utf-8") as file:
         new_example_dict = yaml.load(file)
         assert new_example_dict == example_dict
 
@@ -320,9 +396,9 @@ def test_save_dict_to_file(tmp_test_directory, caplog):
         assert "Failed to write to" in caplog.text
 
 
-def test_get_file_age(tmp_test_directory):
+def test_get_file_age(tmp_test_directory) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
-    with open(tmp_test_directory / "test_file.txt", "w") as file:
+    with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
         file.write("Test data")
 
     time.sleep(1)
@@ -337,3 +413,273 @@ def test_get_file_age(tmp_test_directory):
     # Ensure that the function raises FileNotFoundError for a non-existent file
     with pytest.raises(FileNotFoundError):
         gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
+
+
+def test_separate_args_and_config_data() -> None:
+    # Test the function "separate_args_and_config_data"
+    expected_args = ["arg1", "arg2"]
+    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
+    args, config_data = gen.separate_args_and_config_data(expected_args, **kwargs)
+    assert args == {"arg1": 1, "arg2": 2}
+    assert config_data == {"arg3": 3}
+
+
+def test_get_log_excerpt(tmp_test_directory) -> None:
+    log_file = tmp_test_directory / "log.txt"
+    with open(log_file, "w", encoding="utf-8") as f:
+        f.write("This is a log file.\n")
+        f.write("This is the second line of the log file.\n")
+
+    assert gen.get_log_excerpt(log_file) == (
+        "\n\nRuntime error - See below the relevant part of the log/err file.\n\n"
+        f"{log_file}\n"
+        "====================================================================\n\n"
+        "This is a log file."
+        "This is the second line of the log file.\n\n"
+        "====================================================================\n"
+    )
+
+
+def test_file_has_text(tmp_test_directory, caplog) -> None:
+    """Test the file_has_text function."""
+
+    # Test with file that has text.
+    file = tmp_test_directory / "test_file_has_text.txt"
+    text = "test"
+    with open(file, "w") as f:
+        f.write(text)
+    assert gen.file_has_text(file, text)
+    assert not gen.file_has_text(file, "test2")
+
+    # Test with empty file.
+    file = tmp_test_directory / "test_file_is_empty.txt"
+    with open(file, "w") as f:
+        f.write("")
+    assert not gen.file_has_text(file, text)
+    assert "is empty" in caplog.text
+
+    # Test with file that does not exist.
+    file = tmp_test_directory / "test_file_does_not_exist.txt"
+    assert not gen.file_has_text(file, text)
+    assert "not found" in caplog.text
+
+
+def test_collect_kwargs() -> None:
+    """
+    Test the collect_kwargs function.
+    """
+
+    # Test with no kwargs.
+    kwargs = {}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {}
+
+    # Test with one kwargs.
+    kwargs = {"label_a": 1}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"a": 1}
+
+    # Test with multiple kwargs.
+    kwargs = {"label_a": 1, "label_b": 2, "label_c": 3}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"a": 1, "b": 2, "c": 3}
+
+    # Test with kwargs where only one starts with label_.
+    kwargs = {"a": 1, "b": 2, "label_c": 3, "d": 4}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {"c": 3}
+
+    # Test with kwargs that do not start with label_.
+    kwargs = {"a": 1, "b": 2, "c": 3, "d": 4}
+    out_kwargs = gen.collect_kwargs("label", kwargs)
+    assert out_kwargs == {}
+
+
+def test_set_default_kwargs() -> None:
+    """
+    Test the set_default_kwargs function.
+    """
+
+    in_kwargs = {"a": 1, "b": 2}
+    out_kwargs = gen.set_default_kwargs(in_kwargs, c=3, d=4)
+    assert out_kwargs == {"a": 1, "b": 2, "c": 3, "d": 4}
+
+
+def test_sort_arrays() -> None:
+    """
+    Test the sort_arrays function.
+    """
+
+    # Test with no arguments.
+    args = []
+    new_args = gen.sort_arrays(*args)
+    assert not new_args
+
+    # Test with one argument.
+    args = [list(range(10))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10))]
+
+    # Test with multiple arguments.
+    args = [list(range(10)), list(range(10, 20))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10)), list(range(10, 20))]
+
+    # Test with arguments of different lengths.
+    args = [list(range(10)), list(range(5))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10)), list(range(5))]
+
+    # Test with arguments that are not arrays.
+    args = [1, 2, 3]
+    with pytest.raises(TypeError):
+        gen.sort_arrays(*args)
+
+    # Test with the input array not in the right order.
+    args = [list(reversed(range(10)))]
+    new_args = gen.sort_arrays(*args)
+    assert new_args == [list(range(10))]
+
+
+def test_collect_final_lines(tmp_test_directory) -> None:
+    """
+    Test the collect_final_lines function.
+    """
+
+    # Test with no file.
+    with pytest.raises(FileNotFoundError):
+        gen.collect_final_lines("no_such_file.txt", 10)
+
+    # Test with empty file.
+    file = tmp_test_directory / "empty_file.txt"
+    with open(file, "w"):
+        pass
+    assert gen.collect_final_lines(file, 10) == ""
+
+    # Test with one line file.
+    file = tmp_test_directory / "one_line_file.txt"
+    with open(file, "w") as f:
+        f.write("Line 1")
+    assert gen.collect_final_lines(file, 1) == "Line 1"
+
+    # In the following tests the \n in the output are removed, but in the actual print statements,
+    # where the original function is used, they are still present in the string representation.
+
+    # Test with multiple lines file.
+    file = tmp_test_directory / "multiple_lines_file.txt"
+    with open(file, "w") as f:
+        f.write("Line 1\nLine 2\nLine 3")
+    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+
+    # Test with file with n_lines lines.
+    file = tmp_test_directory / "n_lines_file.txt"
+    with open(file, "w") as f:
+        for i in range(10):
+            f.write(f"Line {i}\n")
+        f.write("Line 10")
+    assert gen.collect_final_lines(file, 3) == "Line 8Line 9Line 10"
+
+    # Test with file compressed in gzip.
+    file = tmp_test_directory / "compressed_file.txt.gz"
+    with gzip.open(file, "wb") as f:
+        f.write(b"Line 1\nLine 2\nLine 3")
+    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+
+
+def test_log_level_from_user() -> None:
+    """
+    Test get_log_level_from_user() function.
+    """
+    assert gen.get_log_level_from_user("info") == logging.INFO
+    assert gen.get_log_level_from_user("debug") == logging.DEBUG
+    assert gen.get_log_level_from_user("warn") == logging.WARNING
+    assert gen.get_log_level_from_user("warning") == logging.WARNING
+    assert gen.get_log_level_from_user("error") == logging.ERROR
+    assert gen.get_log_level_from_user("critical") == logging.CRITICAL
+
+    with pytest.raises(ValueError):
+        gen.get_log_level_from_user("invalid")
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(1)
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(None)
+    with pytest.raises(AttributeError):
+        gen.get_log_level_from_user(True)
+
+
+def test_copy_as_list() -> None:
+    """
+    Test the copy_as_list function.
+    """
+
+    # Test with a string.
+    assert gen.copy_as_list("str") == ["str"]
+
+    # Test with a list.
+    assert gen.copy_as_list([1, 2, 3]) == [1, 2, 3]
+
+    # Test with a tuple.
+    assert gen.copy_as_list((1, 2, 3)) == [1, 2, 3]
+
+    # Test with a dictionary (probably not really a useful case, but should test anyway).
+    assert gen.copy_as_list({"a": 1, "b": 2}) == ["a", "b"]
+
+    # Test with a non-iterable object.
+    assert gen.copy_as_list(123) == [123]
+
+
+def test_find_file_in_current_directory(tmp_test_directory) -> None:
+    """
+    Test finding a file in the temp test directory directory.
+    """
+    file_name = tmp_test_directory / "test.txt"
+    with open(file_name, "w") as file:
+        file.write("Test data")
+    file_path = gen.find_file(file_name, tmp_test_directory)
+    assert file_path == file_name
+
+
+def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
+    """
+    Test finding a file in a non-existing directory.
+    """
+    file_name = tmp_test_directory / "test.txt"
+
+    loc = Path("non_existing_directory")
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
+
+
+def test_find_file_recursively(tmp_test_directory) -> None:
+    """
+    Test finding a file recursively.
+    """
+    file_name = "test_1.txt"
+    test_directory_sub_dir = tmp_test_directory / "test"
+    Path(test_directory_sub_dir).mkdir(parents=True, exist_ok=True)
+    with open(test_directory_sub_dir / file_name, "w", encoding="utf-8") as file:
+        file.write("Test data")
+    loc = tmp_test_directory
+    file_path = gen.find_file(file_name, loc)
+    assert file_path == Path(loc).joinpath("test").joinpath(file_name)
+
+    # Test also the case in which we recursively find unrelated files.
+    file_name = "test_2.txt"
+    Path(test_directory_sub_dir / "unrelated_sub_dir").mkdir(parents=True, exist_ok=True)
+    with open(
+        test_directory_sub_dir / "unrelated_sub_dir" / "unrelated_file.txt", "w", encoding="utf-8"
+    ) as file:
+        file.write("Test data")
+    loc = tmp_test_directory
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
+
+
+def test_find_file_not_found(tmp_test_directory) -> None:
+    """
+    Test finding a file that does not exist.
+    """
+    file_name = "not_existing_file.txt"
+    loc = Path(tmp_test_directory)
+    with pytest.raises(FileNotFoundError):
+        gen.find_file(file_name, loc)
