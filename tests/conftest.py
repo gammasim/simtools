@@ -53,11 +53,11 @@ def mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
-            "DB_API_USER": "db_user",
-            "DB_API_PW": "12345",
-            "DB_API_PORT": "42",
-            "DB_SERVER": "abc@def.de",
+            "SIMTOOLS_SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
+            "SIMTOOLS_DB_API_USER": "db_user",
+            "SIMTOOLS_DB_API_PW": "12345",
+            "SIMTOOLS_DB_API_PORT": "42",
+            "SIMTOOLS_DB_SERVER": "abc@def.de",
         },
         clear=True,
     ):
@@ -66,7 +66,7 @@ def mock_settings_env_vars(tmp_test_directory):
 
 @pytest.fixture
 def simtel_path(mock_settings_env_vars):
-    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
+    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
     if simtel_path.exists():
         return simtel_path
     return ""
@@ -74,7 +74,7 @@ def simtel_path(mock_settings_env_vars):
 
 @pytest.fixture
 def simtel_path_no_mock():
-    simtel_path = Path(os.path.expandvars("$SIMTEL_PATH"))
+    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
     if simtel_path.exists():
         return simtel_path
     return ""
@@ -136,7 +136,7 @@ def db_config():
     _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
         if _para not in mongo_db_config:
-            mongo_db_config[_para] = os.environ.get(_para.upper())
+            mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
     if mongo_db_config["db_api_port"] is not None:
         mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
     return mongo_db_config
