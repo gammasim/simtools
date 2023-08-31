@@ -131,8 +131,10 @@ def db_config():
 
     """
 
-    mongo_db_config = dict(dotenv_values(".env"))
-    mongo_db_config = {key.lower(): value for key, value in mongo_db_config.items()}
+    mongo_db_config = {
+        key.lower().replace("simtools_", ""): value
+        for key, value in dict(dotenv_values(".env")).items()
+    }
     _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
     for _para in _db_para:
         if _para not in mongo_db_config:
