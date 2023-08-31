@@ -1237,11 +1237,11 @@ class CorsikaHistograms:
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     hdf5_table_name = (
-                        f"{function_dict['file name']}_"
+                        f"/{function_dict['file name']}_"
                         f"tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
-                    hdf5_table_name = f"{function_dict['file name']}_all_tels"
+                    hdf5_table_name = f"/{function_dict['file name']}_all_tels"
 
                 table = self.fill_hdf5_table(
                     hist_1D_list[i_histogram],
@@ -1254,8 +1254,13 @@ class CorsikaHistograms:
                     f"Writing 1D histogram with name {hdf5_table_name} to "
                     f"{self.hdf5_file_name}."
                 )
+                # overwrite takes precedence over append
+                if overwrite is True:
+                    append = False
+                else:
+                    append = True
                 write_table(
-                    table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
+                    table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite
                 )
 
     @property
@@ -1354,12 +1359,12 @@ class CorsikaHistograms:
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
                     hdf5_table_name = (
-                        f"{self._dict_2D_distributions[property_name]['file name']}"
+                        f"/{self._dict_2D_distributions[property_name]['file name']}"
                         f"_tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
                     hdf5_table_name = (
-                        f"{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
+                        f"/{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
                     )
                 table = self.fill_hdf5_table(
                     hist_2D_list[i_histogram],
@@ -1373,7 +1378,8 @@ class CorsikaHistograms:
                     f"Writing 2D histogram with name {hdf5_table_name} to "
                     f"{self.hdf5_file_name}."
                 )
-
+                # Always appending to table due to the file previously created
+                # by self._export_1D_histograms.
                 write_table(
                     table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
                 )
@@ -1482,12 +1488,17 @@ class CorsikaHistograms:
         )
         edges *= self.event_information[event_header_element].unit
         table = self.fill_hdf5_table(hist, edges, None, event_header_element, None)
-        hdf5_table_name = f"event_2D_histograms_{event_header_element}"
+        hdf5_table_name = f"/event_2D_histograms_{event_header_element}"
 
         self._logger.info(
             f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
         )
-        write_table(table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite)
+        # overwrite takes precedence over append
+        if overwrite is True:
+            append = False
+        else:
+            append = True
+        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
     def export_event_header_2D_histogram(
         self,
@@ -1526,12 +1537,17 @@ class CorsikaHistograms:
             hist, x_edges, y_edges, event_header_element_1, event_header_element_2
         )
 
-        hdf5_table_name = f"event_2D_histograms_{event_header_element_1}_{event_header_element_2}"
+        hdf5_table_name = f"/event_2D_histograms_{event_header_element_1}_{event_header_element_2}"
 
         self._logger.info(
             f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
         )
-        write_table(table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite)
+        # overwrite takes precedence over append
+        if overwrite is True:
+            append = False
+        else:
+            append = True
+        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
     @property
     def num_photons_per_telescope(self):

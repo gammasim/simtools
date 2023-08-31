@@ -113,6 +113,9 @@
         The name of the output hdf5 data (without the path).
         It requires the `--hdf5` flag.
         If not given, `hdf5_file_name` takes the name from the input IACT file (`input_file`).
+        If the output `hdf5_file_name` file already exists, the tables associated to the chosen
+        flags (e.g. `hdf5`, `event_1D_histograms`, `event_2D_histograms`) will be overwritten. The
+        remaining tables, if any, will stay untouched.
 
 
     event_1D_histograms (str, optional)
