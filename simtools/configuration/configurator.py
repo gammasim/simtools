@@ -277,7 +277,6 @@ class Configurator:
                 env_variable_to_read = f"SIMTOOLS_{key.upper()}"
                 if value is None:
                     _env_dict[key] = os.environ.get(env_variable_to_read)
-                    print(key, env_variable_to_read, _env_dict[key])
         except AttributeError:
             pass
 
