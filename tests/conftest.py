@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 from astropy import units as u
-from dotenv import dotenv_values
+from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_handler
 from simtools import db_handler
@@ -74,6 +74,7 @@ def simtel_path(mock_settings_env_vars):
 
 @pytest.fixture
 def simtel_path_no_mock():
+    load_dotenv(".env")
     simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
     if simtel_path.exists():
         return simtel_path
