@@ -8,6 +8,7 @@ import boost_histogram as bh
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.table import Table
 
 from simtools import version
 from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
@@ -755,12 +756,12 @@ def test_get_bins_max_dist(corsika_histograms_instance):
 
 def test_meta_dict(corsika_histograms_instance_set_histograms):
     expected_meta_dict = {
-        "CORSIKA version": corsika_histograms_instance_set_histograms.corsika_version,
-        "simtools version": version.__version__,
-        "Original IACT file": corsika_histograms_instance_set_histograms.input_file.name,
+        "corsika_version": corsika_histograms_instance_set_histograms.corsika_version,
+        "simtools_version": version.__version__,
+        "iact_file": corsika_histograms_instance_set_histograms.input_file.name,
         "telescope_indices": list(corsika_histograms_instance_set_histograms.telescope_indices),
         "individual_telescopes": corsika_histograms_instance_set_histograms.individual_telescopes,
-        "Note": "Only lower bin edges are given.",
+        "note": "Only lower bin edges are given.",
     }
     assert corsika_histograms_instance_set_histograms._meta_dict == expected_meta_dict
 
@@ -783,52 +784,31 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_export_1D_histograms(corsika_histograms_instance_set_histograms, io_handler):
-    corsika_histograms_instance_set_histograms._export_1D_histograms()
-
-    for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.ecsv",
-        "hist_1D_photon_radial_distr_all_tels.ecsv",
-        "hist_1D_photon_density_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_per_event_distr_all_tels.ecsv",
-        "hist_1D_photon_per_telescope_distr_all_tels.ecsv",
-    ]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
-
-
-def test_export_2D_histograms(corsika_histograms_instance_set_histograms, io_handler):
-    corsika_histograms_instance_set_histograms._export_2D_histograms()
-
-    for file_name in [
-        "hist_2D_photon_direction_distr_all_tels.ecsv",
-        "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
-        "hist_2D_photon_telescope_event_distr_all_tels.ecsv",
-        "hist_2D_photon_count_distr_all_tels.ecsv",
-        "hist_2D_photon_density_distr_all_tels.ecsv",
-    ]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
-
-
-def test_export_histograms(corsika_histograms_instance_set_histograms, io_handler):
+def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, io_handler):
+    # Default values
     corsika_histograms_instance_set_histograms.export_histograms()
 
-    for file_name in [
-        "hist_1D_photon_wavelength_distr_all_tels.ecsv",
-        "hist_1D_photon_radial_distr_all_tels.ecsv",
-        "hist_1D_photon_density_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_time_distr_all_tels.ecsv",
-        "hist_1D_photon_per_event_distr_all_tels.ecsv",
-        "hist_1D_photon_per_telescope_distr_all_tels.ecsv",
-        "hist_2D_photon_direction_distr_all_tels.ecsv",
-        "hist_2D_photon_time_altitude_distr_all_tels.ecsv",
-        "hist_2D_photon_telescope_event_distr_all_tels.ecsv",
-        "hist_2D_photon_count_distr_all_tels.ecsv",
-        "hist_2D_photon_density_distr_all_tels.ecsv",
-    ]:
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    file_name = Path(corsika_histograms_instance_set_histograms.output_path).joinpath(
+        "tel_output_10GeV-2-gamma-20deg-CTAO-South.hdf5"
+    )
+    assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+
+    # Change hdf5 file name
+    corsika_histograms_instance_set_histograms.hdf5_file_name = "test.hdf5"
+    corsika_histograms_instance_set_histograms.export_histograms()
+    output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.hdf5")
+    assert output_file.exists()
+
+    # Read hdf5 file
+    list_of_tables = corsika_histograms_instance_set_histograms.read_hdf5(output_file)
+    assert len(list_of_tables) == 12
+    for table in list_of_tables:
+        assert isinstance(table, Table)
+    # Check piece of metadata
+    assert (
+        list_of_tables[-1].meta["corsika_version"]
+        == corsika_histograms_instance_set_histograms.corsika_version
+    )
 
 
 def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
@@ -853,57 +833,71 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_fill_ecsv_table_1D(corsika_histograms_instance_set_histograms):
+def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
     hist = np.array([1, 2, 3])
     x_edges = np.array([1, 2, 3, 4])
     y_edges = None
     x_label = "test_x_label"
     y_label = None
 
-    table = corsika_histograms_instance_set_histograms.fill_ecsv_table(
+    table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
         hist, x_edges, y_edges, x_label, y_label
     )
 
     assert all(table[x_label] == x_edges[:-1])
-    assert all(table["Values"] == hist)
+    assert all(table["values"] == hist)
 
 
-def test_fill_ecsv_table_2D(corsika_histograms_instance_set_histograms):
+def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
     hist = np.array([[1, 2], [3, 4]])
     x_edges = np.array([1, 2, 3])
     y_edges = np.array([1, 2, 3])
     x_label = "test_x_label"
     y_label = "test_y_label"
 
-    table = corsika_histograms_instance_set_histograms.fill_ecsv_table(
+    table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
         hist, x_edges, y_edges, x_label, y_label
     )
-
-    assert all(table[x_label] == np.array([1, 2, 1, 2]))
-    assert all(table[y_label] == np.array([1, 1, 2, 2]))
-    assert all(table["Values"] == hist.flatten())
+    assert all(table["test_y_label_0"] == np.array([1, 2]))
+    assert all(table["test_y_label_1"] == np.array([3, 4]))
 
 
 def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
-        "total_energy": "event_1D_histograms_total_energy.ecsv",
-        "azimuth": "event_1D_histograms_azimuth.ecsv",
-        "zenith": "event_1D_histograms_zenith.ecsv",
-        "first_interaction_height": "event_1D_histograms_first_interaction_height.ecsv",
+        "total_energy": "event_1D_histograms_total_energy",
+        "azimuth": "event_1D_histograms_azimuth",
+        "zenith": "event_1D_histograms_zenith",
+        "first_interaction_height": "event_1D_histograms_first_interaction_height",
     }
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_1D_histogram(
             event_header_element, bins=50, hist_range=None
         )
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 4
 
 
 def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histograms, io_handler):
+    # Test writing the default photon histograms as well
+    corsika_histograms_instance_set_histograms.export_histograms()
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 12
+
     corsika_event_header_example = {
-        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith.ecsv",
+        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith",
     }
+
+    # Test writing (appending) event header histograms
     for event_header_element, file_name in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1], bins=50, hist_range=None
         )
-        assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    tables = corsika_histograms_instance_set_histograms.read_hdf5(
+        corsika_histograms_instance_set_histograms.hdf5_file_name
+    )
+    assert len(tables) == 13

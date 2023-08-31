@@ -35,7 +35,6 @@ def crs_utm():
 
 
 def position_for_testing():
-
     return {
         "pos_x": 0.0 * u.m,
         "pos_y": 0.0 * u.m,
@@ -49,7 +48,6 @@ def position_for_testing():
 
 
 def test_str(crs_wgs84, crs_local, crs_utm):
-
     tel = TelescopePosition(name="LST-01")
 
     _tcors = tel.__str__()
@@ -72,7 +70,6 @@ def test_str(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
-
     tel = TelescopePosition(name="LST-01")
 
     with pytest.raises(InvalidCoordSystem):
@@ -99,7 +96,6 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_coordinate_variable():
-
     tel = TelescopePosition(name="LST-01")
 
     # value should stay a value
@@ -116,7 +112,6 @@ def test_get_coordinate_variable():
 
 
 def test_set_coordinates():
-
     tel = TelescopePosition(name="LST-01")
 
     with pytest.raises(InvalidCoordSystem):
@@ -130,7 +125,6 @@ def test_set_coordinates():
 
 
 def test_set_altitude():
-
     tel = TelescopePosition(name="LST-01")
 
     tel.set_altitude(5.0)
@@ -142,7 +136,6 @@ def test_set_altitude():
 
 
 def test_convert(crs_wgs84, crs_local, crs_utm):
-
     test_position = position_for_testing()
 
     tel = TelescopePosition(name="LST-01")
@@ -176,7 +169,6 @@ def test_convert(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_reference_system_from(crs_utm):
-
     tel = TelescopePosition(name="LST-01")
 
     assert tel._get_reference_system_from() == (None, None)
@@ -194,7 +186,6 @@ def test_get_reference_system_from(crs_utm):
 
 
 def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
-
     tel = TelescopePosition(name="LST-01")
 
     with pytest.raises(InvalidCoordSystem):
@@ -217,7 +208,6 @@ def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
 
 
 def test_has_altitude():
-
     tel = TelescopePosition(name="LST-01")
 
     with pytest.raises(InvalidCoordSystem):
@@ -240,7 +230,6 @@ def test_has_altitude():
 
 
 def test_set_coordinate_system(crs_wgs84):
-
     tel = TelescopePosition(name="LST-01")
 
     with pytest.raises(InvalidCoordSystem):
@@ -252,7 +241,6 @@ def test_set_coordinate_system(crs_wgs84):
 
 
 def test_altitude_transformations():
-
     tel = TelescopePosition(name="LST-01")
 
     _z = tel.convert_telescope_altitude_to_corsika_system(
@@ -284,7 +272,6 @@ def test_altitude_transformations():
 
 
 def test_convert_all(crs_wgs84, crs_local, crs_utm):
-
     tel = TelescopePosition(name="LST-01")
 
     tel.set_coordinates("corsika", 0.0, 0.0, 2158.0 * u.m)

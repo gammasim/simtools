@@ -1,15 +1,18 @@
 import functools
 import logging
 import operator
+import re
 import time
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 import boost_histogram as bh
 import numpy as np
+import tables
 from astropy import units as u
-from astropy.table import QTable
+from astropy.table import Table
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
+from ctapipe.io import read_table, write_table
 from eventio import IACTFile
 
 from simtools import io_handler, version
@@ -19,6 +22,7 @@ from simtools.utils.general import (
     rotate,
     save_dict_to_file,
 )
+from simtools.utils.names import sanitize_name
 
 
 class HistogramNotCreated(Exception):
@@ -37,6 +41,8 @@ class CorsikaHistograms:
         Instance label.
     output_path: str
         Path where to save the output of the class methods.
+    hdf5_file_name: str
+        HDF5 file name for histogram storage.
 
     Raises
     ------
@@ -44,7 +50,7 @@ class CorsikaHistograms:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file, label=None, output_path=None):
+    def __init__(self, input_file, label=None, output_path=None, hdf5_file_name=None):
         self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
@@ -58,10 +64,17 @@ class CorsikaHistograms:
 
         self.io_handler = io_handler.IOHandler()
         _default_output_path = self.io_handler.get_output_directory(self.label, "corsika")
+
         if output_path is None:
             self.output_path = _default_output_path
         else:
             self.output_path = Path(output_path)
+
+        if hdf5_file_name is None:
+            self.hdf5_file_name = re.split(r"\.", self.input_file.name)[0] + ".hdf5"
+        else:
+            self.hdf5_file_name = hdf5_file_name
+
         self._initialize_attributes()
         self.read_event_information()
         self._initialize_header()
@@ -96,6 +109,27 @@ class CorsikaHistograms:
         self._allowed_1D_labels = {"wavelength", "time", "altitude"}
         self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
         self._header = None
+
+    @property
+    def hdf5_file_name(self):
+        """
+        Property for the hdf5 file name.
+        The idea of this property is to allow setting (or changing) the name of the hdf5 file
+         even after creating the class instance.
+        """
+        return self._hdf5_file_name
+
+    @hdf5_file_name.setter
+    def hdf5_file_name(self, hdf5_file_name):
+        """
+        Sets the hdf5_file_name to the argument passed.
+
+        Parameters
+        ----------
+        hdf5_file_name: str
+            The name of hdf5 file to be set.
+        """
+        self._hdf5_file_name = Path(self.output_path).joinpath(hdf5_file_name).absolute().as_posix()
 
     @property
     def corsika_version(self):
@@ -1083,12 +1117,17 @@ class CorsikaHistograms:
         hist, edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         return hist.reshape(1, bins), edges.reshape(1, bins + 1)
 
-    def export_histograms(self):
+    def export_histograms(self, overwrite=False):
         """
-        Export the histograms to ecsv files.
+        Export the histograms to hdf5 files.
+
+        Parameters
+        ----------
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
         """
-        self._export_1D_histograms()
-        self._export_2D_histograms()
+        self._export_1D_histograms(overwrite=overwrite)
+        self._export_2D_histograms(overwrite=False)
 
     @property
     def _meta_dict(self):
@@ -1098,17 +1137,17 @@ class CorsikaHistograms:
         Returns
         -------
         dict
-            Meta dictionary for the ECSV files with the histograms.
+            Meta dictionary for the hdf5 files with the histograms.
         """
 
         if self.__meta_dict is None:
             self.__meta_dict = {
-                "CORSIKA version": self.corsika_version,
-                "simtools version": version.__version__,
-                "Original IACT file": self.input_file.name,
+                "corsika_version": self.corsika_version,
+                "simtools_version": version.__version__,
+                "iact_file": self.input_file.name,
                 "telescope_indices": list(self.telescope_indices),
                 "individual_telescopes": self.individual_telescopes,
-                "Note": "Only lower bin edges are given.",
+                "note": "Only lower bin edges are given.",
             }
         return self.__meta_dict
 
@@ -1153,7 +1192,7 @@ class CorsikaHistograms:
             },
             "altitude": {
                 "function": "get_photon_altitude_distr",
-                "file name": "hist_1D_photon_time_distr",
+                "file name": "hist_1D_photon_altitude_distr",
                 "title": "Photon altitude of emission distribution",
                 "edges": "Altitude of emission",
                 "edges unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
@@ -1175,13 +1214,18 @@ class CorsikaHistograms:
         }
         return self.__dict_1D_distributions
 
-    def _export_1D_histograms(self):
+    def _export_1D_histograms(self, overwrite=False):
         """
         Auxiliary function to export only the 1D histograms.
+
+        Parameters
+        ----------
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
         """
 
         for _, function_dict in self._dict_1D_distributions.items():
-            self._meta_dict["Title"] = function_dict["title"]
+            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
             hist_1D_list, x_edges_list = function()
             x_edges_list = x_edges_list * function_dict["edges unit"]
@@ -1192,28 +1236,42 @@ class CorsikaHistograms:
             hist_1D_list = hist_1D_list * histogram_value_unit
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
-                    ecsv_file = (
-                        f"{function_dict['file name']}_"
-                        f"tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                    hdf5_table_name = (
+                        f"/{function_dict['file name']}_"
+                        f"tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
-                    ecsv_file = f"{function_dict['file name']}_all_tels.ecsv"
+                    hdf5_table_name = f"/{function_dict['file name']}_all_tels"
 
-                table = self.fill_ecsv_table(
+                table = self.fill_hdf5_table(
                     hist_1D_list[i_histogram],
                     x_edges_list[i_histogram],
                     None,
                     function_dict["edges"],
                     None,
                 )
-                ecsv_file = Path(self.output_path).joinpath(ecsv_file)
-                self._logger.info(f"Exporting histogram to {ecsv_file}.")
-                table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+                self._logger.info(
+                    f"Writing 1D histogram with name {hdf5_table_name} to "
+                    f"{self.hdf5_file_name}."
+                )
+                # overwrite takes precedence over append
+                if overwrite is True:
+                    append = False
+                else:
+                    append = True
+                write_table(
+                    table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite
+                )
 
     @property
-    def _dict_2D_distributions(self):
+    def _dict_2D_distributions(self, overwrite=False):
         """
         Dictionary to label the 2D distributions according to the class methods.
+
+        Parameters
+        ----------
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
 
         Returns
         -------
@@ -1270,13 +1328,17 @@ class CorsikaHistograms:
             }
         return self.__dict_2D_distributions
 
-    def _export_2D_histograms(self):
+    def _export_2D_histograms(self, overwrite):
         """
         Auxiliary function to export only the 2D histograms.
-        """
 
+        Parameters
+        ----------
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
+        """
         for property_name, function_dict in self._dict_2D_distributions.items():
-            self._meta_dict["Title"] = function_dict["title"]
+            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
 
             hist_2D_list, x_edges_list, y_edges_list = function()
@@ -1296,74 +1358,116 @@ class CorsikaHistograms:
 
             for i_histogram, _ in enumerate(x_edges_list):
                 if self.individual_telescopes:
-                    ecsv_file = (
-                        f"{self._dict_2D_distributions[property_name]['file name']}"
-                        f"_tel_index_{self.telescope_indices[i_histogram]}.ecsv"
+                    hdf5_table_name = (
+                        f"/{self._dict_2D_distributions[property_name]['file name']}"
+                        f"_tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
-                    ecsv_file = (
-                        f"{self._dict_2D_distributions[property_name]['file name']}_all_tels.ecsv"
+                    hdf5_table_name = (
+                        f"/{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
                     )
-
-                table = self.fill_ecsv_table(
+                table = self.fill_hdf5_table(
                     hist_2D_list[i_histogram],
                     x_edges_list[i_histogram],
                     y_edges_list[i_histogram],
                     function_dict["x edges"],
                     function_dict["y edges"],
                 )
-                ecsv_file = Path(self.output_path).joinpath(ecsv_file)
-                self._logger.info(f"Exporting histogram to {ecsv_file}.")
-                table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
 
-    def fill_ecsv_table(self, hist, x_edges, y_edges, x_label, y_label):
+                self._logger.info(
+                    f"Writing 2D histogram with name {hdf5_table_name} to "
+                    f"{self.hdf5_file_name}."
+                )
+                # Always appending to table due to the file previously created
+                # by self._export_1D_histograms.
+                write_table(
+                    table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
+                )
+
+    def read_hdf5(self, hdf5_file_name):
         """
-        Create and fill an ecsv table with the histogram information.
+        Read a hdf5 output file, as resulted from `self.export_histograms`.
+
+        Parameters
+        ----------
+        hdf5_file_name: str or Path
+            Name or Path of the hdf5 file to read from.
+
+        Returns
+        -------
+        list
+            The list with the astropy.Table instances for the various 1D and 2D histograms saved
+            in the hdf5 file.
+        """
+        if isinstance(hdf5_file_name, PosixPath):
+            hdf5_file_name = hdf5_file_name.absolute().as_posix()
+
+        tables_list = []
+
+        with tables.open_file(hdf5_file_name, mode="r") as file:
+            for node in file.walk_nodes("/", "Table"):
+                table_path = node._v_pathname
+                table = read_table(hdf5_file_name, table_path)
+                tables_list.append(table)
+        return tables_list
+
+    def fill_hdf5_table(self, hist, x_edges, y_edges, x_label, y_label):
+        """
+        Create and fill an hdf5 table with the histogram information.
         It works for both 1D and 2D distributions.
 
         Parameters
         ----------
         hist: numpy.ndarray
-            The counts of the histogram.
+            The counts of the histograms.
         x_edges: numpy.array
             The x edges of the histograms.
         y_edges: numpy.array
             The y edges of the histograms.
+            Use None for 1D histograms.
         x_label: str
             X edges label.
         y_label: str
             Y edges label.
+            Use None for 1D histograms.
         """
-        try:
-            x_edges_2D, y_edges_2D = np.meshgrid(x_edges[:-1], y_edges[:-1])
-            x_edges_2D_flattened, y_edges_2D_flattened, hist_2D_flattened = (
-                x_edges_2D.flatten(),
-                y_edges_2D.flatten(),
-                hist.flatten(),
+
+        # Complement metadata
+        meta_data = self._meta_dict
+        meta_data["x_edges"] = sanitize_name(x_label)
+        meta_data["x_edges_unit"] = (
+            x_edges.unit if isinstance(x_edges, u.Quantity) else u.dimensionless_unscaled
+        )
+
+        if y_edges is not None:
+            meta_data["y_edges"] = sanitize_name(y_label)
+            meta_data["y_edges_unit"] = (
+                y_edges.unit if isinstance(y_edges, u.Quantity) else u.dimensionless_unscaled
             )
-            table = QTable(
-                [
-                    x_edges_2D_flattened,
-                    y_edges_2D_flattened,
-                    hist_2D_flattened,
-                ],
-                names=(x_label, y_label, "Values"),
-                meta=self._meta_dict,
+            names = [f"{sanitize_name(y_label)}_{i}" for i in range(len(y_edges[:-1]))]
+            table = Table(
+                [hist[i, :] for i in range(len(y_edges[:-1]))],
+                names=names,
+                meta=meta_data,
             )
-        except TypeError:
-            table = QTable(
+
+        else:
+            table = Table(
                 [
                     x_edges[:-1],
                     hist,
                 ],
-                names=(x_label, "Values"),
-                meta=self._meta_dict,
+                names=(sanitize_name(x_label), sanitize_name("Values")),
+                meta=meta_data,
             )
+
         return table
 
-    def export_event_header_1D_histogram(self, event_header_element, bins=50, hist_range=None):
+    def export_event_header_1D_histogram(
+        self, event_header_element, bins=50, hist_range=None, overwrite=False
+    ):
         """
-        Export to a ecsv file the 1D histogram for the key `event_header_element` from the CORSIKA
+        Export to a hdf5 file the 1D histogram for the key `event_header_element` from the CORSIKA
         event header.
 
         Parameters
@@ -1375,18 +1479,26 @@ class CorsikaHistograms:
             Number of bins for the histogram.
         hist_range: 2-tuple
             Tuple to define the range of the histogram.
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
         """
 
         hist, edges = self.event_1D_histogram(
             event_header_element, bins=bins, hist_range=hist_range
         )
         edges *= self.event_information[event_header_element].unit
-        table = self.fill_ecsv_table(hist, edges, None, event_header_element, None)
-        ecsv_file = Path(self.output_path).joinpath(
-            f"event_1D_histograms_{event_header_element}.ecsv"
+        table = self.fill_hdf5_table(hist, edges, None, event_header_element, None)
+        hdf5_table_name = f"/event_2D_histograms_{event_header_element}"
+
+        self._logger.info(
+            f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
         )
-        self._logger.info(f"Exporting histogram to {ecsv_file}.")
-        table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+        # overwrite takes precedence over append
+        if overwrite is True:
+            append = False
+        else:
+            append = True
+        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
     def export_event_header_2D_histogram(
         self,
@@ -1394,9 +1506,10 @@ class CorsikaHistograms:
         event_header_element_2,
         bins=50,
         hist_range=None,
+        overwrite=False,
     ):
         """
-        Export to a ecsv file the 2D histogram for the key `event_header_element_1` and
+        Export to a hdf5 file the 2D histogram for the key `event_header_element_1` and
         `event_header_element_2`from the CORSIKA event header.
 
         Parameters
@@ -1411,6 +1524,8 @@ class CorsikaHistograms:
             Number of bins for the histogram.
         hist_range: 2-tuple
             Tuple to define the range of the histogram.
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
         """
         hist, x_edges, y_edges = self.event_2D_histogram(
             event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
@@ -1418,16 +1533,21 @@ class CorsikaHistograms:
         x_edges *= self.event_information[event_header_element_1].unit
         y_edges *= self.event_information[event_header_element_2].unit
 
-        table = self.fill_ecsv_table(
+        table = self.fill_hdf5_table(
             hist, x_edges, y_edges, event_header_element_1, event_header_element_2
         )
 
-        ecsv_file = Path(self.output_path).joinpath(
-            f"event_2D_histograms_{event_header_element_1}" f"_{event_header_element_2}.ecsv"
-        )
+        hdf5_table_name = f"/event_2D_histograms_{event_header_element_1}_{event_header_element_2}"
 
-        self._logger.info(f"Exporting histogram to {ecsv_file}.")
-        table.write(ecsv_file, format="ascii.ecsv", overwrite=True)
+        self._logger.info(
+            f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
+        )
+        # overwrite takes precedence over append
+        if overwrite is True:
+            append = False
+        else:
+            append = True
+        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
     @property
     def num_photons_per_telescope(self):
