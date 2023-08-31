@@ -110,4 +110,5 @@ jobs:
         run: pytest --durations=10 --color=yes --cov=./ --cov-report=xml
 
       - uses: codecov/codecov-action@v3.1.4
-        verbose: true
+        with:
+          verbose: true
