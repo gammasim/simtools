@@ -219,8 +219,8 @@ def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_te
     # write a temporary file into tmp_test_directory with the environmental variables
     _env_file = tmp_test_directory / "test_env_file"
     with open(_env_file, "w") as output:
-        output.write("LABEL=test_label\n")
-        output.write("CONFIG=test_config_file_env\n")
+        output.write("SIMTOOLS_LABEL=test_label\n")
+        output.write("SIMTOOLS_CONFIG=test_config_file_env\n")
 
     configurator.config["env_file"] = str(_env_file)
     configurator._fill_from_environmental_variables()
