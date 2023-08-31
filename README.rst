@@ -26,7 +26,7 @@ simtools
 .. image:: https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7
    :target: https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
-.. image:: https://codecov.io/gh/gammasim/simtools/branch/master/graph/badge.svg?token=AYAIRPARCH
+.. image:: https://codecov.io/gh/gammasim/simtools/branch/main/graph/badge.svg?token=AYAIRPARCH
    :target: https://codecov.io/gh/gammasim/simtools
 
 Simulation tools and applications for the `Cherenkov Telescope Array (CTAO) <https://www.cta-observatory.org>`_.
