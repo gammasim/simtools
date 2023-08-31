@@ -13,7 +13,6 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def camera_efficiency_sst(telescope_model_sst, simtel_path):
-
     telescope_model_sst.export_model_files()
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
@@ -43,7 +42,6 @@ def test_shall_run(simtel_runner_camera_efficiency):
 
 
 def test_make_run_command(simtel_runner_camera_efficiency):
-
     command = simtel_runner_camera_efficiency._make_run_command()
 
     assert "testeff" in command
@@ -67,7 +65,6 @@ def test_check_run_result(simtel_runner_camera_efficiency):
 
 
 def test_get_one_dim_distribution(simtel_runner_camera_efficiency):
-
     camera_filter_file = simtel_runner_camera_efficiency._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
     )

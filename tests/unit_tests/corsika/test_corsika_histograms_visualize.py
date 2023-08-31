@@ -26,8 +26,13 @@ def test_kernel_plot_2D_photons(corsika_histograms_instance_set_histograms, capl
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=True, telescope_indices=[0, 1, 2]
     )
-    for property_name in ["counts", "density", "direction", "time_altitude",
-                          "num_photons_per_telescope"]:
+    for property_name in [
+        "counts",
+        "density",
+        "direction",
+        "time_altitude",
+        "num_photons_per_telescope",
+    ]:
         all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_2D_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
@@ -62,8 +67,15 @@ def test_kernel_plot_1D_photons(corsika_histograms_instance_set_histograms, capl
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=False, telescope_indices=[0, 1, 2]
     )
-    labels = ["wavelength", "counts", "density", "time", "altitude", "num_photons_per_event",
-              "num_photons_per_telescope"]
+    labels = [
+        "wavelength",
+        "counts",
+        "density",
+        "time",
+        "altitude",
+        "num_photons_per_event",
+        "num_photons_per_telescope",
+    ]
 
     for property_name in labels:
         all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_1D_photons(
@@ -82,8 +94,7 @@ def test_kernel_plot_1D_photons(corsika_histograms_instance_set_histograms, capl
             corsika_histograms_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
-            if property_name in ["num_photons_per_event",
-                                 "num_photons_per_telescope"]:
+            if property_name in ["num_photons_per_event", "num_photons_per_telescope"]:
                 assert isinstance(all_figs[0], plt.Figure)
                 assert isinstance(all_fig_names[0], str)
             else:
@@ -117,15 +128,14 @@ def test_plot_1Ds(corsika_histograms_instance_set_histograms):
 
 
 def test_plot_event_headers(corsika_histograms_instance_set_histograms):
-    fig, fig_name = (corsika_histograms_visualize.
-                     plot_1D_event_header_distribution(corsika_histograms_instance_set_histograms,
-                                                       "total_energy"))
+    fig, fig_name = corsika_histograms_visualize.plot_1D_event_header_distribution(
+        corsika_histograms_instance_set_histograms, "total_energy"
+    )
     assert isinstance(fig, plt.Figure)
     assert isinstance(fig_name, str)
 
-    fig, fig_name = (corsika_histograms_visualize.
-                     plot_2D_event_header_distribution(corsika_histograms_instance_set_histograms,
-                                                       "zenith",
-                                                       "azimuth"))
+    fig, fig_name = corsika_histograms_visualize.plot_2D_event_header_distribution(
+        corsika_histograms_instance_set_histograms, "zenith", "azimuth"
+    )
     assert isinstance(fig, plt.Figure)
     assert isinstance(fig_name, str)
