@@ -256,6 +256,7 @@ def _kernel_plot_1D_photons(corsika_output_instance, property_name, log_y=True):
                 bbox_inches="tight",
             )
         all_figs.append(fig)
+        plt.close(fig)
     return all_figs
 
 
