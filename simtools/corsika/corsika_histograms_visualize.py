@@ -298,6 +298,7 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
                 f"_tel_index_{histograms_instance.telescope_indices[i_hist]}.png",
             )
         all_figs.append(fig)
+        plt.close()
     return all_figs, fig_names
 
 
