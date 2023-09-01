@@ -1,3 +1,4 @@
+import gzip
 import logging
 import shlex
 import subprocess
@@ -192,6 +193,24 @@ class RayTracing:
                 )
                 simtel.run(test=test, force=force)
 
+                photons_file_name = names.ray_tracing_file_name(
+                    self._telescope_model.site,
+                    self._telescope_model.name,
+                    self._source_distance,
+                    self.config.zenith_angle,
+                    this_off_axis,
+                    this_mirror if self.config.single_mirror_mode else None,
+                    self.label,
+                    "photons",
+                )
+                photons_file = self._output_directory.joinpath(photons_file_name)
+
+                self._logger.debug("Using gzip to compress the photons file.")
+
+                with gzip.open(photons_file.with_suffix(photons_file.suffix + ".gz"), "wb") as f:
+                    f.write(open(photons_file, "rb").read())
+                photons_file.unlink()
+
     def analyze(
         self,
         export=True,
@@ -256,7 +275,7 @@ class RayTracing:
                     "photons",
                 )
 
-                photons_file = self._output_directory.joinpath(photons_file_name)
+                photons_file = self._output_directory.joinpath(photons_file_name + ".gz")
                 tel_transmission = compute_telescope_transmission(
                     tel_transmission_pars, this_off_axis
                 )
