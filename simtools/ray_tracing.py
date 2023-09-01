@@ -1,6 +1,7 @@
 import gzip
 import logging
 import shlex
+import shutil
 import subprocess
 from copy import copy
 from math import pi, tan
@@ -207,9 +208,11 @@ class RayTracing:
 
                 self._logger.debug("Using gzip to compress the photons file.")
 
-                with gzip.open(photons_file.with_suffix(photons_file.suffix + ".gz"), "wb") as f:
-                    f.write(open(photons_file, "rb").read())
-                photons_file.unlink()
+                with open(photons_file, "rb") as f_in:
+                    with gzip.open(
+                        photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
+                    ) as f_out:
+                        shutil.copyfileobj(f_in, f_out)
 
     def analyze(
         self,
@@ -347,22 +350,24 @@ class RayTracing:
         """
 
         try:
-            with open(file, encoding="utf-8") as _stdin:
-                rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
-                    shlex.split(
-                        f"{self._simtel_source_path}/sim_telarray/bin/rx "
-                        f"-f {containment_fraction:.2f} -v"
-                    ),
-                    stdin=_stdin,
-                    stdout=subprocess.PIPE,
-                ).communicate()[0]
+            rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
+                shlex.split(
+                    f"{self._simtel_source_path}/sim_telarray/bin/rx "
+                    f"-f {containment_fraction:.2f} -v"
+                ),
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+            )
+            with gzip.open(file, "rb") as _stdin:
+                with rx_output.stdin:
+                    shutil.copyfileobj(_stdin, rx_output.stdin)
+                    try:
+                        rx_output = rx_output.communicate()[0].splitlines()[-1:][0].split()
+                    except IndexError:
+                        self._logger.error(f"Invalid output from rx: {rx_output}")
+                        raise
         except FileNotFoundError:
             self._logger.error(f"Photon list file not found: {file}")
-            raise
-        try:
-            rx_output = rx_output.splitlines()[-1:][0].split()
-        except IndexError:
-            self._logger.error(f"Invalid output from rx: {rx_output}")
             raise
         containment_diameter_cm = 2 * float(rx_output[0])
         x_mean = float(rx_output[1])
