@@ -4,6 +4,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from matplotlib.backends.backend_pdf import PdfPages
 
 _logger = logging.getLogger(__name__)
 
@@ -576,3 +577,21 @@ def plot_2D_event_header_distribution(
     fig.colorbar(mesh)
     fig_name = f"hist_2D_{event_header_element_1}_{event_header_element_2}"
     return fig, fig_name
+
+
+def save_figs_to_pdf(figs, pdf_file_name):
+    """
+    Save figures from corsika histograms to an output pdf file.
+
+    Parameters
+    ----------
+    figs: list
+        List with the figures output by `corsika_output_visualize.py`.
+    pdf_file_name: str
+        Name of the pdf file.
+    """
+    pdf_pages = PdfPages(pdf_file_name)
+    for fig in figs:
+        plt.tight_layout()
+        pdf_pages.savefig(fig)
+    pdf_pages.close()
