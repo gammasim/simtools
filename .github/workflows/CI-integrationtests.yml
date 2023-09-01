@@ -86,8 +86,8 @@ jobs:
 
       - name: run sim_telarray
         run: |
-          echo "${SIMTEL_PATH}"
-          ls "${SIMTEL_PATH}"
+          echo "${SIMTOOLS_SIMTEL_PATH}"
+          ls "${SIMTOOLS_SIMTEL_PATH}"
 
       - name: Integration tests
         shell: bash -l {0}
