@@ -614,8 +614,6 @@ def ray_tracing_file_name(
     name += f"_mirror{mirror_number}" if mirror_number is not None else ""
     name += f"_{label}" if label is not None else ""
     name += ".log" if base == "log" else ".lis"
-    if base == "photons":
-        name += ".gz"
     return name
 
 
