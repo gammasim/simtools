@@ -14,10 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def common_args(simtel_path_no_mock):
+def common_args(simtel_path):
     return {
         "label": "test-corsika-simtel-runner",
-        "simtel_source_path": simtel_path_no_mock,
+        "simtel_source_path": simtel_path,
     }
 
 
@@ -82,7 +82,6 @@ def simtel_args(array_model, simtel_config_data):
 
 @pytest.fixture
 def corsika_simtel_runner(common_args, corsika_args, simtel_args):
-
     corsika_simtel_runner = CorsikaSimtelRunner(
         common_args=common_args, corsika_args=corsika_args, simtel_args=simtel_args
     )
@@ -121,7 +120,6 @@ def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
 
 
 def test_export_multipipe_script(corsika_simtel_runner):
-
     corsika_simtel_runner.export_multipipe_script()
     script = Path(corsika_simtel_runner.corsika_config._config_file_path.parent).joinpath(
         corsika_simtel_runner.corsika_config.get_file_name("multipipe")
@@ -137,7 +135,6 @@ def test_export_multipipe_script(corsika_simtel_runner):
 
 
 def test_export_multipipe_executable(corsika_simtel_runner):
-
     corsika_simtel_runner.export_multipipe_script()
     multipipe_file = Path(corsika_simtel_runner.corsika_config._config_file_path.parent).joinpath(
         corsika_simtel_runner.corsika_config.get_file_name("multipipe")
@@ -156,7 +153,6 @@ def test_export_multipipe_executable(corsika_simtel_runner):
 
 
 def test_make_run_command(corsika_simtel_runner):
-
     command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
     assert "bin/sim_telarray" in command
     assert "-C telescope_theta=20" in command
@@ -166,7 +162,6 @@ def test_make_run_command(corsika_simtel_runner):
 
 
 def test_get_info_for_file_name(corsika_simtel_runner):
-
     info_for_file_name = corsika_simtel_runner.get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
     assert info_for_file_name["primary"] == "gamma"
