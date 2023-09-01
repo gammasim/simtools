@@ -61,6 +61,7 @@ class RayTracing:
         """
 
         self._logger = logging.getLogger(__name__)
+        self._logger.debug("Initializing RayTracing class")
 
         self._simtel_source_path = Path(simtel_source_path)
         self._io_handler = io_handler.IOHandler()
@@ -86,7 +87,8 @@ class RayTracing:
         if self.config.single_mirror_mode:
             # Recalculating source distance.
             self._logger.debug(
-                "Single mirror mode is activate - source distance is being recalculated to 2 * flen"
+                "Single mirror mode is activated - "
+                "source distance is being recalculated to 2 * flen"
             )
             mir_flen = self._telescope_model.get_parameter_value("mirror_focal_length")
             self._source_distance = 2 * float(mir_flen) * u.cm.to(u.km)  # km
