@@ -238,7 +238,7 @@ For example:
 * "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
 
 Any input telescope names can (and should) be validated by the function validate_telescope_name
-(see module :ref:`util.names <utilnames>`).
+(see module :ref:`utils.names <utilsnames>`).
 For the Site field, any different capitalization (e.g "south") or site names like "paranal" and
 "lapalma" will be accepted
 and converted to the standard ones. The same applies to the Class field.
@@ -252,7 +252,7 @@ Validating names
 
 Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
-are found in  :ref:`util.names <utilnames>`. The function validate_name receives the input string
+are found in  :ref:`utils.names <utilsnames>`. The function validate_name receives the input string
 and a name dictionary,
 that is usually called all_something_names. This dictionary contain the possible names (as keys) and
 lists

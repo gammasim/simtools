@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import os
 from copy import copy
 from pathlib import Path
 
@@ -42,13 +43,6 @@ def test_fill_from_config_dict(configurator, args_dict):
     configurator._fill_from_config_dict({"config": "my_file", "test": True})
 
     assert _tmp_config == configurator.config
-
-
-def test_fill_from_environmental_variables(configurator, args_dict):
-    # _fill_from_environmental_variables() is always called after _fill_from_command_line()
-    configurator._fill_from_command_line(arg_list=[])
-    configurator._fill_from_environmental_variables()
-    assert args_dict == configurator.config
 
 
 def test_fill_from_config_file_not_existing_file(configurator):
@@ -173,7 +167,7 @@ def test_get_db_parameters(configurator, args_dict):
     assert configurator.config == args_dict
 
 
-def test_initialize_output(configurator, args_dict):
+def test_initialize_output(configurator):
     configurator.parser.initialize_output_arguments()
     configurator._fill_from_command_line(arg_list=[])
 
@@ -187,3 +181,49 @@ def test_initialize_output(configurator, args_dict):
     configurator.config["output_file"] = "unit_test.txt"
     configurator._initialize_output()
     assert configurator.config["output_file"] == "unit_test.txt"
+
+
+def test_fill_from_environmental_variables(configurator):
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(arg_list=[])
+
+    _config_save = copy(configurator.config)
+
+    # this is not a configuration parameter and therefore should not be set
+    os.environ["SIMTOOLS_TEST_ENV_VARIABLE"] = "test_value"
+    configurator._fill_from_environmental_variables()
+    if "SIMTOOLS_TEST_ENV_VARIABLE" in os.environ:
+        del os.environ["SIMTOOLS_TEST_ENV_VARIABLE"]
+    assert "test_env_variable" not in configurator.config
+
+    # this is a valid configuration parameter, but already configured
+    # _fill_from_environmental_variables() should not change it
+    os.environ["SIMTOOLS_LOG_LEVEL"] = "DEBUG"
+    configurator._fill_from_environmental_variables()
+    assert configurator.config["log_level"] == _config_save["log_level"] == "info"
+    if "SIMTOOLS_LOG_LEVEL" in os.environ:
+        del os.environ["SIMTOOLS_LOG_LEVEL"]
+
+    # this is a valid configuration parameter, but not yet configured
+    os.environ["SIMTOOLS_CONFIG"] = "test_config_file"
+    configurator._fill_from_environmental_variables()
+    assert configurator.config["config"] == "test_config_file"
+    if "SIMTOOLS_CONFIG" in os.environ:
+        del os.environ["SIMTOOLS_CONFIG"]
+
+
+def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(arg_list=[])
+
+    # write a temporary file into tmp_test_directory with the environmental variables
+    _env_file = tmp_test_directory / "test_env_file"
+    with open(_env_file, "w") as output:
+        output.write("SIMTOOLS_LABEL=test_label\n")
+        output.write("SIMTOOLS_CONFIG=test_config_file_env\n")
+
+    configurator.config["env_file"] = str(_env_file)
+    configurator._fill_from_environmental_variables()
+
+    assert configurator.config["label"] == "test_label"
+    assert configurator.config["config"] == "test_config_file_env"

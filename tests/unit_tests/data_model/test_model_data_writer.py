@@ -13,7 +13,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_write_metadata(tmp_test_directory):
-
     # test writer of metadata
     _metadata = {"name": "test_metadata"}
     w_1 = writer.ModelDataWriter()
@@ -41,7 +40,6 @@ def test_write_metadata(tmp_test_directory):
 
 
 def test_write_data(tmp_test_directory):
-
     w_2 = writer.ModelDataWriter()
     w_2.write_data(None)
 
@@ -54,7 +52,6 @@ def test_write_data(tmp_test_directory):
 
 
 def test_astropy_data_format():
-
     assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
     assert writer.ModelDataWriter._astropy_data_format("ecsv") == "ascii.ecsv"
     assert writer.ModelDataWriter._astropy_data_format("ascii.ecsv") == "ascii.ecsv"

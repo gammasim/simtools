@@ -66,15 +66,23 @@ def file_has_text(file, text):
     bool
         True if file has text.
     """
-    with open(file, "rb", 0) as string_file, mmap.mmap(
-        string_file.fileno(), 0, access=mmap.ACCESS_READ
-    ) as text_file_input:
-        re_search_1 = re.compile(f"{text}".encode())
-        search_result_1 = re_search_1.search(text_file_input)
-        if search_result_1 is None:
-            return False
 
-        return True
+    try:
+        with open(file, "rb", 0) as string_file, mmap.mmap(
+            string_file.fileno(), 0, access=mmap.ACCESS_READ
+        ) as text_file_input:
+            re_search_1 = re.compile(f"{text}".encode())
+            search_result_1 = re_search_1.search(text_file_input)
+            if search_result_1 is None:
+                return False
+
+            return True
+    except FileNotFoundError:
+        _logger.warning(f"File {file} not found.")
+        return False
+    except ValueError:
+        _logger.warning(f"File {file} is empty.")
+        return False
 
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False):
@@ -450,6 +458,8 @@ def sort_arrays(*args):
         Sorted args.
     """
 
+    if len(args) == 0:
+        return args
     order_array = copy.copy(args[0])
     new_args = []
     for arg in args:
@@ -573,8 +583,8 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and the dict to be given as\
-    config_data. This function is specific for methods from_kwargs in classes which use the \
+    Separate kwargs into the arguments expected for instancing a class and the dict to be given as
+    config_data. This function is specific for methods from_kwargs in classes which use the
     validate_config_data system.
 
     Parameters
@@ -621,6 +631,7 @@ def program_is_executable(program):
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:
+            _logger.debug("PATH environment variable is not set.")
             return None
 
     return None
@@ -719,8 +730,7 @@ def change_dict_keys_case(data_dict, lower_case=True):
             else:
                 _return_dict[_key_changed] = data_dict[key]
     except AttributeError:
-        _logger = logging.getLogger(__name__)
-        _logger.error(f"Invalid method argument: {data_dict}")
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
 
     return _return_dict
@@ -763,8 +773,13 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
 
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
-    if not all(isinstance(variable, allowed_types) for variable in [x, y]):
+    if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")
+
+    if not isinstance(x, (list, np.ndarray)):
+        x = [x]
+    if not isinstance(y, (list, np.ndarray)):
+        y = [y]
 
     if (
         np.sum(
@@ -774,11 +789,6 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
         == 0
     ):
         raise TypeError("x and y are not from the same type! Cannot perform transformation.")
-
-    if not isinstance(x, (list, np.ndarray)):
-        x = [x]
-    if not isinstance(y, (list, np.ndarray)):
-        y = [y]
 
     if len(x) != len(y):
         raise RuntimeError(

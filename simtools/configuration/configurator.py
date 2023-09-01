@@ -5,6 +5,7 @@ import uuid
 
 import astropy.units as u
 import yaml
+from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools import io_handler
@@ -260,16 +261,22 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (i.e., parameter is None) \
-        from environmental variables.
+        Fill any unconfigured configuration parameters (i.e., parameter is None)
+        from environmental variables or from file (default: ".env").
 
         """
 
         _env_dict = {}
         try:
+            load_dotenv(self.config["env_file"])
+        except KeyError:
+            pass
+        try:
             for key, value in self.config.items():
+                # environmental variables for simtools should always start with SIMTOOLS_
+                env_variable_to_read = f"SIMTOOLS_{key.upper()}"
                 if value is None:
-                    _env_dict[key] = os.environ.get(key.upper())
+                    _env_dict[key] = os.environ.get(env_variable_to_read)
         except AttributeError:
             pass
 

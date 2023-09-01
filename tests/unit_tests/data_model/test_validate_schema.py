@@ -11,7 +11,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_validate_data_type_datetime():
-
     date_validator = validator.SchemaValidator()
 
     date_key = "creation_time"
@@ -35,7 +34,6 @@ def test_validate_data_type_datetime():
 
 
 def test_validate_data_type_email():
-
     date_validator = validator.SchemaValidator()
 
     email_key = "email"
@@ -50,7 +48,6 @@ def test_validate_data_type_email():
 
 
 def test_validate_data_type_schema_str():
-
     date_validator = validator.SchemaValidator()
     test_key = "subtype"
     test_schema_1 = {"type": "str"}
@@ -59,7 +56,6 @@ def test_validate_data_type_schema_str():
 
 
 def test_validate_data_type_schema_float():
-
     date_validator = validator.SchemaValidator()
     test_key = "subtype"
     test_schema_2 = {"type": "float"}
@@ -74,7 +70,6 @@ def test_validate_data_type_schema_float():
 
 
 def test_validate_data_type_schema_bool():
-
     date_validator = validator.SchemaValidator()
     test_key = "subtype"
     test_schema_4 = {"type": "bool"}
@@ -84,7 +79,6 @@ def test_validate_data_type_schema_bool():
 
 
 def test_validate_data_type_schema_int():
-
     date_validator = validator.SchemaValidator()
     test_key = "subtype"
     test_schema_3 = {"type": "int"}
@@ -102,7 +96,6 @@ def test_validate_data_type_schema_int():
 
 
 def test_process_schema():
-
     data_validator = validator.SchemaValidator()
 
     with pytest.raises(TypeError):
@@ -121,7 +114,6 @@ def test_process_schema():
 
 
 def test_validate_and_transform():
-
     date_validator = validator.SchemaValidator()
     date_validator.validate_and_transform()
 
@@ -135,7 +127,6 @@ def test_validate_and_transform():
 
 
 def test_validate_schema():
-
     date_validator = validator.SchemaValidator()
     reference_schema = get_generic_instrument_reference_schema()
     test_schema_1 = get_instrument_test_schema()
@@ -156,7 +147,6 @@ def test_validate_schema():
 
 
 def test_validate_list():
-
     date_validator = validator.SchemaValidator()
     date_validator._reference_schema = get_generic_instrument_reference_schema()
 
@@ -179,7 +169,6 @@ def test_validate_list():
 
 
 def test_check_if_field_is_optional():
-
     date_validator = validator.SchemaValidator()
 
     test_value_1 = {"required": False}
@@ -199,7 +188,6 @@ def test_check_if_field_is_optional():
 
 
 def test_remove_line_feed():
-
     test_string_1 = "ABCK sdlkfjs sdlkf jsd "
     test_string_2 = "ABCK\nsdlkfjs sdlkf\njsd "
     test_string_3 = "ABCK\rsdlkfjs sdlkf\njsd "
@@ -219,7 +207,6 @@ def test_remove_line_feed():
 
 
 def get_generic_workflow_config():
-
     return {
         "CTASIMPIPE": {
             "ACTIVITY": {"NAME": "workflow_name"},
@@ -234,7 +221,6 @@ def get_generic_workflow_config():
 
 
 def get_instrument_test_schema():
-
     return {
         "instrument": {
             "site": "north",
@@ -248,7 +234,6 @@ def get_instrument_test_schema():
 
 
 def get_generic_instrument_reference_schema():
-
     return {
         "instrument": {
             "site": {"type": "str", "required": True},
