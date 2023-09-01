@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import shutil
 
 import astropy.units as u
 import pytest
@@ -104,3 +105,36 @@ def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
             config_data=config_data,
         )
         assert "Invalid TelescopeModel" in caplog.text
+
+
+def test_ray_tracing_read_results(simtel_path, io_handler, telescope_model_lst, caplog):
+    config_data = {
+        "source_distance": 10 * u.km,
+        "zenith_angle": 20 * u.deg,
+        "off_axis_angle": [0, 0] * u.deg,
+    }
+
+    # ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv
+
+    ray = RayTracing(
+        telescope_model=telescope_model_lst,
+        simtel_source_path=simtel_path,
+        config_data=config_data,
+        label="tune_psf",
+    )
+
+    output_directory = ray._output_directory
+    output_directory.mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv",
+        output_directory.joinpath("results"),
+    )
+    shutil.copy(
+        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_tune_psf.lis.gz",
+        output_directory,
+    )
+    ray.analyze(force=False)
+
+    assert ray._has_results is True
+    assert len(ray._results) > 0
+    assert ray.get_mean("d80_cm").value == pytest.approx(3.1209512394646493, abs=1e-5)
