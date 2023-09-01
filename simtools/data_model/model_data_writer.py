@@ -39,8 +39,8 @@ class ModelDataWriter:
         """
         Write model data and metadata
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata: dict
             Metadata to be written.
         product_data: astropy Table
