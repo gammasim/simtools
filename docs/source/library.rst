@@ -23,5 +23,5 @@ simtools is composed of the following modules and module groups:
   ray_tracing
   sim_telarray
   simulators
-  util
+  utils
   visualization
