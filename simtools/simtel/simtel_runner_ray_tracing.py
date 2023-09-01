@@ -224,17 +224,10 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         self._logger.debug("Everything looks fine with output file.")
 
-        self._logger.debug("Using gzip to compress the photons file.")
-        import gzip
-
-        self._photons_file += ".gz"
-        with gzip.open(self._photons_file, "wb") as f:
-            f.write(open(self._photons_file, "rb").read())
-
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid,"""
         n_lines = 0
-        with open(self._photons_file, "r", encoding="utf-8") as ff:
+        with open(self._photons_file, "rb") as ff:
             for _ in ff:
                 n_lines += 1
                 if n_lines > 100:
