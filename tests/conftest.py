@@ -170,7 +170,7 @@ def telescope_model_lst(db_config, io_handler):
         telescope_model_name="LST-1",
         model_version="Prod5",
         mongo_db_config=db_config,
-        label="test-telecope-model-lst",
+        label="validate_camera_efficiency",
     )
     return telescope_model_LST
 
