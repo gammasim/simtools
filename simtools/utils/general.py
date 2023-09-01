@@ -916,7 +916,10 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
         indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
             distance_sorted < radial_edges[i_radial + 1]
         )
-        histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
+        if weights[i_radial] != 0:
+            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
+        else:
+            histogram_1D[i_radial] = 0
     return histogram_1D, radial_edges
 
 
