@@ -397,7 +397,8 @@ class Simulator:
         for file in input_file_list:
             run = self._guess_run_from_file(file)
             self._fill_results(file, run)
-            self.runs.append(run)
+            if run not in self.runs:
+                self.runs.append(run)
 
     def simulate(self, input_file_list=None):
         """
@@ -709,7 +710,9 @@ class Simulator:
 
         """
 
-        if len(self._results["sub_out"]) == 0 and input_file_list is not None:
+        if len(self._results["sub_out"]) == 0:
+            if input_file_list is None:
+                return {"Walltime/run [sec]": np.nan}
             self._fill_results_without_run(input_file_list)
 
         runtime = []
