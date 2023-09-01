@@ -139,3 +139,18 @@ def test_plot_event_headers(corsika_histograms_instance_set_histograms):
     )
     assert isinstance(fig, plt.Figure)
     assert isinstance(fig_name, str)
+
+
+def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler):
+    output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.pdf")
+    figs_list = []
+    for function_label in [
+        "plot_photon_per_event_distr",
+        "plot_photon_per_telescope_distr",
+    ]:
+        function = getattr(corsika_histograms_visualize, function_label)
+        figs, fig_names = function(corsika_histograms_instance_set_histograms)
+        figs_list.append(figs)
+    figs_list = np.array(figs_list).flatten()
+    corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)
+    assert output_file.exists()
