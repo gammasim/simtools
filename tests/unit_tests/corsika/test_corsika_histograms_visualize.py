@@ -149,7 +149,7 @@ def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler
         "plot_photon_per_telescope_distr",
     ]:
         function = getattr(corsika_histograms_visualize, function_label)
-        figs, fig_names = function(corsika_histograms_instance_set_histograms)
+        figs, _ = function(corsika_histograms_instance_set_histograms)
         figs_list.append(figs)
     figs_list = np.array(figs_list).flatten()
     corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)
