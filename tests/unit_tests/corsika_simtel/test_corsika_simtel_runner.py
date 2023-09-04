@@ -14,10 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def common_args(simtel_path_no_mock):
+def common_args(simtel_path):
     return {
         "label": "test-corsika-simtel-runner",
-        "simtel_source_path": simtel_path_no_mock,
+        "simtel_source_path": simtel_path,
     }
 
 
