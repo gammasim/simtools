@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import gzip
 import logging
 import shutil
 
@@ -7,6 +8,36 @@ import astropy.units as u
 import pytest
 
 from simtools.ray_tracing import RayTracing
+from simtools.utils import names
+
+
+@pytest.fixture
+def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
+    """A RayTracing instance with results read in that were simulated before"""
+    config_data = {
+        "source_distance": 10 * u.km,
+        "zenith_angle": 20 * u.deg,
+        "off_axis_angle": [0, 0] * u.deg,
+    }
+
+    ray_tracing_lst = RayTracing(
+        telescope_model=telescope_model_lst,
+        simtel_source_path=simtel_path,
+        config_data=config_data,
+        label="tune_psf",
+    )
+
+    output_directory = ray_tracing_lst._output_directory
+    output_directory.mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv",
+        output_directory.joinpath("results"),
+    )
+    shutil.copy(
+        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_tune_psf.lis.gz",
+        output_directory,
+    )
+    return ray_tracing_lst
 
 
 def test_ray_tracing_from_dict(simtel_path, io_handler, telescope_model_mst, caplog):
@@ -107,34 +138,109 @@ def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
         assert "Invalid TelescopeModel" in caplog.text
 
 
-def test_ray_tracing_read_results(simtel_path, io_handler, telescope_model_lst, caplog):
+def test_ray_tracing_read_results(ray_tracing_lst):
+    ray_tracing_lst.analyze(force=False)
+
+    assert ray_tracing_lst._has_results is True
+    assert len(ray_tracing_lst._results) > 0
+    assert ray_tracing_lst.get_mean("d80_cm").value == pytest.approx(3.1209512394646493, abs=1e-5)
+
+
+def test_process_rx(simtel_path_no_mock, telescope_model_lst, tmp_test_directory, caplog):
+    """
+    Test the process_rx method of the RayTracing class with an empty file
+    and a non-existing file
+    """
+
     config_data = {
         "source_distance": 10 * u.km,
         "zenith_angle": 20 * u.deg,
         "off_axis_angle": [0, 0] * u.deg,
     }
 
-    # ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv
+    ray = RayTracing(
+        telescope_model=telescope_model_lst,
+        simtel_source_path=simtel_path_no_mock,
+        config_data=config_data,
+        label="empty_file",
+    )
+    with gzip.open(tmp_test_directory / "empty_file.gz", "wb"):
+        pass
+    with pytest.raises(IndexError):
+        ray._process_rx(file=tmp_test_directory / "empty_file.gz")
+        assert "Invalid output from rx" in caplog.text
+    with pytest.raises(FileNotFoundError):
+        ray._process_rx(file=tmp_test_directory / "non_existing_file.gz")
+        assert "Photon list file not found" in caplog.text
+
+
+def test_export_results(simtel_path, telescope_model_lst, caplog):
+    """
+    Test the export_results method of the RayTracing class without results
+    """
+
+    config_data = {
+        "source_distance": 10 * u.km,
+        "zenith_angle": 20 * u.deg,
+        "off_axis_angle": [0, 0] * u.deg,
+    }
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         simtel_source_path=simtel_path,
         config_data=config_data,
-        label="tune_psf",
+        label="export_results",
     )
+    ray.export_results()
+    assert "Cannot export results because it does not exist" in caplog.text
 
-    output_directory = ray._output_directory
-    output_directory.mkdir(parents=True, exist_ok=True)
-    shutil.copy(
-        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv",
-        output_directory.joinpath("results"),
-    )
-    shutil.copy(
-        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_tune_psf.lis.gz",
-        output_directory,
-    )
-    ray.analyze(force=False)
 
-    assert ray._has_results is True
-    assert len(ray._results) > 0
-    assert ray.get_mean("d80_cm").value == pytest.approx(3.1209512394646493, abs=1e-5)
+def test_ray_tracing_plot(ray_tracing_lst, caplog):
+    """
+    Test the plot method of the RayTracing class with an invalid key and a valid key
+    """
+
+    ray_tracing_lst.analyze(force=False)
+    # First test a wrong key
+    with pytest.raises(KeyError):
+        ray_tracing_lst.plot(key="invalid_key")
+        assert "Invalid key" in caplog.text
+
+    # Now test a valid key
+    ray_tracing_lst.plot(key="d80_cm", save=True)
+    assert "Saving fig in" in caplog.text
+    plot_file_name = names.ray_tracing_plot_file_name(
+        "d80_cm",
+        ray_tracing_lst._telescope_model.site,
+        ray_tracing_lst._telescope_model.name,
+        ray_tracing_lst._source_distance,
+        ray_tracing_lst.config.zenith_angle,
+        ray_tracing_lst.label,
+    )
+    plot_file = ray_tracing_lst._output_directory.joinpath("figures").joinpath(plot_file_name)
+    assert plot_file.exists() is True
+
+
+def test_ray_tracing_invalid_key(ray_tracing_lst, caplog):
+    """
+    Test the a few methods of the RayTracing class with an invalid key
+    """
+
+    with pytest.raises(KeyError):
+        ray_tracing_lst.plot_histogram(key="invalid_key")
+        assert "Invalid key" in caplog.text
+
+    with pytest.raises(KeyError):
+        ray_tracing_lst.get_mean(key="invalid_key")
+        assert "Invalid key" in caplog.text
+
+    with pytest.raises(KeyError):
+        ray_tracing_lst.get_std_dev(key="invalid_key")
+        assert "Invalid key" in caplog.text
+
+
+def test_ray_tracing_no_images(ray_tracing_lst, caplog):
+    """Test the images method of the RayTracing class with no images"""
+
+    assert ray_tracing_lst.images() is None
+    assert "No image found" in caplog.text
