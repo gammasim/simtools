@@ -302,9 +302,6 @@ def _plot_figures(corsika_histograms_instance):
     for function_name in plot_function_names:
         function = getattr(corsika_histograms_visualize, function_name)
         figures = function(corsika_histograms_instance)
-        """for figure, figure_name in zip(figures, figure_names):
-
-            logger.info(f"Saving histogram to {output_file_name}")"""
         figure_list.append(figures)
     figure_list = np.array(figure_list).flatten()
     core_name = re.sub(r"\.hdf5$", "", corsika_histograms_instance.hdf5_file_name)
