@@ -213,6 +213,7 @@ class RayTracing:
                         photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
                     ) as f_out:
                         shutil.copyfileobj(f_in, f_out)
+                photons_file.unlink()
 
     def analyze(
         self,
