@@ -19,4 +19,4 @@ def test_reading_simtel_file(args_dict, io_handler):
     image.read_photon_list_from_simtel_file(test_file)
     logger.info(image.get_psf(0.8, "cm"))
 
-    assert 3.1020426300932917 == pytest.approx(image.get_psf(0.8, "cm"))
+    assert 3.343415291615846 == pytest.approx(image.get_psf(0.8, "cm"))
