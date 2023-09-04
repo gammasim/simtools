@@ -146,7 +146,9 @@ def test_ray_tracing_read_results(ray_tracing_lst):
     assert ray_tracing_lst.get_mean("d80_cm").value == pytest.approx(4.256768651160611, abs=1e-5)
 
 
-def test_process_rx(simtel_path_no_mock, telescope_model_lst, tmp_test_directory, caplog):
+def test_process_rx(
+    simtel_path_no_mock, io_handler, telescope_model_lst, tmp_test_directory, caplog
+):
     """
     Test the process_rx method of the RayTracing class with an empty file
     and a non-existing file
