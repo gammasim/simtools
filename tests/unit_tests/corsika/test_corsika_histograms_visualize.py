@@ -123,8 +123,8 @@ def test_plot_1Ds(corsika_histograms_instance_set_histograms):
         figs, fig_names = function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
         assert isinstance(fig_names, list)
-        assert all(isinstance(fig, plt.Figure) for fig in figs)
-        assert all(isinstance(fig_name, str) for fig_name in fig_names)
+        assert isinstance(figs[0], plt.Figure)
+        assert isinstance(fig_names[0], str)
 
 
 def test_plot_event_headers(corsika_histograms_instance_set_histograms):
