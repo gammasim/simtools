@@ -515,7 +515,7 @@ class RayTracing:
         """
         images = []
         for this_off_axis in self.config.off_axis_angle:
-            if this_off_axis in self._psf_images:
+            if self._psf_images and this_off_axis in self._psf_images:
                 images.append(self._psf_images[this_off_axis])
         if len(images) == 0:
             self._logger.error("No image found")
