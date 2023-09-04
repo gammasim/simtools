@@ -24,17 +24,17 @@ def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
         telescope_model=telescope_model_lst,
         simtel_source_path=simtel_path,
         config_data=config_data,
-        label="tune_psf",
+        label="validate_optics",
     )
 
     output_directory = ray_tracing_lst._output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_tune_psf.ecsv",
+        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
-        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_tune_psf.lis.gz",
+        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_validate_optics.lis.gz",
         output_directory,
     )
     return ray_tracing_lst
@@ -143,7 +143,7 @@ def test_ray_tracing_read_results(ray_tracing_lst):
 
     assert ray_tracing_lst._has_results is True
     assert len(ray_tracing_lst._results) > 0
-    assert ray_tracing_lst.get_mean("d80_cm").value == pytest.approx(3.1209512394646493, abs=1e-5)
+    assert ray_tracing_lst.get_mean("d80_cm").value == pytest.approx(4.256768651160611, abs=1e-5)
 
 
 def test_process_rx(simtel_path_no_mock, telescope_model_lst, tmp_test_directory, caplog):
@@ -237,6 +237,15 @@ def test_ray_tracing_invalid_key(ray_tracing_lst, caplog):
     with pytest.raises(KeyError):
         ray_tracing_lst.get_std_dev(key="invalid_key")
         assert "Invalid key" in caplog.text
+
+
+def test_ray_tracing_get_std_dev(ray_tracing_lst):
+    """Test the get_std_dev method of the RayTracing class"""
+
+    ray_tracing_lst.analyze(force=False)
+    assert ray_tracing_lst.get_std_dev(key="d80_cm").value == pytest.approx(
+        0.8418404935128992, abs=1e-5
+    )
 
 
 def test_ray_tracing_no_images(ray_tracing_lst, caplog):
