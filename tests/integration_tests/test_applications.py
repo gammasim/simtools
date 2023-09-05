@@ -343,7 +343,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--output_path",
             "TESTMODELDIR/",
         ]
@@ -363,7 +363,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_figures_and_tables.hdf5",
@@ -375,7 +375,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/" "tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_output.hdf5",
@@ -387,7 +387,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_1D_and_2D_run_header.hdf5",
@@ -404,7 +404,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_1D_run_header.hdf5",
@@ -418,7 +418,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_2D_run_header.hdf5",
@@ -433,7 +433,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_individual_telescopes_and_indices.hdf5",
@@ -448,7 +448,7 @@ APP_LIST = {
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
-            "--png",
+            "--pdf",
             "--hdf5",
             "--hdf5_file_name",
             "test_file_telescope_indices.hdf5",

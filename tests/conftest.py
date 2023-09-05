@@ -164,7 +164,7 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def telescope_model_lst(db, db_config, io_handler):
+def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
         telescope_model_name="LST-1",
@@ -176,7 +176,20 @@ def telescope_model_lst(db, db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_sst(db, db_config, io_handler):
+def telescope_model_mst(db_config, io_handler):
+    tel = TelescopeModel(
+        site="north",
+        telescope_model_name="mst-FlashCam-D",
+        model_version="Prod5",
+        label="test-telescope-model-mst",
+        mongo_db_config=db_config,
+    )
+
+    return tel
+
+
+@pytest.fixture
+def telescope_model_sst(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
         telescope_model_name="SST-D",

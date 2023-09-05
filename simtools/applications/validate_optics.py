@@ -55,7 +55,7 @@
     .. code-block:: console
 
         simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0 \
-        --zenith 20 --src_distance 11 --test
+        --zenith 20 --src_distance 10 --test
 
     The output is saved in simtools-output/validate_optics
 
