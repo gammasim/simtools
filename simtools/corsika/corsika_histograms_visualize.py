@@ -91,7 +91,7 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
                 f"{histograms_instance._dict_2D_distributions[property_name]['file name']}"
-                f"_all_tels"
+                "_all_tels"
             )
         else:
             ax.text(
@@ -275,7 +275,7 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
                 f"{histograms_instance._dict_1D_distributions[property_name]['file name']}"
-                f"_all_tels"
+                "_all_tels"
             )
         else:
             ax.set_title(
