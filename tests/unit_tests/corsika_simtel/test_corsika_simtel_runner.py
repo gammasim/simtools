@@ -161,6 +161,16 @@ def test_make_run_command(corsika_simtel_runner):
     assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
 
 
+def test_make_run_command_divergent(corsika_simtel_runner):
+    corsika_simtel_runner.label = "test-corsika-simtel-runner-divergent-pointing"
+    command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+    assert "bin/sim_telarray" in command
+    assert "-W telescope_theta=20" in command
+    assert "-W telescope_phi=0" in command
+    assert "-C show=all" in command
+    assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
+
+
 def test_get_info_for_file_name(corsika_simtel_runner):
     info_for_file_name = corsika_simtel_runner.get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
