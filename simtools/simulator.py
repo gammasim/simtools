@@ -184,8 +184,11 @@ class Simulator:
         if self.simulator == "simtel":
             self._load_sim_tel_config_and_model(config_data)
         if self.simulator == "corsika_simtel":
-            self._load_corsika_config_and_model(config_data)
-            self._load_sim_tel_config_and_model(config_data)
+            config_showers, config_arrays = self._separate_corsika_and_simtel_config_data(
+                config_data
+            )
+            self._load_corsika_config_and_model(config_showers)
+            self._load_sim_tel_config_and_model(config_arrays)
 
     def _load_corsika_config_and_model(self, config_data):
         """
@@ -219,11 +222,11 @@ class Simulator:
             "corsika_parameters_file", None
         )
 
-        # Remove sim_telarray parameters from the CORSIKA config dictionary
-        # TODO - Replace this with a more elegant solution!
-        tel_keys = [k for k in self._corsika_config_data.keys() if k[1:4] in ["ST-", "CT-"]]
-        for key in ["model_version", "default"] + tel_keys:
-            self._corsika_config_data.pop(key, None)
+        # # Remove sim_telarray parameters from the CORSIKA config dictionary
+        # # TODO - Replace this with a more elegant solution!
+        # tel_keys = [k for k in self._corsika_config_data.keys() if k[1:4] in ["ST-", "CT-"]]
+        # for key in ["model_version", "default"] + tel_keys:
+        #     self._corsika_config_data.pop(key, None)
 
     def _load_sim_tel_config_and_model(self, config_data):
         """
@@ -248,6 +251,30 @@ class Simulator:
             array_config_data=_array_model_config,
             mongo_db_config=self._mongo_db_config,
         )
+
+    def _separate_corsika_and_simtel_config_data(self, config_data):
+        """
+        Separate the CORSIKA and sim_telarray simulation configuration to two dictionaries.
+
+        Parameters
+        ----------
+        config_data: dict
+            Dictionary with both the CORSIKA and sim_telarray simulation configuration data.
+
+        Returns
+        -------
+        dict
+            Configuration of shower simulations.
+        dict
+            Configuration of array simulations.
+
+        """
+
+        common = copy(config_data.pop("common", {}))
+        config_showers = copy(config_data.pop("showers", {})) | common
+        config_arrays = copy(config_data.pop("array", {})) | common
+
+        return config_showers, config_arrays
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
@@ -343,7 +370,6 @@ class Simulator:
             "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
-        # TODO: This is not very elegant, find a nicer solution?
         if self.simulator in ["simtel", "corsika_simtel"]:
             simtel_args = {
                 "array_model": self.array_model,
