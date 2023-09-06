@@ -137,14 +137,19 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         """
 
         info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
+        weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
         # TODO: Implement the weak pointing for divergent pointing
         # TODO: Think how to create multiple run commands for various pipes (e.g., NSB levels)
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
         command += f" -I{self.array_model.get_config_directory()}"
-        command += super()._config_option("telescope_theta", self.config.zenith_angle)
-        command += super()._config_option("telescope_phi", self.config.azimuth_angle)
+        command += super()._config_option(
+            "telescope_theta", self.config.zenith_angle, weak_option=weak_pointing
+        )
+        command += super()._config_option(
+            "telescope_phi", self.config.azimuth_angle, weak_option=weak_pointing
+        )
         command += super()._config_option("power_law", "2.5")
         command += super()._config_option(
             "histogram_file", self.get_file_name("histogram", **info_for_file_name)
