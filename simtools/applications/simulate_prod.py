@@ -281,30 +281,39 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, shower_configs, array_configs = _proccess_simulation_config_file(
-        args_dict["production_config"], args_dict["primary"], logger
-    )
+    try:
+        with open(args_dict["production_config"], encoding="utf-8") as file:
+            config_data = yaml.load(file)
+    except FileNotFoundError:
+        logger.error(
+            f"Error loading simulation configuration file from {args_dict['production_config']}"
+        )
+        raise
+
+    # label, shower_configs, array_configs = _proccess_simulation_config_file(
+    #     args_dict["production_config"], args_dict["primary"], logger
+    # )
 
     # Overwrite default and optional settings
-    shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
-    array_configs["site"] = shower_configs["site"] = args_dict["site"]
-    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"]
-    array_configs["phi"] = shower_configs["phi"] = args_dict["azimuth_angle"]
+    config_data["showers"]["run_list"] = args_dict["run"] + args_dict["start_run"]
+    config_data["showers"]["primary"] = args_dict["primary"]
+    config_data["common"]["site"] = args_dict["site"]
+    config_data["common"]["zenith"] = args_dict["zenith_angle"]
+    config_data["common"]["phi"] = args_dict["azimuth_angle"]
+    label = config_data["common"].pop("label", "test-production")
 
     if args_dict["nshow"] is not None:
-        shower_configs["nshow"] = args_dict["nshow"]
+        config_data["showers"]["nshow"] = args_dict["nshow"]
     if args_dict["label"] is not None:
         label = args_dict["label"]
     if "data_directory" in args_dict:
-        array_configs["data_directory"] = shower_configs["data_directory"] = args_dict[
-            "data_directory"
-        ]
+        config_data["common"]["data_directory"] = args_dict["data_directory"]
 
     simulator = Simulator(
         label=label,
         simulator="corsika_simtel",
         simulator_source_path=args_dict["simtel_path"],
-        config_data=shower_configs | array_configs,
+        config_data=config_data,
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
@@ -313,10 +322,10 @@ def main():
     simulator.simulate()
 
     logger.info(
-        f"Production run is complete for primary {shower_configs['primary']} showers "
-        f"coming from {shower_configs['phi']} azimuth and zenith angle of "
-        f"{shower_configs['zenith']} at the {args_dict['site']} site, "
-        f"using the {array_configs['model_version']} telescope model."
+        f"Production run is complete for primary {config_data['showers']['primary']} showers "
+        f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
+        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
+        f"using the {config_data['array']['model_version']} telescope model."
     )
 
     if args_dict["pack_for_grid_register"]:
