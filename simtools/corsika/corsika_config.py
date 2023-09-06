@@ -475,7 +475,7 @@ class CorsikaConfig:
         file_name = (
             f"{self.primary}_{self.site}_{self.layout_name}_"
             f"za{int(self._user_parameters['THETAP'][0]):d}-"
-            f"{int(self._user_parameters['THETAP'][1]):d}deg"
+            f"az{int(self._user_parameters['AZM'][0]):d}deg"
             f"{view_cone}{file_label}"
         )
 
