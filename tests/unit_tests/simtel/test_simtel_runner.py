@@ -24,3 +24,10 @@ def test_run(simtel_runner):
 def test_simtel_execution_error(simtel_runner):
     with pytest.raises(SimtelExecutionError):
         simtel_runner._raise_simtel_error()
+
+
+def test_config_option(simtel_runner):
+    assert simtel_runner._config_option("test", "value") == " -C test=value"
+    assert simtel_runner._config_option("test", "value", weak_option=True) == " -W test=value"
+    assert simtel_runner._config_option("test", "value", weak_option=False) == " -C test=value"
+    assert simtel_runner._config_option("test") == " -C test"
