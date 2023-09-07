@@ -206,7 +206,7 @@ def test_config_data_from_yaml_file(db, io_handler, db_config):
 
 
 def test_get_file_name(corsika_config, io_handler):
-    file_name = "proton_South_4LST_za20-20deg_cone0-5_test-corsika-config"
+    file_name = "proton_South_4LST_za20-az0deg_cone0-5_test-corsika-config"
 
     assert (
         corsika_config.get_file_name("config_tmp", run_number=1)
