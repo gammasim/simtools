@@ -178,14 +178,14 @@ class Simulator:
             Path to yaml file containing configurable data.
 
         """
-        config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        simulator_config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
         if self.simulator == "corsika":
-            self._load_corsika_config_and_model(config_data)
+            self._load_corsika_config_and_model(simulator_config_data)
         if self.simulator == "simtel":
-            self._load_sim_tel_config_and_model(config_data)
+            self._load_sim_tel_config_and_model(simulator_config_data)
         if self.simulator == "corsika_simtel":
             config_showers, config_arrays = self._separate_corsika_and_simtel_config_data(
-                config_data
+                simulator_config_data
             )
             self._load_corsika_config_and_model(config_showers)
             self._load_sim_tel_config_and_model(config_arrays)
