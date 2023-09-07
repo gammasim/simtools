@@ -29,7 +29,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['simtelarray']
+        type: ['corsika_sim_telarray']
 
     steps:
       - name: Checkout repository
