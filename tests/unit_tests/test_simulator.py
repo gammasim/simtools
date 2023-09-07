@@ -41,7 +41,7 @@ def simulator_config_data(tmp_test_directory):
             "viewcone": [0 * u.deg, 0 * u.deg],
             "nshow": 10,
             "erange": [100 * u.GeV, 1 * u.TeV],
-            "cscat": [1, 1400 * u.m, 0],
+            "cscat": [10, 1400 * u.m, 0],
             "run_list": [3, 4],
             "run_range": [6, 10],
         },
