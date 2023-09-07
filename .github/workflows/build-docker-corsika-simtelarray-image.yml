@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'docker/Dockerfile-simtelarray'
+      - './docker/Dockerfile-simtelarray'
   push:
     branches:
       - main
@@ -72,6 +72,6 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push:
             ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true}}
-          file: ./docker/Dockerfile-${{ matrix.type }}
+          file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
