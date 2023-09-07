@@ -222,12 +222,6 @@ class Simulator:
             "corsika_parameters_file", None
         )
 
-        # # Remove sim_telarray parameters from the CORSIKA config dictionary
-        # # TODO - Replace this with a more elegant solution!
-        # tel_keys = [k for k in self._corsika_config_data.keys() if k[1:4] in ["ST-", "CT-"]]
-        # for key in ["model_version", "default"] + tel_keys:
-        #     self._corsika_config_data.pop(key, None)
-
     def _load_sim_tel_config_and_model(self, config_data):
         """
         Load array model and configuration parameters for array simulations
