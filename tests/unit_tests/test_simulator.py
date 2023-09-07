@@ -26,20 +26,36 @@ def label():
 
 
 @pytest.fixture
-def array_config_data(tmp_test_directory):
+def simulator_config_data(tmp_test_directory):
     return {
-        "data_directory": f"{str(tmp_test_directory)}/test-output",
-        "primary": "gamma",
-        "zenith": 20 * u.deg,
-        "azimuth": 0 * u.deg,
-        "viewcone": [0 * u.deg, 0 * u.deg],
-        # ArrayModel
-        "site": "North",
-        "layout_name": "test-layout",
-        "model_version": "Prod5",
-        "default": {"LST": "D234", "MST": "NectarCam-D"},
-        "LST-01": "1",
+        "common": {
+            "site": "North",
+            "layout_name": "test-layout",
+            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "zenith": 20 * u.deg,
+            "azimuth": 0 * u.deg,
+            "primary": "gamma",
+        },
+        "showers": {
+            "eslope": -2.5,
+            "viewcone": [0 * u.deg, 0 * u.deg],
+            "nshow": 10,
+            "erange": [100 * u.GeV, 1 * u.TeV],
+            "cscat": [1, 1400 * u.m, 0],
+            "run_list": [3, 4],
+            "run_range": [6, 10],
+        },
+        "array": {
+            "model_version": "Prod5",
+            "default": {"LST": "D234", "MST": "NectarCam-D"},
+            "LST-01": "1",
+        },
     }
+
+
+@pytest.fixture
+def array_config_data(simulator_config_data):
+    return simulator_config_data["common"] | simulator_config_data["array"]
 
 
 @pytest.fixture
@@ -48,22 +64,8 @@ def input_file_list():
 
 
 @pytest.fixture
-def shower_config_data(tmp_test_directory):
-    return {
-        "data_directory": f"{str(tmp_test_directory)}/test-output",
-        "site": "North",
-        "layout_name": "test-layout",
-        "run_list": [3, 4],
-        "run_range": [6, 10],
-        "nshow": 10,
-        "primary": "gamma",
-        "erange": [100 * u.GeV, 1 * u.TeV],
-        "eslope": -2,
-        "zenith": 20 * u.deg,
-        "azimuth": 0 * u.deg,
-        "viewcone": 0 * u.deg,
-        "cscat": [10, 1500 * u.m, 0],
-    }
+def shower_config_data(simulator_config_data):
+    return simulator_config_data["common"] | simulator_config_data["showers"]
 
 
 @pytest.fixture
@@ -102,12 +104,12 @@ def shower_simulator(label, shower_config_data, io_handler, db_config, simtel_pa
 
 
 @pytest.fixture
-def shower_array_simulator(label, shower_array_config_data, io_handler, db_config, simtel_path):
+def shower_array_simulator(label, simulator_config_data, io_handler, db_config, simtel_path):
     shower_array_simulator = Simulator(
         label=label,
         simulator="corsika_simtel",
         simulator_source_path=simtel_path,
-        config_data=shower_array_config_data,
+        config_data=simulator_config_data,
         mongo_db_config=db_config,
     )
     return shower_array_simulator
