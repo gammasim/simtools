@@ -88,7 +88,6 @@
 
 import logging
 import tarfile
-from copy import copy
 from pathlib import Path
 
 from astropy.io.misc import yaml
@@ -199,82 +198,6 @@ def _parse(description=None):
     return config.initialize(db_config=True, telescope_model=True)
 
 
-def _proccess_simulation_config_file(config_file, primary_config, logger):
-    """
-    Read the simulation configuration file with all the details
-    on shower and array simulations.
-
-    Parameters
-    ----------
-    config_file: str
-        Name of simulation configuration file.
-    primary_config: str
-        Name of the primary selected from the configuration file.
-    logger: logging.logger
-        The logger to use to record log calls.
-
-    Returns
-    -------
-    str
-        Label of simulation configuration.
-    dict
-        Configuration of shower simulations.
-    dict
-        Configuration of array simulations.
-
-    Raises
-    ------
-    FileNotFoundError
-    """
-
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config_data = yaml.load(file)
-    except FileNotFoundError:
-        logger.error(f"Error loading simulation configuration file from {config_file}")
-        raise
-
-    label = config_data.pop("label", "test_run")
-    default_data = config_data.pop("default", {})
-
-    for primary, primary_data in config_data.items():
-        if primary_config is not None and primary != primary_config:
-            continue
-
-        this_default = copy(default_data)
-
-        config_showers = copy(this_default.pop("showers", {}))
-        config_arrays = copy(this_default.pop("array", {}))
-
-        # Grabbing common entries for showers and array
-        for key, value in primary_data.items():
-            if key in ["showers", "array"]:
-                continue
-            config_showers[key] = value
-            config_arrays[key] = value
-
-        # Grabbing showers entries
-        for key, value in primary_data.get("showers", {}).items():
-            config_showers[key] = value
-        config_showers["primary"] = primary
-
-        # Grabbing array entries
-        for key, value in primary_data.get("array", {}).items():
-            config_arrays[key] = value
-        config_arrays["primary"] = primary
-
-        # Filling in the remaining default keys
-        for key, value in this_default.items():
-            config_showers[key] = value
-            config_arrays[key] = value
-
-    config_arrays["data_directory"] = config_showers["data_directory"]
-    config_arrays["site"] = config_showers["site"]
-    config_arrays["layout_name"] = config_showers["layout_name"]
-
-    return label, config_showers, config_arrays
-
-
 def main():
     args_dict, db_config = _parse(description="Run simulations for productions")
 
@@ -289,10 +212,6 @@ def main():
             f"Error loading simulation configuration file from {args_dict['production_config']}"
         )
         raise
-
-    # label, shower_configs, array_configs = _proccess_simulation_config_file(
-    #     args_dict["production_config"], args_dict["primary"], logger
-    # )
 
     # Overwrite default and optional settings
     config_data["showers"]["run_list"] = args_dict["run"] + args_dict["start_run"]
