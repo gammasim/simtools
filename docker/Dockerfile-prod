@@ -1,4 +1,4 @@
-From ghcr.io/gammasim/simtools-simtelarray
+From ghcr.io/gammasim/simtools-corsika_sim_telarray
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
