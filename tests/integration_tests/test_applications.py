@@ -610,6 +610,7 @@ APP_LIST = {
             "10",
             "--data_directory",
             "TESTOUTPUTDIR/",
+            "--pack_for_grid_register",
         ]
     ],
     # print_array
