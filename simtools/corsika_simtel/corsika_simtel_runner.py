@@ -149,7 +149,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         command += super()._config_option(
             "telescope_phi", self.config.azimuth_angle, weak_option=weak_pointing
         )
-        command += super()._config_option("power_law", "2.5")
+        command += super()._config_option("power_law", abs(self.corsika_config.eslope))
         command += super()._config_option(
             "histogram_file", self.get_file_name("histogram", **info_for_file_name)
         )
