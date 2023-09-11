@@ -10,7 +10,7 @@
 
     The entire simulation chain is performed, i.e., shower simulations with CORSIKA
     which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
-    This script assumes that all the necessary configuration files for CORISKA and
+    This script assumes that all the necessary configuration files for CORSIKA and
     sim_telarray are available. FIXME - This is not true at the moment, need to fix I guess.
     The multipipe scripts will be produced as part of this script.
 
@@ -88,7 +88,6 @@
 
 import logging
 import tarfile
-from copy import copy
 from pathlib import Path
 
 from astropy.io.misc import yaml
@@ -199,112 +198,41 @@ def _parse(description=None):
     return config.initialize(db_config=True, telescope_model=True)
 
 
-def _proccess_simulation_config_file(config_file, primary_config, logger):
-    """
-    Read the simulation configuration file with all the details
-    on shower and array simulations.
-
-    Parameters
-    ----------
-    config_file: str
-        Name of simulation configuration file.
-    primary_config: str
-        Name of the primary selected from the configuration file.
-    logger: logging.logger
-        The logger to use to record log calls.
-
-    Returns
-    -------
-    str
-        Label of simulation configuration.
-    dict
-        Configuration of shower simulations.
-    dict
-        Configuration of array simulations.
-
-    Raises
-    ------
-    FileNotFoundError
-    """
-
-    try:
-        with open(config_file, encoding="utf-8") as file:
-            config_data = yaml.load(file)
-    except FileNotFoundError:
-        logger.error(f"Error loading simulation configuration file from {config_file}")
-        raise
-
-    label = config_data.pop("label", "test_run")
-    default_data = config_data.pop("default", {})
-
-    for primary, primary_data in config_data.items():
-        if primary_config is not None and primary != primary_config:
-            continue
-
-        this_default = copy(default_data)
-
-        config_showers = copy(this_default.pop("showers", {}))
-        config_arrays = copy(this_default.pop("array", {}))
-
-        # Grabbing common entries for showers and array
-        for key, value in primary_data.items():
-            if key in ["showers", "array"]:
-                continue
-            config_showers[key] = value
-            config_arrays[key] = value
-
-        # Grabbing showers entries
-        for key, value in primary_data.get("showers", {}).items():
-            config_showers[key] = value
-        config_showers["primary"] = primary
-
-        # Grabbing array entries
-        for key, value in primary_data.get("array", {}).items():
-            config_arrays[key] = value
-        config_arrays["primary"] = primary
-
-        # Filling in the remaining default keys
-        for key, value in this_default.items():
-            config_showers[key] = value
-            config_arrays[key] = value
-
-    config_arrays["data_directory"] = config_showers["data_directory"]
-    config_arrays["site"] = config_showers["site"]
-    config_arrays["layout_name"] = config_showers["layout_name"]
-
-    return label, config_showers, config_arrays
-
-
 def main():
     args_dict, db_config = _parse(description="Run simulations for productions")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, shower_configs, array_configs = _proccess_simulation_config_file(
-        args_dict["production_config"], args_dict["primary"], logger
-    )
+    try:
+        with open(args_dict["production_config"], encoding="utf-8") as file:
+            config_data = yaml.load(file)
+    except FileNotFoundError:
+        logger.error(
+            f"Error loading simulation configuration file from {args_dict['production_config']}"
+        )
+        raise
 
     # Overwrite default and optional settings
-    shower_configs["run_list"] = args_dict["run"] + args_dict["start_run"]
-    array_configs["site"] = shower_configs["site"] = args_dict["site"]
-    array_configs["zenith"] = shower_configs["zenith"] = args_dict["zenith_angle"]
-    array_configs["phi"] = shower_configs["phi"] = args_dict["azimuth_angle"]
+    config_data["showers"]["run_list"] = args_dict["run"] + args_dict["start_run"]
+    config_data["showers"]["primary"] = args_dict["primary"]
+    config_data["common"]["site"] = args_dict["site"]
+    config_data["common"]["zenith"] = args_dict["zenith_angle"]
+    config_data["common"]["phi"] = args_dict["azimuth_angle"]
+    label = config_data["common"].pop("label", "test-production")
 
     if args_dict["nshow"] is not None:
-        shower_configs["nshow"] = args_dict["nshow"]
+        config_data["showers"]["nshow"] = args_dict["nshow"]
     if args_dict["label"] is not None:
         label = args_dict["label"]
     if "data_directory" in args_dict:
-        array_configs["data_directory"] = shower_configs["data_directory"] = args_dict[
-            "data_directory"
-        ]
+        config_data["common"]["data_directory"] = args_dict["data_directory"]
 
     simulator = Simulator(
         label=label,
         simulator="corsika_simtel",
         simulator_source_path=args_dict["simtel_path"],
-        config_data=shower_configs | array_configs,
+        config_data=config_data,
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
@@ -313,10 +241,10 @@ def main():
     simulator.simulate()
 
     logger.info(
-        f"Production run is complete for primary {shower_configs['primary']} showers "
-        f"coming from {shower_configs['phi']} azimuth and zenith angle of "
-        f"{shower_configs['zenith']} at the {args_dict['site']} site, "
-        f"using the {array_configs['model_version']} telescope model."
+        f"Production run is complete for primary {config_data['showers']['primary']} showers "
+        f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
+        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
+        f"using the {config_data['array']['model_version']} telescope model."
     )
 
     if args_dict["pack_for_grid_register"]:
