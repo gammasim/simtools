@@ -5,7 +5,7 @@
 # - {name: sequence_number, datatype: string, description: sequence number}
 # - {name: utm_east, unit: m, datatype: float32}
 # - {name: utm_north, unit: m, datatype: float32}
-# - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to NNN}
+# - {name: alt, unit: m, datatype: float32, description: telescope position upwards relative to Normal Null}
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta:
 #   EPSG: 32628
