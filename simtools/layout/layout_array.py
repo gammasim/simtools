@@ -724,57 +724,9 @@ class LayoutArray:
         except IndexError:
             pass
 
-        formats = self._get_formats_dict(crs_name, corsika_z)
-
         self._set_telescope_list_file(crs_name)
         self._logger.info(f"Exporting telescope list to {self.telescope_list_file}")
-        table.write(self.telescope_list_file, format="ascii.ecsv", overwrite=True, formats=formats)
-
-    @staticmethod
-    def _get_formats_dict(crs_name, corsika_z):
-        """
-        Return formats dict for ECSV file writing. Accuracy depend on coordinate system.
-
-        Parameters
-        ----------
-        crs_name: str
-            Name of coordinate system
-        corsika_z: bool
-            Telescope height in CORSIKA coordinates (for CORSIKA system).
-
-
-        Returns
-        -------
-        dict
-            Formats dict for ECSV file writing.
-
-        """
-
-        if crs_name == "corsika" and corsika_z:
-            return {
-                "pos_x": "%.2f",
-                "pos_y": "%.2f",
-                "pos_z": "%.2f",
-            }
-        if crs_name == "corsika":
-            return {
-                "pos_x": "%.2f",
-                "pos_y": "%.2f",
-                "altitude": "%.2f",
-            }
-        if crs_name == "mercator":
-            return {
-                "lon": "%.5f",
-                "lat": "%.5f",
-                "altitude": "%.2f",
-            }
-        if crs_name == "utm":
-            return {
-                "utm_east": "%.3f",
-                "utm_north": "%.3f",
-                "altitude": "%.3f",
-            }
-        return {}
+        table.write(self.telescope_list_file, format="ascii.ecsv", overwrite=True)
 
     def get_number_of_telescopes(self):
         """
