@@ -136,34 +136,30 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
 
         """
 
-        # TODO: These definitions of the files can probably be separated from
-        # the the run command and put back into the parent class.
         info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
-        self._log_file = SimtelRunnerArray.get_file_name(
-            self, file_type="log", **info_for_file_name
-        )
-        histogram_file = SimtelRunnerArray.get_file_name(
-            self, file_type="histogram", **info_for_file_name
-        )
-        output_file = SimtelRunnerArray.get_file_name(
-            self, file_type="output", **info_for_file_name
-        )
+        weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
-        # TODO: Implement the weak pointing for divergent pointing
         # TODO: Think how to create multiple run commands for various pipes (e.g., NSB levels)
-        # Array
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
         command += f" -I{self.array_model.get_config_directory()}"
-        command += super()._config_option("telescope_theta", self.config.zenith_angle)
-        command += super()._config_option("telescope_phi", self.config.azimuth_angle)
+        command += super()._config_option(
+            "telescope_theta", self.config.zenith_angle, weak_option=weak_pointing
+        )
+        command += super()._config_option(
+            "telescope_phi", self.config.azimuth_angle, weak_option=weak_pointing
+        )
         command += super()._config_option("power_law", "2.5")
-        command += super()._config_option("histogram_file", histogram_file)
-        command += super()._config_option("output_file", output_file)
+        command += super()._config_option(
+            "histogram_file", self.get_file_name("histogram", **info_for_file_name)
+        )
+        command += super()._config_option(
+            "output_file", self.get_file_name("output", **info_for_file_name)
+        )
         command += super()._config_option("random_state", "auto")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
-        command += f" | gzip > {self._log_file} 2>&1 || exit"
+        command += f" | gzip > {self.get_file_name('log', **info_for_file_name)} 2>&1 || exit"
 
         return command
 
