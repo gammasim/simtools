@@ -1,3 +1,4 @@
+# Make sure to include "divergent/convergent" in the label in case that is the pointing strategy. This tells sim_telarray not to overwrite the telescope pointings
 label: 'test-production'
 
 default:
