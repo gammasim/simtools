@@ -71,7 +71,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           push:
-            ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true}}
+            ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true || github.event_name == 'schedule'}}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
