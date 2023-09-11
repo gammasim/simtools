@@ -248,7 +248,6 @@ class CorsikaConfig:
         elif par_name == "PRMPAR":
             value_args = self._convert_primary_input_and_store_primary_name(value_args)
         elif par_name == "ESLOPE":
-            # To make it easier to pass to sim_telarray
             self.eslope = value_args[0]
 
         if len(value_args) != par_info["len"]:
