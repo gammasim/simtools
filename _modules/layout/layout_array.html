@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.layout_array &#8212; simtools v0.1.dev1+ge90d69d</title>
+    <title>layout.layout_array &#8212; simtools v0.1.dev1+g95a6ff6</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=40d7a26f"></script>
+    <script src="../../_static/documentation_options.js?v=765ae19a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge90d69d</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g95a6ff6</p>
 
 
 
@@ -578,7 +578,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_assign_unit_to_quantity</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">key2</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">key2</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">key2</span><span class="si">}</span><span class="s2"> are not given. Coordinates not set.&quot;</span><span class="p">)</span>
+            <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">_try_set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">tel</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -963,14 +963,14 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting telescope coordinates&quot;</span><span class="p">)</span>
 
-        <span class="n">wgs84</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_wgs84</span><span class="p">()</span>
+        <span class="n">crs_wgs84</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_wgs84</span><span class="p">()</span>
         <span class="n">crs_local</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_local</span><span class="p">()</span>
         <span class="n">crs_utm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_utm</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
             <span class="n">tel</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
                 <span class="n">crs_local</span><span class="o">=</span><span class="n">crs_local</span><span class="p">,</span>
-                <span class="n">crs_wgs84</span><span class="o">=</span><span class="n">wgs84</span><span class="p">,</span>
+                <span class="n">crs_wgs84</span><span class="o">=</span><span class="n">crs_wgs84</span><span class="p">,</span>
                 <span class="n">crs_utm</span><span class="o">=</span><span class="n">crs_utm</span><span class="p">,</span>
             <span class="p">)</span></div>
 
@@ -994,6 +994,7 @@
                     <span class="o">+</span> <span class="s2">&quot; +axis=nwu +units=m +k_0=1.0&quot;</span>
                 <span class="p">)</span>
                 <span class="n">crs_local</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_proj4</span><span class="p">(</span><span class="n">proj4_string</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Local (CORSIKA) coordinate system: </span><span class="si">{</span><span class="n">crs_local</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">crs_local</span>
 
         <span class="k">return</span> <span class="kc">None</span>
@@ -1010,6 +1011,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">:</span>
             <span class="n">crs_utm</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UTM coordinate system: </span><span class="si">{</span><span class="n">crs_utm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">crs_utm</span>
 
         <span class="k">return</span> <span class="kc">None</span>
@@ -1017,12 +1019,12 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_crs_wgs84</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        WGS coordinate system definition.</span>
+<span class="sd">        WGS84 coordinate system definition.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pyproj.CRS</span>
-<span class="sd">            WGS coordinate system.</span>
+<span class="sd">            WGS84 coordinate system.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
