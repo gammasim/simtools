@@ -25,17 +25,16 @@ Prepare a file for the simulation model database access (see simtools documentat
 To run the container in bash
 
 ```bash
-docker run --rm -it --env-file .dotenv -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
+docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-print-array-elements -h`).
 This example uses the docker syntax to mount your local directory.
 
-
 The following example runs an application inside the container and writes the output into a directory of the local files system,
 
 ```bash
-docker run --rm -it --env-file .dotenv \
+docker run --rm -it --env-file .env \
     -v "$(pwd):/workdir/external" \
     ghcr.io/gammasim/simtools-prod:latest \
     simtools-print-array-elements \
@@ -82,6 +81,7 @@ To download and run a prepared container in bash:
 
 ```bash
 docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "cd /workdir/external/simtools && pip install -e . && bash"
+docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
 
 Remember you need to `docker login` to the GitHub package repository with a personal token in order to download an image (follow [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
