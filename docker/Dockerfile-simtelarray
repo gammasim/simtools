@@ -1,47 +1,43 @@
-From ubuntu:23.04 as build_image
+FROM almalinux:9.2 as build_image
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN yum install -y \
     bash \
-    build-essential \
-    bzip2 \
     csh \
-    gfortran \
     gcc \
-    g++ \
-    git \
-    libgsl-dev \
-    krb5-user \
-    libpam-krb5 \
+    gcc-c++ \
+    gfortran \
+    gsl-devel \
+    krb5-workstation \
     make \
     unzip \
-    vim \
-    wget && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    wget \
+    yum clean all && rm -rf /var/cache/yum
 
-# corsika and sim_telarray
 RUN mkdir sim_telarray
-COPY corsika7.7_simtelarray.tar.gz sim_telarray
+COPY corsika7.7_simtelarray.tar.gz sim_telarray/
 RUN cd sim_telarray && \
     tar -xvf corsika7.7_simtelarray.tar.gz && \
     ./build_all prod5 qgs2 gsl && \
     find . -name "*.tar.gz" -exec rm -f {} \; && \
     cd ..
 
-From ubuntu:23.04
+FROM almalinux:9.2
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
+
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
-RUN apt-get update && apt-get install -y \
+RUN yum install -y \
     bc \
-    bzip2 \
+    gcc \
+    gcc-c++ \
     gfortran \
-    libgsl-dev \
+    gsl-devel \
     unzip \
     zstd && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    yum clean all && rm -rf /var/cache/yum
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 
