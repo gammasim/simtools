@@ -1,4 +1,4 @@
-From ubuntu:22.10 as build_image
+From ubuntu:23.04 as build_image
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,14 +10,9 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     gcc \
     g++ \
-    git \
     libgsl-dev \
-    krb5-user \
-    libpam-krb5 \
     make \
-    unzip \
-    vim \
-    wget && \
+    unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # corsika and sim_telarray
@@ -29,7 +24,7 @@ RUN cd sim_telarray && \
     find . -name "*.tar.gz" -exec rm -f {} \; && \
     cd ..
 
-From ubuntu:22.10
+From ubuntu:23.04
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
