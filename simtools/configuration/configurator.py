@@ -271,18 +271,15 @@ class Configurator:
             load_dotenv(self.config["env_file"])
         except KeyError:
             pass
-        try:
-            for key, value in self.config.items():
-                # environmental variables for simtools should always start with SIMTOOLS_
-                env_variable_to_read = f"SIMTOOLS_{key.upper()}"
-                if value is None:
-                    _env_dict[key] = os.environ.get(env_variable_to_read)
-                if key in _env_dict and _env_dict[key] is not None:
-                    _env_dict[key] = (
-                        _env_dict[key].split("#")[0].strip().replace(" ", "").replace("'", "")
-                    )
-        except AttributeError:
-            pass
+        for key, value in self.config.items():
+            # environmental variables for simtools should always start with SIMTOOLS_
+            env_variable_to_read = f"SIMTOOLS_{key.upper()}"
+            if value is None:
+                _env_dict[key] = os.environ.get(env_variable_to_read)
+            if key in _env_dict and _env_dict[key] is not None:
+                _env_dict[key] = (
+                    _env_dict[key].split("#")[0].strip().replace(" ", "").replace("'", "")
+                )
 
         self._fill_from_config_dict(_env_dict)
 
