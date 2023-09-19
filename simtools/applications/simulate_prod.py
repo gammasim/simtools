@@ -10,7 +10,7 @@
 
     The entire simulation chain is performed, i.e., shower simulations with CORSIKA
     which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
-    This script assumes that all the necessary configuration files for CORSIKA and
+    This script assumes that all the necessary configuration files for CORISKA and
     sim_telarray are available. FIXME - This is not true at the moment, need to fix I guess.
     The multipipe scripts will be produced as part of this script.
 
@@ -87,6 +87,7 @@
 """
 
 import logging
+import shutil
 import tarfile
 from pathlib import Path
 
@@ -265,7 +266,7 @@ def main():
             # Note that this will overwrite previous files which exist in the directory
             # It should be fine for normal production since each run is on a separate node
             # so no files are expected there.
-            source_file.replace(destination_file)
+            shutil.move(source_file, destination_file)
         logger.info(f"Output files for the grid placed in {str(directory_for_grid_upload)}")
 
 
