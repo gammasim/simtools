@@ -80,7 +80,6 @@ git clone git@github.com:gammasim/simtools.git
 To download and run a prepared container in bash:
 
 ```bash
-docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "cd /workdir/external/simtools && pip install -e . && bash"
 docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
 
@@ -130,5 +129,3 @@ Run the newly build container:
 ```bash
 docker run --rm -it -v "$(pwd)/external:/workdir/external" simtelarray bash
 ```
-
-**Apple silicon users, notice you should add --platform=linux/amd64 to the run command above.**
