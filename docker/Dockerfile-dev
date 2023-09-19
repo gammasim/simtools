@@ -1,26 +1,24 @@
-From ghcr.io/gammasim/simtools-corsika_sim_telarray
+FROM ghcr.io/gammasim/simtools-corsika_sim_telarray
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     git \
     python3-pip \
+    python3-venv \
     wget && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN wget --quiet https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    rm -f get-pip.py
-
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
+    python3 -m venv env && \
+    source env/bin/activate && \
     pip install toml-to-requirements && \
-    toml-to-req --toml-file pyproject.toml --include-optional
-
-RUN cd /workdir/ && \
-    pip install -r requirements.txt
+    toml-to-req --toml-file pyproject.toml --include-optional && \
+    pip uninstall -y toml-to-requirements && \
+    pip install --no-cache-dir -r requirements.txt
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
+ENV PATH="/workdir/simtools/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workdir/external
