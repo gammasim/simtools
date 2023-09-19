@@ -275,11 +275,10 @@ class Configurator:
             # environmental variables for simtools should always start with SIMTOOLS_
             env_variable_to_read = f"SIMTOOLS_{key.upper()}"
             if value is None:
-                _env_dict[key] = os.environ.get(env_variable_to_read)
-            if key in _env_dict and _env_dict[key] is not None:
-                _env_dict[key] = (
-                    _env_dict[key].split("#")[0].strip().replace(" ", "").replace("'", "")
-                )
+                env_value = os.environ.get(env_variable_to_read)
+                if env_value is not None:
+                    env_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
+                _env_dict[key] = env_value
 
         self._fill_from_config_dict(_env_dict)
 
