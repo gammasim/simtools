@@ -16,12 +16,16 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # corsika and sim_telarray
+# (corsika source code is removed to follow
+# the corsika non-distribution policy)
 RUN mkdir sim_telarray
 COPY corsika7.7_simtelarray.tar.gz sim_telarray
 RUN cd sim_telarray && \
     tar -xvf corsika7.7_simtelarray.tar.gz && \
     ./build_all prod5 qgs2 gsl && \
     find . -name "*.tar.gz" -exec rm -f {} \; && \
+    rm -f corsika-run && mv corsika-77410/run corsika-run && \
+    rm -rf corsika-77410 && \
     cd ..
 
 From ubuntu:23.04
