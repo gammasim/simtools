@@ -24,10 +24,10 @@ RUN cd sim_telarray && \
     tar -xvf corsika7.7_simtelarray.tar.gz && \
     ./build_all prod5 qgs2 gsl
 
-RUN cd /workdir/sim_telarray/ && \
-    find . -name "*.tar.gz" -exec rm -f {} \; && \
-    rm -f corsika-run && mv corsika-77410/run corsika-run && \
-    rm -rf corsika-77410 
+RUN find sim_telarray/ -name "*.tar.gz" -exec rm -f {} \;
+RUN rm -f sim_telarray/corsika-run && \
+    mv sim_telarray/corsika-77410/run sim_telarray/corsika-run && \
+    rm -rf sim_telarray/corsika-77410 
 
 From ubuntu:23.04
 WORKDIR /workdir
