@@ -96,7 +96,7 @@ def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model
 
     assert ray.config.zenith_angle == 30
     assert len(ray.config.off_axis_angle) == 2
-    assert ray.config.single_mirror_mode == True
+    assert ray.config.single_mirror_mode
     assert "Single mirror mode is activated" in caplog.text
 
 
