@@ -26,8 +26,8 @@ RUN cd sim_telarray && \
 
 RUN find sim_telarray/ -name "*.tar.gz" -exec rm -f {} \;
 RUN rm -f sim_telarray/corsika-run && \
-    mv sim_telarray/corsika-77410/run sim_telarray/corsika-run && \
-    rm -rf sim_telarray/corsika-77410 
+    mv sim_telarray/corsika-77*/run sim_telarray/corsika-run && \
+    rm -rf sim_telarray/corsika-77*
 
 From ubuntu:23.04
 WORKDIR /workdir
