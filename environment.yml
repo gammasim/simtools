@@ -8,12 +8,12 @@ dependencies:
   - boost-histogram
   - ctapipe
   - eventio
+  - flake8
   - jsonschema
   - matplotlib-base
   - numpy
   - numpydoc
   - pre-commit
-  - pyflakes
   - pymongo
   - pyproj
   - pytest
