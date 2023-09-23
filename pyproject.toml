@@ -47,8 +47,8 @@ dependencies = [
     "pytest-xdist",
 ]
 "dev" = [
+    "flake8",
     "pre-commit",
-    "pyflakes",
 ]
 "doc" = [
     "numpydoc",
