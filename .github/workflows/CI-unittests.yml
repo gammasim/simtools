@@ -115,8 +115,5 @@ jobs:
         with:
           verbose: true
           files: coverage.xml
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: htmlcov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
