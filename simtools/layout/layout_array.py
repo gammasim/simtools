@@ -941,7 +941,9 @@ class LayoutArray:
                 telescope_table.meta["corsika_sphere_radius"][
                     names.get_telescope_type(tel_name_now)
                 ]
-            ).value
+            )
+            .to("m")
+            .value
             for tel_name_now in telescope_table["telescope_name"]
         ]
         telescope_table["radius"] = telescope_table["radius"].quantity * u.m

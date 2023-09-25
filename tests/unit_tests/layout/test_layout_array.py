@@ -136,11 +136,11 @@ def test_read_telescope_list_file(
     pos_x_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     pos_y_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
     pos_z_north = [43.00, 28.90, 24.40, 30.60, 46.50, 26.70]
-    description_north = "CTAO Northern Array Element Coordinates"
+    description_north = "CTAO Northern Array Element Coordinates (prod6)"
     pos_x_south = [-20.64, 79.99, -19.40, -120.03, -0.02, 1.43]
     pos_y_south = [-64.82, -0.77, 65.20, 1.15, 0.00, 151.02]
     pos_z_south = [34.00, 29.00, 31.00, 33.00, 24.00, 25.00]
-    description_south = "CTAO Southern Array Element Coordinates"
+    description_south = "CTAO Southern Array Element Coordinates (prod6)"
 
     def test_one_site(test_file, pos_x, pos_y, pos_z, description):
         table = LayoutArray.read_telescope_list_file(test_file)
