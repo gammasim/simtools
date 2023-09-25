@@ -19,6 +19,10 @@ class InvalidTelescopeListFile(Exception):
     """Exception for invalid telescope list file."""
 
 
+class InvalidCoordinateDataType(Exception):
+    """Exception for low-precision coordinate data type."""
+
+
 class LayoutArray:
     """
     Manage telescope positions at the array layout level.
@@ -563,6 +567,9 @@ class LayoutArray:
             _logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
         _logger.info(f"Reading array elements from {telescope_list_file}")
+        if np.any([col.dtype == np.float32 for col in table.columns.values()]):
+            msg = "Columns with float32 dtype detected. Insufficient precision, use float64."
+            raise InvalidCoordinateDataType(msg)
 
         return table
 
@@ -930,9 +937,14 @@ class LayoutArray:
         """
 
         telescope_table["radius"] = [
-            telescope_table.meta["corsika_sphere_radius"][names.get_telescope_type(tel_name_now)]
+            u.Quantity(
+                telescope_table.meta["corsika_sphere_radius"][
+                    names.get_telescope_type(tel_name_now)
+                ]
+            ).value
             for tel_name_now in telescope_table["telescope_name"]
         ]
+        telescope_table["radius"] = telescope_table["radius"].quantity * u.m
         return telescope_table
 
     def select_assets(self, asset_list=None):
