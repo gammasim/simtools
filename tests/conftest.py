@@ -250,12 +250,12 @@ def manual_corsika_dict_south():
 
 @pytest.fixture
 def telescope_north_test_file():
-    return "data/layout/telescope_positions-North-TestLayout.ecsv"
+    return "tests/resources/telescope_positions-North-corsika.ecsv"
 
 
 @pytest.fixture
 def telescope_south_test_file():
-    return "data/layout/telescope_positions-South-TestLayout.ecsv"
+    return "tests/resources/telescope_positions-South-corsika.ecsv"
 
 
 @pytest.fixture
