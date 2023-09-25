@@ -261,7 +261,7 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (i.e., parameter is None) \
+        Fill any unconfigured configuration parameters (i.e., parameter is None)
         from environmental variables or from file (default: ".env").
 
         """
@@ -271,12 +271,14 @@ class Configurator:
             load_dotenv(self.config["env_file"])
         except KeyError:
             pass
-        try:
-            for key, value in self.config.items():
-                if value is None:
-                    _env_dict[key] = os.environ.get(key.upper())
-        except AttributeError:
-            pass
+        for key, value in self.config.items():
+            # environmental variables for simtools should always start with SIMTOOLS_
+            env_variable_to_read = f"SIMTOOLS_{key.upper()}"
+            if value is None:
+                env_value = os.environ.get(env_variable_to_read)
+                if env_value is not None:
+                    env_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
+                _env_dict[key] = env_value
 
         self._fill_from_config_dict(_env_dict)
 

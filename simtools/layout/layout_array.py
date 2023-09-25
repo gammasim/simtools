@@ -486,7 +486,7 @@ class LayoutArray:
                 self._assign_unit_to_quantity(row[key2], table[key2].unit),
             )
         except KeyError:
-            self._logger.debug(f"{key1} and {key2} are not given. Coordinates not set.")
+            pass
 
     def _try_set_altitude(self, row, tel, table):
         """
@@ -848,14 +848,14 @@ class LayoutArray:
 
         self._logger.info("Converting telescope coordinates")
 
-        wgs84 = self._get_crs_wgs84()
+        crs_wgs84 = self._get_crs_wgs84()
         crs_local = self._get_crs_local()
         crs_utm = self._get_crs_utm()
 
         for tel in self._telescope_list:
             tel.convert_all(
                 crs_local=crs_local,
-                crs_wgs84=wgs84,
+                crs_wgs84=crs_wgs84,
                 crs_utm=crs_utm,
             )
 
@@ -878,6 +878,7 @@ class LayoutArray:
                     + " +axis=nwu +units=m +k_0=1.0"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
+                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
                 return crs_local
 
         return None
@@ -894,6 +895,7 @@ class LayoutArray:
         """
         if self._epsg:
             crs_utm = pyproj.CRS.from_user_input(self._epsg)
+            self._logger.debug(f"UTM coordinate system: {crs_utm}")
             return crs_utm
 
         return None
@@ -901,12 +903,12 @@ class LayoutArray:
     @staticmethod
     def _get_crs_wgs84():
         """
-        WGS coordinate system definition.
+        WGS84 coordinate system definition.
 
         Returns
         -------
         pyproj.CRS
-            WGS coordinate system.
+            WGS84 coordinate system.
 
         """
         return pyproj.CRS("EPSG:4326")

@@ -90,6 +90,7 @@ class CorsikaConfig:
         self.label = label
         self.site = names.validate_site_name(site)
         self.primary = None
+        self.eslope = None
         self._config_file_path = None
         self._output_generic_file_name = None
         self._simtel_source_path = simtel_source_path
@@ -246,6 +247,8 @@ class CorsikaConfig:
             value_args = [0 * par_info["unit"][0], value_args[0]]
         elif par_name == "PRMPAR":
             value_args = self._convert_primary_input_and_store_primary_name(value_args)
+        elif par_name == "ESLOPE":
+            self.eslope = value_args[0]
 
         if len(value_args) != par_info["len"]:
             msg = f"CORSIKA input entry with wrong len: {par_name}"
@@ -475,7 +478,7 @@ class CorsikaConfig:
         file_name = (
             f"{self.primary}_{self.site}_{self.layout_name}_"
             f"za{int(self._user_parameters['THETAP'][0]):d}-"
-            f"{int(self._user_parameters['THETAP'][1]):d}deg"
+            f"az{int(self._user_parameters['AZM'][0]):d}deg"
             f"{view_cone}{file_label}"
         )
 
