@@ -134,23 +134,23 @@ def test_check_data_for_duplicates():
 def test_interval_check_allow_range():
     data_validator = validate_data.DataValidator()
 
-    assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range") == True
-    assert data_validator._interval_check((0.0, 1.0), (0.0, 1.0), "allowed_range") == True
+    assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range")
+    assert data_validator._interval_check((0.0, 1.0), (0.0, 1.0), "allowed_range")
 
-    assert data_validator._interval_check((-1.0, 0.9), (0.0, 1.0), "allowed_range") == False
-    assert data_validator._interval_check((0.0, 1.1), (0.0, 1.0), "allowed_range") == False
-    assert data_validator._interval_check((-1.0, 1.1), (0.0, 1.0), "allowed_range") == False
+    assert not data_validator._interval_check((-1.0, 0.9), (0.0, 1.0), "allowed_range")
+    assert not data_validator._interval_check((0.0, 1.1), (0.0, 1.0), "allowed_range")
+    assert not data_validator._interval_check((-1.0, 1.1), (0.0, 1.0), "allowed_range")
 
 
 def test_interval_check_required_range():
     data_validator = validate_data.DataValidator()
 
-    assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range") == True
-    assert data_validator._interval_check((300.0, 600.0), (300.0, 600), "required_range") == True
+    assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range")
+    assert data_validator._interval_check((300.0, 600.0), (300.0, 600), "required_range")
 
-    assert data_validator._interval_check((350.0, 700.0), (300.0, 600), "required_range") == False
-    assert data_validator._interval_check((300.0, 500.0), (300.0, 600), "required_range") == False
-    assert data_validator._interval_check((350.0, 500.0), (300.0, 600), "required_range") == False
+    assert not data_validator._interval_check((350.0, 700.0), (300.0, 600), "required_range")
+    assert not data_validator._interval_check((300.0, 500.0), (300.0, 600), "required_range")
+    assert not data_validator._interval_check((350.0, 500.0), (300.0, 600), "required_range")
 
 
 def test_check_range():
@@ -231,8 +231,8 @@ def test_get_reference_data_column():
     with pytest.raises(IndexError):
         data_validator._get_reference_data_column("wrong_column")
 
-    assert data_validator._get_reference_data_column("wavelength", status_test=True) == True
-    assert data_validator._get_reference_data_column("wrong_column", status_test=True) == False
+    assert data_validator._get_reference_data_column("wavelength", status_test=True)
+    assert not data_validator._get_reference_data_column("wrong_column", status_test=True)
 
     data_validator._reference_data_columns = get_reference_columns_name_colx()
 
@@ -241,7 +241,7 @@ def test_get_reference_data_column():
     with pytest.raises(IndexError):
         data_validator._get_reference_data_column("col3")
 
-    assert data_validator._get_reference_data_column("col1", status_test=True) == True
+    assert data_validator._get_reference_data_column("col1", status_test=True)
 
     assert data_validator._get_reference_data_column("col1") == {"name": "col1"}
 
@@ -266,11 +266,10 @@ def test_check_for_not_a_number():
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
-    assert (
+    assert not (
         data_validator._check_for_not_a_number(
             Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength")
         )
-        == False
     )
 
     # wavelenght does not allow for nan
@@ -288,23 +287,20 @@ def test_check_for_not_a_number():
         )
 
     # pos_x allows for nan
-    assert (
+    assert not (
         data_validator._check_for_not_a_number(
             Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x")
         )
-        == False
     )
     assert (
         data_validator._check_for_not_a_number(
             Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
         )
-        == True
     )
     assert (
         data_validator._check_for_not_a_number(
             Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
         )
-        == True
     )
 
 

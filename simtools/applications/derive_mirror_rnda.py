@@ -13,7 +13,7 @@
     This application derives the value of the simulation model parameter \
     *mirror_reflection_random_angle* using measurements of the focal length \
     and PSF of individual mirror panels.
-     
+
     PSF measurements are provided by one of the following options:
 
     * mean and sigma value obtained from the measurement of containment diameters of a number of \
