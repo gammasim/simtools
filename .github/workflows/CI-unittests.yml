@@ -108,12 +108,10 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest --durations=10 --color=yes --cov=./simtools/ --cov-report=xml --cov-report=html
+        run: pytest --durations=10 --color=yes --cov=./simtools/ --cov-report=xml
 
       - uses: codecov/codecov-action@v3.1.4
         if: contains(matrix.extra-args, 'codecov')
         with:
           verbose: true
           files: coverage.xml
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
