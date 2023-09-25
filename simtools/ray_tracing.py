@@ -1,5 +1,7 @@
+import gzip
 import logging
 import shlex
+import shutil
 import subprocess
 from copy import copy
 from math import pi, tan
@@ -61,6 +63,7 @@ class RayTracing:
         """
 
         self._logger = logging.getLogger(__name__)
+        self._logger.debug("Initializing RayTracing class")
 
         self._simtel_source_path = Path(simtel_source_path)
         self._io_handler = io_handler.IOHandler()
@@ -86,7 +89,8 @@ class RayTracing:
         if self.config.single_mirror_mode:
             # Recalculating source distance.
             self._logger.debug(
-                "Single mirror mode is activate - source distance is being recalculated to 2 * flen"
+                "Single mirror mode is activated - "
+                "source distance is being recalculated to 2 * flen"
             )
             mir_flen = self._telescope_model.get_parameter_value("mirror_focal_length")
             self._source_distance = 2 * float(mir_flen) * u.cm.to(u.km)  # km
@@ -190,6 +194,27 @@ class RayTracing:
                 )
                 simtel.run(test=test, force=force)
 
+                photons_file_name = names.ray_tracing_file_name(
+                    self._telescope_model.site,
+                    self._telescope_model.name,
+                    self._source_distance,
+                    self.config.zenith_angle,
+                    this_off_axis,
+                    this_mirror if self.config.single_mirror_mode else None,
+                    self.label,
+                    "photons",
+                )
+                photons_file = self._output_directory.joinpath(photons_file_name)
+
+                self._logger.debug("Using gzip to compress the photons file.")
+
+                with open(photons_file, "rb") as f_in:
+                    with gzip.open(
+                        photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
+                    ) as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                photons_file.unlink()
+
     def analyze(
         self,
         export=True,
@@ -254,7 +279,7 @@ class RayTracing:
                     "photons",
                 )
 
-                photons_file = self._output_directory.joinpath(photons_file_name)
+                photons_file = self._output_directory.joinpath(photons_file_name + ".gz")
                 tel_transmission = compute_telescope_transmission(
                     tel_transmission_pars, this_off_axis
                 )
@@ -326,22 +351,24 @@ class RayTracing:
         """
 
         try:
-            with open(file, encoding="utf-8") as _stdin:
-                rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
-                    shlex.split(
-                        f"{self._simtel_source_path}/sim_telarray/bin/rx "
-                        f"-f {containment_fraction:.2f} -v"
-                    ),
-                    stdin=_stdin,
-                    stdout=subprocess.PIPE,
-                ).communicate()[0]
+            rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
+                shlex.split(
+                    f"{self._simtel_source_path}/sim_telarray/bin/rx "
+                    f"-f {containment_fraction:.2f} -v"
+                ),
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+            )
+            with gzip.open(file, "rb") as _stdin:
+                with rx_output.stdin:
+                    shutil.copyfileobj(_stdin, rx_output.stdin)
+                    try:
+                        rx_output = rx_output.communicate()[0].splitlines()[-1:][0].split()
+                    except IndexError:
+                        self._logger.error(f"Invalid output from rx: {rx_output}")
+                        raise
         except FileNotFoundError:
             self._logger.error(f"Photon list file not found: {file}")
-            raise
-        try:
-            rx_output = rx_output.splitlines()[-1:][0].split()
-        except IndexError:
-            self._logger.error(f"Invalid output from rx: {rx_output}")
             raise
         containment_diameter_cm = 2 * float(rx_output[0])
         x_mean = float(rx_output[1])
@@ -489,7 +516,7 @@ class RayTracing:
         """
         images = []
         for this_off_axis in self.config.off_axis_angle:
-            if this_off_axis in self._psf_images:
+            if self._psf_images and this_off_axis in self._psf_images:
                 images.append(self._psf_images[this_off_axis])
         if len(images) == 0:
             self._logger.error("No image found")

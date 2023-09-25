@@ -185,31 +185,45 @@ def test_initialize_output(configurator):
 
 def test_fill_from_environmental_variables(configurator):
     configurator.parser.initialize_output_arguments()
+    configurator.parser.initialize_db_config_arguments()
     configurator._fill_from_command_line(arg_list=[])
 
     _config_save = copy(configurator.config)
 
     # this is not a configuration parameter and therefore should not be set
-    os.environ["TEST_ENV_VARIABLE"] = "test_value"
+    os.environ["SIMTOOLS_TEST_ENV_VARIABLE"] = "test_value"
     configurator._fill_from_environmental_variables()
-    if "TEST_ENV_VARIABLE" in os.environ:
-        del os.environ["TEST_ENV_VARIABLE"]
+    if "SIMTOOLS_TEST_ENV_VARIABLE" in os.environ:
+        del os.environ["SIMTOOLS_TEST_ENV_VARIABLE"]
     assert "test_env_variable" not in configurator.config
 
     # this is a valid configuration parameter, but already configured
     # _fill_from_environmental_variables() should not change it
-    os.environ["LOG_LEVEL"] = "DEBUG"
+    os.environ["SIMTOOLS_LOG_LEVEL"] = "DEBUG"
     configurator._fill_from_environmental_variables()
     assert configurator.config["log_level"] == _config_save["log_level"] == "info"
-    if "LOG_LEVEL" in os.environ:
-        del os.environ["LOG_LEVEL"]
+    if "SIMTOOLS_LOG_LEVEL" in os.environ:
+        del os.environ["SIMTOOLS_LOG_LEVEL"]
 
     # this is a valid configuration parameter, but not yet configured
-    os.environ["CONFIG"] = "test_config_file"
+    os.environ["SIMTOOLS_CONFIG"] = "test_config_file"
     configurator._fill_from_environmental_variables()
     assert configurator.config["config"] == "test_config_file"
-    if "CONFIG" in os.environ:
-        del os.environ["CONFIG"]
+    if "SIMTOOLS_CONFIG" in os.environ:
+        del os.environ["SIMTOOLS_CONFIG"]
+
+    # using .dotenv files with docker: comments are not removed by docker
+    os.environ["SIMTOOLS_DB_API_PORT"] = "27017 #Port on the MongoDB server"
+    os.environ["SIMTOOLS_DB_SERVER"] = "'abc@def.de' # MongoDB server"
+    configurator.config["db_api_port"] = None
+    configurator.config["db_server"] = None
+    configurator._fill_from_environmental_variables()
+    assert configurator.config["db_api_port"] == 27017
+    assert configurator.config["db_server"] == "abc@def.de"
+    if "SIMTOOLS_DB_API_PORT" in os.environ:
+        del os.environ["SIMTOOLS_DB_API_PORT"]
+    if "SIMTOOLS_DB_SERVER" in os.environ:
+        del os.environ["SIMTOOLS_DB_SERVER"]
 
 
 def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
@@ -219,8 +233,8 @@ def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_te
     # write a temporary file into tmp_test_directory with the environmental variables
     _env_file = tmp_test_directory / "test_env_file"
     with open(_env_file, "w") as output:
-        output.write("LABEL=test_label\n")
-        output.write("CONFIG=test_config_file_env\n")
+        output.write("SIMTOOLS_LABEL=test_label\n")
+        output.write("SIMTOOLS_CONFIG=test_config_file_env\n")
 
     configurator.config["env_file"] = str(_env_file)
     configurator._fill_from_environmental_variables()

@@ -1,9 +1,11 @@
 import logging
+from pathlib import Path
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from matplotlib.backends.backend_pdf import PdfPages
 
 _logger = logging.getLogger(__name__)
 
@@ -30,8 +32,6 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     Raises
     ------
@@ -52,7 +52,6 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
     hist_values, x_edges, y_edges = function()
 
     all_figs = []
-    fig_names = []
     for i_hist, _ in enumerate(x_edges):
         fig, ax = plt.subplots()
         if log_z is True:
@@ -90,9 +89,9 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
         fig.colorbar(mesh)
         all_figs.append(fig)
         if histograms_instance.individual_telescopes is False:
-            fig_names.append(
+            ax.set_title(
                 f"{histograms_instance._dict_2D_distributions[property_name]['file name']}"
-                f"_all_tels.png"
+                "_all_tels"
             )
         else:
             ax.text(
@@ -104,13 +103,13 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
                 transform=ax.transAxes,
                 color="white",
             )
-            fig_names.append(
+            ax.set_title(
                 f"{histograms_instance._dict_2D_distributions[property_name]['file name']}"
-                f"_tel_index_{histograms_instance.telescope_indices[i_hist]}.png",
+                f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         plt.close()
 
-    return all_figs, fig_names
+    return all_figs
 
 
 def plot_2D_counts(histograms_instance, log_z=True):
@@ -128,9 +127,6 @@ def plot_2D_counts(histograms_instance, log_z=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
-
     """
     return _kernel_plot_2D_photons(histograms_instance, "counts", log_z=log_z)
 
@@ -150,8 +146,6 @@ def plot_2D_density(histograms_instance, log_z=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     return _kernel_plot_2D_photons(histograms_instance, "density", log_z=log_z)
@@ -172,8 +166,6 @@ def plot_2D_direction(histograms_instance, log_z=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     return _kernel_plot_2D_photons(histograms_instance, "direction", log_z=log_z)
@@ -194,8 +186,6 @@ def plot_2D_time_altitude(histograms_instance, log_z=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     return _kernel_plot_2D_photons(histograms_instance, "time_altitude", log_z=log_z)
@@ -216,8 +206,6 @@ def plot_2D_num_photons_per_telescope(histograms_instance, log_z=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     return _kernel_plot_2D_photons(histograms_instance, "num_photons_per_telescope", log_z=log_z)
@@ -242,8 +230,6 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     Raises
     ------
@@ -264,7 +250,6 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
     )
     hist_values, edges = function()
     all_figs = []
-    fig_names = []
     for i_hist, _ in enumerate(edges):
         fig, ax = plt.subplots()
         ax.bar(
@@ -288,17 +273,18 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
         if log_y is True:
             ax.set_yscale("log")
         if histograms_instance.individual_telescopes is False:
-            fig_names.append(
+            ax.set_title(
                 f"{histograms_instance._dict_1D_distributions[property_name]['file name']}"
-                f"_all_tels.png"
+                "_all_tels"
             )
         else:
-            fig_names.append(
+            ax.set_title(
                 f"{histograms_instance._dict_1D_distributions[property_name]['file name']}"
-                f"_tel_index_{histograms_instance.telescope_indices[i_hist]}.png",
+                f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         all_figs.append(fig)
-    return all_figs, fig_names
+        plt.close(fig)
+    return all_figs
 
 
 def plot_wavelength_distr(histograms_instance, log_y=True):
@@ -316,8 +302,6 @@ def plot_wavelength_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
     """
     return _kernel_plot_1D_photons(histograms_instance, "wavelength", log_y=log_y)
 
@@ -337,8 +321,6 @@ def plot_counts_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
     """
     return _kernel_plot_1D_photons(histograms_instance, "counts", log_y=log_y)
 
@@ -358,8 +340,6 @@ def plot_density_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
     """
     return _kernel_plot_1D_photons(histograms_instance, "density", log_y=log_y)
 
@@ -379,8 +359,6 @@ def plot_time_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
     """
     return _kernel_plot_1D_photons(histograms_instance, "time", log_y=log_y)
 
@@ -400,8 +378,6 @@ def plot_altitude_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
     """
     return _kernel_plot_1D_photons(histograms_instance, "altitude", log_y=log_y)
 
@@ -421,8 +397,6 @@ def plot_photon_per_event_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
 
@@ -444,8 +418,6 @@ def plot_photon_per_telescope_distr(histograms_instance, log_y=True):
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
 
@@ -475,8 +447,6 @@ def plot_1D_event_header_distribution(
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     hist_values, edges = histograms_instance.event_1D_histogram(
@@ -503,8 +473,8 @@ def plot_1D_event_header_distribution(
 
     if log_y is True:
         ax.set_yscale("log")
-    fig_name = f"hist_1D_{event_header_element}"
-    return fig, fig_name
+    ax.set_title(f"hist_1D_{event_header_element}")
+    return fig
 
 
 def plot_2D_event_header_distribution(
@@ -537,8 +507,6 @@ def plot_2D_event_header_distribution(
     -------
     list
         List of figures for the given telescopes.
-    list
-        List of the figure names.
 
     """
     hist_values, x_edges, y_edges = histograms_instance.event_2D_histogram(
@@ -573,6 +541,24 @@ def plot_2D_event_header_distribution(
         ax.set_ylabel(f"{event_header_element_2}")
 
     ax.set_facecolor("black")
+    ax.set_title(f"hist_2D_{event_header_element_1}_{event_header_element_2}")
     fig.colorbar(mesh)
-    fig_name = f"hist_2D_{event_header_element_1}_{event_header_element_2}"
-    return fig, fig_name
+    return fig
+
+
+def save_figs_to_pdf(figs, pdf_file_name):
+    """
+    Save figures from corsika histograms to an output pdf file.
+
+    Parameters
+    ----------
+    figs: list or numpy.array
+        List with the figures output by `corsika_output_visualize.py`.
+    pdf_file_name: str or Path
+        Name of the pdf file.
+    """
+    pdf_pages = PdfPages(Path(pdf_file_name).absolute().as_posix())
+    for fig in figs:
+        plt.tight_layout()
+        pdf_pages.savefig(fig)
+    pdf_pages.close()

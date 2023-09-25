@@ -16,12 +16,11 @@ def test_kernel_plot_2D_photons(corsika_histograms_instance_set_histograms, capl
         "time_altitude",
         "num_photons_per_telescope",
     ]:
-        all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_2D_photons(
+        all_figs = corsika_histograms_visualize._kernel_plot_2D_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         assert np.size(all_figs) == 1
         assert isinstance(all_figs[0], type(plt.figure()))
-        assert isinstance(all_fig_names[0], str)
 
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=True, telescope_indices=[0, 1, 2]
@@ -33,12 +32,11 @@ def test_kernel_plot_2D_photons(corsika_histograms_instance_set_histograms, capl
         "time_altitude",
         "num_photons_per_telescope",
     ]:
-        all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_2D_photons(
+        all_figs = corsika_histograms_visualize._kernel_plot_2D_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         for _, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
             assert isinstance(all_figs[0], plt.Figure)
-            assert isinstance(all_fig_names[0], str)
 
     with pytest.raises(ValueError):
         corsika_histograms_visualize._kernel_plot_2D_photons(
@@ -56,11 +54,9 @@ def test_plot_2Ds(corsika_histograms_instance_set_histograms):
         "plot_2D_num_photons_per_telescope",
     ]:
         function = getattr(corsika_histograms_visualize, function_label)
-        figs, fig_names = function(corsika_histograms_instance_set_histograms)
+        figs = function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
-        assert isinstance(fig_names, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
-        assert all(isinstance(fig_names, str) for fig_names in fig_names)
 
 
 def test_kernel_plot_1D_photons(corsika_histograms_instance_set_histograms, caplog):
@@ -78,28 +74,24 @@ def test_kernel_plot_1D_photons(corsika_histograms_instance_set_histograms, capl
     ]
 
     for property_name in labels:
-        all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_1D_photons(
+        all_figs = corsika_histograms_visualize._kernel_plot_1D_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         assert np.size(all_figs) == 1
         assert isinstance(all_figs[0], type(plt.figure()))
-        assert np.size(all_fig_names) == 1
-        assert isinstance(all_fig_names[0], str)
 
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=True, telescope_indices=[0, 1, 2]
     )
     for property_name in labels:
-        all_figs, all_fig_names = corsika_histograms_visualize._kernel_plot_1D_photons(
+        all_figs = corsika_histograms_visualize._kernel_plot_1D_photons(
             corsika_histograms_instance_set_histograms, property_name
         )
         for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
             if property_name in ["num_photons_per_event", "num_photons_per_telescope"]:
                 assert isinstance(all_figs[0], plt.Figure)
-                assert isinstance(all_fig_names[0], str)
             else:
                 assert isinstance(all_figs[i_hist], plt.Figure)
-                assert isinstance(all_fig_names[i_hist], str)
 
     with pytest.raises(ValueError):
         corsika_histograms_visualize._kernel_plot_1D_photons(
@@ -120,22 +112,33 @@ def test_plot_1Ds(corsika_histograms_instance_set_histograms):
         "plot_photon_per_telescope_distr",
     ]:
         function = getattr(corsika_histograms_visualize, function_label)
-        figs, fig_names = function(corsika_histograms_instance_set_histograms)
+        figs = function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
-        assert isinstance(fig_names, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
-        assert all(isinstance(fig_name, str) for fig_name in fig_names)
 
 
 def test_plot_event_headers(corsika_histograms_instance_set_histograms):
-    fig, fig_name = corsika_histograms_visualize.plot_1D_event_header_distribution(
+    fig = corsika_histograms_visualize.plot_1D_event_header_distribution(
         corsika_histograms_instance_set_histograms, "total_energy"
     )
     assert isinstance(fig, plt.Figure)
-    assert isinstance(fig_name, str)
 
-    fig, fig_name = corsika_histograms_visualize.plot_2D_event_header_distribution(
+    fig = corsika_histograms_visualize.plot_2D_event_header_distribution(
         corsika_histograms_instance_set_histograms, "zenith", "azimuth"
     )
     assert isinstance(fig, plt.Figure)
-    assert isinstance(fig_name, str)
+
+
+def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler):
+    output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.pdf")
+    figs_list = []
+    for function_label in [
+        "plot_photon_per_event_distr",
+        "plot_photon_per_telescope_distr",
+    ]:
+        function = getattr(corsika_histograms_visualize, function_label)
+        figs = function(corsika_histograms_instance_set_histograms)
+        figs_list.append(figs)
+    figs_list = np.array(figs_list).flatten()
+    corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)
+    assert output_file.exists()

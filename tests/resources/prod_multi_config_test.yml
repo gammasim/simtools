@@ -1,49 +1,21 @@
-label: 'test-production'
-
-default:
+common:
+  # Make sure to include "divergent/convergent" in the label in case that is the pointing strategy. This tells sim_telarray not to overwrite the telescope pointings
+  label: 'test-production'
   site: North
   layout_name: test-layout
   data_directory: ./
-  showers:
-    eslope: -2
-    zenith: 20 deg
-    phi: 0 deg
-  array:
-    model_version: Prod5
-    zenith: 20 deg
-    phi: 0 deg
-    default:
-      LST: 'D234'
-      MST: NectarCam-D
-    LST-01: '1'
-
-# These are the default settings for each primary for 20 deg zenith angle, La Palma.
-# The number of showers, energy range and cscat can be overwritten in the command line.
-# TODO: Need to figure out how to keep all site/zenith angle/primary settings in the most efficient way
-proton:
-  viewcone: [0 deg, 10 deg]
-  showers:
-    nshow: 10
-    erange: [8 GeV, 600 TeV]
-    cscat: [20, 1400.0 m, 0]
-
-gamma:
+  zenith: 20 deg
+  phi: 0 deg
+  primary: gamma
+showers:
+  eslope: -2.5
   viewcone: [0 deg, 0 deg]
-  showers:
-    nshow: 10
-    erange: [3 GeV, 330 TeV]
-    cscat: [10, 1400.0 m, 0]
-
-gamma_diffuse:
-  viewcone: [0 deg, 10 deg]
-  showers:
-    nshow: 10
-    erange: [3 GeV, 330 TeV]
-    cscat: [20, 1900.0 m, 0]
-
-electron:
-  viewcone: [0 deg, 10 deg]
-  showers:
-    nshow: 10
-    erange: [3 GeV, 330 TeV]
-    cscat: [20, 1900.0 m, 0]
+  nshow: 10
+  erange: [3 GeV, 330 TeV]
+  cscat: [10, 1400.0 m, 0]
+array:
+  model_version: Prod5
+  default:
+    LST: 'D234'
+    MST: NectarCam-D
+  LST-01: '1'
