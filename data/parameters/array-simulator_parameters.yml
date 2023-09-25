@@ -13,7 +13,3 @@ azimuth_angle:
   len: 1
   unit: !astropy.units.Unit {unit: deg}
   names: ['azimuth', 'phi']
-viewcone:
-  len: 2
-  unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
-  names: ['cone']

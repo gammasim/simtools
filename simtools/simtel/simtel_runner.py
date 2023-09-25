@@ -236,8 +236,9 @@ class SimtelRunner:
         return False
 
     @staticmethod
-    def _config_option(par, value=None):
+    def _config_option(par, value=None, weak_option=False):
         """Util function for building sim_telarray command."""
-        c = f" -C {par}"
+        option_syntax = "-W" if weak_option else "-C"
+        c = f" {option_syntax} {par}"
         c += f"={value}" if value is not None else ""
         return c

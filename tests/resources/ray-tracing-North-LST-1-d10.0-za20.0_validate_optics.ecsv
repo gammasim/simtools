@@ -1,0 +1,37 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: Off-axis angle, unit: deg, datatype: float64}
+# - {name: d80_cm, unit: cm, datatype: float64}
+# - {name: d80_deg, unit: deg, datatype: float64}
+# - {name: eff_area, unit: m2, datatype: float64}
+# - {name: eff_flen, unit: cm, datatype: float64}
+# meta: !!omap
+# - __serialized_columns__:
+#     Off-axis angle:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id001 !astropy.units.Unit {unit: deg}
+#       value: !astropy.table.SerializedColumn {name: Off-axis angle}
+#     d80_cm:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id002 !astropy.units.Unit {unit: cm}
+#       value: !astropy.table.SerializedColumn {name: d80_cm}
+#     d80_deg:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: d80_deg}
+#     eff_area:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: m2}
+#       value: !astropy.table.SerializedColumn {name: eff_area}
+#     eff_flen:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id002
+#       value: !astropy.table.SerializedColumn {name: eff_flen}
+# schema: astropy-2.0
+"Off-axis angle" d80_cm d80_deg eff_area eff_flen
+0.0 3.3600060671514207 0.06875505956647382 364.75700291640004 nan
+0.25 3.5031872946202856 0.07168494529485545 366.0344599383 2881.070273691937
+0.5 4.040651119673342 0.08268294844360466 364.16129756940006 2879.751009134415
+0.75 4.7524704802075854 0.09724875027728797 364.5782913123 2881.062926296621
+1.0 5.6275282941504186 0.11515486440902667 364.3929607599 2881.070845942882

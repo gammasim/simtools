@@ -227,7 +227,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid,"""
         n_lines = 0
-        with open(self._photons_file, "r", encoding="utf-8") as ff:
+        with open(self._photons_file, "rb") as ff:
             for _ in ff:
                 n_lines += 1
                 if n_lines > 100:
