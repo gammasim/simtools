@@ -164,7 +164,7 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def telescope_model_lst(db, db_config, io_handler):
+def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
         telescope_model_name="LST-1",
@@ -176,7 +176,20 @@ def telescope_model_lst(db, db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_sst(db, db_config, io_handler):
+def telescope_model_mst(db_config, io_handler):
+    tel = TelescopeModel(
+        site="north",
+        telescope_model_name="mst-FlashCam-D",
+        model_version="Prod5",
+        label="test-telescope-model-mst",
+        mongo_db_config=db_config,
+    )
+
+    return tel
+
+
+@pytest.fixture
+def telescope_model_sst(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
         telescope_model_name="SST-D",
@@ -261,3 +274,41 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
 def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
     corsika_histograms_instance.set_histograms()
     return corsika_histograms_instance
+
+
+@pytest.fixture
+def simulator_config_data(tmp_test_directory):
+    return {
+        "common": {
+            "site": "North",
+            "layout_name": "test-layout",
+            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "zenith": 20 * u.deg,
+            "azimuth": 0 * u.deg,
+            "primary": "gamma",
+        },
+        "showers": {
+            "eslope": -2.5,
+            "viewcone": [0 * u.deg, 0 * u.deg],
+            "nshow": 10,
+            "erange": [100 * u.GeV, 1 * u.TeV],
+            "cscat": [10, 1400 * u.m, 0],
+            "run_list": [3, 4],
+            "run_range": [6, 10],
+        },
+        "array": {
+            "model_version": "Prod5",
+            "default": {"LST": "D234", "MST": "NectarCam-D"},
+            "LST-01": "1",
+        },
+    }
+
+
+@pytest.fixture
+def array_config_data(simulator_config_data):
+    return simulator_config_data["common"] | simulator_config_data["array"]
+
+
+@pytest.fixture
+def shower_config_data(simulator_config_data):
+    return simulator_config_data["common"] | simulator_config_data["showers"]

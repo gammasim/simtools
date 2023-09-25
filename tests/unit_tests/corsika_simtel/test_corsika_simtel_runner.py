@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-import astropy.units as u
 import pytest
 
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
@@ -22,48 +21,25 @@ def common_args(simtel_path):
 
 
 @pytest.fixture
-def array_config_data():
-    return {
-        "site": "North",
-        "layout_name": "test-layout",
-        "model_version": "Prod5",
-        "default": {"LST": "D234", "MST": "NectarCam-D"},
-        "LST-01": "1",
-    }
-
-
-@pytest.fixture
-def corsika_config_data(tmp_test_directory):
-    return {
-        "data_directory": str(tmp_test_directory) + "/test-output",
-        "nshow": 10,
-        "primary": "gamma",
-        "erange": [100 * u.GeV, 1 * u.TeV],
-        "eslope": -2,
-        "zenith": 20 * u.deg,
-        "azimuth": 0 * u.deg,
-        "viewcone": 0 * u.deg,
-        "cscat": [10, 1500 * u.m, 0],
-    }
-
-
-@pytest.fixture
-def corsika_args(corsika_config_data, db_config, array_config_data):
+def corsika_args(shower_config_data, db_config, array_config_data):
+    # Remove the keys which are not necessary for general CORSIKA configuration
+    for key_to_pop in ["site", "run_list", "run_range", "layout_name"]:
+        shower_config_data.pop(key_to_pop, None)
     return {
         "mongo_db_config": db_config,
         "site": "North",
         "layout_name": array_config_data["layout_name"],
-        "corsika_config_data": corsika_config_data,
+        "corsika_config_data": shower_config_data,
     }
 
 
 @pytest.fixture
-def simtel_config_data(tmp_test_directory):
+def simtel_config_data(tmp_test_directory, array_config_data):
     return {
         "simtel_data_directory": str(tmp_test_directory) + "/test-output",
-        "primary": "gamma",
-        "zenith_angle": 20 * u.deg,
-        "azimuth_angle": 0 * u.deg,
+        "primary": array_config_data["primary"],
+        "zenith_angle": array_config_data["zenith"],
+        "azimuth_angle": array_config_data["azimuth"],
     }
 
 
@@ -157,6 +133,16 @@ def test_make_run_command(corsika_simtel_runner):
     assert "bin/sim_telarray" in command
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
+    assert "-C show=all" in command
+    assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
+
+
+def test_make_run_command_divergent(corsika_simtel_runner):
+    corsika_simtel_runner.label = "test-corsika-simtel-runner-divergent-pointing"
+    command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+    assert "bin/sim_telarray" in command
+    assert "-W telescope_theta=20" in command
+    assert "-W telescope_phi=0" in command
     assert "-C show=all" in command
     assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
 

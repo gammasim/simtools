@@ -1,6 +1,6 @@
 ---
 name: CI-unittests
-# Execute unit tests - pyflakes and pytest
+# Execute unit tests - flake8 and pytest
 #
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -101,9 +101,9 @@ jobs:
           python --version
           pip install '.[tests,dev,doc]'
 
-      - name: pyflakes liniting
+      - name: flake8
         run: |
-          pyflakes .
+          flake8 --max-line-length 100 --per-file-ignores="_version.py:F401 E501" .
 
       - name: Unit tests
         shell: bash -l {0}
