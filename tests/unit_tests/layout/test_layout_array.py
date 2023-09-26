@@ -165,7 +165,7 @@ def test_read_telescope_list_file(
         telescope_south_test_file, pos_x_south, pos_y_south, pos_z_south, description_south
     )
 
-    # Change on of the columns data type to float32
+    # Change one of the columns data type to float32
     tmp_table = table.copy()
     tmp_table["pos_y"] = tmp_table["pos_y"].astype(np.float32)
     tmp_table.write(tmp_test_directory / "tmp_table_float32.ecsv", format="ascii.ecsv")
