@@ -26,9 +26,6 @@ simtools
 .. image:: https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7
    :target: https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
-.. image:: https://codecov.io/gh/gammasim/simtools/branch/main/graph/badge.svg?token=AYAIRPARCH
-   :target: https://codecov.io/gh/gammasim/simtools
-
 Simulation tools and applications for the `Cherenkov Telescope Array (CTAO) <https://www.cta-observatory.org>`_.
 
 License: `BSD-3 <https://github.com/gammasim/simtools/blob/main/LICENSE>`_
@@ -54,7 +51,7 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 - `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
 - :ref:`databases <Databases>`, especially the model parameter database
 
-simtools is under rapid development with continuous changes and additions planned. 
+simtools is under rapid development with continuous changes and additions planned.
 Please contact the developers before using it: simtools-developer@desy.de
 
 
@@ -88,7 +85,7 @@ Authors
 =======
 
 * Raul R Prado (DESY)
-* Orel Gueta (DESY) 
+* Orel Gueta (DESY)
 * Victor B. Martins (DESY)
 * Gernot Maier (DESY)
 
