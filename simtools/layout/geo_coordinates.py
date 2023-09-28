@@ -75,8 +75,8 @@ class GeoCoordinates:
             if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
                 proj4_string = (
                     "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + f" +lon_0={_center_lon} +lat_0={_center_lat}"
-                    + f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
+                    f" +lon_0={_center_lon} +lat_0={_center_lat}"
+                    f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
                 self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
