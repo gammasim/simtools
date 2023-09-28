@@ -10,12 +10,6 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 
 
-def LaPalma_reference_point():
-    lapalma = TelescopePosition(name="LaPalma")
-    lapalma.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
-    return lapalma
-
-
 def test_crs_utm():
     geo = GeoCoordinates()
     utm_crs = geo.crs_utm(32719)
@@ -36,7 +30,8 @@ def test_crs_wgs84():
 def test_crs_local():
     geo = GeoCoordinates()
 
-    lapalma = LaPalma_reference_point()
+    lapalma = TelescopePosition(name="LaPalma")
+    lapalma.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
     lapalma_crs = geo.crs_local(lapalma)
     assert isinstance(lapalma_crs, pyproj.CRS)
 
@@ -78,7 +73,8 @@ def test_coordinate_scale_factor():
     scale_factor_equator = _coord._coordinate_scale_factor(ref_equator)
     assert scale_factor_equator == pytest.approx(1.0, rel=1.0e-4)
 
-    ref_lapalma = LaPalma_reference_point()
+    ref_lapalma = TelescopePosition(name="LaPalma")
+    ref_lapalma.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
     scale_factor_lapalma = _coord._coordinate_scale_factor(ref_lapalma)
     assert scale_factor_lapalma == pytest.approx(1.0003415856959632, rel=1.0e-6)
 
