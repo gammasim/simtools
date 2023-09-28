@@ -2,6 +2,7 @@
 
 import warnings
 
+import numpy as np
 import pyproj
 import pytest
 
@@ -40,6 +41,7 @@ def test_crs_wgs84():
 
 def test_crs_local():
     geo = GeoCoordinates()
+
     lapalma = LaPalma_reference_point()
     lapalma_crs = geo.crs_local(lapalma)
     assert isinstance(lapalma_crs, pyproj.CRS)
@@ -69,6 +71,11 @@ def test_crs_local():
     with pytest.raises(AttributeError):
         geo.crs_local(None)
 
+    nan_reference = TelescopePosition(name="NaN")
+    nan_reference.set_coordinates("mercator", np.nan, -70.316345, 2147.0)
+    with pytest.raises(pyproj.exceptions.CRSError):
+        geo.crs_local(nan_reference)
+
 
 def test_coordinate_scale_factor():
     _coord = GeoCoordinates()
@@ -80,11 +87,14 @@ def test_coordinate_scale_factor():
 
     ref_lapalma = LaPalma_reference_point()
     scale_factor_lapalma = _coord._coordinate_scale_factor(ref_lapalma)
-    assert scale_factor_lapalma == pytest.approx(1.000341, rel=1.0e-4)
+    assert scale_factor_lapalma == pytest.approx(1.0003415856959632, rel=1.0e-6)
 
     ref_paranal = Paranal_reference_point()
     scale_factor_paranal = _coord._coordinate_scale_factor(ref_paranal)
-    assert scale_factor_paranal == pytest.approx(1.000368, rel=1.0e-4)
+    assert scale_factor_paranal == pytest.approx(1.0003368142476146, rel=1.0e-6)
+
+    with pytest.raises(AttributeError):
+        _coord._coordinate_scale_factor(None)
 
 
 def test_geocentric_radius():
@@ -94,16 +104,16 @@ def test_geocentric_radius():
     _semi_minor_axis = 6356752.314245179
 
     radius_equator = _coord._geocentric_radius(0.0, _semi_major_axis, _semi_minor_axis)
-    assert radius_equator == pytest.approx(_semi_major_axis, rel=1e-3)
+    assert radius_equator == pytest.approx(_semi_major_axis, rel=1e-6)
 
     radius_pole = _coord._geocentric_radius(90.0, _semi_major_axis, _semi_minor_axis)
-    assert radius_pole == pytest.approx(_semi_minor_axis, rel=1e-3)
+    assert radius_pole == pytest.approx(_semi_minor_axis, rel=1e-6)
 
-    radius_lapalma = _coord._geocentric_radius(28.7621, _semi_major_axis, _semi_minor_axis)
-    assert radius_lapalma == pytest.approx(6373217.689521963, rel=1e-3)
+    radius_lapalma = _coord._geocentric_radius(28.762166014, _semi_major_axis, _semi_minor_axis)
+    assert radius_lapalma == pytest.approx(6373217.689521963, rel=1e-6)
 
-    radius_paranal = _coord._geocentric_radius(-24.6253, _semi_major_axis, _semi_minor_axis)
-    assert radius_paranal == pytest.approx(6374433.4309, rel=1e-3)
+    radius_paranal = _coord._geocentric_radius(-24.68342915, _semi_major_axis, _semi_minor_axis)
+    assert radius_paranal == pytest.approx(6374433.430905125, rel=1e-6)
 
     with pytest.raises(TypeError):
         _coord._geocentric_radius(0.0, None, _semi_minor_axis)
