@@ -73,17 +73,15 @@ class GeoCoordinates:
         try:
             _center_lat, _center_lon, _ = reference_point.get_coordinates("mercator")
             _scale_factor_k_0 = self._coordinate_scale_factor(reference_point)
-            proj4_string = (
-                "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                f" +lon_0={_center_lon} +lat_0={_center_lat}"
-                f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
-            )
-            crs_local = pyproj.CRS.from_proj4(proj4_string)
-            self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
-            return crs_local
-        except pyproj.exceptions.CRSError:
-            self._logger.error("Failed to derive local coordinate system. Invalid reference point")
-            raise
+            if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
+                proj4_string = (
+                    "+proj=tmerc +ellps=WGS84 +datum=WGS84"
+                    f" +lon_0={_center_lon} +lat_0={_center_lat}"
+                    f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
+                )
+                crs_local = pyproj.CRS.from_proj4(proj4_string)
+                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
+                return crs_local
         except AttributeError:
             self._logger.error("Failed to derive local coordinate system. Missing reference point")
             raise

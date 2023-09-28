@@ -73,8 +73,7 @@ def test_crs_local():
 
     nan_reference = TelescopePosition(name="NaN")
     nan_reference.set_coordinates("mercator", np.nan, -70.316345, 2147.0)
-    with pytest.raises(pyproj.exceptions.CRSError):
-        geo.crs_local(nan_reference)
+    assert geo.crs_local(nan_reference) is None
 
 
 def test_coordinate_scale_factor():
