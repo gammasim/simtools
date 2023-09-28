@@ -3,10 +3,10 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-import pyproj
 from astropy.table import QTable
 
 from simtools import db_handler, io_handler
+from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
@@ -66,6 +66,7 @@ class LayoutArray:
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
+        self.geo_coordinates = GeoCoordinates()
 
         self.telescope_list_file = None
         self._telescope_list = []
@@ -329,9 +330,9 @@ class LayoutArray:
             pass
 
         self._array_center.convert_all(
-            crs_local=self._get_crs_local(),
-            crs_wgs84=self._get_crs_wgs84(),
-            crs_utm=self._get_crs_utm(),
+            crs_local=self.geo_coordinates.crs_local(self._array_center),
+            crs_wgs84=self.geo_coordinates.crs_wgs84(),
+            crs_utm=self.geo_coordinates.crs_utm(self._epsg),
         )
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, tel_name=None):
@@ -855,9 +856,9 @@ class LayoutArray:
 
         self._logger.info("Converting telescope coordinates")
 
-        crs_wgs84 = self._get_crs_wgs84()
-        crs_local = self._get_crs_local()
-        crs_utm = self._get_crs_utm()
+        crs_wgs84 = self.geo_coordinates.crs_wgs84()
+        crs_local = self.geo_coordinates.crs_local(self._array_center)
+        crs_utm = self.geo_coordinates.crs_utm(self._epsg)
 
         for tel in self._telescope_list:
             tel.convert_all(
@@ -865,60 +866,6 @@ class LayoutArray:
                 crs_wgs84=crs_wgs84,
                 crs_utm=crs_utm,
             )
-
-    def _get_crs_local(self):
-        """
-        Local coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            local coordinate system.
-
-        """
-        if self._array_center:
-            _center_lat, _center_lon, _ = self._array_center.get_coordinates("mercator")
-            if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
-                proj4_string = (
-                    "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + f" +lon_0={_center_lon} +lat_0={_center_lat}"
-                    + " +axis=nwu +units=m +k_0=1.0"
-                )
-                crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
-                return crs_local
-
-        return None
-
-    def _get_crs_utm(self):
-        """
-        UTM coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            UTM coordinate system.
-
-        """
-        if self._epsg:
-            crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.debug(f"UTM coordinate system: {crs_utm}")
-            return crs_utm
-
-        return None
-
-    @staticmethod
-    def _get_crs_wgs84():
-        """
-        WGS84 coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            WGS84 coordinate system.
-
-        """
-        return pyproj.CRS("EPSG:4326")
 
     @staticmethod
     def include_radius_into_telescope_table(telescope_table):
