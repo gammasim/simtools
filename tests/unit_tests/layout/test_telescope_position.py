@@ -181,7 +181,6 @@ def test_get_reference_system_from(crs_utm):
     _crs_name, _crs = tel._get_reference_system_from()
 
     assert _crs_name == "utm"
-    # TODO: somehow fail to check the type of _crs
     assert _crs is not None
 
 
