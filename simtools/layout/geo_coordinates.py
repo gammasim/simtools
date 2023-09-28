@@ -1,5 +1,6 @@
 import logging
 
+import astropy.units as u
 import numpy as np
 import pyproj
 
@@ -72,15 +73,17 @@ class GeoCoordinates:
         try:
             _center_lat, _center_lon, _ = reference_point.get_coordinates("mercator")
             _scale_factor_k_0 = self._coordinate_scale_factor(reference_point)
-            if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
-                proj4_string = (
-                    "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    f" +lon_0={_center_lon} +lat_0={_center_lat}"
-                    f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
-                )
-                crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
-                return crs_local
+            proj4_string = (
+                "+proj=tmerc +ellps=WGS84 +datum=WGS84"
+                f" +lon_0={_center_lon} +lat_0={_center_lat}"
+                f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
+            )
+            crs_local = pyproj.CRS.from_proj4(proj4_string)
+            self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
+            return crs_local
+        except pyproj.exceptions.CRSError:
+            self._logger.error("Failed to derive local coordinate system. Invalid reference point")
+            raise
         except AttributeError:
             self._logger.error("Failed to derive local coordinate system. Missing reference point")
             raise
@@ -106,23 +109,22 @@ class GeoCoordinates:
         k_0: float
             Scale factor for local coordinate system.
 
+        Raises
+        ------
+        AttributeError
+            If reference_point does not have a valid center or UTM system is not defined.
+
         """
 
         try:
             _center_lat, _, _centre_altitude = reference_point.get_coordinates("mercator")
-        except TypeError:
-            self._logger.debug("Missing array center, cannot derive coordinate scale factor")
-            return None
-
-        try:
-            crs_utm = self.crs_wgs84()
-            _semi_major_axis = crs_utm.geodetic_crs.ellipsoid.semi_major_metre
-            _semi_minor_axis = crs_utm.geodetic_crs.ellipsoid.semi_minor_metre
         except AttributeError:
-            self._logger.warning(
-                "Missing UTM coordinate system required for scale factor derivation"
-            )
-            return None
+            self._logger.debug("Missing array center, cannot derive coordinate scale factor")
+            raise
+
+        crs_utm = self.crs_wgs84()
+        _semi_major_axis = crs_utm.geodetic_crs.ellipsoid.semi_major_metre * u.m
+        _semi_minor_axis = crs_utm.geodetic_crs.ellipsoid.semi_minor_metre * u.m
 
         _local_geo_radius = self._geocentric_radius(_center_lat, _semi_major_axis, _semi_minor_axis)
 
@@ -137,11 +139,11 @@ class GeoCoordinates:
 
         Parameters
         ----------
-        latitude: float
+        latitude: astropy.Quantity
             Latitude in degrees.
-        semi_major_axis: float
+        semi_major_axis: astropy.Quantity
             Semi-major axis of ellipsoid in meters.
-        semi_minor_axis: float
+        semi_minor_axis: astropy.Quantity
             Semi-minor axis of ellipsoid in meters.
 
         Returns
