@@ -66,7 +66,7 @@ def test_crs_local():
         warnings.simplefilter("ignore")
         lapalma_dict = lapalma_crs.to_dict()
     assert lapalma_dict["proj"] == _crs_test_dict["proj"]
-    assert lapalma_dict["k"] == pytest.approx(_crs_test_dict["k"], rel=1.0e-4)
+    assert lapalma_dict["k"] == pytest.approx(_crs_test_dict["k"], rel=1.0e-6)
 
     with pytest.raises(AttributeError):
         geo.crs_local(None)
