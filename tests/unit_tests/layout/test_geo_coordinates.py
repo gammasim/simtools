@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import warnings
+
 import pyproj
 import pytest
 
@@ -54,7 +56,13 @@ def test_crs_local():
         "no_defs": None,
         "type": "crs",
     }
-    lapalma_dict = lapalma_crs.to_dict()
+    # ignore warnings from pyproj that te crs.to_dict()
+    # method is not sufficient to fully describe a
+    # coordinate system - this is not relevant for the
+    # simple comparison of the crs parameters
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        lapalma_dict = lapalma_crs.to_dict()
     assert lapalma_dict["proj"] == _crs_test_dict["proj"]
     assert lapalma_dict["k"] == pytest.approx(_crs_test_dict["k"], rel=1.0e-4)
 
