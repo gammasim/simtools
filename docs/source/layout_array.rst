@@ -22,3 +22,11 @@ telescope_position
 
 .. automodule:: layout.telescope_position
    :members:
+
+.. _geocoordinatesmodule:
+
+geo_coordinates
+---------------
+
+.. automodule:: layout.geo_coordinates
+   :members:
