@@ -52,8 +52,8 @@ The following steps outline how to contribute code to simtools:
 Note the :ref:`guidelines on pull requests <pull_requests>`.
 
 
-Testing
-=======
+Unit and Integration Testing
+============================
 
 The pytest framework is used for testing:
 
@@ -73,6 +73,9 @@ This should be used to avoid duplication.
 
 The `pytest-xdist <https://pytest-xdist.readthedocs.io/en/latest/>`_ plugin is part of the developer environment
 and can be used to run unit and integration tests in parallel (e.g., ``pytest -n 4`` to run on four cores in parallel).
+
+Check the test coverage with ``pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov``. 
+Add the ``--cov-report html`` option to generate a coverage report in HTML format.
 
 Generating Documentation
 ========================
