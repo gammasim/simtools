@@ -16,12 +16,6 @@ def LaPalma_reference_point():
     return lapalma
 
 
-def Paranal_reference_point():
-    paranal = TelescopePosition(name="Paranal")
-    paranal.set_coordinates("mercator", -24.68342915, -70.316345, 2147.0)
-    return paranal
-
-
 def test_crs_utm():
     geo = GeoCoordinates()
     utm_crs = geo.crs_utm(32719)
@@ -88,7 +82,8 @@ def test_coordinate_scale_factor():
     scale_factor_lapalma = _coord._coordinate_scale_factor(ref_lapalma)
     assert scale_factor_lapalma == pytest.approx(1.0003415856959632, rel=1.0e-6)
 
-    ref_paranal = Paranal_reference_point()
+    ref_paranal = TelescopePosition(name="Paranal")
+    ref_paranal.set_coordinates("mercator", -24.68342915, -70.316345, 2147.0)
     scale_factor_paranal = _coord._coordinate_scale_factor(ref_paranal)
     assert scale_factor_paranal == pytest.approx(1.0003368142476146, rel=1.0e-6)
 
