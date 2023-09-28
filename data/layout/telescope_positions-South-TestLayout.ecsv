@@ -2,61 +2,23 @@
 # ---
 # datatype:
 # - {name: telescope_name, datatype: string, description: telescope name}
-# - {name: pos_x, unit: m, datatype: float32, description: telescope position towards North relative to the array center.}
-# - {name: pos_y, unit: m, datatype: float32, description: telescope position towards West relative to the array center.}
-# - {name: pos_z, unit: m, datatype: float32, description: telescope position upwards relative to the CORSIKA observation level.}
-# meta:
-#   data_type: positionfile
-#   description: "telescope positions for CTAO South"
-#   EPSG: 32719
-#   center_lon: !astropy.units.Quantity
-#     unit: &id001 !astropy.units.Unit {unit: deg}
-#     value: -70.316345
-#   center_lat: !astropy.units.Quantity
-#     unit: *id001
-#     value: -24.683429
-#   center_alt: !astropy.units.Quantity
-#     unit: &id002 !astropy.units.Unit {unit: m}
-#     value: 2162.35
-#   center_northing: !astropy.units.Quantity
-#     unit: *id002
-#     value: 7269466.999
-#   center_easting: !astropy.units.Quantity
-#     unit: *id002
-#     value: 366822.017
-#   corsika_obs_level: !astropy.units.Quantity
-#     unit: *id002
-#     value: 2147
-#   corsika_sphere_radius:
-#     LST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 12.5
-#     MST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 9.6
-#     SCT: !astropy.units.Quantity
-#       unit: *id002
-#       value: 7.15
-#     SST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 3.0
-#   corsika_sphere_center:
-#     LST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 16.0
-#     MST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 9.0
-#     SCT: !astropy.units.Quantity
-#       unit: *id002
-#       value: 6.1
-#     SST: !astropy.units.Quantity
-#       unit: *id002
-#       value: 3.25
-#   comments: |
-#       Prod6 array definition for CTAO South
-#       UTM Zone 19 (S)
-# schema: astropy-2.0
+# - {name: pos_x, unit: m, datatype: float64, description: telescope position towards North relative to the array center.}
+# - {name: pos_y, unit: m, datatype: float64, description: telescope position towards West relative to the array center.}
+# - {name: pos_z, unit: m, datatype: float64, description: telescope position upwards relative to the CORSIKA observation level.}
+# meta: !!omap
+# - data_type: position_file
+# - description: "CTAO Southern Array Element Coordinates (prod6)"
+# - center_northing: "7269466 m"
+# - center_easting: "366822 m"
+# - corsika_obs_level: "2147 m"
+# - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
+# - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
+# - EPSG: 32719
+# - comments: |
+#       Telescope positions obtained using:
+#       simtools/applications/print_array_elements.py
+#       --compact corsika --use_corsika_telescope_height
+#       --array_element_list SouthArray-utm.ecsv
 telescope_name    pos_x    pos_y   pos_z
 LST-01     -20.64     -64.82      34.00
 LST-02      79.99      -0.77      29.00

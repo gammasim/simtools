@@ -304,7 +304,7 @@ class TelescopePosition:
 
     def _get_reference_system_from(self):
         """
-        Return coordinate system and coordinatee for a fully defined system. The first fully\
+        Return coordinate system and coordinates for a fully defined system. The first fully\
         defined system from self.crs is returned.
 
         Returns
@@ -512,7 +512,7 @@ class TelescopePosition:
         Returns
         -------
         dict
-           coordinate system defintion
+           coordinate system definition
 
         """
 
