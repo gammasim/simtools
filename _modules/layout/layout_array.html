@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.layout_array &#8212; simtools v0.1.dev1+g4188594</title>
+    <title>layout.layout_array &#8212; simtools v0.1.dev1+gf9ce4ad</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=b08c86f7"></script>
+    <script src="../../_static/documentation_options.js?v=56703d20"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4188594</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf9ce4ad</p>
 
 
 
@@ -87,10 +87,10 @@
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pyproj</span>
 <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
 
 <span class="kn">from</span> <span class="nn">simtools</span> <span class="kn">import</span> <span class="n">db_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.layout.geo_coordinates</span> <span class="kn">import</span> <span class="n">GeoCoordinates</span>
 <span class="kn">from</span> <span class="nn">simtools.layout.telescope_position</span> <span class="kn">import</span> <span class="n">TelescopePosition</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span> <span class="nn">simtools.utils.general</span> <span class="kn">import</span> <span class="n">collect_data_from_yaml_or_dict</span>
@@ -104,6 +104,10 @@
 <span class="k">class</span> <span class="nc">InvalidTelescopeListFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid telescope list file.&quot;&quot;&quot;</span></div>
 
+
+
+<span class="k">class</span> <span class="nc">InvalidCoordinateDataType</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for low-precision coordinate data type.&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="LayoutArray">
@@ -151,6 +155,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span> <span class="o">=</span> <span class="n">GeoCoordinates</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list_file</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -417,9 +422,9 @@
             <span class="k">pass</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
-            <span class="n">crs_local</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_local</span><span class="p">(),</span>
-            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_wgs84</span><span class="p">(),</span>
-            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_utm</span><span class="p">(),</span>
+            <span class="n">crs_local</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">),</span>
+            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
+            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_altitude_from_corsika_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tel_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -657,6 +662,9 @@
             <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading list of array elements from </span><span class="si">{</span><span class="n">telescope_list_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading array elements from </span><span class="si">{</span><span class="n">telescope_list_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">([</span><span class="n">col</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">()]):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Columns with float32 dtype detected. Insufficient precision, use float64.&quot;</span>
+            <span class="k">raise</span> <span class="n">InvalidCoordinateDataType</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">table</span></div>
 
@@ -963,9 +971,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting telescope coordinates&quot;</span><span class="p">)</span>
 
-        <span class="n">crs_wgs84</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_wgs84</span><span class="p">()</span>
-        <span class="n">crs_local</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_local</span><span class="p">()</span>
-        <span class="n">crs_utm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crs_utm</span><span class="p">()</span>
+        <span class="n">crs_wgs84</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">()</span>
+        <span class="n">crs_local</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">)</span>
+        <span class="n">crs_utm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
             <span class="n">tel</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
@@ -974,60 +982,6 @@
                 <span class="n">crs_utm</span><span class="o">=</span><span class="n">crs_utm</span><span class="p">,</span>
             <span class="p">)</span></div>
 
-
-    <span class="k">def</span> <span class="nf">_get_crs_local</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Local coordinate system definition.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pyproj.CRS</span>
-<span class="sd">            local coordinate system.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">:</span>
-            <span class="n">_center_lat</span><span class="p">,</span> <span class="n">_center_lon</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="s2">&quot;mercator&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_center_lat</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_center_lon</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
-                <span class="n">proj4_string</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;+proj=tmerc +ellps=WGS84 +datum=WGS84&quot;</span>
-                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; +lon_0=</span><span class="si">{</span><span class="n">_center_lon</span><span class="si">}</span><span class="s2"> +lat_0=</span><span class="si">{</span><span class="n">_center_lat</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="o">+</span> <span class="s2">&quot; +axis=nwu +units=m +k_0=1.0&quot;</span>
-                <span class="p">)</span>
-                <span class="n">crs_local</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_proj4</span><span class="p">(</span><span class="n">proj4_string</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Local (CORSIKA) coordinate system: </span><span class="si">{</span><span class="n">crs_local</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">crs_local</span>
-
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="nf">_get_crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        UTM coordinate system definition.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pyproj.CRS</span>
-<span class="sd">            UTM coordinate system.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">:</span>
-            <span class="n">crs_utm</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UTM coordinate system: </span><span class="si">{</span><span class="n">crs_utm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">crs_utm</span>
-
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_crs_wgs84</span><span class="p">():</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        WGS84 coordinate system definition.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pyproj.CRS</span>
-<span class="sd">            WGS84 coordinate system.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LayoutArray.include_radius_into_telescope_table">
 <a class="viewcode-back" href="../../layout_array.html#layout.layout_array.LayoutArray.include_radius_into_telescope_table">[docs]</a>
@@ -1048,9 +1002,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">telescope_table</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">telescope_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;corsika_sphere_radius&quot;</span><span class="p">][</span><span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type</span><span class="p">(</span><span class="n">tel_name_now</span><span class="p">)]</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span>
+                <span class="n">telescope_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;corsika_sphere_radius&quot;</span><span class="p">][</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type</span><span class="p">(</span><span class="n">tel_name_now</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">value</span>
             <span class="k">for</span> <span class="n">tel_name_now</span> <span class="ow">in</span> <span class="n">telescope_table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
         <span class="p">]</span>
+        <span class="n">telescope_table</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">telescope_table</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
         <span class="k">return</span> <span class="n">telescope_table</span></div>
 
 
