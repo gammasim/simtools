@@ -80,7 +80,6 @@ class GeoCoordinates:
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
                 self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
-                print(crs_local.to_dict())
                 return crs_local
         except AttributeError:
             self._logger.error("Failed to derive local coordinate system. Missing reference point")
