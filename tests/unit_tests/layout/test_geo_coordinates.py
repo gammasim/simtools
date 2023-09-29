@@ -107,3 +107,22 @@ def test_geocentric_radius():
 
     with pytest.raises(TypeError):
         _coord._geocentric_radius(0.0, None, _semi_minor_axis)
+
+
+def test_valid_reference_point():
+    geo_coords = GeoCoordinates()
+    reference_point = TelescopePosition(name="LaPalma")
+    reference_point.set_coordinates("mercator", 28.7621661, -17.8920302, 2177.0)
+    assert geo_coords._valid_reference_point(reference_point)
+
+    reference_point.set_coordinates("mercator", 28.7621661, -17.8920302, np.nan)
+    assert not geo_coords._valid_reference_point(reference_point)
+
+    reference_point.set_coordinates("mercator", np.nan, np.nan, 2177.0)
+    assert not geo_coords._valid_reference_point(reference_point)
+
+    reference_point.set_coordinates("mercator", np.nan, -17.8920302, 2177.0)
+    assert not geo_coords._valid_reference_point(reference_point)
+
+    reference_point.set_coordinates("mercator", 28.7621661, np.nan, 2177.0)
+    assert not geo_coords._valid_reference_point(reference_point)
