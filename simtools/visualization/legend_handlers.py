@@ -51,8 +51,8 @@ class TelescopeHandler(object):
             sct: "black",
             sst: "darkgreen",
         }
-        for tel_type in names.all_telescope_class_names:
-            self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
+        for key, value in corsika_info["corsika_sphere_radius"].items():
+            self.radius_dict[key] = value["value"]
 
 
 class PixelObject(object):
