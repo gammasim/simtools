@@ -82,3 +82,29 @@ def test_sanitize_name():
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
     assert names.sanitize_name("123name") == "_123name"
     assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
+
+
+def test_get_telescope_type():
+    telescope_name = "LST-1"
+    assert names.get_telescope_type(telescope_name) == "LST"
+    telescope_name = "MST-2"
+    assert names.get_telescope_type(telescope_name) == "MST"
+    telescope_name = "SST-27"
+    assert names.get_telescope_type(telescope_name) == "SST"
+    telescope_name = "SCT-27"
+    assert names.get_telescope_type(telescope_name) == "SCT"
+    telescope_name = "MAGIC-2"
+    assert names.get_telescope_type(telescope_name) == "MAGIC"
+    telescope_name = "VERITAS-4"
+    assert names.get_telescope_type(telescope_name) == "VERITAS"
+    telescope_name = ""
+    assert names.get_telescope_type(telescope_name) == ""
+    telescope_name = "-1"
+    assert names.get_telescope_type(telescope_name) == ""
+    telescope_name = "LST-"
+    assert names.get_telescope_type(telescope_name) == "LST"
+    telescope_name = None
+    with pytest.raises(AttributeError):
+        assert names.get_telescope_type(telescope_name) == ""
+    telescope_name = "Not_a_telescope"
+    assert names.get_telescope_type(telescope_name) == ""

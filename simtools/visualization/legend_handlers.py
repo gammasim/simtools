@@ -334,5 +334,8 @@ class MeanRadiusOuterEdgeHandler(object):
 all_telescope_objects = {lst: LSTObject, mst: MSTObject, sct: SCTObject, sst: SSTObject}
 all_telescope_handlers = {lst: LSTHandler, mst: MSTHandler, sct: SCTHandler, sst: SSTHandler}
 legend_handler_map = {}
-for tel_type in names.all_telescope_class_names:
-    legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
+try:
+    for tel_type in names.all_telescope_class_names:
+        legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
+except KeyError:
+    pass
