@@ -35,12 +35,18 @@ lst = "LST"
 mst = "MST"
 sct = "SCT"
 sst = "SST"
+hess = "HESS"
+magic = "MAGIC"
+veritas = "VERITAS"
 
 all_telescope_class_names = {
     lst: ["lst"],
     mst: ["mst"],
     sct: ["sct"],
     sst: ["sst"],
+    hess: ["hess"],
+    magic: ["magic"],
+    veritas: ["veritas"],
 }
 
 all_camera_names = {
@@ -773,11 +779,13 @@ def get_telescope_type(telescope_name):
         Telescope type.
     """
 
-    _class, _ = split_telescope_model_name(telescope_name)
+    _tel_class, _ = split_telescope_model_name(telescope_name)
     try:
-        if _class[0:3] in all_telescope_class_names:
-            return _class[0:3]
-
+        for _class in all_telescope_class_names:
+            if len(_class) == 3 and _tel_class[0:3] == _class:
+                return _class
+            if _tel_class == _class:
+                return _class
     except IndexError:
         pass
 
