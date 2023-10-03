@@ -306,15 +306,9 @@ class LayoutArray:
         self._array_center.set_coordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
         self._set_array_center_mercator(center_dict)
         self._set_array_center_utm(center_dict)
-        try:
-            self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
-        except TypeError:
-            pass
-        try:
-            _name = center_dict.get("array_name")
-            self.name = _name if _name is not None else self.name
-        except KeyError:
-            pass
+        self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
+        _name = center_dict.get("array_name")
+        self.name = _name if _name is not None else self.name
 
         self._array_center.convert_all(
             crs_local=self.geo_coordinates.crs_local(self._array_center),
