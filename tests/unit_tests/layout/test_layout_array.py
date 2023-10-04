@@ -87,20 +87,22 @@ def test_initialize_coordinate_systems(
     def test_one_site(center_data_dict, instance, easting, northing):
         instance._initialize_coordinate_systems()
         _x, _y, _z = instance._array_center.get_coordinates("corsika")
-        assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == 0.0 * u.m
+        assert _x == 0.0 * u.m and _y == 0.0 * u.m
+        assert np.isnan(_z.value)
         _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
         assert np.isnan(_lat) and np.isnan(_lon)
 
-        instance._initialize_coordinate_systems(center_data_dict)
-        _x, _y, _z = instance._array_center.get_coordinates("corsika")
-        assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == center_data_dict["center_alt"]
-        _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
-        assert _lat.value == pytest.approx(center_data_dict["center_lat"].value, 1.0e-2)
-        assert _lon.value == pytest.approx(center_data_dict["center_lon"].value, 1.0e-2)
+        if center_data_dict is not None:
+            instance._initialize_coordinate_systems(center_data_dict)
+            _x, _y, _z = instance._array_center.get_coordinates("corsika")
+            assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == center_data_dict["center_alt"]
+            _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
+            assert _lat.value == pytest.approx(center_data_dict["center_lat"].value, 1.0e-2)
+            assert _lon.value == pytest.approx(center_data_dict["center_lon"].value, 1.0e-2)
 
-        _E, _N, _z = instance._array_center.get_coordinates("utm")
-        assert _E.value == pytest.approx(easting, 1.0)
-        assert _N.value == pytest.approx(northing, 1.0)
+            _E, _N, _z = instance._array_center.get_coordinates("utm")
+            assert _E.value == pytest.approx(easting, 1.0)
+            assert _N.value == pytest.approx(northing, 1.0)
 
     test_one_site(
         north_layout_center_data_dict, layout_array_north_instance, 217611.227, 3185066.278
@@ -108,6 +110,7 @@ def test_initialize_coordinate_systems(
     test_one_site(
         south_layout_center_data_dict, layout_array_south_instance, 366822.017, 7269466.999
     )
+    test_one_site(None, layout_array_south_instance, 366822.017, 7269466.999)
 
 
 def test_initialize_corsika_telescope_from_file(

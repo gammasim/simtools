@@ -71,9 +71,9 @@ class GeoCoordinates:
 
         """
         try:
-            _center_lat, _center_lon, _ = reference_point.get_coordinates("mercator")
-            _scale_factor_k_0 = self._coordinate_scale_factor(reference_point)
-            if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
+            if self._valid_reference_point(reference_point):
+                _center_lat, _center_lon, _ = reference_point.get_coordinates("mercator")
+                _scale_factor_k_0 = self._coordinate_scale_factor(reference_point)
                 proj4_string = (
                     "+proj=tmerc +ellps=WGS84 +datum=WGS84"
                     f" +lon_0={_center_lon} +lat_0={_center_lat}"
@@ -87,6 +87,37 @@ class GeoCoordinates:
             raise
 
         return None
+
+    def _valid_reference_point(self, reference_point):
+        """
+        Check if reference point has valid long/lat coordinates (including altitude).
+        This is required to derive the local coordinate system.
+        Try if a conversion from UTM coordinates to long/lat is possible.
+
+        Parameters
+        ----------
+        reference_point: simtools.layout.telescope_position
+            Reference coordinate.
+
+        Returns
+        -------
+        bool
+            True if reference point has valid coordinates.
+
+        """
+        _center_lat, _center_lon, _center_alt = reference_point.get_coordinates("mercator")
+        if np.isnan(_center_alt.value):
+            self._logger.debug("Missing array center altitude")
+            return False
+
+        if np.isnan(_center_lat.value) or np.isnan(_center_lon.value):
+            self._logger.debug(
+                "Invalid array center coordinates "
+                f"(lat={_center_lat}, lon={_center_lon}, alt={_center_alt})"
+            )
+            return False
+
+        return True
 
     def _coordinate_scale_factor(self, reference_point):
         """
