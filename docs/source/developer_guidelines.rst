@@ -3,12 +3,13 @@
 Developer Guidelines
 ********************
 
-This section provides help and guidelines for developers of simtools.
-If you want to contribute, please use one of the contact points listed at the
+This section provides guidelines for developers of simtools.
+
+If you want to contribute, contact the simtools team using one of the contact points listed at the
 entry page of this documentation.
 
-In general, please take note of the `ctapipe developer guidelines
-<https://cta-observatory.github.io/ctapipe/development/index.html>`_.
+Simtools follows generally the development guidelines of CTAO and
+ctapipe (see `ctapipe development <https://cta-observatory.github.io/ctapipe/development/index.html>`_).
 
 Project setup
 =============
@@ -17,20 +18,20 @@ The main code repository for simtools is on GitHub:
 
 `https://github.com/gammasim/simtools <https://github.com/gammasim/simtools>`_
 
-The main directories for developers are the
+The main directories of simtools are:
 
 - root directory: `simtools <https://github.com/gammasim/simtools/tree/main/simtools>`_
-- applications (simtools:) `applications <https://github.com/gammasim/simtools/tree/main/simtools/applications>`_
-- unit and integration tests: `tests <https://github.com/gammasim/simtools/tree/main/tests>`_
-- documentation: `docs <https://github.com/gammasim/simtools/tree/main/docs>`_
-- docker files: `docker <https://github.com/gammasim/simtools/tree/main/docker>`_
+- applications (simtools:) `simtools/applications <https://github.com/gammasim/simtools/tree/main/simtools/applications>`_
+- unit and integration tests: `./tests <https://github.com/gammasim/simtools/tree/main/tests>`_
+- documentation: `./docs <https://github.com/gammasim/simtools/tree/main/docs>`_
+- docker files: `.docker <https://github.com/gammasim/simtools/tree/main/docker>`_
 
 
 Python version
 ==============
 
 The simtools package is currently developed for Python 3.9, but expected to work with Python 3.10 and 3.11 as well.
-Unit and integration tests are run for Python 3.9 and 3.11.
+Unit and integration tests run for Python 3.9 and 3.11.
 
 
 Contributing code
@@ -58,7 +59,7 @@ Unit and Integration Testing
 The pytest framework is used for testing:
 
 - unit tests should be written for every module and function
-- integration tests should be written for every application cover the most important use cases
+- integration tests should be written for every application and cover the most important use cases
 
 The test modules are located in
 `simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ modules separated
@@ -74,7 +75,7 @@ This should be used to avoid duplication.
 The `pytest-xdist <https://pytest-xdist.readthedocs.io/en/latest/>`_ plugin is part of the developer environment
 and can be used to run unit and integration tests in parallel (e.g., ``pytest -n 4`` to run on four cores in parallel).
 
-Check the test coverage with ``pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov``. 
+Check the test coverage with ``pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov``.
 Add the ``--cov-report html`` option to generate a coverage report in HTML format.
 
 Generating Documentation
