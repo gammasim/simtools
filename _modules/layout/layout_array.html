@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.layout_array &#8212; simtools v0.1.dev1+gf9ce4ad</title>
+    <title>layout.layout_array &#8212; simtools v0.1.dev1+g2031455</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=56703d20"></script>
+    <script src="../../_static/documentation_options.js?v=9d7cff0f"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf9ce4ad</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g2031455</p>
 
 
 
@@ -376,6 +376,8 @@
     <span class="k">def</span> <span class="nf">_initialize_coordinate_systems</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize array center and coordinate systems.</span>
+<span class="sd">        By definition, the array center is at (0,0,0) in</span>
+<span class="sd">        the CORSIKA coordinate system.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -389,11 +391,29 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="n">center_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">center_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">center_dict</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;array_center&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_array_center_mercator</span><span class="p">(</span><span class="n">center_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_array_center_utm</span><span class="p">(</span><span class="n">center_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_alt&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)))</span>
+        <span class="n">_name</span> <span class="o">=</span> <span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">_name</span> <span class="k">if</span> <span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="n">center_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">center_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">center_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
+            <span class="n">crs_local</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">),</span>
+            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
+            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_array_center_mercator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set array center coordinates in mercator system.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span>
                 <span class="s2">&quot;mercator&quot;</span><span class="p">,</span>
@@ -402,6 +422,15 @@
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_set_array_center_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set array center coordinates in UTM system.</span>
+<span class="sd">        Convert array center position to WGS84 system</span>
+<span class="sd">        (as latitudes are required for the definition</span>
+<span class="sd">        for the definition of the CORSIKA coordinate system)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span> <span class="o">=</span> <span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EPSG&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span>
@@ -409,23 +438,13 @@
                 <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_easting&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)),</span>
                 <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_northing&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)),</span>
             <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
+                <span class="n">crs_local</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
+                <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">),</span>
+            <span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="k">pass</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center_alt&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)))</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_name</span> <span class="o">=</span> <span class="n">center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_name&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">_name</span> <span class="k">if</span> <span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="o">.</span><span class="n">convert_all</span><span class="p">(</span>
-            <span class="n">crs_local</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span><span class="p">),</span>
-            <span class="n">crs_wgs84</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_wgs84</span><span class="p">(),</span>
-            <span class="n">crs_utm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geo_coordinates</span><span class="o">.</span><span class="n">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epsg</span><span class="p">),</span>
-        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_altitude_from_corsika_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tel_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -720,8 +739,8 @@
 
     <span class="k">def</span> <span class="nf">_get_export_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_corsika_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        File metadata for export of array element list to file. Included array center definiton,\</span>
-<span class="sd">        CORSIKA telescope parameters, and EPSG centre</span>
+<span class="sd">        File metadata for export of array element list to file. Included array center definition,\</span>
+<span class="sd">        CORSIKA telescope parameters, and EPSG center</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
