@@ -284,6 +284,8 @@ class LayoutArray:
     def _initialize_coordinate_systems(self, center_dict=None):
         """
         Initialize array center and coordinate systems.
+        By definition, the array center is at (0,0,0) in
+        the CORSIKA coordinate system.
 
         Parameters
         ----------
@@ -297,11 +299,29 @@ class LayoutArray:
 
         """
 
+        center_dict = {} if center_dict is None else center_dict
+
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
         self._array_center.set_coordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
+        self._set_array_center_mercator(center_dict)
+        self._set_array_center_utm(center_dict)
+        self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
+        _name = center_dict.get("array_name")
+        self.name = _name if _name is not None else self.name
 
-        center_dict = {} if center_dict is None else center_dict
+        self._array_center.convert_all(
+            crs_local=self.geo_coordinates.crs_local(self._array_center),
+            crs_wgs84=self.geo_coordinates.crs_wgs84(),
+            crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+        )
+
+    def _set_array_center_mercator(self, center_dict):
+        """
+        Set array center coordinates in mercator system.
+
+        """
+
         try:
             self._array_center.set_coordinates(
                 "mercator",
@@ -310,6 +330,15 @@ class LayoutArray:
             )
         except TypeError:
             pass
+
+    def _set_array_center_utm(self, center_dict):
+        """
+        Set array center coordinates in UTM system.
+        Convert array center position to WGS84 system
+        (as latitudes are required for the definition
+        for the definition of the CORSIKA coordinate system)
+
+        """
         try:
             self._epsg = center_dict.get("EPSG", None)
             self._array_center.set_coordinates(
@@ -317,23 +346,13 @@ class LayoutArray:
                 u.Quantity(center_dict.get("center_easting", np.nan * u.m)),
                 u.Quantity(center_dict.get("center_northing", np.nan * u.m)),
             )
+            self._array_center.convert_all(
+                crs_local=None,
+                crs_wgs84=self.geo_coordinates.crs_wgs84(),
+                crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+            )
         except TypeError:
             pass
-        try:
-            self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", 0.0 * u.m)))
-        except TypeError:
-            pass
-        try:
-            _name = center_dict.get("array_name")
-            self.name = _name if _name is not None else self.name
-        except KeyError:
-            pass
-
-        self._array_center.convert_all(
-            crs_local=self.geo_coordinates.crs_local(self._array_center),
-            crs_wgs84=self.geo_coordinates.crs_wgs84(),
-            crs_utm=self.geo_coordinates.crs_utm(self._epsg),
-        )
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, tel_name=None):
         """
@@ -619,8 +638,8 @@ class LayoutArray:
 
     def _get_export_metadata(self, export_corsika_meta=False):
         """
-        File metadata for export of array element list to file. Included array center definiton,\
-        CORSIKA telescope parameters, and EPSG centre
+        File metadata for export of array element list to file. Included array center definition,\
+        CORSIKA telescope parameters, and EPSG center
 
         Parameters
         ----------
