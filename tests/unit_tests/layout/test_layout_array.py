@@ -518,16 +518,18 @@ def test_try_set_coordinate(
     )
 
 
-def test_get_corsika_sphere_center(telescope_north_test_file):
+def test_get_corsika_sphere_center(telescope_north_test_file, caplog):
     layout = LayoutArray(telescope_list_file=telescope_north_test_file)
 
     assert layout._get_corsika_sphere_center("LST") == 16.0 * u.m
 
-    with pytest.raises(KeyError):
-        layout._get_corsika_sphere_center("not_a_telescope")
+    with caplog.at_level(logging.WARNING):
+        assert layout._get_corsika_sphere_center("not_a_telescope") == 0.0 * u.m
+    assert (
+        "Missing definition of CORSIKA sphere center for telescope not_a_telescope of type"
+        in caplog.text
+    )
 
-    with pytest.raises(KeyError):
-        layout._get_corsika_sphere_center("")
-
-    with pytest.raises(AttributeError):
-        layout._get_corsika_sphere_center(None)
+    with caplog.at_level(logging.WARNING):
+        assert layout._get_corsika_sphere_center("") == 0.0 * u.m
+    assert "Missing definition of CORSIKA sphere center for telescope  of type " in caplog.text

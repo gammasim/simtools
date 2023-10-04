@@ -408,11 +408,12 @@ class LayoutArray:
                 names.get_telescope_type(tel_name)
             ]
         except KeyError:
-            self._logger.error(
-                "Missing definition of CORSIKA sphere center for telescope type "
-                f"{names.get_telescope_type(tel_name)}"
+            self._logger.warning(
+                "Missing definition of CORSIKA sphere center for telescope "
+                f"{tel_name} of type {names.get_telescope_type(tel_name)}"
             )
-            raise
+
+        return 0.0 * u.m
 
     def _load_telescope_names(self, row):
         """
