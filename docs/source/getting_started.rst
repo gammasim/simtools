@@ -187,7 +187,7 @@ Clone simtools from GitHub into a directory ``external/simtools``:
     # clone simtools repository
     git clone https://github.com/gammasim/simtools.git external/simtools
 
-Start up a container (the image will we downloaded, if it is not available in your environment):
+Start up a container (the image will be downloaded, if it is not available in your environment):
 
 .. code-block::
 
