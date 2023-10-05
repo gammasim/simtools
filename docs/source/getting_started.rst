@@ -196,7 +196,7 @@ Start up a container (the image will be downloaded, if it is not available in yo
         bash -c "$(cat ./entrypoint.sh) && bash"
 
 The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
-The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is set.
+The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is automatically set.
 
 Test your installation using the docker image by running the unit tests:
 
