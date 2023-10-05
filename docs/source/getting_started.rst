@@ -9,18 +9,18 @@ Model Database Access
 Simulation model parameters are stored in a MongoDB-type database.
 Many simtools applications depend on access to this database; ask one of the developers for the credentials.
 
-Credentials for database access are passed on to simtools applications using environmental variables.
-For database access, copy \
-`set_DB_environ_template.sh <https://github.com/gammasim/simtools/blob/main/set_DB_environ_template.sh>`_ to a new file named ``set_DB_environ.sh``, and update it with the credentials:
+Credentials for database access are passed on to simtools applications using the environmental variables settings in .env file. Copy the .env_template to .env and modify the credentials for access.
 
-.. code-block::
+.. code-block:: console
 
-    export DB_API_USER=<db_user_name>
-    export DB_API_PW=<db_password>
-    export DB_API_PORT=<db_port>
-    export DB_SERVER=<db_server>
+    $ # credentials for simulation model database access
+    $ SIMTOOLS_DB_API_PORT=port #Port on the MongoDB server
+    $ SIMTOOLS_DB_SERVER=server # MongoDB server
+    $ SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
+    $ SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person
+    $ SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=auth
+    $ SIMTOOLS_SIMTEL_PATH=dir
 
-See below for the usage of this script.
 
 .. _InstallationForUsers:
 
@@ -31,30 +31,9 @@ simtools is under rapid development and not ready for production use.
 It will be made available in future using the conda packaging system.
 For now, the following installation procedure is foreseen:
 
-Install a simple python environment:
-
 .. code-block:: console
 
-    $ mamba create --name simtools-prod python=3.9
-    $ mamba activate simtools-prod
-
-Clone simtools project:
-
-.. code-block:: console
-
-    $ git clone https://github.com/gammasim/simtools.git
-
-Change directory into ``simtools`` and install simtools including dependencies:
-
-.. code-block:: console
-
-    $ pip install .
-
-Source the ``set_DB_environ.sh`` script in order to run the applications (see `Model Database Access`_ and `Set environmental variables`_)
-
-.. code-block:: console
-
-    $ source set_DB_environ.sh
+    $ pip install gammasimtools
 
 
 All simtools applications are now available as command line tools. Note the naming of the tool, starting with ``simtools-`` followed by the application name. See :ref:`Applications` for more details.
@@ -82,9 +61,9 @@ Create a conda virtual environment with the simtools dependencies installed:
 
 .. code-block:: console
 
-    $ conda env create -f environment.yml
+    $ mamba env create -f environment.yml
 
-    $ conda activate simtools-dev
+    $ mamba activate simtools-dev
 
     $ pip install -e .
 
@@ -100,19 +79,6 @@ CTA users can download both packages from `here <https://www.mpi-hd.mpg.de/hfm/C
 
     tar -czf corsika7.7_simtelarray.tar.gz
     ./build_all prod5 qgs2 gsl
-
-
-+++++++++++++++++++++++++++
-Set environmental variables
-+++++++++++++++++++++++++++
-
-Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to activate set the environmental variables for the DB access:
-
-.. code-block:: console
-
-    $ source set_DB_environ.sh
-
-The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation.
 
 +++++++++++++++++
 Test installation
