@@ -9,7 +9,7 @@ If you want to contribute, contact the simtools team using one of the contact po
 entry page of this documentation.
 
 Simtools follows generally the development guidelines of CTAO and
-ctapipe (see `ctapipe development <https://cta-observatory.github.io/ctapipe/development/index.html>`_).
+ctapipe (see `ctapipe development <https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html>`_).
 
 Project setup
 =============
@@ -37,6 +37,9 @@ Unit and integration tests run for Python 3.9 and 3.11.
 Contributing code
 =================
 
+It is recommended to discuss any code changes with the simtools team before starting to implement them
+(e.g., by opening an issue on GitHub).
+
 The following steps outline how to contribute code to simtools:
 
 1. Set up your coding environment as outlined in the :ref:`getting started <getting_started>` section.
@@ -59,7 +62,7 @@ Unit and Integration Testing
 The pytest framework is used for testing:
 
 - unit tests should be written for every module and function
-- integration tests should be written for every application and cover the most important use cases
+- integration tests should be written for every application and cover the most important use cases. Integration tests should follow the logic of the existing tests in `simtools/tests/integration_tests <https://github.com/gammasim/simtools/tree/main/tests/integration_tests/>`_.
 
 The test modules are located in
 `simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ separated
