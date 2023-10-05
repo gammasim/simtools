@@ -66,6 +66,8 @@ Use pip to install simtools and its dependencies:
 
     $ pip install gammasimtools
 
+The pip installation method requires to install CORSIKA/sim_telarray separately, see `CorsikaSimTelarrayInstallation`_.
+
 .. _GitInstallation:
 
 Git Installation
@@ -78,6 +80,8 @@ Install simtools directly from the GitHub repository:
     $ git clone https://github.com/gammasim/simtools.git
     $ cd simtools
     $ pip install .
+
+The git installation method requires to install CORSIKA/sim_telarray separately, see `CorsikaSimTelarrayInstallation`_.
 
 .. _DockerInstallation:
 
@@ -158,11 +162,7 @@ Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to set th
 
 The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation.
 
-Test your installation by running the unit tests:
-
-.. code-block:: console
-
-    $ pytest tests/unit_tests/
+Test your complete installation following the instructions in :ref:`this section <TestingInstallation>`.
 
 Docker Environment for Developers
 =================================
@@ -193,13 +193,26 @@ Start up a container (the image will be downloaded, if it is not available in yo
 
     docker run --rm -it -v "$(pwd)/external:/workdir/external" \
         ghcr.io/gammasim/simtools-dev:latest \
-        bash -c "$(cat ./entrypoint.sh) && bash"
+        bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 
-The entry script of the container will source the ``set_DB_environ.sh`` script and set the DB access parameters (see `Model Database Access`_).
-The container includes a CORSIKA and sim_telarray installation; the environmental variable ``$SIM_TELPATH`` is automatically set.
+The container includes a CORSIKA and sim_telarray installation;
+the environmental variable ``$SIM_TELPATH`` and those for the database access are automatically set (if `.env` is set correctly).
 
-Test your installation using the docker image by running the unit tests:
+Test your installation following the instructions in :ref:`this section <TestingInstallation>`.
+
+.. _TestingInstallation:
+
+Testing your installation
+=========================
+
+Test the simtools installation the docker image by running the unit tests:
 
 .. code-block:: console
 
     $ pytest tests/unit_tests/
+
+Test the simtools plus CORSIKA/sim_telarray installation by running the integration tests:
+
+.. code-block:: console
+
+    $ pytest tests/integration_tests/

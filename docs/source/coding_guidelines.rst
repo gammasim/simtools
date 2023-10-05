@@ -3,11 +3,11 @@
 Coding Guidelines
 *****************
 
-This document describes the coding guidelines for the project. 
+This document describes the coding guidelines for the project.
 
 In general, the simtools project follows the PEP8 style.
-It uses the same guidelines outlined in the `ctapipe style guide <https://cta-observatory.github.io/ctapipe/development/style-guide.html#>`_
-and `code guidelines <https://cta-observatory.github.io/ctapipe/development/code-guidelines.html>`_.
+It uses the same guidelines outlined in the `ctapipe style guide <https://ctapipe.readthedocs.io/en/latest/developer-guide/style-guide.html>`_
+and `code guidelines <https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html>`_
 
 Automatic Formatting
 ====================
@@ -151,4 +151,3 @@ And this is an example of how the site name is validated in the :ref:`telescope_
   self.site = names.validate_site_name(site)
 
 where site was given as parameter to the ``TelescopeModel::__init__`` function.
-
