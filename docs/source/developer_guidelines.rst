@@ -62,7 +62,7 @@ The pytest framework is used for testing:
 - integration tests should be written for every application and cover the most important use cases
 
 The test modules are located in
-`simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ modules separated
+`simtools/tests <https://github.com/gammasim/simtools/tree/main/tests>`_ separated
 by unit and integration tests.
 It is recommended to write unit tests in parallel with the modules to assure that the code is testable.
 
