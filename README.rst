@@ -79,7 +79,7 @@ Install simtools with mamba (recommended for developers):
     git clone https://github.com/gammasim/simtools.git
     cd simtools
     mamba env create -f environment.yml
-    conda activate simtools
+    mamba activate simtools-dev
     pip install -e .
 
 For more detail see the :ref:`Getting_Started` section of the manual.
