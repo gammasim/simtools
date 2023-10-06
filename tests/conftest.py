@@ -218,12 +218,19 @@ def manual_corsika_dict_north():
             "MST": 9.15 * u.m,
             "SCT": 7.15 * u.m,
             "SST": 3 * u.m,
+            "HESS": 7.5 * u.m,  # Value for CT1-4
+            "MAGIC": 10 * u.m,  # Value used in Prod6
+            "VERITAS": 9.15
+            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
         },
         "corsika_sphere_center": {
             "LST": 16 * u.m,
             "MST": 9 * u.m,
             "SCT": 6.1 * u.m,
             "SST": 3.25 * u.m,
+            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
+            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
+            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
         },
         "corsika_obs_level": 2158 * u.m,
     }
@@ -237,12 +244,19 @@ def manual_corsika_dict_south():
             "MST": 9.15 * u.m,
             "SCT": 7.15 * u.m,
             "SST": 3 * u.m,
+            "HESS": 7.5 * u.m,  # Value for CT1-4
+            "MAGIC": 10 * u.m,  # Value used in Prod6
+            "VERITAS": 9.15
+            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
         },
         "corsika_sphere_center": {
             "LST": 16 * u.m,
             "MST": 9 * u.m,
             "SCT": 6.1 * u.m,
             "SST": 3.25 * u.m,
+            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
+            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
+            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
         },
         "corsika_obs_level": 2147 * u.m,
     }
