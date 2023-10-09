@@ -132,7 +132,6 @@ def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file)
 def test_export_results(simtel_path, telescope_model_lst, caplog):
     config_data = {
         "zenith_angle": 20 * u.deg,
-        # "off_axis_angle": [0, 0] * u.deg,
     }
     camera_efficiency = CameraEfficiency(
         telescope_model=telescope_model_lst,
@@ -140,6 +139,5 @@ def test_export_results(simtel_path, telescope_model_lst, caplog):
         config_data=config_data,
         label="export_results",
     )
-
     camera_efficiency.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
