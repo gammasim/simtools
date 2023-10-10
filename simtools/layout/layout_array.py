@@ -797,9 +797,8 @@ class LayoutArray:
                 raise
 
             corsika_list += "TELESCOPE"
-            corsika_list += f"\t {pos_x.value:.3f}E2"
-            corsika_list += f"\t {pos_y.value:.3f}E2"
-            corsika_list += f"\t {pos_z.value:.3f}E2"
+            for pos in [pos_x, pos_y, pos_z]:
+                corsika_list += f"\t {pos.value:.3f}E2"
             corsika_list += f"\t {sphere_radius.value:.3f}E2"
             corsika_list += f"\t # {tel.name}\n"
 
