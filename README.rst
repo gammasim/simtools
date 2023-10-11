@@ -54,7 +54,7 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 - `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
 - :ref:`databases <Databases>`, especially the model parameter database
 
-simtools is under rapid development with continuous changes and additions planned. 
+simtools is under rapid development with continuous changes and additions planned.
 Please contact the developers before using it: simtools-developer@desy.de
 
 
@@ -88,7 +88,8 @@ Authors
 =======
 
 * Raul R Prado (DESY)
-* Orel Gueta (DESY) 
+* Orel Gueta (DESY)
+* Tobias Kleiner (DESY)
 * Victor B. Martins (DESY)
 * Gernot Maier (DESY)
 
