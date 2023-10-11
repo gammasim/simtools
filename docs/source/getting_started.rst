@@ -154,13 +154,9 @@ CTA users can download both packages from the `sim_telarray webpage <https://www
     $ tar -czf corsika7.7_simtelarray.tar.gz
     $ ./build_all prod5 qgs2 gsl
 
-Source the ``set_DB_environ.sh`` script (see `Model Database Access`_) to set the environmental variables required for database access:
+The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation
+(recommended to include it in the \.env file with all other environment variables).
 
-.. code-block:: console
-
-    $ source set_DB_environ.sh
-
-The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation.
 
 Test your complete installation following the instructions in :ref:`this section <TestingInstallation>`.
 
@@ -196,7 +192,8 @@ Start up a container (the image will be downloaded, if it is not available in yo
         bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 
 The container includes a CORSIKA and sim_telarray installation;
-the environmental variable ``$SIM_TELPATH`` and those for the database access are automatically set (if `.env` is set correctly).
+the environmental variable ``$SIM_TELPATH`` and those for the database access are automatically set
+(if variables are set correctly in the \.env` file).
 
 Test your installation following the instructions in :ref:`this section <TestingInstallation>`.
 
