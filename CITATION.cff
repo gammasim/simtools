@@ -18,6 +18,11 @@ authors:
     family-names: Gueta
     orcid: 'https://orcid.org/0000-0002-9440-2398'
     affiliation: DESY
+  - given-names: Tobias
+    name-particle: K.
+    family-names: Kleiner
+    orcid: 'https://orcid.org/0000-0002-4260-9186'
+    affiliation: DESY
   - given-names: Victor
     family-names: Barbosa Martins
     orcid: 'https://orcid.org/0000-0002-5085-8828'
