@@ -255,24 +255,19 @@ class LayoutArray:
             dictionary with CORSIKA telescope parameters
 
         """
+
         try:
             self._corsika_telescope["corsika_obs_level"] = u.Quantity(
                 corsika_dict["corsika_obs_level"]
             )
         except (TypeError, KeyError):
             self._corsika_telescope["corsika_obs_level"] = np.nan * u.m
-        try:
-            self._corsika_telescope["corsika_sphere_center"] = self._initialize_sphere_parameters(
-                corsika_dict["corsika_sphere_center"]
-            )
-        except (TypeError, KeyError):
-            pass
-        try:
-            self._corsika_telescope["corsika_sphere_radius"] = self._initialize_sphere_parameters(
-                corsika_dict["corsika_sphere_radius"]
-            )
-        except (TypeError, KeyError):
-            pass
+
+        for key in ["corsika_sphere_center", "corsika_sphere_radius"]:
+            try:
+                self._corsika_telescope[key] = self._initialize_sphere_parameters(corsika_dict[key])
+            except (TypeError, KeyError):
+                pass
 
     def _initialize_coordinate_systems(self, center_dict=None):
         """
@@ -805,9 +800,8 @@ class LayoutArray:
                 raise
 
             corsika_list += "TELESCOPE"
-            corsika_list += f"\t {pos_x.value:.3f}E2"
-            corsika_list += f"\t {pos_y.value:.3f}E2"
-            corsika_list += f"\t {pos_z.value:.3f}E2"
+            for pos in [pos_x, pos_y, pos_z]:
+                corsika_list += f"\t {pos.value:.3f}E2"
             corsika_list += f"\t {sphere_radius.value:.3f}E2"
             corsika_list += f"\t # {tel.name}\n"
 
