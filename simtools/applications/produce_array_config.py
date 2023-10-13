@@ -75,7 +75,7 @@
 
     .. code-block:: console
 
-        python applications/get_file_from_db.py --file_name array_config_test.yml
+        simtools-get-file-from-db --file_name array_config_test.yml
 
     Run the application. Runtime < 1 min.
 
