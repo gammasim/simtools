@@ -124,7 +124,7 @@ def _parse(label=None, description=None):
     )
     config.parser.add_argument(
         "--use_corsika_telescope_height",
-        help="Use CORSIKA coordinates for telescope heights (requires CORSIKA observeration level)",
+        help="Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)",
         required=False,
         default=False,
         action="store_true",
