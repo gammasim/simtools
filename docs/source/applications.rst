@@ -49,6 +49,12 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
+generate_corsika_histograms
+==================
+
+.. automodule:: generate_corsika_histograms
+   :members:
+
 get_file_from_db
 ================
 
@@ -68,17 +74,16 @@ make_regular_arrays
 .. automodule:: make_regular_arrays
    :members:
 
+plot_layout_array
+======================
+
+.. automodule:: plot_layout_array
+   :members:
 
 plot_simtel_histograms
 ======================
 
 .. automodule:: plot_simtel_histograms
-   :members:
-
-plot_layout_array
-======================
-
-.. automodule:: plot_layout_array
    :members:
 
 print_array_elements
@@ -107,6 +112,12 @@ sim_showers_for_trigger_rates
 .. automodule:: sim_showers_for_trigger_rates
    :members:
 
+
+simulate_prod
+=========================
+
+.. automodule:: simulate_prod
+   :members:
 
 submit_data_from_external
 =========================
