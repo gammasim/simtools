@@ -193,7 +193,7 @@ class Simulator:
     def _load_corsika_config_and_model(self, config_data):
         """
         Validate configuration data for CORSIKA shower simulation and
-        remove entries need needed for CorsikaRunner.
+        remove entries needed for CorsikaRunner.
 
         Parameters
         ----------
