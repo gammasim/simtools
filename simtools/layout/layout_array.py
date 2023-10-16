@@ -389,7 +389,7 @@ class LayoutArray:
         Returns
         -------
         astropy.Quantity
-            Telescope sphere center value
+            Telescope sphere center value (0.0*u.m if sphere center is not defined).
 
         Raises
         ------
