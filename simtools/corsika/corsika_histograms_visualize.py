@@ -60,24 +60,24 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
             norm = None
         mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
         if (
-            histograms_instance._dict_2D_distributions[property_name]["x edges unit"]
+            histograms_instance._dict_2D_distributions[property_name]["x axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{histograms_instance._dict_2D_distributions[property_name]['x edges']} "
-                f"({histograms_instance._dict_2D_distributions[property_name]['x edges unit']})"
+                f"({histograms_instance._dict_2D_distributions[property_name]['x axis unit']})"
             )
         else:
             ax.set_xlabel(
                 f"{histograms_instance._dict_2D_distributions[property_name]['x edges']} "
             )
         if (
-            histograms_instance._dict_2D_distributions[property_name]["y edges unit"]
+            histograms_instance._dict_2D_distributions[property_name]["y axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
                 f"{histograms_instance._dict_2D_distributions[property_name]['y edges']} "
-                f"({histograms_instance._dict_2D_distributions[property_name]['y edges unit']})"
+                f"({histograms_instance._dict_2D_distributions[property_name]['y axis unit']})"
             )
         else:
             ax.set_ylabel(
@@ -259,19 +259,19 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
             width=np.abs(np.diff(edges[i_hist])),
         )
         if (
-            histograms_instance._dict_1D_distributions[property_name]["edges unit"]
+            histograms_instance._dict_1D_distributions[property_name]["axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
                 f"{histograms_instance._dict_1D_distributions[property_name]['edges']} "
-                f"({histograms_instance._dict_1D_distributions[property_name]['edges unit']})"
+                f"({histograms_instance._dict_1D_distributions[property_name]['axis unit']})"
             )
         else:
             ax.set_xlabel(f"{histograms_instance._dict_1D_distributions[property_name]['edges']} ")
         if property_name == "density":
             ax.set_ylabel(
                 f"Density ("
-                f"{histograms_instance._dict_1D_distributions[property_name]['edges unit']}$^{-2}$)"
+                f"{histograms_instance._dict_1D_distributions[property_name]['axis unit']}$^{-2}$)"
             )
         else:
             ax.set_ylabel("Counts")
