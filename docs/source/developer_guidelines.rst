@@ -113,7 +113,6 @@ Application should not include complex algorithm, this should be done at the mod
 
 All applications should follow the same structure:
 
-
 .. code-block:: python
 
     def main():
@@ -141,6 +140,8 @@ Application handling should be done using the :ref:`Configurator <configurationc
 configurations from command line, configuration file, or environmental variables.
 Check the :ref:`commandline_parser <configurationcommandline_parser>` module for generic command line arguments before introducing new ones in applications
 
+The documentation of application uses the in-line doc string.
+Note that sphinx requires an explicit listing of new applications in `application.rst <https://github.com/gammasim/simtools/blob/main/docs/source/applications.rst>`_.
 
 Dependencies
 ============
