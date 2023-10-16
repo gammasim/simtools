@@ -773,7 +773,7 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
             "file name": "hist_1D_photon_wavelength_distr",
             "title": "Photon wavelength distribution",
             "edges": "wavelength",
-            "edges unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
+            "axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "z axis"
             ]["start"].unit,
         }
@@ -818,11 +818,11 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
             "file name": "hist_2D_photon_count_distr",
             "title": "Photon count distribution on the ground",
             "x edges": "x position on the ground",
-            "x edges unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
+            "x axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "x axis"
             ]["start"].unit,
             "y edges": "y position on the ground",
-            "y edges unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
+            "y axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "y axis"
             ]["start"].unit,
         }
