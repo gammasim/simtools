@@ -72,7 +72,7 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
                 f"{histograms_instance._dict_2D_distributions[property_name]['x edges']} "
             )
         if (
-            histograms_instance._dict_2D_distributions[property_name]["y edges"]
+            histograms_instance._dict_2D_distributions[property_name]["y edges unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
@@ -268,7 +268,14 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
             )
         else:
             ax.set_xlabel(f"{histograms_instance._dict_1D_distributions[property_name]['edges']} ")
-        ax.set_ylabel("Counts")
+        if property_name == "density":
+            ax.set_ylabel(
+                f"Density ("
+                f"${histograms_instance._dict_1D_distributions[property_name]['edges unit']}^{-2}$"
+                f")"
+            )
+        else:
+            ax.set_ylabel("Counts")
 
         if log_y is True:
             ax.set_yscale("log")
