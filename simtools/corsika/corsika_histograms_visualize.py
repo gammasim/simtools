@@ -49,42 +49,44 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
         histograms_instance,
         histograms_instance._dict_2D_distributions[property_name]["function"],
     )
-    hist_values, x_edges, y_edges = function()
+    hist_values, x_bin_edges, y_bin_edges = function()
 
     all_figs = []
-    for i_hist, _ in enumerate(x_edges):
+    for i_hist, _ in enumerate(x_bin_edges):
         fig, ax = plt.subplots()
         if log_z is True:
             norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values[i_hist]), 2]))
         else:
             norm = None
-        mesh = ax.pcolormesh(x_edges[i_hist], y_edges[i_hist], hist_values[i_hist], norm=norm)
+        mesh = ax.pcolormesh(
+            x_bin_edges[i_hist], y_bin_edges[i_hist], hist_values[i_hist], norm=norm
+        )
         if (
             histograms_instance._dict_2D_distributions[property_name]["x axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['x edges']} "
+                f"{histograms_instance._dict_2D_distributions[property_name]['x bin edges']} "
                 f"({histograms_instance._dict_2D_distributions[property_name]['x axis unit']})"
             )
         else:
             ax.set_xlabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['x edges']} "
+                f"{histograms_instance._dict_2D_distributions[property_name]['x bin edges']} "
             )
         if (
             histograms_instance._dict_2D_distributions[property_name]["y axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['y edges']} "
+                f"{histograms_instance._dict_2D_distributions[property_name]['y bin edges']} "
                 f"({histograms_instance._dict_2D_distributions[property_name]['y axis unit']})"
             )
         else:
             ax.set_ylabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['y edges']} "
+                f"{histograms_instance._dict_2D_distributions[property_name]['y bin edges']} "
             )
-        ax.set_xlim(np.amin(x_edges[i_hist]), np.amax(x_edges[i_hist]))
-        ax.set_ylim(np.amin(y_edges[i_hist]), np.amax(y_edges[i_hist]))
+        ax.set_xlim(np.amin(x_bin_edges[i_hist]), np.amax(x_bin_edges[i_hist]))
+        ax.set_ylim(np.amin(y_bin_edges[i_hist]), np.amax(y_bin_edges[i_hist]))
         ax.set_facecolor("black")
         fig.colorbar(mesh)
         all_figs.append(fig)
@@ -248,26 +250,28 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
         histograms_instance,
         histograms_instance._dict_1D_distributions[property_name]["function"],
     )
-    hist_values, edges = function()
+    hist_values, bin_edges = function()
     all_figs = []
-    for i_hist, _ in enumerate(edges):
+    for i_hist, _ in enumerate(bin_edges):
         fig, ax = plt.subplots()
         ax.bar(
-            edges[i_hist][:-1],
+            bin_edges[i_hist][:-1],
             hist_values[i_hist],
             align="edge",
-            width=np.abs(np.diff(edges[i_hist])),
+            width=np.abs(np.diff(bin_edges[i_hist])),
         )
         if (
             histograms_instance._dict_1D_distributions[property_name]["axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_1D_distributions[property_name]['edges']} "
+                f"{histograms_instance._dict_1D_distributions[property_name]['bin edges']} "
                 f"({histograms_instance._dict_1D_distributions[property_name]['axis unit']})"
             )
         else:
-            ax.set_xlabel(f"{histograms_instance._dict_1D_distributions[property_name]['edges']} ")
+            ax.set_xlabel(
+                f"{histograms_instance._dict_1D_distributions[property_name]['bin edges']} "
+            )
         if property_name == "density":
             ax.set_ylabel(
                 f"Density ("
@@ -455,15 +459,15 @@ def plot_1D_event_header_distribution(
         List of figures for the given telescopes.
 
     """
-    hist_values, edges = histograms_instance.event_1D_histogram(
+    hist_values, bin_edges = histograms_instance.event_1D_histogram(
         event_header_element, bins=bins, hist_range=hist_range
     )
     fig, ax = plt.subplots()
     ax.bar(
-        edges[:-1],
+        bin_edges[:-1],
         hist_values,
         align="edge",
-        width=np.abs(np.diff(edges)),
+        width=np.abs(np.diff(bin_edges)),
     )
     if (
         histograms_instance.event_information[event_header_element].unit
@@ -515,7 +519,7 @@ def plot_2D_event_header_distribution(
         List of figures for the given telescopes.
 
     """
-    hist_values, x_edges, y_edges = histograms_instance.event_2D_histogram(
+    hist_values, x_bin_edges, y_bin_edges = histograms_instance.event_2D_histogram(
         event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
     )
     fig, ax = plt.subplots()
@@ -523,7 +527,7 @@ def plot_2D_event_header_distribution(
         norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values), 2]))
     else:
         norm = None
-    mesh = ax.pcolormesh(x_edges, y_edges, hist_values, norm=norm)
+    mesh = ax.pcolormesh(x_bin_edges, y_bin_edges, hist_values, norm=norm)
 
     if (
         histograms_instance.event_information[event_header_element_1].unit
