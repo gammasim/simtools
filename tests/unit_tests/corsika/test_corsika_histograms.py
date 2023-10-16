@@ -189,16 +189,16 @@ def test_get_hist_1D_projection(corsika_histograms_instance_set_histograms, capl
         assert "label_not_valid is not valid." in caplog.text
 
     labels = ["wavelength", "time", "altitude"]
-    expected_shape_of_edges = [(1, 81), (1, 101), (1, 101)]
+    expected_shape_of_bin_edges = [(1, 81), (1, 101), (1, 101)]
     expected_shape_of_values = [(1, 80), (1, 100), (1, 100)]
     expected_mean = [125.4, 116.3, 116.3]
     expected_std = [153.4, 378.2, 483.8]
     for i_hist, hist_label in enumerate(labels):
         (
             hist_1D_list,
-            x_edges_list,
+            x_bin_edges_list,
         ) = corsika_histograms_instance_set_histograms._get_hist_1D_projection(hist_label)
-        assert np.shape(x_edges_list) == expected_shape_of_edges[i_hist]
+        assert np.shape(x_bin_edges_list) == expected_shape_of_bin_edges[i_hist]
         assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
         assert pytest.approx(np.mean(hist_1D_list), 1e-2) == expected_mean[i_hist]
         assert pytest.approx(np.std(hist_1D_list), 1e-2) == expected_std[i_hist]
@@ -296,9 +296,11 @@ def test_get_hist_2D_projection(corsika_histograms_instance, caplog):
     hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are approximately the same
     # (except for the density hist, which is divided by the area)
     for i_label, label in enumerate(labels):
-        hist_values, x_edges, y_edges = corsika_histograms_instance._get_hist_2D_projection(label)
-        assert np.shape(x_edges) == (1, 101)
-        assert np.shape(y_edges) == (1, 101)
+        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2D_projection(
+            label
+        )
+        assert np.shape(x_bin_edges) == (1, 101)
+        assert np.shape(y_bin_edges) == (1, 101)
         assert np.shape(hist_values) == (1, 100, 100)
         assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
@@ -306,7 +308,9 @@ def test_get_hist_2D_projection(corsika_histograms_instance, caplog):
     corsika_histograms_instance.set_histograms(telescope_indices=[0, 1, 2])
     hist_sums = [3677, 9.2, 3677, 3677]
     for i_label, label in enumerate(labels):
-        hist_values, x_edges, y_edges = corsika_histograms_instance._get_hist_2D_projection(label)
+        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2D_projection(
+            label
+        )
         assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
 
@@ -318,7 +322,7 @@ def test_get_2D_photon_position_distr(corsika_histograms_instance_set_histograms
     counts = corsika_histograms_instance_set_histograms.get_2D_photon_position_distr()
     assert pytest.approx(np.sum(counts[0]), 1e-2) == 11633
 
-    # The edges should be the same
+    # The bin_edges should be the same
     assert (counts[1] == density[1]).all()
     assert (counts[2] == density[2]).all()
 
@@ -355,7 +359,7 @@ def test_get_2D_num_photons_distr(corsika_histograms_instance_set_histograms):
         telescope_indices_array,
     ) = corsika_histograms_instance_set_histograms.get_2D_num_photons_distr()
     assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
-    # (edges of hist)
+    # (bin_edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
     assert (
         pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
@@ -412,10 +416,10 @@ def test_get_photon_radial_distr_individual_telescopes(corsika_histograms_instan
     corsika_histograms_instance_set_histograms.set_histograms(
         telescope_indices=[0, 1, 2], individual_telescopes=True, hist_config=None
     )
-    _, x_edges_list = corsika_histograms_instance_set_histograms.get_photon_radial_distr()
+    _, x_bin_edges_list = corsika_histograms_instance_set_histograms.get_photon_radial_distr()
     for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
-        assert np.amax(x_edges_list[i_hist]) == 16
-        assert np.size(x_edges_list[i_hist]) == 33
+        assert np.amax(x_bin_edges_list[i_hist]) == 16
+        assert np.size(x_bin_edges_list[i_hist]) == 33
 
 
 def test_get_photon_radial_distr_some_telescopes(corsika_histograms_instance_set_histograms):
@@ -423,9 +427,9 @@ def test_get_photon_radial_distr_some_telescopes(corsika_histograms_instance_set
     corsika_histograms_instance_set_histograms.set_histograms(
         telescope_indices=[0, 1, 2, 3, 4, 5], individual_telescopes=False, hist_config=None
     )
-    _, x_edges_list = corsika_histograms_instance_set_histograms.get_photon_radial_distr()
-    assert np.amax(x_edges_list) == 1000
-    assert np.size(x_edges_list) == 51
+    _, x_bin_edges_list = corsika_histograms_instance_set_histograms.get_photon_radial_distr()
+    assert np.amax(x_bin_edges_list) == 1000
+    assert np.size(x_bin_edges_list) == 51
 
 
 def test_get_photon_radial_distr_input_some_tel_and_density(
@@ -436,21 +440,22 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
         telescope_indices=None, individual_telescopes=False, hist_config=None
     )
 
-    hist_1D_list, x_edges_list = corsika_histograms_instance_set_histograms.get_photon_radial_distr(
-        bins=100, max_dist=1200
-    )
-    assert np.amax(x_edges_list) == 1200
-    assert np.size(x_edges_list) == 101
+    (
+        hist_1D_list,
+        x_bin_edges_list,
+    ) = corsika_histograms_instance_set_histograms.get_photon_radial_distr(bins=100, max_dist=1200)
+    assert np.amax(x_bin_edges_list) == 1200
+    assert np.size(x_bin_edges_list) == 101
 
-    # Test if the keyword density changes the output histogram but not the edges
+    # Test if the keyword density changes the output histogram but not the bin_edges
     (
         hist_1D_list_dens,
-        x_edges_list_dens,
+        x_bin_edges_list_dens,
     ) = corsika_histograms_instance_set_histograms.get_photon_density_distr(
         bins=100,
         max_dist=1200,
     )
-    assert (x_edges_list_dens == x_edges_list).all()
+    assert (x_bin_edges_list_dens == x_bin_edges_list).all()
 
     assert (
         pytest.approx(np.sum(hist_1D_list_dens), 1e-2) == 1.86
@@ -465,16 +470,16 @@ def test_get_photon_radial_distr_input_all_tel(corsika_histograms_instance):
     )
 
     # Default input values
-    _, x_edges_list = corsika_histograms_instance.get_photon_radial_distr()
+    _, x_bin_edges_list = corsika_histograms_instance.get_photon_radial_distr()
     for i_tel, _ in enumerate(corsika_histograms_instance.telescope_indices):
-        assert np.amax(x_edges_list[i_tel]) == 16
-        assert np.size(x_edges_list[i_tel]) == 33
+        assert np.amax(x_bin_edges_list[i_tel]) == 16
+        assert np.size(x_bin_edges_list[i_tel]) == 33
 
     # Input values
-    _, x_edges_list = corsika_histograms_instance.get_photon_radial_distr(bins=20, max_dist=10)
+    _, x_bin_edges_list = corsika_histograms_instance.get_photon_radial_distr(bins=20, max_dist=10)
     for i_tel, _ in enumerate(corsika_histograms_instance.telescope_indices):
-        assert np.amax(x_edges_list[i_tel]) == 10
-        assert np.size(x_edges_list[i_tel]) == 21
+        assert np.amax(x_bin_edges_list[i_tel]) == 10
+        assert np.size(x_bin_edges_list[i_tel]) == 21
 
 
 def test_num_photons_per_event_per_telescope(corsika_histograms_instance_set_histograms):
@@ -558,28 +563,28 @@ def test_num_photons_per_telescope(corsika_histograms_instance_set_histograms):
 
 def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplog):
     # Test range and bins for event
-    hist, edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
+    hist, bin_edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
         bins=50, hist_range=None
     )
-    assert np.size(edges) == 51
-    hist, edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
+    assert np.size(bin_edges) == 51
+    hist, bin_edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
         bins=100, hist_range=None
     )
-    assert np.size(edges) == 101
-    hist, edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
+    assert np.size(bin_edges) == 101
+    hist, bin_edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
         bins=100, hist_range=(0, 500)
     )
-    assert edges[0][0] == 0
-    assert edges[0][-1] == 500
+    assert bin_edges[0][0] == 0
+    assert bin_edges[0][-1] == 500
 
     # Test number of events simulated
-    hist, edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
+    hist, bin_edges = corsika_histograms_instance_set_histograms.get_num_photons_per_event_distr(
         bins=2, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
         pytest.approx(
-            np.sum(edges[0, :-1] * hist[0])
+            np.sum(bin_edges[0, :-1] * hist[0])
             / np.sum(corsika_histograms_instance_set_histograms.num_photons_per_event),
             abs=1,
         )
@@ -587,13 +592,16 @@ def test_get_num_photons_distr(corsika_histograms_instance_set_histograms, caplo
     )
 
     # Test telescope
-    hist, edges = corsika_histograms_instance_set_histograms.get_num_photons_per_telescope_distr(
+    (
+        hist,
+        bin_edges,
+    ) = corsika_histograms_instance_set_histograms.get_num_photons_per_telescope_distr(
         bins=87, hist_range=None
     )
     # Assert that the integration of the histogram resembles the known total number of events.
     assert (
         pytest.approx(
-            np.sum(edges[0, :-1] * hist[0])
+            np.sum(bin_edges[0, :-1] * hist[0])
             / np.sum(corsika_histograms_instance_set_histograms.num_photons_per_telescope),
             abs=1,
         )
@@ -715,19 +723,19 @@ def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
 
 
 def test_event_1D_histogram(corsika_histograms_instance_set_histograms):
-    hist, edges = corsika_histograms_instance_set_histograms.event_1D_histogram(
+    hist, bin_edges = corsika_histograms_instance_set_histograms.event_1D_histogram(
         "total_energy", bins=5, hist_range=(5, 15)
     )
-    assert np.size(edges) == 6
+    assert np.size(bin_edges) == 6
     assert np.sum(hist) == 2
     assert hist[2] == 2
 
 
 def test_event_2D_histogram(corsika_histograms_instance_set_histograms):
-    hist, x_edges, _ = corsika_histograms_instance_set_histograms.event_2D_histogram(
+    hist, x_bin_edges, _ = corsika_histograms_instance_set_histograms.event_2D_histogram(
         "total_energy", "first_interaction_height", bins=(5, 5), hist_range=[[5, 15], [-60e5, -5e5]]
     )
-    assert np.size(x_edges) == 6
+    assert np.size(x_bin_edges) == 6
     assert np.sum(hist) == 2
     assert np.shape(hist) == (5, 5)
 
@@ -772,7 +780,7 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
             "function": "get_photon_wavelength_distr",
             "file name": "hist_1D_photon_wavelength_distr",
             "title": "Photon wavelength distribution",
-            "edges": "wavelength",
+            "bin edges": "wavelength",
             "axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "z axis"
             ]["start"].unit,
@@ -817,11 +825,11 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
             "function": "get_2D_photon_position_distr",
             "file name": "hist_2D_photon_count_distr",
             "title": "Photon count distribution on the ground",
-            "x edges": "x position on the ground",
+            "x bin edges": "x position on the ground",
             "x axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "x axis"
             ]["start"].unit,
-            "y edges": "y position on the ground",
+            "y bin edges": "y position on the ground",
             "y axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
                 "y axis"
             ]["start"].unit,
@@ -835,28 +843,28 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
 
 def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
     hist = np.array([1, 2, 3])
-    x_edges = np.array([1, 2, 3, 4])
-    y_edges = None
+    x_bin_edges = np.array([1, 2, 3, 4])
+    y_bin_edges = None
     x_label = "test_x_label"
     y_label = None
 
     table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
-        hist, x_edges, y_edges, x_label, y_label
+        hist, x_bin_edges, y_bin_edges, x_label, y_label
     )
 
-    assert all(table[x_label] == x_edges[:-1])
+    assert all(table[x_label] == x_bin_edges[:-1])
     assert all(table["values"] == hist)
 
 
 def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
     hist = np.array([[1, 2], [3, 4]])
-    x_edges = np.array([1, 2, 3])
-    y_edges = np.array([1, 2, 3])
+    x_bin_edges = np.array([1, 2, 3])
+    y_bin_edges = np.array([1, 2, 3])
     x_label = "test_x_label"
     y_label = "test_y_label"
 
     table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
-        hist, x_edges, y_edges, x_label, y_label
+        hist, x_bin_edges, y_bin_edges, x_label, y_label
     )
     assert all(table["test_y_label_0"] == np.array([1, 2]))
     assert all(table["test_y_label_1"] == np.array([3, 4]))
