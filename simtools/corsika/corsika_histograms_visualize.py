@@ -274,8 +274,8 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
             )
         if property_name == "density":
             ax.set_ylabel(
-                f"Density ("
-                f"{histograms_instance._dict_1D_distributions[property_name]['axis unit']}$^{-2}$)"
+                f"Density ({histograms_instance._dict_1D_distributions[property_name]['axis unit']}"
+                r"$^{-2}$)"
             )
         else:
             ax.set_ylabel("Counts")
