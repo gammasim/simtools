@@ -227,7 +227,7 @@ class CorsikaHistograms:
                     self.all_event_keys, all_event_units
                 )
 
-                # Add the unities to dictionary with the parameters and turn it into
+                # Add the units to dictionary with the parameters and turn it into
                 # astropy.Quantities.
                 for i_key, key in enumerate(self.all_event_keys[1:]):  # starting at the second
                     # element to avoid the non-numeric (e.g. 'EVTH') key.
@@ -544,9 +544,9 @@ class CorsikaHistograms:
              of the Cherenkov photons on the ground are saved:
              x: x position on the ground (CORSIKA coordinate system),
              y: y position on the ground (CORSIKA coordinate system),
-             cx: direction cosinus in the x direction, i.e., the cosinus of the angle between the
+             cx: direction cosine in the x direction, i.e., the cosine of the angle between the
              incoming direction and the x axis,
-             cy: direction cosinus in the y direction, i.e., the cosinus of the angle between the
+             cy: direction cosine in the y direction, i.e., the cosine of the angle between the
              incoming direction and the y axis,
              time: time of arrival of the photon in ns. The clock starts when the particle crosses
              the top of the atmosphere (CORSIKA-defined) if `self.event_first_interaction_heights`
