@@ -116,6 +116,15 @@ corsika_sphere_center:
   SST:
     value: 3.25
     unit: "m"
+  HESS:
+    value: 7.5 # Invented value for CT1-4, copied from radius
+    unit: "m"
+  MAGIC:
+    value: 10.0 # Invented value for MAGIC, copied from radius
+    unit: "m"
+  VERITAS:
+    value: 9 # Invented value for VERITAS, copied from radius
+    unit: "m"
 
 corsika_sphere_radius:
   LST:
@@ -129,4 +138,13 @@ corsika_sphere_radius:
     unit: "m"
   SST:
     value: 3.
+    unit: "m"
+  HESS:
+    value: 7.5 # Value for CT1-4
+    unit: "m"
+  MAGIC:
+    value: 10.0 # Value used in Prod6
+    unit: "m"
+  VERITAS:
+    value: 9.15 # Invented value (same diameter as the MST, so copy the same value)
     unit: "m"

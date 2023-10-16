@@ -39,7 +39,7 @@ def south_layout_center_data_dict():
 
 @pytest.fixture
 def layout_array_north_four_LST_instance(
-    north_layout_center_data_dict, manual_corsika_dict_north, io_handler, db_config
+    north_layout_center_data_dict, manual_corsika_dict_north, db_config
 ):
     layout = LayoutArray(
         site="North",
@@ -54,7 +54,7 @@ def layout_array_north_four_LST_instance(
 
 @pytest.fixture
 def layout_array_south_four_LST_instance(
-    south_layout_center_data_dict, manual_corsika_dict_south, io_handler, db_config
+    south_layout_center_data_dict, manual_corsika_dict_south, db_config
 ):
     layout = LayoutArray(
         site="South",
@@ -516,3 +516,20 @@ def test_try_set_coordinate(
     test_one_site(
         layout_array_south_instance, telescope_south_test_file, manual_xx_south, manual_yy_south
     )
+
+
+def test_get_corsika_sphere_center(telescope_north_test_file, caplog):
+    layout = LayoutArray(telescope_list_file=telescope_north_test_file)
+
+    assert layout._get_corsika_sphere_center("LST") == 16.0 * u.m
+
+    with caplog.at_level(logging.WARNING):
+        assert layout._get_corsika_sphere_center("not_a_telescope") == 0.0 * u.m
+    assert (
+        "Missing definition of CORSIKA sphere center for telescope not_a_telescope of type"
+        in caplog.text
+    )
+
+    with caplog.at_level(logging.WARNING):
+        assert layout._get_corsika_sphere_center("") == 0.0 * u.m
+    assert "Missing definition of CORSIKA sphere center for telescope  of type " in caplog.text

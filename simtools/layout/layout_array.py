@@ -10,7 +10,6 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
-from simtools.utils.names import all_telescope_class_names
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
@@ -189,22 +188,16 @@ class LayoutArray:
         for simtools_par in corsika_pars:
             corsika_par = names.translate_simtools_to_corsika(simtools_par)
             corsika_dict[simtools_par] = {}
-            for tel_type in all_telescope_class_names:
-                corsika_dict[simtools_par][tel_type] = corsika_parameters_dict[corsika_par][
-                    tel_type
-                ]["value"]
-
+            for key, value in corsika_parameters_dict[corsika_par].items():
+                corsika_dict[simtools_par][key] = value["value"]
                 try:
-                    unit = corsika_parameters_dict[corsika_par][tel_type]["unit"]
-                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][
-                        tel_type
-                    ] * u.Unit(unit)
+                    unit = value["unit"]
+                    corsika_dict[simtools_par][key] = corsika_dict[simtools_par][key] * u.Unit(unit)
                 except KeyError:
                     self._logger.warning(
                         "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
                         "the unit."
                     )
-                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
         if self.mongo_db_config is None:
             self._logger.error("DB connection info was not provided, cannot set site altitude")
@@ -279,7 +272,7 @@ class LayoutArray:
     def _initialize_coordinate_systems(self, center_dict=None):
         """
         Initialize array center and coordinate systems.
-        By definition, the array center is at (0,0,0) in
+        By definition, the array center is at (0,0) in
         the CORSIKA coordinate system.
 
         Parameters
@@ -398,12 +391,22 @@ class LayoutArray:
         astropy.Quantity
             Telescope sphere center value (0.0*u.m if sphere center is not defined).
 
+        Raises
+        ------
+        KeyError
+            if Missing definition of CORSIKA sphere center for this telescope type.
+
         """
 
-        if len(names.get_telescope_type(tel_name)) > 0:
+        try:
             return self._corsika_telescope["corsika_sphere_center"][
                 names.get_telescope_type(tel_name)
             ]
+        except KeyError:
+            self._logger.warning(
+                "Missing definition of CORSIKA sphere center for telescope "
+                f"{tel_name} of type {names.get_telescope_type(tel_name)}"
+            )
 
         return 0.0 * u.m
 

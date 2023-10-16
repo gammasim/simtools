@@ -5,7 +5,7 @@ import numpy as np
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io_handler import IOHandler
 from simtools.utils import names
-from simtools.utils.names import lst, mst, sct, sst
+from simtools.utils.names import hess, lst, magic, mst, sct, sst, veritas
 
 __all__ = [
     "EdgePixelObject",
@@ -50,9 +50,12 @@ class TelescopeHandler(object):
             mst: "dodgerblue",
             sct: "black",
             sst: "darkgreen",
+            hess: "grey",
+            magic: "grey",
+            veritas: "grey",
         }
-        for tel_type in names.all_telescope_class_names:
-            self.radius_dict[tel_type] = corsika_info["corsika_sphere_radius"][tel_type]["value"]
+        for key, value in corsika_info["corsika_sphere_radius"].items():
+            self.radius_dict[key] = value["value"]
 
 
 class PixelObject(object):
@@ -81,6 +84,18 @@ class SCTObject(object):
 
 class SSTObject(object):
     """SST Object."""
+
+
+class HESSObject(object):
+    """HESS Object."""
+
+
+class MAGICObject(object):
+    """MAGIC Object."""
+
+
+class VERITASObject(object):
+    """VERITAS Object."""
 
 
 class MeanRadiusOuterEdgeObject(object):
@@ -288,7 +303,7 @@ class SSTHandler(TelescopeHandler):
         return patch
 
 
-class SCTHandler(object):
+class SCTHandler(TelescopeHandler):
     """
     Legend handler class to plot a representation of an SCT in an array layout.
     """
@@ -302,6 +317,78 @@ class SCTHandler(object):
             height,
             facecolor=self.colors_dict[sct],
             edgecolor=self.colors_dict[sct],
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class HESSHandler(TelescopeHandler):
+    """
+    Legend handler class to plot a representation of an HESS in an array layout.
+    """
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = (
+            handlebox.xdescent + handlebox.width / 3,
+            handlebox.ydescent + handlebox.height / 3,
+        )
+        radius = handlebox.height
+        patch = mpatches.RegularPolygon(
+            (x0, y0),
+            numVertices=6,
+            radius=0.7 * radius * self.radius_dict[hess] / self.radius_dict[lst],
+            orientation=np.deg2rad(30),
+            facecolor=self.colors_dict[hess],
+            edgecolor=self.colors_dict[hess],
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class MAGICHandler(TelescopeHandler):
+    """
+    Legend handler class to plot a representation of an MAGIC in an array layout.
+    """
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = (
+            handlebox.xdescent + handlebox.width / 3,
+            handlebox.ydescent + handlebox.height / 3,
+        )
+        radius = handlebox.height
+        patch = mpatches.RegularPolygon(
+            (x0, y0),
+            numVertices=6,
+            radius=0.7 * radius * self.radius_dict[magic] / self.radius_dict[lst],
+            orientation=np.deg2rad(30),
+            facecolor=self.colors_dict[magic],
+            edgecolor=self.colors_dict[magic],
+            transform=handlebox.get_transform(),
+        )
+        handlebox.add_artist(patch)
+        return patch
+
+
+class VERITASHandler(TelescopeHandler):
+    """
+    Legend handler class to plot a representation of an VERITAS in an array layout.
+    """
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = (
+            handlebox.xdescent + handlebox.width / 3,
+            handlebox.ydescent + handlebox.height / 3,
+        )
+        radius = handlebox.height
+        patch = mpatches.RegularPolygon(
+            (x0, y0),
+            numVertices=6,
+            radius=0.7 * radius * self.radius_dict[veritas] / self.radius_dict[lst],
+            orientation=np.deg2rad(30),
+            facecolor=self.colors_dict[veritas],
+            edgecolor=self.colors_dict[veritas],
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -331,8 +418,27 @@ class MeanRadiusOuterEdgeHandler(object):
         return patch
 
 
-all_telescope_objects = {lst: LSTObject, mst: MSTObject, sct: SCTObject, sst: SSTObject}
-all_telescope_handlers = {lst: LSTHandler, mst: MSTHandler, sct: SCTHandler, sst: SSTHandler}
+all_telescope_objects = {
+    lst: LSTObject,
+    mst: MSTObject,
+    sct: SCTObject,
+    sst: SSTObject,
+    hess: HESSObject,
+    magic: MAGICObject,
+    veritas: VERITASObject,
+}
+all_telescope_handlers = {
+    lst: LSTHandler,
+    mst: MSTHandler,
+    sct: SCTHandler,
+    sst: SSTHandler,
+    hess: HESSHandler,
+    magic: MAGICHandler,
+    veritas: VERITASHandler,
+}
 legend_handler_map = {}
-for tel_type in names.all_telescope_class_names:
-    legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
+try:
+    for tel_type in names.all_telescope_class_names:
+        legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
+except KeyError:
+    pass
