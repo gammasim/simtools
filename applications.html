@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+gf0a3c5d</title>
+    <title>Applications &#8212; simtools v0.1.dev1+gb0a1857</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=3082b913"></script>
+    <script src="_static/documentation_options.js?v=20b89876"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf0a3c5d</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb0a1857</p>
 
 
 
@@ -74,7 +74,9 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
 
 <div class="relations">
@@ -608,7 +610,7 @@ Ex.:</p>
 <h3>Example<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h3>
 <p>North - Prod5, simple example</p>
 <p>Get the array configuration from DB:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python applications/get_file_from_db.py --file_name array_config_test.yml</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name array_config_test.yml</span>
 </pre></div>
 </div>
 <p>Run the application. Runtime &lt; 1 min.</p>
@@ -667,7 +669,7 @@ resources (print quicklook into used computational resources)</p>
 <h3>Example<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h3>
 <p>Testing a mini-prod5 simulation.</p>
 <p>Get the configuration file from the DB</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from_db --file_name prod_config_test.yml</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name prod_config_test.yml</span>
 </pre></div>
 </div>
 <p>Run the application:</p>
@@ -720,7 +722,7 @@ Each run is simulated in a job. Each job is submitted by using the submission   
 <section id="id36">
 <h3>Example<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h3>
 <p>Producing a set of proton showers for trigger rate simulations of LST.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-sim-showers-for-trigger_rates --array 4LST --site North --primary         proton --nruns 2 --nevents 10000 --test --submit_command local</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary         proton --nruns 2 --nevents 10000 --test --submit_command local</span>
 </pre></div>
 </div>
 <p>The output is saved in simtools-output/sim_showers_for_trigger_rates.</p>

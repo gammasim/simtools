@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>simtools &#8212; simtools v0.1.dev1+gf0a3c5d</title>
+    <title>simtools &#8212; simtools v0.1.dev1+gb0a1857</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=3082b913"></script>
+    <script src="_static/documentation_options.js?v=20b89876"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -30,7 +30,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf0a3c5d</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb0a1857</p>
 
 
 
@@ -53,7 +53,9 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
 
 <div class="relations">
@@ -167,7 +169,9 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#model-database-access">Model Database Access</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-for-users">Installation for Users</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-for-developers">Installation for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-of-corsika-and-sim-telarray">Installation of CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#docker-environment-for-developers">Docker Environment for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#testing-your-installation">Testing your installation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
@@ -221,19 +225,29 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <li class="toctree-l2"><a class="reference internal" href="simulation_software.html#sim-telarray">sim_telarray</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="guidelines.html">Developer Guidelines</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#project-setup">Project setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#python-version">Python version</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#code-formatting">Code formatting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#logging">Logging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#testing">Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#documentation">Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#writing-applications">Writing Applications</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#handling-data-files">Handling data files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#naming">Naming</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guidelines.html#input-validation">Input validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#project-setup">Project setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#python-version">Python version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#contributing-code">Contributing code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#unit-and-integration-testing">Unit and Integration Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#generating-documentation">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#writing-applications">Writing Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#data-files">Data files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#input-validation">Input validation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pull_requests.html#before-issuing-a-pull-request">Before issuing a pull request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pull_requests.html#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pull_requests.html#reviewing-a-pull-request">Reviewing a pull request</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html#automatic-formatting">Automatic Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html#naming">Naming</a></li>
 </ul>
 </li>
 </ul>

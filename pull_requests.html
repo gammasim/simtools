@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Pull requests &#8212; simtools v0.1.dev1+gb0a1857</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
+    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
+    <script src="_static/documentation_options.js?v=20b89876"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Coding Guidelines" href="coding_guidelines.html" />
+    <link rel="prev" title="Developer Guidelines" href="developer_guidelines.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">simtools</a></h1>
+
+
+
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb0a1857</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pull requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="developer_guidelines.html" title="previous chapter">Developer Guidelines</a></li>
+      <li>Next: <a href="coding_guidelines.html" title="next chapter">Coding Guidelines</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pull_requests.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="pull-requests">
+<span id="id1"></span><h1>Pull requests<a class="headerlink" href="#pull-requests" title="Link to this heading">¶</a></h1>
+<p>Pull requests are one of our most important and powerful development tools.
+They help to obtain good quality, homogenous, and maintainable code.</p>
+<p>Both reviewing pull requests and addressing reviewers’ comments is hard.
+The following thoughts might help to obtain an efficient and pleasant reviewing process.</p>
+<section id="before-issuing-a-pull-request">
+<h2>Before issuing a pull request<a class="headerlink" href="#before-issuing-a-pull-request" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>changes and new features shall be discussed with the team before implementation</p></li>
+<li><p>all tests shall pass</p></li>
+<li><p>no conflicts with ‘main’ (best to do a <code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span> <span class="pre">main</span></code> before the pull request)</p></li>
+<li><p>self-review the changes made (e.g., by using the draft pull request feature)</p></li>
+</ul>
+</section>
+<section id="issuing-a-pull-request">
+<h2>Issuing a pull request<a class="headerlink" href="#issuing-a-pull-request" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>describe clearly the problem or issue solved by the pull request; do not assume full familiarity of the reviewer with the issue</p></li>
+<li><p>indicate if this a new feature, refactoring, or bug fix</p></li>
+<li><p>describe the main logic of the changes</p></li>
+<li><p>guide the reviewer through the changes; indicate for larger pull requests a logical order for reviewing</p></li>
+<li><p>consider adding code or usage examples</p></li>
+<li><p>add any statement helping reviewers (e.g., indicate which files to review first)</p></li>
+<li><p>pull request should focus on one problem and should be short (even though it is easier to make big ones)</p></li>
+<li><p>if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue</p></li>
+</ul>
+</section>
+<section id="reviewing-a-pull-request">
+<h2>Reviewing a pull request<a class="headerlink" href="#reviewing-a-pull-request" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>seek to understand the purpose of the pull request; reach out to the author before reviewing if it is not clear which problem will be solved</p></li>
+<li><p>if you reject the pull request or if you think another approach might be more efficient, request immediately (not after many other patches are implemented); if there is a major issue, focus on that first and indicate that detailed comments will come at a later point</p></li>
+<li><p>indicate on the pull request page (or e.g., in the chat) that you have started reviewing to avoid duplicated reviews</p></li>
+<li><p>propose solutions, not just disagreement; reviewer comments should lead to improvements of the pull request (e.g., a comment saying “I don’t like this” is not helping)</p></li>
+<li><p>accept that there are different solutions (keeping the homogenity of the code in mind)</p></li>
+<li><p>focus on relevant points</p></li>
+<li><p>discuss the code, not the coder (it is “the code is doing..”, not “you are doing….”). Often logic has been introduced earlier and there is no use of pointing fingers.</p></li>
+<li><p>pull the code locally and execute the new code</p></li>
+<li><p>limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.</p></li>
+<li><p>clearly indicate if you have no time for a review (this is ok if it is known)</p></li>
+<li><p>fix small typos directly</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      
+      
+      
+      <a href="_sources/pull_requests.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
