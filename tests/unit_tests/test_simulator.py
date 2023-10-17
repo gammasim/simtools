@@ -2,6 +2,7 @@
 
 import logging
 import math
+import os
 import shutil
 from copy import copy
 from pathlib import Path
@@ -383,3 +384,16 @@ def test_print_list_of_files(array_simulator, input_file_list):
     with pytest.raises(KeyError):
         array_simulator._print_list_of_files("blabla")
     array_simulator._print_list_of_files("log")
+
+
+def test_pass_corsika_paramter_file(label, array_config_data, io_handler, db_config, simtel_path):
+    os.system("cp data/parameters/corsika_parameters.yml corsika_parameters_2.yml")
+    array_simulator = Simulator(
+        label=label,
+        simulator="simtel",
+        simulator_source_path=simtel_path,
+        config_data=array_config_data,
+        mongo_db_config=db_config,
+        corsika_parameters_file="corsika_parameters_2.yml",
+    )
+    assert array_simulator.corsika_parameters_file == "corsika_parameters_2.yml"
