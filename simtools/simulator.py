@@ -87,6 +87,8 @@ class Simulator:
         Dict with shower or array model configuration data.
     config_file: str or Path
         Path to yaml file containing configurable data.
+    corsika_parameters_file: str or Path
+        Path to yaml file containing the corsika parameters.
     submit_command: str
         Job submission command.
     extra_commands: str or list of str
@@ -104,6 +106,7 @@ class Simulator:
         label=None,
         config_data=None,
         config_file=None,
+        corsika_parameters_file=None,
         submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
@@ -116,6 +119,7 @@ class Simulator:
         self._logger.debug(f"Init Simulator {simulator}")
 
         self.label = label
+        self.corsika_parameters_file = corsika_parameters_file
         self.simulator = simulator
         self.runs = []
         self._results = defaultdict(list)
@@ -124,7 +128,6 @@ class Simulator:
         self._corsika_config_data = None
         self.site = None
         self.layout_name = None
-        self._corsika_parameters_file = None
         self.config = None
         self.array_model = None
         self._simulation_runner = None
@@ -218,7 +221,7 @@ class Simulator:
             self._corsika_config_data.pop("run_range", None),
         )
 
-        self._corsika_parameters_file = self._corsika_config_data.pop(
+        self.corsika_parameters_file = self._corsika_config_data.pop(
             "corsika_parameters_file", None
         )
 
@@ -361,7 +364,7 @@ class Simulator:
             "mongo_db_config": self._mongo_db_config,
             "site": self.site,
             "layout_name": self.layout_name,
-            "corsika_parameters_file": self._corsika_parameters_file,
+            "corsika_parameters_file": self.corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
         if self.simulator in ["simtel", "corsika_simtel"]:
