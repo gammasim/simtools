@@ -2,16 +2,17 @@ FROM ghcr.io/gammasim/simtools-corsika_sim_telarray
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN microdnf update -y && microdnf install -y \
     git \
     python3-pip \
-    python3-venv \
+    python3-devel \
     wget && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    microdnf clean all
 
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
     python3 -m venv env && \
     source env/bin/activate && \
+    pip install -U pip && \
     pip install toml-to-requirements && \
     toml-to-req --toml-file pyproject.toml --include-optional && \
     pip uninstall -y toml-to-requirements && \

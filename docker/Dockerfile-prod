@@ -2,11 +2,11 @@ FROM ghcr.io/gammasim/simtools-corsika_sim_telarray
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN microdnf update -y && microdnf install -y \
     git \
     python3-pip \
-    python3-venv && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    python3-devel && \
+    microdnf clean all
 
 RUN git clone -b main https://github.com/gammasim/simtools.git --depth 1
 RUN cd /workdir/ && \
