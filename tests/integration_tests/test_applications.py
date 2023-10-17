@@ -564,6 +564,24 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
+    "production::array_only_corsika_parameters": [
+        [
+            "--productionconfig",
+            "./tests/resources/prod_config_test.yml",
+            "--task",
+            "simulate",
+            "--array_only",
+            "--test",
+            "--corsika_parameters_file",
+            "./data/parameters/corsika_parameters.yaml",
+            "--submit_command",
+            "local",
+            "--data_directory",
+            "TESTOUTPUTDIR/",
+            "--output_path",
+            "TESTOUTPUTDIR/",
+        ]
+    ],
     "simulate_prod::gamma_20_deg": [
         [
             "--production_config",
