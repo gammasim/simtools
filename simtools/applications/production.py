@@ -108,6 +108,13 @@ def _parse(description=None):
         required=True,
     )
     config.parser.add_argument(
+        "--corsika_parameters_file",
+        help="Yaml file with corsika parameters.",
+        type=str,
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
         "--task",
         help=(
             "What task to execute. Options: "
@@ -246,6 +253,7 @@ def main():
             simulator="corsika",
             simulator_source_path=args_dict["simtel_path"],
             config_data=config_data,
+            corsika_parameters_file=args_dict["corsika_parameters_file"],
             submit_command=args_dict["submit_command"],
             test=args_dict["test"],
             mongo_db_config=db_config,
@@ -266,6 +274,7 @@ def main():
                 simulator="simtel",
                 simulator_source_path=args_dict["simtel_path"],
                 config_data=config_data,
+                corsika_parameters_file=args_dict["corsika_parameters_file"],
                 submit_command=args_dict["submit_command"],
                 mongo_db_config=db_config,
             )
