@@ -858,9 +858,9 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     hist2d: numpy.ndarray
         The histogram counts.
     xaxis: numpy.array
-        The values of the x axis (histogram bin_edges) on the ground.
+        The values of the x axis (histogram bin edges) on the ground.
     yaxis: numpy.array
-        The values of the y axis (histogram bin_edges) on the ground.
+        The values of the y axis (histogram bin edges) on the ground.
     bins: float
         Number of bins in distance.
     max_dist: float
@@ -871,7 +871,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
     np.array
-        The bin_edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
+        The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
 
