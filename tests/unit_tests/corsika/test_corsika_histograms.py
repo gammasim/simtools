@@ -322,7 +322,7 @@ def test_get_2D_photon_position_distr(corsika_histograms_instance_set_histograms
     counts = corsika_histograms_instance_set_histograms.get_2D_photon_position_distr()
     assert pytest.approx(np.sum(counts[0]), 1e-2) == 11633
 
-    # The bin_edges should be the same
+    # The bin edges should be the same
     assert (counts[1] == density[1]).all()
     assert (counts[2] == density[2]).all()
 
@@ -359,7 +359,7 @@ def test_get_2D_num_photons_distr(corsika_histograms_instance_set_histograms):
         telescope_indices_array,
     ) = corsika_histograms_instance_set_histograms.get_2D_num_photons_distr()
     assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
-    # (bin_edges of hist)
+    # (bin edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
     assert (
         pytest.approx(num_photons_per_event_per_telescope[0][0, 0], 1e-2) == 2543.3
