@@ -23,7 +23,8 @@
     .. code-block:: console
 
         simtools-plot-simtel-histograms \
-            --file_lists list_test1.txt list_test2.txt --figure_name histograms_comparison
+            --file_lists tests/resources/simtel_histograms_file_list.txt
+            --figure_name histograms
 
 """
 
