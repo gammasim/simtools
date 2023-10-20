@@ -227,7 +227,7 @@ APP_LIST = {
             "--file_lists",
             "tests/resources/simtel_histograms_file_list.txt",
             "--figure_name",
-            "test_figure_name.png",
+            "test_figure_name",
         ]
     ],
     # Layout
