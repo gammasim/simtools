@@ -222,9 +222,12 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_simtel_histograms::help": [
+    "plot_simtel_histograms": [
         [
-            "--help",
+            "--file_lists",
+            "tests/resources/simtel_histograms_file_list.txt",
+            "--figure_name",
+            "test_figure_name.png",
         ]
     ],
     # Layout
