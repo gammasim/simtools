@@ -51,7 +51,7 @@ class SimtelHistograms:
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
-        if not hasattr(self, "combined_hists"):
+        if self.combined_hists is None:
             self._combine_histogram_files()
         return len(self.combined_hists)
 
@@ -69,7 +69,7 @@ class SimtelHistograms:
         str
             Histogram title.
         """
-        if not hasattr(self, "combined_hists"):
+        if self.combined_hists is None:
             self._combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
@@ -77,7 +77,6 @@ class SimtelHistograms:
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
-
         n_files = 0
         for file in self._histogram_files:
             count_file = True
