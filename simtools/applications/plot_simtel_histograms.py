@@ -13,9 +13,9 @@
     file_lists (str, optional)
         Text file containing the list of sim_telarray histogram files to be plotted.
         Multiple text files can be given.
-    c (str, optional)
+    hist_file_names (str, optional)
         Name of the histogram files to be plotted.
-        Either one of the arguments must be given: `file_lists` or `hist_names` and they are
+        Either one of the arguments must be given: `file_lists` or `hist_file_names` and they are
         mutually exclusive.
     figure_name (str, required)
         File name for the pdf output (without extension).
@@ -57,7 +57,7 @@ def main():
         type=str,
     )
     input_group.add_argument(
-        "--hist_names",
+        "--hist_file_names",
         help="Name of the histogram files to be plotted.",
         nargs="+",
         type=str,
@@ -83,7 +83,7 @@ def main():
                     histogram_files.append(line.replace("\n", ""))
             histogram_file_list.append(histogram_files)
     else:
-        histogram_file_list = [args_dict["hist_names"]]
+        histogram_file_list = [args_dict["hist_file_names"]]
         n_lists = 1
 
     simtel_histograms = []
