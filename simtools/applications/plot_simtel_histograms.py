@@ -71,9 +71,13 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    n_lists = len(args_dict["file_lists"])
+    if args_dict["file_lists"]:
+        list_of_input = args_dict["file_lists"]
+    else:
+        list_of_input = args_dict["hist_names"]
+    n_lists = len(list_of_input)
     simtel_histograms = []
-    for this_list_of_files in args_dict["file_lists"]:
+    for this_list_of_files in list_of_input:
         # Collecting hist files
         histogram_files = []
         with open(this_list_of_files, encoding="utf-8") as file:
