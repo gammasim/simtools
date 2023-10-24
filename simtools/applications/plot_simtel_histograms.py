@@ -71,22 +71,25 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    histogram_file_list = []
     if args_dict["file_lists"]:
-        list_of_input = args_dict["file_lists"]
+        n_lists = len(args_dict["file_lists"])
+        for one_list in args_dict["file_lists"]:
+            # Collecting hist files
+            histogram_files = []
+            with open(one_list, encoding="utf-8") as file:
+                for line in file:
+                    # Removing '\n' from filename, in case it is left there.
+                    histogram_files.append(line.replace("\n", ""))
+            histogram_file_list.append(histogram_files)
     else:
-        list_of_input = args_dict["hist_names"]
-    n_lists = len(list_of_input)
-    simtel_histograms = []
-    for this_list_of_files in list_of_input:
-        # Collecting hist files
-        histogram_files = []
-        with open(this_list_of_files, encoding="utf-8") as file:
-            for line in file:
-                # Removing '\n' from filename, in case it is left there.
-                histogram_files.append(line.replace("\n", ""))
+        histogram_file_list = [args_dict["hist_names"]]
+        n_lists = 1
 
+    simtel_histograms = []
+    for i_file in range(n_lists):
         # Building SimtelHistograms
-        sh = SimtelHistograms(histogram_files)
+        sh = SimtelHistograms(histogram_file_list[i_file])
         simtel_histograms.append(sh)
 
     # Checking if number of histograms is consistent
