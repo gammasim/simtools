@@ -48,12 +48,19 @@ def main():
         label=Path(__file__).stem,
         description=("Plots sim_telarray histograms."),
     )
-    config.parser.add_argument(
+    input_group = config.parser.add_mutually_exclusive_group(required=True)
+
+    input_group.add_argument(
         "--file_lists",
         help="File containing the list of histogram files to be plotted.",
         nargs="+",
         type=str,
-        required=True,
+    )
+    input_group.add_argument(
+        "--hist_names",
+        help="Name of the histogram files to be plotted.",
+        nargs="+",
+        type=str,
     )
     config.parser.add_argument(
         "--figure_name", help="File name for the pdf output.", type=str, required=True
