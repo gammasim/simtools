@@ -10,9 +10,13 @@
 
     Command line arguments
     ----------------------
-    file_lists (str, required)
-        Text file containing the list of sim_telarray histogram files to be plotted. \
+    file_lists (str, optional)
+        Text file containing the list of sim_telarray histogram files to be plotted.
         Multiple text files can be given.
+    c (str, optional)
+        Name of the histogram files to be plotted.
+        Either one of the arguments must be given: `file_lists` or `hist_names` and they are
+        mutually exclusive.
     figure_name (str, required)
         File name for the pdf output (without extension).
     verbosity (str, optional)
