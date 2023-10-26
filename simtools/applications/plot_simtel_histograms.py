@@ -10,13 +10,10 @@
 
     Command line arguments
     ----------------------
-    file_lists (str, optional)
-        Text file containing the list of sim_telarray histogram files to be plotted.
-        Multiple text files can be given.
     hist_file_names (str, optional)
         Name of the histogram files to be plotted.
-        Either one of the arguments must be given: `file_lists` or `hist_file_names` and they are
-        mutually exclusive.
+        It can be given as the histogram file names (more than one option allowed) or as a text
+            file with the names of the histogram files in it.
     figure_name (str, required)
         File name for the pdf output (without extension).
     verbosity (str, optional)
@@ -26,8 +23,8 @@
     -------
     .. code-block:: console
 
-        simtools-plot-simtel-histograms \
-            --file_lists tests/resources/simtel_histograms_file_list.txt
+        simtools-plot-simtel-histograms --hist_file_names
+            ./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
             --figure_name histograms
 
 """
@@ -51,14 +48,9 @@ def main():
     input_group = config.parser.add_mutually_exclusive_group(required=True)
 
     input_group.add_argument(
-        "--file_lists",
-        help="File containing the list of histogram files to be plotted.",
-        nargs="+",
-        type=str,
-    )
-    input_group.add_argument(
         "--hist_file_names",
-        help="Name of the histogram files to be plotted.",
+        help="Name of the histogram files to be plotted or the text file containing the list of "
+        "histogram files.",
         nargs="+",
         type=str,
     )
