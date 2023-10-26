@@ -19,6 +19,11 @@
     verbosity (str, optional)
         Log level to print (default=INFO).
 
+    Raises
+    ------
+    TypeError:
+        if argument passed through `hist_file_names` is not a file.
+
     Example
     -------
     .. code-block:: console
@@ -45,13 +50,13 @@ def main():
         label=Path(__file__).stem,
         description=("Plots sim_telarray histograms."),
     )
-    input_group = config.parser.add_mutually_exclusive_group(required=True)
 
-    input_group.add_argument(
+    config.parser.add_argument(
         "--hist_file_names",
         help="Name of the histogram files to be plotted or the text file containing the list of "
         "histogram files.",
         nargs="+",
+        required=True,
         type=str,
     )
     config.parser.add_argument(
@@ -62,62 +67,41 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    n_lists = len(args_dict["hist_file_names"])
 
-    histogram_file_list = []
-    if args_dict["file_lists"]:
-        n_lists = len(args_dict["file_lists"])
-        for one_list in args_dict["file_lists"]:
-            # Collecting hist files
-            histogram_files = []
-            with open(one_list, encoding="utf-8") as file:
-                for line in file:
-                    # Removing '\n' from filename, in case it is left there.
-                    histogram_files.append(line.replace("\n", ""))
-            histogram_file_list.append(histogram_files)
-    else:
-        histogram_file_list = [args_dict["hist_file_names"]]
-        n_lists = 1
+    histogram_files = []
+    for one_file in args_dict["hist_file_names"]:
+        if Path(one_file).is_file():
+            if Path(one_file).suffix in [".zst", ".simtel"]:
+                histogram_files.append(one_file)
+            else:
+                # Collecting hist files
+                with open(one_file, encoding="utf-8") as file:
+                    for line in file:
+                        # Removing '\n' from filename, in case it is left there.
+                        histogram_files.append(line.replace("\n", ""))
+        else:
+            msg = f"{one_file} is not a file."
+            logger.error(msg)
+            raise TypeError
 
-    simtel_histograms = []
-    for i_file in range(n_lists):
-        # Building SimtelHistograms
-        sh = SimtelHistograms(histogram_file_list[i_file])
-        simtel_histograms.append(sh)
-
-    # Checking if number of histograms is consistent
-    number_of_hists = [sh.number_of_histograms for sh in simtel_histograms]
-    # Converting list to set will remove the duplicated entries.
-    # If all entries in the list are the same, len(set) will be 1
-    if len(set(number_of_hists)) > 1:
-        msg = (
-            "Number of histograms in different sets of simulations is inconsistent"
-            " - please make sure the simulations sets are consistent"
-        )
-        logger.error(msg)
-        raise IOError(msg)
-
-    # Plotting
+    # Building SimtelHistograms
+    simtel_histograms = SimtelHistograms(histogram_files)
 
     # Checking if it is needed to add the pdf extension to the file name
-    if args_dict["figure_name"].split(".")[-1] == "pdf":
+    if Path(args_dict["figure_name"]).suffix == "pdf":
         fig_name = args_dict["figure_name"]
     else:
         fig_name = args_dict["figure_name"] + ".pdf"
 
     pdf_pages = PdfPages(fig_name)
-    for i_hist in range(number_of_hists[0]):
-        title = simtel_histograms[0].get_histogram_title(i_hist)
+    for i_hist in range(n_lists * simtel_histograms.number_of_histograms):
+        title = simtel_histograms.get_histogram_title(i_hist)
 
         logger.debug(f"Processing: {title}")
 
         fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
-
-        if n_lists == 1:
-            # If only one simulation set, axs is a single axes (not iterable)
-            sh.plot_one_histogram(i_hist, axs)
-        else:
-            for sh, ax in zip(simtel_histograms, axs):
-                sh.plot_one_histogram(i_hist, ax)
+        simtel_histograms.plot_one_histogram(i_hist, axs)
 
         plt.tight_layout()
         pdf_pages.savefig(fig)
