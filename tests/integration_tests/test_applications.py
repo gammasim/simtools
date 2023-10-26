@@ -224,7 +224,7 @@ APP_LIST = {
     ],
     "plot_simtel_histograms::file_lists": [
         [
-            "--file_lists",
+            "--hist_file_names",
             "./tests/resources/simtel_histograms_file_list.txt",
             "--figure_name",
             "TESTOUTPUTDIR/test_figure_name",
