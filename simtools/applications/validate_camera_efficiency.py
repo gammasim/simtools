@@ -23,6 +23,14 @@
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
         Model version (default='Current')
+    zenith_angle (float, optional)
+        Zenith angle in degrees (between 0 and 180) (default=20).
+    azimuth_angle (float, optional)
+        Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
+        one of north, south, east or west (case insensitive). Note that North is 0 degrees
+        and the azimuth grows clockwise, so East is 90 degrees (default=0).
+    nsb_spectrum (str, optional)
+        File with NSB spectrum to use (following sim_telarray required format).
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -60,6 +68,7 @@ import simtools.utils.general as gen
 from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.model.telescope_model import TelescopeModel
 
 
@@ -74,6 +83,34 @@ def _parse(label):
             "Calculate the camera efficiency of the telescope requested. "
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
         ),
+    )
+    config.parser.add_argument(
+        "--azimuth_angle",
+        help=(
+            "Telescope pointing direction in azimuth. "
+            "It can be in degrees between 0 and 360 or one of north, south, east or west "
+            "(case insensitive). Note that North is 0 degrees and "
+            "the azimuth grows clockwise, so East is 90 degrees."
+        ),
+        type=CommandLineParser.azimuth_angle,
+        default=0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--zenith_angle",
+        help="Zenith angle in degrees (between 0 and 180).",
+        type=CommandLineParser.zenith_angle,
+        default=20,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--nsb_spectrum",
+        # FIXME - describe format of the sim_telarray file or better, use a standard
+        # format and convert on the fly to sim_telarray format
+        help="File with NSB spectrum to use (following sim_telarray required format).",
+        type=str,
+        default=None,
+        required=False,
     )
     return config.initialize(db_config=True, telescope_model=True)
 
@@ -105,6 +142,12 @@ def main():
     ce = CameraEfficiency(
         telescope_model=tel_model,
         simtel_source_path=args_dict["simtel_path"],
+        label=label,
+        config_data={
+            "zenith_angle": args_dict["zenith_angle"],
+            "azimuth_angle": args_dict["azimuth_angle"],
+            "nsb_spectrum": args_dict["nsb_spectrum"],
+        },
     )
     ce.simulate(force=True)
     ce.analyze(force=True)
