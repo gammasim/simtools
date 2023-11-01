@@ -32,6 +32,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         file_simtel=None,
         file_log=None,
         zenith_angle=None,
+        nsb_spectrum=None,
     ):
         """
         Initialize SimtelRunner.
@@ -47,6 +48,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
+        self.nsb_spectrum = nsb_spectrum
 
     def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
@@ -102,6 +104,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
             )
 
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/testeff"))
+        if self.nsb_spectrum is not None:
+            command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
         command += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
