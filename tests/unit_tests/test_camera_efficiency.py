@@ -146,4 +146,4 @@ def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_fil
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for" in summary
+    assert "Results summary for LST-1" in summary
