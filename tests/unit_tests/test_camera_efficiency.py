@@ -30,22 +30,21 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path):
 
 @pytest.fixture
 def results_file(db, io_handler):
-    test_file_name = "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(
-            label="validate_camera_efficiency",
-            sub_dir="camera-efficiency",
-            dir_type="test",
-        ),
-        file_name=test_file_name,
+    test_file_name = (
+        "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
     )
-
-    return io_handler.get_output_directory(
+    output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
         sub_dir="camera-efficiency",
         dir_type="test",
-    ).joinpath("camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv")
+    )
+    db.export_file_db(
+        db_name="test-data",
+        dest=output_directory,
+        file_name=test_file_name,
+    )
+
+    return output_directory.joinpath(test_file_name)
 
 
 def test_from_kwargs(telescope_model_lst, simtel_path):
@@ -70,15 +69,15 @@ def test_validate_telescope_model(simtel_path):
 def test_load_files(camera_efficiency_lst):
     assert (
         camera_efficiency_lst._file_results.name
-        == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.ecsv"
+        == "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
     )
     assert (
         camera_efficiency_lst._file_simtel.name
-        == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.dat"
+        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.dat"
     )
     assert (
         camera_efficiency_lst._file_log.name
-        == "camera-efficiency-North-LST-1-za20.0_validate_camera_efficiency.log"
+        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.log"
     )
 
 
@@ -141,3 +140,10 @@ def test_export_results(simtel_path, telescope_model_lst, caplog):
     )
     camera_efficiency.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
+
+
+def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_file):
+    camera_efficiency_lst._read_results()
+    telescope_model_lst.export_model_files()
+    summary = camera_efficiency_lst.results_summary()
+    assert "Results summary for" in summary
