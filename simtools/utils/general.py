@@ -11,6 +11,9 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
+from astropy.table import Table
+
+from simtools.utils.names import sanitize_name
 
 __all__ = [
     "collect_data_from_yaml_or_dict",
@@ -949,3 +952,57 @@ def save_dict_to_file(dictionary, file_name):
         msg = f"Failed to write to {file_name}."
         _logger.error(msg)
         raise
+
+
+def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data):
+    """
+    Create and fill an hdf5 table with the histogram information.
+    It works for both 1D and 2D distributions.
+
+    Parameters
+    ----------
+    hist: numpy.ndarray
+        The counts of the histograms.
+    x_bin_edges: numpy.array
+        The x bin edges of the histograms.
+    y_bin_edges: numpy.array
+        The y bin edges of the histograms.
+        Use None for 1D histograms.
+    x_label: str
+        X bin edges label.
+    y_label: str
+        Y bin edges label.
+        Use None for 1D histograms.
+    meta_data: dict
+        Dictionary with the histogram metadata.
+    """
+
+    # Complement metadata
+    meta_data["x bin edges"] = sanitize_name(x_label)
+    meta_data["x bin edges unit"] = (
+        x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
+    )
+
+    if y_bin_edges is not None:
+        meta_data["y bin edges"] = sanitize_name(y_label)
+        meta_data["y bin edges unit"] = (
+            y_bin_edges.unit if isinstance(y_bin_edges, u.Quantity) else u.dimensionless_unscaled
+        )
+        names = [f"{sanitize_name(y_label)}_{i}" for i in range(len(y_bin_edges[:-1]))]
+        table = Table(
+            [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
+            names=names,
+            meta=meta_data,
+        )
+
+    else:
+        table = Table(
+            [
+                x_bin_edges[:-1],
+                hist,
+            ],
+            names=(sanitize_name(x_label), sanitize_name("Values")),
+            meta=meta_data,
+        )
+
+    return table
