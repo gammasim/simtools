@@ -5,13 +5,15 @@ import os
 import re
 import time
 from collections import namedtuple
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 import astropy.units as u
 import numpy as np
+import tables
 from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 from astropy.table import Table
+from ctapipe.io import read_table
 
 from simtools.utils.names import sanitize_name
 
@@ -32,6 +34,8 @@ __all__ = [
     "get_log_excerpt",
     "convert_2D_to_radial_distr",
     "save_dict_to_file",
+    "fill_hdf5_table",
+    "read_hdf5",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -1006,3 +1010,31 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
         )
 
     return table
+
+
+def read_hdf5(hdf5_file_name):
+    """
+    Read a hdf5 output file.
+
+    Parameters
+    ----------
+    hdf5_file_name: str or Path
+        Name or Path of the hdf5 file to read from.
+
+    Returns
+    -------
+    list
+        The list with the astropy.Table instances for the various 1D and 2D histograms saved
+        in the hdf5 file.
+    """
+    if isinstance(hdf5_file_name, PosixPath):
+        hdf5_file_name = hdf5_file_name.absolute().as_posix()
+
+    tables_list = []
+
+    with tables.open_file(hdf5_file_name, mode="r") as file:
+        for node in file.walk_nodes("/", "Table"):
+            table_path = node._v_pathname
+            table = read_table(hdf5_file_name, table_path)
+            tables_list.append(table)
+    return tables_list
