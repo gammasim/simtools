@@ -37,6 +37,8 @@ class SimtelHistograms:
         Initialize SimtelHistograms
         """
         self._logger = logging.getLogger(__name__)
+        if not isinstance(histogram_files, list):
+            histogram_files = [histogram_files]
         self._histogram_files = histogram_files
         self._is_test = test
         self.combined_hists = None
