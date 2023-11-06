@@ -251,7 +251,6 @@ class SimtelHistograms:
         if self.__meta_dict is None:
             self.__meta_dict = {
                 "simtools_version": version.__version__,
-                "simtel_array_files": self.combined_hists,
                 "note": "Only lower bin edges are given.",
             }
         return self.__meta_dict
@@ -269,25 +268,33 @@ class SimtelHistograms:
         """
         for histogram in self.combined_hists:
             x_bin_edges_list = np.linspace(
-                histogram.lower_x, histogram.upper_x, num=histogram.n_bins_x, endpoint=True
+                histogram["lower_x"],
+                histogram["upper_x"],
+                num=histogram["n_bins_x"] + 1,
+                endpoint=True,
             )
-            if histogram.n_bins_y > 0:
+            if histogram["n_bins_y"] > 0:
                 y_bin_edges_list = np.linspace(
-                    histogram.lower_y, histogram.upper_y, num=histogram.n_bins_y, endpoint=True
+                    histogram["lower_y"],
+                    histogram["upper_y"],
+                    num=histogram["n_bins_y"] + 1,
+                    endpoint=True,
                 )
             else:
                 y_bin_edges_list = None
-            self._meta_dict["Title"] = sanitize_name(histogram.title)
+
+            self._meta_dict["Title"] = sanitize_name(histogram["title"])
 
             table = fill_hdf5_table(
-                hist=histogram.data,
+                hist=histogram["data"],
                 x_bin_edges=x_bin_edges_list,
                 y_bin_edges=y_bin_edges_list,
                 x_label=None,
                 y_label=None,
                 meta_data=self._meta_dict,
             )
-            self._logger.info(
+
+            self._logger.debug(
                 f"Writing histogram with name {self._meta_dict['Title']} to " f"{hdf5_file_name}."
             )
             # overwrite takes precedence over append
@@ -298,7 +305,7 @@ class SimtelHistograms:
             write_table(
                 table,
                 hdf5_file_name,
-                self._meta_dict["Title"],
+                f"/{self._meta_dict['Title']}",
                 append=append,
                 overwrite=overwrite,
             )
