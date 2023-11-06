@@ -3,15 +3,14 @@ import logging
 import operator
 import re
 import time
-from pathlib import Path, PosixPath
+from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
-import tables
 from astropy import units as u
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
-from ctapipe.io import read_table, write_table
+from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import io_handler, version
@@ -1385,33 +1384,6 @@ class CorsikaHistograms:
                 write_table(
                     table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
                 )
-
-    def read_hdf5(self, hdf5_file_name):
-        """
-        Read a hdf5 output file, as resulted from `self.export_histograms`.
-
-        Parameters
-        ----------
-        hdf5_file_name: str or Path
-            Name or Path of the hdf5 file to read from.
-
-        Returns
-        -------
-        list
-            The list with the astropy.Table instances for the various 1D and 2D histograms saved
-            in the hdf5 file.
-        """
-        if isinstance(hdf5_file_name, PosixPath):
-            hdf5_file_name = hdf5_file_name.absolute().as_posix()
-
-        tables_list = []
-
-        with tables.open_file(hdf5_file_name, mode="r") as file:
-            for node in file.walk_nodes("/", "Table"):
-                table_path = node._v_pathname
-                table = read_table(hdf5_file_name, table_path)
-                tables_list.append(table)
-        return tables_list
 
     def export_event_header_1D_histogram(
         self, event_header_element, bins=50, hist_range=None, overwrite=False

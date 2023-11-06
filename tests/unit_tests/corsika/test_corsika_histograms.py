@@ -12,6 +12,7 @@ from astropy.table import Table
 
 from simtools import version
 from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
+from simtools.utils.general import read_hdf5
 
 
 def test_init(corsika_histograms_instance, corsika_output_file_name):
@@ -808,7 +809,7 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     assert output_file.exists()
 
     # Read hdf5 file
-    list_of_tables = corsika_histograms_instance_set_histograms.read_hdf5(output_file)
+    list_of_tables = read_hdf5(output_file)
     assert len(list_of_tables) == 12
     for table in list_of_tables:
         assert isinstance(table, Table)
@@ -853,18 +854,14 @@ def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histog
             event_header_element, bins=50, hist_range=None
         )
 
-    tables = corsika_histograms_instance_set_histograms.read_hdf5(
-        corsika_histograms_instance_set_histograms.hdf5_file_name
-    )
+    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 4
 
 
 def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     # Test writing the default photon histograms as well
     corsika_histograms_instance_set_histograms.export_histograms()
-    tables = corsika_histograms_instance_set_histograms.read_hdf5(
-        corsika_histograms_instance_set_histograms.hdf5_file_name
-    )
+    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 12
 
     corsika_event_header_example = {
@@ -876,7 +873,5 @@ def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histog
         corsika_histograms_instance_set_histograms.export_event_header_2D_histogram(
             event_header_element[0], event_header_element[1], bins=50, hist_range=None
         )
-    tables = corsika_histograms_instance_set_histograms.read_hdf5(
-        corsika_histograms_instance_set_histograms.hdf5_file_name
-    )
+    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 13
