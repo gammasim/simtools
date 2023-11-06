@@ -1490,7 +1490,7 @@ class CorsikaHistograms:
         x_bin_edges *= self.event_information[event_header_element_1].unit
         y_bin_edges *= self.event_information[event_header_element_2].unit
 
-        table = self.fill_hdf5_table(
+        table = fill_hdf5_table(
             hist=hist,
             x_bin_edges=x_bin_edges,
             y_bin_edges=y_bin_edges,
