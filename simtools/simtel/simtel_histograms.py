@@ -295,7 +295,7 @@ class SimtelHistograms:
                 append = True
             write_table(
                 table,
-                self.hdf5_file_name,
+                hdf5_file_name,
                 self._meta_dict["Title"],
                 append=append,
                 overwrite=overwrite,
