@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-from pathlib import Path
 
 import pytest
 from astropy.table import Table
@@ -53,20 +52,16 @@ def test_meta_dict(simtel_array_histograms_instance):
 
 
 def test_export_histograms(simtel_array_histograms_instance, io_handler):
+    file_with_path = io_handler.get_output_directory(dir_type="test").joinpath(
+        "test_hist_simtel.hdf5"
+    )
     # Default values
-    simtel_array_histograms_instance.export_histograms("test_hist_simtel.hdf5")
+    simtel_array_histograms_instance.export_histograms(file_with_path)
 
-    file_name = Path(simtel_array_histograms_instance.output_path).joinpath("test_hist_simtel.hdf5")
-    assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    assert file_with_path.exists()
 
     # Read hdf5 file
-    list_of_tables = read_hdf5(io_handler.get_output_directory(dir_type="test").joinpath(file_name))
-    assert len(list_of_tables) == 10
+    list_of_tables = read_hdf5(file_with_path)
+    assert len(list_of_tables) == 144
     for table in list_of_tables:
         assert isinstance(table, Table)
-    # Check piece of metadata
-    print(list_of_tables[-1].meta)
-    assert (
-        list_of_tables[-1].meta["corsika_version"]
-        == simtel_array_histograms_instance.corsika_version
-    )

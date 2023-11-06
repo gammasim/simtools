@@ -982,17 +982,27 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     """
 
     # Complement metadata
-    meta_data["x bin edges"] = sanitize_name(x_label)
+    if x_label is not None:
+        meta_data["x bin edges"] = sanitize_name(x_label)
     meta_data["x bin edges unit"] = (
         x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
     )
 
     if y_bin_edges is not None:
-        meta_data["y bin edges"] = sanitize_name(y_label)
+        if y_label is not None:
+            meta_data["y bin edges"] = sanitize_name(y_label)
+            names = [
+                f"{meta_data['y bin edges'].split('__')[0]}_{i}"
+                for i in range(len(y_bin_edges[:-1]))
+            ]
+        else:
+            names = [
+                f"{meta_data['Title'].split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+            ]
         meta_data["y bin edges unit"] = (
             y_bin_edges.unit if isinstance(y_bin_edges, u.Quantity) else u.dimensionless_unscaled
         )
-        names = [f"{sanitize_name(y_label)}_{i}" for i in range(len(y_bin_edges[:-1]))]
+
         table = Table(
             [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
             names=names,
@@ -1000,15 +1010,19 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
         )
 
     else:
+        if x_label is not None:
+            meta_data["x bin edges"] = sanitize_name(x_label)
+            names = meta_data["x bin edges"]
+        else:
+            names = meta_data["Title"]
         table = Table(
             [
                 x_bin_edges[:-1],
                 hist,
             ],
-            names=(sanitize_name(x_label), sanitize_name("Values")),
+            names=(names, sanitize_name("Values")),
             meta=meta_data,
         )
-
     return table
 
 
