@@ -9,7 +9,6 @@ import boost_histogram as bh
 import numpy as np
 import tables
 from astropy import units as u
-from astropy.table import Table
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
 from ctapipe.io import read_table, write_table
@@ -19,6 +18,7 @@ from simtools import io_handler, version
 from simtools.utils.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
+    fill_hdf5_table,
     rotate,
     save_dict_to_file,
 )
@@ -1243,12 +1243,13 @@ class CorsikaHistograms:
                 else:
                     hdf5_table_name = f"/{function_dict['file name']}_all_tels"
 
-                table = self.fill_hdf5_table(
-                    hist_1D_list[i_histogram],
-                    x_bin_edges_list[i_histogram],
-                    None,
-                    function_dict["bin edges"],
-                    None,
+                table = fill_hdf5_table(
+                    hist=hist_1D_list[i_histogram],
+                    x_bin_edges=x_bin_edges_list[i_histogram],
+                    y_bin_edges=None,
+                    x_label=function_dict["bin edges"],
+                    y_label=None,
+                    meta_data=self._meta_dict,
                 )
                 self._logger.info(
                     f"Writing 1D histogram with name {hdf5_table_name} to "
@@ -1366,12 +1367,13 @@ class CorsikaHistograms:
                     hdf5_table_name = (
                         f"/{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
                     )
-                table = self.fill_hdf5_table(
-                    hist_2D_list[i_histogram],
-                    x_bin_edges_list[i_histogram],
-                    y_bin_edges_list[i_histogram],
-                    function_dict["x bin edges"],
-                    function_dict["y bin edges"],
+                table = fill_hdf5_table(
+                    hist=hist_2D_list[i_histogram],
+                    x_bin_edges=x_bin_edges_list[i_histogram],
+                    y_bin_edges=y_bin_edges_list[i_histogram],
+                    x_label=function_dict["x bin edges"],
+                    y_label=function_dict["y bin edges"],
+                    meta_data=self._meta_dict,
                 )
 
                 self._logger.info(
@@ -1411,60 +1413,6 @@ class CorsikaHistograms:
                 tables_list.append(table)
         return tables_list
 
-    def fill_hdf5_table(self, hist, x_bin_edges, y_bin_edges, x_label, y_label):
-        """
-        Create and fill an hdf5 table with the histogram information.
-        It works for both 1D and 2D distributions.
-
-        Parameters
-        ----------
-        hist: numpy.ndarray
-            The counts of the histograms.
-        x_bin_edges: numpy.array
-            The x bin edges of the histograms.
-        y_bin_edges: numpy.array
-            The y bin edges of the histograms.
-            Use None for 1D histograms.
-        x_label: str
-            X bin edges label.
-        y_label: str
-            Y bin edges label.
-            Use None for 1D histograms.
-        """
-
-        # Complement metadata
-        meta_data = self._meta_dict
-        meta_data["x bin edges"] = sanitize_name(x_label)
-        meta_data["x bin edges unit"] = (
-            x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
-        )
-
-        if y_bin_edges is not None:
-            meta_data["y bin edges"] = sanitize_name(y_label)
-            meta_data["y bin edges unit"] = (
-                y_bin_edges.unit
-                if isinstance(y_bin_edges, u.Quantity)
-                else u.dimensionless_unscaled
-            )
-            names = [f"{sanitize_name(y_label)}_{i}" for i in range(len(y_bin_edges[:-1]))]
-            table = Table(
-                [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
-                names=names,
-                meta=meta_data,
-            )
-
-        else:
-            table = Table(
-                [
-                    x_bin_edges[:-1],
-                    hist,
-                ],
-                names=(sanitize_name(x_label), sanitize_name("Values")),
-                meta=meta_data,
-            )
-
-        return table
-
     def export_event_header_1D_histogram(
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
@@ -1489,7 +1437,14 @@ class CorsikaHistograms:
             event_header_element, bins=bins, hist_range=hist_range
         )
         bin_edges *= self.event_information[event_header_element].unit
-        table = self.fill_hdf5_table(hist, bin_edges, None, event_header_element, None)
+        table = fill_hdf5_table(
+            hist=hist,
+            x_bin_edges=bin_edges,
+            y_bin_edges=None,
+            x_label=event_header_element,
+            y_label=None,
+            meta_data=self._meta_dict,
+        )
         hdf5_table_name = f"/event_2D_histograms_{event_header_element}"
 
         self._logger.info(
@@ -1536,7 +1491,12 @@ class CorsikaHistograms:
         y_bin_edges *= self.event_information[event_header_element_2].unit
 
         table = self.fill_hdf5_table(
-            hist, x_bin_edges, y_bin_edges, event_header_element_1, event_header_element_2
+            hist=hist,
+            x_bin_edges=x_bin_edges,
+            y_bin_edges=y_bin_edges,
+            x_label=event_header_element_1,
+            y_label=event_header_element_2,
+            meta_data=self._meta_dict,
         )
 
         hdf5_table_name = f"/event_2D_histograms_{event_header_element_1}_{event_header_element_2}"
