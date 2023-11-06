@@ -23,7 +23,9 @@ def simtel_array_histograms_file(io_handler, corsika_output_file_name):
 
 @pytest.fixture
 def simtel_array_histograms_instance(simtel_array_histograms_file):
-    return SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    instance = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    instance._combine_histogram_files()
+    return instance
 
 
 def test_histograms(io_handler, simtel_array_histograms_file):
