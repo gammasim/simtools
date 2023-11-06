@@ -3,9 +3,14 @@ import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
 from matplotlib.backends.backend_pdf import PdfPages
+
+from simtools import version
+from simtools.utils.general import fill_hdf5_table
+from simtools.utils.names import sanitize_name
 
 __all__ = ["BadHistogramFormat", "SimtelHistograms"]
 
@@ -35,6 +40,7 @@ class SimtelHistograms:
         self._histogram_files = histogram_files
         self._is_test = test
         self.combined_hists = None
+        self.__meta_dict = None
 
     def plot_and_save_figures(self, fig_name):
         """
@@ -228,3 +234,69 @@ class SimtelHistograms:
             ax.hist(centers, bins=x_bins, weights=hist["data"])
             ax.set_xlim(xlim)
         return
+
+    @property
+    def _meta_dict(self):
+        """
+        Define the meta dictionary for exporting the histograms.
+
+        Returns
+        -------
+        dict
+            Meta dictionary for the hdf5 files with the histograms.
+        """
+
+        if self.__meta_dict is None:
+            self.__meta_dict = {
+                "simtools_version": version.__version__,
+                "simtel_array_files": self.combined_hists,
+                "note": "Only lower bin edges are given.",
+            }
+        return self.__meta_dict
+
+    def export_histograms(self, hdf5_file_name, overwrite=False):
+        """
+        Export the histograms to hdf5 files.
+
+        Parameters
+        ----------
+        hdf5_file_name: str
+            Name of the file to be saved with the hdf5 tables.
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
+        """
+        for histogram in self.combined_hists:
+            x_bin_edges_list = np.linspace(
+                histogram.lower_x, histogram.upper_x, num=histogram.n_bins_x, endpoint=True
+            )
+            if histogram.n_bins_y > 0:
+                y_bin_edges_list = np.linspace(
+                    histogram.lower_y, histogram.upper_y, num=histogram.n_bins_y, endpoint=True
+                )
+            else:
+                y_bin_edges_list = None
+            self._meta_dict["Title"] = sanitize_name(histogram.title)
+
+            table = fill_hdf5_table(
+                hist=histogram.data,
+                x_bin_edges=x_bin_edges_list,
+                y_bin_edges=y_bin_edges_list,
+                x_label=None,
+                y_label=None,
+                meta_data=self._meta_dict,
+            )
+            self._logger.info(
+                f"Writing histogram with name {self._meta_dict['Title']} to " f"{hdf5_file_name}."
+            )
+            # overwrite takes precedence over append
+            if overwrite is True:
+                append = False
+            else:
+                append = True
+            write_table(
+                table,
+                self.hdf5_file_name,
+                self._meta_dict["Title"],
+                append=append,
+                overwrite=overwrite,
+            )
