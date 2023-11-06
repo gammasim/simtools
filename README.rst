@@ -97,3 +97,8 @@ Citing this Software
 ====================
 
 Please cite this software if it use used for a publication, see the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_ and `CITATION.cff <https://github.com/gammasim/simtools/blob/main/CITATION.cff>`_ .
+
+Acknowledgements
+================
+
+This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – project number 460248186 (PUNCH4NFDI).
