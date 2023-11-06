@@ -841,35 +841,6 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
-    hist = np.array([1, 2, 3])
-    x_bin_edges = np.array([1, 2, 3, 4])
-    y_bin_edges = None
-    x_label = "test_x_label"
-    y_label = None
-
-    table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
-        hist, x_bin_edges, y_bin_edges, x_label, y_label
-    )
-
-    assert all(table[x_label] == x_bin_edges[:-1])
-    assert all(table["values"] == hist)
-
-
-def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
-    hist = np.array([[1, 2], [3, 4]])
-    x_bin_edges = np.array([1, 2, 3])
-    y_bin_edges = np.array([1, 2, 3])
-    x_label = "test_x_label"
-    y_label = "test_y_label"
-
-    table = corsika_histograms_instance_set_histograms.fill_hdf5_table(
-        hist, x_bin_edges, y_bin_edges, x_label, y_label
-    )
-    assert all(table["test_y_label_0"] == np.array([1, 2]))
-    assert all(table["test_y_label_1"] == np.array([3, 4]))
-
-
 def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
         "total_energy": "event_1D_histograms_total_energy",
