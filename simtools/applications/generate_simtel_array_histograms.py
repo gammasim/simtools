@@ -42,7 +42,7 @@
     -------
     .. code-block:: console
 
-        simtools-plot-simtel-histograms --hist_file_names tests/resources/
+        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/
             run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
             --output_file_name test_hist_hdata --hdf5 --pdf
 
