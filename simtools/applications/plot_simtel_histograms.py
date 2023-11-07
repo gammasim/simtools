@@ -16,6 +16,20 @@
             file with the names of the histogram files in it.
     figure_name (str, required)
         File name for the pdf output (without extension).
+    pdf (bool, optional)
+        If set, histograms are saved into pdf files.
+        One pdf file contains all the histograms found in the file.
+        The name of the file is controlled via `output_file_name`.
+    hdf5: bool
+        If true, histograms are saved into hdf5 files.
+        At least one of `pdf` and `hdf5` has to be activated.
+    output_file_name (str, optional)
+        The name of the output hdf5 (and/or pdf) files (without the path).
+        If not given, `output_file_name` takes the name from the (first) input file
+            (`hist_file_names`).
+        If the output `output_file_name.hdf5` file already exists and `hdf5` is set, the tables
+            associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
+            untouched.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
@@ -35,6 +49,7 @@
 """
 
 import logging
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -45,11 +60,24 @@ from simtools.configuration import configurator
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
-def main():
-    config = configurator.Configurator(
-        label=Path(__file__).stem,
-        description=("Plots sim_telarray histograms."),
-    )
+def _parse(label, description):
+    """
+    Parse command line configuration
+
+    Parameters
+    ----------
+    label: str
+        Label describing the application.
+    description: str
+        Description of the application.
+
+    Returns
+    -------
+    CommandLineParser
+        Command line parser object
+
+    """
+    config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
         "--hist_file_names",
@@ -59,20 +87,60 @@ def main():
         required=True,
         type=str,
     )
+
     config.parser.add_argument(
-        "--figure_name", help="File name for the pdf output.", type=str, required=True
+        "--hdf5", help="Save histograms into hdf5 files.", action="store_true", required=False
     )
 
-    args_dict, _ = config.initialize()
+    config.parser.add_argument(
+        "--pdf", help="Save histograms into a pdf file.", action="store_true", required=False
+    )
+
+    config.parser.add_argument(
+        "--output_file_name",
+        help="Name of the hdf5 (and/or pdf) file where to save the histograms.",
+        type=str,
+        required=False,
+        default=None,
+    )
+
+    config_parser, _ = config.initialize(db_config=False, paths=True)
+    if not config_parser["pdf"]:
+        if not config_parser["hdf5"]:
+            config.parser.error("At least one argument is required: `--pdf` or `--hdf5`.")
+
+    return config_parser, _
+
+
+def main():
+    label = Path(__file__).stem
+    description = "Display the simtel_array histograms."
+    config_parser, _ = _parse(label, description)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    n_lists = len(args_dict["hist_file_names"])
+    logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
+    initial_time = time.time()
+    logger.info("Starting the application.")
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
+    n_lists = len(config_parser["hist_file_names"])
+
+    # If the hdf5 output file already exists, it is overwritten
+    if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
+        msg = (
+            f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
+            f"Overwriting it."
+        )
+        logger.warning(msg)
+        overwrite = True
+    else:
+        overwrite = False
 
     histogram_files = []
-    for one_file in args_dict["hist_file_names"]:
+    for one_file in config_parser["hist_file_names"]:
         if Path(one_file).is_file():
-            if Path(one_file).suffix in [".zst", ".simtel"]:
+            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
                 histogram_files.append(one_file)
             else:
                 # Collecting hist files
@@ -87,28 +155,37 @@ def main():
 
     # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
+    simtel_histograms._combine_histogram_files()
 
-    # Checking if it is needed to add the pdf extension to the file name
-    if Path(args_dict["figure_name"]).suffix == "pdf":
-        fig_name = args_dict["figure_name"]
-    else:
-        fig_name = args_dict["figure_name"] + ".pdf"
+    output_file_name = Path(config_parser["output_path"]).joinpath(
+        f"{config_parser['output_file_name']}"
+    )
 
-    pdf_pages = PdfPages(fig_name)
-    for i_hist in range(n_lists * simtel_histograms.number_of_histograms):
-        title = simtel_histograms.get_histogram_title(i_hist)
+    if config_parser["pdf"]:
+        pdf_pages = PdfPages(f"{output_file_name}.pdf")
 
-        logger.debug(f"Processing: {title}")
+        for i_hist in range(n_lists * simtel_histograms.number_of_histograms):
+            title = simtel_histograms.get_histogram_title(i_hist)
 
-        fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
-        simtel_histograms.plot_one_histogram(i_hist, axs)
+            logger.debug(f"Processing: {title}")
 
-        plt.tight_layout()
-        pdf_pages.savefig(fig)
-        plt.clf()
+            fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
+            simtel_histograms.plot_one_histogram(i_hist, axs)
 
-    plt.close()
-    pdf_pages.close()
+            plt.tight_layout()
+            pdf_pages.savefig(fig)
+            plt.clf()
+
+        plt.close()
+        pdf_pages.close()
+
+    if config_parser["hdf5"]:
+        simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
+
+    final_time = time.time()
+    logger.info(
+        f"Finalizing the application. Total time needed: {round(final_time - initial_time)}s."
+    )
 
 
 if __name__ == "__main__":
