@@ -145,7 +145,7 @@ def main():
 
     # If no output name is passed, the tool gets the name of the first histogram of the list
     if config_parser["output_file_name"] is None:
-        config_parser["output_file_name"] = Path(histogram_files[0].absolute().name)
+        config_parser["output_file_name"] = Path(histogram_files[0]).absolute().name
 
     # If the hdf5 output file already exists, it is overwritten
     if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
