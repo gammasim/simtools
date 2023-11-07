@@ -68,7 +68,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     n_lists = len(args_dict["hist_file_names"])
-    logger.info(f"Found {n_lists} hist_file_names. Opening them.")
+    logger.info(f"Opening {n_lists} files.")
     histogram_files = []
     for one_file in args_dict["hist_file_names"]:
         if Path(one_file).is_file():
@@ -86,7 +86,7 @@ def main():
             raise TypeError
 
     # Building SimtelHistograms
-    logger.info(f"Histograms will be produced for {histogram_files}.")
+    logger.info(f"Creating histograms for {histogram_files}.")
     simtel_histograms = SimtelHistograms(histogram_files)
 
     # Checking if it is needed to add the pdf extension to the file name
