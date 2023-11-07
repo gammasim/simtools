@@ -226,16 +226,27 @@ APP_LIST = {
         [
             "--hist_file_names",
             "./tests/resources/simtel_histograms_file_list.txt",
-            "--figure_name",
-            "TESTOUTPUTDIR/test_figure_name",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
         ]
     ],
-    "plot_simtel_histograms::hist_file_names": [
+    "plot_simtel_histograms::hist_file_names_pdf": [
         [
             "--hist_file_names",
             "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
-            "--figure_name",
-            "TESTOUTPUTDIR/test_figure_name",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
+        ]
+    ],
+    "plot_simtel_histograms::hist_file_names_pdf_hdf5": [
+        [
+            "--hist_file_names",
+            "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
+            "--hdf5",
         ]
     ],
     # Layout

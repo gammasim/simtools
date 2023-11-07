@@ -126,8 +126,13 @@ def main():
 
     n_lists = len(config_parser["hist_file_names"])
 
-    # If the hdf5 output file already exists, it is overwritten
+    # If no output name is passed, the tool gets the name of the first histogram of the list
+    if config_parser["output_file_name"] is None:
+        config_parser["output_file_name"] = (
+            Path(config_parser["hist_file_names"][0]).absolute().name
+        )
 
+    # If the hdf5 output file already exists, it is overwritten
     if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
         msg = (
             f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
@@ -178,10 +183,10 @@ def main():
 
         plt.close()
         pdf_pages.close()
-        logger.debug(f"Finished writing to the pdf file {output_file_name}.pdf")
+        logger.info(f"Wrote histograms to the pdf file {output_file_name}.pdf")
 
     if config_parser["hdf5"]:
-        logger.debug(f"Exporting the histograms to the hdf5 file {output_file_name}.hdf5")
+        logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
 
     final_time = time.time()
