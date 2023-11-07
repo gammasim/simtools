@@ -42,9 +42,9 @@
     -------
     .. code-block:: console
 
-        simtools-plot-simtel-histograms --hist_file_names
-            ./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
-            --figure_name histograms
+        simtools-plot-simtel-histograms --hist_file_names tests/resources/
+            run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
+            --output_file_name test_hist_hdata --hdf5 --pdf
 
 """
 
@@ -56,6 +56,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
+from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
@@ -115,18 +116,18 @@ def _parse(label, description):
 def main():
     label = Path(__file__).stem
     description = "Display the simtel_array histograms."
+    io_handler_instance = io_handler.IOHandler()
     config_parser, _ = _parse(label, description)
-
+    output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     initial_time = time.time()
     logger.info("Starting the application.")
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     n_lists = len(config_parser["hist_file_names"])
 
     # If the hdf5 output file already exists, it is overwritten
+
     if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
         msg = (
             f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
@@ -157,11 +158,10 @@ def main():
     simtel_histograms = SimtelHistograms(histogram_files)
     simtel_histograms._combine_histogram_files()
 
-    output_file_name = Path(config_parser["output_path"]).joinpath(
-        f"{config_parser['output_file_name']}"
-    )
+    output_file_name = Path(output_path).joinpath(f"{config_parser['output_file_name']}")
 
     if config_parser["pdf"]:
+        logger.debug(f"Creating the pdf file {output_file_name}.pdf")
         pdf_pages = PdfPages(f"{output_file_name}.pdf")
 
         for i_hist in range(n_lists * simtel_histograms.number_of_histograms):
@@ -178,8 +178,10 @@ def main():
 
         plt.close()
         pdf_pages.close()
+        logger.debug(f"Finished writing to the pdf file {output_file_name}.pdf")
 
     if config_parser["hdf5"]:
+        logger.debug(f"Exporting the histograms to the hdf5 file {output_file_name}.hdf5")
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
 
     final_time = time.time()
