@@ -228,6 +228,7 @@ APP_LIST = {
             "./tests/resources/simtel_histograms_file_list.txt",
             "--output_file_name",
             "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
         ]
     ],
     "plot_simtel_histograms::hist_file_names_pdf": [
