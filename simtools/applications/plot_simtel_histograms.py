@@ -126,23 +126,7 @@ def main():
 
     n_lists = len(config_parser["hist_file_names"])
 
-    # If no output name is passed, the tool gets the name of the first histogram of the list
-    if config_parser["output_file_name"] is None:
-        config_parser["output_file_name"] = (
-            Path(config_parser["hist_file_names"][0]).absolute().name
-        )
-
-    # If the hdf5 output file already exists, it is overwritten
-    if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
-        msg = (
-            f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
-            f"Overwriting it."
-        )
-        logger.warning(msg)
-        overwrite = True
-    else:
-        overwrite = False
-
+    # Building list of histograms from the input files
     histogram_files = []
     for one_file in config_parser["hist_file_names"]:
         if Path(one_file).is_file():
@@ -158,6 +142,21 @@ def main():
             msg = f"{one_file} is not a file."
             logger.error(msg)
             raise TypeError
+
+    # If no output name is passed, the tool gets the name of the first histogram of the list
+    if config_parser["output_file_name"] is None:
+        config_parser["output_file_name"] = Path(histogram_files[0].absolute().name)
+
+    # If the hdf5 output file already exists, it is overwritten
+    if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
+        msg = (
+            f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
+            f"Overwriting it."
+        )
+        logger.warning(msg)
+        overwrite = True
+    else:
+        overwrite = False
 
     # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
