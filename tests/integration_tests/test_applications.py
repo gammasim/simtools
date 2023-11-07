@@ -222,7 +222,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_simtel_histograms::file_lists": [
+    "generate_simtel_array_histograms::file_lists": [
         [
             "--hist_file_names",
             "./tests/resources/simtel_histograms_file_list.txt",
@@ -231,7 +231,7 @@ APP_LIST = {
             "--pdf",
         ]
     ],
-    "plot_simtel_histograms::hist_file_names_pdf": [
+    "generate_simtel_array_histograms::hist_file_names_pdf": [
         [
             "--hist_file_names",
             "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
@@ -240,14 +240,14 @@ APP_LIST = {
             "--pdf",
         ]
     ],
-    "plot_simtel_histograms::hist_file_names_pdf_no_name": [
+    "generate_simtel_array_histograms::hist_file_names_pdf_no_name": [
         [
             "--hist_file_names",
             "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
             "--pdf",
         ]
     ],
-    "plot_simtel_histograms::hist_file_names_pdf_hdf5": [
+    "generate_simtel_array_histograms::hist_file_names_pdf_hdf5": [
         [
             "--hist_file_names",
             "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
