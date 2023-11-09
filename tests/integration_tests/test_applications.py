@@ -222,9 +222,20 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_simtel_histograms::help": [
+    "plot_simtel_histograms::file_lists": [
         [
-            "--help",
+            "--hist_file_names",
+            "./tests/resources/simtel_histograms_file_list.txt",
+            "--figure_name",
+            "TESTOUTPUTDIR/test_figure_name",
+        ]
+    ],
+    "plot_simtel_histograms::hist_file_names": [
+        [
+            "--hist_file_names",
+            "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            "--figure_name",
+            "TESTOUTPUTDIR/test_figure_name",
         ]
     ],
     # Layout

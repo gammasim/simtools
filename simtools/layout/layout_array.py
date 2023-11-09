@@ -3,20 +3,23 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-import pyproj
 from astropy.table import QTable
 
 from simtools import db_handler, io_handler
+from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
-from simtools.utils.names import all_telescope_class_names
 
 __all__ = ["InvalidTelescopeListFile", "LayoutArray"]
 
 
 class InvalidTelescopeListFile(Exception):
     """Exception for invalid telescope list file."""
+
+
+class InvalidCoordinateDataType(Exception):
+    """Exception for low-precision coordinate data type."""
 
 
 class LayoutArray:
@@ -62,6 +65,7 @@ class LayoutArray:
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
         self.io_handler = io_handler.IOHandler()
+        self.geo_coordinates = GeoCoordinates()
 
         self.telescope_list_file = None
         self._telescope_list = []
@@ -184,22 +188,16 @@ class LayoutArray:
         for simtools_par in corsika_pars:
             corsika_par = names.translate_simtools_to_corsika(simtools_par)
             corsika_dict[simtools_par] = {}
-            for tel_type in all_telescope_class_names:
-                corsika_dict[simtools_par][tel_type] = corsika_parameters_dict[corsika_par][
-                    tel_type
-                ]["value"]
-
+            for key, value in corsika_parameters_dict[corsika_par].items():
+                corsika_dict[simtools_par][key] = value["value"]
                 try:
-                    unit = corsika_parameters_dict[corsika_par][tel_type]["unit"]
-                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][
-                        tel_type
-                    ] * u.Unit(unit)
+                    unit = value["unit"]
+                    corsika_dict[simtools_par][key] = corsika_dict[simtools_par][key] * u.Unit(unit)
                 except KeyError:
                     self._logger.warning(
                         "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
                         "the unit."
                     )
-                    corsika_dict[simtools_par][tel_type] = corsika_dict[simtools_par][tel_type]
 
         if self.mongo_db_config is None:
             self._logger.error("DB connection info was not provided, cannot set site altitude")
@@ -257,28 +255,25 @@ class LayoutArray:
             dictionary with CORSIKA telescope parameters
 
         """
+
         try:
             self._corsika_telescope["corsika_obs_level"] = u.Quantity(
                 corsika_dict["corsika_obs_level"]
             )
         except (TypeError, KeyError):
             self._corsika_telescope["corsika_obs_level"] = np.nan * u.m
-        try:
-            self._corsika_telescope["corsika_sphere_center"] = self._initialize_sphere_parameters(
-                corsika_dict["corsika_sphere_center"]
-            )
-        except (TypeError, KeyError):
-            pass
-        try:
-            self._corsika_telescope["corsika_sphere_radius"] = self._initialize_sphere_parameters(
-                corsika_dict["corsika_sphere_radius"]
-            )
-        except (TypeError, KeyError):
-            pass
+
+        for key in ["corsika_sphere_center", "corsika_sphere_radius"]:
+            try:
+                self._corsika_telescope[key] = self._initialize_sphere_parameters(corsika_dict[key])
+            except (TypeError, KeyError):
+                pass
 
     def _initialize_coordinate_systems(self, center_dict=None):
         """
         Initialize array center and coordinate systems.
+        By definition, the array center is at (0,0) in
+        the CORSIKA coordinate system.
 
         Parameters
         ----------
@@ -292,11 +287,29 @@ class LayoutArray:
 
         """
 
+        center_dict = {} if center_dict is None else center_dict
+
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
         self._array_center.set_coordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
+        self._set_array_center_mercator(center_dict)
+        self._set_array_center_utm(center_dict)
+        self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
+        _name = center_dict.get("array_name")
+        self.name = _name if _name is not None else self.name
 
-        center_dict = {} if center_dict is None else center_dict
+        self._array_center.convert_all(
+            crs_local=self.geo_coordinates.crs_local(self._array_center),
+            crs_wgs84=self.geo_coordinates.crs_wgs84(),
+            crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+        )
+
+    def _set_array_center_mercator(self, center_dict):
+        """
+        Set array center coordinates in mercator system.
+
+        """
+
         try:
             self._array_center.set_coordinates(
                 "mercator",
@@ -305,6 +318,15 @@ class LayoutArray:
             )
         except TypeError:
             pass
+
+    def _set_array_center_utm(self, center_dict):
+        """
+        Set array center coordinates in UTM system.
+        Convert array center position to WGS84 system
+        (as latitudes are required for the definition
+        for the definition of the CORSIKA coordinate system)
+
+        """
         try:
             self._epsg = center_dict.get("EPSG", None)
             self._array_center.set_coordinates(
@@ -312,23 +334,13 @@ class LayoutArray:
                 u.Quantity(center_dict.get("center_easting", np.nan * u.m)),
                 u.Quantity(center_dict.get("center_northing", np.nan * u.m)),
             )
+            self._array_center.convert_all(
+                crs_local=None,
+                crs_wgs84=self.geo_coordinates.crs_wgs84(),
+                crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+            )
         except TypeError:
             pass
-        try:
-            self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", 0.0 * u.m)))
-        except TypeError:
-            pass
-        try:
-            _name = center_dict.get("array_name")
-            self.name = _name if _name is not None else self.name
-        except KeyError:
-            pass
-
-        self._array_center.convert_all(
-            crs_local=self._get_crs_local(),
-            crs_wgs84=self._get_crs_wgs84(),
-            crs_utm=self._get_crs_utm(),
-        )
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, tel_name=None):
         """
@@ -379,12 +391,22 @@ class LayoutArray:
         astropy.Quantity
             Telescope sphere center value (0.0*u.m if sphere center is not defined).
 
+        Raises
+        ------
+        KeyError
+            if Missing definition of CORSIKA sphere center for this telescope type.
+
         """
 
-        if len(names.get_telescope_type(tel_name)) > 0:
+        try:
             return self._corsika_telescope["corsika_sphere_center"][
                 names.get_telescope_type(tel_name)
             ]
+        except KeyError:
+            self._logger.warning(
+                "Missing definition of CORSIKA sphere center for telescope "
+                f"{tel_name} of type {names.get_telescope_type(tel_name)}"
+            )
 
         return 0.0 * u.m
 
@@ -563,6 +585,9 @@ class LayoutArray:
             _logger.error(f"Error reading list of array elements from {telescope_list_file}")
             raise
         _logger.info(f"Reading array elements from {telescope_list_file}")
+        if np.any([col.dtype == np.float32 for col in table.columns.values()]):
+            msg = "Columns with float32 dtype detected. Insufficient precision, use float64."
+            raise InvalidCoordinateDataType(msg)
 
         return table
 
@@ -611,8 +636,8 @@ class LayoutArray:
 
     def _get_export_metadata(self, export_corsika_meta=False):
         """
-        File metadata for export of array element list to file. Included array center definiton,\
-        CORSIKA telescope parameters, and EPSG centre
+        File metadata for export of array element list to file. Included array center definition,\
+        CORSIKA telescope parameters, and EPSG center
 
         Parameters
         ----------
@@ -775,9 +800,8 @@ class LayoutArray:
                 raise
 
             corsika_list += "TELESCOPE"
-            corsika_list += f"\t {pos_x.value:.3f}E2"
-            corsika_list += f"\t {pos_y.value:.3f}E2"
-            corsika_list += f"\t {pos_z.value:.3f}E2"
+            for pos in [pos_x, pos_y, pos_z]:
+                corsika_list += f"\t {pos.value:.3f}E2"
             corsika_list += f"\t {sphere_radius.value:.3f}E2"
             corsika_list += f"\t # {tel.name}\n"
 
@@ -848,9 +872,9 @@ class LayoutArray:
 
         self._logger.info("Converting telescope coordinates")
 
-        crs_wgs84 = self._get_crs_wgs84()
-        crs_local = self._get_crs_local()
-        crs_utm = self._get_crs_utm()
+        crs_wgs84 = self.geo_coordinates.crs_wgs84()
+        crs_local = self.geo_coordinates.crs_local(self._array_center)
+        crs_utm = self.geo_coordinates.crs_utm(self._epsg)
 
         for tel in self._telescope_list:
             tel.convert_all(
@@ -858,60 +882,6 @@ class LayoutArray:
                 crs_wgs84=crs_wgs84,
                 crs_utm=crs_utm,
             )
-
-    def _get_crs_local(self):
-        """
-        Local coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            local coordinate system.
-
-        """
-        if self._array_center:
-            _center_lat, _center_lon, _ = self._array_center.get_coordinates("mercator")
-            if not np.isnan(_center_lat.value) and not np.isnan(_center_lon.value):
-                proj4_string = (
-                    "+proj=tmerc +ellps=WGS84 +datum=WGS84"
-                    + f" +lon_0={_center_lon} +lat_0={_center_lat}"
-                    + " +axis=nwu +units=m +k_0=1.0"
-                )
-                crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
-                return crs_local
-
-        return None
-
-    def _get_crs_utm(self):
-        """
-        UTM coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            UTM coordinate system.
-
-        """
-        if self._epsg:
-            crs_utm = pyproj.CRS.from_user_input(self._epsg)
-            self._logger.debug(f"UTM coordinate system: {crs_utm}")
-            return crs_utm
-
-        return None
-
-    @staticmethod
-    def _get_crs_wgs84():
-        """
-        WGS84 coordinate system definition.
-
-        Returns
-        -------
-        pyproj.CRS
-            WGS84 coordinate system.
-
-        """
-        return pyproj.CRS("EPSG:4326")
 
     @staticmethod
     def include_radius_into_telescope_table(telescope_table):
@@ -930,9 +900,16 @@ class LayoutArray:
         """
 
         telescope_table["radius"] = [
-            telescope_table.meta["corsika_sphere_radius"][names.get_telescope_type(tel_name_now)]
+            u.Quantity(
+                telescope_table.meta["corsika_sphere_radius"][
+                    names.get_telescope_type(tel_name_now)
+                ]
+            )
+            .to("m")
+            .value
             for tel_name_now in telescope_table["telescope_name"]
         ]
+        telescope_table["radius"] = telescope_table["radius"].quantity * u.m
         return telescope_table
 
     def select_assets(self, asset_list=None):
