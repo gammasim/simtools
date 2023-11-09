@@ -49,6 +49,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
+            extra-args: ["codecov"]
 
           - os: ubuntu-latest
             python-version: "3.11"
@@ -111,5 +112,6 @@ jobs:
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v3
+        if: contains(matrix.extra-args, 'codecov')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
