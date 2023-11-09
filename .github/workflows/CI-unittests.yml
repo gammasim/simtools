@@ -120,7 +120,7 @@ jobs:
         uses: codecov/codecov-action@v3
         if: contains(matrix.extra-args, 'codecov')
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_SIMTOOLS_TOKEN }}
           files: ./coverage.xml, !./simtools/applications
 
       - name: Archive code coverage results
