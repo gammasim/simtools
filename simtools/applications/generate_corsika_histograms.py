@@ -11,7 +11,7 @@
     The following 2D histograms are produced:
         - Number of Cherenkov photons on the ground;
         - Density of Cherenkov photons on the ground;
-        - Incoming direction (directive cosinus) of the Cherenkov photons;
+        - Incoming direction (directive cosines) of the Cherenkov photons;
         - Time of arrival (ns) vs altitude of production (km);
         - Number of Cherenkov photons per event per telescope.
 
@@ -48,7 +48,7 @@
         The configuration used for generating the histograms.
         It includes information about the bin sizes, the ranges, scale of the plot and units.
         By construction, three major histograms are created to start with:
-         - hist_direction (2D): Directive cosinus (x and y) for the incoming photohs;
+         - hist_direction (2D): Directive cosines (x and y) for the incoming photons;
          - hist_position (3D): position x, position y, and wavelength;
          - hist_time_altitude (2D): time of arrival and altitude of emission;
 
@@ -106,7 +106,7 @@
                   value: 0.0
 
     pdf (bool, optional)
-        If true, histograms are saved into pdf files.
+        If set, histograms are saved into pdf files.
         One pdf file contains all the histograms for the Cherenkov photons.
         The name of the file is controlled via `hdf5_file_name`.
         If event_1D_histograms and event_2D_histograms are used, two separate pdf files might be
@@ -116,7 +116,7 @@
 
 
     hdf5 (bool, optional)
-        If true, histograms are saved into hdf5 files.
+        If set, histograms are saved into hdf5 files.
 
     hdf5_file_name (str, optional)
         The name of the output hdf5 data (without the path).

@@ -127,3 +127,17 @@ def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file)
     assert camera_efficiency_lst.calc_nsb_rate() == pytest.approx(
         0.24421390533203186
     )  # Value for Prod5 LST-1
+
+
+def test_export_results(simtel_path, telescope_model_lst, caplog):
+    config_data = {
+        "zenith_angle": 20 * u.deg,
+    }
+    camera_efficiency = CameraEfficiency(
+        telescope_model=telescope_model_lst,
+        simtel_source_path=simtel_path,
+        config_data=config_data,
+        label="export_results",
+    )
+    camera_efficiency.export_results()
+    assert "Cannot export results because they do not exist" in caplog.text

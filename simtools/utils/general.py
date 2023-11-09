@@ -858,9 +858,9 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     hist2d: numpy.ndarray
         The histogram counts.
     xaxis: numpy.array
-        The values of the x axis (histogram edges) on the ground.
+        The values of the x axis (histogram bin edges) on the ground.
     yaxis: numpy.array
-        The values of the y axis (histogram edges) on the ground.
+        The values of the y axis (histogram bin edges) on the ground.
     bins: float
         Number of bins in distance.
     max_dist: float
@@ -871,7 +871,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     np.array
         The values of the 1D histogram with size = int(max_dist/bin_size).
     np.array
-        The edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
+        The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
 
@@ -888,7 +888,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
             break
 
     grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
-    # the hist edges (n + 1).
+    # the hist bin_edges (n + 1).
     # radial_distance_map maps the distance to the center from each element in a square matrix.
     radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
     # The sorting and unravel_index give us the two indices for the position of the sorted element
@@ -907,20 +907,20 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
     # acount for it using weights below.
 
-    weights, radial_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
+    weights, radial_bin_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
     histogram_1D = np.empty_like(weights, dtype=float)
 
-    for i_radial, _ in enumerate(radial_edges[:-1]):
+    for i_radial, _ in enumerate(radial_bin_edges[:-1]):
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
         # bins that fit this interval.
-        indices_to_sum = (distance_sorted >= radial_edges[i_radial]) * (
-            distance_sorted < radial_edges[i_radial + 1]
+        indices_to_sum = (distance_sorted >= radial_bin_edges[i_radial]) * (
+            distance_sorted < radial_bin_edges[i_radial + 1]
         )
         if weights[i_radial] != 0:
             histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         else:
             histogram_1D[i_radial] = 0
-    return histogram_1D, radial_edges
+    return histogram_1D, radial_bin_edges
 
 
 def save_dict_to_file(dictionary, file_name):
