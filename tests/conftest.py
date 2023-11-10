@@ -11,7 +11,7 @@ import simtools.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -201,13 +201,13 @@ def telescope_model_sst(db_config, io_handler):
 
 
 @pytest.fixture
-def layout_array_north_instance(io_handler, db_config):
-    return LayoutArray(site="North", mongo_db_config=db_config, name="test_layout")
+def array_layout_north_instance(io_handler, db_config):
+    return ArrayLayout(site="North", mongo_db_config=db_config, name="test_layout")
 
 
 @pytest.fixture
-def layout_array_south_instance(io_handler, db_config):
-    return LayoutArray(site="South", mongo_db_config=db_config, name="test_layout")
+def array_layout_south_instance(io_handler, db_config):
+    return ArrayLayout(site="South", mongo_db_config=db_config, name="test_layout")
 
 
 @pytest.fixture
