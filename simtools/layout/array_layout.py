@@ -11,7 +11,7 @@ from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
 
-__all__ = ["InvalidTelescopeListFile", "LayoutArray"]
+__all__ = ["InvalidTelescopeListFile", "ArrayLayout"]
 
 
 class InvalidTelescopeListFile(Exception):
@@ -22,7 +22,7 @@ class InvalidCoordinateDataType(Exception):
     """Exception for low-precision coordinate data type."""
 
 
-class LayoutArray:
+class ArrayLayout:
     """
     Manage telescope positions at the array layout level.
 
@@ -55,7 +55,7 @@ class LayoutArray:
         telescope_list_file=None,
     ):
         """
-        Initialize LayoutArray.
+        Initialize ArrayLayout.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -74,10 +74,10 @@ class LayoutArray:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
-            self.initialize_layout_array_from_telescope_file(telescope_list_file)
+            self.initialize_array_layout_from_telescope_file(telescope_list_file)
 
     @classmethod
-    def from_layout_array_name(cls, mongo_db_config, layout_array_name, label=None):
+    def from_array_layout_name(cls, mongo_db_config, array_layout_name, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `data/layout` path.
@@ -86,33 +86,33 @@ class LayoutArray:
         ----------
         mongo_db_config: dict
             MongoDB configuration.
-        layout_array_name: str
+        array_layout_name: str
             e.g. South-4LST, North-Prod5 ...
         label: str
             Instance label. Important for output file naming.
 
         Returns
         -------
-        LayoutArray
-            Instance of the LayoutArray.
+        ArrayLayout
+            Instance of the ArrayLayout.
         """
 
-        split_name = layout_array_name.split("-")
+        split_name = array_layout_name.split("-")
         site_name = names.validate_site_name(split_name[0])
-        array_name = names.validate_layout_array_name(split_name[1])
-        valid_layout_array_name = site_name + "-" + array_name
+        array_name = names.validate_array_layout_name(split_name[1])
+        valid_array_layout_name = site_name + "-" + array_name
 
         layout = cls(
             site=site_name,
             mongo_db_config=mongo_db_config,
-            name=valid_layout_array_name,
+            name=valid_array_layout_name,
             label=label,
         )
 
         telescope_list_file = layout.io_handler.get_input_data_file(
-            "layout", f"telescope_positions-{valid_layout_array_name}.ecsv"
+            "layout", f"telescope_positions-{valid_array_layout_name}.ecsv"
         )
-        layout.initialize_layout_array_from_telescope_file(telescope_list_file)
+        layout.initialize_array_layout_from_telescope_file(telescope_list_file)
 
         return layout
 
@@ -591,7 +591,7 @@ class LayoutArray:
 
         return table
 
-    def initialize_layout_array_from_telescope_file(self, telescope_list_file):
+    def initialize_array_layout_from_telescope_file(self, telescope_list_file):
         """
         Initialize the Layout array from a telescope list file.
 
@@ -813,7 +813,7 @@ class LayoutArray:
 
         """
 
-        print(f"LayoutArray: {self.name}")
+        print(f"ArrayLayout: {self.name}")
         print("ArrayCenter")
         print(self._array_center)
         print("Telescopes")

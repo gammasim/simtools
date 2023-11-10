@@ -8,7 +8,7 @@ from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools import io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
 
@@ -97,11 +97,11 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
 
-        # Grabbing layout name and building LayoutArray
-        self.layout_name = names.validate_layout_array_name(layout_name)
-        self.layout = LayoutArray.from_layout_array_name(
+        # Grabbing layout name and building ArrayLayout
+        self.layout_name = names.validate_array_layout_name(layout_name)
+        self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=mongo_db_config,
-            layout_array_name=f"{self.site}-{self.layout_name}",
+            array_layout_name=f"{self.site}-{self.layout_name}",
             label=self.label,
         )
 

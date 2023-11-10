@@ -2,7 +2,7 @@ import logging
 from copy import copy
 
 from simtools import db_handler, io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
@@ -18,7 +18,7 @@ class InvalidArrayConfigData(Exception):
 class ArrayModel:
     """
     ArrayModel is an abstract representation of the MC model at the array level. It contains the\
-    list of TelescopeModel's and a LayoutArray.
+    list of TelescopeModel's and a ArrayLayout.
 
     Parameters
     ----------
@@ -81,11 +81,11 @@ class ArrayModel:
         # Site
         self.site = names.validate_site_name(array_config_data["site"])
 
-        # Grabbing layout name and building LayoutArray
-        self.layout_name = names.validate_layout_array_name(array_config_data["layout_name"])
-        self.layout = LayoutArray.from_layout_array_name(
+        # Grabbing layout name and building ArrayLayout
+        self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
+        self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=self.mongo_db_config,
-            layout_array_name=self.site + "-" + self.layout_name,
+            array_layout_name=self.site + "-" + self.layout_name,
             label=self.label,
         )
 
@@ -192,7 +192,7 @@ class ArrayModel:
         if len(self._telescope_model) != len(self.layout):
             self._logger.warning(
                 "Number of telescopes in the list of telescope models does "
-                "not match the number of telescopes in the LayoutArray - something is wrong!"
+                "not match the number of telescopes in the ArrayLayout - something is wrong!"
             )
 
         # Changing parameters, if there are any in all_pars_to_change

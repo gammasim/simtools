@@ -72,7 +72,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.layout import layout_array
+from simtools.layout import array_layout
 
 
 def _parse(label=None, description=None):
@@ -146,7 +146,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
+    layout = array_layout.ArrayLayout(telescope_list_file=args_dict["array_element_list"])
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
     if args_dict["export"] is not None:

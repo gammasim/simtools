@@ -17,7 +17,7 @@ simtools is composed of the following modules and module groups:
   db_handler
   io_handler
   job_execution
-  layout_array
+  array_layout
   mc_model
   psf_analysis
   ray_tracing

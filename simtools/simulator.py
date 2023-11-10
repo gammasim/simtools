@@ -206,7 +206,7 @@ class Simulator:
 
         try:
             self.site = names.validate_site_name(self._corsika_config_data.pop("site"))
-            self.layout_name = names.validate_layout_array_name(
+            self.layout_name = names.validate_array_layout_name(
                 self._corsika_config_data.pop("layout_name")
             )
         except KeyError:
@@ -332,7 +332,7 @@ class Simulator:
 
         try:
             _array_model_data["site"] = names.validate_site_name(_rest_data.pop("site"))
-            _array_model_data["layout_name"] = names.validate_layout_array_name(
+            _array_model_data["layout_name"] = names.validate_array_layout_name(
                 _rest_data.pop("layout_name")
             )
             _array_model_data["model_version"] = _rest_data.pop("model_version")
