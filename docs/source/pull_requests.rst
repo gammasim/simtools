@@ -1,4 +1,4 @@
-.. _PullRequests:
+.. _pull_requests:
 
 Pull requests
 *************
