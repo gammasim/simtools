@@ -46,4 +46,3 @@ jobs:
           BRANCH: gh-pages
           FOLDER: docs/build/html
           CLEAN: true
-          SINGLE_COMMIT: true
