@@ -50,7 +50,7 @@ derive_mirror_rnda
    :members:
 
 generate_corsika_histograms
-==================
+===========================
 
 .. automodule:: generate_corsika_histograms
    :members:
