@@ -30,7 +30,7 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # https://github.com/myint/rstcheck
   - repo: https://github.com/myint/rstcheck
-    rev: ''
+    rev: 534b469
     hooks:
       - id: rstcheck
         name: Check reST files using rstcheck
