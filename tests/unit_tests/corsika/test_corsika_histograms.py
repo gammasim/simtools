@@ -877,7 +877,7 @@ def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histog
         "zenith": "event_1D_histograms_zenith",
         "first_interaction_height": "event_1D_histograms_first_interaction_height",
     }
-    for event_header_element, file_name in corsika_event_header_example.items():
+    for event_header_element, _ in corsika_event_header_example.items():
         corsika_histograms_instance_set_histograms.export_event_header_1D_histogram(
             event_header_element, bins=50, hist_range=None
         )
