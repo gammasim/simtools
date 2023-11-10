@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Configuration &#8212; simtools v0.1.dev1+g6d3fc36</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
+    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
+    <script src="_static/documentation_options.js?v=ec481e98"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CORSIKA" href="corsika.html" />
+    <link rel="prev" title="Camera Efficiency" href="camera_efficiency.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">simtools</a></h1>
+
+
+
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g6d3fc36</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_handler.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layout_array.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="library.html">API</a><ul>
+      <li>Previous: <a href="camera_efficiency.html" title="previous chapter">Camera Efficiency</a></li>
+      <li>Next: <a href="corsika.html" title="next chapter">CORSIKA</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/configuration_module.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="configuration">
+<span id="configurationmodule"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
+<p>Reference documentation for the configuration of simtools applications.</p>
+<section id="module-configuration.configurator">
+<span id="configurator"></span><span id="configurationconfigurator"></span><h2>configurator<a class="headerlink" href="#module-configuration.configurator" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="configuration.configurator.Configurator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">Configurator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator" title="Link to this definition">¶</a></dt>
+<dd><p>Application configuration.</p>
+<p>Allow to set configuration parameters by</p>
+<ul class="simple">
+<li><p>command line arguments</p></li>
+<li><p>configuration file (yml file)</p></li>
+<li><p>configuration dict when calling the class</p></li>
+<li><p>environmental variables</p></li>
+</ul>
+<p>Assigns unique ACIVITY_ID to this configuration (uuid).</p>
+<p>Configuration parameter names are converted always to lower case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>Configuration parameters as dict.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Class label.</p>
+</dd>
+<dt><strong>usage: str</strong></dt><dd><p>Application usage description.</p>
+</dd>
+<dt><strong>description: str</strong></dt><dd><p>Text displayed as description.</p>
+</dd>
+<dt><strong>epilog: str</strong></dt><dd><p>Text display after all arguments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.configurator.Configurator.default_config">
+<span class="sig-name descname"><span class="pre">default_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.default_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.default_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns dictionary of default configuration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>arg_list: list</strong></dt><dd><p>List of arguments.</p>
+</dd>
+<dt><strong>add_db_config: bool</strong></dt><dd><p>Add DB configuration file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Configuration parameters as dict.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.configurator.Configurator.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.initialize" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize configuration from command line, configuration file, class config, or         environmental variable.</p>
+<p>Priorities in parameter settings.
+1. command line; 2. yaml file; 3. class init; 4. env variables.</p>
+<p>Conflicting configuration settings raise an Exception, with the exception of settings         from environmental variables, which are only done when the configuration parameter         is None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>paths: bool</strong></dt><dd><p>Add path configuration to list of args.</p>
+</dd>
+<dt><strong>output: bool</strong></dt><dd><p>Add output file configuration to list of args.</p>
+</dd>
+<dt><strong>telescope_model: bool</strong></dt><dd><p>Add telescope model configuration to list of args.</p>
+</dd>
+<dt><strong>db_config: bool</strong></dt><dd><p>Add database configuration parameters to list of args.</p>
+</dd>
+<dt><strong>job_submission: bool</strong></dt><dd><p>Add job submission configuration to list of args.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Configuration parameters as dict.</p>
+</dd>
+<dt>dict</dt><dd><p>Dictionary with DB parameters</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidConfigurationParameter</dt><dd><p>if parameter has already been defined with a different value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="configuration.configurator.InvalidConfigurationParameter">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigurationParameter</span></span><a class="reference internal" href="_modules/configuration/configurator.html#InvalidConfigurationParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.InvalidConfigurationParameter" title="Link to this definition">¶</a></dt>
+<dd><p>Exception for Invalid configuration parameter.</p>
+</dd></dl>
+
+</section>
+<section id="module-configuration.commandline_parser">
+<span id="commandline-parser"></span><span id="configurationcommandline-parser"></span><h2>commandline_parser<a class="headerlink" href="#module-configuration.commandline_parser" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.commandline_parser.</span></span><span class="sig-name descname"><span class="pre">CommandLineParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter_class=&lt;class</span> <span class="pre">'argparse.HelpFormatter'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_chars='-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromfile_prefix_chars=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argument_default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_handler='error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_help=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_abbrev=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_on_error=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser" title="Link to this definition">¶</a></dt>
+<dd><p>Command line parser for applications.</p>
+<p>Wrapper around standard python argparse.ArgumentParser.</p>
+<p>Command line arguments should be given in snake_case, e.g.  <code class="xref py py-obj docutils literal notranslate"><span class="pre">input_meta</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>argparse.ArgumentParser class</strong></dt><dd><p>Object for parsing command line strings into Python objects. For a list of keywords, please        refer to argparse.ArgumentParser documentation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.azimuth_angle">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">azimuth_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.azimuth_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.azimuth_angle" title="Link to this definition">¶</a></dt>
+<dd><p>Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
+Other allowed options are north, south, east or west which will be translated to an angle
+where north corresponds to zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>angle: float or str</strong></dt><dd><p>azimuth angle to verify or convert</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Astropy.Quantity</dt><dd><p>Validated/Converted aziumth angle in degrees</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>When angle is outside of the interval [0, 360] or not in (north, south, east, west)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.efficiency_interval">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">efficiency_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.efficiency_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.efficiency_interval" title="Link to this definition">¶</a></dt>
+<dd><p>Argument parser type to check that value is an efficiency
+in the interval [0,1]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>value provided through the command line</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Validated efficiency interval</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>When value is outside of the interval [0,1]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">
+<span class="sig-name descname"><span class="pre">initialize_application_execution_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_application_execution_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize application execution arguments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_config_files">
+<span class="sig-name descname"><span class="pre">initialize_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_config_files" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize configuration files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">
+<span class="sig-name descname"><span class="pre">initialize_db_config_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_db_config_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize DB configuration parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_default_arguments">
+<span class="sig-name descname"><span class="pre">initialize_default_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_default_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_default_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize default arguments used by all applications (e.g., verbosity or test flag).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>paths: bool</strong></dt><dd><p>Add path configuration to list of args.</p>
+</dd>
+<dt><strong>output: bool</strong></dt><dd><p>Add output file configuration to list of args.</p>
+</dd>
+<dt><strong>telescope_model: bool</strong></dt><dd><p>Add telescope model configuration to list of args.</p>
+</dd>
+<dt><strong>db_config: bool</strong></dt><dd><p>Add database configuration parameters to list of args.</p>
+</dd>
+<dt><strong>job_submission: bool</strong></dt><dd><p>Add job submission configuration parameters to list of args.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">
+<span class="sig-name descname"><span class="pre">initialize_job_submission_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_job_submission_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize job submission arguments for simulator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_output_arguments">
+<span class="sig-name descname"><span class="pre">initialize_output_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_output_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_output_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize application output files(s)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_path_arguments">
+<span class="sig-name descname"><span class="pre">initialize_path_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_path_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_path_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize paths.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments">
+<span class="sig-name descname"><span class="pre">initialize_telescope_model_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_telescope_model_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize default arguments for site and telescope model definition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>add_model_version: bool</strong></dt><dd><p>Set to allow a simulation model argument.</p>
+</dd>
+<dt><strong>add_telescope: bool</strong></dt><dd><p>Set to allow a telescope name argument.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.site">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.site" title="Link to this definition">¶</a></dt>
+<dd><p>Argument parser type to check that a valid site name is given</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: str</strong></dt><dd><p>site name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Validated site name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>for invalid sites</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.telescope">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.telescope" title="Link to this definition">¶</a></dt>
+<dd><p>Argument parser type to check that a valid telescope name is given</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: str</strong></dt><dd><p>telescope name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Validated telescope name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>for invalid telescope</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.zenith_angle">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zenith_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.zenith_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.zenith_angle" title="Link to this definition">¶</a></dt>
+<dd><p>Argument parser type to check that the zenith angle provided is in the interval [0, 180].
+We allow here zenith angles larger than 90 degrees in the improbable case
+such simulations are requested. It is not guaranteed that the actual simulation software
+supports such angles!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>angle: float</strong></dt><dd><p>zenith angle to verify</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Astropy.Quantity</dt><dd><p>Validated zenith angle in degrees</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>When angle is outside of the interval [0, 180]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      
+      
+      
+      <a href="_sources/configuration_module.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
