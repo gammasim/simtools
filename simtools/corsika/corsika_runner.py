@@ -96,7 +96,7 @@ class CorsikaRunner:
 
         self.label = label
         self.site = names.validate_site_name(site)
-        self.layout_name = names.validate_layout_array_name(layout_name)
+        self.layout_name = names.validate_array_layout_name(layout_name)
 
         self._keep_seeds = keep_seeds
 
