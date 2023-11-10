@@ -34,4 +34,4 @@ repos:
     hooks:
       - id: rstcheck
         name: Check reST files using rstcheck
-        args: [--report-level=warning]
+        args: [--report-level=info]
