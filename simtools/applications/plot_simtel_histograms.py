@@ -13,7 +13,7 @@
     hist_file_names (str, optional)
         Name of the histogram files to be plotted.
         It can be given as the histogram file names (more than one option allowed) or as a text
-            file with the names of the histogram files in it.
+        file with the names of the histogram files in it.
     figure_name (str, required)
         File name for the pdf output (without extension).
     verbosity (str, optional)

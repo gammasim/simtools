@@ -80,7 +80,7 @@ todo_include_todos = True
 autodoc_mock_imports = [
     "matplotlib",
     "yaml",
-    "numpy",
+    #    "numpy",
     "astropy",
     "bson",
     "pymongo",
@@ -100,7 +100,7 @@ templates_path = ["_templates"]
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst']
+source_suffix = [".rst"]
 
 # The master toctree document.
 master_doc = "index"
@@ -128,7 +128,7 @@ default_role = "py:obj"
 #
 # html_theme = "sphinx_rtd_theme"
 # html_theme = "bizstyle"
-html_theme = 'alabaster'
+html_theme = "alabaster"
 
 html_title = f"{project} v{version} Manual"
 
@@ -158,13 +158,7 @@ html_static_path = []
 #
 # html_sidebars = {}
 html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-        "sourcelink.html"
-    ]
+    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html", "sourcelink.html"]
 }
 html_css_files = ["simtools.css"]
 html_file_suffix = ".html"
