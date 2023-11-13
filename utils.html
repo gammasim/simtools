@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g6b33f34</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g1ae590d</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=23311adc"></script>
+    <script src="_static/documentation_options.js?v=e8a6a9b7"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g6b33f34</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g1ae590d</p>
 
 
 
@@ -244,6 +244,33 @@ the util module.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="utils.general.fill_hdf5_table">
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">fill_hdf5_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#fill_hdf5_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.fill_hdf5_table" title="Link to this definition">¶</a></dt>
+<dd><p>Create and fill an hdf5 table with the histogram information.
+It works for both 1D and 2D distributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hist: numpy.ndarray</strong></dt><dd><p>The counts of the histograms.</p>
+</dd>
+<dt><strong>x_bin_edges: numpy.array</strong></dt><dd><p>The x bin edges of the histograms.</p>
+</dd>
+<dt><strong>y_bin_edges: numpy.array</strong></dt><dd><p>The y bin edges of the histograms.
+Use None for 1D histograms.</p>
+</dd>
+<dt><strong>x_label: str</strong></dt><dd><p>X bin edges label.</p>
+</dd>
+<dt><strong>y_label: str</strong></dt><dd><p>Y bin edges label.
+Use None for 1D histograms.</p>
+</dd>
+<dt><strong>meta_data: dict</strong></dt><dd><p>Dictionary with the histogram metadata.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="utils.general.get_log_excerpt">
 <span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">get_log_excerpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_last_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#get_log_excerpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.get_log_excerpt" title="Link to this definition">¶</a></dt>
 <dd><p>Get an excerpt from a log file, namely the n_last_lines of the file.</p>
@@ -279,6 +306,27 @@ the util module.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>logging.LEVEL</dt><dd><p>The requested logging level to be used as input to logging.setLevel().</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.general.read_hdf5">
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">read_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdf5_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#read_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.read_hdf5" title="Link to this definition">¶</a></dt>
+<dd><p>Read a hdf5 output file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hdf5_file_name: str or Path</strong></dt><dd><p>Name or Path of the hdf5 file to read from.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>The list with the astropy.Table instances for the various 1D and 2D histograms saved
+in the hdf5 file.</p>
 </dd>
 </dl>
 </dd>

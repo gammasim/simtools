@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g6b33f34</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+g1ae590d</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=23311adc"></script>
+    <script src="../_static/documentation_options.js?v=e8a6a9b7"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g6b33f34</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g1ae590d</p>
 
 
 
@@ -531,8 +531,8 @@
 
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_on_axis_eff_optical_area</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="c1"># NSB input spectrum is from Benn&amp;Ellison</span>
-        <span class="c1"># (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:</span>
+        <span class="c1"># NSB input spectrum is from Benn &amp; Ellison</span>
+        <span class="c1"># (integral is in ph/(cm2 ns sr) ) from 300 - 650 nm:</span>
         <span class="n">n1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">651</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
         <span class="n">n1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_reduced_wl</span><span class="p">)</span>
         <span class="n">n1_integral_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][</span>
