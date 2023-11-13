@@ -26,6 +26,14 @@ jobs:
           python --version
           pip install '.[doc]'
 
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(perl -ne 'print if /[^[:ascii:]]/' docs/source/*)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
+
       - name: Build docs
         shell: bash -l {0}
         run: |
