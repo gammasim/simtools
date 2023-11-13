@@ -90,7 +90,7 @@ def _parse(label, description):
     )
 
     config.parser.add_argument(
-        "--hdf5", help="Save histograms into hdf5 files.", action="store_true", required=False
+        "--hdf5", help="Save histograms into a hdf5 file.", action="store_true", required=False
     )
 
     config.parser.add_argument(
