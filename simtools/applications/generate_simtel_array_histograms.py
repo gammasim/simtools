@@ -90,14 +90,6 @@ def _parse(label, description):
     )
 
     config.parser.add_argument(
-        "--hdf5", help="Save histograms into a hdf5 file.", action="store_true", required=False
-    )
-
-    config.parser.add_argument(
-        "--pdf", help="Save histograms into a pdf file.", action="store_true", required=False
-    )
-
-    config.parser.add_argument(
         "--output_file_name",
         help="Name of the hdf5 (and/or pdf) file where to save the histograms.",
         type=str,
@@ -105,19 +97,24 @@ def _parse(label, description):
         default=None,
     )
 
-    config_parser, _ = config.initialize(db_config=False, paths=True)
-    if not config_parser["pdf"]:
-        if not config_parser["hdf5"]:
-            config.parser.error("At least one argument is required: `--pdf` or `--hdf5`.")
+    required_config = config.parser.add_mutually_exclusive_group(required=True)
+    required_config.add_argument(
+        "--hdf5", help="Save histograms into a hdf5 file.", action="store_true"
+    )
+    required_config.add_argument(
+        "--pdf", help="Save histograms into a pdf file.", action="store_true"
+    )
 
-    return config_parser, _
+    config_parser, _ = config.initialize(db_config=False, paths=True)
+
+    return config_parser
 
 
 def main():
     label = Path(__file__).stem
     description = "Display the simtel_array histograms."
     io_handler_instance = io_handler.IOHandler()
-    config_parser, _ = _parse(label, description)
+    config_parser = _parse(label, description)
     output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
