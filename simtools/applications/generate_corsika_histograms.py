@@ -157,6 +157,7 @@
     Expected final print-out message:
 
     .. code-block:: console
+
         INFO::generate_corsika_histograms(l358)::main::Finalizing the application.
         Total time needed: 8s.
 """
