@@ -648,7 +648,6 @@ class Simulator:
                     file_type="output", **self._simulation_runner.get_info_for_file_name(run)
                 )
                 self._results["output"].append(str(output_file_name))
-
         return self._results["output"]
 
     def get_list_of_histogram_files(self):

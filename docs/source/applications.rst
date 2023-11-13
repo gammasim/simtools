@@ -49,6 +49,11 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
+generate_simtel_array_histograms
+================================
+
+.. automodule:: generate_simtel_array_histograms
+   :members:
 
 get_file_from_db
 ================
@@ -73,12 +78,6 @@ plot_layout_array
 ======================
 
 .. automodule:: plot_layout_array
-   :members:
-
-plot_simtel_histograms
-======================
-
-.. automodule:: plot_simtel_histograms
    :members:
 
 print_array_elements
