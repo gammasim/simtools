@@ -49,7 +49,6 @@
 """
 
 import logging
-import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -121,7 +120,6 @@ def main():
     output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
-    initial_time = time.time()
     logger.info("Starting the application.")
 
     n_lists = len(config_parser["hist_file_names"])
@@ -129,7 +127,7 @@ def main():
     # Building list of histograms from the input files
     histogram_files = []
     for one_file in config_parser["hist_file_names"]:
-        if Path(one_file).is_file():
+        try:
             if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
                 histogram_files.append(one_file)
             else:
@@ -138,14 +136,15 @@ def main():
                     for line in file:
                         # Removing '\n' from filename, in case it is left there.
                         histogram_files.append(line.replace("\n", ""))
-        else:
+        except FileNotFoundError:
             msg = f"{one_file} is not a file."
             logger.error(msg)
-            raise TypeError
+            raise FileNotFoundError
 
     # If no output name is passed, the tool gets the name of the first histogram of the list
     if config_parser["output_file_name"] is None:
         config_parser["output_file_name"] = Path(histogram_files[0]).absolute().name
+    output_file_name = Path(output_path).joinpath(f"{config_parser['output_file_name']}")
 
     # If the hdf5 output file already exists, it is overwritten
     if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
@@ -161,8 +160,6 @@ def main():
     # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
     simtel_histograms._combine_histogram_files()
-
-    output_file_name = Path(output_path).joinpath(f"{config_parser['output_file_name']}")
 
     if config_parser["pdf"]:
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
@@ -187,11 +184,6 @@ def main():
     if config_parser["hdf5"]:
         logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
-
-    final_time = time.time()
-    logger.info(
-        f"Finalizing the application. Total time needed: {round(final_time - initial_time)}s."
-    )
 
 
 if __name__ == "__main__":
