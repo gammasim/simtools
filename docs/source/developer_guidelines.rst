@@ -105,7 +105,7 @@ docstrings or RST files). The documentation can be viewed locally in a browser s
 file ``./build/html/index.html``.
 
 The documentation is written in reStructuredText (RST) format.
-Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are difficult to understand.
+Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
 
 Hints:
 
