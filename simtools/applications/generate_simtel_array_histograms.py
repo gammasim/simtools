@@ -3,9 +3,9 @@
 """
     Summary
     -------
-    This application plots and prints sim_telarray histograms into pdf file.
-    It accepts multiple lists of histograms files that are plotted together,
-    side-by-side. Each histogram is plotted in a page of the pdf.
+    This application allows to write sim_telarray histograms into pdf and hdf5 files.
+    It accepts multiple lists of histograms files, a single list or a histogram file.
+    Each histogram is plotted in a page of the pdf file if the --pdf option is activated.
 
 
     Command line arguments
