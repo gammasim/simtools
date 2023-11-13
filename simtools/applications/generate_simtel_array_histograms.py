@@ -13,7 +13,7 @@
     hist_file_names (str, optional)
         Name of the histogram files to be plotted.
         It can be given as the histogram file names (more than one option allowed) or as a text
-            file with the names of the histogram files in it.
+        file with the names of the histogram files in it.
     figure_name (str, required)
         File name for the pdf output (without extension).
     pdf (bool, optional)
@@ -26,10 +26,10 @@
     output_file_name (str, optional)
         The name of the output hdf5 (and/or pdf) files (without the path).
         If not given, `output_file_name` takes the name from the (first) input file
-            (`hist_file_names`).
+        (`hist_file_names`).
         If the output `output_file_name.hdf5` file already exists and `hdf5` is set, the tables
-            associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
-            untouched.
+        associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
+        untouched.
     verbosity (str, optional)
         Log level to print (default=INFO).
 
