@@ -88,6 +88,7 @@ autodoc_mock_imports = [
     "scipy",
     "cycler",
     "eventio",
+    "ctapipe",
 ]
 
 # Change the look of autodoc classes
