@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g1ae590d</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g4f010f7</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=e8a6a9b7"></script>
+    <script src="_static/documentation_options.js?v=c29199aa"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g1ae590d</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4f010f7</p>
 
 
 
@@ -188,6 +188,14 @@ docstrings in the code.</p>
 <p>This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
 docstrings or RST files). The documentation can be viewed locally in a browser starting from the
 file <code class="docutils literal notranslate"><span class="pre">./build/html/index.html</span></code>.</p>
+<p>The documentation is written in reStructuredText (RST) format.
+Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.</p>
+<p>Hints:</p>
+<ul class="simple">
+<li><p>make sure that headings are underlined with the correct number of <code class="docutils literal notranslate"><span class="pre">=</span></code> characters</p></li>
+<li><p>make sure that the indentation is correct and aligned</p></li>
+<li><p>use unicode for special characters (e.g., <code class="docutils literal notranslate"><span class="pre">\u00B2</span></code> for superscript 2); see <a class="reference external" href="https://unicode-table.com/en/">unicode table</a></p></li>
+</ul>
 </section>
 <section id="writing-applications">
 <h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">¶</a></h2>
