@@ -49,10 +49,8 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
-
-
 generate_simtel_array_histograms
-==================
+================================
 
 .. automodule:: generate_simtel_array_histograms
    :members:
