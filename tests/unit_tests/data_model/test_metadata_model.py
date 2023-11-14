@@ -26,11 +26,11 @@ def test_metadata_input_reference_schema():
 
 
 def test_metadata_input_reference_document_list():
-    assert "SITE" in metadata_model.metadata_input_reference_document_list("instrumentlist")
-    assert "SITE" in metadata_model.metadata_input_reference_document_list("INSTRUMENTLIST")
-    assert "TYPE" in metadata_model.metadata_input_reference_document_list("documentlist")
-    with pytest.raises(metadata_model.InvalidSchemaList, match=r"Invalid schema list: wronglist"):
-        metadata_model.metadata_input_reference_document_list("wronglist")
+    assert "SITE" in metadata_model.metadata_input_reference_document_list("instrument_list")
+    assert "SITE" in metadata_model.metadata_input_reference_document_list("INSTRUMENT_LIST")
+    assert "TYPE" in metadata_model.metadata_input_reference_document_list("document_list")
+    with pytest.raises(metadata_model.InvalidSchemaList, match=r"Invalid schema list: wrong_list"):
+        metadata_model.metadata_input_reference_document_list("wrong_list")
 
 
 def test_metadata_dict_with_defaults():
