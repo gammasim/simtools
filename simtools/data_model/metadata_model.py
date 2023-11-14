@@ -1,6 +1,6 @@
 """
 Definition of metadata model for input to and output of simtools.
-Follows CTA top-level data model definition.
+Follows CTAO top-level data model definition.
 Metadata is broken into hierarchical categories in this module.
 
 Metadata definitions require the three following fields to be defined:
