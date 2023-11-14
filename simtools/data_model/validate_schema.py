@@ -44,7 +44,7 @@ class SchemaValidator:
         Returns
         -------
         dict
-            Complete set of metadata following the CTA top-level metadata defintion
+            Complete set of metadata following the CTA top-level metadata definition
             (None if meta_file_name is undefined)
 
         """
@@ -105,7 +105,7 @@ class SchemaValidator:
         """
         Process schema entries for inconsistencies
         (quite fine tuned)
-        - remove linefeeds from description string
+        - remove line feeds from description string
 
         Raises
         ------
@@ -216,7 +216,7 @@ class SchemaValidator:
 
     def _validate_list(self, schema_type, data_list):
         """
-        Validate schmema for list type entry
+        Validate schema for list type entry
 
         Parameters
         ----------
@@ -235,7 +235,7 @@ class SchemaValidator:
     def _field_is_optional(self, field_dict):
         """
         Check if data field is labeled as optional in the reference metadata schema.
-        Dictionaries as datafields are tested for any optional fields.
+        Dictionaries as data fields are tested for any optional fields.
 
         Parameters
         ----------
