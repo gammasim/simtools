@@ -64,7 +64,7 @@ class MetadataCollector:
         Parameters
         ----------
         association_dict: dict
-            Dictionary for assocation metadata field.
+            Dictionary for association metadata field.
 
         Raises
         ------
@@ -147,7 +147,7 @@ class MetadataCollector:
         """
 
         product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        self._logger.debug(f"Reading activitiy UUID {product_dict['id']}")
+        self._logger.debug(f"Reading activity UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
@@ -217,7 +217,7 @@ class MetadataCollector:
         Parameters
         ----------
         activity_dict: dict
-            Dictionary for top-level activitiy metadata.
+            Dictionary for top-level activity metadata.
 
         """
 
