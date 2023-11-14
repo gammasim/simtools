@@ -37,7 +37,7 @@ def _category_contact():
     """
     Metadata field CONTACT.
 
-    Organisation and person submitting or processing these data.
+    Organization and person submitting or processing these data.
 
     """
     return {
@@ -75,7 +75,7 @@ def _category_product():
             "START": {"type": "datetime", "required": False, "default": None},
             "END": {"type": "datetime", "required": False, "default": None},
         },
-        "ASSOCIATION": {"type": "instrumentlist", "required": True, "default": []},
+        "ASSOCIATION": {"type": "instrument_list", "required": True, "default": []},
     }
 
 
@@ -100,7 +100,7 @@ def _category_context():
     Describes list of context documents.
 
     """
-    return {"DOCUMENT": {"type": "documentlist", "required": False, "default": None}}
+    return {"DOCUMENT": {"type": "document_list", "required": False, "default": None}}
 
 
 def _category_document():
@@ -212,21 +212,21 @@ def metadata_input_reference_schema():
 
 def metadata_input_reference_document_list(schema_list):
     """
-    Reference model data for input metata data of type documentlist or instrumentlist
+    Reference model data for input metata data of type document_list or instrument_list
 
     Parameters
     ----------
     schema_list: str
-        List type to be returned (e.g., instrumentlist or documentlist)
+        List type to be returned (e.g., instrument_list or document_list)
 
     Returns
     -------
-    dict with input reference schema for documentlist or instrumentlist
+    dict with input reference schema for document_list or instrument_list
 
     """
-    if schema_list.lower() == "instrumentlist":
+    if schema_list.lower() == "instrument_list":
         return _category_instrument()
-    if schema_list.lower() == "documentlist":
+    if schema_list.lower() == "document_list":
         return _category_document()
 
     msg = f"Invalid schema list: {schema_list}"

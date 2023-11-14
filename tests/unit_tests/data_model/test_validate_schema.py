@@ -160,12 +160,12 @@ def test_validate_list():
         }
     }
     instrument_list = [instrument_1["instrument"]]
-    date_validator._validate_list("instrumentlist", instrument_list)
+    date_validator._validate_list("instrument_list", instrument_list)
 
     del instrument_1["instrument"]["class"]
     instrument_list.append(instrument_1)
     with pytest.raises(ValueError, match=r"Missing required field 'class'"):
-        date_validator._validate_list("instrumentlist", instrument_list)
+        date_validator._validate_list("instrument_list", instrument_list)
 
 
 def test_check_if_field_is_optional():

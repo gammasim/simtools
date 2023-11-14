@@ -221,7 +221,7 @@ class SchemaValidator:
         Parameters
         ----------
         schema_type
-            reference schema type (e.g., instrumentlist, documentlist).
+            reference schema type (e.g., instrument_list, document_list).
         data_list: list
             list of dictionaries to be validated.
         """
