@@ -61,6 +61,49 @@ def _parse(label, description):
     return config.initialize(output=False)
 
 
+def resolve_references(yaml_data):
+    """
+    Resolve references in yaml data and expand the
+    received dictionary accordingly.
+
+    Parameters
+    ----------
+    yaml_data: dict
+        Dictionary with yaml data.
+
+    Returns
+    -------
+    dict
+        Dictionary with resolved references.
+
+    """
+
+    def expand_ref(ref):
+        ref_path = ref.lstrip("#/")
+        parts = ref_path.split("/")
+        ref_data = yaml_data
+        for part in parts:
+            if part in ("definitions", "CTA"):
+                continue
+            ref_data = ref_data.get(part, {})
+        return ref_data
+
+    def resolve_references_recursive(data):
+        if isinstance(data, dict):
+            if "$ref" in data:
+                ref = data["$ref"]
+                resolved_data = expand_ref(ref)
+                if isinstance(resolved_data, dict) and len(resolved_data) > 1:
+                    return resolve_references_recursive(resolved_data)
+                return resolved_data
+            return {k: resolve_references_recursive(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [resolve_references_recursive(item) for item in data]
+        return data
+
+    return resolve_references_recursive(yaml_data)
+
+
 def fill_defaults(schema):
     """
     Fill default values from json schema.
@@ -78,6 +121,8 @@ def fill_defaults(schema):
     """
 
     defaults = {"CTA": {}}
+
+    schema = resolve_references(schema)
 
     def fill_defaults_recursive(subschema, current_dict):
         if "properties" in subschema:
