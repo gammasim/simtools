@@ -108,7 +108,8 @@ def main():
         schema = gen.collect_data_from_yaml_or_dict(in_yaml=args_dict["schema"], in_dict=None)
         _logger.info(f"Reading schema from {args_dict['schema']}")
 
-    default_values = fill_defaults(
+    default_values = {}
+    default_values["CTA"] = fill_defaults(
         schema["definitions"]["CTA"], required_only=args_dict["required_only"]
     )
 
