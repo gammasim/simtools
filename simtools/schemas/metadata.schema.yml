@@ -268,6 +268,9 @@ definitions:
             description: |-
               CTA Site.
             default: null
+            example:
+              - CTA-North
+              - CTA-South
           CLASS:
             anyOf:
               - type: "null"
@@ -276,15 +279,15 @@ definitions:
             description: |-
               General class of instrument to which this data product applies.
             example:
-              - Array
-              - Subarray
-              - Telescope
-              - Camera
-              - Optics
-              - Mirror
-              - Photosensor
-              - CameraModule
-              - Part
+              - array
+              - subarray
+              - telescope
+              - camera
+              - optics
+              - mirror
+              - photosensor
+              - cameraModule
+              - part
           TYPE:
             anyOf:
               - type: "null"
@@ -486,3 +489,12 @@ definitions:
                 - ID
                 - TITLE
                 - TYPE
+          ASSOCIATEDELEMENTS:
+            title: Associated elements.
+            description: |-
+              CTA elements associated with this data product
+              (e.g., this data product is to be used to model
+              a certain camera).
+            type: array
+            items:
+              $ref: '#/definitions/CTA/properties/INSTRUMENT'
