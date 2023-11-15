@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages=["simtools"]
+include-package-data = true
 
 [tool.setuptools_scm]
 write_to = "simtools/_version.py"
@@ -67,6 +68,7 @@ simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:
 simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
 simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
+simtools-generate-default-metadata-file = "simtools.applications.generate_default_metadata_file:main"
 simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 simtools-get-parameter = "simtools.applications.get_parameter:main"
 simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
