@@ -23,7 +23,6 @@ definitions:
     required:
       - ACTIVITY
       - CONTACT
-      - CONTEXT
       - INSTRUMENT
       - PROCESS
       - PRODUCT
@@ -78,6 +77,17 @@ definitions:
             default: null
       ###############
       PRODUCT:
+        title: Product
+        description: |-
+          Describes the details of the data product, including its type and
+          links to the data model definition.
+        required:
+          - CREATION_TIME
+          - DATA
+          - DESCRIPTION
+          - FORMAT
+          - ID
+          - VALID
         type: object
         additionalProperties: false
         properties:
@@ -105,6 +115,13 @@ definitions:
             description: |-
               Product identifier.
           DATA:
+            title: Data
+            required:
+              - CATEGORY
+              - ASSOCIATION
+              - LEVEL
+              - MODEL
+              - TYPE
             type: object
             additionalProperties: false
             properties:
@@ -204,13 +221,6 @@ definitions:
                   - URL
                   - VERSION
                 title: Model
-            required:
-              - CATEGORY
-              - ASSOCIATION
-              - LEVEL
-              - MODEL
-              - TYPE
-            title: Data
           FORMAT:
             type: string
             default: ecsv
@@ -240,18 +250,6 @@ definitions:
               - type: string
               - type: "null"
             default: null
-        required:
-          - CREATION_TIME
-          - DATA
-          - DESCRIPTION
-          - FILENAME
-          - FORMAT
-          - ID
-          - VALID
-        title: Product
-        description: |-
-          Describes the details of the data product, including its type and
-          links to the data model definition.
       ###############
       INSTRUMENT:
         title: Instrument
@@ -326,6 +324,7 @@ definitions:
           associated ID.
         required:
           - TYPE
+          - ID
         type: object
         additionalProperties: false
         properties:
@@ -366,7 +365,6 @@ definitions:
         required:
           - ID
           - NAME
-          - SOFTWARE
           - START
           - TYPE
         type: object
