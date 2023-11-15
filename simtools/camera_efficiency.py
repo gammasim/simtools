@@ -432,8 +432,7 @@ class CameraEfficiency:
             / self._telescope_model.get_telescope_transmission_parameters()[0]
         )
 
-        # NSB input spectrum is from Benn&Ellison
-        # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
+        # (integral is in ph./(cm^2 ns sr) ) from 300 - 650 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
