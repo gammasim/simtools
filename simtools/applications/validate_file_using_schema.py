@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Validate parameter description files using a json schema file.
+    Validate file (e.g., metaadata) using a json schema file.
 
     Command line arguments
     ----------------------
@@ -16,7 +16,7 @@
 
     .. code-block:: console
 
-        simtools-validate-schema-file \
+        simtools-validate-file-using-schema \
          --file_name tests/resources/MST_mirror_2f_measurements.schema.yml \
          --schema jsonschema.yml
 
