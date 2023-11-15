@@ -12,11 +12,6 @@
         (default: simtools/schemas/metadata.schema.yml)
     output_file (str, optional)
         Output file name.
-    required_only (bool, optional)
-        Output required fields only.
-
-    TODO:
-    - output required fields only
 
     """
 
@@ -62,30 +57,43 @@ def _parse(label, description):
         type=str,
         required=False,
     )
-    config.parser.add_argument(
-        "--required_only",
-        help="output required fields only",
-        action="store_true",
-        required=False,
-    )
 
     return config.initialize(output=False)
 
 
-def fill_defaults(schema, required_only=False):
-    defaults = {}
+def fill_defaults(schema):
+    """
+    Fill default values from json schema.
+
+    Parameters
+    ----------
+    schema: dict
+        Schema describing the input data.
+
+    Returns
+    -------
+    dict
+        Dictionary with default values.
+
+    """
+
+    defaults = {"CTA": {}}
 
     def fill_defaults_recursive(subschema, current_dict):
         if "properties" in subschema:
             for prop, prop_schema in subschema["properties"].items():
                 if "default" in prop_schema:
                     current_dict[prop] = prop_schema["default"]
-                elif "type" in prop_schema and prop_schema["type"] == "object":
-                    current_dict[prop] = {}
-                    fill_defaults_recursive(prop_schema, current_dict[prop])
-                # You might need to handle other types like arrays, etc., if present
+                elif "type" in prop_schema:
+                    if prop_schema["type"] == "object":
+                        current_dict[prop] = {}
+                        fill_defaults_recursive(prop_schema, current_dict[prop])
+                    elif prop_schema["type"] == "array":
+                        current_dict[prop] = [{}]
+                        if "items" in prop_schema and isinstance(prop_schema["items"], dict):
+                            fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
 
-    fill_defaults_recursive(schema, defaults)
+    fill_defaults_recursive(schema, defaults["CTA"])
     return defaults
 
 
@@ -108,10 +116,7 @@ def main():
         schema = gen.collect_data_from_yaml_or_dict(in_yaml=args_dict["schema"], in_dict=None)
         _logger.info(f"Reading schema from {args_dict['schema']}")
 
-    default_values = {}
-    default_values["CTA"] = fill_defaults(
-        schema["definitions"]["CTA"], required_only=args_dict["required_only"]
-    )
+    default_values = fill_defaults(schema["definitions"]["CTA"])
 
     if args_dict["output_file"] is None:
         print(default_values)
