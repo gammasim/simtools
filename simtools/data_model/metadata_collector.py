@@ -5,7 +5,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 import simtools.version
 from simtools import io_handler
-from simtools.data_model import metadata_model, validate_schema
+from simtools.data_model import metadata_model
 from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
@@ -46,14 +46,14 @@ class MetadataCollector:
         """
 
         self._fill_association_meta_from_args(
-            self.top_level_meta["cta"]["context"]["sim"]["association"]
+            self.top_level_meta["cta"]["context"]["associated_elements"]
         )
 
         self._fill_product_meta(self.top_level_meta["cta"]["product"])
 
         self._fill_top_level_meta_from_file(self.top_level_meta["cta"])
 
-        self._fill_association_id(self.top_level_meta["cta"]["context"]["sim"]["association"])
+        self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
 
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
@@ -112,22 +112,20 @@ class MetadataCollector:
             self._logger.debug("Skipping metadata reading; no metadata file defined.")
             return
 
-        _schema_validator = validate_schema.SchemaValidator()
-        _input_meta = _schema_validator.validate_and_transform(
-            meta_file_name=self.args_dict["input_meta"],
-        )
+        try:
+            self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
+            _input_meta = gen.collect_data_from_yaml_or_dict(
+                in_yaml=self.args_dict.get("input_meta", None), in_dict=None
+            )
+        except gen.InvalidConfigData:
+            self._logger.debug("Failed reading metadata from file.")
+            raise
+
+        metadata_model.validate_schema(_input_meta, None)
+
+        _input_meta = gen.change_dict_keys_case(_input_meta, True)
 
         self._merge_config_dicts(top_level_dict, _input_meta)
-        # list entry copies
-        for association in _input_meta["product"]["association"]:
-            self._fill_context_sim_list(
-                top_level_dict["context"]["sim"]["association"], association
-            )
-        try:
-            for document in _input_meta["product"]["document"]:
-                self._fill_context_sim_list(top_level_dict["context"]["document"], document)
-        except KeyError:
-            top_level_dict["context"].pop("document")
 
     def _fill_product_meta(self, product_dict):
         """
