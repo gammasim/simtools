@@ -1,45 +1,50 @@
 ---
-REFERENCE:
-  VERSION: 0.1.0
-ACTIVITY:
-  NAME: telescope_positions
-# Organisation and person submitting these data
-CONTACT:
-  ORGANIZATION: 'CTAO North'
-  NAME: 'CTAO Project Scientist'
-  EMAIL: 'a@email.org'
-# Description of instrument which obtained these data
-INSTRUMENT:
-  SITE: null
-  CLASS: null
-  TYPE: null
-  ID: null
-# Description of the process which generated these data
-PROCESS:
-  TYPE: null
-  ID: null
-# Description of the submitted data product
-PRODUCT:
-  DESCRIPTION: |-
-    Telescope positions for the CTAO Northern site
-    (UTM coordinate system).
-  CREATION_TIME: '2022-05-30 12:00:00'
-  VALID:
-    START: '2022-05-30 12:00:00'
-  FORMAT: ascii.ecsv
-  DATA:
-    MODEL:
-      NAME: simpipe-schema
-      VERSION: 0.1.0
-      URL: https://github.com/gammasim/workflows/schema
-      TYPE: telescope_positions_UTM
-  ASSOCIATION:
-    - SITE: North
-      CLASS: Array
-      TYPE: standard
-      ID: CTAO-N
-  DOCUMENT:
-    - TYPE: CTAO-DOC
-      TITLE: Layouts of the CTAO Arrays
-      ID: CTA-SPE-PSC-000000-0001 1c
-      CREATION_TIME: '2022-05-30 12:00:00'
+CTA:
+  REFERENCE:
+    VERSION: 1.0.0
+  ACTIVITY:
+    NAME: telescope_positions
+    ID: null
+    TYPE: null
+    START: null
+  # Organisation and person submitting these data
+  CONTACT:
+    ORGANIZATION: 'CTAO North'
+    NAME: 'CTAO Project Scientist'
+    EMAIL: 'a@email.org'
+  # Description of instrument which obtained these data
+  INSTRUMENT:
+    SITE: null
+    CLASS: null
+    TYPE: null
+    ID: null
+  # Description of the process which generated these data
+  PROCESS:
+    TYPE: null
+    ID: null
+  # Description of the submitted data product
+  PRODUCT:
+    DESCRIPTION: |-
+      Telescope positions for the CTAO Northern site
+      (UTM coordinate system).
+    CREATION_TIME: '2022-05-30 12:00:00'
+    ID: null
+    VALID:
+      START: '2022-05-30 12:00:00'
+    FORMAT: ascii.ecsv
+    DATA:
+      CATEGORY: CAL
+      LEVEL: R1
+      TYPE: Service
+      MODEL:
+        NAME: simpipe-schema
+        VERSION: 0.1.0
+        URL: https://github.com/gammasim/workflows/schema
+        TYPE: telescope_positions_UTM
+      ASSOCIATION: null
+  CONTEXT:
+    DOCUMENT:
+      - TYPE: CTAO-DOC
+        TITLE: Layouts of the CTAO Arrays
+        ID: CTA-SPE-PSC-000000-0001 1c
+        CREATION_TIME: '2022-05-30 12:00:00'
