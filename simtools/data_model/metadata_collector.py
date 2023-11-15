@@ -48,13 +48,9 @@ class MetadataCollector:
         self._fill_association_meta_from_args(
             self.top_level_meta["cta"]["context"]["associated_elements"]
         )
-
         self._fill_product_meta(self.top_level_meta["cta"]["product"])
-
         self._fill_top_level_meta_from_file(self.top_level_meta["cta"])
-
         self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
-
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
     def _fill_association_meta_from_args(self, association_dict):
@@ -122,10 +118,11 @@ class MetadataCollector:
             raise
 
         metadata_model.validate_schema(_input_meta, None)
+        _input_meta = self._process_metadata_from_file(_input_meta)
 
-        _input_meta = gen.change_dict_keys_case(_input_meta, True)
-
-        self._merge_config_dicts(top_level_dict, _input_meta)
+        self._merge_config_dicts(top_level_dict, _input_meta["cta"])
+        for key in ("document", "associated_elements"):
+            self._copy_metadata_context_lists(top_level_dict, _input_meta["cta"], key)
 
     def _fill_product_meta(self, product_dict):
         """
@@ -307,3 +304,65 @@ class MetadataCollector:
         except (TypeError, IndexError):
             product_list = [new_entry_dict]
         return product_list
+
+    def _process_metadata_from_file(self, meta_dict):
+        """
+        Process metadata from file to ensure compatibility
+        with metadata model.
+
+        Returns
+        -------
+        dict
+            Metadata dictionary.
+
+        """
+
+        meta_dict = gen.change_dict_keys_case(meta_dict, True)
+        try:
+            meta_dict["cta"]["product"]["description"] = self._remove_line_feed(
+                meta_dict["cta"]["product"]["description"]
+            )
+        except KeyError:
+            pass
+
+        return meta_dict
+
+    @staticmethod
+    def _remove_line_feed(string):
+        """
+        Remove all line feeds from a string
+
+        Parameters
+        ----------
+        str
+            input string
+
+        Returns
+        -------
+        str
+            with line feeds removed
+        """
+
+        return string.replace("\n", " ").replace("\r", "")
+
+    def _copy_metadata_context_lists(self, top_level_dict, _input_meta, key):
+        """
+        Copy list-type metadata from file.
+        Very fine tuned.
+
+        Parameters
+        ----------
+        top_level_dict: dict
+            Dictionary for top level metadata.
+        meta_dict: dict
+            Dictionary for metadata from file.
+        key: str
+            Key for metadata entry.
+
+        """
+
+        try:
+            for document in _input_meta["context"][key]:
+                self._fill_context_sim_list(top_level_dict["context"][key], document)
+        except KeyError:
+            top_level_dict["context"].pop(key)
