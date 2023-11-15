@@ -63,35 +63,43 @@ definitions:
               Organization to which this data product is associated
             default: CTAO
           NAME:
-            type: string
             description: |-
               Name of contact within the organization
+            anyOf:
+              - type: string
+              - type: "null"
             default: null
           EMAIL:
-            type: string
-            format: email
             description: Contact email address
-            default: abc@def.org
+            anyOf:
+              - type: string
+                format: email
+              - type: "null"
+            default: null
       ###############
       PRODUCT:
         type: object
         additionalProperties: false
         properties:
           DESCRIPTION:
-            type: string
+            anyOf:
+              - type: string
+              - type: "null"
             default: null
             description: Product description
           CREATION_TIME:
             anyOf:
               - type: string
                 format: date-time
-              - type: 'null'
+              - type: "null"
             format: date-time
             default: null
             description: |-
               Human-readable date and time of file creation, in ISO format.
           ID:
-            type: string
+            anyOf:
+              - type: string
+              - type: "null"
             format: uuid
             default: null
             description: |-
@@ -101,17 +109,21 @@ definitions:
             additionalProperties: false
             properties:
               CATEGORY:
-                type: string
-                default: 'null'
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
                 description: |-
                   CTA data identifier
                 enum:
                   - SIM
                   - CAL
-                  - 'null'
+                  - null
               ASSOCIATION:
-                type: string
-                default: 'null'
+                anyOf:
+                  - type: "null"
+                  - type: string
+                default: null
                 description: |-
                   Array element association.
                 enum:
@@ -120,6 +132,7 @@ definitions:
                   - Subarray
                   - Telescope
                   - Target
+                  - null
               LEVEL:
                 type: string
                 default: R1
@@ -151,30 +164,40 @@ definitions:
                 additionalProperties: false
                 properties:
                   NAME:
-                    type: string
+                    anyOf:
+                      - type: string
+                      - type: "null"
                     default: null
                     description: |-
                       Identifying name of the data model used.
                   VERSION:
-                    type: string
+                    anyOf:
+                      - type: string
+                      - type: "null"
                     default: null
                     description: |-
                       Version of the data model used.
                   URL:
-                    type: string
-                    format: uri
                     description: |-
                       Link to definition of data model.
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: "null"
                     default: null
                   TYPE:
-                    type: string
                     description: |-
                       TODO - is this necessary?
+                    anyOf:
+                      - type: string
+                      - type: "null"
                     default: null
                   SUBTYPE:
-                    type: 'null'
                     description: |-
                       TODO - is this necessary?
+                    anyOf:
+                      - type: string
+                      - type: "null"
                     default: null
                 required:
                   - NAME
@@ -199,19 +222,23 @@ definitions:
                 anyOf:
                   - type: string
                     format: date-time
-                  - type: 'null'
+                  - type: "null"
                 default: null
               END:
                 anyOf:
                   - type: string
                     format: date-time
-                  - type: 'null'
+                  - type: "null"
                 default: null
             title: Valid
             description: |-
               Time range of validity for this data product.
           FILENAME:
-            type: string
+            description: |-
+              Name of the file containing the data product.
+            anyOf:
+              - type: string
+              - type: "null"
             default: null
         required:
           - CREATION_TIME
@@ -238,16 +265,16 @@ definitions:
         properties:
           SITE:
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
             description: |-
               CTA Site.
-            default: 'null'
+            default: null
           CLASS:
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
             description: |-
               General class of instrument to which this data product applies.
             example:
@@ -262,9 +289,9 @@ definitions:
               - Part
           TYPE:
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
             description: |-
               The specific type of instrument in the class.
             example:
@@ -273,9 +300,9 @@ definitions:
               - SST
           SUBTYPE:
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
             description: |-
               Sub-type of the instrument.
             example:
@@ -283,9 +310,9 @@ definitions:
               - FlashCam
           ID:
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
             description: |-
               Unique ID of the specific instrument in the class.
             example:
@@ -306,9 +333,9 @@ definitions:
             description: |-
               General type of the process.
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
             enum:
               - observation
               - calibration
@@ -320,16 +347,16 @@ definitions:
               More specific class of the process if the class is not sufficient
               to describe it.
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
           ID:
             description: |-
               Unique identifier of the process.
             anyOf:
-              - type: 'null'
+              - type: "null"
               - type: string
-            default: 'null'
+            default: null
       ###############
       ACTIVITY:
         title: Activity
@@ -341,7 +368,6 @@ definitions:
           - NAME
           - SOFTWARE
           - START
-          - END
           - TYPE
         type: object
         additionalProperties: false
@@ -350,12 +376,17 @@ definitions:
             description: |-
               Name of activity that produced this data product,
               e.g. the software/ script name.
-            type: string
-            default: 'null'
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
           TYPE:
-            type: string
             description: |-
               General type of the activity.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
             example:
               - software
               - user
@@ -363,18 +394,9 @@ definitions:
             description: |-
               Unique identifier of the instance of this activity.
             anyOf:
-              - type: 'null'
               - type: string
-            default: 'null'
-          START:
-            description: |-
-              Start time of the activity.
-            anyOf:
-              - type: string
-                format: date-time
-              - type: 'null'
-            format: date-time
-            default: 'null'
+              - type: "null"
+            default: null
           SOFTWARE:
             title: Software
             description: |-
@@ -385,25 +407,36 @@ definitions:
               NAME:
                 description: |-
                   Name of the software used to generate this data product.
-                type: string
-                default: 'null'
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
               VERSION:
                 description: |-
                   Version of the software used to generate this data product.
-                type: string
-                default: 'null'
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
             required:
               - NAME
               - VERSION
+          START:
+            description: |-
+              Start time of the activity.
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            default: null
           END:
             description: |-
               End time of the activity.
             anyOf:
               - type: string
                 format: date-time
-              - type: 'null'
-            format: date-time
-            default: 'null'
+              - type: "null"
+            default: null
       ###############
       CONTEXT:
         title: Context
@@ -412,8 +445,6 @@ definitions:
         type: object
         additionalProperties: false
         properties:
-          SIM:
-            $ref: '#/definitions/Sim'
           DOCUMENT:
             title: Context documents.
             description: |-
@@ -426,85 +457,34 @@ definitions:
                 TYPE:
                   description: |-
                     Type of document.
-                  type: string
-                  default: 'null'
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
                 TITLE:
                   description: |-
                     Title of document.
-                  type: string
-                  default: 'null'
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
                 ID:
                   description: |-
                     Unique identifier of document.
-                  type: string
-                  default: 'null'
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
                 CREATION_TIME:
                   description: |-
                     Creation time of document.
                   anyOf:
                     - type: string
                       format: date-time
-                    - type: 'null'
-                  default: 'null'
+                    - type: "null"
+                  default: null
               required:
                 - CREATION_TIME
                 - ID
                 - TITLE
                 - TYPE
-  Sim:
-    type: object
-    additionalProperties: false
-    properties:
-      ASSOCIATION:
-        type: array
-        items:
-          type: object
-          additionalProperties: false
-          properties:
-            SITE:
-              anyOf:
-                - type: 'null'
-                - type: string
-              description: |-
-                CTA Site.
-              default: 'null'
-            CLASS:
-              anyOf:
-                - type: 'null'
-                - type: string
-              default: 'null'
-              description: |-
-                General class of instrument to which this data product applies
-                (e.g., array, subarray, telescope, camera, optics, mirror,
-                photosensor, camera-module, part, ...)
-            TYPE:
-              anyOf:
-                - type: 'null'
-                - type: string
-              default: 'null'
-              description: |-
-                The specific type of instrument in the class (e.g., MST)
-            SUBTYPE:
-              anyOf:
-                - type: 'null'
-                - type: string
-              default: 'null'
-              description: |-
-                Sub-type of the instrument (e.g., NectarCam).
-            ID:
-              anyOf:
-                - type: 'null'
-                - type: string
-              default: 'null'
-              description: |-
-                Unique ID of the specific instrument in the class
-                (e.g., MSTN-20).
-          required:
-            - CLASS
-            - ID
-            - SITE
-            - TYPE
-          title: Instrument
-    required:
-      - ASSOCIATION
-    title: Sim
