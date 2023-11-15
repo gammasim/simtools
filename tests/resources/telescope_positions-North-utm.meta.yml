@@ -7,6 +7,7 @@ CTA:
     ID: null
     TYPE: null
     START: null
+    END: null
   # Organisation and person submitting these data
   CONTACT:
     ORGANIZATION: 'CTAO North'

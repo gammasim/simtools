@@ -82,7 +82,6 @@ definitions:
           Describes the details of the data product, including its type and
           links to the data model definition.
         required:
-          - CREATION_TIME
           - DATA
           - DESCRIPTION
           - FORMAT
@@ -121,7 +120,6 @@ definitions:
               - ASSOCIATION
               - LEVEL
               - MODEL
-              - TYPE
             type: object
             additionalProperties: false
             properties:
@@ -177,6 +175,10 @@ definitions:
                   - DataCube
                   - Catalog
               MODEL:
+                title: Model
+                required:
+                  - NAME
+                  - VERSION
                 type: object
                 additionalProperties: false
                 properties:
@@ -216,11 +218,6 @@ definitions:
                       - type: string
                       - type: "null"
                     default: null
-                required:
-                  - NAME
-                  - URL
-                  - VERSION
-                title: Model
           FORMAT:
             type: string
             default: ecsv
@@ -369,6 +366,7 @@ definitions:
           - ID
           - NAME
           - START
+          - END
           - TYPE
         type: object
         additionalProperties: false
