@@ -709,8 +709,8 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ],
     ],
-    # validate_schema_files
-    "validate_schema_files": [
+    # validate_file_using_schema
+    "validate_file_using_schema": [
         [
             "--schema",
             "TESTMODELDIR/jsonschema.yml",
