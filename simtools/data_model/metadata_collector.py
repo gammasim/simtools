@@ -125,9 +125,9 @@ class MetadataCollector:
             )
         try:
             for document in _input_meta["product"]["document"]:
-                self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
+                self._fill_context_sim_list(top_level_dict["context"]["document"], document)
         except KeyError:
-            top_level_dict["context"]["sim"].pop("document")
+            top_level_dict["context"].pop("document")
 
     def _fill_product_meta(self, product_dict):
         """
