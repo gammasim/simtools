@@ -49,6 +49,12 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
+generate_default_metadata_file
+==============================
+
+.. automodule:: generate_default_metadata_file
+   :members:
+
 generate_simtel_array_histograms
 ================================
 
@@ -147,8 +153,8 @@ validate_optics
 .. automodule:: validate_optics
    :members:
 
-validate_schema_files
-=====================
+validate_file_using_schema
+==========================
 
-.. automodule:: validate_schema_files
+.. automodule:: validate_file_using_schema
    :members:
