@@ -178,10 +178,10 @@ def top_level_reference_schema():
                     "ASSOCIATION": [
                         _category_instrument(),
                     ],
-                    "DOCUMENT": [
-                        _category_document(),
-                    ],
                 },
+                "DOCUMENT": [
+                    _category_document(),
+                ],
             },
         }
     }
