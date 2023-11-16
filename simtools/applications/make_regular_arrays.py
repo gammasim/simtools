@@ -56,7 +56,7 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, output=True)
 
     label = "make_regular_arrays"
 
