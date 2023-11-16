@@ -4,8 +4,8 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools import io_handler
 from simtools.data_model import metadata_model, validate_schema
+from simtools.io import io_handler
 from simtools.utils import names
 
 __all__ = ["MetadataCollector"]

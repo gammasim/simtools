@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
 
 __all__ = ["SimtelRunnerArray"]

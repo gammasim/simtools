@@ -8,7 +8,7 @@ import yaml
 from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
-from simtools import io_handler
+from simtools.io import io_handler
 
 __all__ = [
     "Configurator",

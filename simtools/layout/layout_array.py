@@ -5,7 +5,8 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools import db_handler, io_handler
+from simtools import db_handler
+from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names

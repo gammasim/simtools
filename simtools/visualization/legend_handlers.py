@@ -3,7 +3,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_handler import IOHandler
+from simtools.io.io_handler import IOHandler
 from simtools.utils import names
 from simtools.utils.names import hess, lst, magic, mst, sct, sst, veritas
 

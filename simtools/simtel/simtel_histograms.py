@@ -9,7 +9,7 @@ from eventio.search_utils import yield_toplevel_of_type
 from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools import version
-from simtools.utils.general import fill_hdf5_table
+from simtools.io.io_hdf5 import fill_hdf5_table
 from simtools.utils.names import sanitize_name
 
 __all__ = ["BadHistogramFormat", "SimtelHistograms"]

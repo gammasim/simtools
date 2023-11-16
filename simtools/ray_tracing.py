@@ -14,7 +14,7 @@ import numpy as np
 from astropy.table import QTable
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
