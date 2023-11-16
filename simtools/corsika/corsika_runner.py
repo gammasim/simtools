@@ -7,7 +7,7 @@ from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,
 )
-from simtools.io import io_handler
+from simtools.io_operations import io_handler
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
 

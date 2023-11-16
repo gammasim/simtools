@@ -15,7 +15,7 @@ simtools is composed of the following modules and module groups:
   corsika_simtel
   data_model
   db_handler
-  io
+  io_operations
   job_execution
   layout_array
   mc_model

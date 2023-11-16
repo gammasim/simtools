@@ -69,7 +69,7 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.configuration import configurator
-from simtools.io import io_handler
+from simtools.io_operations import io_handler
 from simtools.simulator import Simulator
 from simtools.utils import general as gen
 

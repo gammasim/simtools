@@ -5,7 +5,7 @@ import astropy
 import yaml
 
 import simtools.utils.general as gen
-from simtools.io import io_handler
+from simtools.io_operations import io_handler
 
 __all__ = ["ModelDataWriter"]
 
