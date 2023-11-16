@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import simtools.io.io_hdf5 as io_hdf5
+import simtools.io_operations.io_hdf5 as io_hdf5
 
 
 def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):

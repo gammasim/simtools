@@ -14,8 +14,8 @@ from ctapipe.io import write_table
 from eventio import IACTFile
 
 from simtools import version
-from simtools.io import io_handler
-from simtools.io.io_hdf5 import fill_hdf5_table
+from simtools.io_operations import io_handler
+from simtools.io_operations.io_hdf5 import fill_hdf5_table
 from simtools.utils.general import (
     collect_data_from_yaml_or_dict,
     convert_2D_to_radial_distr,
