@@ -234,6 +234,81 @@ def test_collect_schema_dict(args_dict_site, tmp_test_directory):
     )
 
 
+def test_process_metadata_from_file():
+    _collector = metadata_collector.MetadataCollector({})
+
+    meta_dict_1 = {"cta": {"product": {"description": "This is a sample description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_1)
+    assert _dict_test_1 == meta_dict_1
+
+    meta_dict_2 = {"cta": {"PRODUCT": {"description": "This is a sample description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_2)
+
+    meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_3)
+
+
+def test__remove_line_feed():
+    collector = metadata_collector.MetadataCollector({})
+    input_string = "This is a string without line feeds."
+    result = collector._remove_line_feed(input_string)
+    assert result == input_string
+
+    input_string_2 = "This is a string\n with line feeds."
+    result = collector._remove_line_feed(input_string_2)
+    assert result == input_string.replace("without", "with")
+
+    input_string_3 = "This is a string\r with line feeds."
+    result = collector._remove_line_feed(input_string_3)
+    assert result == input_string.replace("without", "with")
+
+    assert "" == collector._remove_line_feed("")
+
+    assert " " == collector._remove_line_feed(" ")
+
+    assert " " == collector._remove_line_feed("  ")
+
+
+def test_copy_metadata_from_file(args_dict_site):
+    top_level_dict = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"}
+            ]
+        }
+    }
+
+    _input_meta = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
+                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
+            ]
+        }
+    }
+
+    _result_meta = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"},
+                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
+                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
+            ]
+        }
+    }
+
+    key = "associated_elements"
+
+    _collector = metadata_collector.MetadataCollector({})
+    _collector._copy_metadata_context_lists(top_level_dict, _input_meta, key)
+
+    assert _result_meta["context"][key] == top_level_dict["context"][key]
+
+    key = "documents"
+    with pytest.raises(KeyError):
+        _collector._copy_metadata_context_lists(top_level_dict, _input_meta, key)
+
+
 def get_generic_input_meta():
     return {
         "contact": "my_name",
