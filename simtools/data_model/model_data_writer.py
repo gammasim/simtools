@@ -53,7 +53,7 @@ class ModelDataWriter:
 
         writer = ModelDataWriter(
             product_data_file=args_dict.get("output_file", None),
-            product_data_format=args_dict.get("output_file_format", None),
+            product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
         )
         writer.write(metadata=metadata, product_data=product_data)
 

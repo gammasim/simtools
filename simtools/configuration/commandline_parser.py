@@ -103,12 +103,12 @@ class CommandLineParser(argparse.ArgumentParser):
             "--output_path",
             help="path pointing towards output directory",
             type=Path,
-            default=".",
+            default="./simtools-output/",
             required=False,
         )
         _job_group.add_argument(
-            "--use_plain_output_path",
-            help="use plain output path (without adding the tool name and dates)",
+            "--use_simtools_output_path",
+            help="use simtools output path (adding the tool name and dates)",
             action="store_true",
             required=False,
         )
