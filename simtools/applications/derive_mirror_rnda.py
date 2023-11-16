@@ -301,12 +301,10 @@ def _print_and_write_results(
             f"containment_radius_sigma_D{containment_fraction_percent}",
         ),
     )
-    file_writer = writer.ModelDataWriter(
-        product_data_file=args_dict.get("output_file", None),
-        product_data_format=args_dict.get("output_file_format", None),
-    )
-    file_writer.write(
-        metadata=MetadataCollector(args_dict=args_dict).top_level_meta, product_data=result_table
+    writer.ModelDataWriter.dump(
+        args_dict=args_dict,
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        product_data=result_table,
     )
 
 
