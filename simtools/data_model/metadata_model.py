@@ -133,7 +133,7 @@ def resolve_references(yaml_data):
                     return resolve_references_recursive(resolved_data)
                 return resolved_data
             return {k: resolve_references_recursive(v) for k, v in data.items()}
-        elif isinstance(data, list):
+        if isinstance(data, list):
             return [resolve_references_recursive(item) for item in data]
         return data
 
