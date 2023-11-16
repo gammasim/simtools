@@ -32,14 +32,6 @@ validate_data
 
 .. _datamodelvalidateschema:
 
-validate_schema
----------------
-
-.. automodule:: data_model.validate_schema
-   :members:
-
-.. _datamodelmetadatacollector:
-
 metadata_collector
 ------------------
 
