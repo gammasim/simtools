@@ -108,8 +108,9 @@ definitions:
           ID:
             anyOf:
               - type: string
+                format: uuid
               - type: "null"
-            format: uuid
+              - type: number
             default: null
             description: |-
               Product identifier.
@@ -310,6 +311,7 @@ definitions:
             anyOf:
               - type: "null"
               - type: string
+              - type: number
             default: null
             description: |-
               Unique ID of the specific instrument in the class.
@@ -355,6 +357,7 @@ definitions:
             anyOf:
               - type: "null"
               - type: string
+              - type: number
             default: null
       ###############
       ACTIVITY:
@@ -395,6 +398,7 @@ definitions:
             anyOf:
               - type: string
               - type: "null"
+              - type: number
             default: null
           SOFTWARE:
             title: Software
@@ -473,6 +477,7 @@ definitions:
                   anyOf:
                     - type: string
                     - type: "null"
+                    - type: number
                   default: null
                 CREATION_TIME:
                   description: |-
@@ -480,6 +485,14 @@ definitions:
                   anyOf:
                     - type: string
                       format: date-time
+                    - type: "null"
+                  default: null
+                URL:
+                  description: |-
+                    Link to document
+                  anyOf:
+                    - type: string
+                      format: uri
                     - type: "null"
                   default: null
               required:
