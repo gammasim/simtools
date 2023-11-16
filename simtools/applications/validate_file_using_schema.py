@@ -53,7 +53,7 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
     config.parser.add_argument("--schema", help="json schema file", required=True)
-    return config.initialize()
+    return config.initialize(paths=False)
 
 
 def main():
