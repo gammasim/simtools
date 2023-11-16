@@ -35,6 +35,28 @@ class ModelDataWriter:
             self.product_data_file = None
         self.product_data_format = self._astropy_data_format(product_data_format)
 
+    @staticmethod
+    def dump(args_dict, metadata=None, product_data=None):
+        """
+        Write model data and metadata (as static method).
+
+        Parameters
+        ----------
+        args_dict: dict
+            Dictionary with configuration parameters.
+        metadata: dict
+            Metadata to be written.
+        product_data: astropy Table
+            Model data to be written
+
+        """
+
+        writer = ModelDataWriter(
+            product_data_file=args_dict.get("output_file", None),
+            product_data_format=args_dict.get("output_file_format", None),
+        )
+        writer.write(metadata=metadata, product_data=product_data)
+
     def write(self, metadata=None, product_data=None):
         """
         Write model data and metadata
@@ -48,8 +70,10 @@ class ModelDataWriter:
 
         """
 
-        self.write_metadata(metadata=metadata)
-        self.write_data(product_data=product_data)
+        if metadata is not None:
+            self.write_metadata(metadata=metadata)
+        if product_data is not None:
+            self.write_data(product_data=product_data)
 
     def write_data(self, product_data):
         """
@@ -99,21 +123,19 @@ class ModelDataWriter:
         ------
         FileNotFoundError
             If yml_file not found.
-        AttributeError
-            If no metadata defined for writing.
         TypeError
             If yml_file is not defined.
         """
 
         try:
             yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
-            self._logger.info(f"Writing metadata to {yml_file}")
             with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(metadata, keys_lower_case),
                     file,
                     sort_keys=False,
                 )
+            self._logger.info(f"Writing metadata to {yml_file}")
             return yml_file
         except FileNotFoundError:
             self._logger.error(f"Error writing model data to {yml_file}")

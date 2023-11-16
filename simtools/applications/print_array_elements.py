@@ -19,8 +19,8 @@
 
     Command line arguments
     ----------------------
-    array_element_list (str)
-        File name with list of array element positions (ecsv format)
+    input (str)
+        File name with list of array element positions
     compact (str)
         Compact output in requested coordinate system; possible are corsika,utm,mercator
     export (str)
@@ -59,7 +59,7 @@
     .. code-block:: console
 
         simtools-print-array-elements \\
-            --array_element_list tests/resources/telescope_positions-North-utm.ecsv \\
+            --input tests/resources/telescope_positions-North-utm.ecsv \\
             --export corsika --use_corsika_telescope_height \\
             --select_assets LSTN, MSTN, SSTN
 
@@ -70,8 +70,10 @@
 import logging
 from pathlib import Path
 
+import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import layout_array
 
 
@@ -96,9 +98,15 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--array_element_list",
-        help="list of array element positions (ecsv format)",
+        "--input",
+        help="list of array element positions",
         required=True,
+    )
+    config.parser.add_argument(
+        "--input_meta",
+        help="meta data file associated to input data",
+        type=str,
+        required=False,
     )
     config.parser.add_argument(
         "--compact",
@@ -136,7 +144,7 @@ def _parse(label=None, description=None):
         default=None,
         nargs="+",
     )
-    return config.initialize()
+    return config.initialize(output=True)
 
 
 def main():
@@ -146,13 +154,18 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray(telescope_list_file=args_dict["array_element_list"])
+    layout = layout_array.LayoutArray(telescope_list_file=args_dict["input"])
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
+
     if args_dict["export"] is not None:
-        layout.export_telescope_list(
-            crs_name=args_dict["export"],
-            corsika_z=args_dict["use_corsika_telescope_height"],
+        writer.ModelDataWriter.dump(
+            args_dict=args_dict,
+            metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+            product_data=layout.export_telescope_list_table(
+                crs_name=args_dict["export"],
+                corsika_z=args_dict["use_corsika_telescope_height"],
+            ),
         )
     else:
         layout.print_telescope_list(
