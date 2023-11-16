@@ -309,6 +309,13 @@ class MetadataCollector:
         """
         Process metadata from file to ensure compatibility
         with metadata model.
+        Changes keys to lower case and removes line feeds
+        from description fields.
+
+        Parameters
+        ----------
+        meta_dict: dict
+            Input metadata dictionary.
 
         Returns
         -------
@@ -343,7 +350,7 @@ class MetadataCollector:
             with line feeds removed
         """
 
-        return string.replace("\n", " ").replace("\r", "")
+        return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
 
     def _copy_metadata_context_lists(self, top_level_dict, _input_meta, key):
         """
