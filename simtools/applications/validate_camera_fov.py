@@ -59,8 +59,8 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.io import io_handler
 from simtools.model.telescope_model import TelescopeModel
 
 

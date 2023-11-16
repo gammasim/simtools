@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io import io_handler
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.utils import names
 

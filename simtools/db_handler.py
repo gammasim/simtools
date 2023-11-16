@@ -12,7 +12,7 @@ from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io import io_handler
 from simtools.model.model_utils import get_telescope_class
 from simtools.utils import names
 
