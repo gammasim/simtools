@@ -15,7 +15,7 @@ class MetadataCollector:
     """
     Collects and combines metadata associated with the current activity
     (e.g., the execution of an application).
-    Follows CTAO top-level metadata definition.
+    Depends on and fine tuned to CTAO top-level metadata definition.
 
     Parameters
     ----------
