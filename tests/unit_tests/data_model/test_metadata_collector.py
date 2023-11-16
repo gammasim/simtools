@@ -21,20 +21,20 @@ def test_fill_association_meta_from_args(args_dict_site):
         metadata_model.top_level_reference_schema(), True
     )
     metadata_1._fill_association_meta_from_args(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["site"] == "South"
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["class"] == "MST"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["site"] == "South"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["class"] == "MST"
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] == "NectarCam"
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["type"] == "NectarCam"
     )
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["subtype"] == "D"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == "D"
 
     metadata_1.args_dict = None
     with pytest.raises(TypeError):
         metadata_1._fill_association_meta_from_args(
-            metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+            metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
         )
 
 
@@ -79,7 +79,7 @@ def test_fill_product_meta(args_dict_site):
     metadata_1.args_dict["schema"] = "tests/resources/MST_mirror_2f_measurements.schema.yml"
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "1.0.0"
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
 
 
 def test_fill_association_id(args_dict_site):
@@ -87,31 +87,31 @@ def test_fill_association_id(args_dict_site):
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.top_level_reference_schema(), True
     )
-    metadata_1.top_level_meta["cta"]["context"]["sim"]["association"] = get_generic_input_meta()[
-        "product"
-    ]["association"]
+    metadata_1.top_level_meta["cta"]["context"]["associated_elements"] = get_generic_input_meta()[
+        "context"
+    ]["associated_elements"]
 
     metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["id"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["id"]
         == "South-MST-FlashCam-D"
     )
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][1]["id"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][1]["id"]
         == "North-MST-NectarCam-7"
     )
 
     metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
 
 def test_merge_config_dicts(args_dict_site):
     d_low_priority = {
-        "reference": {"version": "0.1.0"},
+        "reference": {"version": "1.0.0"},
         "activity": {"name": "SetParameterFromExternal", "description": "Set data columns"},
         "datamodel": "model-A",
         "product": None,
@@ -161,16 +161,16 @@ def test_fill_activity_meta(args_dict_site):
 
 
 def test_fill_context_sim_list(args_dict_site):
-    _test_dict_1 = copy.copy(get_generic_input_meta()["product"]["association"])
+    _test_dict_1 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
 
     # empty dict -> return same dict
     metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, {})
-    assert _test_dict_1 == get_generic_input_meta()["product"]["association"]
+    assert _test_dict_1 == get_generic_input_meta()["context"]["associated_elements"]
 
     # add one new entry
     _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
     metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, _new_element)
-    _test_dict_2 = copy.copy(get_generic_input_meta()["product"]["association"])
+    _test_dict_2 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
     _test_dict_2.append(_new_element)
     assert _test_dict_1 == _test_dict_2
 
@@ -241,18 +241,20 @@ def get_generic_input_meta():
         "product": {
             "description": "my_product",
             "create_time": "2050-01-01",
-            "association": [
+        },
+        "process": "process_description",
+        "context": {
+            "associated_elements": [
                 {"site": "South", "class": "MST", "type": "FlashCam", "subtype": "D", "id:": None},
                 {"site": "North", "class": "MST", "type": "NectarCam", "subtype": "7", "id:": None},
             ],
         },
-        "process": "process_description",
     }
 
 
 def get_example_input_schema_single_parameter():
     return {
-        "version": "0.1.0",
+        "version": "1.0.0",
         "name": "ref_lat",
         "description": "Latitude of site centre.",
         "short_description": "Latitude of site centre.",
