@@ -65,7 +65,9 @@ CTA:
         CREATION_TIME: null
         TITLE: null
       - TYPE: Presentation
-        URL: https://indico.cta-observatory.org/login/?next=%2Fevent%2F2680%2Fcontributions%2F23371%2Fattachments%2F17190%2F22730%2F200320_MST_optics.pdf
+        URL: |
+          https://indico.cta-observatory.org/login/
+          ?next=%2Fevent%2F2680%2Fcontributions%2F23371%2Fattachments%2F17190%2F22730%2F200320_MST_optics.pdf
         CREATION_TIME: null
         TITLE: null
         ID: null
