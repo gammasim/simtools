@@ -26,19 +26,31 @@ jobs:
           python --version
           pip install '.[doc]'
 
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(perl -ne 'print if /[^[:ascii:]]/' docs/source/*)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
+
       - name: Build docs
         shell: bash -l {0}
         run: |
           make -C docs/ html
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Make command failed with exit code $exit_code"
+            exit $exit_code
+          fi
           touch docs/build/html/.nojekyll
 
-      - name: Deploy to gihub pages
+      - name: Deploy to github pages
         # only run when PR is merged
         if: github.event.pull_request.merged
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: docs/build/html
           CLEAN: true
-          SINGLE_COMMIT: true

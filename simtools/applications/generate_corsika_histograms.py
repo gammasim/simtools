@@ -157,6 +157,7 @@
     Expected final print-out message:
 
     .. code-block:: console
+
         INFO::generate_corsika_histograms(l358)::main::Finalizing the application.
         Total time needed: 8s.
 """
@@ -169,10 +170,10 @@ from pathlib import Path
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
 from simtools.corsika import corsika_histograms_visualize
 from simtools.corsika.corsika_histograms import CorsikaHistograms
+from simtools.io_operations import io_handler
 
 logger = logging.getLogger()
 
