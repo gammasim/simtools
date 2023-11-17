@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gd1234dc</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gc779140</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=806c55c0"></script>
+    <script src="../../_static/documentation_options.js?v=7678b2ee"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gd1234dc</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc779140</p>
 
 
 
@@ -91,17 +91,12 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PosixPath</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tables</span>
 <span class="kn">from</span> <span class="nn">astropy.coordinates.errors</span> <span class="kn">import</span> <span class="n">UnitsError</span>
 <span class="kn">from</span> <span class="nn">astropy.io.misc</span> <span class="kn">import</span> <span class="n">yaml</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
-<span class="kn">from</span> <span class="nn">ctapipe.io</span> <span class="kn">import</span> <span class="n">read_table</span>
-
-<span class="kn">from</span> <span class="nn">simtools.utils.names</span> <span class="kn">import</span> <span class="n">sanitize_name</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;collect_data_from_yaml_or_dict&quot;</span><span class="p">,</span>
@@ -120,8 +115,6 @@
     <span class="s2">&quot;get_log_excerpt&quot;</span><span class="p">,</span>
     <span class="s2">&quot;convert_2D_to_radial_distr&quot;</span><span class="p">,</span>
     <span class="s2">&quot;save_dict_to_file&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;fill_hdf5_table&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;read_hdf5&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -1086,108 +1079,6 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to write to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span></div>
-
-
-
-<div class="viewcode-block" id="fill_hdf5_table">
-<a class="viewcode-back" href="../../utils.html#utils.general.fill_hdf5_table">[docs]</a>
-<span class="k">def</span> <span class="nf">fill_hdf5_table</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">x_bin_edges</span><span class="p">,</span> <span class="n">y_bin_edges</span><span class="p">,</span> <span class="n">x_label</span><span class="p">,</span> <span class="n">y_label</span><span class="p">,</span> <span class="n">meta_data</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create and fill an hdf5 table with the histogram information.</span>
-<span class="sd">    It works for both 1D and 2D distributions.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hist: numpy.ndarray</span>
-<span class="sd">        The counts of the histograms.</span>
-<span class="sd">    x_bin_edges: numpy.array</span>
-<span class="sd">        The x bin edges of the histograms.</span>
-<span class="sd">    y_bin_edges: numpy.array</span>
-<span class="sd">        The y bin edges of the histograms.</span>
-<span class="sd">        Use None for 1D histograms.</span>
-<span class="sd">    x_label: str</span>
-<span class="sd">        X bin edges label.</span>
-<span class="sd">    y_label: str</span>
-<span class="sd">        Y bin edges label.</span>
-<span class="sd">        Use None for 1D histograms.</span>
-<span class="sd">    meta_data: dict</span>
-<span class="sd">        Dictionary with the histogram metadata.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Complement metadata</span>
-    <span class="k">if</span> <span class="n">x_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x bin edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
-    <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x bin edges unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">x_bin_edges</span><span class="o">.</span><span class="n">unit</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_bin_edges</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">y_bin_edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">y_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;y bin edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta_data</span><span class="p">[</span><span class="s1">&#39;y bin edges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta_data</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="p">]</span>
-        <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;y bin edges unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">y_bin_edges</span><span class="o">.</span><span class="n">unit</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
-        <span class="p">)</span>
-
-        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))],</span>
-            <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
-            <span class="n">meta</span><span class="o">=</span><span class="n">meta_data</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">x_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x bin edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x bin edges&quot;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span>
-        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">x_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">hist</span><span class="p">,</span>
-            <span class="p">],</span>
-            <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="s2">&quot;Values&quot;</span><span class="p">)),</span>
-            <span class="n">meta</span><span class="o">=</span><span class="n">meta_data</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">table</span></div>
-
-
-
-<div class="viewcode-block" id="read_hdf5">
-<a class="viewcode-back" href="../../utils.html#utils.general.read_hdf5">[docs]</a>
-<span class="k">def</span> <span class="nf">read_hdf5</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read a hdf5 output file.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hdf5_file_name: str or Path</span>
-<span class="sd">        Name or Path of the hdf5 file to read from.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        The list with the astropy.Table instances for the various 1D and 2D histograms saved</span>
-<span class="sd">        in the hdf5 file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">):</span>
-        <span class="n">hdf5_file_name</span> <span class="o">=</span> <span class="n">hdf5_file_name</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-
-    <span class="n">tables_list</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">with</span> <span class="n">tables</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">walk_nodes</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;Table&quot;</span><span class="p">):</span>
-            <span class="n">table_path</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_v_pathname</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">read_table</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">table_path</span><span class="p">)</span>
-            <span class="n">tables_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">tables_list</span></div>
 
 </pre></div>
 
