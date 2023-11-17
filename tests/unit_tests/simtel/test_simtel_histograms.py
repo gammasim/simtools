@@ -5,7 +5,7 @@ import logging
 import pytest
 from astropy.table import Table
 
-from simtools.io_operations.io_hdf5 import read_hdf5
+from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 logger = logging.getLogger()

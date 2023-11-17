@@ -12,7 +12,7 @@ from astropy.table import Table
 
 from simtools import version
 from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
-from simtools.io_operations.io_hdf5 import read_hdf5
+from simtools.io_operations.hdf5_handler import read_hdf5
 
 
 def test_init(corsika_histograms_instance, corsika_output_file_name):
