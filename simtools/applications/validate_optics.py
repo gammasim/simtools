@@ -77,8 +77,8 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 
