@@ -55,8 +55,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
