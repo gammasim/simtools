@@ -7,7 +7,7 @@ import numpy as np
 from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
