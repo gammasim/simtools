@@ -44,8 +44,8 @@ import matplotlib.pyplot as plt
 from astropy import units as u
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.layout.layout_array import LayoutArray
 from simtools.visualization.visualize import plot_array
 
