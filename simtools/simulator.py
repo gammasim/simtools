@@ -8,9 +8,9 @@ import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -648,7 +648,6 @@ class Simulator:
                     file_type="output", **self._simulation_runner.get_info_for_file_name(run)
                 )
                 self._results["output"].append(str(output_file_name))
-
         return self._results["output"]
 
     def get_list_of_histogram_files(self):

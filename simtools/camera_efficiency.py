@@ -8,7 +8,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
 from simtools.utils import names
@@ -417,8 +417,8 @@ class CameraEfficiency:
 
         print(self._telescope_model.get_on_axis_eff_optical_area().to("m2").value)
 
-        # NSB input spectrum is from Benn&Ellison
-        # (integral is in ph./(cm² ns sr) ) from 300 - 650 nm:
+        # NSB input spectrum is from Benn & Ellison
+        # (integral is in ph/(cm2 ns sr) ) from 300 - 650 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][

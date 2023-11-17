@@ -49,10 +49,10 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
-generate_corsika_histograms
-==================
+generate_simtel_array_histograms
+================================
 
-.. automodule:: generate_corsika_histograms
+.. automodule:: generate_simtel_array_histograms
    :members:
 
 get_file_from_db
@@ -78,12 +78,6 @@ plot_array_layout
 =================
 
 .. automodule:: plot_array_layout
-   :members:
-
-plot_simtel_histograms
-======================
-
-.. automodule:: plot_simtel_histograms
    :members:
 
 print_array_elements
