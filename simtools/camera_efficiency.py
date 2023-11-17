@@ -8,7 +8,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
 from simtools.utils import names
