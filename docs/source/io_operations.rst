@@ -15,8 +15,8 @@ io_handler
 
 .. _iohdf5:
 
-io_hdf5
-*******
+hdf5_handler
+************
 
-.. automodule:: io_operations.io_hdf5
+.. automodule:: io_operations.hdf5_handler
    :members:
