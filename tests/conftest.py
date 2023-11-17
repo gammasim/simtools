@@ -7,7 +7,7 @@ import pytest
 from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
-import simtools.io_handler
+import simtools.io_operations.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
@@ -35,7 +35,7 @@ def tmp_test_directory(tmpdir_factory):
 
 @pytest.fixture
 def io_handler(tmp_test_directory):
-    tmp_io_handler = simtools.io_handler.IOHandler()
+    tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         data_path="./data/",

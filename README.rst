@@ -52,7 +52,7 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 - `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code
 - `workflows <https://github.com/gammasim/workflows>`_ for setting, derivation and validation of simulation model parameters
 - `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
-- :ref:`databases <Databases>`, especially the model parameter database
+- `databases <https://gammasim.github.io/simtools/databases.html>`_, especially the model parameter database
 
 simtools is under rapid development with continuous changes and additions planned.
 Please contact the developers before using it: simtools-developer@desy.de
@@ -82,7 +82,7 @@ Install simtools with mamba (recommended for developers):
     conda activate simtools
     pip install -e .
 
-For more detail see the :ref:`Getting_Started` section of the manual.
+For more detail see the `Getting_Started <https://gammasim.github.io/simtools/getting_started.html>`_ section of the manual.
 
 Authors
 =======
