@@ -4,6 +4,7 @@ $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Reference Schema
 description: YAML representation of model parameter schema
 version: 0.1.0
+name: metadata.schema
 type: object
 additionalProperties: false
 
