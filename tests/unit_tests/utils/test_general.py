@@ -55,13 +55,11 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
 
 
 def test_collect_dict_from_url(io_handler) -> None:
-    test_yaml_file = io_handler.get_output_file(
-        file_name="test_collect_dict_data.yml", dir_type="test"
-    )
-    _reference_dict = gen.collect_data_from_yaml_or_dict(test_yaml_file, None)
+    _file = "tests/resources/test_parameters.yml"
+    _reference_dict = gen.collect_data_from_yaml_or_dict(_file, None)
 
-    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    _url_dict = gen.collect_data_from_http_yaml(url + "tests/resources/test_parameters.yml")
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url_dict = gen.collect_data_from_http_yaml(_url + _file)
 
     assert _reference_dict == _url_dict
 
