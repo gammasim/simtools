@@ -1,0 +1,56 @@
+---
+name: CI-linting
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: install packages
+        run: |
+          pip install yamllint validate-pyproject
+
+      - name: flake8
+        uses: py-actions/flake8@v2
+        with:
+          max-line-length: "100"
+
+      - name: yaml
+        run: |
+          echo 'rules:' > config.yaml
+          echo '  line-length:' >> config.yaml
+          echo '    max: 250' >> config.yaml
+          yamllint --config-file=config.yaml .
+
+      - name: pyproject.toml
+        run: |
+          validate-pyproject pyproject.toml
+
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(find . -type f \
+          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
+          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
