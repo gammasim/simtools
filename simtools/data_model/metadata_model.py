@@ -26,7 +26,7 @@ def validate_schema(data, schema_file):
     ----------
     data
         dictionary to be validated
-    schema (dict)
+    schema_file (dict)
         schema used for validation
 
     Raises
