@@ -7,8 +7,8 @@ import yaml
 from simtools.data_model import metadata_model
 
 
-def test_top_level_reference_schema():
-    _top_meta = metadata_model.top_level_reference_schema()
+def test_get_default_metadata_dict():
+    _top_meta = metadata_model.get_default_metadata_dict()
 
     assert isinstance(_top_meta, dict)
     assert len(_top_meta) > 0
@@ -122,3 +122,18 @@ def test_fill_defaults():
     }
 
     assert metadata_model.fill_defaults(schema) == expected_result
+
+    schema = {
+        "no_properties": {
+            "CONTACT": {
+                "type": "object",
+                "properties": {
+                    "organization": {"type": "string", "default": "CTA"},
+                    "number": {"type": "integer", "default": 30},
+                },
+            },
+        }
+    }
+
+    with pytest.raises(KeyError):
+        metadata_model.fill_defaults(schema)

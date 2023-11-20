@@ -35,7 +35,7 @@ class MetadataCollector:
 
         self.args_dict = args_dict
         self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.top_level_reference_schema(), lower_case=True
+            data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
         self.collect_product_meta_data()
 
@@ -114,7 +114,7 @@ class MetadataCollector:
                 in_yaml=self.args_dict.get("input_meta", None), in_dict=None
             )
         except gen.InvalidConfigData:
-            self._logger.debug("Failed reading metadata from file.")
+            self._logger.error("Failed reading metadata from file.")
             raise
 
         metadata_model.validate_schema(_input_meta, None)
@@ -122,7 +122,7 @@ class MetadataCollector:
 
         self._merge_config_dicts(top_level_dict, _input_meta["cta"])
         for key in ("document", "associated_elements"):
-            self._copy_metadata_context_lists(top_level_dict, _input_meta["cta"], key)
+            self._copy_list_type_metadata(top_level_dict, _input_meta["cta"], key)
 
     def _fill_product_meta(self, product_dict):
         """
@@ -350,7 +350,7 @@ class MetadataCollector:
 
         return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
 
-    def _copy_metadata_context_lists(self, top_level_dict, _input_meta, key):
+    def _copy_list_type_metadata(self, top_level_dict, _input_meta, key):
         """
         Copy list-type metadata from file.
         Very fine tuned.
