@@ -8,18 +8,18 @@ CTA:
     TYPE: null
     START: null
     END: null
-  # Organisation and person submitting these data
+  # Organization and person submitting these data
   CONTACT:
     ORGANIZATION: 'MST Consortium'
-    NAME: 'Mirr Responsible Person'
+    NAME: 'MST Mirror Responsible Person'
     EMAIL: 'a@email.org'
   # Description of instrument which obtained these data
   INSTRUMENT:
     SITE: 'The 2f teststand'
-    CLASS: mirror-panel
+    CLASS: mirrorPanel
     TYPE: MLT
     SUBTYPE: pre-production
-    ID: unique-ID-of-mirror-panel-set
+    ID: unique-ID-of-mirror-panel-teststand
   # Description of the process which generated these data
   PROCESS:
     TYPE: lab

@@ -15,7 +15,7 @@ CTA:
     EMAIL: 'a@email.org'
   # Description of instrument which obtained these data
   INSTRUMENT:
-    SITE: null
+    SITE: CTA-North
     CLASS: null
     TYPE: null
     ID: null
@@ -27,7 +27,8 @@ CTA:
   PRODUCT:
     DESCRIPTION: |-
       Telescope positions for the CTAO Northern site
-      (UTM coordinate system).
+      (UTM coordinate system). Consistent with
+      document CTA-SPE-PSC-000000-0001 1c.
     CREATION_TIME: '2022-05-30 12:00:00'
     ID: null
     VALID:
