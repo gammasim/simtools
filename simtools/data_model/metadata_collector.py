@@ -307,10 +307,8 @@ class MetadataCollector:
 
     def _process_metadata_from_file(self, meta_dict):
         """
-        Process metadata from file to ensure compatibility
-        with metadata model.
-        Changes keys to lower case and removes line feeds
-        from description fields.
+        Process metadata from file to ensure compatibility with metadata model.
+        Changes keys to lower case and removes line feeds from description fields.
 
         Parameters
         ----------
