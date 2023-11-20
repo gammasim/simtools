@@ -8,7 +8,7 @@ CTA:
     TYPE: null
     START: null
     END: null
-  # Organisation and person submitting these data
+  # Organization and person submitting these data
   CONTACT:
     ORGANIZATION: 'CTAO North'
     NAME: 'CTAO Project Scientist'
