@@ -52,7 +52,7 @@ def load_schema(schema_file=None):
 
     Returns
     -------
-    schema (dict)
+    schema_file (dict)
         schema
 
     Raises
