@@ -36,6 +36,7 @@ jobs:
 
       - name: yaml
         run: |
+          # TODO - very large line length
           echo 'rules:' > config.yaml
           echo '  line-length:' >> config.yaml
           echo '    max: 250' >> config.yaml
