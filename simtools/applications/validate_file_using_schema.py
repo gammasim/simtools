@@ -11,14 +11,19 @@
     schema (str)
       schema file (jsonschema format) used for validation
 
+    Raises
+    ------
+    FileNotFoundError
+      if file to be validated is not found
+
     Example
     -------
 
     .. code-block:: console
 
         simtools-validate-file-using-schema \
-         --file_name tests/resources/MST_mirror_2f_measurements.schema.yml \
-         --schema jsonschema.yml
+         --file_name tests/resources/MLTdata-preproduction.meta.yml \
+         --schema simtools/schemas/metadata.schema.yml
 
 """
 
