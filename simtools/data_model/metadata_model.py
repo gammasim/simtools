@@ -99,8 +99,7 @@ def top_level_reference_schema(schema_file=None):
 
 def resolve_references(yaml_data):
     """
-    Resolve references in yaml data and expand the
-    received dictionary accordingly.
+    Resolve references in yaml data and expand the received dictionary accordingly.
 
     Parameters
     ----------
