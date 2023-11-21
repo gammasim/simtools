@@ -49,10 +49,10 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
-generate_default_metadata_file
-==============================
+generate_default_metadata
+=========================
 
-.. automodule:: generate_default_metadata_file
+.. automodule:: generate_default_metadata
    :members:
 
 generate_simtel_array_histograms
