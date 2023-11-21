@@ -18,30 +18,30 @@ logger.setLevel(logging.DEBUG)
 def test_fill_association_meta_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
     metadata_1._fill_association_meta_from_args(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["site"] == "South"
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["class"] == "MST"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["site"] == "South"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["class"] == "MST"
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] == "NectarCam"
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["type"] == "NectarCam"
     )
-    assert metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["subtype"] == "D"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == "D"
 
     metadata_1.args_dict = None
     with pytest.raises(TypeError):
         metadata_1._fill_association_meta_from_args(
-            metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+            metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
         )
 
 
 def test_fill_top_level_meta_from_file(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
     metadata_1.args_dict["input_meta"] = None
@@ -51,18 +51,13 @@ def test_fill_top_level_meta_from_file(args_dict_site):
     metadata_1._fill_top_level_meta_from_file(metadata_1.top_level_meta["cta"])
 
     assert metadata_1.top_level_meta["cta"]["activity"]["name"] == "mirror_2f_measurement"
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["type"] == "FlashCam"
-    )
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["document"][1]["type"] == "Presentation"
-    )
+    assert metadata_1.top_level_meta["cta"]["context"]["document"][1]["type"] == "Presentation"
 
 
 def test_fill_product_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
     with pytest.raises(TypeError):
@@ -90,34 +85,33 @@ def test_fill_product_meta(args_dict_site):
 def test_fill_association_id(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
-    metadata_1.top_level_meta["cta"]["context"]["sim"]["association"] = get_generic_input_meta()[
-        "product"
-    ]["association"]
+    metadata_1.top_level_meta["cta"]["context"]["associated_elements"] = get_generic_input_meta()[
+        "context"
+    ]["associated_elements"]
 
     metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][0]["id"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["id"]
         == "South-MST-FlashCam-D"
     )
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][1]["id"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][1]["id"]
         == "North-MST-NectarCam-7"
     )
 
-    metadata_1.top_level_meta["cta"]["context"]["sim"]["association"][1]["site"] = "West"
     metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["sim"]["association"]
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
 
 def test_merge_config_dicts(args_dict_site):
     d_low_priority = {
-        "reference": {"version": "0.1.0"},
+        "reference": {"version": "1.0.0"},
         "activity": {"name": "SetParameterFromExternal", "description": "Set data columns"},
         "datamodel": "model-A",
         "product": None,
@@ -156,27 +150,27 @@ def test_merge_config_dicts(args_dict_site):
 def test_fill_activity_meta(args_dict_site):
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
     file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["cta"]["activity"])
 
     file_writer_2 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_2.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
 
 def test_fill_context_sim_list(args_dict_site):
-    _test_dict_1 = copy.copy(get_generic_input_meta()["product"]["association"])
+    _test_dict_1 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
 
     # empty dict -> return same dict
     metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, {})
-    assert _test_dict_1 == get_generic_input_meta()["product"]["association"]
+    assert _test_dict_1 == get_generic_input_meta()["context"]["associated_elements"]
 
     # add one new entry
     _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
     metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, _new_element)
-    _test_dict_2 = copy.copy(get_generic_input_meta()["product"]["association"])
+    _test_dict_2 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
     _test_dict_2.append(_new_element)
     assert _test_dict_1 == _test_dict_2
 
@@ -240,6 +234,81 @@ def test_collect_schema_dict(args_dict_site, tmp_test_directory):
     )
 
 
+def test_process_metadata_from_file():
+    _collector = metadata_collector.MetadataCollector({})
+
+    meta_dict_1 = {"cta": {"product": {"description": "This is a sample description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_1)
+    assert _dict_test_1 == meta_dict_1
+
+    meta_dict_2 = {"cta": {"PRODUCT": {"description": "This is a sample description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_2)
+
+    meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
+    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_3)
+
+
+def test__remove_line_feed():
+    collector = metadata_collector.MetadataCollector({})
+    input_string = "This is a string without line feeds."
+    result = collector._remove_line_feed(input_string)
+    assert result == input_string
+
+    input_string_2 = "This is a string\n with line feeds."
+    result = collector._remove_line_feed(input_string_2)
+    assert result == input_string.replace("without", "with")
+
+    input_string_3 = "This is a string\r with line feeds."
+    result = collector._remove_line_feed(input_string_3)
+    assert result == input_string.replace("without", "with")
+
+    assert "" == collector._remove_line_feed("")
+
+    assert " " == collector._remove_line_feed(" ")
+
+    assert " " == collector._remove_line_feed("  ")
+
+
+def test_copy_list_type_metadata(args_dict_site):
+    top_level_dict = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"}
+            ]
+        }
+    }
+
+    _input_meta = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
+                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
+            ]
+        }
+    }
+
+    _result_meta = {
+        "context": {
+            "associated_elements": [
+                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"},
+                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
+                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
+            ]
+        }
+    }
+
+    key = "associated_elements"
+
+    _collector = metadata_collector.MetadataCollector({})
+    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+
+    assert _result_meta["context"][key] == top_level_dict["context"][key]
+
+    key = "documents"
+    with pytest.raises(KeyError):
+        _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+
+
 def get_generic_input_meta():
     return {
         "contact": "my_name",
@@ -247,18 +316,20 @@ def get_generic_input_meta():
         "product": {
             "description": "my_product",
             "create_time": "2050-01-01",
-            "association": [
+        },
+        "process": "process_description",
+        "context": {
+            "associated_elements": [
                 {"site": "South", "class": "MST", "type": "FlashCam", "subtype": "D", "id:": None},
                 {"site": "North", "class": "MST", "type": "NectarCam", "subtype": "7", "id:": None},
             ],
         },
-        "process": "process_description",
     }
 
 
 def get_example_input_schema_single_parameter():
     return {
-        "version": "0.1.0",
+        "version": "1.0.0",
         "name": "ref_lat",
         "description": "Latitude of site centre.",
         "short_description": "Latitude of site centre.",
