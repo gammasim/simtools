@@ -108,7 +108,6 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
     )
-    # TODO - is export really needed or can we just use the output_file argument?
     config.parser.add_argument(
         "--compact",
         help="compact output (in requested coordinate system)",
