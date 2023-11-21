@@ -1,6 +1,12 @@
 ---
 name: CI-integrationtests
 # Execute integration tests for applications
+#
+env:
+  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
+  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
 
 on:
   pull_request:
@@ -15,12 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
-      env:
-        SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
-        SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-        SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-        SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-        SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
 
     defaults:
       run:
@@ -31,11 +31,11 @@ jobs:
      - name: checkout
        uses: actions/checkout@v4
 
-     - name: Set PATH for bash
+     - name: Set PATH
        run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> $GITHUB_ENV
 
-     - name: Install Python dependencies
+     - name: Run integration tests
        shell: bash -l {0}
        run: |
           source /workdir/env/bin/activate
