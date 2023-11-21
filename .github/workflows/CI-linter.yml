@@ -16,6 +16,11 @@ jobs:
       run:
         shell: bash -leo pipefail {0}
 
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -59,7 +64,7 @@ jobs:
           VALIDATE_DOCKERFILE_HADOLINT: true
           LINTER_RULES_PATH: ./
 
-            #          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for non-ASCII characters
