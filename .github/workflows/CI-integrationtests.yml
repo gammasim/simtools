@@ -36,8 +36,8 @@ jobs:
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> $GITHUB_ENV
 
      - name: Install Python dependencies
+       shell: bash -l {0}
        run: |
-          python --version
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
           pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
