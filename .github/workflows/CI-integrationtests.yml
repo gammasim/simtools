@@ -42,5 +42,6 @@ jobs:
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
           pip freeze
+          export PYTHONPATH=$PYTHONPATH:.
           echo "Python Path: $PYTHONPATH"
           pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
