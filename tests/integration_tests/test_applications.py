@@ -222,6 +222,12 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
+    "generate_default_metadata": [
+        [
+            "--output_path",
+            "TESTOUTPUTDIR/test_generate_default_metadata",
+        ]
+    ],
     "generate_simtel_array_histograms::file_lists": [
         [
             "--hist_file_names",
@@ -709,8 +715,8 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ],
     ],
-    # validate_schema_files
-    "validate_schema_files": [
+    # validate_file_using_schema
+    "validate_file_using_schema": [
         [
             "--schema",
             "TESTMODELDIR/jsonschema.yml",
