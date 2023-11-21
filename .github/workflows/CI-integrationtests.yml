@@ -22,7 +22,7 @@ jobs:
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
       ports:
-        - ${{ secrets.DB_API_PORT }}
+        - $SIMTOOLS_DB_API_PORT
       options: --user 0
 
     defaults:
