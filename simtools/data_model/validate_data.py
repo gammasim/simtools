@@ -231,7 +231,7 @@ class DataValidator:
             else:
                 self._logger.error(
                     "Failed removal of duplication for column "
-                    f"{_column_with_unique_requirement}, values are not unqiue"
+                    f"{_column_with_unique_requirement}, values are not unique"
                 )
                 raise ValueError
 
@@ -434,7 +434,7 @@ class DataValidator:
     def _interval_check(data, axis_range, range_type):
         """
         Check that values are inside allowed range (range_type='allowed_range') or span at least
-         the given inveral (range_type='required_range').
+         the given interval (range_type='required_range').
 
         Parameters
         ----------

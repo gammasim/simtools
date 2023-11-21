@@ -49,10 +49,16 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
-generate_corsika_histograms
-==================
+generate_default_metadata
+=========================
 
-.. automodule:: generate_corsika_histograms
+.. automodule:: generate_default_metadata
+   :members:
+
+generate_simtel_array_histograms
+================================
+
+.. automodule:: generate_simtel_array_histograms
    :members:
 
 get_file_from_db
@@ -78,12 +84,6 @@ plot_layout_array
 ======================
 
 .. automodule:: plot_layout_array
-   :members:
-
-plot_simtel_histograms
-======================
-
-.. automodule:: plot_simtel_histograms
    :members:
 
 print_array_elements
@@ -153,8 +153,8 @@ validate_optics
 .. automodule:: validate_optics
    :members:
 
-validate_schema_files
-=====================
+validate_file_using_schema
+==========================
 
-.. automodule:: validate_schema_files
+.. automodule:: validate_file_using_schema
    :members:

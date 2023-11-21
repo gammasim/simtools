@@ -104,6 +104,15 @@ This is especially recommended to identify warnings and errors by Sphinx (e.g., 
 docstrings or RST files). The documentation can be viewed locally in a browser starting from the
 file ``./build/html/index.html``.
 
+The documentation is written in reStructuredText (RST) format.
+Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
+
+Hints:
+
+- make sure that headings are underlined with the correct number of ``=`` characters
+- make sure that the indentation is correct and aligned
+- use unicode for special characters (e.g., ``\u00B2`` for superscript 2); see `unicode table <https://unicode-table.com/en/>`_
+
 
 Writing Applications
 ====================
