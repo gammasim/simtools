@@ -89,45 +89,6 @@ def _parse(label, description):
     return config.initialize(output=True)
 
 
-def get_schema_file(args_dict, top_level_meta, logger):
-    """
-    Return name of schema file.
-    Give priority to command line argument over metadata.
-
-    Parameters
-    ----------
-    args_dict: dict
-        command line arguments
-    top_level_meta: dict
-        top-level metadata
-    logger: logging.Logger
-        logger
-
-    Returns
-    -------
-    str
-        schema file name
-
-    """
-
-    try:
-        _schema_file = args_dict["schema"]
-        if _schema_file is not None:
-            logger.info(f"Using schema from command line: {_schema_file}")
-            return _schema_file
-    except KeyError:
-        pass
-
-    try:
-        _schema_file = top_level_meta["cta"]["product"]["data"]["model"]["url"]
-        logger.info(f"Using schema from metadata: {_schema_file}")
-    except KeyError:
-        logger.error("No schema provided")
-        raise
-
-    return _schema_file
-
-
 def main():
     args_dict, _ = _parse(
         label=Path(__file__).stem,
@@ -139,10 +100,8 @@ def main():
 
     _metadata = MetadataCollector(args_dict=args_dict)
 
-    _schema_file = get_schema_file(args_dict, _metadata.top_level_meta, logger)
-
     data_validator = validate_data.DataValidator(
-        schema_file=_schema_file,
+        schema_file=_metadata.get_data_model_schema(),
         data_file=args_dict["input"],
     )
 
