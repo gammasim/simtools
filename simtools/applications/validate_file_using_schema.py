@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Validate file (e.g., metadata) using a json schema file.
+    Validate yaml file using a json schema file.
 
     Command line arguments
     ----------------------
