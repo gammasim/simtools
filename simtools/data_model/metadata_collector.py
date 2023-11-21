@@ -66,19 +66,17 @@ class MetadataCollector:
 
         _schema_file = self.args_dict.get("schema", None)
         if _schema_file is not None:
-            self._logger.info(f"Using schema from command line: {_schema_file}")
+            self._logger.info(f"From command line: {_schema_file}")
             return _schema_file
 
         try:
             _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
-            self._logger.info(f"Using schema from metadata: {_schema_file}")
+            self._logger.info(f"From metadata: {_schema_file}")
         except KeyError:
             self._logger.error("No schema file name provided")
             raise
 
         return _schema_file
-
-        return self.args_dict.get("schema", None)
 
     def _fill_association_meta_from_args(self, association_dict):
         """

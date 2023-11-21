@@ -74,10 +74,10 @@ class DataValidator:
         try:
             if Path(self._data_file_name).suffix in (".yml", ".yaml"):
                 self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
-                self._logger.info(f"Reading data from yaml file: {self._data_file_name}")
+                self._logger.info(f"Validating data from: {self._data_file_name}")
             else:
                 self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
-                self._logger.info(f"Reading tabled data from file: {self._data_file_name}")
+                self._logger.info(f"Validating tabled data from: {self._data_file_name}")
         except (AttributeError, TypeError):
             pass
 
