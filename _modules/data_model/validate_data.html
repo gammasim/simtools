@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gc779140</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g40ed0d8</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=7678b2ee"></script>
+    <script src="../../_static/documentation_options.js?v=c23c1925"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc779140</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g40ed0d8</p>
 
 
 
@@ -325,7 +325,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="s2">&quot;Failed removal of duplication for column &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_column_with_unique_requirement</span><span class="si">}</span><span class="s2">, values are not unqiue&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_column_with_unique_requirement</span><span class="si">}</span><span class="s2">, values are not unique&quot;</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span>
 
@@ -528,7 +528,7 @@
     <span class="k">def</span> <span class="nf">_interval_check</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">,</span> <span class="n">range_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that values are inside allowed range (range_type=&#39;allowed_range&#39;) or span at least</span>
-<span class="sd">         the given inveral (range_type=&#39;required_range&#39;).</span>
+<span class="sd">         the given interval (range_type=&#39;required_range&#39;).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

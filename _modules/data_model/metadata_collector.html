@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gc779140</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g40ed0d8</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=7678b2ee"></script>
+    <script src="../../_static/documentation_options.js?v=c23c1925"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc779140</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g40ed0d8</p>
 
 
 
@@ -90,7 +90,7 @@
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">import</span> <span class="nn">simtools.version</span>
-<span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">metadata_model</span><span class="p">,</span> <span class="n">validate_schema</span>
+<span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">metadata_model</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
@@ -103,7 +103,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collects and combines metadata associated with the current activity</span>
 <span class="sd">    (e.g., the execution of an application).</span>
-<span class="sd">    Follows CTAO top-level metadata definition.</span>
+<span class="sd">    Depends on and fine tuned to CTAO top-level metadata definition.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -123,7 +123,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
-            <span class="n">data_dict</span><span class="o">=</span><span class="n">metadata_model</span><span class="o">.</span><span class="n">top_level_reference_schema</span><span class="p">(),</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span>
+            <span class="n">data_dict</span><span class="o">=</span><span class="n">metadata_model</span><span class="o">.</span><span class="n">get_default_metadata_dict</span><span class="p">(),</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collect_product_meta_data</span><span class="p">()</span>
 
@@ -136,15 +136,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_meta_from_args</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;associated_elements&quot;</span><span class="p">]</span>
         <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">])</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_top_level_meta_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">])</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">])</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;associated_elements&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;activity&quot;</span><span class="p">])</span></div>
 
 
@@ -155,7 +151,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        association_dict: dict</span>
-<span class="sd">            Dictionary for assocation metadata field.</span>
+<span class="sd">            Dictionary for association metadata field.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -203,22 +199,21 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping metadata reading; no metadata file defined.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
-        <span class="n">_schema_validator</span> <span class="o">=</span> <span class="n">validate_schema</span><span class="o">.</span><span class="n">SchemaValidator</span><span class="p">()</span>
-        <span class="n">_input_meta</span> <span class="o">=</span> <span class="n">_schema_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">(</span>
-            <span class="n">meta_file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_merge_config_dicts</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">)</span>
-        <span class="c1"># list entry copies</span>
-        <span class="k">for</span> <span class="n">association</span> <span class="ow">in</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span>
-                <span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">],</span> <span class="n">association</span>
-            <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;document&quot;</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">][</span><span class="s2">&quot;document&quot;</span><span class="p">],</span> <span class="n">document</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;sim&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;document&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading meta data from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;input_meta&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">_input_meta</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
+                <span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed reading metadata from file.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="n">metadata_model</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">(</span><span class="n">_input_meta</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_input_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_metadata_from_file</span><span class="p">(</span><span class="n">_input_meta</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_merge_config_dicts</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;document&quot;</span><span class="p">,</span> <span class="s2">&quot;associated_elements&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_list_type_metadata</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">product_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -238,7 +233,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activity_id&quot;</span><span class="p">,</span> <span class="s2">&quot;UNDEFINED_ACTIVITY_ID&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading activitiy UUID </span><span class="si">{</span><span class="n">product_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading activity UUID </span><span class="si">{</span><span class="n">product_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;SIM&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;R1&quot;</span>
@@ -308,7 +303,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        activity_dict: dict</span>
-<span class="sd">            Dictionary for top-level activitiy metadata.</span>
+<span class="sd">            Dictionary for top-level activity metadata.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -402,7 +397,74 @@
                 <span class="n">product_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_entry_dict</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
             <span class="n">product_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_entry_dict</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">product_list</span></div>
+        <span class="k">return</span> <span class="n">product_list</span>
+
+    <span class="k">def</span> <span class="nf">_process_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process metadata from file to ensure compatibility with metadata model.</span>
+<span class="sd">        Changes keys to lower case and removes line feeds from description fields.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta_dict: dict</span>
+<span class="sd">            Input metadata dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Metadata dictionary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">meta_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_feed</span><span class="p">(</span>
+                <span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">meta_dict</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_remove_line_feed</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove all line feeds from a string</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        str</span>
+<span class="sd">            input string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            with line feeds removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;  &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_copy_list_type_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy list-type metadata from file.</span>
+<span class="sd">        Very fine tuned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        top_level_dict: dict</span>
+<span class="sd">            Dictionary for top level metadata.</span>
+<span class="sd">        meta_dict: dict</span>
+<span class="sd">            Dictionary for metadata from file.</span>
+<span class="sd">        key: str</span>
+<span class="sd">            Key for metadata entry.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">],</span> <span class="n">document</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
 </pre></div>
 
