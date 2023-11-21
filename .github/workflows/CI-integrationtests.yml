@@ -21,8 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
-      ports:
-        - $SIMTOOLS_DB_API_PORT
       options: --user 0
 
     defaults:
