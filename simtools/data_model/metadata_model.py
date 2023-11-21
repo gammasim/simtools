@@ -25,7 +25,7 @@ def validate_schema(data, schema_file):
     ----------
     data
         dictionary to be validated
-    schema (dict)
+    schema_file (dict)
         schema used for validation
 
     Raises
@@ -51,7 +51,7 @@ def load_schema(schema_file=None):
 
     Returns
     -------
-    schema (dict)
+    schema_file (dict)
         schema
 
     Raises
@@ -70,11 +70,10 @@ def load_schema(schema_file=None):
     return schema, schema_file
 
 
-def top_level_reference_schema(schema_file=None):
+def get_default_metadata_dict(schema_file=None):
     """
-    Reference schema following the CTA Top-Level Data Model.
-
-    This metadata schema is used for simtools data products.
+    Returns metadata schema with default values.
+    Follows the CTA Top-Level Data Model.
 
     Parameters
     ----------
@@ -94,8 +93,7 @@ def top_level_reference_schema(schema_file=None):
 
 def resolve_references(yaml_data):
     """
-    Resolve references in yaml data and expand the
-    received dictionary accordingly.
+    Resolve references in yaml data and expand the received dictionary accordingly.
 
     Parameters
     ----------
@@ -156,7 +154,7 @@ def fill_defaults(schema):
     schema = resolve_references(schema)
 
     def fill_defaults_recursive(subschema, current_dict):
-        if "properties" in subschema:
+        try:
             for prop, prop_schema in subschema["properties"].items():
                 if "default" in prop_schema:
                     current_dict[prop] = prop_schema["default"]
@@ -168,6 +166,10 @@ def fill_defaults(schema):
                         current_dict[prop] = [{}]
                         if "items" in prop_schema and isinstance(prop_schema["items"], dict):
                             fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
+        except KeyError:
+            msg = "Missing 'properties' key in schema."
+            _logger.error(msg)
+            raise
 
     fill_defaults_recursive(schema, defaults["CTA"])
     return defaults

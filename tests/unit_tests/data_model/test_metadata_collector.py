@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 def test_fill_association_meta_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
     metadata_1._fill_association_meta_from_args(
         metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
@@ -41,7 +41,7 @@ def test_fill_association_meta_from_args(args_dict_site):
 def test_fill_top_level_meta_from_file(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
     metadata_1.args_dict["input_meta"] = None
@@ -57,7 +57,7 @@ def test_fill_top_level_meta_from_file(args_dict_site):
 def test_fill_product_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
     with pytest.raises(TypeError):
@@ -85,7 +85,7 @@ def test_fill_product_meta(args_dict_site):
 def test_fill_association_id(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
     metadata_1.top_level_meta["cta"]["context"]["associated_elements"] = get_generic_input_meta()[
         "context"
@@ -150,13 +150,13 @@ def test_merge_config_dicts(args_dict_site):
 def test_fill_activity_meta(args_dict_site):
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
     file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["cta"]["activity"])
 
     file_writer_2 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     file_writer_2.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.top_level_reference_schema(), True
+        metadata_model.get_default_metadata_dict(), True
     )
 
 
@@ -269,7 +269,7 @@ def test__remove_line_feed():
     assert " " == collector._remove_line_feed("  ")
 
 
-def test_copy_metadata_from_file(args_dict_site):
+def test_copy_list_type_metadata(args_dict_site):
     top_level_dict = {
         "context": {
             "associated_elements": [
@@ -300,13 +300,13 @@ def test_copy_metadata_from_file(args_dict_site):
     key = "associated_elements"
 
     _collector = metadata_collector.MetadataCollector({})
-    _collector._copy_metadata_context_lists(top_level_dict, _input_meta, key)
+    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
 
     assert _result_meta["context"][key] == top_level_dict["context"][key]
 
     key = "documents"
     with pytest.raises(KeyError):
-        _collector._copy_metadata_context_lists(top_level_dict, _input_meta, key)
+        _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
 
 
 def get_generic_input_meta():
