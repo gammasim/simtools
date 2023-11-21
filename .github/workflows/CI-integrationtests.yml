@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
+      ports:
+        - ${{ secrets.DB_API_PORT }}
       options: --user 0
 
     defaults:
@@ -41,7 +43,5 @@ jobs:
        run: |
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
-          pip freeze
           export PYTHONPATH=$PYTHONPATH:.
-          echo "Python Path: $PYTHONPATH"
           pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
