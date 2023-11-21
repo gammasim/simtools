@@ -29,22 +29,35 @@ jobs:
         run: |
           pip install yamllint validate-pyproject
 
-      - name: flake8
-        uses: py-actions/flake8@v2
-        with:
-          max-line-length: "100"
-
-      - name: yaml
-        run: |
-          # TODO - very large line length
-          echo 'rules:' > config.yaml
-          echo '  line-length:' >> config.yaml
-          echo '    max: 250' >> config.yaml
-          yamllint --config-file=config.yaml .
-
       - name: pyproject.toml
         run: |
           validate-pyproject pyproject.toml
+
+      - name: yaml_config
+        run: |
+          # TODO - very large line length
+          echo 'rules:' > yaml_config.yaml
+          echo '  line-length:' >> yaml_config.yaml
+          echo '    max: 250' >> yaml_config.yaml
+
+      - name: Lint Code Base
+        uses: super-linter/super-linter@v5
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_YAML: true
+          YAML_CONFIG_FILE: yaml_config.yaml
+          VALIDATE_PYTHON_ISORT: true
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          LINTER_RULES_PATH: ./
+          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for non-ASCII characters
         run: |
