@@ -53,6 +53,33 @@ class MetadataCollector:
         self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
+    def get_data_model_schema(self):
+        """
+        Return name of schema file.
+
+        Returns
+        -------
+        str
+            Name of schema file.
+
+        """
+
+        _schema_file = self.args_dict.get("schema", None)
+        if _schema_file is not None:
+            self._logger.info(f"Using schema from command line: {_schema_file}")
+            return _schema_file
+
+        try:
+            _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
+            self._logger.info(f"Using schema from metadata: {_schema_file}")
+        except KeyError:
+            self._logger.error("No schema file name provided")
+            raise
+
+        return _schema_file
+
+        return self.args_dict.get("schema", None)
+
     def _fill_association_meta_from_args(self, association_dict):
         """
         Append association metadata set through configurator.
