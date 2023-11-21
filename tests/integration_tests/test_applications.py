@@ -222,6 +222,12 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
+    "generate_default_metadata:file_output": [
+        [
+            "--output_path",
+            "TESTOUTPUTDIR/test_generate_default_metadata",
+        ]
+    ],
     "generate_simtel_array_histograms::file_lists": [
         [
             "--hist_file_names",
