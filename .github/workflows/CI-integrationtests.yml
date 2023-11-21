@@ -1,7 +1,6 @@
 ---
 name: CI-integrationtests
 # Execute integration tests for applications
-#
 
 on:
   pull_request:
@@ -15,11 +14,9 @@ jobs:
   integrationtests:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/gammasim/simtools-corsika_sim_telarray:latest
-      options: --user 1001
+      image: ghcr.io/gammasim/simtools-dev:latest
       env:
         SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
-        PATH:  "/workdir/sim_telarray/env/bin/:$PATH"
         SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
         SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
         SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
@@ -30,21 +27,17 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
 
-      - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v1
-        with:
-          environment-file: environment.yml
-          create-args: python=3.9
-          init-shell: bash
+     - name: checkout
+       uses: actions/checkout@v4
 
-      - name: Python dependencies
-        run: |
+     - name: Set PATH for bash
+       run: |
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> $GITHUB_ENV
+
+     - name: Install Python dependencies
+       run: |
           python --version
+          source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
-
-      - name: Integration tests
-        shell: bash -l {0}
-        run: pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
+          pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
