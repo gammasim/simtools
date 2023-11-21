@@ -43,8 +43,7 @@ CTA:
       MODEL:
         NAME: simpipe-schema
         VERSION: 0.1.0
-        URL: |-
-          https://raw.githubusercontent.com/gammasim/workflows/main/schemas/MST_mirror_2f_measurements.schema.yml
+        URL: https://raw.githubusercontent.com/gammasim/workflows/main/schemas/MST_mirror_2f_measurements.schema.yml
   CONTEXT:
     ASSOCIATED_ELEMENTS:
       - SITE: South
