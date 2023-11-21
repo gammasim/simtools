@@ -5,7 +5,7 @@
     Submit model parameter (value, table) through the command line.
 
     Input data and metadata is validated, and if necessary enriched
-    and converted following a predescribed schema.
+    and converted following a pre-described schema.
 
     Command line arguments
     ----------------------
@@ -33,7 +33,7 @@
 
     .. code-block:: console
 
-        INFO::model_data_writer(l70)::write_data::Writing data to\
+        INFO::model_data_writer(l70)::write_data::Writing data to \
             /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv
 
 """
