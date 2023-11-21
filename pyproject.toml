@@ -101,6 +101,12 @@ max-args = 10
 # Maximum number of locals for function / method body (default=15).
 max-locals = 25
 
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
 [tool.pytest.ini_options]
 minversion="6.0"
 norecursedirs=["build", "docs/_build"]
