@@ -13,6 +13,15 @@
     output_file (str, optional)
         Output file name.
 
+    Example
+    -------
+    .. code-block:: console
+
+        simtools-generate-default-metadata-file
+            --schema simtools/schemas/metadata.schema.yml
+            --output_file default_metadata.yml
+
+
     """
 
 import logging
@@ -53,7 +62,7 @@ def _parse(label, description):
     )
     config.parser.add_argument(
         "--output_file",
-        help="output file name",
+        help="output file name (if not given: print to stdout)",
         type=str,
         required=False,
     )
@@ -70,7 +79,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    default_values = metadata_model.top_level_reference_schema(args_dict["schema"])
+    default_values = metadata_model.get_default_metadata_dict(args_dict["schema"])
 
     if args_dict["output_file"] is None:
         print(default_values)
