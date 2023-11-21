@@ -146,12 +146,10 @@ def main():
         data_file=args_dict["input"],
     )
 
-    file_writer = writer.ModelDataWriter(
-        product_data_file=args_dict["output_file"],
-        product_data_format=args_dict["output_file_format"],
-    )
-    file_writer.write(
-        metadata=_metadata.top_level_meta, product_data=data_validator.validate_and_transform()
+    writer.ModelDataWriter.dump(
+        args_dict=args_dict,
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        product_data=data_validator.validate_and_transform(),
     )
 
 
