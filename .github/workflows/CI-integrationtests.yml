@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
+      options: --user 0
 
     defaults:
       run:
