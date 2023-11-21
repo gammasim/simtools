@@ -158,7 +158,8 @@ class Configurator:
             self.config["label"] = self.label
 
         self._initialize_io_handler()
-        self._initialize_output()
+        if output:
+            self._initialize_output()
         _db_dict = self._get_db_parameters()
 
         return self.config, _db_dict
@@ -297,20 +298,20 @@ class Configurator:
 
     def _initialize_output(self):
         """
-        Initialize default output file names (in out output_file is not configured).
+        Initialize default output file names (in case output_file is not configured).
 
         """
         if self.config.get("output_file", None) is None:
             prefix = "TEST"
-            label = extention = ""
+            label = extension = ""
             if not self.config.get("test", False):
                 prefix = self.config["activity_id"]
                 if self.config.get("label", "") and len(self.config.get("label", "")) > 0:
                     label = f"-{self.config['label']}"
             if len(self.config.get("output_file_format", "")) > 0:
-                extention = f".{self.config['output_file_format']}"
+                extension = f".{self.config['output_file_format']}"
 
-            self.config["output_file"] = f"{prefix}{label}{extention}"
+            self.config["output_file"] = f"{prefix}{label}{extension}"
 
     @staticmethod
     def _arglist_from_config(input_var):
