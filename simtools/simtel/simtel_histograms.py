@@ -3,9 +3,14 @@ import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
 from matplotlib.backends.backend_pdf import PdfPages
+
+from simtools import version
+from simtools.io_operations.hdf5_handler import fill_hdf5_table
+from simtools.utils.names import sanitize_name
 
 __all__ = ["BadHistogramFormat", "SimtelHistograms"]
 
@@ -32,9 +37,12 @@ class SimtelHistograms:
         Initialize SimtelHistograms
         """
         self._logger = logging.getLogger(__name__)
+        if not isinstance(histogram_files, list):
+            histogram_files = [histogram_files]
         self._histogram_files = histogram_files
         self._is_test = test
         self.combined_hists = None
+        self.__meta_dict = None
 
     def plot_and_save_figures(self, fig_name):
         """
@@ -51,7 +59,7 @@ class SimtelHistograms:
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
-        if not hasattr(self, "combined_hists"):
+        if self.combined_hists is None:
             self._combine_histogram_files()
         return len(self.combined_hists)
 
@@ -69,7 +77,7 @@ class SimtelHistograms:
         str
             Histogram title.
         """
-        if not hasattr(self, "combined_hists"):
+        if self.combined_hists is None:
             self._combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
@@ -77,7 +85,6 @@ class SimtelHistograms:
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
-
         n_files = 0
         for file in self._histogram_files:
             count_file = True
@@ -229,3 +236,76 @@ class SimtelHistograms:
             ax.hist(centers, bins=x_bins, weights=hist["data"])
             ax.set_xlim(xlim)
         return
+
+    @property
+    def _meta_dict(self):
+        """
+        Define the meta dictionary for exporting the histograms.
+
+        Returns
+        -------
+        dict
+            Meta dictionary for the hdf5 files with the histograms.
+        """
+
+        if self.__meta_dict is None:
+            self.__meta_dict = {
+                "simtools_version": version.__version__,
+                "note": "Only lower bin edges are given.",
+            }
+        return self.__meta_dict
+
+    def export_histograms(self, hdf5_file_name, overwrite=False):
+        """
+        Export the histograms to hdf5 files.
+
+        Parameters
+        ----------
+        hdf5_file_name: str
+            Name of the file to be saved with the hdf5 tables.
+        overwrite: bool
+            If True overwrites the histograms already saved in the hdf5 file.
+        """
+        for histogram in self.combined_hists:
+            x_bin_edges_list = np.linspace(
+                histogram["lower_x"],
+                histogram["upper_x"],
+                num=histogram["n_bins_x"] + 1,
+                endpoint=True,
+            )
+            if histogram["n_bins_y"] > 0:
+                y_bin_edges_list = np.linspace(
+                    histogram["lower_y"],
+                    histogram["upper_y"],
+                    num=histogram["n_bins_y"] + 1,
+                    endpoint=True,
+                )
+            else:
+                y_bin_edges_list = None
+
+            self._meta_dict["Title"] = sanitize_name(histogram["title"])
+
+            table = fill_hdf5_table(
+                hist=histogram["data"],
+                x_bin_edges=x_bin_edges_list,
+                y_bin_edges=y_bin_edges_list,
+                x_label=None,
+                y_label=None,
+                meta_data=self._meta_dict,
+            )
+
+            self._logger.debug(
+                f"Writing histogram with name {self._meta_dict['Title']} to " f"{hdf5_file_name}."
+            )
+            # overwrite takes precedence over append
+            if overwrite is True:
+                append = False
+            else:
+                append = True
+            write_table(
+                table,
+                hdf5_file_name,
+                f"/{self._meta_dict['Title']}",
+                append=append,
+                overwrite=overwrite,
+            )

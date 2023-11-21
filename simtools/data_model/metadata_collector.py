@@ -4,8 +4,8 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools import io_handler
-from simtools.data_model import metadata_model, validate_schema
+from simtools.data_model import metadata_model
+from simtools.io_operations import io_handler
 from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
@@ -15,7 +15,7 @@ class MetadataCollector:
     """
     Collects and combines metadata associated with the current activity
     (e.g., the execution of an application).
-    Follows CTAO top-level metadata definition.
+    Depends on and fine tuned to CTAO top-level metadata definition.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ class MetadataCollector:
 
         self.args_dict = args_dict
         self.top_level_meta = gen.change_dict_keys_case(
-            data_dict=metadata_model.top_level_reference_schema(), lower_case=True
+            data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
         self.collect_product_meta_data()
 
@@ -46,15 +46,11 @@ class MetadataCollector:
         """
 
         self._fill_association_meta_from_args(
-            self.top_level_meta["cta"]["context"]["sim"]["association"]
+            self.top_level_meta["cta"]["context"]["associated_elements"]
         )
-
         self._fill_product_meta(self.top_level_meta["cta"]["product"])
-
         self._fill_top_level_meta_from_file(self.top_level_meta["cta"])
-
-        self._fill_association_id(self.top_level_meta["cta"]["context"]["sim"]["association"])
-
+        self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
     def _fill_association_meta_from_args(self, association_dict):
@@ -64,7 +60,7 @@ class MetadataCollector:
         Parameters
         ----------
         association_dict: dict
-            Dictionary for assocation metadata field.
+            Dictionary for association metadata field.
 
         Raises
         ------
@@ -112,22 +108,21 @@ class MetadataCollector:
             self._logger.debug("Skipping metadata reading; no metadata file defined.")
             return
 
-        _schema_validator = validate_schema.SchemaValidator()
-        _input_meta = _schema_validator.validate_and_transform(
-            meta_file_name=self.args_dict["input_meta"],
-        )
-
-        self._merge_config_dicts(top_level_dict, _input_meta)
-        # list entry copies
-        for association in _input_meta["product"]["association"]:
-            self._fill_context_sim_list(
-                top_level_dict["context"]["sim"]["association"], association
-            )
         try:
-            for document in _input_meta["product"]["document"]:
-                self._fill_context_sim_list(top_level_dict["context"]["sim"]["document"], document)
-        except KeyError:
-            top_level_dict["context"]["sim"].pop("document")
+            self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
+            _input_meta = gen.collect_data_from_yaml_or_dict(
+                in_yaml=self.args_dict.get("input_meta", None), in_dict=None
+            )
+        except gen.InvalidConfigData:
+            self._logger.error("Failed reading metadata from file.")
+            raise
+
+        metadata_model.validate_schema(_input_meta, None)
+        _input_meta = self._process_metadata_from_file(_input_meta)
+
+        self._merge_config_dicts(top_level_dict, _input_meta["cta"])
+        for key in ("document", "associated_elements"):
+            self._copy_list_type_metadata(top_level_dict, _input_meta["cta"], key)
 
     def _fill_product_meta(self, product_dict):
         """
@@ -147,7 +142,7 @@ class MetadataCollector:
         """
 
         product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        self._logger.debug(f"Reading activitiy UUID {product_dict['id']}")
+        self._logger.debug(f"Reading activity UUID {product_dict['id']}")
 
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
@@ -217,7 +212,7 @@ class MetadataCollector:
         Parameters
         ----------
         activity_dict: dict
-            Dictionary for top-level activitiy metadata.
+            Dictionary for top-level activity metadata.
 
         """
 
@@ -309,3 +304,70 @@ class MetadataCollector:
         except (TypeError, IndexError):
             product_list = [new_entry_dict]
         return product_list
+
+    def _process_metadata_from_file(self, meta_dict):
+        """
+        Process metadata from file to ensure compatibility with metadata model.
+        Changes keys to lower case and removes line feeds from description fields.
+
+        Parameters
+        ----------
+        meta_dict: dict
+            Input metadata dictionary.
+
+        Returns
+        -------
+        dict
+            Metadata dictionary.
+
+        """
+
+        meta_dict = gen.change_dict_keys_case(meta_dict, True)
+        try:
+            meta_dict["cta"]["product"]["description"] = self._remove_line_feed(
+                meta_dict["cta"]["product"]["description"]
+            )
+        except KeyError:
+            pass
+
+        return meta_dict
+
+    @staticmethod
+    def _remove_line_feed(string):
+        """
+        Remove all line feeds from a string
+
+        Parameters
+        ----------
+        str
+            input string
+
+        Returns
+        -------
+        str
+            with line feeds removed
+        """
+
+        return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
+
+    def _copy_list_type_metadata(self, top_level_dict, _input_meta, key):
+        """
+        Copy list-type metadata from file.
+        Very fine tuned.
+
+        Parameters
+        ----------
+        top_level_dict: dict
+            Dictionary for top level metadata.
+        meta_dict: dict
+            Dictionary for metadata from file.
+        key: str
+            Key for metadata entry.
+
+        """
+
+        try:
+            for document in _input_meta["context"][key]:
+                self._fill_context_sim_list(top_level_dict["context"][key], document)
+        except KeyError:
+            top_level_dict["context"].pop(key)
