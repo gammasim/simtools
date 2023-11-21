@@ -8,7 +8,7 @@
     Command line arguments
     ----------------------
     schema (str, optional)
-        Schema describing the input data
+        Schema file describing the input data
         (default: simtools/schemas/metadata.schema.yml)
     output_file (str, optional)
         Output file name.
@@ -17,7 +17,7 @@
     -------
     .. code-block:: console
 
-        simtools-generate-default-metadata-file
+        simtools-generate-default-metadata
             --schema simtools/schemas/metadata.schema.yml
             --output_file default_metadata.yml
 
