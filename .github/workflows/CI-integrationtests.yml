@@ -40,4 +40,6 @@ jobs:
        run: |
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
+          pip freeze
+          echo "Python Path: $PYTHONPATH"
           pytest -x --color=yes --durations=10 --no-cov tests/integration_tests/
