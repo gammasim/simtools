@@ -222,7 +222,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "generate_default_metadata:file_output": [
+    "generate_default_metadata": [
         [
             "--output_path",
             "TESTOUTPUTDIR/test_generate_default_metadata",
