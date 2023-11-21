@@ -47,16 +47,19 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_YAML: true
           YAML_CONFIG_FILE: yaml_config.yaml
+          YAML_ERROR_ON_WARNING: false
+            #          VALIDATE_PYTHON_PYLINT: true
+            #          PYTHON_PYLINT_CONFIG_FILE
           VALIDATE_PYTHON_ISORT: true
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
           VALIDATE_PYTHON_FLAKE8: true
           VALIDATE_PYTHON_BLACK: true
+          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
           VALIDATE_MARKDOWN: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           LINTER_RULES_PATH: ./
-          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
-          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
 
-          DEFAULT_BRANCH: main
+            #          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for non-ASCII characters
