@@ -40,9 +40,9 @@ def validate_schema(data, schema_file):
     try:
         jsonschema.validate(data, schema=schema)
     except jsonschema.exceptions.ValidationError:
-        _logger.error(f"Schema validation failed using {schema}")
+        _logger.error(f"Failed using {schema}")
         raise
-    _logger.info(f"Schema validation successful using {schema_file}")
+    _logger.debug(f"Succeeded using {schema_file}")
 
 
 def load_schema(schema_file=None):
@@ -65,7 +65,7 @@ def load_schema(schema_file=None):
         schema_file = files("simtools").joinpath("schemas/metadata.schema.yml")
 
     schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
-    _logger.info(f"Loading schema from {schema_file}")
+    _logger.debug(f"Loading schema from {schema_file}")
 
     return schema, schema_file
 
