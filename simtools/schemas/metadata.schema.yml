@@ -1,0 +1,511 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimtoolsOutputMetadata'
+title: SimPipe Output Metadata Reference Schema
+description: YAML representation of model parameter schema
+version: 0.1.0
+type: object
+additionalProperties: false
+
+
+definitions:
+  SimtoolsOutputMetadata:
+    type: object
+    additionalProperties: false
+    properties:
+      CTA:
+        $ref: '#/definitions/CTA'
+    required:
+      - CTA
+    description: SimPipe metadata definition
+  CTA:
+    type: object
+    required:
+      - ACTIVITY
+      - CONTACT
+      - INSTRUMENT
+      - PROCESS
+      - PRODUCT
+      - REFERENCE
+    additionalProperties: false
+    properties:
+      ###############
+      REFERENCE:
+        description: Reference fields
+        required:
+          - VERSION
+        type: object
+        additionalProperties: false
+        properties:
+          VERSION:
+            type: string
+            description: |-
+              Version of the Reference metadata schema used in the data product
+            default: 1.0.0
+            pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+      ###############
+      CONTACT:
+        title: Contact
+        description: |-
+          Describes the person or institution that is responsible for this
+          data product.
+        required:
+          - EMAIL
+          - NAME
+          - ORGANIZATION
+        type: object
+        additionalProperties: false
+        properties:
+          ORGANIZATION:
+            type: string
+            description: |-
+              Organization to which this data product is associated
+            default: CTAO
+          NAME:
+            description: |-
+              Name of contact within the organization
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          EMAIL:
+            description: Contact email address
+            anyOf:
+              - type: string
+                format: email
+              - type: "null"
+            default: null
+      ###############
+      PRODUCT:
+        title: Product
+        description: |-
+          Describes the details of the data product, including its type and
+          links to the data model definition.
+        required:
+          - DATA
+          - DESCRIPTION
+          - FORMAT
+          - ID
+          - VALID
+        type: object
+        additionalProperties: false
+        properties:
+          DESCRIPTION:
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+            description: Product description
+          CREATION_TIME:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            format: date-time
+            default: null
+            description: |-
+              Human-readable date and time of file creation, in ISO format.
+          ID:
+            anyOf:
+              - type: string
+                format: uuid
+              - type: "null"
+              - type: number
+            default: null
+            description: |-
+              Product identifier.
+          DATA:
+            title: Data
+            required:
+              - CATEGORY
+              - ASSOCIATION
+              - LEVEL
+              - MODEL
+            type: object
+            additionalProperties: false
+            properties:
+              CATEGORY:
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
+                description: |-
+                  CTA data identifier
+                enum:
+                  - SIM
+                  - CAL
+                  - null
+              ASSOCIATION:
+                anyOf:
+                  - type: "null"
+                  - type: string
+                default: null
+                description: |-
+                  Array element association.
+                enum:
+                  - CTA
+                  - Site
+                  - Subarray
+                  - Telescope
+                  - Target
+                  - null
+              LEVEL:
+                type: string
+                default: R1
+                description: |-
+                  CTA data level
+                enum:
+                  - R0
+                  - R1
+                  - DL0
+                  - DL1
+                  - DL2
+                  - DL3
+                  - DL4
+                  - DL5
+                  - DL6
+              TYPE:
+                type: string
+                default: Service
+                description: |-
+                  CTA data type.
+                enum:
+                  - Event
+                  - Monitoring
+                  - Service
+                  - DataCube
+                  - Catalog
+              MODEL:
+                title: Model
+                required:
+                  - NAME
+                  - VERSION
+                type: object
+                additionalProperties: false
+                properties:
+                  NAME:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    default: null
+                    description: |-
+                      Identifying name of the data model used.
+                  VERSION:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    default: null
+                    description: |-
+                      Version of the data model used.
+                  URL:
+                    description: |-
+                      Link to definition of data model.
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: "null"
+                    default: null
+                  TYPE:
+                    description: |-
+                      TODO - is this necessary?
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    default: null
+                  SUBTYPE:
+                    description: |-
+                      TODO - is this necessary?
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    default: null
+          FORMAT:
+            type: string
+            default: ecsv
+          VALID:
+            type: object
+            additionalProperties: false
+            properties:
+              START:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+                default: null
+              END:
+                anyOf:
+                  - type: string
+                    format: date-time
+                  - type: "null"
+                default: null
+            title: Valid
+            description: |-
+              Time range of validity for this data product.
+          FILENAME:
+            description: |-
+              Name of the file containing the data product.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+      ###############
+      INSTRUMENT:
+        title: Instrument
+        required:
+          - CLASS
+          - ID
+          - SITE
+          - TYPE
+        type: object
+        additionalProperties: false
+        properties:
+          SITE:
+            anyOf:
+              - type: "null"
+              - type: string
+            description: |-
+              CTA Site.
+            default: null
+            example:
+              - CTA-North
+              - CTA-South
+          CLASS:
+            anyOf:
+              - type: "null"
+              - type: string
+            default: null
+            description: |-
+              General class of instrument to which this data product applies.
+            example:
+              - array
+              - subarray
+              - telescope
+              - camera
+              - optics
+              - mirror
+              - photosensor
+              - cameraModule
+              - part
+          TYPE:
+            anyOf:
+              - type: "null"
+              - type: string
+            default: null
+            description: |-
+              The specific type of instrument in the class.
+            example:
+              - MST
+              - LST
+              - SST
+          SUBTYPE:
+            anyOf:
+              - type: "null"
+              - type: string
+            default: null
+            description: |-
+              Sub-type of the instrument.
+            example:
+              - NectarCam
+              - FlashCam
+          ID:
+            anyOf:
+              - type: "null"
+              - type: string
+              - type: number
+            default: null
+            description: |-
+              Unique ID of the specific instrument in the class.
+            example:
+              - MSTN-20
+      ###############
+      PROCESS:
+        title: Process
+        description: |-
+          The top-level activity to which the activity that generated this
+          product belongs, for example an Observation Block, and it's
+          associated ID.
+        required:
+          - TYPE
+          - ID
+        type: object
+        additionalProperties: false
+        properties:
+          TYPE:
+            description: |-
+              General type of the process.
+            anyOf:
+              - type: "null"
+              - type: string
+            default: null
+            enum:
+              - observation
+              - calibration
+              - simulation
+              - lab
+              - null
+          SUBTYPE:
+            description: |-
+              More specific class of the process if the class is not sufficient
+              to describe it.
+            anyOf:
+              - type: "null"
+              - type: string
+            default: null
+          ID:
+            description: |-
+              Unique identifier of the process.
+            anyOf:
+              - type: "null"
+              - type: string
+              - type: number
+            default: null
+      ###############
+      ACTIVITY:
+        title: Activity
+        description: |-
+          The specific software or task that generated this particular
+          data product.
+        required:
+          - ID
+          - NAME
+          - START
+          - END
+          - TYPE
+        type: object
+        additionalProperties: false
+        properties:
+          NAME:
+            description: |-
+              Name of activity that produced this data product,
+              e.g. the software/ script name.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          TYPE:
+            description: |-
+              General type of the activity.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+            example:
+              - software
+              - user
+          ID:
+            description: |-
+              Unique identifier of the instance of this activity.
+            anyOf:
+              - type: string
+              - type: "null"
+              - type: number
+            default: null
+          SOFTWARE:
+            title: Software
+            description: |-
+              The software used to generate this data product.
+            type: object
+            additionalProperties: false
+            properties:
+              NAME:
+                description: |-
+                  Name of the software used to generate this data product.
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
+              VERSION:
+                description: |-
+                  Version of the software used to generate this data product.
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
+            required:
+              - NAME
+              - VERSION
+          START:
+            description: |-
+              Start time of the activity.
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            default: null
+          END:
+            description: |-
+              End time of the activity.
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            default: null
+      ###############
+      CONTEXT:
+        title: Context
+        description: |-
+          Additional context information for this data product.
+        type: object
+        additionalProperties: false
+        properties:
+          DOCUMENT:
+            title: Context documents.
+            description: |-
+              Documents that provide additional context for this data product.
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                TYPE:
+                  description: |-
+                    Type of document.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                TITLE:
+                  description: |-
+                    Title of document.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                ID:
+                  description: |-
+                    Unique identifier of document.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                    - type: number
+                  default: null
+                CREATION_TIME:
+                  description: |-
+                    Creation time of document.
+                  anyOf:
+                    - type: string
+                      format: date-time
+                    - type: "null"
+                  default: null
+                URL:
+                  description: |-
+                    Link to document
+                  anyOf:
+                    - type: string
+                      format: uri
+                    - type: "null"
+                  default: null
+              required:
+                - CREATION_TIME
+                - ID
+                - TITLE
+                - TYPE
+          ASSOCIATED_ELEMENTS:
+            title: Associated elements.
+            description: |-
+              CTA elements associated with this data product
+              (e.g., this data product is to be used to model
+              a certain camera).
+            type: array
+            items:
+              $ref: '#/definitions/CTA/properties/INSTRUMENT'
