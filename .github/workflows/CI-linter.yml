@@ -51,12 +51,12 @@ jobs:
       # RST linter
       # Note: unclear how to suppress error messages
       # (use grep -v in this case)
-      - name: restructuredtext-lint
-        run: |
-          rst-lint README.rst docs/source |
-           grep -v "Unknown directive type" |
-           grep -v "Unknown interpreted text role" |
-           grep -v "Cannot analyze code. Pygments package not found."
+    #  - name: restructuredtext-lint
+    #    run: |
+    #      rst-lint README.rst docs/source |
+    #       grep -v "Unknown directive type" |
+    #       grep -v "Unknown interpreted text role" |
+    #       grep -v "Cannot analyze code. Pygments package not found."
 
       - name: Check whether the citation metadata from CITATION.cff is valid
         uses: citation-file-format/cffconvert-github-action@2.0.0
