@@ -94,6 +94,8 @@ max-line-length = 100
 max-module-lines = 1000
 # Disable warnings
 disable = ["logging-fstring-interpolation"]
+# Ignore files
+ignore = ["__init__.py"]
 
 [tool.pylint.design]
 # Maximum number of arguments for function / method (default=5).
