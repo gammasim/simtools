@@ -64,8 +64,8 @@ jobs:
           # flake8
           VALIDATE_PYTHON_FLAKE8: true
           # black
-          VALIDATE_PYTHON_BLACK: false
-          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+#          VALIDATE_PYTHON_BLACK: false
+#          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
           # markdown
           VALIDATE_MARKDOWN: true
           # docker
