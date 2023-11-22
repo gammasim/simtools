@@ -118,7 +118,7 @@ docker build -f Dockerfile-simtelarray  -t simtelarray .
 ```
 
 Building expects that a tar ball of corsika/sim\_telarray (named corsika7.7\_simtelarray.tar.gz) is available in the building directory.
-Download the tar package from the MPIK website (password applies) with
+Download the tar package from MPIK (password applies) with
 
 ```bash
 ./download_simulationsoftware.sh
