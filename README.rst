@@ -101,4 +101,4 @@ Please cite this software if it use used for a publication, see the `Zenodo reco
 Acknowledgements
 ================
 
-This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – project number 460248186 (PUNCH4NFDI).
+This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (PUNCH4NFDI).
