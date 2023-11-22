@@ -30,15 +30,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: install packages
+      - name: install packages not included in super-linter
         run: |
-          pip install yamllint validate-pyproject
+          pip install validate-pyproject
 
       - name: pyproject.toml
         run: |
           validate-pyproject pyproject.toml
 
-      - name: yaml_config
+      - name: yaml_config used by super-linter
         run: |
           # TODO - very large line length
           echo 'rules:' > yaml_config.yaml
@@ -49,23 +49,50 @@ jobs:
         uses: super-linter/super-linter@v5
         env:
           VALIDATE_ALL_CODEBASE: true
+          # github actions
           VALIDATE_GITHUB_ACTIONS: true
+          # yaml
           VALIDATE_YAML: true
           YAML_CONFIG_FILE: yaml_config.yaml
           YAML_ERROR_ON_WARNING: false
-            #          VALIDATE_PYTHON_PYLINT: true
-            #          PYTHON_PYLINT_CONFIG_FILE
+          # pylint
+          VALIDATE_PYTHON_PYLINT: true
+          PYTHON_PYLINT_CONFIG_FILE: pyproject.toml
+          # isort
           VALIDATE_PYTHON_ISORT: true
           PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+          # flake8
           VALIDATE_PYTHON_FLAKE8: true
+          # black
           VALIDATE_PYTHON_BLACK: false
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+          # markdown
           VALIDATE_MARKDOWN: true
+          # docker
           VALIDATE_DOCKERFILE_HADOLINT: true
+          # copy and paste
+          VALIDATE_JSCPD_ALL_CODEBASE: true
+          # .env file
+          VALIDATE_ENV: true
+          # language
+          VALIDATE_NATURAL_LANGUAGE: true
+          # path for linter rules
           LINTER_RULES_PATH: ./
+          # create a log file
+          CREATE_LOG_FILE: true
+          LOG_FILE: superlinter.log
 
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload super-linter log file
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: super-linter reports
+          path: |
+             superlinter.log
 
       - name: Check for non-ASCII characters
         run: |
