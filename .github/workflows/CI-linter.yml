@@ -30,14 +30,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: install packages not included in super-linter
-        run: |
-          pip install validate-pyproject
-
-      - name: pyproject.toml
-        run: |
-          validate-pyproject pyproject.toml
-
       - name: yaml_config used by super-linter
         run: |
           # TODO - very large line length
@@ -64,8 +56,8 @@ jobs:
           # flake8
           VALIDATE_PYTHON_FLAKE8: true
           # black
-#          VALIDATE_PYTHON_BLACK: false
-#          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+          VALIDATE_PYTHON_BLACK: true
+          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
           # markdown
           VALIDATE_MARKDOWN: true
           # docker
@@ -76,6 +68,8 @@ jobs:
           VALIDATE_ENV: true
           # language
           VALIDATE_NATURAL_LANGUAGE: true
+          # bash
+          VALIDATE_BASH: true
           # path for linter rules
           LINTER_RULES_PATH: ./
           # create a log file
@@ -86,6 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Upload super-linter log file
+      # and keep it for 5 days
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         if: success() || failure()
@@ -93,6 +88,7 @@ jobs:
           name: super-linter reports
           path: |
              superlinter.log
+             retention-days: 5
 
       - name: Check for non-ASCII characters
         run: |
@@ -103,3 +99,22 @@ jobs:
             echo "Non-ASCII characters found in documentation."
             exit 1
           fi
+
+      - name: install packages not included in super-linter
+        run: |
+          pip install validate-pyproject restructuredtext-lint
+
+      - name: pyproject.toml
+        run: |
+          validate-pyproject pyproject.toml
+
+      - name: restructuredtext-lint
+        run: |
+          rst-lint README.rst docs/source |
+           grep -v "Unknown directive type" |
+           grep -v "Unknown interpreted text role"
+
+      - name: Check whether the citation metadata from CITATION.cff is valid
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
