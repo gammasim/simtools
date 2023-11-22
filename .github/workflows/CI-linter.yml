@@ -30,12 +30,49 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(find . -type f \
+          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
+          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
+
+      - name: install packages not included in super-linter
+        run: |
+          pip install validate-pyproject restructuredtext-lint
+
+      - name: pyproject.toml
+        run: |
+          validate-pyproject pyproject.toml
+
+      - name: restructuredtext-lint
+        run: |
+          rst-lint README.rst docs/source |
+           grep -v "Unknown directive type" |
+           grep -v "Unknown interpreted text role"
+
+      - name: Check whether the citation metadata from CITATION.cff is valid
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
+
       - name: yaml_config used by super-linter
         run: |
           # TODO - very large line length
           echo 'rules:' > yaml_config.yaml
           echo '  line-length:' >> yaml_config.yaml
           echo '    max: 250' >> yaml_config.yaml
+
+      # Dependencies required to avoid errors
+      # reported by linters
+      - name: Install mamba dependencies
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          init-shell: bash
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v5
@@ -89,32 +126,3 @@ jobs:
           path: |
              superlinter.log
              retention-days: 5
-
-      - name: Check for non-ASCII characters
-        run: |
-          output=$(find . -type f \
-          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
-          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
-          if [ -n "$output" ]; then
-            echo "Non-ASCII characters found in documentation."
-            exit 1
-          fi
-
-      - name: install packages not included in super-linter
-        run: |
-          pip install validate-pyproject restructuredtext-lint
-
-      - name: pyproject.toml
-        run: |
-          validate-pyproject pyproject.toml
-
-      - name: restructuredtext-lint
-        run: |
-          rst-lint README.rst docs/source |
-           grep -v "Unknown directive type" |
-           grep -v "Unknown interpreted text role"
-
-      - name: Check whether the citation metadata from CITATION.cff is valid
-        uses: citation-file-format/cffconvert-github-action@2.0.0
-        with:
-          args: "--validate"
