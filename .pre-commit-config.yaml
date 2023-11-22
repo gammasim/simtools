@@ -28,3 +28,8 @@ repos:
     hooks:
       - id: docstr-coverage
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
+  # gitup action
+  - repo: https://github.com/rhysd/actionlint
+    rev: main
+    hooks:
+      - id: actionlint
