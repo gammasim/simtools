@@ -97,6 +97,14 @@ disable = ["logging-fstring-interpolation"]
 # Ignore files
 ignore = ["__init__.py", "scm_version.py", "_version.py"]
 
+[tool.pylint."messages control"]
+# See discussion in issue 521
+# Agreed to not have module docstring (missing-module-docstring)
+# Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
+disable = ["missing-module-docstring", "unpacking-non-sequence"]
+# see https://github.com/pylint-dev/pylint/issues/2289
+generated-members = ["gist_heat_r"]
+
 [tool.pylint.design]
 # Maximum number of arguments for function / method (default=5).
 max-args = 10
