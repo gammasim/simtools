@@ -53,6 +53,31 @@ class MetadataCollector:
         self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
+    def get_data_model_schema(self):
+        """
+        Return name of schema file.
+
+        Returns
+        -------
+        str
+            Name of schema file.
+
+        """
+
+        _schema_file = self.args_dict.get("schema", None)
+        if _schema_file is not None:
+            self._logger.info(f"From command line: {_schema_file}")
+            return _schema_file
+
+        try:
+            _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
+            self._logger.info(f"From metadata: {_schema_file}")
+        except KeyError:
+            self._logger.error("No schema file name provided")
+            raise
+
+        return _schema_file
+
     def _fill_association_meta_from_args(self, association_dict):
         """
         Append association metadata set through configurator.
@@ -149,8 +174,8 @@ class MetadataCollector:
         product_dict["data"]["type"] = "service"
 
         _schema_dict = self._collect_schema_dict()
-        product_dict["data"]["model"]["name"] = _schema_dict.get("name", "simpipe-schema")
-        product_dict["data"]["model"]["version"] = _schema_dict.get("version", "0.0.0")
+        product_dict["data"]["model"]["name"] = _schema_dict.get("name", None)
+        product_dict["data"]["model"]["version"] = _schema_dict.get("version", None)
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
 
@@ -169,7 +194,9 @@ class MetadataCollector:
 
         """
 
-        _schema = self.args_dict.get("schema", "")
+        _schema = self.args_dict.get("schema", None)
+        if _schema is None:
+            return {}
         if Path(_schema).is_dir():
             try:
                 _data_dict = gen.collect_data_from_yaml_or_dict(

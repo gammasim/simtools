@@ -101,16 +101,14 @@ def main():
     _metadata = MetadataCollector(args_dict=args_dict)
 
     data_validator = validate_data.DataValidator(
-        schema_file=args_dict.get("schema", None),
+        schema_file=_metadata.get_data_model_schema(),
         data_file=args_dict["input"],
     )
 
-    file_writer = writer.ModelDataWriter(
-        product_data_file=args_dict["output_file"],
-        product_data_format=args_dict["output_file_format"],
-    )
-    file_writer.write(
-        metadata=_metadata.top_level_meta, product_data=data_validator.validate_and_transform()
+    writer.ModelDataWriter.dump(
+        args_dict=args_dict,
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        product_data=data_validator.validate_and_transform(),
     )
 
 

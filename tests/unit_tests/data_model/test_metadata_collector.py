@@ -15,6 +15,28 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+def test_get_data_model_schema():
+    args_dict = {"schema": "simtools/schemas/metadata.schema.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema()
+    assert schema_file == "simtools/schemas/metadata.schema.yml"
+
+    args_dict = {"no_schema": "schema_file.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema()
+    assert schema_file is None
+
+    _collector.top_level_meta["cta"]["product"]["data"]["model"][
+        "url"
+    ] = "simtools/schemas/metadata.schema.yml"
+    schema_file = _collector.get_data_model_schema()
+    assert schema_file == "simtools/schemas/metadata.schema.yml"
+
+    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
+    with pytest.raises(KeyError):
+        _collector.get_data_model_schema()
+
+
 def test_fill_association_meta_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
@@ -73,7 +95,7 @@ def test_fill_product_meta(args_dict_site):
 
     assert metadata_1.top_level_meta["cta"]["product"]["id"] == "UNDEFINED_ACTIVITY_ID"
 
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
 
     # read product metadata from schema file
     metadata_1.args_dict["schema"] = "tests/resources/MST_mirror_2f_measurements.schema.yml"

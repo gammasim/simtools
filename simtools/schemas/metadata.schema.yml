@@ -4,6 +4,7 @@ $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Reference Schema
 description: YAML representation of model parameter schema
 version: 0.1.0
+name: metadata.schema
 type: object
 additionalProperties: false
 
@@ -282,7 +283,7 @@ definitions:
               - telescope
               - camera
               - optics
-              - mirror
+              - mirrorPanel
               - photosensor
               - cameraModule
               - part
@@ -317,6 +318,12 @@ definitions:
               Unique ID of the specific instrument in the class.
             example:
               - MSTN-20
+          DESCRIPTION:
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+            description: Instrument description
       ###############
       PROCESS:
         title: Process

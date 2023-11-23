@@ -11,7 +11,6 @@ import logging
 from importlib.resources import files
 
 import jsonschema
-import yaml
 
 import simtools.utils.general as gen
 
@@ -36,14 +35,14 @@ def validate_schema(data, schema_file):
 
     """
 
-    schema = load_schema(schema_file)
+    schema, schema_file = load_schema(schema_file)
 
     try:
         jsonschema.validate(data, schema=schema)
     except jsonschema.exceptions.ValidationError:
-        _logger.error(f"Schema validation failed using {schema}")
+        _logger.error(f"Failed using {schema}")
         raise
-    _logger.info("Schema validation successful")
+    _logger.debug(f"Succeeded using {schema_file}")
 
 
 def load_schema(schema_file=None):
@@ -63,16 +62,12 @@ def load_schema(schema_file=None):
     """
 
     if schema_file is None:
-        with files("simtools").joinpath("schemas/metadata.schema.yml").open(
-            "r", encoding="utf-8"
-        ) as file:
-            schema = yaml.safe_load(file)
-        _logger.info("Loading schema from simtools package.")
-    else:
-        schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
-        _logger.info(f"Loading schema from {schema_file}")
+        schema_file = files("simtools").joinpath("schemas/metadata.schema.yml")
 
-    return schema
+    schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
+    _logger.debug(f"Loading schema from {schema_file}")
+
+    return schema, schema_file
 
 
 def get_default_metadata_dict(schema_file=None):
@@ -92,7 +87,8 @@ def get_default_metadata_dict(schema_file=None):
 
     """
 
-    schema = load_schema(schema_file)
+    _logger.debug(f"Loading default schema from {schema_file}")
+    schema, _ = load_schema(schema_file)
     return fill_defaults(schema["definitions"]["CTA"])
 
 

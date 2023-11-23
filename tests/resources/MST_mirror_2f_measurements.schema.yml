@@ -1,14 +1,16 @@
 %YAML 1.2
 ---
 title: Schema for mirror panel 2F measurements
-version: 0.1.0
-base_schema: simpipe-schema
-base_schema_url: https://github.com/gammasim/workflows/schema/jsonschema.yml
-base_schema_version: 0.1.0
 name: mirror_2f_measurement
 description: |-
   Mirror panel 2F measurements determining
   panel radius and panel PSF.
+version: 0.1.0
+
+base_schema: simpipe-schema
+base_schema_url: https://github.com/gammasim/workflows/schema/jsonschema.yml
+base_schema_version: 0.1.0
+
 data:
   - type: datatable
     table_columns:
