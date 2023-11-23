@@ -39,6 +39,7 @@ from pathlib import Path
 
 import astropy.units as u
 
+import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
@@ -56,7 +57,7 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, output=True)
 
     label = "make_regular_arrays"
 
@@ -158,7 +159,14 @@ def main():
 
             layout.convert_coordinates()
             layout.print_telescope_list()
-            layout.export_telescope_list(crs_name="corsika", corsika_z=None)
+            writer.ModelDataWriter.dump(
+                args_dict=args_dict,
+                metadata=None,
+                product_data=layout.export_telescope_list_table(
+                    crs_name="corsika",
+                    corsika_z=False,
+                ),
+            )
 
 
 if __name__ == "__main__":

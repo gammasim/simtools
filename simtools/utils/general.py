@@ -3,9 +3,13 @@ import logging
 import mmap
 import os
 import re
+import tempfile
 import time
+import urllib.error
+import urllib.request
 from collections import namedtuple
 from pathlib import Path
+from urllib.parse import urlparse
 
 import astropy.units as u
 import numpy as np
@@ -328,6 +332,63 @@ def _validate_and_convert_value(par_name, par_info, value_in):
     return _validate_and_convert_value_with_units(value, value_keys, par_name, par_info)
 
 
+def is_url(url):
+    """
+    Check if a string is a valid URL.
+
+    Parameters
+    ----------
+    url: str
+        String to be checked.
+
+    Returns
+    -------
+    bool
+        True if url is a valid URL.
+
+    """
+
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
+def collect_data_from_http_yaml(url):
+    """
+    Download yaml file from url and return it contents as dict.
+    File is downloaded as a temporary file and deleted afterwards.
+
+    Parameters
+    ----------
+    url: str
+        URL of the yaml file.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the yaml file contents.
+
+    """
+
+    _logger.debug(f"Downloaded yaml file from {url}")
+    try:
+        with tempfile.NamedTemporaryFile() as tmp_file:
+            urllib.request.urlretrieve(url, tmp_file.name)
+            data = yaml.load(tmp_file)
+    except TypeError:
+        msg = "Invalid url {url}"
+        _logger.error(msg)
+        raise
+    except urllib.error.HTTPError:
+        msg = f"Failed to download yaml file from {url}"
+        _logger.error(msg)
+        raise
+
+    return data
+
+
 def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     """
     Collect input data that can be given either as a dict or as a yaml file.
@@ -350,8 +411,11 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     if in_yaml is not None:
         if in_dict is not None:
             _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
-        with open(in_yaml, encoding="utf-8") as file:
-            data = yaml.load(file)
+        if is_url(str(in_yaml)):
+            data = collect_data_from_http_yaml(in_yaml)
+        else:
+            with open(in_yaml, encoding="utf-8") as file:
+                data = yaml.load(file)
         return data
     if in_dict is not None:
         return dict(in_dict)

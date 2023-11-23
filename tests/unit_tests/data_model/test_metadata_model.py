@@ -19,7 +19,7 @@ def test_get_default_metadata_dict():
 
 
 def test_load_schema():
-    _metadata_schema = metadata_model.load_schema()
+    _metadata_schema, _ = metadata_model.load_schema()
     assert isinstance(_metadata_schema, dict)
     assert len(_metadata_schema) > 0
 
