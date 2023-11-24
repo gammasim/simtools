@@ -516,3 +516,22 @@ definitions:
             type: array
             items:
               $ref: '#/definitions/CTA/properties/INSTRUMENT'
+          ASSOCIATED_DATA:
+            title: Associated data.
+            description: |-
+              Associated data products (e.g., this data product
+              has been derived using the associated data).
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                ID:
+                  anyOf:
+                    - type: string
+                      format: uuid
+                    - type: "null"
+                    - type: number
+                  default: null
+                  description: |-
+                    Product identifier of associated data product.
