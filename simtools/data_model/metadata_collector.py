@@ -13,9 +13,11 @@ __all__ = ["MetadataCollector"]
 
 class MetadataCollector:
     """
-    Collects and combines metadata associated with the current activity
-    (e.g., the execution of an application).
-    Depends on and fine tuned to CTAO top-level metadata definition.
+    Collects and combines metadata associated to describe the current
+    simtools activity and its data products. Collect as much metadata
+    as possible from command line configuration, input data, environment,
+    schema descriptions.
+    Depends on the CTAO top-level metadata definition.
 
     Parameters
     ----------
@@ -49,7 +51,7 @@ class MetadataCollector:
             self.top_level_meta["cta"]["context"]["associated_elements"]
         )
         self._fill_product_meta(self.top_level_meta["cta"]["product"])
-        self._fill_top_level_meta_from_file(self.top_level_meta["cta"])
+        self._fill_top_level_meta_from_input_meta(self.top_level_meta["cta"])
         self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
         self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
@@ -113,9 +115,10 @@ class MetadataCollector:
 
         self._fill_context_sim_list(association_dict, _association)
 
-    def _fill_top_level_meta_from_file(self, top_level_dict):
+    def _fill_top_level_meta_from_input_meta(self, top_level_dict):
         """
-        Read and validate metadata from file. Fill metadata into top-level template.
+        Read and validate input metadata from file.
+        Fill metadata into top-level template.
 
         Parameters
         ----------
@@ -133,21 +136,46 @@ class MetadataCollector:
             self._logger.debug("Skipping metadata reading; no metadata file defined.")
             return
 
-        try:
-            self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
-            _input_meta = gen.collect_data_from_yaml_or_dict(
-                in_yaml=self.args_dict.get("input_meta", None), in_dict=None
+        _input_meta = self._read_input_meta_from_file(self.args_dict.get("input_meta", None))
+
+        if "context" in _input_meta["cta"]:
+            self._merge_config_dicts(
+                top_level_dict["cta"]["context"], _input_meta["cta"]["context"]
             )
+            for key in ("document", "associated_elements", "associated_data"):
+                self._copy_list_type_metadata(top_level_dict, _input_meta["cta"], key)
+
+    def _read_input_meta_from_file(self, file_name):
+        """
+        Read and validate input metadata from file.
+
+        Parameters
+        ----------
+        file_name: str
+            Name of input metadata file.
+
+        Returns
+        -------
+        dict
+            Metadata dictionary.
+
+        Raises
+        ------
+        gen.InvalidConfigData
+            if metadata cannot be read from file.
+
+        """
+
+        try:
+            self._logger.debug(f"Reading meta data from {file_name}")
+            _input_meta = gen.collect_data_from_yaml_or_dict(in_yaml=file_name, in_dict=None)
         except gen.InvalidConfigData:
             self._logger.error("Failed reading metadata from file.")
             raise
 
         metadata_model.validate_schema(_input_meta, None)
-        _input_meta = self._process_metadata_from_file(_input_meta)
 
-        self._merge_config_dicts(top_level_dict, _input_meta["cta"])
-        for key in ("document", "associated_elements"):
-            self._copy_list_type_metadata(top_level_dict, _input_meta["cta"], key)
+        return self._process_metadata_from_file(_input_meta)
 
     def _fill_product_meta(self, product_dict):
         """
