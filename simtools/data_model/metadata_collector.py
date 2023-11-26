@@ -1,12 +1,11 @@
 import datetime
 import logging
-from pathlib import Path
+import os
 
 import simtools.utils.general as gen
 import simtools.version
 from simtools.data_model import metadata_model
 from simtools.io_operations import io_handler
-from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
 
@@ -21,12 +20,14 @@ class MetadataCollector:
 
     Parameters
     ----------
-    args: argparse.Namespace
+    args_dict: Dictionary
         Command line parameters
+    data_model_name: str
+        Name of simulation model parameter
 
     """
 
-    def __init__(self, args_dict):
+    def __init__(self, args_dict, data_model_name=None):
         """
         Initialize metadata collector.
 
@@ -36,31 +37,37 @@ class MetadataCollector:
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict
+        self.data_model_name = data_model_name
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
-        self.collect_product_meta_data()
+        self.collect_meta_data()
 
-    def collect_product_meta_data(self):
+    def collect_meta_data(self):
         """
         Collect and verify product metadata from different sources.
 
         """
 
-        self._fill_association_meta_from_args(
+        self._fill_contact_meta(self.top_level_meta["cta"]["contact"])
+        self._fill_product_meta(self.top_level_meta["cta"]["product"])
+        self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
+        self._fill_process_meta(self.top_level_meta["cta"]["process"])
+        self._fill_context_from_input_meta(self.top_level_meta["cta"]["context"])
+        self._fill_associated_elements_from_args(
             self.top_level_meta["cta"]["context"]["associated_elements"]
         )
-        self._fill_product_meta(self.top_level_meta["cta"]["product"])
-        self._fill_top_level_meta_from_input_meta(self.top_level_meta["cta"])
-        self._fill_association_id(self.top_level_meta["cta"]["context"]["associated_elements"])
-        self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
 
     def get_data_model_schema(self):
         """
-        Return name of schema file.
+        Return name of schema file and schema dict.
+
+        Determine schema file from command line, metadata or default location.
 
         Returns
         -------
+        dict
+            Schema dictionary.
         str
             Name of schema file.
 
@@ -71,23 +78,54 @@ class MetadataCollector:
             self._logger.info(f"From command line: {_schema_file}")
             return _schema_file
 
+        print("FFFF", self.top_level_meta["cta"]["product"]["data"])
+
         try:
             _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
+            if _schema_file is None:
+                raise TypeError
             self._logger.info(f"From metadata: {_schema_file}")
-        except KeyError:
-            self._logger.error("No schema file name provided")
-            raise
+            return _schema_file
+        except (KeyError, TypeError):
+            self._logger.debug("No schema file name provided.")
 
-        return _schema_file
+        # TODO - questionable that this is hardwired
+        try:
+            _schema_file = (
+                "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
+                + self.data_model_name
+                + ".schema.yml"
+            )
+        except TypeError:
+            self._logger.debug("No data model name provided.")
 
-    def _fill_association_meta_from_args(self, association_dict):
+        return gen.collect_data_from_yaml_or_dict(in_yaml=_schema_file, in_dict=None), _schema_file
+
+    def _fill_contact_meta(self, contact_dict):
         """
-        Append association metadata set through configurator.
+        Fill contact metadata fields.
 
         Parameters
         ----------
-        association_dict: dict
-            Dictionary for association metadata field.
+        contact_dict: dict
+            Dictionary for contact metadata fields.
+
+        """
+
+        if contact_dict.get("name", None) is None:
+            contact_dict["name"] = os.getlogin()
+
+    def _fill_associated_elements_from_args(self, associated_elements_dict):
+        """
+        Append association metadata set through configurator.
+
+        TODO - this function might go in future, as instrument
+        information will not be given via command line.
+
+        Parameters
+        ----------
+        associated_elements_dict: dict
+            Dictionary for associated elements field.
 
         Raises
         ------
@@ -113,17 +151,16 @@ class MetadataCollector:
             self._logger.error("Error reading association metadata from args")
             raise
 
-        self._fill_context_sim_list(association_dict, _association)
+        self._fill_context_sim_list(associated_elements_dict, _association)
 
-    def _fill_top_level_meta_from_input_meta(self, top_level_dict):
+    def _fill_context_from_input_meta(self, context_dict):
         """
-        Read and validate input metadata from file.
-        Fill metadata into top-level template.
+        Read and validate input metadata from file and fill CONTEXT metadata fields.
 
         Parameters
         ----------
-        top_level_dict: dict
-            Dictionary for top level metadata.
+        context_dict: dict
+            Dictionary with context level metadata.
 
         Raises
         ------
@@ -133,17 +170,19 @@ class MetadataCollector:
         """
 
         if self.args_dict.get("input_meta", None) is None:
-            self._logger.debug("Skipping metadata reading; no metadata file defined.")
+            self._logger.debug("No input metadata file defined.")
             return
 
         _input_meta = self._read_input_meta_from_file(self.args_dict.get("input_meta", None))
 
-        if "context" in _input_meta["cta"]:
-            self._merge_config_dicts(
-                top_level_dict["cta"]["context"], _input_meta["cta"]["context"]
-            )
+        try:
+            self._merge_config_dicts(context_dict, _input_meta["cta"]["context"])
             for key in ("document", "associated_elements", "associated_data"):
-                self._copy_list_type_metadata(top_level_dict, _input_meta["cta"], key)
+                self._copy_list_type_metadata(context_dict, _input_meta["cta"], key)
+        except KeyError:
+            self._logger.debug("No context metadata defined in input metadata file.")
+
+        self._fill_context_sim_list(context_dict["associated_data"], _input_meta["cta"]["product"])
 
     def _read_input_meta_from_file(self, file_name):
         """
@@ -194,71 +233,40 @@ class MetadataCollector:
 
         """
 
-        product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        self._logger.debug(f"Reading activity UUID {product_dict['id']}")
+        _schema_dict, _schema_file = self.get_data_model_schema()
 
+        product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
+        product_dict["creation_time"] = datetime.datetime.now().isoformat(timespec="seconds")
+        product_dict["description"] = _schema_dict.get("description", None)
+
+        # DATA:CATEGORY
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
         product_dict["data"]["type"] = "service"
+        # TODO - introduce consistent naming of DL3 data model and model parameter schema files
+        product_dict["data"]["association"] = _schema_dict["instrument"]["class"]
 
-        _schema_dict = self._collect_schema_dict()
+        # DATA:MODEL
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", None)
         product_dict["data"]["model"]["version"] = _schema_dict.get("version", None)
+        product_dict["data"]["model"]["url"] = _schema_file
+        product_dict["data"]["model"]["type"] = _schema_dict.get("base_schema", None)
+
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
 
-    def _collect_schema_dict(self):
+    def _fill_process_meta(self, process_dict):
         """
-        Read schema from file.
-
-        The schema configuration parameter points to a directory or a file.
-        For the case of a directory, the schema file is assumed to be named
-        <parameter_name>.schema.yml.
-
-        Returns
-        -------
-        dict
-            Dictionary containing schema metadata.
-
-        """
-
-        _schema = self.args_dict.get("schema", None)
-        if _schema is None:
-            return {}
-        if Path(_schema).is_dir():
-            try:
-                _data_dict = gen.collect_data_from_yaml_or_dict(
-                    in_yaml=self.args_dict.get("input", None), in_dict=None, allow_empty=True
-                )
-                return gen.collect_dict_from_file(
-                    file_path=_schema,
-                    file_name=f"{_data_dict['name']}.schema.yml",
-                )
-            except (TypeError, KeyError):
-                return {}
-        return gen.collect_dict_from_file(_schema)
-
-    @staticmethod
-    def _fill_association_id(association_dict):
-        """
-        Fill association id from site and telescope class, type, subtype.
+        Fill metadata for process fields.
 
         Parameters
         ----------
-        association_dict: dict
-            Association dictionary.
+        process_dict: dict
+            Dictionary for process metadata fields.
 
         """
-        for association in association_dict:
-            try:
-                association["id"] = names.simtools_instrument_name(
-                    site=association["site"],
-                    telescope_class_name=association["class"],
-                    sub_system_name=association["type"],
-                    telescope_id_name=association.get("subtype", "D"),
-                )
-            except ValueError:
-                association["id"] = None
+
+        process_dict["type"] = "simulation"
 
     def _fill_activity_meta(self, activity_dict):
         """
@@ -272,6 +280,8 @@ class MetadataCollector:
         """
 
         activity_dict["name"] = self.args_dict.get("label", None)
+        activity_dict["type"] = "software"
+        activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
         activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
         activity_dict["end"] = activity_dict["start"]
         activity_dict["software"]["name"] = "simtools"
@@ -315,50 +325,35 @@ class MetadataCollector:
             self._logger.error("Error merging dictionaries")
             raise
 
-    def input_data_file_name(self):
-        """
-        Return input data file (full path).
-
-        Returns
-        -------
-        str
-            Input data file (full path).
-
-        Raises
-        ------
-        KeyError
-            if missing description of INPUT_DATA
-        """
-
-        try:
-            return self.args_dict["input_data"]
-        except KeyError:
-            self._logger.error("Missing description of INPUT_DATA")
-            raise
-
-    @staticmethod
-    def _fill_context_sim_list(product_list, new_entry_dict):
+    def _fill_context_sim_list(self, meta_list, new_entry_dict):
         """
         Fill list-type entries into metadata. Take into account the first list entry is the default
         value filled with Nones.
 
+        Parameters
+        ----------
+        meta_list: list
+            List of metadata entries.
+        new_entry_dict: dict
+            New metadata entry to be added to meta_list.
+
         Returns
         -------
         list
-            Updated product list.
+            Updated meta list.
 
         """
 
         if len(new_entry_dict) == 0:
             return []
         try:
-            if any(v is not None for v in product_list[0].values()):
-                product_list.append(new_entry_dict)
+            if self._all_values_none(meta_list[0]):
+                meta_list[0] = new_entry_dict
             else:
-                product_list[0] = new_entry_dict
+                meta_list.append(new_entry_dict)
         except (TypeError, IndexError):
-            product_list = [new_entry_dict]
-        return product_list
+            meta_list = [new_entry_dict]
+        return meta_list
 
     def _process_metadata_from_file(self, meta_dict):
         """
@@ -405,16 +400,16 @@ class MetadataCollector:
 
         return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
 
-    def _copy_list_type_metadata(self, top_level_dict, _input_meta, key):
+    def _copy_list_type_metadata(self, context_dict, _input_meta, key):
         """
         Copy list-type metadata from file.
         Very fine tuned.
 
         Parameters
         ----------
-        top_level_dict: dict
-            Dictionary for top level metadata.
-        meta_dict: dict
+        context_dict: dict
+            Dictionary for top level metadata (context level)
+        _input_meta: dict
             Dictionary for metadata from file.
         key: str
             Key for metadata entry.
@@ -423,6 +418,27 @@ class MetadataCollector:
 
         try:
             for document in _input_meta["context"][key]:
-                self._fill_context_sim_list(top_level_dict["context"][key], document)
+                self._fill_context_sim_list(context_dict[key], document)
         except KeyError:
-            top_level_dict["context"].pop(key)
+            pass
+
+    def _all_values_none(self, input_dict):
+        """
+        Check recursively if all values in a dictionary are None.
+
+        Parameters
+        ----------
+        input_dict: dict
+            Input dictionary.
+
+        Returns
+        -------
+        bool
+            True if all entries are None, False otherwise.
+
+        """
+
+        if not isinstance(input_dict, dict):
+            return input_dict is None
+
+        return all(self._all_values_none(value) for value in input_dict.values())
