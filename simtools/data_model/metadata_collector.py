@@ -41,6 +41,7 @@ class MetadataCollector:
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
+        self.input_meta = self._read_input_meta_from_file()
         self.collect_meta_data()
 
     def collect_meta_data(self):
@@ -61,8 +62,9 @@ class MetadataCollector:
     def get_data_model_schema(self):
         """
         Return name of schema file and schema dict.
-
-        Determine schema file from command line, metadata or default location.
+        The schema file name is taken (in this order) from the command line,
+        from the metadata file, from the data model name, or from the input
+        metadata file.
 
         Returns
         -------
@@ -78,8 +80,6 @@ class MetadataCollector:
             self._logger.info(f"From command line: {_schema_file}")
             return _schema_file
 
-        print("FFFF", self.top_level_meta["cta"]["product"]["data"])
-
         try:
             _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
             if _schema_file is None:
@@ -87,19 +87,31 @@ class MetadataCollector:
             self._logger.info(f"From metadata: {_schema_file}")
             return _schema_file
         except (KeyError, TypeError):
-            self._logger.debug("No schema file name provided.")
+            pass
 
         # TODO - questionable that this is hardwired
-        try:
+        if self.data_model_name is not None:
             _schema_file = (
                 "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
                 + self.data_model_name
                 + ".schema.yml"
             )
-        except TypeError:
-            self._logger.debug("No data model name provided.")
+            self._logger.info(f"From data model name: {_schema_file}")
+        else:
+            try:
+                _schema_file = self.input_meta["cta"]["product"]["data"]["model"]["url"]
+                self._logger.info(f"From input meta data : {_schema_file}")
+            except KeyError:
+                _schema_file = None
 
-        return gen.collect_data_from_yaml_or_dict(in_yaml=_schema_file, in_dict=None), _schema_file
+        try:
+            return (
+                gen.collect_data_from_yaml_or_dict(in_yaml=_schema_file, in_dict=None),
+                _schema_file,
+            )
+        except gen.InvalidConfigData:
+            self._logger.debug(f"Failed reading schema file from {_schema_file}.")
+        return {}, None
 
     def _fill_contact_meta(self, contact_dict):
         """
@@ -169,29 +181,20 @@ class MetadataCollector:
 
         """
 
-        if self.args_dict.get("input_meta", None) is None:
-            self._logger.debug("No input metadata file defined.")
-            return
-
-        _input_meta = self._read_input_meta_from_file(self.args_dict.get("input_meta", None))
-
         try:
-            self._merge_config_dicts(context_dict, _input_meta["cta"]["context"])
+            self._merge_config_dicts(context_dict, self.input_meta["cta"]["context"])
             for key in ("document", "associated_elements", "associated_data"):
-                self._copy_list_type_metadata(context_dict, _input_meta["cta"], key)
+                self._copy_list_type_metadata(context_dict, self.input_meta["cta"], key)
         except KeyError:
             self._logger.debug("No context metadata defined in input metadata file.")
 
-        self._fill_context_sim_list(context_dict["associated_data"], _input_meta["cta"]["product"])
+        self._fill_context_sim_list(
+            context_dict["associated_data"], self.input_meta["cta"]["product"]
+        )
 
-    def _read_input_meta_from_file(self, file_name):
+    def _read_input_meta_from_file(self):
         """
         Read and validate input metadata from file.
-
-        Parameters
-        ----------
-        file_name: str
-            Name of input metadata file.
 
         Returns
         -------
@@ -205,9 +208,15 @@ class MetadataCollector:
 
         """
 
+        if self.args_dict is None or self.args_dict.get("input_meta", None) is None:
+            self._logger.debug("No input metadata file defined.")
+            return {}
+
         try:
-            self._logger.debug(f"Reading meta data from {file_name}")
-            _input_meta = gen.collect_data_from_yaml_or_dict(in_yaml=file_name, in_dict=None)
+            self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
+            _input_meta = gen.collect_data_from_yaml_or_dict(
+                in_yaml=self.args_dict["input_meta"], in_dict=None
+            )
         except gen.InvalidConfigData:
             self._logger.error("Failed reading metadata from file.")
             raise
@@ -244,7 +253,10 @@ class MetadataCollector:
         product_dict["data"]["level"] = "R1"
         product_dict["data"]["type"] = "service"
         # TODO - introduce consistent naming of DL3 data model and model parameter schema files
-        product_dict["data"]["association"] = _schema_dict["instrument"]["class"]
+        try:
+            product_dict["data"]["association"] = _schema_dict["instrument"]["class"]
+        except KeyError:
+            pass
 
         # DATA:MODEL
         product_dict["data"]["model"]["name"] = _schema_dict.get("name", None)
