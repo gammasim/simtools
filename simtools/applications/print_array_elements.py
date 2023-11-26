@@ -149,10 +149,10 @@ def _parse(label=None, description=None):
 
 def main():
     label = Path(__file__).stem
-    model_parameter_name = "array_coordinates"
+    data_model_name = "array_coordinates"
     args_dict, _ = _parse(
         label,
-        description=f"Print a list of array element positions ({model_parameter_name})",
+        description=f"Print a list of array element positions ({data_model_name})",
     )
 
     _logger = logging.getLogger()
@@ -165,7 +165,10 @@ def main():
     if args_dict["export"] is not None:
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+            metadata=MetadataCollector(
+                args_dict=args_dict,
+                data_model_name=data_model_name,
+            ).top_level_meta,
             product_data=layout.export_telescope_list_table(
                 crs_name=args_dict["export"],
                 corsika_z=args_dict["use_corsika_telescope_height"],
