@@ -3,10 +3,8 @@
 import copy
 import logging
 import os
-from pathlib import Path
 
 import pytest
-import yaml
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.utils.general as gen
@@ -209,76 +207,30 @@ def test_fill_context_sim_list(args_dict_site):
     _test_dict_1 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
 
     # empty dict -> return same dict
-    metadata_collector.MetadataCollector._fill_context_sim_list(
-        meta_list=_test_dict_1, new_entry_dict={}
-    )
+    _collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    _collector._fill_context_sim_list(meta_list=_test_dict_1, new_entry_dict={})
     assert _test_dict_1 == get_generic_input_meta()["context"]["associated_elements"]
 
     # add one new entry
     _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
-    metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, _new_element)
+    _collector._fill_context_sim_list(_test_dict_1, _new_element)
     _test_dict_2 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
     _test_dict_2.append(_new_element)
     assert _test_dict_1 == _test_dict_2
 
     # add one new entry to non-existing list -> add
     _test_none = None
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
-        _test_none, _new_element
-    )
+    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
     assert _test_none == [_new_element]
     _test_none = []
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
-        _test_none, _new_element
-    )
+    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
     assert _test_none == [_new_element]
 
     # one entry with Nones only
     _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
-    _test_def = metadata_collector.MetadataCollector._fill_context_sim_list(_test_def, _new_element)
+    _test_def = _collector._fill_context_sim_list(_test_def, _new_element)
     assert _test_none == [_new_element]
-
-
-def test_input_data_file_name(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    with pytest.raises(KeyError):
-        metadata_1.input_data_file_name()
-
-    metadata_1.args_dict["input_data"] = "test.hdf5"
-    assert metadata_1.input_data_file_name() == "test.hdf5"
-
-
-def test_collect_schema_dict(args_dict_site, tmp_test_directory):
-    _tmp_schema = get_example_input_schema_single_parameter()
-    # write _tmp_schema to a yml file in tmp_test_directory
-    _tmp_schema_file = Path(tmp_test_directory).joinpath("ref_long.schema.yml")
-    with open(_tmp_schema_file, "w") as outfile:
-        yaml.dump(_tmp_schema, outfile, default_flow_style=False)
-
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    assert metadata_1._collect_schema_dict() == {}
-
-    # test when full schema file name is given
-    metadata_1.args_dict["schema"] = _tmp_schema_file
-    assert metadata_1._collect_schema_dict() == _tmp_schema
-
-    # test when directory including schema file is given, but no parameter name
-    metadata_1.args_dict["schema"] = tmp_test_directory
-    assert metadata_1._collect_schema_dict() == {}
-
-    # test when directory including schema file is given, and parameter name
-    _tmp_parameter = {"name": "ref_long", "value": 1.0}
-    _tmp_parameter_file = Path(tmp_test_directory).joinpath("ref_long.yml")
-    with open(_tmp_parameter_file, "w") as outfile:
-        yaml.dump(_tmp_parameter, outfile, default_flow_style=False)
-    metadata_1.args_dict["input"] = _tmp_parameter_file
-    # compared sorted dicts, because the order of the keys is not guaranteed
-    # (mostly due to above yaml.dump)
-    assert dict(sorted(metadata_1._collect_schema_dict().items())) == dict(
-        sorted(_tmp_schema.items())
-    )
 
 
 def test_process_metadata_from_file():
@@ -347,13 +299,37 @@ def test_copy_list_type_metadata(args_dict_site):
     key = "associated_elements"
 
     _collector = metadata_collector.MetadataCollector({})
-    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    _collector._copy_list_type_metadata(top_level_dict["context"], _input_meta, key)
 
     assert _result_meta["context"][key] == top_level_dict["context"][key]
 
     key = "documents"
-    with pytest.raises(KeyError):
-        _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    _org_top_level_dict = copy.deepcopy(top_level_dict)
+    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    assert _org_top_level_dict == top_level_dict
+
+
+def test_input_dict_is_none():
+    _collector = metadata_collector.MetadataCollector(args_dict={})
+    input_dict = None
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = "not a dictionary"
+    result = _collector._all_values_none(input_dict)
+    assert result is False
+
+    input_dict = {"key1": None, "key2": None}
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = {}
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = {"key1": None, "key2": "value"}
+    result = _collector._all_values_none(input_dict)
+    assert result is False
 
 
 def get_generic_input_meta():
