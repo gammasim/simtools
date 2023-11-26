@@ -34,6 +34,7 @@ CTA:
     VALID:
       START: '2022-05-30 12:00:00'
     FORMAT: ascii.ecsv
+    FILENAME: telescope_positions-North-utm.ecsv
     DATA:
       CATEGORY: CAL
       LEVEL: R1
