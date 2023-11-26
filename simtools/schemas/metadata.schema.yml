@@ -151,8 +151,10 @@ definitions:
                   - Target
                   - null
               LEVEL:
-                type: string
-                default: R1
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
                 description: |-
                   CTA data level
                 enum:
@@ -165,9 +167,12 @@ definitions:
                   - DL4
                   - DL5
                   - DL6
+                  - null
               TYPE:
-                type: string
-                default: Service
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
                 description: |-
                   CTA data type.
                 enum:
@@ -176,6 +181,7 @@ definitions:
                   - Service
                   - DataCube
                   - Catalog
+                  - null
               MODEL:
                 title: Model
                 required:
@@ -208,21 +214,22 @@ definitions:
                     default: null
                   TYPE:
                     description: |-
-                      TODO - is this necessary?
+                      Type of data model (e.g. simpipe-schema).
                     anyOf:
                       - type: string
                       - type: "null"
                     default: null
                   SUBTYPE:
                     description: |-
-                      TODO - is this necessary?
+                      Additional subtype of data model.
                     anyOf:
                       - type: string
                       - type: "null"
-                    default: null
           FORMAT:
-            type: string
-            default: ecsv
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
           VALID:
             type: object
             additionalProperties: false
@@ -523,15 +530,4 @@ definitions:
               has been derived using the associated data).
             type: array
             items:
-              type: object
-              additionalProperties: false
-              properties:
-                ID:
-                  anyOf:
-                    - type: string
-                      format: uuid
-                    - type: "null"
-                    - type: number
-                  default: null
-                  description: |-
-                    Product identifier of associated data product.
+              $ref: '#/definitions/CTA/properties/PRODUCT'
