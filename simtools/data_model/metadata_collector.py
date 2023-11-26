@@ -38,6 +38,8 @@ class MetadataCollector:
 
         self.args_dict = args_dict
         self.data_model_name = data_model_name
+        self.schema_file = None
+        self.schema_dict = None
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
@@ -59,59 +61,73 @@ class MetadataCollector:
             self.top_level_meta["cta"]["context"]["associated_elements"]
         )
 
-    def get_data_model_schema(self):
+    def get_data_model_schema_file_name(self):
         """
-        Return name of schema file and schema dict.
+        Return data model schema file name.
         The schema file name is taken (in this order) from the command line,
         from the metadata file, from the data model name, or from the input
         metadata file.
 
         Returns
         -------
-        dict
-            Schema dictionary.
         str
             Name of schema file.
 
         """
 
-        _schema_file = self.args_dict.get("schema", None)
-        if _schema_file is not None:
-            self._logger.info(f"From command line: {_schema_file}")
-            return _schema_file
+        try:
+            if self.args_dict["schema"]:
+                self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
+                return self.args_dict["schema"]
+        except KeyError:
+            pass
 
         try:
-            _schema_file = self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
-            if _schema_file is None:
-                raise TypeError
-            self._logger.info(f"From metadata: {_schema_file}")
-            return _schema_file
-        except (KeyError, TypeError):
+            if self.top_level_meta["cta"]["product"]["data"]["model"]["url"]:
+                self._logger.debug(
+                    "Schema file from product metadata: "
+                    f"{self.top_level_meta['cta']['product']['data']['model']['url']}"
+                )
+                return self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
+        except KeyError:
             pass
 
         # TODO - questionable that this is hardwired
-        if self.data_model_name is not None:
-            _schema_file = (
+        if self.data_model_name:
+            self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
+            return (
                 "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
                 + self.data_model_name
                 + ".schema.yml"
             )
-            self._logger.info(f"From data model name: {_schema_file}")
-        else:
-            try:
-                _schema_file = self.input_meta["cta"]["product"]["data"]["model"]["url"]
-                self._logger.info(f"From input meta data : {_schema_file}")
-            except KeyError:
-                _schema_file = None
 
         try:
-            return (
-                gen.collect_data_from_yaml_or_dict(in_yaml=_schema_file, in_dict=None),
-                _schema_file,
+            self._logger.debug(
+                "Schema file from input metadata: "
+                f"{self.input_meta['cta']['product']['data']['model']['url']}"
             )
+            return self.input_meta["cta"]["product"]["data"]["model"]["url"]
+        except KeyError:
+            pass
+
+        self._logger.warning("No schema file found.")
+
+    def get_data_model_schema_dict(self):
+        """
+        Return data model schema dictionary.
+
+        Returns
+        -------
+        dict
+            Data model schema dictionary.
+
+        """
+
+        try:
+            return gen.collect_data_from_yaml_or_dict(in_yaml=self.schema_file, in_dict=None)
         except gen.InvalidConfigData:
-            self._logger.debug(f"Failed reading schema file from {_schema_file}.")
-        return {}, None
+            self._logger.debug(f"Failed reading schema file from {self.schema_file}.")
+        return {}
 
     def _fill_contact_meta(self, contact_dict):
         """
@@ -188,9 +204,12 @@ class MetadataCollector:
         except KeyError:
             self._logger.debug("No context metadata defined in input metadata file.")
 
-        self._fill_context_sim_list(
-            context_dict["associated_data"], self.input_meta["cta"]["product"]
-        )
+        try:
+            self._fill_context_sim_list(
+                context_dict["associated_data"], self.input_meta["cta"]["product"]
+            )
+        except (KeyError, TypeError):
+            pass
 
     def _read_input_meta_from_file(self):
         """
@@ -217,13 +236,16 @@ class MetadataCollector:
             _input_meta = gen.collect_data_from_yaml_or_dict(
                 in_yaml=self.args_dict["input_meta"], in_dict=None
             )
-        except gen.InvalidConfigData:
+        except (gen.InvalidConfigData, FileNotFoundError):
             self._logger.error("Failed reading metadata from file.")
             raise
 
         metadata_model.validate_schema(_input_meta, None)
 
-        return self._process_metadata_from_file(_input_meta)
+        return gen.change_dict_keys_case(
+            self._process_metadata_from_file(_input_meta),
+            lower_case=True,
+        )
 
     def _fill_product_meta(self, product_dict):
         """
@@ -242,11 +264,12 @@ class MetadataCollector:
 
         """
 
-        _schema_dict, _schema_file = self.get_data_model_schema()
+        self.schema_file = self.get_data_model_schema_file_name()
+        self.schema_dict = self.get_data_model_schema_dict()
 
         product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
         product_dict["creation_time"] = datetime.datetime.now().isoformat(timespec="seconds")
-        product_dict["description"] = _schema_dict.get("description", None)
+        product_dict["description"] = self.schema_dict.get("description", None)
 
         # DATA:CATEGORY
         product_dict["data"]["category"] = "SIM"
@@ -254,15 +277,15 @@ class MetadataCollector:
         product_dict["data"]["type"] = "service"
         # TODO - introduce consistent naming of DL3 data model and model parameter schema files
         try:
-            product_dict["data"]["association"] = _schema_dict["instrument"]["class"]
+            product_dict["data"]["association"] = self.schema_dict["instrument"]["class"]
         except KeyError:
             pass
 
         # DATA:MODEL
-        product_dict["data"]["model"]["name"] = _schema_dict.get("name", None)
-        product_dict["data"]["model"]["version"] = _schema_dict.get("version", None)
-        product_dict["data"]["model"]["url"] = _schema_file
-        product_dict["data"]["model"]["type"] = _schema_dict.get("base_schema", None)
+        product_dict["data"]["model"]["name"] = self.schema_dict.get("name", None)
+        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", None)
+        product_dict["data"]["model"]["url"] = self.schema_file
+        product_dict["data"]["model"]["type"] = self.schema_dict.get("base_schema", None)
 
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
