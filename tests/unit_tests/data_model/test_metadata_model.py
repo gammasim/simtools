@@ -18,13 +18,13 @@ def test_get_default_metadata_dict():
     assert _top_meta["CTA"]["CONTACT"]["ORGANIZATION"] == "CTAO"
 
 
-def test_load_schema():
-    _metadata_schema, _ = metadata_model.load_schema()
+def test__load_schema():
+    _metadata_schema, _ = metadata_model._load_schema()
     assert isinstance(_metadata_schema, dict)
     assert len(_metadata_schema) > 0
 
     with pytest.raises(FileNotFoundError):
-        metadata_model.load_schema(schema_file="not_existing_file")
+        metadata_model._load_schema(schema_file="not_existing_file")
 
 
 def test_validate_schema(tmp_test_directory):
@@ -48,7 +48,7 @@ def test_validate_schema(tmp_test_directory):
         metadata_model.validate_schema(invalid_data, schema_file)
 
 
-def test_resolve_references():
+def test__resolve_references():
     yaml_data = {
         "example_data": {
             "example_object": {"type": "object", "properties": {"INSTRUMENT": {"type": "string"}}},
@@ -68,10 +68,10 @@ def test_resolve_references():
         }
     }
 
-    assert metadata_model.resolve_references(yaml_data) == expected_result
+    assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
-def test_fill_defaults():
+def test__fill_defaults():
     schema = {
         "properties": {
             "CONTACT": {
@@ -121,7 +121,7 @@ def test_fill_defaults():
         }
     }
 
-    assert metadata_model.fill_defaults(schema) == expected_result
+    assert metadata_model._fill_defaults(schema) == expected_result
 
     schema = {
         "no_properties": {
@@ -136,4 +136,4 @@ def test_fill_defaults():
     }
 
     with pytest.raises(KeyError):
-        metadata_model.fill_defaults(schema)
+        metadata_model._fill_defaults(schema)
