@@ -73,35 +73,26 @@ def test__resolve_references():
 
 def test__fill_defaults():
     schema = {
-        "properties": {
-            "CONTACT": {
-                "type": "object",
-                "properties": {
-                    "organization": {"type": "string", "default": "CTA"},
-                    "number": {"type": "integer", "default": 30},
-                },
-            },
-            "DOCUMENTS": {
-                "type": "array",
-                "items": {
+        "CTA": {
+            "properties": {
+                "CONTACT": {
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string", "default": "a_document"},
-                        "id": {"type": "integer", "default": 55},
+                        "organization": {"type": "string", "default": "CTA"},
+                        "number": {"type": "integer", "default": 30},
                     },
                 },
-            },
-            "NO_DEFAULT": {
-                "type": "object",
-                "properties": {
-                    "string_without_default": {
-                        "type": "string",
+                "DOCUMENTS": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "default": "a_document"},
+                            "id": {"type": "integer", "default": 55},
+                        },
                     },
                 },
-            },
-            "NO_DEFAULT_LIST": {
-                "type": "array",
-                "items": {
+                "NO_DEFAULT": {
                     "type": "object",
                     "properties": {
                         "string_without_default": {
@@ -109,7 +100,18 @@ def test__fill_defaults():
                         },
                     },
                 },
-            },
+                "NO_DEFAULT_LIST": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "string_without_default": {
+                                "type": "string",
+                            },
+                        },
+                    },
+                },
+            }
         }
     }
     expected_result = {
