@@ -37,7 +37,7 @@ class ModelDataWriter:
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     @staticmethod
-    def dump(args_dict, metadata=None, product_data=None, validate_product_data=False):
+    def dump(args_dict, metadata=None, product_data=None, validate_schema_file=False):
         """
         Write model data and metadata (as static method).
 
@@ -49,6 +49,8 @@ class ModelDataWriter:
             Metadata to be written.
         product_data: astropy Table
             Model data to be written
+        validate_schema_file: str
+            Schema file used in validation of output data.
 
         """
 
@@ -56,9 +58,11 @@ class ModelDataWriter:
             product_data_file=args_dict.get("output_file", None),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
         )
-        if validate_product_data:
+        if validate_schema_file:
             product_data = writer.validate_and_transform(
-                metadata=metadata, product_data=product_data
+                metadata=metadata,
+                product_data=product_data,
+                validate_schema_file=validate_schema_file,
             )
         writer.write(metadata=metadata, product_data=product_data)
 
@@ -80,7 +84,7 @@ class ModelDataWriter:
         if product_data is not None:
             self.write_data(product_data=product_data)
 
-    def validate_and_transform(self, metadata=None, product_data=None):
+    def validate_and_transform(self, metadata=None, product_data=None, validate_schema_file=None):
         """
         Validate product data using jsonschema given in metadata.
         If necessary, transform product data to match schema.
@@ -91,19 +95,15 @@ class ModelDataWriter:
             Metadata to be written.
         product_data: astropy Table
             Model data to be validated
+        validate_schema_file: str
+            Schema file used in validation of output data.
 
         """
 
-        # TODO - review if this detailed knowledge of the metadata structure is necessary
-        # (at this place in the code)
-        try:
-            _validator = validate_data.DataValidator(
-                schema_file=metadata["cta"]["product"]["data"]["model"]["url"],
-                data_table=product_data,
-            )
-        except KeyError:
-            self._logger.error("No schema file defined for validation")
-            return product_data
+        _validator = validate_data.DataValidator(
+            schema_file=validate_schema_file,
+            data_table=product_data,
+        )
         return _validator.validate_and_transform()
 
     def write_data(self, product_data):
