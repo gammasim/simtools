@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 
+import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
 from simtools.data_model import metadata_model
@@ -92,14 +93,9 @@ class MetadataCollector:
         except KeyError:
             pass
 
-        # TODO - questionable that this is hardwired
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return (
-                "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
-                + self.data_model_name
-                + ".schema.yml"
-            )
+            return simtools.constants.SCHEMA_URL + self.data_model_name + ".schema.yml"
 
         try:
             self._logger.debug(

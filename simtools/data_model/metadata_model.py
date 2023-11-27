@@ -12,6 +12,7 @@ from importlib.resources import files
 
 import jsonschema
 
+import simtools.constants
 import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ def _load_schema(schema_file=None):
     """
 
     if schema_file is None:
-        schema_file = files("simtools").joinpath("schemas/metadata.schema.yml")
+        schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
     schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
