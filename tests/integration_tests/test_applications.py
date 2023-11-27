@@ -224,6 +224,8 @@ APP_LIST = {
     ],
     "generate_default_metadata": [
         [
+            "--schema",
+            "simtools/schemas/metadata.schema.yml",
             "--output_path",
             "TESTOUTPUTDIR/test_generate_default_metadata",
         ]
