@@ -726,7 +726,7 @@ class LayoutArray:
             table[_name_x] = pos_x
             table[_name_y] = pos_y
             if corsika_z:
-                table["pos_z"] = pos_z
+                table["position_z"] = pos_z
             else:
                 table[_name_z] = pos_z
         except IndexError:
