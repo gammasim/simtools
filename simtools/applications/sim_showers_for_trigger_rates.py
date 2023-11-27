@@ -25,13 +25,13 @@
     primary (str, required)
         Name of the primary particle (proton, helium ...).
     nruns (int, optional)
-        Number of runs to be simulated (default=100).
+        Number of runs to be simulated.
     nevents (int, optional)
-        Number of events simulated per run (default=100000).
+        Number of events simulated per run.
     zenith (float, optional)
-        Zenith angle in deg (default=20).
+        Zenith angle in deg.
     azimuth (float, optional)
-        Azimuth angle in deg (default=0).
+        Azimuth angle in deg.
     output (str, optional)
         Path of the directory to store the output simulations. By default, \
         the standard output directory defined by config will be used.
@@ -39,7 +39,7 @@
         If activated, no job will be submitted. Instead, an example of the \
         run script will be printed.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
@@ -106,16 +106,16 @@ def _parse(label=None, description=None):
         required=True,
     )
     config.parser.add_argument(
-        "--nruns", help="Number of runs (default=100)", type=int, default=100
+        "--nruns", help="Number of runs", type=int, default=100
     )
     config.parser.add_argument(
-        "--nevents", help="Number of events/run (default=100)", type=int, default=100000
+        "--nevents", help="Number of events/run", type=int, default=100000
     )
     config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+        "--zenith", help="Zenith angle in deg", type=float, default=20
     )
     config.parser.add_argument(
-        "--azimuth", help="Azimuth angle in deg (default=0)", type=float, default=0
+        "--azimuth", help="Azimuth angle in deg", type=float, default=0
     )
     # TODO confusing with output_path?
     config.parser.add_argument(

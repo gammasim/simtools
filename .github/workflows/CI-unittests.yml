@@ -49,6 +49,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
+            extra-args: ["codecov"]
 
           - os: ubuntu-latest
             python-version: "3.11"
@@ -96,10 +97,15 @@ jobs:
         run: |
           tee -a ~/.bash_profile <<<'export PATH="$pythonLocation/bin:$PATH"'
 
-      - name: Python dependencies
+      - name: Python dependencies (pip)
+        if: matrix.install-method == 'pip'
         run: |
-          python --version
           pip install '.[tests,dev,doc]'
+
+      - name: Python dependencies (mamba)
+        if: matrix.install-method == 'mamba'
+        run: |
+          pip install -e '.[tests,dev,doc]'
 
       - name: flake8
         run: |
@@ -107,6 +113,17 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
-        run: pytest --durations=10 --color=yes --cov --cov-report=xml
+        run: |
+          pytest --durations=10 --color=yes
 
-      - uses: codecov/codecov-action@v3.1.4
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v3
+        if: contains(matrix.extra-args, 'codecov')
+        with:
+          token: ${{ secrets.CODECOV_SIMTOOLS_TOKEN }}
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: coverage.xml

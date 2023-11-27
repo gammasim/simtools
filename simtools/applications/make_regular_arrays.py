@@ -13,7 +13,7 @@
     Command line arguments
     ----------------------
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
