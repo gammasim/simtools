@@ -519,8 +519,8 @@ class TelescopePosition:
         return {
             "corsika": {
                 "crs": None,
-                "xx": {"name": "pos_x", "value": np.nan, "unit": u.Unit("m")},
-                "yy": {"name": "pos_y", "value": np.nan, "unit": u.Unit("m")},
+                "xx": {"name": "position_x", "value": np.nan, "unit": u.Unit("m")},
+                "yy": {"name": "position_y", "value": np.nan, "unit": u.Unit("m")},
                 "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
             },
             "mercator": {
