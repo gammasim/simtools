@@ -20,7 +20,7 @@
         Telescope model name (e.g. LST-1, SST-D, ...)
 
     log_level (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Raises
     ------
