@@ -167,7 +167,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--log_level",
             action="store",
             default="info",
-            help="log level to print (default is INFO)",
+            help="log level to print",
             required=False,
         )
         _job_group.add_argument(
@@ -188,7 +188,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--db_api_authentication_database",
-            help="database  with user info (optional, default is 'admin')",
+            help="database  with user info (optional)",
             type=str,
             required=False,
             default="admin",
