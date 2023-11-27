@@ -173,6 +173,7 @@ def main():
                 crs_name=args_dict["export"],
                 corsika_z=args_dict["use_corsika_telescope_height"],
             ),
+            validate_product_data=True,
         )
     else:
         layout.print_telescope_list(
