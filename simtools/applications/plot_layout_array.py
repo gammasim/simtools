@@ -26,7 +26,7 @@
     show_tel_label (bool, optional)
         Shows the telescope labels in the plot.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
