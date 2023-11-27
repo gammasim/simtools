@@ -149,7 +149,7 @@ class DataValidator:
             if not np.issubdtype(col.dtype, np.number):
                 continue
             self._check_for_not_a_number(col, col_name)
-            self._check_and_convert_units(col, col_name)
+            col = self._check_and_convert_units(col, col_name)
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
 
@@ -368,43 +368,13 @@ class DataValidator:
                 f"Data column '{col_name}' with reference unit "
                 f"'{reference_unit}' and data unit '{col.unit}'"
             )
-            self._convert_unit_to(col, reference_unit)
-
+            return u.Quantity(col).to(reference_unit)
         except u.core.UnitConversionError:
             self._logger.error(
                 f"Invalid unit in data column '{col_name}'. "
                 f"Expected type '{reference_unit}', found '{col.unit}'"
             )
             raise
-
-        return col
-
-    def _convert_unit_to(self, col, unit):
-        """
-        Convert column unit to reference unit, taking into account differences
-        between astropy Columns and Quantities.
-
-        Parameters
-        ----------
-        col: astropy.column or Quantity
-            data column to be converted
-        unit: astropy.unit
-            unit
-
-        Raises
-        ------
-        TypeError
-            if column type is not Quantity or Column
-
-        """
-
-        if isinstance(col, u.Quantity):
-            col.to(unit)
-        elif isinstance(col, Table.Column):
-            col.convert_unit_to(unit)
-        else:
-            self._logger.error(f"Invalid data column type {type(col)}")
-            raise TypeError
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
