@@ -713,6 +713,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--select_assets",
+            "LSTN MSTN LSTS MSTS SSTS",
             "--output_path",
             "TESTOUTPUTDIR/",
         ],

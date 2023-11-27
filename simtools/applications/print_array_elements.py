@@ -163,17 +163,15 @@ def main():
     layout.convert_coordinates()
 
     if args_dict["export"] is not None:
+        _metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=MetadataCollector(
-                args_dict=args_dict,
-                data_model_name=data_model_name,
-            ).top_level_meta,
+            metadata=_metadata.top_level_meta,
             product_data=layout.export_telescope_list_table(
                 crs_name=args_dict["export"],
                 corsika_z=args_dict["use_corsika_telescope_height"],
             ),
-            validate_product_data=True,
+            validate_schema_file=_metadata.get_data_model_schema_file_name(),
         )
     else:
         layout.print_telescope_list(
