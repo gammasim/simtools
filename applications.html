@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g8f3000b</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g5143c84</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=33173da0"></script>
+    <script src="_static/documentation_options.js?v=36372b3f"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8f3000b</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g5143c84</p>
 
 
 
@@ -154,7 +154,7 @@ This application should complement the ones for updating parameters,     adding 
 </dd>
 <dt>db (str)</dt><dd><p>The DB to insert the files to.         The choices are either the default CTA simulation DB or a sandbox for testing.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -190,11 +190,11 @@ This application should complement the ones for updating parameters,     adding 
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=prod4).</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
 </dd>
-<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
 </dd>
-<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
 </dd>
 <dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
 </dd>
@@ -202,7 +202,7 @@ This application should complement the ones for updating parameters,     adding 
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -277,7 +277,7 @@ taken from the <a class="reference internal" href="databases.html#model-paramete
 <dl class="simple">
 <dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. North-LST-1, South-SST-D, …)</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version</p>
 </dd>
 <dt>psf_measurement (str, optional)</dt><dd><p>Table with results from PSF measurements for each mirror panel spot size</p>
 </dd>
@@ -285,7 +285,7 @@ taken from the <a class="reference internal" href="databases.html#model-paramete
 </dd>
 <dt>psf_measurement_containment_sigma (float, optional)</dt><dd><p>Std dev of measured containment diameter [cm]</p>
 </dd>
-<dt>containment_fraction (float, required)</dt><dd><p>Containment fraction for diameter calculation (default: 0.8)</p>
+<dt>containment_fraction (float, required)</dt><dd><p>Containment fraction for diameter calculation</p>
 </dd>
 <dt>rnda (float, optional)</dt><dd><p>Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the         default model is read from the simulation model database.</p>
 </dd>
@@ -299,7 +299,7 @@ taken from the <a class="reference internal" href="databases.html#model-paramete
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating only few mirrors.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -390,7 +390,7 @@ If the output <code class="xref py py-obj docutils literal notranslate"><span cl
 associated to <code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5</span></code> will be overwritten. The remaining tables, if any, will stay
 untouched.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -427,7 +427,7 @@ i.e., python applications/get_file_from_db.py -file_name mirror_CTA-N-LST1_v2019
 <dt>output_path (str)</dt><dd><p>Name of the local output directory where to save the files.
 Default it $CWD.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -460,7 +460,7 @@ If no version is provided, the value of the current model is printed..</p>
 </dd>
 <dt>telescope (str, optional)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
 </dd>
-<dt>log_level (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>log_level (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -498,7 +498,7 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 <section id="id23">
 <h3>Command line arguments<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h3>
 <dl class="simple">
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -539,7 +539,7 @@ are plotted and saved separately.</p>
 </dd>
 <dt>show_tel_label (bool, optional)</dt><dd><p>Shows the telescope labels in the plot.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -654,7 +654,7 @@ Ex.:</p>
 </dd>
 <dt>array_config (str, required)</dt><dd><p>Path to a yaml file with the array config data.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -713,7 +713,7 @@ resources (print quicklook into used computational resources)</p>
 </dd>
 <dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -755,19 +755,19 @@ Each run is simulated in a job. Each job is submitted by using the submission   
 </dd>
 <dt>primary (str, required)</dt><dd><p>Name of the primary particle (proton, helium …).</p>
 </dd>
-<dt>nruns (int, optional)</dt><dd><p>Number of runs to be simulated (default=100).</p>
+<dt>nruns (int, optional)</dt><dd><p>Number of runs to be simulated.</p>
 </dd>
-<dt>nevents (int, optional)</dt><dd><p>Number of events simulated per run (default=100000).</p>
+<dt>nevents (int, optional)</dt><dd><p>Number of events simulated per run.</p>
 </dd>
-<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
 </dd>
-<dt>azimuth (float, optional)</dt><dd><p>Azimuth angle in deg (default=0).</p>
+<dt>azimuth (float, optional)</dt><dd><p>Azimuth angle in deg.</p>
 </dd>
 <dt>output (str, optional)</dt><dd><p>Path of the directory to store the output simulations. By default,         the standard output directory defined by config will be used.</p>
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted. Instead, an example of the         run script will be printed.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -834,7 +834,7 @@ It allows the transformation system to keep using sequential run numbers without
 </dd>
 <dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data</p>
 </dd>
-<dt>log_level (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>log_level (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -919,11 +919,11 @@ and converted following a pre-described schema.</p>
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=”Current”).</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
 </dd>
-<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
 </dd>
-<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
 </dd>
 <dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
 </dd>
@@ -933,7 +933,7 @@ and converted following a pre-described schema.</p>
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
@@ -989,9 +989,9 @@ and converted following a pre-described schema.</p>
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print</p>
 </dd>
 </dl>
 </section>
@@ -1031,13 +1031,13 @@ and converted following a pre-described schema.</p>
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version</p>
 </dd>
-<dt>camera_in_sky_coor (bool, optional)</dt><dd><p>Plot the camera layout in sky coordinates akin to looking at it from behind for single          mirror telescopes (default=False)</p>
+<dt>camera_in_sky_coor (bool, optional)</dt><dd><p>Plot the camera layout in sky coordinates akin to looking at it from behind for single          mirror telescopes</p>
 </dd>
-<dt>print_pixels_id (bool, optional)</dt><dd><p>Up to which pixel ID to print (default=50). To suppress printing of pixel IDs, set to zero         (–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
+<dt>print_pixels_id (bool, optional)</dt><dd><p>Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero         (–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print</p>
 </dd>
 </dl>
 </section>
@@ -1080,21 +1080,21 @@ The telescope zenith angle and the source distance can be set by command line ar
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’).</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
 </dd>
-<dt>src_distance (float, optional)</dt><dd><p>Source distance in km (default=10).</p>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
 </dd>
-<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg (default=20).</p>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
 </dd>
-<dt>max_offset (float, optional)</dt><dd><p>Maximum offset angle in deg (default=4).</p>
+<dt>max_offset (float, optional)</dt><dd><p>Maximum offset angle in deg.</p>
 </dd>
-<dt>offset_steps (float, optional)</dt><dd><p>Offset angle step size (default=0.25 deg)</p>
+<dt>offset_steps (float, optional)</dt><dd><p>Offset angle step size.</p>
 </dd>
 <dt>plot_images (activation mode, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
 </dd>
 <dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print (default=INFO).</p>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>

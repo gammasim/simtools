@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>compare_cumulative_psf &#8212; simtools v0.1.dev1+g8f3000b</title>
+    <title>compare_cumulative_psf &#8212; simtools v0.1.dev1+g5143c84</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=33173da0"></script>
+    <script src="../_static/documentation_options.js?v=36372b3f"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8f3000b</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g5143c84</p>
 
 
 
@@ -116,11 +116,11 @@
 <span class="sd">    telescope (str, required)</span>
 <span class="sd">        Telescope model name (e.g. LST-1, SST-D, ...).</span>
 <span class="sd">    model_version (str, optional)</span>
-<span class="sd">        Model version (default=prod4).</span>
+<span class="sd">        Model version.</span>
 <span class="sd">    src_distance (float, optional)</span>
-<span class="sd">        Source distance in km (default=10).</span>
+<span class="sd">        Source distance in km.</span>
 <span class="sd">    zenith (float, optional)</span>
-<span class="sd">        Zenith angle in deg (default=20).</span>
+<span class="sd">        Zenith angle in deg.</span>
 <span class="sd">    data (str, optional)</span>
 <span class="sd">        Name of the data file with the measured cumulative PSF.</span>
 <span class="sd">    pars (str, optional)</span>
@@ -128,7 +128,7 @@
 <span class="sd">    test (activation mode, optional)</span>
 <span class="sd">        If activated, application will be faster by simulating fewer photons.</span>
 <span class="sd">    verbosity (str, optional)</span>
-<span class="sd">        Log level to print (default=INFO).</span>
+<span class="sd">        Log level to print.</span>
 
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
@@ -206,12 +206,12 @@
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--src_distance&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Source distance in km (default=10)&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Source distance in km&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--zenith&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in deg (default=20)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">20.0</span>
+        <span class="s2">&quot;--zenith&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in deg&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">20.0</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--data&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Data file name with the measured PSF vs radius [cm]&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span>
