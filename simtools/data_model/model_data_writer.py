@@ -5,6 +5,7 @@ import astropy
 import yaml
 
 import simtools.utils.general as gen
+from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
 
 __all__ = ["ModelDataWriter"]
@@ -36,7 +37,7 @@ class ModelDataWriter:
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     @staticmethod
-    def dump(args_dict, metadata=None, product_data=None):
+    def dump(args_dict, metadata=None, product_data=None, validate_product_data=False):
         """
         Write model data and metadata (as static method).
 
@@ -55,6 +56,10 @@ class ModelDataWriter:
             product_data_file=args_dict.get("output_file", None),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
         )
+        if validate_product_data:
+            product_data = writer.validate_and_transform(
+                metadata=metadata, product_data=product_data
+            )
         writer.write(metadata=metadata, product_data=product_data)
 
     def write(self, metadata=None, product_data=None):
@@ -74,6 +79,32 @@ class ModelDataWriter:
             self.write_metadata(metadata=metadata)
         if product_data is not None:
             self.write_data(product_data=product_data)
+
+    def validate_and_transform(self, metadata=None, product_data=None):
+        """
+        Validate product data using jsonschema given in metadata.
+        If necessary, transform product data to match schema.
+
+        Parameters
+        ----------
+        metadata: dict
+            Metadata to be written.
+        product_data: astropy Table
+            Model data to be validated
+
+        """
+
+        # TODO - review if this detailed knowledge of the metadata structure is necessary
+        # (at this place in the code)
+        try:
+            _validator = validate_data.DataValidator(
+                schema_file=metadata["cta"]["product"]["data"]["model"]["url"],
+                data_table=product_data,
+            )
+        except KeyError:
+            self._logger.error("No schema file defined for validation")
+            return product_data
+        return _validator.validate_and_transform()
 
     def write_data(self, product_data):
         """
