@@ -507,11 +507,16 @@ class DataValidator:
         ----------
         column_name: str
             Column name.
+        status_test: bool
+            Test if reference column exists.
 
         Returns
         -------
         dict
-            Reference schema column.
+            Reference schema column (for status_test==False).
+        bool
+            True if reference column exists (for status_test==True).
+
 
         Raises
         ------
