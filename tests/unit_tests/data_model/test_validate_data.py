@@ -187,10 +187,10 @@ def test_check_and_convert_units():
 
     # check unit conversion for "position_x" (column type Quantity)
     assert table_1["position_x"].unit == u.m
-    assert pytest.approx(table_1["position_x"].value[0], 100.0)
+    assert 100.0 == pytest.approx(table_1["position_x"].value[0])
     # check unit conversion for "position_y" (column type Column)
     assert table_1["position_y"].unit == u.m
-    assert pytest.approx(table_1["position_y"].value[1], 7000.0)
+    assert 7000.0 == pytest.approx(table_1["position_y"].value[1])
 
     table_2 = Table()
     table_2["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
