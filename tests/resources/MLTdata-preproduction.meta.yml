@@ -15,11 +15,11 @@ CTA:
     EMAIL: 'a@email.org'
   # Description of instrument which obtained these data
   INSTRUMENT:
-    SITE: 'The 2f teststand'
+    SITE: 'The 2f test stand'
     CLASS: mirrorPanel
     TYPE: MLT
     SUBTYPE: pre-production
-    ID: unique-ID-of-mirror-panel-teststand
+    ID: unique-ID-of-mirror-panel-test-stand
   # Description of the process which generated these data
   PROCESS:
     TYPE: lab
