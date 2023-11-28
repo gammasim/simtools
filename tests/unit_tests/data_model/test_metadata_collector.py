@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import copy
+import getpass
 import logging
-import os
 
 import pytest
 
@@ -69,7 +69,7 @@ def test_fill_contact_meta(args_dict_site):
     contact_dict = {}
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     collector._fill_contact_meta(contact_dict)
-    assert contact_dict["name"] == os.getlogin()
+    assert contact_dict["name"] == getpass.getuser()
 
 
 def test_fill_associated_elements_from_args(args_dict_site):

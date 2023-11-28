@@ -6,8 +6,8 @@ implementation of the metadata model.
 
 """
 import datetime
+import getpass
 import logging
-import os
 
 import simtools.constants
 import simtools.utils.general as gen
@@ -144,10 +144,7 @@ class MetadataCollector:
         """
 
         if contact_dict.get("name", None) is None:
-            try:
-                contact_dict["name"] = os.getlogin()
-            except OSError:
-                contact_dict["name"] = "unknown"
+            contact_dict["name"] = getpass.getuser()
 
     def _fill_associated_elements_from_args(self, associated_elements_dict):
         """
