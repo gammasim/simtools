@@ -1,3 +1,10 @@
+"""
+Metadata collector for simtools.
+
+This should be the only module in simtools with knowledge on the
+implementation of the metadata model.
+
+"""
 import datetime
 import logging
 import os
