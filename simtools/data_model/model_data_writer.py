@@ -5,6 +5,7 @@ import astropy
 import yaml
 
 import simtools.utils.general as gen
+from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
 
 __all__ = ["ModelDataWriter"]
@@ -36,7 +37,7 @@ class ModelDataWriter:
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     @staticmethod
-    def dump(args_dict, metadata=None, product_data=None):
+    def dump(args_dict, metadata=None, product_data=None, validate_schema_file=False):
         """
         Write model data and metadata (as static method).
 
@@ -48,6 +49,8 @@ class ModelDataWriter:
             Metadata to be written.
         product_data: astropy Table
             Model data to be written
+        validate_schema_file: str
+            Schema file used in validation of output data.
 
         """
 
@@ -55,6 +58,12 @@ class ModelDataWriter:
             product_data_file=args_dict.get("output_file", None),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
         )
+        if validate_schema_file:
+            product_data = writer.validate_and_transform(
+                metadata=metadata,
+                product_data=product_data,
+                validate_schema_file=validate_schema_file,
+            )
         writer.write(metadata=metadata, product_data=product_data)
 
     def write(self, metadata=None, product_data=None):
@@ -74,6 +83,28 @@ class ModelDataWriter:
             self.write_metadata(metadata=metadata)
         if product_data is not None:
             self.write_data(product_data=product_data)
+
+    def validate_and_transform(self, metadata=None, product_data=None, validate_schema_file=None):
+        """
+        Validate product data using jsonschema given in metadata.
+        If necessary, transform product data to match schema.
+
+        Parameters
+        ----------
+        metadata: dict
+            Metadata to be written.
+        product_data: astropy Table
+            Model data to be validated
+        validate_schema_file: str
+            Schema file used in validation of output data.
+
+        """
+
+        _validator = validate_data.DataValidator(
+            schema_file=validate_schema_file,
+            data_table=product_data,
+        )
+        return _validator.validate_and_transform()
 
     def write_data(self, product_data):
         """

@@ -224,6 +224,8 @@ APP_LIST = {
     ],
     "generate_default_metadata": [
         [
+            "--schema",
+            "simtools/schemas/metadata.schema.yml",
             "--output_path",
             "TESTOUTPUTDIR/test_generate_default_metadata",
         ]
@@ -711,6 +713,8 @@ APP_LIST = {
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--select_assets",
+            "LSTN MSTN LSTS MSTS SSTS",
             "--output_path",
             "TESTOUTPUTDIR/",
         ],

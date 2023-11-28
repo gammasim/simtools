@@ -12,6 +12,7 @@ from importlib.resources import files
 
 import jsonschema
 
+import simtools.constants
 import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ def validate_schema(data, schema_file):
 
     """
 
-    schema, schema_file = load_schema(schema_file)
+    schema, schema_file = _load_schema(schema_file)
 
     try:
         jsonschema.validate(data, schema=schema)
@@ -45,7 +46,32 @@ def validate_schema(data, schema_file):
     _logger.debug(f"Succeeded using {schema_file}")
 
 
-def load_schema(schema_file=None):
+def get_default_metadata_dict(schema_file=None, observatory="CTA"):
+    """
+    Returns metadata schema with default values.
+    Follows the CTA Top-Level Data Model.
+
+    Parameters
+    ----------
+    schema_file: str
+        Schema file (jsonschema format) used for validation
+    observatory: str
+        Observatory name
+
+    Returns
+    -------
+    dict with reference schema
+
+
+    """
+
+    _logger.debug(f"Loading default schema from {schema_file}")
+    schema, _ = _load_schema(schema_file)
+
+    return _fill_defaults(schema["definitions"], observatory)
+
+
+def _load_schema(schema_file=None):
     """
     Load parameter schema from file from simpipe metadata schema.
 
@@ -62,7 +88,7 @@ def load_schema(schema_file=None):
     """
 
     if schema_file is None:
-        schema_file = files("simtools").joinpath("schemas/metadata.schema.yml")
+        schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
     schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
@@ -70,29 +96,7 @@ def load_schema(schema_file=None):
     return schema, schema_file
 
 
-def get_default_metadata_dict(schema_file=None):
-    """
-    Returns metadata schema with default values.
-    Follows the CTA Top-Level Data Model.
-
-    Parameters
-    ----------
-    schema_file: str
-        Schema file (jsonschema format) used for validation
-
-    Returns
-    -------
-    dict with reference schema
-
-
-    """
-
-    _logger.debug(f"Loading default schema from {schema_file}")
-    schema, _ = load_schema(schema_file)
-    return fill_defaults(schema["definitions"]["CTA"])
-
-
-def resolve_references(yaml_data):
+def _resolve_references(yaml_data, observatory="CTA"):
     """
     Resolve references in yaml data and expand the received dictionary accordingly.
 
@@ -100,6 +104,8 @@ def resolve_references(yaml_data):
     ----------
     yaml_data: dict
         Dictionary with yaml data.
+    observatory: str
+        Observatory name
 
     Returns
     -------
@@ -113,28 +119,28 @@ def resolve_references(yaml_data):
         parts = ref_path.split("/")
         ref_data = yaml_data
         for part in parts:
-            if part in ("definitions", "CTA"):
+            if part in ("definitions", observatory):
                 continue
             ref_data = ref_data.get(part, {})
         return ref_data
 
-    def resolve_references_recursive(data):
+    def _resolve_references_recursive(data):
         if isinstance(data, dict):
             if "$ref" in data:
                 ref = data["$ref"]
                 resolved_data = expand_ref(ref)
                 if isinstance(resolved_data, dict) and len(resolved_data) > 1:
-                    return resolve_references_recursive(resolved_data)
+                    return _resolve_references_recursive(resolved_data)
                 return resolved_data
-            return {k: resolve_references_recursive(v) for k, v in data.items()}
+            return {k: _resolve_references_recursive(v) for k, v in data.items()}
         if isinstance(data, list):
-            return [resolve_references_recursive(item) for item in data]
+            return [_resolve_references_recursive(item) for item in data]
         return data
 
-    return resolve_references_recursive(yaml_data)
+    return _resolve_references_recursive(yaml_data)
 
 
-def fill_defaults(schema):
+def _fill_defaults(schema, observatory="CTA"):
     """
     Fill default values from json schema.
 
@@ -142,6 +148,8 @@ def fill_defaults(schema):
     ----------
     schema: dict
         Schema describing the input data.
+    observatory: str
+        Observatory name
 
     Returns
     -------
@@ -150,11 +158,11 @@ def fill_defaults(schema):
 
     """
 
-    defaults = {"CTA": {}}
+    defaults = {observatory: {}}
 
-    schema = resolve_references(schema)
+    schema = _resolve_references(schema[observatory])
 
-    def fill_defaults_recursive(subschema, current_dict):
+    def _fill_defaults_recursive(subschema, current_dict):
         try:
             for prop, prop_schema in subschema["properties"].items():
                 if "default" in prop_schema:
@@ -162,15 +170,15 @@ def fill_defaults(schema):
                 elif "type" in prop_schema:
                     if prop_schema["type"] == "object":
                         current_dict[prop] = {}
-                        fill_defaults_recursive(prop_schema, current_dict[prop])
+                        _fill_defaults_recursive(prop_schema, current_dict[prop])
                     elif prop_schema["type"] == "array":
                         current_dict[prop] = [{}]
                         if "items" in prop_schema and isinstance(prop_schema["items"], dict):
-                            fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
+                            _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
         except KeyError:
             msg = "Missing 'properties' key in schema."
             _logger.error(msg)
             raise
 
-    fill_defaults_recursive(schema, defaults["CTA"])
+    _fill_defaults_recursive(schema, defaults[observatory])
     return defaults
