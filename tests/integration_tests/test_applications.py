@@ -21,6 +21,11 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
+    "submit_data_from_external::help": [
+        [
+            "--help",
+        ]
+    ],
     # Optics
     "compare_cumulative_psf": [
         [
@@ -37,11 +42,6 @@ APP_LIST = {
             "--test",
             "--output_path",
             "TESTOUTPUTDIR/",
-        ]
-    ],
-    "submit_data_from_external::help": [
-        [
-            "--help",
         ]
     ],
     "submit_data_from_external::submit_table": [
