@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g639834c</title>
+    <title>simulator &#8212; simtools v0.1.dev1+g0516a3e</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=80562d92"></script>
+    <script src="../_static/documentation_options.js?v=6aa3bc2e"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g639834c</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g0516a3e</p>
 
 
 
@@ -297,7 +297,7 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_layout_array_name</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_layout_name</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;layout_name&quot;</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -423,7 +423,7 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_array_model_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">_rest_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">))</span>
-            <span class="n">_array_model_data</span><span class="p">[</span><span class="s2">&quot;layout_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_layout_array_name</span><span class="p">(</span>
+            <span class="n">_array_model_data</span><span class="p">[</span><span class="s2">&quot;layout_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_layout_name</span><span class="p">(</span>
                 <span class="n">_rest_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;layout_name&quot;</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">_array_model_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rest_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">)</span>

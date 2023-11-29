@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g639834c</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g0516a3e</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=80562d92"></script>
+    <script src="_static/documentation_options.js?v=6aa3bc2e"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g639834c</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g0516a3e</p>
 
 
 
@@ -58,7 +58,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-get_file_from_db">get_file_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-get_parameter">get_parameter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-make_regular_arrays">make_regular_arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-plot_layout_array">plot_layout_array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-plot_array_layout">plot_array_layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-print_array_elements">print_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-produce_array_config">produce_array_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-production">production</a></li>
@@ -510,13 +510,13 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 </div>
 <p>The output is saved in simtools-output/make_regular_arrays.</p>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter        nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS        T-corsika.ecsv</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::array_layout(l608)::export_telescope_list::Exporting telescope list to /workdir/exter        nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS        T-corsika.ecsv</span>
 </pre></div>
 </div>
 </section>
 </section>
-<section id="module-plot_layout_array">
-<span id="plot-layout-array"></span><h2>plot_layout_array<a class="headerlink" href="#module-plot_layout_array" title="Link to this heading">¶</a></h2>
+<section id="module-plot_array_layout">
+<span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading">¶</a></h2>
 <section id="id25">
 <h3>Summary<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h3>
 <p>This application plots the layout array and saves into disk.</p>
@@ -533,7 +533,7 @@ are plotted and saved separately.</p>
 </dd>
 <dt>telescope_list (str, optional)</dt><dd><p>The telescopes file (.ecsv) with the array information.</p>
 </dd>
-<dt>layout_array_name (str, optional)</dt><dd><p>Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).</p>
+<dt>array_layout_name (str, optional)</dt><dd><p>Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).</p>
 </dd>
 <dt>rotate_angle (float, optional)</dt><dd><p>Angle to rotate the array before plotting (in degrees).</p>
 </dd>
@@ -545,7 +545,7 @@ are plotted and saved separately.</p>
 </section>
 <section id="id27">
 <h3>Example<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h3>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha         --layout_array_name North-TestLayout</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha         --array_layout_name North-TestLayout</span>
 </pre></div>
 </div>
 </section>
@@ -848,10 +848,10 @@ It allows the transformation system to keep using sequential run numbers without
 and the output in corsika-data and simtel-data. The location of the latter directories
 can be set to a different location via the option –data_directory.</p>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::layout_array(l569)::read_telescope_list_file::Reading array elements from ...</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::array_layout(l569)::read_telescope_list_file::Reading array elements from ...</span>
 <span class="go">WARNING::corsika_runner(l127)::_load_corsika_config_data::data_directory not given</span>
 <span class="go">in corsika_config - default output directory will be set.</span>
-<span class="go">INFO::layout_array(l569)::read_telescope_list_file::Reading array elements from ...</span>
+<span class="go">INFO::array_layout(l569)::read_telescope_list_file::Reading array elements from ...</span>
 <span class="go">INFO::corsika_config(l493)::_set_output_file_and_directory::Creating directory</span>
 <span class="go">INFO::simulator(l405)::simulate::Submission command: local</span>
 <span class="go">INFO::simulator(l410)::simulate::Starting submission for 1 run</span>
