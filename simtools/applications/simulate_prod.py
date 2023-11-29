@@ -50,7 +50,7 @@
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data
     log_level (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
