@@ -152,7 +152,7 @@ class SimtelHistograms:
             pdf_pages.savefig(fig)
             plt.close()
 
-        if len(pdf_pages.get_pagecount()) > 0:
+        if pdf_pages.get_pagecount() > 0:
             pdf_pages.close()
 
     def plot_one_histogram(self, i_hist, ax):
