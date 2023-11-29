@@ -292,15 +292,11 @@ def test_check_for_not_a_number():
             Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x")
         )
     )
-    assert (
-        data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
-        )
+    assert data_validator._check_for_not_a_number(
+        Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
     )
-    assert (
-        data_validator._check_for_not_a_number(
-            Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
-        )
+    assert data_validator._check_for_not_a_number(
+        Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
     )
 
 

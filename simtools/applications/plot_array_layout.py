@@ -19,7 +19,7 @@
         File name for the pdf output.
     telescope_list (str, optional)
         The telescopes file (.ecsv) with the array information.
-    layout_array_name (str, optional)
+    array_layout_name (str, optional)
         Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
     rotate_angle (float, optional)
         Angle to rotate the array before plotting (in degrees).
@@ -33,7 +33,7 @@
     .. code-block:: console
 
         simtools-plot-layout-array --figure_name northern_array_alpha \
-        --layout_array_name North-TestLayout
+        --array_layout_name North-TestLayout
 
 """
 
@@ -46,7 +46,7 @@ from astropy import units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 from simtools.visualization.visualize import plot_array
 
 
@@ -103,8 +103,8 @@ def _parse(label, description, usage):
         default=None,
     )
     input_group.add_argument(
-        "--layout_array_name",
-        help="Name of the layout array.",
+        "--array_layout_name",
+        help="Name of the array layout.",
         nargs="+",
         type=str,
         required=False,
@@ -117,7 +117,7 @@ def _parse(label, description, usage):
 def main():
     label = Path(__file__).stem
     description = "Plots layout array."
-    usage = "python applications/plot_layout_array.py --layout_array_name test_layout"
+    usage = "python applications/plot_array_layout.py --array_layout_name test_layout"
     args_dict, _ = _parse(label, description, usage)
     io_handler_instance = io_handler.IOHandler()
 
@@ -135,13 +135,13 @@ def main():
         logger.info("Plotting array from telescope list file(s).")
         telescope_file = args_dict["telescope_list"]
 
-    elif args_dict["layout_array_name"] is not None:
+    elif args_dict["array_layout_name"] is not None:
         logger.info("Plotting array from layout array name(s).")
         telescope_file = [
             io_handler_instance.get_input_data_file(
                 "layout", f"telescope_positions-{one_array}.ecsv"
             )
-            for one_array in args_dict["layout_array_name"]
+            for one_array in args_dict["array_layout_name"]
         ]
 
     for one_file in telescope_file:
@@ -150,14 +150,14 @@ def main():
             logger.debug(f"Processing: {one_angle}.")
             if args_dict["figure_name"] is None:
                 plot_file_name = (
-                    f"plot_layout_array_{(Path(one_file).name).split('.')[0]}_"
+                    f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
                     f"{str((round((one_angle.to(u.deg).value))))}deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]
 
-            telescope_table = LayoutArray.read_telescope_list_file(one_file)
-            telescopes_dict = LayoutArray.include_radius_into_telescope_table(telescope_table)
+            telescope_table = ArrayLayout.read_telescope_list_file(one_file)
+            telescopes_dict = ArrayLayout.include_radius_into_telescope_table(telescope_table)
             fig_out = plot_array(
                 telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
             )
