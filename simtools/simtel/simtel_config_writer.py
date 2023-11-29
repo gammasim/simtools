@@ -97,8 +97,8 @@ class SimtelConfigWriter:
         ----------
         config_file_path: str or Path
             Path of the file to write on.
-        layout: LayoutArray
-            Instance of LayoutArray referent to the array model.
+        layout: ArrayLayout
+            Instance of ArrayLayout referent to the array model.
         telescope_model: list of TelescopeModel
             List of TelescopeModel's instances as used by the ArrayModel instance.
         site_parameters: dict
