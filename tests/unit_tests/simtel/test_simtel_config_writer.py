@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.general import file_has_text
 
@@ -25,8 +25,8 @@ def simtel_config_writer():
 
 @pytest.fixture
 def layout(io_handler, db_config):
-    layout = LayoutArray.from_layout_array_name(
-        mongo_db_config=db_config, layout_array_name="South-4LST"
+    layout = ArrayLayout.from_array_layout_name(
+        mongo_db_config=db_config, array_layout_name="South-4LST"
     )
     return layout
 

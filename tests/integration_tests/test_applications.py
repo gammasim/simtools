@@ -21,6 +21,11 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
+    "submit_data_from_external::help": [
+        [
+            "--help",
+        ]
+    ],
     # Optics
     "compare_cumulative_psf": [
         [
@@ -37,11 +42,6 @@ APP_LIST = {
             "--test",
             "--output_path",
             "TESTOUTPUTDIR/",
-        ]
-    ],
-    "submit_data_from_external::help": [
-        [
-            "--help",
         ]
     ],
     "submit_data_from_external::submit_table": [
@@ -270,14 +270,14 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file": [
+    "plot_array_layout::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_with_name": [
+    "plot_array_layout::one_file_with_name": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test",
@@ -285,7 +285,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_with_name_and_extension": [
+    "plot_array_layout::one_file_with_name_and_extension": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test.png",
@@ -293,7 +293,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_one_angle": [
+    "plot_array_layout::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20",
@@ -301,7 +301,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_two_angles": [
+    "plot_array_layout::one_file_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20 30",
@@ -309,7 +309,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files": [
+    "plot_array_layout::two_files": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -317,7 +317,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files_one_angle": [
+    "plot_array_layout::two_files_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -326,7 +326,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files_two_angles": [
+    "plot_array_layout::two_files_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -335,40 +335,40 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name": [
+    "plot_array_layout::layout_name": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name_one_angle": [
+    "plot_array_layout::layout_name_one_angle": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--rotate_angle 20",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name_two_angles": [
+    "plot_array_layout::layout_name_two_angles": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--rotate_angle 20 30",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_two_names_one_angle": [
+    "plot_array_layout::layout_two_names_one_angle": [
         [
-            "--layout_array_name North-4LST South-4LST",
+            "--array_layout_name North-4LST South-4LST",
             "--rotate_angle 20",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_two_names_two_angles": [
+    "plot_array_layout::layout_two_names_two_angles": [
         [
-            "--layout_array_name North-4LST South-4LST",
+            "--array_layout_name North-4LST South-4LST",
             "--rotate_angle 20 30",
             "--output_path",
             "TESTOUTPUTDIR/",

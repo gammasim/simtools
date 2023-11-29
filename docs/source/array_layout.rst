@@ -8,10 +8,10 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 
 .. _layoutarraymodule:
 
-layout_array
+array_layout
 ------------
 
-.. automodule:: layout.layout_array
+.. automodule:: layout.array_layout
    :members:
 
 
