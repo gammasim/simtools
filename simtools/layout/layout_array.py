@@ -71,6 +71,7 @@ class LayoutArray:
         self.telescope_list_file = None
         self._telescope_list = []
         self._epsg = None
+
         if telescope_list_file is None:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)

@@ -22,9 +22,9 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default='Current')
+        Model version
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print
 
     Example
     -------
