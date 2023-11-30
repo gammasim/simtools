@@ -6,7 +6,6 @@ from threading import Lock
 
 import gridfs
 import pymongo
-import yaml
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
@@ -500,9 +499,7 @@ class DatabaseHandler:
         _file_name_db = f"parValues-{telescope_name_yaml}.yml"
         _yaml_file = gen.find_file(_file_name_db, self.io_handler.model_path)
         self._logger.debug(f"Reading DB file {_yaml_file}")
-        with open(_yaml_file, "r", encoding="utf-8") as stream:
-            _all_pars = yaml.safe_load(stream)
-        return _all_pars
+        return gen.collect_data_from_yaml_or_dict(in_yaml=_yaml_file, in_dict=None)
 
     def get_site_parameters(
         self,
@@ -564,8 +561,7 @@ class DatabaseHandler:
 
         yaml_file = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
         self._logger.info(f"Reading DB file {yaml_file}")
-        with open(yaml_file, "r", encoding="utf-8") as stream:
-            _all_pars_versions = yaml.safe_load(stream)
+        _all_pars_versions = gen.collect_data_from_yaml_or_dict(in_yaml=yaml_file)
 
         _pars = {}
         for par_name, par_info in _all_pars_versions.items():

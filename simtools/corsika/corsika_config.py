@@ -4,7 +4,6 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
@@ -144,9 +143,7 @@ class CorsikaConfig:
 
         logger = logging.getLogger(__name__)
         logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
-        with open(corsika_parameters_file, "r", encoding="utf-8") as f:
-            corsika_parameters = yaml.load(f)
-        return corsika_parameters
+        return collect_data_from_yaml_or_dict(in_yaml=corsika_parameters_file, in_dict=None)
 
     def set_user_parameters(self, corsika_config_data):
         """

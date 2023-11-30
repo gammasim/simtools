@@ -5,10 +5,10 @@ import sys
 import uuid
 
 import astropy.units as u
-import yaml
 from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
+import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 
 __all__ = [
@@ -62,7 +62,9 @@ class Configurator:
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
-            prog=self.label, usage=usage, description=description,
+            prog=self.label,
+            usage=usage,
+            description=description,
             epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
@@ -247,8 +249,7 @@ class Configurator:
 
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
-            with open(config_file, "r", encoding="utf-8") as stream:
-                _config_dict = yaml.safe_load(stream)
+            _config_dict = gen.collect_data_from_yaml_or_dict(in_yaml=config_file, in_dict=None)
             if "CTASIMPIPE" in _config_dict:
                 try:
                     self._fill_from_config_dict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])

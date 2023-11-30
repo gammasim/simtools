@@ -91,7 +91,7 @@ import shutil
 import tarfile
 from pathlib import Path
 
-from astropy.io.misc import yaml
+import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -207,7 +207,7 @@ def main():
 
     try:
         with open(args_dict["production_config"], encoding="utf-8") as file:
-            config_data = yaml.load(file)
+            config_data = yaml.safe_load(file)
     except FileNotFoundError:
         logger.error(
             f"Error loading simulation configuration file from {args_dict['production_config']}"
