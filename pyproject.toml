@@ -72,7 +72,8 @@ simtools-generate-default-metadata = "simtools.applications.generate_default_met
 simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 simtools-get-parameter = "simtools.applications.get_parameter:main"
 simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
-simtools-plot-layout-array = "simtools.applications.plot_layout_array:main"
+simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:main"
 simtools-print-array-elements = "simtools.applications.print_array_elements:main"
 simtools-produce-array-config = "simtools.applications.produce_array_config:main"
 simtools-production = "simtools.applications.production:main"
@@ -626,8 +627,8 @@ redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", 
 
 [tool.pytest.ini_options]
 minversion="6.0"
-norecursedirs=["build", "docs/_build"]
-addopts="-v"
+norecursedirs=["build", "docs/_build", "simtools/applications"]
+addopts="-v --cov=simtools --cov-report=xml --cov-report=term"
 testpaths="tests/unit_tests/"
 # Ignore the warning about fontTools.misc.py23
 filterwarnings="ignore:The py23 module has been deprecated:DeprecationWarning"
