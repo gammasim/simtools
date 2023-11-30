@@ -28,10 +28,10 @@ class MetadataCollector:
 
     Parameters
     ----------
-    args_dict: Dictionary
+    args_dict: dict
         Command line parameters
     data_model_name: str
-        Name of simulation model parameter
+        Name of data model parameter
 
     """
 
@@ -51,7 +51,7 @@ class MetadataCollector:
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
-        self.input_meta = self._read_input_meta_from_file()
+        self.input_metadata = self._read_input_metadata_from_file()
         self.collect_meta_data()
 
     def collect_meta_data(self):
@@ -107,9 +107,9 @@ class MetadataCollector:
         try:
             self._logger.debug(
                 "Schema file from input metadata: "
-                f"{self.input_meta['cta']['product']['data']['model']['url']}"
+                f"{self.input_metadata['cta']['product']['data']['model']['url']}"
             )
-            return self.input_meta["cta"]["product"]["data"]["model"]["url"]
+            return self.input_metadata["cta"]["product"]["data"]["model"]["url"]
         except KeyError:
             pass
 
@@ -201,20 +201,20 @@ class MetadataCollector:
         """
 
         try:
-            self._merge_config_dicts(context_dict, self.input_meta["cta"]["context"])
+            self._merge_config_dicts(context_dict, self.input_metadata["cta"]["context"])
             for key in ("document", "associated_elements", "associated_data"):
-                self._copy_list_type_metadata(context_dict, self.input_meta["cta"], key)
+                self._copy_list_type_metadata(context_dict, self.input_metadata["cta"], key)
         except KeyError:
             self._logger.debug("No context metadata defined in input metadata file.")
 
         try:
             self._fill_context_sim_list(
-                context_dict["associated_data"], self.input_meta["cta"]["product"]
+                context_dict["associated_data"], self.input_metadata["cta"]["product"]
             )
         except (KeyError, TypeError):
-            pass
+            self._logger.debug("No input product metadata appended to associated data.")
 
-    def _read_input_meta_from_file(self):
+    def _read_input_metadata_from_file(self):
         """
         Read and validate input metadata from file.
 
@@ -236,17 +236,17 @@ class MetadataCollector:
 
         try:
             self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
-            _input_meta = gen.collect_data_from_yaml_or_dict(
+            _input_metadata = gen.collect_data_from_yaml_or_dict(
                 in_yaml=self.args_dict["input_meta"], in_dict=None
             )
         except (gen.InvalidConfigData, FileNotFoundError):
             self._logger.error("Failed reading metadata from file.")
             raise
 
-        metadata_model.validate_schema(_input_meta, None)
+        metadata_model.validate_schema(_input_metadata, None)
 
         return gen.change_dict_keys_case(
-            self._process_metadata_from_file(_input_meta),
+            self._process_metadata_from_file(_input_metadata),
             lower_case=True,
         )
 
@@ -295,7 +295,7 @@ class MetadataCollector:
 
     def _fill_process_meta(self, process_dict):
         """
-        Fill metadata for process fields.
+        Fill process fields in metadata.
 
         Parameters
         ----------
@@ -438,7 +438,7 @@ class MetadataCollector:
 
         return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
 
-    def _copy_list_type_metadata(self, context_dict, _input_meta, key):
+    def _copy_list_type_metadata(self, context_dict, _input_metadata, key):
         """
         Copy list-type metadata from file.
         Very fine tuned.
@@ -447,7 +447,7 @@ class MetadataCollector:
         ----------
         context_dict: dict
             Dictionary for top level metadata (context level)
-        _input_meta: dict
+        _input_metadata: dict
             Dictionary for metadata from file.
         key: str
             Key for metadata entry.
@@ -455,7 +455,7 @@ class MetadataCollector:
         """
 
         try:
-            for document in _input_meta["context"][key]:
+            for document in _input_metadata["context"][key]:
                 self._fill_context_sim_list(context_dict[key], document)
         except KeyError:
             pass

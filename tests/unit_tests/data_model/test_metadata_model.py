@@ -18,7 +18,7 @@ def test_get_default_metadata_dict():
     assert _top_meta["CTA"]["CONTACT"]["ORGANIZATION"] == "CTAO"
 
 
-def test__load_schema():
+def test_load_schema():
     _metadata_schema, _ = metadata_model._load_schema()
     assert isinstance(_metadata_schema, dict)
     assert len(_metadata_schema) > 0
@@ -48,7 +48,7 @@ def test_validate_schema(tmp_test_directory):
         metadata_model.validate_schema(invalid_data, schema_file)
 
 
-def test__resolve_references():
+def test_resolve_references():
     yaml_data = {
         "example_data": {
             "example_object": {"type": "object", "properties": {"INSTRUMENT": {"type": "string"}}},
@@ -71,7 +71,7 @@ def test__resolve_references():
     assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
-def test__fill_defaults():
+def test_fill_defaults():
     schema = {
         "CTA": {
             "properties": {

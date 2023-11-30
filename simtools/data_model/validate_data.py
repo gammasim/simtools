@@ -53,6 +53,11 @@ class DataValidator:
         data: dict or astropy.table
             Data dict or table
 
+        Raises
+        ------
+        TypeError
+            if no data or data table is available
+
         """
 
         if self.data_file_name:

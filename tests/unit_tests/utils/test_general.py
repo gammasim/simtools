@@ -63,6 +63,10 @@ def test_collect_dict_from_url(io_handler) -> None:
 
     assert _reference_dict == _url_dict
 
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
+    with pytest.raises(urllib.error.HTTPError):
+        gen.collect_data_from_http_yaml(_url + _file)
+
 
 def test_collect_dict_from_file() -> None:
     # Test 1: file_path is a yaml file

@@ -44,7 +44,7 @@ class ModelDataWriter:
         Parameters
         ----------
         args_dict: dict
-            Dictionary with configuration parameters.
+            Dictionary with configuration parameters (including output file name and path).
         metadata: dict
             Metadata to be written.
         product_data: astropy Table

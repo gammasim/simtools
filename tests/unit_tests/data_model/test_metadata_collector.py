@@ -49,7 +49,9 @@ def test_get_data_model_schema_file_name():
     assert schema_file == url
 
     # from input metadata
-    _collector.input_meta = {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+    _collector.input_metadata = {
+        "cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}
+    }
     _collector.data_model_name = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == "from_input_meta"
@@ -97,25 +99,25 @@ def test_fill_associated_elements_from_args(args_dict_site):
         )
 
 
-def test_read_input_meta_from_file(args_dict_site):
+def test_read_input_metadata_from_file(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
-    assert metadata_1._read_input_meta_from_file() == {}
+    assert metadata_1._read_input_metadata_from_file() == {}
 
     metadata_1.args_dict["input_meta"] = "./file_does_not_exist"
     with pytest.raises(FileNotFoundError):
-        metadata_1._read_input_meta_from_file()
+        metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
-    assert len(metadata_1._read_input_meta_from_file()) > 0
+    assert len(metadata_1._read_input_metadata_from_file()) > 0
 
 
 def test_fill_context_from_input_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
-    metadata_1.input_meta = metadata_1._read_input_meta_from_file()
+    metadata_1.input_metadata = metadata_1._read_input_metadata_from_file()
     metadata_1._fill_context_from_input_meta(metadata_1.top_level_meta["cta"]["context"])
 
     assert metadata_1.top_level_meta["cta"]["context"]["document"][1]["type"] == "Presentation"

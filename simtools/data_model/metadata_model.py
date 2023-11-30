@@ -31,8 +31,8 @@ def validate_schema(data, schema_file):
 
     Raises
     ------
-    FileNotFoundError
-        if input file is not found
+    jsonschema.exceptions.ValidationError
+        if validation fails
 
     """
 
@@ -60,7 +60,8 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
     Returns
     -------
-    dict with reference schema
+    dict
+        Reference schema dictionary.
 
 
     """
@@ -77,8 +78,11 @@ def _load_schema(schema_file=None):
 
     Returns
     -------
-    schema_file (dict)
-        schema
+    schema_file dict
+        Schema used for validation.
+    schema_file str
+        File name schema is loaded from. If schema_file is not given,
+        the default schema file name is returned.
 
     Raises
     ------
