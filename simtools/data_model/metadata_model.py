@@ -11,7 +11,7 @@ import logging
 from importlib.resources import files
 
 import jsonschema
-from astropy.io.misc import yaml
+import yaml
 
 import simtools.utils.general as gen
 
@@ -66,7 +66,7 @@ def load_schema(schema_file=None):
         with files("simtools").joinpath("schemas/metadata.schema.yml").open(
             "r", encoding="utf-8"
         ) as file:
-            schema = yaml.load(file)
+            schema = yaml.safe_load(file)
         _logger.info("Loading schema from simtools package.")
     else:
         schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
