@@ -39,7 +39,7 @@
     .. code-block:: console
 
         simtools-print-array-elements \\
-            --array_element_list tests/resources/telescope_positions-South-4MST.ecsv \\
+            --input tests/resources/telescope_positions-South-4MST.ecsv \\
             --compact corsika
 
     Expected final print-out message:
@@ -74,7 +74,7 @@ import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.layout import layout_array
+from simtools.layout import array_layout
 
 
 def _parse(label=None, description=None):
@@ -158,7 +158,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = layout_array.LayoutArray(telescope_list_file=args_dict["input"])
+    layout = array_layout.LayoutArray(telescope_list_file=args_dict["input"])
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
 
