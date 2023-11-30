@@ -370,6 +370,13 @@ def collect_data_from_http_yaml(url):
     dict
         Dictionary containing the yaml file contents.
 
+    Raises
+    ------
+    TypeError
+        If url is not a valid URL.
+    urllib.error.HTTPError
+        If downloading the yaml file fails.
+
     """
 
     _logger.debug(f"Downloaded yaml file from {url}")
