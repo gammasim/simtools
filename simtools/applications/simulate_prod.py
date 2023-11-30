@@ -91,8 +91,6 @@ import shutil
 import tarfile
 from pathlib import Path
 
-import yaml
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -206,8 +204,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     try:
-        with open(args_dict["production_config"], encoding="utf-8") as file:
-            config_data = yaml.safe_load(file)
+        config_data = gen.collect_data_from_yaml_or_dict(in_yaml=args_dict["production_config"])
     except FileNotFoundError:
         logger.error(
             f"Error loading simulation configuration file from {args_dict['production_config']}"
