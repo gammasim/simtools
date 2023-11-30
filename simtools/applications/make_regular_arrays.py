@@ -29,7 +29,7 @@
 
     .. code-block:: console
 
-        INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
+        INFO::array_layout(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
         nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
         T-corsika.ecsv
 """
@@ -44,7 +44,7 @@ import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 
 
 def main():
@@ -106,7 +106,7 @@ def main():
     for site in ["South", "North"]:
         for array_name in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
             logger.info(f"Processing array {array_name}")
-            layout = LayoutArray(
+            layout = ArrayLayout(
                 site=site,
                 mongo_db_config=db_config,
                 label=label,
