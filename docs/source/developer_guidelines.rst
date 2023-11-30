@@ -30,8 +30,7 @@ The main directories of simtools are:
 Python version
 ==============
 
-The simtools package is currently developed for Python 3.9, but expected to work with Python 3.10 and 3.11 as well.
-Unit and integration tests run for Python 3.9 and 3.11.
+The simtools package is currently developed for Python 3.11.
 
 
 Contributing code

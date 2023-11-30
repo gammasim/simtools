@@ -57,7 +57,7 @@ Prepare a python environment:
 
 .. code-block:: console
 
-    $ mamba create --name simtools-prod python=3.9
+    $ mamba create --name simtools-prod python=3.11
     $ mamba activate simtools-prod
 
 Use pip to install simtools and its dependencies:

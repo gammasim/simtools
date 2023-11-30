@@ -175,7 +175,7 @@ htmlhelp_basename = "simtoolsdoc"
 
 # -- Options for intersphinx extension ---------------------------------------
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.9", None),
+    "python": ("https://docs.python.org/3.11", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "astropy": ("https://docs.astropy.org/en/latest/", None),
