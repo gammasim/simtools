@@ -62,49 +62,49 @@
 
         hist_position:
             x axis:
-            bins: 100
-            scale: linear
-            start: !astropy.units.Quantity
-                unit: &id001 !astropy.units.Unit {unit: m}
-                value: -1000.0
-            stop: &id002 !astropy.units.Quantity
-                unit: *id001
-                value: 1000.0
+                bins: 100
+                scale: linear
+                start: !astropy.units.Quantity
+                    unit: &id001 !astropy.units.Unit {unit: m}
+                    value: -1000.0
+                stop: &id002 !astropy.units.Quantity
+                    unit: *id001
+                    value: 1000.0
             y axis:
-            bins: 100
-            scale: linear
-            start: !astropy.units.Quantity
-                unit: *id001
-                value: -1000.0
-            stop: *id002
+                bins: 100
+                scale: linear
+                start: !astropy.units.Quantity
+                    unit: *id001
+                    value: -1000.0
+                stop: *id002
             z axis:
-            bins: 80
-            scale: linear
-            start: !astropy.units.Quantity
-                unit: &id003 !astropy.units.Unit {unit: nm}
-                value: 200.0
-            stop: !astropy.units.Quantity
-                unit: *id003
-                value: 1000.0
+                bins: 80
+                scale: linear
+                start: !astropy.units.Quantity
+                    unit: &id003 !astropy.units.Unit {unit: nm}
+                    value: 200.0
+                stop: !astropy.units.Quantity
+                    unit: *id003
+                    value: 1000.0
         hist_time_altitude:
             x axis:
-            bins: 100
-            scale: linear
-            start: !astropy.units.Quantity
-                unit: &id004 !astropy.units.Unit {unit: ns}
-                value: -2000.0
-            stop: !astropy.units.Quantity
-                unit: *id004
-                value: 2000.0
+                bins: 100
+                scale: linear
+                start: !astropy.units.Quantity
+                    unit: &id004 !astropy.units.Unit {unit: ns}
+                    value: -2000.0
+                stop: !astropy.units.Quantity
+                    unit: *id004
+                    value: 2000.0
             y axis:
-            bins: 100
-            scale: linear
-            start: !astropy.units.Quantity
-                unit: &id005 !astropy.units.Unit {unit: km}
-                value: 120.0
-            stop: !astropy.units.Quantity
-                unit: *id005
-                value: 0.0
+                bins: 100
+                scale: linear
+                start: !astropy.units.Quantity
+                    unit: &id005 !astropy.units.Unit {unit: km}
+                    value: 120.0
+                stop: !astropy.units.Quantity
+                    unit: *id005
+                    value: 0.0
 
 
     pdf (bool, optional)
