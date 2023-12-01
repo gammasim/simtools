@@ -214,7 +214,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
 def _check_value_entry_length(value, par_name, par_info):
     """
-    Validate length of user input parmeters
+    Validate length of user input parameters
 
     Parameters
     ----------
@@ -558,7 +558,7 @@ def collect_final_lines(file, n_lines):
     list_of_lines = []
 
     if Path(file).suffix == ".gz":
-        import gzip
+        import gzip # pylint: disable=import-outside-toplevel
 
         file_open_function = gzip.open
     else:
