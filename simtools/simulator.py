@@ -124,7 +124,6 @@ class Simulator:
         self._corsika_config_data = None
         self.site = None
         self.layout_name = None
-        self._corsika_parameters_file = None
         self.config = None
         self.array_model = None
         self._simulation_runner = None
@@ -216,10 +215,6 @@ class Simulator:
         self.runs = self._validate_run_list_and_range(
             self._corsika_config_data.pop("run_list", None),
             self._corsika_config_data.pop("run_range", None),
-        )
-
-        self._corsika_parameters_file = self._corsika_config_data.pop(
-            "corsika_parameters_file", None
         )
 
     def _load_sim_tel_config_and_model(self, config_data):
@@ -361,7 +356,6 @@ class Simulator:
             "mongo_db_config": self._mongo_db_config,
             "site": self.site,
             "layout_name": self.layout_name,
-            "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
         if self.simulator in ["simtel", "corsika_simtel"]:

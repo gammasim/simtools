@@ -43,10 +43,6 @@ class CorsikaRunner:
             'cscat': [10, 1500 * u.m, 0]
         }
 
-    The remaining CORSIKA parameters can be set as a yaml file, using the argument \
-    corsika_parameters_file. When not given, corsika_parameters will be loaded from \
-    data/parameters/corsika_parameters.yml.
-
     The CORSIKA output directory must be set by the data_directory entry. The following directories\
     will be created to store the logs and input file:
     {data_directory}/corsika/$site/$primary/logs
@@ -70,8 +66,6 @@ class CorsikaRunner:
         Dict with CORSIKA config data.
     corsika_config_file: str or Path
         Path to yaml file containing CORSIKA config data.
-    corsika_parameters_file: str or Path
-        Path to yaml file containing CORSIKA parameters.
     """
 
     def __init__(
@@ -82,7 +76,6 @@ class CorsikaRunner:
         simtel_source_path,
         label=None,
         keep_seeds=False,
-        corsika_parameters_file=None,
         corsika_config_data=None,
         corsika_config_file=None,
         use_multipipe=False,
