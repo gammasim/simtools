@@ -14,6 +14,7 @@
 import os
 import sys
 
+import toml
 import yaml
 
 import simtools.version
@@ -44,6 +45,20 @@ def get_authors_from_citation_file(file_name):
     return author[:-2]
 
 
+def get_python_version_from_pyproject():
+    """
+    Read python version from pyproject.toml file
+
+    """
+    with open("../../pyproject.toml") as file:
+        pyproject = toml.load(file)
+
+    try:
+        return pyproject['project']['requires-python'].replace(">", "").replace("=", "")
+    except KeyError:
+        return "3.11"
+
+
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
@@ -51,6 +66,11 @@ copyright = "2023, gammasim-tools, simtools developers"
 author = get_authors_from_citation_file("../CITATION.cff")
 rst_epilog = f"""
 .. |author| replace:: {author}
+"""
+
+python_requires = get_python_version_from_pyproject()
+rst_epilog = f"""
+.. |python_requires| replace:: {python_requires}
 """
 
 # The short X.Y version
@@ -175,7 +195,7 @@ htmlhelp_basename = "simtoolsdoc"
 
 # -- Options for intersphinx extension ---------------------------------------
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.11", None),
+    "python": (f"https://docs.python.org/{python_requires}", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "astropy": ("https://docs.astropy.org/en/latest/", None),
