@@ -19,12 +19,12 @@ def test_get_default_metadata_dict():
 
 
 def test_load_schema():
-    _metadata_schema = metadata_model.load_schema()
+    _metadata_schema, _ = metadata_model._load_schema()
     assert isinstance(_metadata_schema, dict)
     assert len(_metadata_schema) > 0
 
     with pytest.raises(FileNotFoundError):
-        metadata_model.load_schema(schema_file="not_existing_file")
+        metadata_model._load_schema(schema_file="not_existing_file")
 
 
 def test_validate_schema(tmp_test_directory):
@@ -68,40 +68,31 @@ def test_resolve_references():
         }
     }
 
-    assert metadata_model.resolve_references(yaml_data) == expected_result
+    assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
 def test_fill_defaults():
     schema = {
-        "properties": {
-            "CONTACT": {
-                "type": "object",
-                "properties": {
-                    "organization": {"type": "string", "default": "CTA"},
-                    "number": {"type": "integer", "default": 30},
-                },
-            },
-            "DOCUMENTS": {
-                "type": "array",
-                "items": {
+        "CTA": {
+            "properties": {
+                "CONTACT": {
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string", "default": "a_document"},
-                        "id": {"type": "integer", "default": 55},
+                        "organization": {"type": "string", "default": "CTA"},
+                        "number": {"type": "integer", "default": 30},
                     },
                 },
-            },
-            "NO_DEFAULT": {
-                "type": "object",
-                "properties": {
-                    "string_without_default": {
-                        "type": "string",
+                "DOCUMENTS": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "default": "a_document"},
+                            "id": {"type": "integer", "default": 55},
+                        },
                     },
                 },
-            },
-            "NO_DEFAULT_LIST": {
-                "type": "array",
-                "items": {
+                "NO_DEFAULT": {
                     "type": "object",
                     "properties": {
                         "string_without_default": {
@@ -109,7 +100,18 @@ def test_fill_defaults():
                         },
                     },
                 },
-            },
+                "NO_DEFAULT_LIST": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "string_without_default": {
+                                "type": "string",
+                            },
+                        },
+                    },
+                },
+            }
         }
     }
     expected_result = {
@@ -121,7 +123,7 @@ def test_fill_defaults():
         }
     }
 
-    assert metadata_model.fill_defaults(schema) == expected_result
+    assert metadata_model._fill_defaults(schema) == expected_result
 
     schema = {
         "no_properties": {
@@ -136,4 +138,4 @@ def test_fill_defaults():
     }
 
     with pytest.raises(KeyError):
-        metadata_model.fill_defaults(schema)
+        metadata_model._fill_defaults(schema)

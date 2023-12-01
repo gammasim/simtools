@@ -224,6 +224,8 @@ APP_LIST = {
     ],
     "generate_default_metadata": [
         [
+            "--schema",
+            "simtools/schemas/metadata.schema.yml",
             "--output_path",
             "TESTOUTPUTDIR/test_generate_default_metadata",
         ]
@@ -651,11 +653,11 @@ APP_LIST = {
     ],
     # print_array
     "print_array_elements::print_all": [
-        ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
+        ["--input", "tests/resources/telescope_positions-South-4MST.ecsv"],
     ],
     "print_array_elements::print_compact": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--compact",
             "corsika",
@@ -665,7 +667,7 @@ APP_LIST = {
     ],
     "print_array_elements::export_utm": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "utm",
@@ -675,7 +677,7 @@ APP_LIST = {
     ],
     "print_array_elements::export_corsika": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "corsika",
@@ -686,7 +688,7 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_nocors_utm": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "utm",
@@ -696,7 +698,7 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_nocors_corsika": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "corsika",
@@ -706,11 +708,13 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_corsika_telescopeheights": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--select_assets",
+            "LSTN MSTN LSTS MSTS SSTS",
             "--output_path",
             "TESTOUTPUTDIR/",
         ],
