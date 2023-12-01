@@ -30,7 +30,7 @@ class DataValidator:
 
     """
 
-    def __init__(self, schema_file=None, data_file=None):
+    def __init__(self, schema_file=None, data_file=None, data_table=None):
         """
         Initialize validation class and read required reference data columns
 
@@ -38,11 +38,11 @@ class DataValidator:
 
         self._logger = logging.getLogger(__name__)
 
-        self._data_file_name = data_file
-        self._schema_file_name = schema_file
+        self.data_file_name = data_file
+        self.schema_file_name = schema_file
         self._reference_data_columns = None
         self.data = None
-        self.data_table = None
+        self.data_table = data_table
 
     def validate_and_transform(self):
         """
@@ -53,13 +53,22 @@ class DataValidator:
         data: dict or astropy.table
             Data dict or table
 
+        Raises
+        ------
+        TypeError
+            if no data or data table is available
+
         """
 
-        self.validate_data_file()
+        if self.data_file_name:
+            self.validate_data_file()
         if isinstance(self.data, dict):
             self._validate_data_dict()
-        else:
+        elif isinstance(self.data_table, Table):
             self._validate_data_table()
+        else:
+            self._logger.error("No data or data table to validate")
+            raise TypeError
 
         return self.data_table
 
@@ -72,12 +81,12 @@ class DataValidator:
         """
 
         try:
-            if Path(self._data_file_name).suffix in (".yml", ".yaml"):
-                self.data = gen.collect_data_from_yaml_or_dict(self._data_file_name, None)
-                self._logger.info(f"Reading data from yaml file: {self._data_file_name}")
+            if Path(self.data_file_name).suffix in (".yml", ".yaml"):
+                self.data = gen.collect_data_from_yaml_or_dict(self.data_file_name, None)
+                self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
-                self.data_table = Table.read(self._data_file_name, guess=True, delimiter=r"\s")
-                self._logger.info(f"Reading tabled data from file: {self._data_file_name}")
+                self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
+                self._logger.info(f"Validating tabled data from: {self.data_file_name}")
         except (AttributeError, TypeError):
             pass
 
@@ -90,7 +99,7 @@ class DataValidator:
 
         try:
             self._reference_data_columns = self._read_validation_schema(
-                self._schema_file_name, self.data["name"]
+                self.schema_file_name, self.data["name"]
             )
             _quantities = []
             for value, unit in zip(self.data["value"], self.data["units"]):
@@ -113,11 +122,11 @@ class DataValidator:
         """
 
         try:
-            self._reference_data_columns = self._read_validation_schema(self._schema_file_name)[
+            self._reference_data_columns = self._read_validation_schema(self.schema_file_name)[
                 0
             ].get("table_columns", None)
         except IndexError:
-            self._logger.error(f"Error reading validation schema from {self._schema_file_name}")
+            self._logger.error(f"Error reading validation schema from {self.schema_file_name}")
             raise
 
         if self._reference_data_columns is not None:
@@ -138,15 +147,16 @@ class DataValidator:
 
         self._check_required_columns()
 
-        for col in self.data_table.itercols():
-            if not self._get_reference_data_column(col.name, status_test=True):
+        for col_name in self.data_table.colnames:
+            col = self.data_table[col_name]
+            if not self._get_reference_data_column(col_name, status_test=True):
                 continue
             if not np.issubdtype(col.dtype, np.number):
                 continue
-            self._check_for_not_a_number(col)
-            self._check_and_convert_units(col)
-            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
-            self._check_range(col.name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
+            self._check_for_not_a_number(col, col_name)
+            col = self._check_and_convert_units(col, col_name)
+            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
+            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
 
     def _check_required_columns(self):
         """
@@ -283,14 +293,16 @@ class DataValidator:
 
         return u.Unit(reference_unit)
 
-    def _check_for_not_a_number(self, col):
+    def _check_for_not_a_number(self, col, col_name):
         """
         Check that column values are finite and not NaN.
 
         Parameters
         ----------
-        col: astropy.column
+        col: astropy.column or Quantity
             data column to be converted
+        col_name: str
+            column name
 
         Returns
         -------
@@ -305,11 +317,11 @@ class DataValidator:
         """
 
         if np.isnan(col.data).any():
-            self._logger.info(f"Column {col.name} contains NaN.")
+            self._logger.info(f"Column {col_name} contains NaN.")
         if np.isinf(col.data).any():
-            self._logger.info(f"Column {col.name} contains infinite value.")
+            self._logger.info(f"Column {col_name} contains infinite value.")
 
-        entry = self._get_reference_data_column(col.name)
+        entry = self._get_reference_data_column(col_name)
         if "allow_nan" in entry.get("input_processing", {}):
             return np.isnan(col.data).any() or np.isinf(col.data).any()
 
@@ -319,7 +331,7 @@ class DataValidator:
 
         return False
 
-    def _check_and_convert_units(self, col):
+    def _check_and_convert_units(self, col, col_name):
         """
         Check that all columns have an allowed unit. Convert to reference unit (e.g., Angstrom to
         nm).
@@ -332,8 +344,10 @@ class DataValidator:
 
         Parameters
         ----------
-        col: astropy.column
+        col: astropy.column or Quantity
             data column to be converted
+        col_name: str
+            column name
 
         Returns
         -------
@@ -347,29 +361,25 @@ class DataValidator:
 
         """
 
-        self._logger.debug(f"Checking data column '{col.name}'")
+        self._logger.debug(f"Checking data column '{col_name}'")
 
         try:
-            reference_unit = self._get_reference_unit(col.name)
+            reference_unit = self._get_reference_unit(col_name)
             if col.unit is None or col.unit == "dimensionless":
                 col.unit = u.dimensionless_unscaled
                 return col
 
             self._logger.debug(
-                f"Data column '{col.name}' with reference unit "
+                f"Data column '{col_name}' with reference unit "
                 f"'{reference_unit}' and data unit '{col.unit}'"
             )
-
-            col.convert_unit_to(reference_unit)
-
+            return u.Quantity(col).to(reference_unit)
         except u.core.UnitConversionError:
             self._logger.error(
-                f"Invalid unit in data column '{col.name}'. "
+                f"Invalid unit in data column '{col_name}'. "
                 f"Expected type '{reference_unit}', found '{col.unit}'"
             )
             raise
-
-        return col
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
@@ -502,11 +512,16 @@ class DataValidator:
         ----------
         column_name: str
             Column name.
+        status_test: bool
+            Test if reference column exists.
 
         Returns
         -------
         dict
-            Reference schema column.
+            Reference schema column (for status_test==False).
+        bool
+            True if reference column exists (for status_test==True).
+
 
         Raises
         ------

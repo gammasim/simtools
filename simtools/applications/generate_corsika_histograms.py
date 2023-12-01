@@ -42,68 +42,70 @@
         Indicates whether single histograms are generated for the individual telescopes, or if
         a master histogram is generated for all the telescopes together.
         If the argument is not given, the Cherenkov photons from the given telescopes are considered
-         together in the same histograms.
+        together in the same histograms.
 
     hist_config (hdf5 or dict, optional)
         The configuration used for generating the histograms.
         It includes information about the bin sizes, the ranges, scale of the plot and units.
         By construction, three major histograms are created to start with:
-         - hist_direction (2D): Directive cosines (x and y) for the incoming photons;
-         - hist_position (3D): position x, position y, and wavelength;
-         - hist_time_altitude (2D): time of arrival and altitude of emission;
+        - hist_direction (2D): Directive cosines (x and y) for the incoming photons;
+        - hist_position (3D): position x, position y, and wavelength;
+        - hist_time_altitude (2D): time of arrival and altitude of emission;
 
-        If the argument is not given, the default configuration is generated:
+    If the argument is not given, the default configuration is generated:
 
-        .. code-block:: console
-            hist_direction:
-              x axis: {bins: 100, scale: linear, start: -1, stop: 1}
-              y axis: {bins: 100, scale: linear, start: -1, stop: 1}
+    .. code-block:: console
 
-            hist_position:
-              x axis:
+        hist_direction:
+            x axis: {bins: 100, scale: linear, start: -1, stop: 1}
+            y axis: {bins: 100, scale: linear, start: -1, stop: 1}
+
+        hist_position:
+            x axis:
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                  unit: &id001 !astropy.units.Unit {unit: m}
-                  value: -1000.0
+                    unit: &id001 !astropy.units.Unit {unit: m}
+                    value: -1000.0
                 stop: &id002 !astropy.units.Quantity
-                  unit: *id001
-                  value: 1000.0
-              y axis:
+                    unit: *id001
+                    value: 1000.0
+            y axis:
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                  unit: *id001
-                  value: -1000.0
+                    unit: *id001
+                    value: -1000.0
                 stop: *id002
-              z axis:
+            z axis:
                 bins: 80
                 scale: linear
                 start: !astropy.units.Quantity
-                  unit: &id003 !astropy.units.Unit {unit: nm}
-                  value: 200.0
+                    unit: &id003 !astropy.units.Unit {unit: nm}
+                    value: 200.0
                 stop: !astropy.units.Quantity
-                  unit: *id003
-                  value: 1000.0
-            hist_time_altitude:
-              x axis:
+                    unit: *id003
+                    value: 1000.0
+        hist_time_altitude:
+            x axis:
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                  unit: &id004 !astropy.units.Unit {unit: ns}
-                  value: -2000.0
+                    unit: &id004 !astropy.units.Unit {unit: ns}
+                    value: -2000.0
                 stop: !astropy.units.Quantity
-                  unit: *id004
-                  value: 2000.0
-              y axis:
+                    unit: *id004
+                    value: 2000.0
+            y axis:
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                  unit: &id005 !astropy.units.Unit {unit: km}
-                  value: 120.0
+                    unit: &id005 !astropy.units.Unit {unit: km}
+                    value: 120.0
                 stop: !astropy.units.Quantity
-                  unit: *id005
-                  value: 0.0
+                    unit: *id005
+                    value: 0.0
+
 
     pdf (bool, optional)
         If set, histograms are saved into pdf files.

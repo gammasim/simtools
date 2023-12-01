@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
 import copy
+import getpass
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.utils.general as gen
@@ -15,12 +14,72 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_fill_association_meta_from_args(args_dict_site):
+def test_get_data_model_schema_file_name():
+    # from args_dict / command line
+    args_dict = {"no_schema": "schema_file.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
+
+    args_dict = {"schema": "simtools/schemas/metadata.schema.yml"}
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == args_dict["schema"]
+
+    # from metadata
+    _collector.top_level_meta["cta"]["product"]["data"]["model"][
+        "url"
+    ] = "simtools/schemas/top_level_meta.schema.yml"
+    schema_file = _collector.get_data_model_schema_file_name()
+    # test that priority is given to args_dict (if not none)
+    assert schema_file == args_dict["schema"]
+    _collector.args_dict["schema"] = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == "simtools/schemas/top_level_meta.schema.yml"
+
+    _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file is None
+
+    # from data model_name
+    _collector.data_model_name = "array_coordinates"
+    schema_file = _collector.get_data_model_schema_file_name()
+    url = "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
+    url += "array_coordinates.schema.yml"
+    assert schema_file == url
+
+    # from input metadata
+    _collector.input_metadata = {
+        "cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}
+    }
+    _collector.data_model_name = None
+    schema_file = _collector.get_data_model_schema_file_name()
+    assert schema_file == "from_input_meta"
+
+
+def test_get_data_model_schema_dict(args_dict_site):
+    metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    metadata.schema_file_name = "simtools/schemas/metadata.schema.yml"
+
+    assert isinstance(metadata.get_data_model_schema_dict(), dict)
+
+    metadata.schema_file_name = "this_file_does_not_exist"
+    assert metadata.get_data_model_schema_dict() == {}
+
+
+def test_fill_contact_meta(args_dict_site):
+    contact_dict = {}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector._fill_contact_meta(contact_dict)
+    assert contact_dict["name"] == getpass.getuser()
+
+
+def test_fill_associated_elements_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.get_default_metadata_dict(), True
     )
-    metadata_1._fill_association_meta_from_args(
+    metadata_1._fill_associated_elements_from_args(
         metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
     )
 
@@ -31,34 +90,45 @@ def test_fill_association_meta_from_args(args_dict_site):
     )
     assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == "D"
 
+    metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0].pop("site")
+
     metadata_1.args_dict = None
     with pytest.raises(TypeError):
-        metadata_1._fill_association_meta_from_args(
+        metadata_1._fill_associated_elements_from_args(
             metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
         )
 
 
-def test_fill_top_level_meta_from_file(args_dict_site):
+def test_read_input_metadata_from_file(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
-
     metadata_1.args_dict["input_meta"] = None
-    metadata_1._fill_top_level_meta_from_file(metadata_1.top_level_meta["cta"])
+
+    assert metadata_1._read_input_metadata_from_file() == {}
+
+    metadata_1.args_dict["input_meta"] = "./file_does_not_exist"
+    with pytest.raises(FileNotFoundError):
+        metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
-    metadata_1._fill_top_level_meta_from_file(metadata_1.top_level_meta["cta"])
+    assert len(metadata_1._read_input_metadata_from_file()) > 0
 
-    assert metadata_1.top_level_meta["cta"]["activity"]["name"] == "mirror_2f_measurement"
+
+def test_fill_context_from_input_meta(args_dict_site):
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
+    metadata_1.input_metadata = metadata_1._read_input_metadata_from_file()
+    metadata_1._fill_context_from_input_meta(metadata_1.top_level_meta["cta"]["context"])
+
     assert metadata_1.top_level_meta["cta"]["context"]["document"][1]["type"] == "Presentation"
+    assert (
+        metadata_1.top_level_meta["cta"]["context"]["associated_data"][0]["description"][0:6]
+        == "Mirror"
+    )
 
 
 def test_fill_product_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
 
     with pytest.raises(TypeError):
         metadata_1._fill_product_meta(product_dict=None)
@@ -73,7 +143,7 @@ def test_fill_product_meta(args_dict_site):
 
     assert metadata_1.top_level_meta["cta"]["product"]["id"] == "UNDEFINED_ACTIVITY_ID"
 
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
 
     # read product metadata from schema file
     metadata_1.args_dict["schema"] = "tests/resources/MST_mirror_2f_measurements.schema.yml"
@@ -82,31 +152,11 @@ def test_fill_product_meta(args_dict_site):
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
 
 
-def test_fill_association_id(args_dict_site):
+def test_fill_process_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
-    metadata_1.top_level_meta["cta"]["context"]["associated_elements"] = get_generic_input_meta()[
-        "context"
-    ]["associated_elements"]
+    metadata_1._fill_process_meta(metadata_1.top_level_meta["cta"]["activity"])
 
-    metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
-    )
-
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["id"]
-        == "South-MST-FlashCam-D"
-    )
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][1]["id"]
-        == "North-MST-NectarCam-7"
-    )
-
-    metadata_1._fill_association_id(
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
-    )
+    assert metadata_1.top_level_meta["cta"]["activity"]["type"] == "simulation"
 
 
 def test_merge_config_dicts(args_dict_site):
@@ -149,89 +199,40 @@ def test_merge_config_dicts(args_dict_site):
 
 def test_fill_activity_meta(args_dict_site):
     file_writer_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    file_writer_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
     file_writer_1._fill_activity_meta(file_writer_1.top_level_meta["cta"]["activity"])
 
-    file_writer_2 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    file_writer_2.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
+    # this is set by args_dict_site in conf.py  (although this is a unit test)
+    assert file_writer_1.top_level_meta["cta"]["activity"]["name"] == "integration_test"
 
 
 def test_fill_context_sim_list(args_dict_site):
     _test_dict_1 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
 
     # empty dict -> return same dict
-    metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, {})
+    _collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    _collector._fill_context_sim_list(meta_list=_test_dict_1, new_entry_dict={})
     assert _test_dict_1 == get_generic_input_meta()["context"]["associated_elements"]
 
     # add one new entry
     _new_element = {"site": "South", "class": "SCT", "type": "sctcam", "subtype": "7", "id:": None}
-    metadata_collector.MetadataCollector._fill_context_sim_list(_test_dict_1, _new_element)
+    _collector._fill_context_sim_list(_test_dict_1, _new_element)
     _test_dict_2 = copy.copy(get_generic_input_meta()["context"]["associated_elements"])
     _test_dict_2.append(_new_element)
     assert _test_dict_1 == _test_dict_2
 
     # add one new entry to non-existing list -> add
     _test_none = None
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
-        _test_none, _new_element
-    )
+    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
     assert _test_none == [_new_element]
     _test_none = []
-    _test_none = metadata_collector.MetadataCollector._fill_context_sim_list(
-        _test_none, _new_element
-    )
+    _test_none = _collector._fill_context_sim_list(_test_none, _new_element)
     assert _test_none == [_new_element]
 
     # one entry with Nones only
     _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
-    _test_def = metadata_collector.MetadataCollector._fill_context_sim_list(_test_def, _new_element)
+    _test_def = _collector._fill_context_sim_list(_test_def, _new_element)
     assert _test_none == [_new_element]
-
-
-def test_input_data_file_name(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    with pytest.raises(KeyError):
-        metadata_1.input_data_file_name()
-
-    metadata_1.args_dict["input_data"] = "test.hdf5"
-    assert metadata_1.input_data_file_name() == "test.hdf5"
-
-
-def test_collect_schema_dict(args_dict_site, tmp_test_directory):
-    _tmp_schema = get_example_input_schema_single_parameter()
-    # write _tmp_schema to a yml file in tmp_test_directory
-    _tmp_schema_file = Path(tmp_test_directory).joinpath("ref_long.schema.yml")
-    with open(_tmp_schema_file, "w") as outfile:
-        yaml.dump(_tmp_schema, outfile, default_flow_style=False)
-
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    assert metadata_1._collect_schema_dict() == {}
-
-    # test when full schema file name is given
-    metadata_1.args_dict["schema"] = _tmp_schema_file
-    assert metadata_1._collect_schema_dict() == _tmp_schema
-
-    # test when directory including schema file is given, but no parameter name
-    metadata_1.args_dict["schema"] = tmp_test_directory
-    assert metadata_1._collect_schema_dict() == {}
-
-    # test when directory including schema file is given, and parameter name
-    _tmp_parameter = {"name": "ref_long", "value": 1.0}
-    _tmp_parameter_file = Path(tmp_test_directory).joinpath("ref_long.yml")
-    with open(_tmp_parameter_file, "w") as outfile:
-        yaml.dump(_tmp_parameter, outfile, default_flow_style=False)
-    metadata_1.args_dict["input"] = _tmp_parameter_file
-    # compared sorted dicts, because the order of the keys is not guaranteed
-    # (mostly due to above yaml.dump)
-    assert dict(sorted(metadata_1._collect_schema_dict().items())) == dict(
-        sorted(_tmp_schema.items())
-    )
 
 
 def test_process_metadata_from_file():
@@ -300,13 +301,37 @@ def test_copy_list_type_metadata(args_dict_site):
     key = "associated_elements"
 
     _collector = metadata_collector.MetadataCollector({})
-    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    _collector._copy_list_type_metadata(top_level_dict["context"], _input_meta, key)
 
     assert _result_meta["context"][key] == top_level_dict["context"][key]
 
     key = "documents"
-    with pytest.raises(KeyError):
-        _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    _org_top_level_dict = copy.deepcopy(top_level_dict)
+    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
+    assert _org_top_level_dict == top_level_dict
+
+
+def test_input_dict_is_none():
+    _collector = metadata_collector.MetadataCollector(args_dict={})
+    input_dict = None
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = "not a dictionary"
+    result = _collector._all_values_none(input_dict)
+    assert result is False
+
+    input_dict = {"key1": None, "key2": None}
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = {}
+    result = _collector._all_values_none(input_dict)
+    assert result is True
+
+    input_dict = {"key1": None, "key2": "value"}
+    result = _collector._all_values_none(input_dict)
+    assert result is False
 
 
 def get_generic_input_meta():
