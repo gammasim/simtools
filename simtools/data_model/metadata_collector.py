@@ -285,10 +285,10 @@ class MetadataCollector:
             pass
 
         # DATA:MODEL
-        product_dict["data"]["model"]["name"] = self.schema_dict.get("name", None)
-        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", None)
+        helper_dict = {"name": "name", "version": "version", "type": "base_schema"}
+        for key, value in helper_dict.items():
+            product_dict["data"]["model"][key] = self.schema_dict.get(value, None)
         product_dict["data"]["model"]["url"] = self.schema_file
-        product_dict["data"]["model"]["type"] = self.schema_dict.get("base_schema", None)
 
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
