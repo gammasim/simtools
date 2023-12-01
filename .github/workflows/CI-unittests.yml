@@ -22,6 +22,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            python-version: "3.9"
+            install-method: mamba
+
+          - os: macos-latest
+            python-version: "3.9"
+            install-method: mamba
+
+          - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
             extra-args: ["codecov"]
