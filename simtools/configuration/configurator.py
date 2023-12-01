@@ -62,7 +62,9 @@ class Configurator:
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
-            prog=self.label, usage=usage, description=description,
+            prog=self.label,
+            usage=usage,
+            description=description,
             epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )

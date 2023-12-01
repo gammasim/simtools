@@ -29,7 +29,7 @@
 
     .. code-block:: console
 
-        INFO::layout_array(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
+        INFO::array_layout(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
         nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
         T-corsika.ecsv
 """
@@ -39,11 +39,12 @@ from pathlib import Path
 
 import astropy.units as u
 
+import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.layout.layout_array import LayoutArray
+from simtools.layout.array_layout import ArrayLayout
 
 
 def main():
@@ -56,7 +57,7 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, output=True)
 
     label = "make_regular_arrays"
 
@@ -105,7 +106,7 @@ def main():
     for site in ["South", "North"]:
         for array_name in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
             logger.info(f"Processing array {array_name}")
-            layout = LayoutArray(
+            layout = ArrayLayout(
                 site=site,
                 mongo_db_config=db_config,
                 label=label,
@@ -158,7 +159,14 @@ def main():
 
             layout.convert_coordinates()
             layout.print_telescope_list()
-            layout.export_telescope_list(crs_name="corsika", corsika_z=None)
+            writer.ModelDataWriter.dump(
+                args_dict=args_dict,
+                metadata=None,
+                product_data=layout.export_telescope_list_table(
+                    crs_name="corsika",
+                    corsika_z=False,
+                ),
+            )
 
 
 if __name__ == "__main__":
