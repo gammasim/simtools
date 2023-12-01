@@ -39,6 +39,7 @@ dependencies = [
     "python-dotenv",
     "pyyaml",
     "scipy",
+    "toml",
 ]
 
 [project.optional-dependencies]
