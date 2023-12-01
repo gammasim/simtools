@@ -54,9 +54,12 @@ def get_python_version_from_pyproject():
         pyproject = toml.load(file)
 
     try:
-        return pyproject['project']['requires-python'].replace(">", "").replace("=", "")
+        return (
+            pyproject['project']['requires-python'],
+            pyproject['project']['requires-python'].replace(">", "").replace("=", "")
+        )
     except KeyError:
-        return "3.11"
+        return (">=3.11", "3.11")
 
 
 # -- Project information -----------------------------------------------------
@@ -68,9 +71,9 @@ rst_epilog = f"""
 .. |author| replace:: {author}
 """
 
-python_requires = get_python_version_from_pyproject()
+python_min_requires, python_requires = get_python_version_from_pyproject()
 rst_epilog = f"""
-.. |python_requires| replace:: {python_requires}
+.. |python_min_requires| replace:: {python_min_requires}
 """
 
 # The short X.Y version
