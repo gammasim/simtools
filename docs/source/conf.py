@@ -17,6 +17,8 @@ import sys
 import toml
 import yaml
 
+from pathlib import Path
+
 import simtools.version
 
 sys.path.insert(0, os.path.abspath("../../simtools"))
@@ -24,13 +26,13 @@ sys.path.insert(0, os.path.abspath("../../simtools/applications"))
 sys.path.insert(0, os.path.abspath("../.."))
 
 
-def get_authors_from_citation_file(file_name):
+def get_authors_from_citation_file():
     """
     Read list of authors from CITATION.cff file
 
     """
     try:
-        with open("../../CITATION.cff") as file:
+        with open(Path(__file__).parent / "../../CITATION.cff") as file:
             citation = yaml.safe_load(file)
     except FileNotFoundError:
         raise
@@ -50,23 +52,20 @@ def get_python_version_from_pyproject():
     Read python version from pyproject.toml file
 
     """
-    with open("../../pyproject.toml") as file:
+    with open(Path(__file__).parent / "../../pyproject.toml") as file:
         pyproject = toml.load(file)
 
-    try:
-        return (
-            pyproject['project']['requires-python'],
-            pyproject['project']['requires-python'].replace(">", "").replace("=", "")
-        )
-    except KeyError:
-        return (">=3.11", "3.11")
+    return (
+        pyproject['project']['requires-python'],
+        pyproject['project']['requires-python'].replace(">", "").replace("=", "")
+    )
 
 
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
 copyright = "2023, gammasim-tools, simtools developers"
-author = get_authors_from_citation_file("../CITATION.cff")
+author = get_authors_from_citation_file()
 rst_epilog = f"""
 .. |author| replace:: {author}
 """
