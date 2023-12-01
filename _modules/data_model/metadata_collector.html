@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g2147a77</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g97c22a5</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=ad24d6da"></script>
+    <script src="../../_static/documentation_options.js?v=5e469c1d"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g2147a77</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g97c22a5</p>
 
 
 
@@ -84,15 +84,22 @@
           <div class="body" role="main">
             
   <h1>Source code for data_model.metadata_collector</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Metadata collector for simtools.</span>
 
+<span class="sd">This should be the only module in simtools with knowledge on the</span>
+<span class="sd">implementation of the metadata model.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">simtools.constants</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">import</span> <span class="nn">simtools.version</span>
 <span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">metadata_model</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MetadataCollector&quot;</span><span class="p">]</span>
 
@@ -101,18 +108,22 @@
 <a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector">[docs]</a>
 <span class="k">class</span> <span class="nc">MetadataCollector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Collects and combines metadata associated with the current activity</span>
-<span class="sd">    (e.g., the execution of an application).</span>
-<span class="sd">    Depends on and fine tuned to CTAO top-level metadata definition.</span>
+<span class="sd">    Collects and combines metadata associated to describe the current</span>
+<span class="sd">    simtools activity and its data products. Collect as much metadata</span>
+<span class="sd">    as possible from command line configuration, input data, environment,</span>
+<span class="sd">    schema descriptions.</span>
+<span class="sd">    Depends on the CTAO top-level metadata definition.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    args: argparse.Namespace</span>
+<span class="sd">    args_dict: dict</span>
 <span class="sd">        Command line parameters</span>
+<span class="sd">    data_model_name: str</span>
+<span class="sd">        Name of data model parameter</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize metadata collector.</span>
 
@@ -122,36 +133,127 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span> <span class="o">=</span> <span class="n">data_model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
             <span class="n">data_dict</span><span class="o">=</span><span class="n">metadata_model</span><span class="o">.</span><span class="n">get_default_metadata_dict</span><span class="p">(),</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">collect_product_meta_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_input_metadata_from_file</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collect_meta_data</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MetadataCollector.collect_product_meta_data">
-<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.collect_product_meta_data">[docs]</a>
-    <span class="k">def</span> <span class="nf">collect_product_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MetadataCollector.collect_meta_data">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.collect_meta_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">collect_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect and verify product metadata from different sources.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_meta_from_args</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;associated_elements&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_contact_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;contact&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_top_level_meta_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_association_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;associated_elements&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;activity&quot;</span><span class="p">])</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;activity&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_process_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;process&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_from_input_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_associated_elements_from_args</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="s2">&quot;associated_elements&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_fill_association_meta_from_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">association_dict</span><span class="p">):</span>
+<div class="viewcode-block" id="MetadataCollector.get_data_model_schema_file_name">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_file_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_data_model_schema_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Append association metadata set through configurator.</span>
+<span class="sd">        Return data model schema file name.</span>
+<span class="sd">        The schema file name is taken (in this order) from the command line,</span>
+<span class="sd">        from the metadata file, from the data model name, or from the input</span>
+<span class="sd">        metadata file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Name of schema file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema file from command line: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Schema file from product metadata: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s1">&#39;cta&#39;</span><span class="p">][</span><span class="s1">&#39;product&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">][</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema file from data model name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">SCHEMA_URL</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Schema file from input metadata: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">[</span><span class="s1">&#39;cta&#39;</span><span class="p">][</span><span class="s1">&#39;product&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;model&#39;</span><span class="p">][</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No schema file found.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetadataCollector.get_data_model_schema_dict">
+<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_data_model_schema_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return data model schema dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Data model schema dictionary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span><span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No valid schema file provided (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_fill_contact_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contact_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill contact metadata fields.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        association_dict: dict</span>
-<span class="sd">            Dictionary for association metadata field.</span>
+<span class="sd">        contact_dict: dict</span>
+<span class="sd">            Dictionary for contact metadata fields.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">contact_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">contact_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getuser</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_fill_associated_elements_from_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">associated_elements_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append association metadata set through configurator.</span>
+
+<span class="sd">        TODO - this function might go in future, as instrument</span>
+<span class="sd">        information will not be given via command line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        associated_elements_dict: dict</span>
+<span class="sd">            Dictionary for associated elements field.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -177,16 +279,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error reading association metadata from args&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">association_dict</span><span class="p">,</span> <span class="n">_association</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">associated_elements_dict</span><span class="p">,</span> <span class="n">_association</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_fill_top_level_meta_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_level_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fill_context_from_input_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read and validate metadata from file. Fill metadata into top-level template.</span>
+<span class="sd">        Read and validate input metadata from file and fill CONTEXT metadata fields.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        top_level_dict: dict</span>
-<span class="sd">            Dictionary for top level metadata.</span>
+<span class="sd">        context_dict: dict</span>
+<span class="sd">            Dictionary with context level metadata.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -195,25 +297,55 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping metadata reading; no metadata file defined.&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_merge_config_dicts</span><span class="p">(</span><span class="n">context_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;context&quot;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;document&quot;</span><span class="p">,</span> <span class="s2">&quot;associated_elements&quot;</span><span class="p">,</span> <span class="s2">&quot;associated_data&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copy_list_type_metadata</span><span class="p">(</span><span class="n">context_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No context metadata defined in input metadata file.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span>
+                <span class="n">context_dict</span><span class="p">[</span><span class="s2">&quot;associated_data&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No input product metadata appended to associated data.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_input_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and validate input metadata from file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Metadata dictionary.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        gen.InvalidConfigData</span>
+<span class="sd">            if metadata cannot be read from file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No input metadata file defined.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading meta data from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;input_meta&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">_input_meta</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
-                <span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
+            <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
+                <span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed reading metadata from file.&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="n">metadata_model</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">(</span><span class="n">_input_meta</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">_input_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_metadata_from_file</span><span class="p">(</span><span class="n">_input_meta</span><span class="p">)</span>
+        <span class="n">metadata_model</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_merge_config_dicts</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;document&quot;</span><span class="p">,</span> <span class="s2">&quot;associated_elements&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_list_type_metadata</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_metadata_from_file</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">),</span>
+            <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">product_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -232,69 +364,44 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activity_id&quot;</span><span class="p">,</span> <span class="s2">&quot;UNDEFINED_ACTIVITY_ID&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading activity UUID </span><span class="si">{</span><span class="n">product_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_model_schema_file_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_model_schema_dict</span><span class="p">()</span>
 
+        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activity_id&quot;</span><span class="p">,</span> <span class="s2">&quot;UNDEFINED_ACTIVITY_ID&quot;</span><span class="p">)</span>
+        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;creation_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># DATA:CATEGORY</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;SIM&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;R1&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;service&quot;</span>
+        <span class="c1"># TODO - introduce consistent naming of DL3 data model and model parameter schema files</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-        <span class="n">_schema_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_schema_dict</span><span class="p">()</span>
-        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;simpipe-schema&quot;</span><span class="p">)</span>
-        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0&quot;</span><span class="p">)</span>
+        <span class="c1"># DATA:MODEL</span>
+        <span class="n">helper_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;base_schema&quot;</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">helper_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span>
+
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file_format&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_collect_schema_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fill_process_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read schema from file.</span>
-
-<span class="sd">        The schema configuration parameter points to a directory or a file.</span>
-<span class="sd">        For the case of a directory, the schema file is assumed to be named</span>
-<span class="sd">        &lt;parameter_name&gt;.schema.yml.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Dictionary containing schema metadata.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">_schema</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">_data_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
-                    <span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_empty</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_dict_from_file</span><span class="p">(</span>
-                    <span class="n">file_path</span><span class="o">=</span><span class="n">_schema</span><span class="p">,</span>
-                    <span class="n">file_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_data_dict</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
-                <span class="k">return</span> <span class="p">{}</span>
-        <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_dict_from_file</span><span class="p">(</span><span class="n">_schema</span><span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_fill_association_id</span><span class="p">(</span><span class="n">association_dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill association id from site and telescope class, type, subtype.</span>
+<span class="sd">        Fill process fields in metadata.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        association_dict: dict</span>
-<span class="sd">            Association dictionary.</span>
+<span class="sd">        process_dict: dict</span>
+<span class="sd">            Dictionary for process metadata fields.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">association</span> <span class="ow">in</span> <span class="n">association_dict</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">association</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">simtools_instrument_name</span><span class="p">(</span>
-                    <span class="n">site</span><span class="o">=</span><span class="n">association</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-                    <span class="n">telescope_class_name</span><span class="o">=</span><span class="n">association</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">],</span>
-                    <span class="n">sub_system_name</span><span class="o">=</span><span class="n">association</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                    <span class="n">telescope_id_name</span><span class="o">=</span><span class="n">association</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subtype&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">),</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="n">association</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">process_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;simulation&quot;</span>
 
     <span class="k">def</span> <span class="nf">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activity_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -308,6 +415,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;software&quot;</span>
+        <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activity_id&quot;</span><span class="p">,</span> <span class="s2">&quot;UNDEFINED_ACTIVITY_ID&quot;</span><span class="p">)</span>
         <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
         <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span>
         <span class="n">activity_dict</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;simtools&quot;</span>
@@ -351,53 +460,35 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error merging dictionaries&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-<div class="viewcode-block" id="MetadataCollector.input_data_file_name">
-<a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.input_data_file_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">input_data_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return input data file (full path).</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Input data file (full path).</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        KeyError</span>
-<span class="sd">            if missing description of INPUT_DATA</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_data&quot;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Missing description of INPUT_DATA&quot;</span><span class="p">)</span>
-            <span class="k">raise</span></div>
-
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_fill_context_sim_list</span><span class="p">(</span><span class="n">product_list</span><span class="p">,</span> <span class="n">new_entry_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fill_context_sim_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_list</span><span class="p">,</span> <span class="n">new_entry_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill list-type entries into metadata. Take into account the first list entry is the default</span>
 <span class="sd">        value filled with Nones.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meta_list: list</span>
+<span class="sd">            List of metadata entries.</span>
+<span class="sd">        new_entry_dict: dict</span>
+<span class="sd">            New metadata entry to be added to meta_list.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
-<span class="sd">            Updated product list.</span>
+<span class="sd">            Updated meta list.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_entry_dict</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">product_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
-                <span class="n">product_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_entry_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_values_none</span><span class="p">(</span><span class="n">meta_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">meta_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_entry_dict</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">product_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_entry_dict</span>
+                <span class="n">meta_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_entry_dict</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-            <span class="n">product_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_entry_dict</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">product_list</span>
+            <span class="n">meta_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_entry_dict</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">meta_list</span>
 
     <span class="k">def</span> <span class="nf">_process_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -444,16 +535,16 @@
 
         <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;  &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_copy_list_type_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_level_dict</span><span class="p">,</span> <span class="n">_input_meta</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_copy_list_type_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_dict</span><span class="p">,</span> <span class="n">_input_metadata</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copy list-type metadata from file.</span>
 <span class="sd">        Very fine tuned.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        top_level_dict: dict</span>
-<span class="sd">            Dictionary for top level metadata.</span>
-<span class="sd">        meta_dict: dict</span>
+<span class="sd">        context_dict: dict</span>
+<span class="sd">            Dictionary for top level metadata (context level)</span>
+<span class="sd">        _input_metadata: dict</span>
 <span class="sd">            Dictionary for metadata from file.</span>
 <span class="sd">        key: str</span>
 <span class="sd">            Key for metadata entry.</span>
@@ -461,10 +552,31 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">_input_meta</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">],</span> <span class="n">document</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">_input_metadata</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_context_sim_list</span><span class="p">(</span><span class="n">context_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">document</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="n">top_level_dict</span><span class="p">[</span><span class="s2">&quot;context&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_all_values_none</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check recursively if all values in a dictionary are None.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_dict: dict</span>
+<span class="sd">            Input dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if all entries are None, False otherwise.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">input_dict</span> <span class="ow">is</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_values_none</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
 
 </pre></div>
 

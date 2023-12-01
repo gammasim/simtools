@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+g2147a77</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+g97c22a5</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=ad24d6da"></script>
+    <script src="../../_static/documentation_options.js?v=5e469c1d"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g2147a77</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g97c22a5</p>
 
 
 
@@ -779,36 +779,11 @@
 
         <span class="k">return</span> <span class="n">_meta</span>
 
-    <span class="k">def</span> <span class="nf">_set_telescope_list_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">):</span>
+<div class="viewcode-block" id="ArrayLayout.export_telescope_list_table">
+<a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.export_telescope_list_table">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_telescope_list_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">corsika_z</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set file location for writing of telescope list</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        crs_name: str</span>
-<span class="sd">            Name of coordinate system to be used for export.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Path</span>
-<span class="sd">            Output file</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">_output_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="n">dir_type</span><span class="o">=</span><span class="s2">&quot;simtools-result&quot;</span>
-        <span class="p">)</span>
-
-        <span class="n">_name</span> <span class="o">=</span> <span class="n">crs_name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">crs_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list_file</span> <span class="o">=</span> <span class="n">_output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">layout_telescope_list_file_name</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="p">)</span>
-
-<div class="viewcode-block" id="ArrayLayout.export_telescope_list">
-<a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.export_telescope_list">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_telescope_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">corsika_z</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Export array elements positions to ECSV file</span>
+<span class="sd">        Export array elements positions to astropy table.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -816,6 +791,12 @@
 <span class="sd">            Name of coordinate system to be used for export.</span>
 <span class="sd">        corsika_z: bool</span>
 <span class="sd">            Write telescope height in CORSIKA coordinates (for CORSIKA system).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.QTable</span>
+<span class="sd">            Astropy table with the telescope layout information.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_export_metadata</span><span class="p">(</span><span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;corsika&quot;</span><span class="p">))</span>
@@ -850,15 +831,13 @@
             <span class="n">table</span><span class="p">[</span><span class="n">_name_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_x</span>
             <span class="n">table</span><span class="p">[</span><span class="n">_name_y</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_y</span>
             <span class="k">if</span> <span class="n">corsika_z</span><span class="p">:</span>
-                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;pos_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
+                <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">table</span><span class="p">[</span><span class="n">_name_z</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">pass</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_telescope_list_file</span><span class="p">(</span><span class="n">crs_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting telescope list to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_list_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_list_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">table</span></div>
 
 
 <div class="viewcode-block" id="ArrayLayout.get_number_of_telescopes">

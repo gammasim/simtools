@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g2147a77</title>
+    <title>Index &#8212; simtools v0.1.dev1+g97c22a5</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=ad24d6da"></script>
+    <script src="_static/documentation_options.js?v=5e469c1d"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="#" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g2147a77</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g97c22a5</p>
 
 
 
@@ -202,7 +202,7 @@
 </li>
       <li><a href="utils.html#utils.general.collect_kwargs">collect_kwargs() (in module utils.general)</a>
 </li>
-      <li><a href="data_model.html#data_model.metadata_collector.MetadataCollector.collect_product_meta_data">collect_product_meta_data() (data_model.metadata_collector.MetadataCollector method)</a>
+      <li><a href="data_model.html#data_model.metadata_collector.MetadataCollector.collect_meta_data">collect_meta_data() (data_model.metadata_collector.MetadataCollector method)</a>
 </li>
       <li><a href="configuration_module.html#configuration.commandline_parser.CommandLineParser">CommandLineParser (class in configuration.commandline_parser)</a>
 </li>
@@ -320,10 +320,10 @@
         <li><a href="data_model.html#module-data_model.validate_data">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="db_handler.html#db_handler.DatabaseHandler">DatabaseHandler (class in db_handler)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="data_model.html#data_model.validate_data.DataValidator">DataValidator (class in data_model.validate_data)</a>
 </li>
       <li>
@@ -345,6 +345,8 @@
 </li>
       </ul></li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.derived">derived (model.telescope_model.TelescopeModel property)</a>
+</li>
+      <li><a href="data_model.html#data_model.model_data_writer.ModelDataWriter.dump">dump() (data_model.model_data_writer.ModelDataWriter static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -392,7 +394,7 @@
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.export_table_to_model_directory">export_table_to_model_directory() (model.telescope_model.TelescopeModel method)</a>
 </li>
-      <li><a href="array_layout.html#layout.array_layout.ArrayLayout.export_telescope_list">export_telescope_list() (layout.array_layout.ArrayLayout method)</a>
+      <li><a href="array_layout.html#layout.array_layout.ArrayLayout.export_telescope_list_table">export_telescope_list_table() (layout.array_layout.ArrayLayout method)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.extra_label">extra_label (model.telescope_model.TelescopeModel property)</a>
 </li>
@@ -404,14 +406,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="simulators.html#simulator.Simulator.file_list">file_list() (simulator.Simulator method)</a>
 </li>
-      <li><a href="data_model.html#data_model.metadata_model.fill_defaults">fill_defaults() (in module data_model.metadata_model)</a>
-</li>
       <li><a href="io_operations.html#io_operations.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module io_operations.hdf5_handler)</a>
+</li>
+      <li><a href="array_layout.html#layout.array_layout.ArrayLayout.from_array_layout_name">from_array_layout_name() (layout.array_layout.ArrayLayout class method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="array_layout.html#layout.array_layout.ArrayLayout.from_array_layout_name">from_array_layout_name() (layout.array_layout.ArrayLayout class method)</a>
-</li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.from_config_file">from_config_file() (model.telescope_model.TelescopeModel class method)</a>
 </li>
       <li><a href="camera_efficiency.html#camera_efficiency.CameraEfficiency.from_kwargs">from_kwargs() (camera_efficiency.CameraEfficiency class method)</a>
@@ -477,6 +477,10 @@
 </li>
       <li><a href="psf_analysis.html#psf_analysis.PSFImage.get_cumulative_data">get_cumulative_data() (psf_analysis.PSFImage method)</a>
 </li>
+      <li><a href="data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_dict">get_data_model_schema_dict() (data_model.metadata_collector.MetadataCollector method)</a>
+</li>
+      <li><a href="data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_file_name">get_data_model_schema_file_name() (data_model.metadata_collector.MetadataCollector method)</a>
+</li>
       <li><a href="data_model.html#data_model.metadata_model.get_default_metadata_dict">get_default_metadata_dict() (in module data_model.metadata_model)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.get_derived_directory">get_derived_directory() (model.telescope_model.TelescopeModel method)</a>
@@ -522,10 +526,10 @@
 </li>
       <li><a href="corsika.html#corsika.corsika_config.CorsikaConfig.get_input_file">get_input_file() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
-      <li><a href="mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
+</li>
       <li><a href="mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">get_lightguide_efficiency_wavelength_file_name() (model.camera.Camera method)</a>
 </li>
       <li><a href="visualization.html#visualization.visualize.get_lines">get_lines() (in module visualization.visualize)</a>
@@ -667,18 +671,16 @@
 </li>
       <li><a href="configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments">initialize_telescope_model_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
 </li>
-      <li><a href="data_model.html#data_model.metadata_collector.MetadataCollector.input_data_file_name">input_data_file_name() (data_model.metadata_collector.MetadataCollector method)</a>
-</li>
       <li><a href="db_handler.html#db_handler.DatabaseHandler.insert_file_to_db">insert_file_to_db() (db_handler.DatabaseHandler method)</a>
 </li>
       <li><a href="mc_model.html#model.array_model.InvalidArrayConfigData">InvalidArrayConfigData</a>
 </li>
       <li><a href="utils.html#utils.general.InvalidConfigData">InvalidConfigData</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils.html#utils.general.InvalidConfigEntry">InvalidConfigEntry</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="configuration_module.html#configuration.configurator.InvalidConfigurationParameter">InvalidConfigurationParameter</a>
 </li>
       <li><a href="array_layout.html#layout.telescope_position.InvalidCoordSystem">InvalidCoordSystem</a>
@@ -780,8 +782,6 @@
       <li><a href="sim_telarray.html#simtel.simtel_events.SimtelEvents.load_header_and_summary">load_header_and_summary() (simtel.simtel_events.SimtelEvents method)</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_events.SimtelEvents.load_input_files">load_input_files() (simtel.simtel_events.SimtelEvents method)</a>
-</li>
-      <li><a href="data_model.html#data_model.metadata_model.load_schema">load_schema() (in module data_model.metadata_model)</a>
 </li>
       <li><a href="visualization.html#visualization.legend_handlers.LSTHandler">LSTHandler (class in visualization.legend_handlers)</a>
 </li>
@@ -1136,10 +1136,10 @@
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.read_incidence_angle_distribution">read_incidence_angle_distribution() (model.telescope_model.TelescopeModel method)</a>
 </li>
-      <li><a href="db_handler.html#db_handler.DatabaseHandler.read_mongo_db">read_mongo_db() (db_handler.DatabaseHandler method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="db_handler.html#db_handler.DatabaseHandler.read_mongo_db">read_mongo_db() (db_handler.DatabaseHandler method)</a>
+</li>
       <li><a href="psf_analysis.html#psf_analysis.PSFImage.read_photon_list_from_simtel_file">read_photon_list_from_simtel_file() (psf_analysis.PSFImage method)</a>
 </li>
       <li><a href="mc_model.html#model.camera.Camera.read_pixel_list">read_pixel_list() (model.camera.Camera static method)</a>
@@ -1151,8 +1151,6 @@
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.reference_data">reference_data (model.telescope_model.TelescopeModel property)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.remove_parameters">remove_parameters() (model.telescope_model.TelescopeModel method)</a>
-</li>
-      <li><a href="data_model.html#data_model.metadata_model.resolve_references">resolve_references() (in module data_model.metadata_model)</a>
 </li>
       <li><a href="simulators.html#simulator.Simulator.resources">resources() (simulator.Simulator method)</a>
 </li>
@@ -1381,8 +1379,12 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="data_model.html#data_model.validate_data.DataValidator.validate_and_transform">validate_and_transform() (data_model.validate_data.DataValidator method)</a>
+      <li><a href="data_model.html#data_model.model_data_writer.ModelDataWriter.validate_and_transform">validate_and_transform() (data_model.model_data_writer.ModelDataWriter method)</a>
+
+      <ul>
+        <li><a href="data_model.html#data_model.validate_data.DataValidator.validate_and_transform">(data_model.validate_data.DataValidator method)</a>
 </li>
+      </ul></li>
       <li><a href="utils.html#utils.names.validate_array_layout_name">validate_array_layout_name() (in module utils.names)</a>
 </li>
       <li>
@@ -1414,10 +1416,10 @@
       </ul></li>
       <li><a href="utils.html#utils.names.validate_model_version_name">validate_model_version_name() (in module utils.names)</a>
 </li>
-      <li><a href="utils.html#utils.names.validate_name">validate_name() (in module utils.names)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#utils.names.validate_name">validate_name() (in module utils.names)</a>
+</li>
       <li>
     validate_optics
 
