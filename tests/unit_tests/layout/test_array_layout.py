@@ -240,6 +240,7 @@ def test_build_layout(
     array_layout_south_four_LST_instance,
     tmp_test_directory,
     db_config,
+    io_handler,
 ):
     def test_one_site(layout, site_label):
         layout.add_telescope(
@@ -281,7 +282,7 @@ def test_build_layout(
 
         # Building a second layout from the file exported by the first one
         layout_2 = ArrayLayout(site=site_label, mongo_db_config=db_config, name="test_layout_2")
-        layout_2.initialize_array_layout_from_telescope_file(layout.telescope_list_file)
+        layout_2.initialize_array_layout_from_telescope_file(_export_file)
 
         assert 4 == layout_2.get_number_of_telescopes()
         assert layout_2._array_center.get_altitude().value == pytest.approx(
