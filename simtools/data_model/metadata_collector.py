@@ -102,7 +102,7 @@ class MetadataCollector:
 
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return simtools.constants.SCHEMA_URL + self.data_model_name + ".schema.yml"
+            return f"{simtools.constants.SCHEMA_URL}{self.data_model_name}.schema.yml"
 
         try:
             self._logger.debug(
@@ -129,7 +129,7 @@ class MetadataCollector:
         try:
             return gen.collect_data_from_yaml_or_dict(in_yaml=self.schema_file, in_dict=None)
         except gen.InvalidConfigData:
-            self._logger.debug(f"Failed reading schema file from {self.schema_file}.")
+            self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 
     def _fill_contact_meta(self, contact_dict):
