@@ -5,6 +5,7 @@ import logging
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import QTable
 
 import simtools.utils.general as gen
 from simtools.layout.array_layout import ArrayLayout, InvalidCoordinateDataType
@@ -239,6 +240,7 @@ def test_build_layout(
     array_layout_south_four_LST_instance,
     tmp_test_directory,
     db_config,
+    io_handler,
 ):
     def test_one_site(layout, site_label):
         layout.add_telescope(
@@ -272,11 +274,15 @@ def test_build_layout(
 
         layout.convert_coordinates()
         layout.print_telescope_list()
-        layout.export_telescope_list(crs_name="corsika")
+        _table = layout.export_telescope_list_table(crs_name="corsika")
+        _export_file = tmp_test_directory / "test_layout.ecsv"
+        _table.write(_export_file, format="ascii.ecsv", overwrite=True)
+
+        assert isinstance(_table, QTable)
 
         # Building a second layout from the file exported by the first one
         layout_2 = ArrayLayout(site=site_label, mongo_db_config=db_config, name="test_layout_2")
-        layout_2.initialize_array_layout_from_telescope_file(layout.telescope_list_file)
+        layout_2.initialize_array_layout_from_telescope_file(_export_file)
 
         assert 4 == layout_2.get_number_of_telescopes()
         assert layout_2._array_center.get_altitude().value == pytest.approx(

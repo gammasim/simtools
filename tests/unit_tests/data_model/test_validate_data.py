@@ -179,24 +179,33 @@ def test_check_and_convert_units():
     table_1["qe"] = Column([0.1, 0.5], dtype="float32")
     table_1["qe"] = Column([0.1, 0.5], unit=None, dtype="float32")
     table_1["qe"] = Column([0.1, 0.5], unit="dimensionless", dtype="float32")
+    table_1["position_x"] = [0.1, 0.5] * u.km
+    table_1["position_y"] = Column([5.0, 7], unit="km", dtype="float32")
 
-    for col in table_1.itercols():
-        data_validator._check_and_convert_units(col)
+    for col_name in table_1.colnames:
+        table_1[col_name] = data_validator._check_and_convert_units(table_1[col_name], col_name)
+
+    # check unit conversion for "position_x" (column type Quantity)
+    assert table_1["position_x"].unit == u.m
+    assert 100.0 == pytest.approx(table_1["position_x"].value[0])
+    # check unit conversion for "position_y" (column type Column)
+    assert table_1["position_y"].unit == u.m
+    assert 7000.0 == pytest.approx(table_1["position_y"].value[1])
 
     table_2 = Table()
     table_2["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
     table_2["wrong_column"] = Column([0.1, 0.5], dtype="float32")
 
     with pytest.raises(IndexError):
-        for col in table_2.itercols():
-            data_validator._check_and_convert_units(col)
+        for col_name in table_2.colnames:
+            data_validator._check_and_convert_units(table_2[col_name], col_name)
 
     table_3 = Table()
     table_3["wavelength"] = Column([300.0, 350.0], unit="kg", dtype="float32")
 
     with pytest.raises(u.core.UnitConversionError):
-        for col in table_3.itercols():
-            data_validator._check_and_convert_units(col)
+        for col_name in table_3.colnames:
+            data_validator._check_and_convert_units(table_3[col_name], col_name)
 
 
 def test_check_required_columns():
@@ -268,35 +277,35 @@ def test_check_for_not_a_number():
 
     assert not (
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength")
+            Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
         )
     )
 
-    # wavelenght does not allow for nan
+    # wavelength does not allow for nan
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength")
+            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
         )
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength")
+            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
         )
     with pytest.raises(ValueError):
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength")
+            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
         )
 
-    # pos_x allows for nan
+    # position_x allows for nan
     assert not (
         data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="pos_x")
+            Column([300.0, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
         )
     )
     assert data_validator._check_for_not_a_number(
-        Column([np.nan, 350.0, 315.0], dtype="float32", name="pos_x")
+        Column([np.nan, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
     )
     assert data_validator._check_for_not_a_number(
-        Column([333.0, np.inf, 315.0], dtype="float32", name="pos_x")
+        Column([333.0, np.inf, 315.0], dtype="float32", name="position_x"), "position_x"
     )
 
 
@@ -377,10 +386,19 @@ def get_reference_columns():
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
         },
         {
-            "name": "pos_x",
+            "name": "position_x",
             "description": "x position",
             "required_column": False,
-            "units": "dimensionless",
+            "units": "m",
+            "type": "double",
+            "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
+            "input_processing": ["allow_nan"],
+        },
+        {
+            "name": "position_y",
+            "description": "y position",
+            "required_column": False,
+            "units": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
             "input_processing": ["allow_nan"],

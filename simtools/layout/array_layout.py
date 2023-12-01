@@ -676,34 +676,9 @@ class ArrayLayout:
 
         return _meta
 
-    def _set_telescope_list_file(self, crs_name):
+    def export_telescope_list_table(self, crs_name, corsika_z=False):
         """
-        Set file location for writing of telescope list
-
-        Parameters
-        ----------
-        crs_name: str
-            Name of coordinate system to be used for export.
-
-        Returns
-        -------
-        Path
-            Output file
-
-        """
-
-        _output_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir="layout", dir_type="simtools-result"
-        )
-
-        _name = crs_name if self.name is None else self.name + "-" + crs_name
-        self.telescope_list_file = _output_directory.joinpath(
-            names.layout_telescope_list_file_name(_name, None)
-        )
-
-    def export_telescope_list(self, crs_name, corsika_z=False):
-        """
-        Export array elements positions to ECSV file
+        Export array elements positions to astropy table.
 
         Parameters
         ----------
@@ -711,6 +686,12 @@ class ArrayLayout:
             Name of coordinate system to be used for export.
         corsika_z: bool
             Write telescope height in CORSIKA coordinates (for CORSIKA system).
+
+        Returns
+        -------
+        astropy.table.QTable
+            Astropy table with the telescope layout information.
+
         """
 
         table = QTable(meta=self._get_export_metadata(crs_name == "corsika"))
@@ -745,15 +726,13 @@ class ArrayLayout:
             table[_name_x] = pos_x
             table[_name_y] = pos_y
             if corsika_z:
-                table["pos_z"] = pos_z
+                table["position_z"] = pos_z
             else:
                 table[_name_z] = pos_z
         except IndexError:
             pass
 
-        self._set_telescope_list_file(crs_name)
-        self._logger.info(f"Exporting telescope list to {self.telescope_list_file}")
-        table.write(self.telescope_list_file, format="ascii.ecsv", overwrite=True)
+        return table
 
     def get_number_of_telescopes(self):
         """
