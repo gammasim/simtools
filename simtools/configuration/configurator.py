@@ -62,7 +62,9 @@ class Configurator:
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
-            prog=self.label, usage=usage, description=description,
+            prog=self.label,
+            usage=usage,
+            description=description,
             epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
@@ -294,7 +296,7 @@ class Configurator:
         _io_handler = io_handler.IOHandler()
         _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
-            use_plain_output_path=not self.config.get("use_simtools_output_path", False),
+            use_plain_output_path=self.config.get("use_plain_output_path", False),
             data_path=self.config.get("data_path", None),
             model_path=self.config.get("model_path", None),
         )
