@@ -15,15 +15,19 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: Get python version from pyproject.toml
+        run: |
+          python_version=$(grep -E '^\s*requires-python\s*=' pyproject.toml | awk -F '= ' '{gsub(/[>=]+/, "", $2); print $2}' | tr -d '"' | tr -d "'")
+          echo "python_version=${python_version}" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v4
+        with:
+          python-version: $
 
       - name: Python dependencies
         run: |
-          python --version
           pip install '.[doc]'
-          python --version
 
       - name: Check for non-ASCII characters
         run: |
