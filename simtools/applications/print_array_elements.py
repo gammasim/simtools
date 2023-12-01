@@ -158,7 +158,7 @@ def main():
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    layout = array_layout.LayoutArray(telescope_list_file=args_dict["input"])
+    layout = array_layout.ArrayLayout(telescope_list_file=args_dict["input"])
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
 
