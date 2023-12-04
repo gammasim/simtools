@@ -31,7 +31,7 @@
         associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
         untouched.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Raises
     ------

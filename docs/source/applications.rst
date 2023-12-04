@@ -49,6 +49,12 @@ derive_mirror_rnda
 .. automodule:: derive_mirror_rnda
    :members:
 
+generate_corsika_histograms
+===========================
+
+.. automodule:: generate_corsika_histograms
+   :members:
+
 generate_default_metadata
 =========================
 
@@ -80,10 +86,10 @@ make_regular_arrays
 .. automodule:: make_regular_arrays
    :members:
 
-plot_layout_array
-======================
+plot_array_layout
+=================
 
-.. automodule:: plot_layout_array
+.. automodule:: plot_array_layout
    :members:
 
 print_array_elements

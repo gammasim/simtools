@@ -4,6 +4,7 @@ import gzip
 import logging
 import os
 import time
+import urllib.error
 from copy import copy
 from pathlib import Path
 
@@ -51,6 +52,20 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
     with pytest.raises(InvalidConfigData):
         gen.collect_data_from_yaml_or_dict(None, None, allow_empty=False)
         assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+
+
+def test_collect_dict_from_url(io_handler) -> None:
+    _file = "tests/resources/test_parameters.yml"
+    _reference_dict = gen.collect_data_from_yaml_or_dict(_file, None)
+
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url_dict = gen.collect_data_from_http_yaml(_url + _file)
+
+    assert _reference_dict == _url_dict
+
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
+    with pytest.raises(urllib.error.HTTPError):
+        gen.collect_data_from_http_yaml(_url + _file)
 
 
 def test_collect_dict_from_file() -> None:
@@ -683,3 +698,35 @@ def test_find_file_not_found(tmp_test_directory) -> None:
     loc = Path(tmp_test_directory)
     with pytest.raises(FileNotFoundError):
         gen.find_file(file_name, loc)
+
+
+def test_is_url():
+    url = "http://www.desy.de"
+    assert gen.is_url(url) is True
+
+    url = "ftp://www.desy.de"
+    assert gen.is_url(url) is True
+
+    url = ""
+    assert gen.is_url(url) is False
+
+    url = "http://"
+    assert gen.is_url(url) is False
+
+    url = "desy.de"
+    assert gen.is_url(url) is False
+
+
+def test_collect_data_from_http_yaml():
+    file = "tests/resources/test_parameters.yml"
+    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+
+    data = gen.collect_data_from_http_yaml(url + file)
+    assert isinstance(data, dict)
+
+    with pytest.raises(TypeError):
+        data = gen.collect_data_from_http_yaml(None)
+
+    url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
+    with pytest.raises(urllib.error.HTTPError):
+        data = gen.collect_data_from_http_yaml(url + file)

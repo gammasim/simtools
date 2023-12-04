@@ -32,7 +32,7 @@
     nsb_spectrum (str, optional)
         File with NSB spectrum to use (following sim_telarray required format).
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print
 
     Example
     -------

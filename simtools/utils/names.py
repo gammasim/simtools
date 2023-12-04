@@ -20,7 +20,7 @@ __all__ = [
     "simtools_instrument_name",
     "split_telescope_model_name",
     "validate_camera_name",
-    "validate_layout_array_name",
+    "validate_array_layout_name",
     "validate_model_version_name",
     "validate_name",
     "validate_simtel_mode_name",
@@ -97,7 +97,7 @@ all_simtel_mode_names = {
     "Trigger": ["trigger"],
 }
 
-all_layout_array_names = {
+all_array_layout_names = {
     "4LST": ["4-lst", "4lst"],
     "1LST": ["1-lst", "1lst"],
     "4MST": ["4-mst", "4mst"],
@@ -230,9 +230,9 @@ def validate_site_name(name):
     return validate_name(name, all_site_names)
 
 
-def validate_layout_array_name(name):
+def validate_array_layout_name(name):
     """
-    Validate a layout array name.
+    Validate a array layout name.
 
     Parameters
     ----------
@@ -244,7 +244,7 @@ def validate_layout_array_name(name):
     str
         Validated name.
     """
-    return validate_name(name, all_layout_array_names)
+    return validate_name(name, all_array_layout_names)
 
 
 def validate_name(name, all_names):

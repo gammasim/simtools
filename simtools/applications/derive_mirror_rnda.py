@@ -68,7 +68,7 @@
     telescope (str, required)
         Telescope name (e.g. North-LST-1, South-SST-D, ...)
     model_version (str, optional)
-        Model version (default='Current')
+        Model version
     psf_measurement (str, optional)
         Table with results from PSF measurements for each mirror panel spot size
     psf_measurement_containment_mean (float, required)
@@ -76,7 +76,7 @@
     psf_measurement_containment_sigma (float, optional)
         Std dev of measured containment diameter [cm]
     containment_fraction (float, required)
-        Containment fraction for diameter calculation (default: 0.8)
+        Containment fraction for diameter calculation
     rnda (float, optional)
         Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the \
         default model is read from the simulation model database.
@@ -93,7 +93,7 @@
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
@@ -301,12 +301,10 @@ def _print_and_write_results(
             f"containment_radius_sigma_D{containment_fraction_percent}",
         ),
     )
-    file_writer = writer.ModelDataWriter(
-        product_data_file=args_dict.get("output_file", None),
-        product_data_format=args_dict.get("output_file_format", None),
-    )
-    file_writer.write(
-        metadata=MetadataCollector(args_dict=args_dict).top_level_meta, product_data=result_table
+    writer.ModelDataWriter.dump(
+        args_dict=args_dict,
+        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        product_data=result_table,
     )
 
 

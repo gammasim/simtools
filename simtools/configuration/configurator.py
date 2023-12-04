@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import sys
@@ -61,7 +62,11 @@ class Configurator:
         self.label = label
         self.config = {}
         self.parser = argparser.CommandLineParser(
-            prog=self.label, usage=usage, description=description, epilog=epilog
+            prog=self.label,
+            usage=usage,
+            description=description,
+            epilog=epilog,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
 
     def default_config(self, arg_list=None, add_db_config=False):
