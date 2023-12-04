@@ -558,7 +558,7 @@ def collect_final_lines(file, n_lines):
     list_of_lines = []
 
     if Path(file).suffix == ".gz":
-        import gzip # pylint: disable=import-outside-toplevel
+        import gzip  # pylint: disable=import-outside-toplevel
 
         file_open_function = gzip.open
     else:
