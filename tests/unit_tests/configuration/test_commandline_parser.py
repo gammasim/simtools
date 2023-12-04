@@ -48,6 +48,9 @@ def test_zenith_angle(caplog):
     assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
     assert parser.CommandLineParser.zenith_angle(90).value == pytest.approx(90.0)
     assert isinstance(parser.CommandLineParser.zenith_angle(0), u.Quantity)
+    assert parser.CommandLineParser.zenith_angle("0 deg").value == pytest.approx(0.0)
+    assert parser.CommandLineParser.zenith_angle("45 deg").value == pytest.approx(45.0)
+    assert parser.CommandLineParser.zenith_angle("90 deg").value == pytest.approx(90.0)
 
     with pytest.raises(
         argparse.ArgumentTypeError,
@@ -59,7 +62,7 @@ def test_zenith_angle(caplog):
         match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
     ):
         parser.CommandLineParser.zenith_angle(190)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         parser.CommandLineParser.zenith_angle("North")
         assert "The zenith angle provided is not a valid numeric value" in caplog.text
 
@@ -69,6 +72,9 @@ def test_azimuth_angle(caplog):
     assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
     assert parser.CommandLineParser.azimuth_angle(90).value == pytest.approx(90.0)
     assert isinstance(parser.CommandLineParser.azimuth_angle(0), u.Quantity)
+    assert parser.CommandLineParser.azimuth_angle("0 deg").value == pytest.approx(0.0)
+    assert parser.CommandLineParser.azimuth_angle("45 deg").value == pytest.approx(45.0)
+    assert parser.CommandLineParser.azimuth_angle("90 deg").value == pytest.approx(90.0)
 
     assert parser.CommandLineParser.azimuth_angle("North").value == pytest.approx(0.0)
     assert parser.CommandLineParser.azimuth_angle("South").value == pytest.approx(180.0)
