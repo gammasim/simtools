@@ -5,6 +5,7 @@ import os
 from copy import copy
 from pathlib import Path
 
+import astropy.units as u
 import pytest
 import yaml
 
@@ -12,12 +13,14 @@ from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameter,
 )
+from simtools.io_operations import io_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
 def test_fill_from_command_line(configurator, args_dict):
+    
     configurator._fill_from_command_line(arg_list=[])
     assert args_dict == configurator.config
 
@@ -44,6 +47,9 @@ def test_fill_from_config_dict(configurator, args_dict):
 
     assert _tmp_config == configurator.config
 
+    # No AttributeError is raised for non-dict inputs
+    configurator._fill_from_config_dict("abc")
+
 
 def test_fill_from_config_file_not_existing_file(configurator):
     # _fill_from_config_file() is always called after _fill_from_command_line()
@@ -69,7 +75,7 @@ def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
     configurator.config["output_path"] = None
     configurator._fill_from_config_file(_config_file)
     for key, value in _tmp_dict.items():
-        # none values are explicitely not set in Configurator._arglist_from_config()
+        # none values are explicitly not set in Configurator._arglist_from_config()
         if value is not None:
             if "_path" in key:
                 _tmp_config[key] = Path(value)
@@ -93,13 +99,38 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
     configurator.config["output_path"] = None
     configurator._fill_from_config_file(_workflow_file)
     for key, value in _tmp_dict.items():
-        # none values are explicitely not set in Configurator._arglist_from_config()
+        # none values are explicitly not set in Configurator._arglist_from_config()
         if value is not None:
             if "_path" in key:
                 _tmp_config[key] = Path(value)
             else:
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
+
+
+    # test that no KeyError is raised for "CTASIMPIPE:NO_CONFIGURATION"
+    _tmp_dict_workflow = {"CTASIMPIPE": {"NO_CONFIGURATION": _tmp_dict}}
+    _workflow_file = tmp_test_directory / "configuration-test-2.yml"
+    with open(_workflow_file, "w") as output:
+        yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
+    configurator.config["config"] = str(_workflow_file)
+    _tmp_config["config"] = str(_workflow_file)
+    configurator.config["output_path"] = None
+    # no KeyError
+    configurator._fill_from_config_file(_workflow_file)
+
+
+
+def test_initialize_io_handler(configurator, tmp_test_directory):
+
+    # io_handler is a Singleton, so configurator changes should
+    # be reflected in the io_handler
+    _io_handler = io_handler.IOHandler()
+
+    configurator.config["output_path"] = tmp_test_directory
+    configurator._initialize_io_handler()
+
+    assert _io_handler.output_path == tmp_test_directory
 
 
 def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
@@ -122,11 +153,11 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
 
 
 def test_arglist_from_config():
-    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"]}
+    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"], "e": 5.*u.m}
 
-    assert ["--a", "1.0", "--c", "--d", "d1", "d2", "d3"] == Configurator._arglist_from_config(
-        _tmp_dict
-    )
+    assert [
+        "--a", "1.0", "--c", "--d", "d1", "d2", "d3", "--e", "5.0 m",
+        ] == Configurator._arglist_from_config(_tmp_dict)
 
     assert [] == Configurator._arglist_from_config({})
 
@@ -153,7 +184,7 @@ def test_convert_stringnone_to_none():
     assert _tmp_none == Configurator._convert_stringnone_to_none(_tmp_dict)
 
 
-def test_get_db_parameters(configurator, args_dict):
+def test_get_db_parameters_from_env(configurator, args_dict):
     configurator.parser.initialize_db_config_arguments()
     configurator._fill_from_command_line(arg_list=[])
     configurator._fill_from_environmental_variables()
@@ -175,6 +206,18 @@ def test_initialize_output(configurator):
     configurator.config["test"] = True
     configurator._initialize_output()
     assert configurator.config["output_file"] == "TEST.ecsv"
+
+    # output is not configured (and not activity_id)
+    configurator.config["test"] = False
+    configurator.config["output_file"] = None
+    with pytest.raises(KeyError):
+        configurator._initialize_output()
+
+    # output is not configured (but activity_id)
+    configurator.config["activity_id"] = "A-ID"
+    configurator.config["label"] = "test_label" 
+    configurator._initialize_output()
+    assert configurator.config["output_file"] == "A-ID-test_label.ecsv"
 
     # output file is configured
     configurator.config["test"] = False
@@ -225,6 +268,10 @@ def test_fill_from_environmental_variables(configurator):
     if "SIMTOOLS_DB_SERVER" in os.environ:
         del os.environ["SIMTOOLS_DB_SERVER"]
 
+    # no config defined, should not raise key error
+    configurator.config.pop("env_file")
+    configurator._fill_from_environmental_variables()
+
 
 def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
     configurator.parser.initialize_output_arguments()
@@ -241,3 +288,41 @@ def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_te
 
     assert configurator.config["label"] == "test_label"
     assert configurator.config["config"] == "test_config_file_env"
+
+
+def test_get_db_parameters():
+    # default config
+    configurator = Configurator(config={})
+    configurator.default_config(add_db_config=True)
+    db_params = configurator._get_db_parameters()
+    assert db_params == {
+        'db_api_port': None, 
+        'db_api_pw': None, 
+        'db_api_user': None, 
+        'db_server': None
+        }
+
+    # filled config
+    configurator = Configurator()
+    configurator.default_config(add_db_config=True)
+    configurator.config = {
+            "db_api_user": "user", 
+            "db_api_pw": "password", 
+            "db_api_port": 1234, 
+            "db_server": "localhost"
+            }
+        
+    db_params = configurator._get_db_parameters()
+    assert db_params == {
+        "db_api_user": "user", 
+        "db_api_pw": "password", 
+        "db_api_port": 1234, 
+        "db_server": "localhost"
+    }
+
+    # empty config
+    configurator = Configurator(config={})
+    configurator.default_config(add_db_config=True)
+    configurator.config = {}
+    db_params = configurator._get_db_parameters()
+    assert db_params == {}
