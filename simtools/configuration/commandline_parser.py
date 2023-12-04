@@ -360,17 +360,20 @@ class CommandLineParser(argparse.ArgumentParser):
         logger = logging.getLogger(__name__)
 
         try:
-            fangle = float(angle)
+            fangle = float(angle) * u.deg
         except ValueError:
-            logger.error("The zenith angle provided is not a valid numeric value.")
-            raise
-        if fangle < 0.0 or fangle > 180.0:
+            fangle = u.Quantity(angle).to("deg")
+        except TypeError:
+            logger.error(
+                "The zenith angle provided is not a valid numerical or astropy.Quantity value."
+            )
+        if fangle < 0.0 * u.deg or fangle > 180.0 * u.deg:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
                 "is outside of the allowed [0, 180] interval"
             )
 
-        return fangle * u.deg
+        return fangle
 
     @staticmethod
     def azimuth_angle(angle):
@@ -387,7 +390,7 @@ class CommandLineParser(argparse.ArgumentParser):
         Returns
         -------
         Astropy.Quantity
-            Validated/Converted aziumth angle in degrees
+            Validated/Converted azimuth angle in degrees
 
         Raises
         ------
@@ -410,6 +413,14 @@ class CommandLineParser(argparse.ArgumentParser):
         except ValueError:
             logger.debug(
                 "The azimuth angle provided is not a valid numeric value. "
+                "Will check if it is an astropy.Quantity instead"
+            )
+        try:
+            fangle = u.Quantity(angle).to("deg")
+            return fangle.to("deg")
+        except TypeError:
+            logger.debug(
+                "The azimuth angle provided is not a valid astropy.Quantity. "
                 "Will check if it is (north, south, east, west) instead"
             )
         if isinstance(angle, str):
