@@ -65,7 +65,7 @@
     array_config (str, required)
         Path to a yaml file with the array config data.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------

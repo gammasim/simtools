@@ -20,16 +20,16 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default='Current')
+        Model version
     camera_in_sky_coor (bool, optional)
         Plot the camera layout in sky coordinates akin to looking at it from behind for single \
-         mirror telescopes (default=False)
+         mirror telescopes
     print_pixels_id (bool, optional)
-        Up to which pixel ID to print (default=50). To suppress printing of pixel IDs, set to zero\
+        Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero\
          (--print_pixels_id 0). To print all pixels, set to 'All'."
 
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print
 
     Example
     -------
@@ -84,7 +84,7 @@ def main():
     config.parser.add_argument(
         "--print_pixels_id",
         help=(
-            "Up to which pixel ID to print (default: 50). "
+            "Up to which pixel ID to print. "
             "To suppress printing of pixel IDs, set to zero (--print_pixels_id 0). "
             "To print all pixels, set to 'All'."
         ),
