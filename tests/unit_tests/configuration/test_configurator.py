@@ -20,7 +20,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_from_command_line(configurator, args_dict):
-    
     configurator._fill_from_command_line(arg_list=[])
     assert args_dict == configurator.config
 
@@ -107,7 +106,6 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
 
-
     # test that no KeyError is raised for "CTASIMPIPE:NO_CONFIGURATION"
     _tmp_dict_workflow = {"CTASIMPIPE": {"NO_CONFIGURATION": _tmp_dict}}
     _workflow_file = tmp_test_directory / "configuration-test-2.yml"
@@ -120,9 +118,7 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
     configurator._fill_from_config_file(_workflow_file)
 
 
-
 def test_initialize_io_handler(configurator, tmp_test_directory):
-
     # io_handler is a Singleton, so configurator changes should
     # be reflected in the io_handler
     _io_handler = io_handler.IOHandler()
@@ -153,11 +149,19 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
 
 
 def test_arglist_from_config():
-    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"], "e": 5.*u.m}
+    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"], "e": 5.0 * u.m}
 
     assert [
-        "--a", "1.0", "--c", "--d", "d1", "d2", "d3", "--e", "5.0 m",
-        ] == Configurator._arglist_from_config(_tmp_dict)
+        "--a",
+        "1.0",
+        "--c",
+        "--d",
+        "d1",
+        "d2",
+        "d3",
+        "--e",
+        "5.0 m",
+    ] == Configurator._arglist_from_config(_tmp_dict)
 
     assert [] == Configurator._arglist_from_config({})
 
@@ -215,7 +219,7 @@ def test_initialize_output(configurator):
 
     # output is not configured (but activity_id)
     configurator.config["activity_id"] = "A-ID"
-    configurator.config["label"] = "test_label" 
+    configurator.config["label"] = "test_label"
     configurator._initialize_output()
     assert configurator.config["output_file"] == "A-ID-test_label.ecsv"
 
@@ -296,28 +300,28 @@ def test_get_db_parameters():
     configurator.default_config(add_db_config=True)
     db_params = configurator._get_db_parameters()
     assert db_params == {
-        'db_api_port': None, 
-        'db_api_pw': None, 
-        'db_api_user': None, 
-        'db_server': None
-        }
+        "db_api_port": None,
+        "db_api_pw": None,
+        "db_api_user": None,
+        "db_server": None,
+    }
 
     # filled config
     configurator = Configurator()
     configurator.default_config(add_db_config=True)
     configurator.config = {
-            "db_api_user": "user", 
-            "db_api_pw": "password", 
-            "db_api_port": 1234, 
-            "db_server": "localhost"
-            }
-        
+        "db_api_user": "user",
+        "db_api_pw": "password",
+        "db_api_port": 1234,
+        "db_server": "localhost",
+    }
+
     db_params = configurator._get_db_parameters()
     assert db_params == {
-        "db_api_user": "user", 
-        "db_api_pw": "password", 
-        "db_api_port": 1234, 
-        "db_server": "localhost"
+        "db_api_user": "user",
+        "db_api_pw": "password",
+        "db_api_port": 1234,
+        "db_server": "localhost",
     }
 
     # empty config
