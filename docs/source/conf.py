@@ -56,8 +56,8 @@ def get_python_version_from_pyproject():
         pyproject = toml.load(file)
 
     return (
-        pyproject['project']['requires-python'],
-        pyproject['project']['requires-python'].replace(">", "").replace("=", "")
+        pyproject["project"]["requires-python"],
+        pyproject["project"]["requires-python"].replace(">", "").replace("=", ""),
     )
 
 
@@ -181,7 +181,13 @@ html_static_path = []
 #
 # html_sidebars = {}
 html_sidebars = {
-    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html", "sourcelink.html"]
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",
+        "searchbox.html",
+        "sourcelink.html",
+    ]
 }
 html_css_files = ["simtools.css"]
 html_file_suffix = ".html"
