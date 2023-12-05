@@ -279,7 +279,7 @@ class DatabaseHandler:
 
             raise
 
-        dest_file.write_text(file.read_text())
+        dest_file.write_text(file.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _get_model_parameters_yaml(
         self, telescope_model_name, model_version, only_applicable=False
@@ -1385,9 +1385,9 @@ class DatabaseHandler:
             self._logger.warning(
                 f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
-            return file_system.find_one(
+            return file_system.find_one(  # pylint: disable=protected-access
                 {"filename": kwargs["filename"]}
-            )._id  # pylint: disable=protected-access;
+            )._id
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
 

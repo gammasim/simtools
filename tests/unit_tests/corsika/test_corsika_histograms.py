@@ -837,7 +837,7 @@ def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
         }
     }
     assert (
-        corsika_histograms_instance_set_histograms._dict_2d_distributions["counts"]
+        corsika_histograms_instance_set_histograms.dict_2d_distributions["counts"]
         == expected_dict_2d_distributions["counts"]
     )
 

@@ -209,11 +209,11 @@ def main():
     mar_0 = split_simtel_parameter(raw_par)[0]
 
     logger.debug(
-        "Previous parameter values: \n"
-        "MRRA = " + str(mrra_0) + "\n"
-        "MRF = " + str(mfr_0) + "\n"
-        "MRRA2 = " + str(mrra2_0) + "\n"
-        "MAR = " + str(mar_0) + "\n"
+        "Previous parameter values:\n"
+        f"MRRA = {str(mrra_0)}\n"
+        f"MRF = {str(mfr_0)}\n"
+        f"MRRA2 = {str(mrra2_0)}\n"
+        f"MAR = {str(mar_0)}\n"
     )
 
     if args_dict["fixed"]:

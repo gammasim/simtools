@@ -103,7 +103,8 @@ disable = ["logging-fstring-interpolation"]
 # Ignore files
 ignore = [
     "__init__.py", "scm_version.py", "_version.py",
-    "simtools/visualization/legend_handlers.py",
+    "legend_handlers.py",
+    "version.py",
 ]
 
 [tool.pylint."messages control"]
