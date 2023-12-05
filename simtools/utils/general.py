@@ -1,3 +1,7 @@
+"""
+General functions useful across different parts of the code.
+"""
+
 import copy
 import logging
 import mmap
