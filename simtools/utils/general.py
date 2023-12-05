@@ -745,3 +745,64 @@ def get_file_age(file_path):
 
     file_age_minutes = (current_time - modification_time) / 60
     return file_age_minutes
+
+
+def change_dict_keys_case(data_dict, lower_case=True):
+    """
+    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
+    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
+
+    Parameters
+    ----------
+    data_dict: dict
+        Dictionary to be converted.
+    lower_case: bool
+        Change keys to lower (upper) case if True (False).
+    """
+
+    _return_dict = {}
+    try:
+        for key in data_dict.keys():
+            if lower_case:
+                _key_changed = key.lower()
+            else:
+                _key_changed = key.upper()
+            if isinstance(data_dict[key], dict):
+                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+            elif isinstance(data_dict[key], list):
+                _tmp_list = []
+                for _list_entry in data_dict[key]:
+                    if isinstance(_list_entry, dict):
+                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+                    else:
+                        _tmp_list.append(_list_entry)
+                _return_dict[_key_changed] = _tmp_list
+            else:
+                _return_dict[_key_changed] = data_dict[key]
+    except AttributeError:
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
+        raise
+    return _return_dict
+
+
+def sort_arrays(*args):
+    """Sort arrays
+
+    Parameters
+    ----------
+    *args
+        Arguments to be sorted.
+    Returns
+    -------
+    list
+        Sorted args.
+    """
+
+    if len(args) == 0:
+        return args
+    order_array = copy.copy(args[0])
+    new_args = []
+    for arg in args:
+        _, value = zip(*sorted(zip(order_array, arg)))
+        new_args.append(list(value))
+    return new_args
