@@ -4,9 +4,7 @@ General functions useful across different parts of the code.
 
 import copy
 import logging
-import mmap
 import os
-import re
 import tempfile
 import time
 import urllib.error
@@ -56,41 +54,6 @@ class InvalidConfigEntry(Exception):
 
 class InvalidConfigData(Exception):
     """Exception for invalid configuration data."""
-
-
-def file_has_text(file, text):
-    """
-    Check whether a file contain a certain piece of text.
-
-    Parameters
-    ----------
-    file: str
-        Path of the file.
-    text: str
-        Piece of text to be searched for.
-
-    Returns
-    -------
-    bool
-        True if file has text.
-    """
-
-    try:
-        with open(file, "rb", 0) as string_file, mmap.mmap(
-            string_file.fileno(), 0, access=mmap.ACCESS_READ
-        ) as text_file_input:
-            re_search_1 = re.compile(f"{text}".encode())
-            search_result_1 = re_search_1.search(text_file_input)
-            if search_result_1 is None:
-                return False
-
-            return True
-    except FileNotFoundError:
-        _logger.warning(f"File {file} not found.")
-        return False
-    except ValueError:
-        _logger.warning(f"File {file} is empty.")
-        return False
 
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False):
