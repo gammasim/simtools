@@ -12,8 +12,8 @@ from cycler import cycler
 from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
 
+from simtools.utils import geometry as transf
 from simtools.utils import names
-from simtools.utils import transformations as transf
 from simtools.utils.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
 

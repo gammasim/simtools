@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from astropy.coordinates.errors import UnitsError
 
-import simtools.utils.transformations as transf
+import simtools.utils.geometry as transf
 
 
 def test_rotate_telescope_position(caplog) -> None:
