@@ -80,6 +80,12 @@ jobs:
       - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
+          pip install pylint
+
+      - name: pylint
+        run: |
+          pylint $(git ls-files 'simtools/*.py')
+
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v5
@@ -92,8 +98,7 @@ jobs:
           YAML_CONFIG_FILE: yaml_config.yaml
           YAML_ERROR_ON_WARNING: false
           # pylint
-          VALIDATE_PYTHON_PYLINT: true
-          PYTHON_PYLINT_CONFIG_FILE: pyproject.toml
+          VALIDATE_PYTHON_PYLINT: false
           # isort
           VALIDATE_PYTHON_ISORT: true
           PYTHON_ISORT_CONFIG_FILE: pyproject.toml
