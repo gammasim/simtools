@@ -361,7 +361,6 @@ class Simulator:
             "mongo_db_config": self._mongo_db_config,
             "site": self.site,
             "layout_name": self.layout_name,
-            "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
         if self.simulator in ["simtel", "corsika_simtel"]:
