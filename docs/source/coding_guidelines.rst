@@ -46,7 +46,7 @@ To run pylint locally, use:
 
 .. code-block::
 
-    pylint --verbose --rcfile=pyproject.toml ./simtools/**/*.py
+    pylint $(git ls-files 'simtools/*.py')
 
 API documentation
 -----------------
