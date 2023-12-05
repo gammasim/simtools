@@ -1,10 +1,10 @@
 import logging
 from pathlib import Path
 
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
 
 _logger = logging.getLogger(__name__)
@@ -38,16 +38,16 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     ValueError
         if `property` is not allowed.
     """
-    if property_name not in histograms_instance._dict_2d_distributions:
+    if property_name not in histograms_instance.dict_2d_distributions:
         msg = (
             f"This property does not exist. The valid entries are "
-            f"{histograms_instance._dict_2d_distributions}"
+            f"{histograms_instance.dict_2d_distributions}"
         )
         _logger.error(msg)
         raise ValueError
     function = getattr(
         histograms_instance,
-        histograms_instance._dict_2d_distributions[property_name]["function"],
+        histograms_instance.dict_2d_distributions[property_name]["function"],
     )
     hist_values, x_bin_edges, y_bin_edges = function()
 
@@ -62,28 +62,28 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
             x_bin_edges[i_hist], y_bin_edges[i_hist], hist_values[i_hist], norm=norm
         )
         if (
-            histograms_instance._dict_2d_distributions[property_name]["x axis unit"]
+            histograms_instance.dict_2d_distributions[property_name]["x axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_2d_distributions[property_name]['x bin edges']} "
-                f"({histograms_instance._dict_2d_distributions[property_name]['x axis unit']})"
+                f"{histograms_instance.dict_2d_distributions[property_name]['x bin edges']} "
+                f"({histograms_instance.dict_2d_distributions[property_name]['x axis unit']})"
             )
         else:
             ax.set_xlabel(
-                f"{histograms_instance._dict_2d_distributions[property_name]['x bin edges']} "
+                f"{histograms_instance.dict_2d_distributions[property_name]['x bin edges']} "
             )
         if (
-            histograms_instance._dict_2d_distributions[property_name]["y axis unit"]
+            histograms_instance.dict_2d_distributions[property_name]["y axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
-                f"{histograms_instance._dict_2d_distributions[property_name]['y bin edges']} "
-                f"({histograms_instance._dict_2d_distributions[property_name]['y axis unit']})"
+                f"{histograms_instance.dict_2d_distributions[property_name]['y bin edges']} "
+                f"({histograms_instance.dict_2d_distributions[property_name]['y axis unit']})"
             )
         else:
             ax.set_ylabel(
-                f"{histograms_instance._dict_2d_distributions[property_name]['y bin edges']} "
+                f"{histograms_instance.dict_2d_distributions[property_name]['y bin edges']} "
             )
         ax.set_xlim(np.amin(x_bin_edges[i_hist]), np.amax(x_bin_edges[i_hist]))
         ax.set_ylim(np.amin(y_bin_edges[i_hist]), np.amax(y_bin_edges[i_hist]))
@@ -92,7 +92,7 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
         all_figs.append(fig)
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
-                f"{histograms_instance._dict_2d_distributions[property_name]['file name']}"
+                f"{histograms_instance.dict_2d_distributions[property_name]['file name']}"
                 "_all_tels"
             )
         else:
@@ -106,7 +106,7 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
                 color="white",
             )
             ax.set_title(
-                f"{histograms_instance._dict_2d_distributions[property_name]['file name']}"
+                f"{histograms_instance.dict_2d_distributions[property_name]['file name']}"
                 f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         plt.close()

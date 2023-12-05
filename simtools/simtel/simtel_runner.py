@@ -140,8 +140,8 @@ class SimtelRunner:
                     file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
-            N = 1 if test else self.runs_per_set
-            for _ in range(N):
+            n = 1 if test else self.runs_per_set
+            for _ in range(n):
                 file.write(f"{command}\n\n")
 
             # Printing out runtime

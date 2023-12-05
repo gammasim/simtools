@@ -1265,7 +1265,7 @@ class CorsikaHistograms:
                 )
 
     @property
-    def _dict_2d_distributions(self, overwrite=False):
+    def dict_2d_distributions(self, overwrite=False):
         """
         Dictionary to label the 2D distributions according to the class methods.
 
@@ -1338,34 +1338,34 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-        for property_name, function_dict in self._dict_2d_distributions.items():
+        for property_name, function_dict in self.dict_2d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
 
             hist_2d_list, x_bin_edges_list, y_bin_edges_list = function()
             if function_dict["function"] == "get_2d_photon_density_distr":
                 histogram_value_unit = 1 / (
-                    self._dict_2d_distributions[property_name]["x axis unit"]
-                    * self._dict_2d_distributions[property_name]["y axis unit"]
+                    self.dict_2d_distributions[property_name]["x axis unit"]
+                    * self.dict_2d_distributions[property_name]["y axis unit"]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
 
             hist_2d_list, x_bin_edges_list, y_bin_edges_list = (
                 hist_2d_list * histogram_value_unit,
-                x_bin_edges_list * self._dict_2d_distributions[property_name]["x axis unit"],
-                y_bin_edges_list * self._dict_2d_distributions[property_name]["y axis unit"],
+                x_bin_edges_list * self.dict_2d_distributions[property_name]["x axis unit"],
+                y_bin_edges_list * self.dict_2d_distributions[property_name]["y axis unit"],
             )
 
             for i_histogram, _ in enumerate(x_bin_edges_list):
                 if self.individual_telescopes:
                     hdf5_table_name = (
-                        f"/{self._dict_2d_distributions[property_name]['file name']}"
+                        f"/{self.dict_2d_distributions[property_name]['file name']}"
                         f"_tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
                     hdf5_table_name = (
-                        f"/{self._dict_2d_distributions[property_name]['file name']}" f"_all_tels"
+                        f"/{self.dict_2d_distributions[property_name]['file name']}" f"_all_tels"
                     )
                 table = fill_hdf5_table(
                     hist=hist_2d_list[i_histogram],

@@ -53,14 +53,14 @@ class SimtelHistograms:
         fig_name: str
             Name of the output figure file.
         """
-        self._combine_histogram_files()
+        self.combine_histogram_files()
         self._plot_combined_histograms(fig_name)
 
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
         if self.combined_hists is None:
-            self._combine_histogram_files()
+            self.combine_histogram_files()
         return len(self.combined_hists)
 
     def get_histogram_title(self, i_hist):
@@ -78,10 +78,10 @@ class SimtelHistograms:
             Histogram title.
         """
         if self.combined_hists is None:
-            self._combine_histogram_files()
+            self.combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
-    def _combine_histogram_files(self):
+    def combine_histogram_files(self):
         """Combine histograms from all files into one single list of histograms."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
