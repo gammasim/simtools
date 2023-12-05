@@ -22,9 +22,9 @@ __all__ = [
     "get_lines",
     "get_markers",
     "get_telescope_patch",
-    "plot_1D",
+    "plot_1d",
     "plot_array",
-    "plot_hist_2D",
+    "plot_hist_2d",
     "plot_table",
     "set_style",
 ]
@@ -65,7 +65,7 @@ COLORS["autumn"] = [
     "#A4657A",
     "#424D9C",
     "#DC575A",
-    "#1D2D38",
+    "#1D2d38",
     "#634B5B",
     "#56276D",
     "#577580",
@@ -272,7 +272,7 @@ def get_lines():
     return LINES
 
 
-def plot_1D(data, **kwargs):
+def plot_1d(data, **kwargs):
     """
     Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \
     added at the bottom to allow easy comparison. Additional options, such as plot title, plot
@@ -481,10 +481,10 @@ def plot_table(table, y_title, **kwargs):
     for column in table.keys()[1:]:
         data_dict[column] = QTable([table[x_axis], table[column]], names=[x_axis, y_title])
 
-    return plot_1D(data_dict, **kwargs)
+    return plot_1d(data_dict, **kwargs)
 
 
-def plot_hist_2D(data, **kwargs):
+def plot_hist_2d(data, **kwargs):
     """
     Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\
     axes limits, log scale, etc.) should be done using the returned plt instance.
@@ -511,7 +511,7 @@ def plot_hist_2D(data, **kwargs):
     else:
         title = ""
 
-    # Set default style since the usual options do not affect 2D plots (for now).
+    # Set default style since the usual options do not affect 2d plots (for now).
     set_style()
 
     gs = gridspec.GridSpec(1, 1)
