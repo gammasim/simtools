@@ -92,6 +92,7 @@ simtools-validate-optics = "simtools.applications.validate_optics:main"
 good-names = [
     "e", "i", "j", "k", "x", "y", "n", "f", "r", "ex", "db", "im", "sh", "ax", "ce", "xx", "yy", "zz",
     "C1", "C2", "C3", "C4", "C4x", "N1", "N2", "N3", "N4", "N4x",
+    "lst", "mst", "sst", "sct", "hess", "magic", "veritas",
     ]
 # Maximum number of characters on a single line.
 max-line-length = 100
@@ -100,7 +101,10 @@ max-module-lines = 1000
 # Disable warnings
 disable = ["logging-fstring-interpolation"]
 # Ignore files
-ignore = ["__init__.py", "scm_version.py", "_version.py"]
+ignore = [
+    "__init__.py", "scm_version.py", "_version.py",
+    "simtools/visualization/legend_handlers.py",
+]
 
 [tool.pylint."messages control"]
 # See discussion in issue 521
@@ -111,6 +115,7 @@ disable = [
     "unpacking-non-sequence",
     "logging-format-interpolation",
     "fixme",
+    "missing-function-docstring",
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
 generated-members = ["gist_heat_r"]
