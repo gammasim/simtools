@@ -331,34 +331,21 @@ def shower_config_data(simulator_config_data):
 
 
 @pytest.fixture
-def file_has_text(file, text):
-    """
-    Check whether a file contain a certain piece of text.
+def file_has_text():
+    def wrapper(file, text):
+        try:
+            with open(file, "rb", 0) as string_file, mmap.mmap(
+                string_file.fileno(), 0, access=mmap.ACCESS_READ
+            ) as text_file_input:
+                re_search_1 = re.compile(f"{text}".encode())
+                search_result_1 = re_search_1.search(text_file_input)
+                if search_result_1 is None:
+                    return False
 
-    Parameters
-    ----------
-    file: str
-        Path of the file.
-    text: str
-        Piece of text to be searched for.
+                return True
+        except FileNotFoundError:
+            return False
+        except ValueError:
+            return False
 
-    Returns
-    -------
-    bool
-        True if file has text.
-    """
-
-    try:
-        with open(file, "rb", 0) as string_file, mmap.mmap(
-            string_file.fileno(), 0, access=mmap.ACCESS_READ
-        ) as text_file_input:
-            re_search_1 = re.compile(f"{text}".encode())
-            search_result_1 = re_search_1.search(text_file_input)
-            if search_result_1 is None:
-                return False
-
-            return True
-    except FileNotFoundError:
-        return False
-    except ValueError:
-        return False
+    return wrapper
