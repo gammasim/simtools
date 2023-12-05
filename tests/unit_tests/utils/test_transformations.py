@@ -1,3 +1,5 @@
+from copy import copy
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -121,3 +123,38 @@ def test_convert_2D_to_radial_distr(caplog) -> None:
     )
     msg = "The histogram with number of bins"
     assert msg in caplog.text
+
+
+def test_change_dict_keys_case(caplog) -> None:
+    # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
+    _upper_dict = {
+        "REFERENCE": {"VERSION": "0.1.0"},
+        "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
+        "DATA_COLUMNS": {"ATTRIBUTE": ["remove_duplicates", "SORT"]},
+        "DICT_IN_LIST": {
+            "KEY_OF_FIRST_DICT": ["FIRST_ITEM", {"KEY_OF_NESTED_DICT": "VALUE_OF_SECOND_DICT"}]
+        },
+    }
+    _lower_dict = {
+        "reference": {"version": "0.1.0"},
+        "activity": {"name": "submit", "id": "84890304", "description": "Set data"},
+        "data_columns": {"attribute": ["remove_duplicates", "SORT"]},
+        "dict_in_list": {
+            "key_of_first_dict": ["FIRST_ITEM", {"key_of_nested_dict": "VALUE_OF_SECOND_DICT"}]
+        },
+    }
+    _no_change_dict_upper = transf.change_dict_keys_case(copy(_upper_dict), False)
+    assert _no_change_dict_upper == _upper_dict
+
+    _no_change_dict_lower = transf.change_dict_keys_case(copy(_lower_dict), True)
+    assert _no_change_dict_lower == _lower_dict
+
+    _changed_to_lower = transf.change_dict_keys_case(copy(_upper_dict), True)
+    assert _changed_to_lower == _lower_dict
+
+    _changed_to_upper = transf.change_dict_keys_case(copy(_lower_dict), False)
+    assert _changed_to_upper == _upper_dict
+
+    with pytest.raises(AttributeError):
+        transf.change_dict_keys_case([2], False)
+        assert "Input is not a proper dictionary" in caplog.text
