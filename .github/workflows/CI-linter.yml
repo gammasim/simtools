@@ -75,10 +75,9 @@ jobs:
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment.yml
-          create-args: python="3.11"
           init-shell: bash
 
-      - name: Python dependencies (mamba)
+      - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
 
