@@ -53,11 +53,11 @@ Pip Installation
     The pip-installation of simtools provides limited functionality only
     and is not as well tests as the conda/mamba installation.
 
-Prepare a python environment:
+Prepare a python environment (in this example for python version 3.11):
 
 .. code-block:: console
 
-    $ mamba create --name simtools-prod
+    $ mamba create --name simtools-prod python=3.11
     $ mamba activate simtools-prod
 
 Use pip to install simtools and its dependencies:
