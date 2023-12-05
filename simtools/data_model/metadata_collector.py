@@ -11,7 +11,6 @@ import logging
 
 import simtools.constants
 import simtools.utils.general as gen
-import simtools.utils.transformations as transf
 import simtools.version
 from simtools.data_model import metadata_model
 from simtools.io_operations import io_handler
@@ -49,7 +48,7 @@ class MetadataCollector:
         self.data_model_name = data_model_name
         self.schema_file = None
         self.schema_dict = None
-        self.top_level_meta = transf.change_dict_keys_case(
+        self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
         self.input_metadata = self._read_input_metadata_from_file()
@@ -246,7 +245,7 @@ class MetadataCollector:
 
         metadata_model.validate_schema(_input_metadata, None)
 
-        return transf.change_dict_keys_case(
+        return gen.change_dict_keys_case(
             self._process_metadata_from_file(_input_metadata),
             lower_case=True,
         )
@@ -411,7 +410,7 @@ class MetadataCollector:
 
         """
 
-        meta_dict = transf.change_dict_keys_case(meta_dict, True)
+        meta_dict = gen.change_dict_keys_case(meta_dict, True)
         try:
             meta_dict["cta"]["product"]["description"] = self._remove_line_feed(
                 meta_dict["cta"]["product"]["description"]

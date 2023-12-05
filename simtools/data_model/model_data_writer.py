@@ -4,7 +4,7 @@ from pathlib import Path
 import astropy
 import yaml
 
-import simtools.utils.transformations as transf
+import simtools.utils.general as gen
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
 
@@ -162,7 +162,7 @@ class ModelDataWriter:
             yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
             with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
-                    transf.change_dict_keys_case(metadata, keys_lower_case),
+                    gen.change_dict_keys_case(metadata, keys_lower_case),
                     file,
                     sort_keys=False,
                 )

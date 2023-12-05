@@ -17,6 +17,7 @@ import astropy.units as u
 from astropy.io.misc import yaml
 
 __all__ = [
+    "change_dict_keys_case",
     "collect_data_from_yaml_or_dict",
     "collect_final_lines",
     "collect_kwargs",
@@ -29,6 +30,7 @@ __all__ = [
     "set_default_kwargs",
     "validate_config_data",
     "get_log_excerpt",
+    "sort_arrays",
 ]
 
 _logger = logging.getLogger(__name__)
