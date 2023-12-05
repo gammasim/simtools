@@ -131,9 +131,7 @@ def main():
         type=float,
         default=10,
     )
-    config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg", type=float, default=20
-    )
+    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )

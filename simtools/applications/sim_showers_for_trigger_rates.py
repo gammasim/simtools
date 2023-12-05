@@ -105,18 +105,10 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    config.parser.add_argument(
-        "--nruns", help="Number of runs", type=int, default=100
-    )
-    config.parser.add_argument(
-        "--nevents", help="Number of events/run", type=int, default=100000
-    )
-    config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg", type=float, default=20
-    )
-    config.parser.add_argument(
-        "--azimuth", help="Azimuth angle in deg", type=float, default=0
-    )
+    config.parser.add_argument("--nruns", help="Number of runs", type=int, default=100)
+    config.parser.add_argument("--nevents", help="Number of events/run", type=int, default=100000)
+    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
+    config.parser.add_argument("--azimuth", help="Azimuth angle in deg", type=float, default=0)
     # TODO confusing with output_path?
     config.parser.add_argument(
         "--output",

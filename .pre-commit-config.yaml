@@ -6,7 +6,7 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.11.0
     hooks:
       - id: black
         args: ["--line-length=100"]
@@ -18,7 +18,7 @@ repos:
         args: ["--max-line-length=100"]
   # https://github.com/pre-commit/pre-commit-hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -30,6 +30,6 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # gitup action
   - repo: https://github.com/rhysd/actionlint
-    rev: main
+    rev: v1.6.26
     hooks:
       - id: actionlint
