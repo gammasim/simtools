@@ -362,8 +362,9 @@ class CorsikaHistograms:
         if file_name is None:
             file_name = "hist_config"
         file_name = Path(file_name).with_suffix(".yml")
-        output_config_file = Path(self.output_path).joinpath(file_name)
-        yaml.dump(self.hist_config, output_config_file)
+        output_config_file_name = Path(self.output_path).joinpath(file_name)
+        with open(output_config_file_name, "w", encoding="utf-8") as file:
+            yaml.dump(self.hist_config, file)
 
     def _create_histogram_default_config(self):
         """
