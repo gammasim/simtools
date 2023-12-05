@@ -5,6 +5,7 @@ import logging
 import os
 import time
 import urllib.error
+from copy import copy
 from pathlib import Path
 
 import astropy.units as u

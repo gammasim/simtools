@@ -7,7 +7,7 @@ import logging
 import pytest
 
 import simtools.data_model.metadata_collector as metadata_collector
-import simtools.utils.transformations as transf
+import simtools.utils.general as gen
 from simtools.data_model import metadata_model
 
 logger = logging.getLogger()
@@ -76,7 +76,7 @@ def test_fill_contact_meta(args_dict_site):
 
 def test_fill_associated_elements_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1.top_level_meta = transf.change_dict_keys_case(
+    metadata_1.top_level_meta = gen.change_dict_keys_case(
         metadata_model.get_default_metadata_dict(), True
     )
     metadata_1._fill_associated_elements_from_args(
