@@ -65,42 +65,6 @@ def test_rotate_telescope_position(caplog) -> None:
         transf.rotate(x_new_array, y_new_array, 30 * u.m)
 
 
-def test_sort_arrays() -> None:
-    """
-    Test the sort_arrays function.
-    """
-
-    # Test with no arguments.
-    args = []
-    new_args = transf.sort_arrays(*args)
-    assert not new_args
-
-    # Test with one argument.
-    args = [list(range(10))]
-    new_args = transf.sort_arrays(*args)
-    assert new_args == [list(range(10))]
-
-    # Test with multiple arguments.
-    args = [list(range(10)), list(range(10, 20))]
-    new_args = transf.sort_arrays(*args)
-    assert new_args == [list(range(10)), list(range(10, 20))]
-
-    # Test with arguments of different lengths.
-    args = [list(range(10)), list(range(5))]
-    new_args = transf.sort_arrays(*args)
-    assert new_args == [list(range(10)), list(range(5))]
-
-    # Test with arguments that are not arrays.
-    args = [1, 2, 3]
-    with pytest.raises(TypeError):
-        transf.sort_arrays(*args)
-
-    # Test with the input array not in the right order.
-    args = [list(reversed(range(10)))]
-    new_args = transf.sort_arrays(*args)
-    assert new_args == [list(range(10))]
-
-
 def test_convert_2D_to_radial_distr(caplog) -> None:
     # Test normal functioning
     max_dist = 100

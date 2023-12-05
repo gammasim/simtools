@@ -1,8 +1,7 @@
 """
-A collection of functions related to transformations (e.g., geometrical, sorting)
+A collection of functions related to geometrical transformations.
 """
 
-import copy
 import logging
 
 import astropy.units as u
@@ -13,7 +12,6 @@ __all__ = [
     "change_dict_keys_case",
     "convert_2D_to_radial_distr",
     "rotate",
-    "sort_arrays",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -201,26 +199,3 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
 
     return x_trans, y_trans
-
-
-def sort_arrays(*args):
-    """Sort arrays
-
-    Parameters
-    ----------
-    *args
-        Arguments to be sorted.
-    Returns
-    -------
-    list
-        Sorted args.
-    """
-
-    if len(args) == 0:
-        return args
-    order_array = copy.copy(args[0])
-    new_args = []
-    for arg in args:
-        _, value = zip(*sorted(zip(order_array, arg)))
-        new_args.append(list(value))
-    return new_args
