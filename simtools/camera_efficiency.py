@@ -280,6 +280,7 @@ class CameraEfficiency:
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
         """
+        nsb_pixel_pe_per_ns, nsb_rate_ref_conditions = self.calc_nsb_rate()
         summary = (
             f"Results summary for {self._telescope_model.name} at "
             f"zenith={self.config.zenith_angle:.1f}, "
@@ -293,8 +294,10 @@ class CameraEfficiency:
             "Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
             "(A-PERF-2025/B-TEL-0090): "
             f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
+            "Expected NSB pixel rate for the provided NSB spectrum: "
+            f"{nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
             "Expected NSB pixel rate for the reference NSB: "
-            f"{self.calc_nsb_rate():.4f} [p.e./ns]\n"
+            f"{nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
         )
 
         return summary
@@ -421,18 +424,21 @@ class CameraEfficiency:
 
         Returns
         -------
-        nsb_rate
-            NSB rate in p.e./ns
+        nsb_rate_provided_spectrum: float
+            NSB pixel rate in p.e./ns for the provided NSB spectrum
+        nsb_rate_ref_conditions: float
+            NSB pixel rate in p.e./ns for reference conditions
+            (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
 
-        nsb_pe_per_ns = (
+        nsb_rate_provided_spectrum = (
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()
             * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
             / self._telescope_model.get_telescope_transmission_parameters()[0]
         )
 
-        # (integral is in ph./(cm^2 ns sr) ) from 300 - 650 nm:
+        # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
@@ -440,12 +446,13 @@ class CameraEfficiency:
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
-        nsb_rate = (
-            nsb_pe_per_ns
+        print("nsb_integral = ", nsb_integral)
+        nsb_rate_ref_conditions = (
+            nsb_rate_provided_spectrum
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
             / nsb_integral
         )
-        return nsb_rate
+        return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """
