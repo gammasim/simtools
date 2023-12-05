@@ -124,6 +124,7 @@ class Simulator:
         self._corsika_config_data = None
         self.site = None
         self.layout_name = None
+        self._corsika_parameters_file = None
         self.config = None
         self.array_model = None
         self._simulation_runner = None
