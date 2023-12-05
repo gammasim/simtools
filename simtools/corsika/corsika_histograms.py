@@ -639,7 +639,7 @@ class CorsikaHistograms:
 
         num_photons_per_event_per_telescope_to_set = []
         start_time = time.time()
-        self._logger.debug("Starting reading the file at {}.".format(start_time))
+        self._logger.debug(f"Starting reading the file at {start_time}.")
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
