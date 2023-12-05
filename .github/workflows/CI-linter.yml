@@ -83,7 +83,6 @@ jobs:
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v5
-        shell: bash -l {0}
         env:
           VALIDATE_ALL_CODEBASE: true
           # github actions
@@ -120,9 +119,10 @@ jobs:
           # create a log file
           CREATE_LOG_FILE: true
           LOG_FILE: superlinter.log
-
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          python_package_directory: .
 
       # Upload super-linter log file
       # and keep it for 5 days
