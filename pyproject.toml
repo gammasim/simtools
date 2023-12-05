@@ -39,6 +39,7 @@ dependencies = [
     "python-dotenv",
     "pyyaml",
     "scipy",
+    "toml",
 ]
 
 [project.optional-dependencies]
@@ -167,7 +168,7 @@ persistent = true
 
 # Minimum Python version to use for version dependent checks. Will default to the
 # version used to run pylint.
-py-version = "3.9"
+py-version = "3.11"
 
 # Discover python modules and packages in the file system subtree.
 # recursive =
