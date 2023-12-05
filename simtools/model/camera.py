@@ -16,7 +16,7 @@ from simtools.model.model_utils import (
     get_telescope_class,
     is_two_mirror_telescope,
 )
-from simtools.utils.general import rotate
+from simtools.utils.transformations import rotate
 
 __all__ = ["Camera"]
 
