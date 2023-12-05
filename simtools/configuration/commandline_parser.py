@@ -341,7 +341,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        angle: float
+        angle: float, str, astropy.Quantity
             zenith angle to verify
 
         Returns
@@ -416,8 +416,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "Will check if it is an astropy.Quantity instead"
             )
         try:
-            fangle = u.Quantity(angle).to("deg")
-            return fangle.to("deg")
+            return u.Quantity(angle).to("deg")
         except TypeError:
             logger.debug(
                 "The azimuth angle provided is not a valid astropy.Quantity. "
