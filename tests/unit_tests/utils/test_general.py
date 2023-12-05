@@ -15,6 +15,7 @@ from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
+import simtools.utils.transformations as transf
 from simtools.utils.general import (
     InvalidConfigData,
     InvalidConfigEntry,
@@ -313,7 +314,7 @@ def test_rotate_telescope_position(caplog) -> None:
     y_rot_manual = np.array([-13.7, 3.7, -3.7, 13.7])
 
     def check_results(x_to_test, y_to_test, x_right, y_right, angle, theta=0 * u.deg):
-        x_rot, y_rot = gen.rotate(x_to_test, y_to_test, angle, theta)
+        x_rot, y_rot = transf.rotate(x_to_test, y_to_test, angle, theta)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
         if not isinstance(x_right, (list, np.ndarray)):
             x_right = [x_right]
@@ -344,22 +345,22 @@ def test_rotate_telescope_position(caplog) -> None:
     check_results(x, y, x_rot_theta_manual, y_rot_theta_manual, angle_deg, 45 * u.deg)
 
     with pytest.raises(TypeError):
-        gen.rotate(x, y[0], angle_deg)
+        transf.rotate(x, y[0], angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate("1", "2", angle_deg)
+        transf.rotate("1", "2", angle_deg)
         assert "x and y types are not valid! Cannot perform transformation" in caplog.text
     with pytest.raises(TypeError):
-        gen.rotate(str(x[0]), y[0], angle_deg)
+        transf.rotate(str(x[0]), y[0], angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate(u.Quantity(10), 10, angle_deg)
+        transf.rotate(u.Quantity(10), 10, angle_deg)
     with pytest.raises(TypeError):
-        gen.rotate(x[0], str(y[0]), angle_deg)
+        transf.rotate(x[0], str(y[0]), angle_deg)
     with pytest.raises(RuntimeError):
-        gen.rotate(x[:-1], y, angle_deg)
+        transf.rotate(x[:-1], y, angle_deg)
     with pytest.raises(UnitsError):
-        gen.rotate(x_new_array.to(u.cm), y_new_array, angle_deg)
+        transf.rotate(x_new_array.to(u.cm), y_new_array, angle_deg)
     with pytest.raises(u.core.UnitsError):
-        gen.rotate(x_new_array, y_new_array, 30 * u.m)
+        transf.rotate(x_new_array, y_new_array, 30 * u.m)
 
 
 def test_convert_2D_to_radial_distr(caplog) -> None:
@@ -372,14 +373,14 @@ def test_convert_2D_to_radial_distr(caplog) -> None:
     x2d, y2d = np.meshgrid(xaxis, yaxis)
     distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
 
-    distance_to_center_1D, radial_bin_edges = gen.convert_2D_to_radial_distr(
+    distance_to_center_1D, radial_bin_edges = transf.convert_2D_to_radial_distr(
         distance_to_center_2D, xaxis, yaxis, bins=bins, max_dist=max_dist
     )
     difference = radial_bin_edges[:-1] - distance_to_center_1D
     assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
 
     # Test warning in caplog
-    gen.convert_2D_to_radial_distr(
+    transf.convert_2D_to_radial_distr(
         distance_to_center_2D, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
     )
     msg = "The histogram with number of bins"
@@ -525,32 +526,32 @@ def test_sort_arrays() -> None:
 
     # Test with no arguments.
     args = []
-    new_args = gen.sort_arrays(*args)
+    new_args = transf.sort_arrays(*args)
     assert not new_args
 
     # Test with one argument.
     args = [list(range(10))]
-    new_args = gen.sort_arrays(*args)
+    new_args = transf.sort_arrays(*args)
     assert new_args == [list(range(10))]
 
     # Test with multiple arguments.
     args = [list(range(10)), list(range(10, 20))]
-    new_args = gen.sort_arrays(*args)
+    new_args = transf.sort_arrays(*args)
     assert new_args == [list(range(10)), list(range(10, 20))]
 
     # Test with arguments of different lengths.
     args = [list(range(10)), list(range(5))]
-    new_args = gen.sort_arrays(*args)
+    new_args = transf.sort_arrays(*args)
     assert new_args == [list(range(10)), list(range(5))]
 
     # Test with arguments that are not arrays.
     args = [1, 2, 3]
     with pytest.raises(TypeError):
-        gen.sort_arrays(*args)
+        transf.sort_arrays(*args)
 
     # Test with the input array not in the right order.
     args = [list(reversed(range(10)))]
-    new_args = gen.sort_arrays(*args)
+    new_args = transf.sort_arrays(*args)
     assert new_args == [list(range(10))]
 
 
