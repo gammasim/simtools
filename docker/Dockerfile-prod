@@ -4,13 +4,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN microdnf update -y && microdnf install -y \
     git \
-    python3-pip \
-    python3-devel && \
+    python3.11-pip \
+    python3.11-devel && \
     microdnf clean all
 
 RUN git clone -b main https://github.com/gammasim/simtools.git --depth 1
 RUN cd /workdir/ && \
-    python3 -m venv env && \
+    python3.11 -m venv env && \
     source env/bin/activate && \
     cd /workdir/simtools/ && \
     pip install --no-cache-dir .
