@@ -77,6 +77,10 @@ jobs:
           environment-file: environment.yml
           init-shell: bash
 
+      - name: Python dependencies (mamba)
+        run: |
+          pip install -e '.[tests,dev,doc]'
+
       - name: Lint Code Base
         uses: super-linter/super-linter@v5
         env:
