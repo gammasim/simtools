@@ -14,7 +14,10 @@
 import os
 import sys
 
+import toml
 import yaml
+
+from pathlib import Path
 
 import simtools.version
 
@@ -28,7 +31,7 @@ def get_authors_from_citation_file():
     Read list of authors from CITATION.cff file
 
     """
-    with open("../../CITATION.cff", encoding="utf-8") as file:
+    with open(Path(__file__).parent / "../../CITATION.cff", encoding="utf-8") as file:
         citation = yaml.safe_load(file)
 
     tmp_author = ""
@@ -41,6 +44,20 @@ def get_authors_from_citation_file():
     return tmp_author[:-2]
 
 
+def get_python_version_from_pyproject():
+    """
+    Read python version from pyproject.toml file
+
+    """
+    with open(Path(__file__).parent / "../../pyproject.toml") as file:
+        pyproject = toml.load(file)
+
+    return (
+        pyproject["project"]["requires-python"],
+        pyproject["project"]["requires-python"].replace(">", "").replace("=", ""),
+    )
+
+
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
@@ -48,6 +65,11 @@ copyright = "2023, gammasim-tools, simtools developers"
 author = get_authors_from_citation_file()
 rst_epilog = f"""
 .. |author| replace:: {author}
+"""
+
+python_min_requires, python_requires = get_python_version_from_pyproject()
+rst_epilog = f"""
+.. |python_min_requires| replace:: {python_min_requires}
 """
 
 # The short X.Y version
@@ -156,7 +178,13 @@ html_static_path = []
 #
 # html_sidebars = {}
 html_sidebars = {
-    "**": ["about.html", "navigation.html", "relations.html", "searchbox.html", "sourcelink.html"]
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",
+        "searchbox.html",
+        "sourcelink.html",
+    ]
 }
 html_css_files = ["simtools.css"]
 html_file_suffix = ".html"
@@ -172,7 +200,7 @@ htmlhelp_basename = "simtoolsdoc"
 
 # -- Options for intersphinx extension ---------------------------------------
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.9", None),
+    "python": (f"https://docs.python.org/{python_requires}", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "astropy": ("https://docs.astropy.org/en/latest/", None),

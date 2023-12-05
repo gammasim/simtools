@@ -3,7 +3,7 @@ name: simtools-dev
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.11
   - astropy
   - boost-histogram
   - ctapipe
@@ -24,6 +24,7 @@ dependencies:
   - scipy
   - sphinx
   - sphinx_rtd_theme
+  - toml
 
 # cheatsheet
 # create: conda env create -f environment.yml
