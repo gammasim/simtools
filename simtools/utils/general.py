@@ -29,7 +29,6 @@ __all__ = [
     "set_default_kwargs",
     "validate_config_data",
     "get_log_excerpt",
-    "save_dict_to_file",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -785,31 +784,3 @@ def get_file_age(file_path):
 
     file_age_minutes = (current_time - modification_time) / 60
     return file_age_minutes
-
-
-def save_dict_to_file(dictionary, file_name):
-    """
-    Save dictionary to a file.
-
-    Parameters
-    ----------
-    dictionary: dict
-        Dictionary to be saved into a file.
-    file_name: str or Path
-        Name of file to be saved with path.
-
-    Raises
-    ------
-    IOError:
-        if writing to file_name fails.
-    """
-
-    file_name = Path(file_name).with_suffix(".yml")
-    _logger.info(f"Exporting histogram configuration to {file_name}")
-    try:
-        with open(file_name, "w", encoding="utf-8") as file:
-            yaml.dump(dictionary, file)
-    except IOError:
-        msg = f"Failed to write to {file_name}."
-        _logger.error(msg)
-        raise

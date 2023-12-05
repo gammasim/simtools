@@ -303,31 +303,6 @@ def test_change_dict_keys_case(caplog) -> None:
         assert "Input is not a proper dictionary" in caplog.text
 
 
-def test_save_dict_to_file(tmp_test_directory, caplog) -> None:
-    paths = ["test_file", "test_file.yml"]
-    example_dict = {"key": 12}
-    for path in paths:
-        gen.save_dict_to_file(example_dict, f"{tmp_test_directory}/{path}")
-        with open(f"{tmp_test_directory}/test_file.yml", encoding="utf-8") as file:
-            new_example_dict = yaml.load(file)
-            assert new_example_dict == example_dict
-
-    # Path
-    path = tmp_test_directory / "test_file_2.yml"
-    example_dict = {"key": 12}
-    gen.save_dict_to_file(example_dict, path)
-    with open(path, encoding="utf-8") as file:
-        new_example_dict = yaml.load(file)
-        assert new_example_dict == example_dict
-
-    # Test error
-    path = tmp_test_directory / "non_existing_path/test_file_2.yml"
-    example_dict = {"key": 12}
-    with pytest.raises(IOError):
-        gen.save_dict_to_file(example_dict, path)
-        assert "Failed to write to" in caplog.text
-
-
 def test_get_file_age(tmp_test_directory) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
     with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
