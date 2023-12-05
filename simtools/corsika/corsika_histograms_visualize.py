@@ -10,7 +10,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 _logger = logging.getLogger(__name__)
 
 
-def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
+def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     """
     The next functions below are used by the the CorsikaHistograms class to plot all sort of
     information from the Cherenkov photons saved.
@@ -38,16 +38,16 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
     ValueError
         if `property` is not allowed.
     """
-    if property_name not in histograms_instance._dict_2D_distributions:
+    if property_name not in histograms_instance._dict_2d_distributions:
         msg = (
             f"This property does not exist. The valid entries are "
-            f"{histograms_instance._dict_2D_distributions}"
+            f"{histograms_instance._dict_2d_distributions}"
         )
         _logger.error(msg)
         raise ValueError
     function = getattr(
         histograms_instance,
-        histograms_instance._dict_2D_distributions[property_name]["function"],
+        histograms_instance._dict_2d_distributions[property_name]["function"],
     )
     hist_values, x_bin_edges, y_bin_edges = function()
 
@@ -62,28 +62,28 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
             x_bin_edges[i_hist], y_bin_edges[i_hist], hist_values[i_hist], norm=norm
         )
         if (
-            histograms_instance._dict_2D_distributions[property_name]["x axis unit"]
+            histograms_instance._dict_2d_distributions[property_name]["x axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['x bin edges']} "
-                f"({histograms_instance._dict_2D_distributions[property_name]['x axis unit']})"
+                f"{histograms_instance._dict_2d_distributions[property_name]['x bin edges']} "
+                f"({histograms_instance._dict_2d_distributions[property_name]['x axis unit']})"
             )
         else:
             ax.set_xlabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['x bin edges']} "
+                f"{histograms_instance._dict_2d_distributions[property_name]['x bin edges']} "
             )
         if (
-            histograms_instance._dict_2D_distributions[property_name]["y axis unit"]
+            histograms_instance._dict_2d_distributions[property_name]["y axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_ylabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['y bin edges']} "
-                f"({histograms_instance._dict_2D_distributions[property_name]['y axis unit']})"
+                f"{histograms_instance._dict_2d_distributions[property_name]['y bin edges']} "
+                f"({histograms_instance._dict_2d_distributions[property_name]['y axis unit']})"
             )
         else:
             ax.set_ylabel(
-                f"{histograms_instance._dict_2D_distributions[property_name]['y bin edges']} "
+                f"{histograms_instance._dict_2d_distributions[property_name]['y bin edges']} "
             )
         ax.set_xlim(np.amin(x_bin_edges[i_hist]), np.amax(x_bin_edges[i_hist]))
         ax.set_ylim(np.amin(y_bin_edges[i_hist]), np.amax(y_bin_edges[i_hist]))
@@ -92,7 +92,7 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
         all_figs.append(fig)
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
-                f"{histograms_instance._dict_2D_distributions[property_name]['file name']}"
+                f"{histograms_instance._dict_2d_distributions[property_name]['file name']}"
                 "_all_tels"
             )
         else:
@@ -106,7 +106,7 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
                 color="white",
             )
             ax.set_title(
-                f"{histograms_instance._dict_2D_distributions[property_name]['file name']}"
+                f"{histograms_instance._dict_2d_distributions[property_name]['file name']}"
                 f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         plt.close()
@@ -114,7 +114,7 @@ def _kernel_plot_2D_photons(histograms_instance, property_name, log_z=False):
     return all_figs
 
 
-def plot_2D_counts(histograms_instance, log_z=True):
+def plot_2d_counts(histograms_instance, log_z=True):
     """
     Plot the 2D histogram of the photon positions on the ground.
 
@@ -130,10 +130,10 @@ def plot_2D_counts(histograms_instance, log_z=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_2D_photons(histograms_instance, "counts", log_z=log_z)
+    return _kernel_plot_2d_photons(histograms_instance, "counts", log_z=log_z)
 
 
-def plot_2D_density(histograms_instance, log_z=True):
+def plot_2d_density(histograms_instance, log_z=True):
     """
     Plot the 2D histogram of the photon density distribution on the ground.
 
@@ -150,10 +150,10 @@ def plot_2D_density(histograms_instance, log_z=True):
         List of figures for the given telescopes.
 
     """
-    return _kernel_plot_2D_photons(histograms_instance, "density", log_z=log_z)
+    return _kernel_plot_2d_photons(histograms_instance, "density", log_z=log_z)
 
 
-def plot_2D_direction(histograms_instance, log_z=True):
+def plot_2d_direction(histograms_instance, log_z=True):
     """
     Plot the 2D histogram of the incoming direction of photons.
 
@@ -170,10 +170,10 @@ def plot_2D_direction(histograms_instance, log_z=True):
         List of figures for the given telescopes.
 
     """
-    return _kernel_plot_2D_photons(histograms_instance, "direction", log_z=log_z)
+    return _kernel_plot_2d_photons(histograms_instance, "direction", log_z=log_z)
 
 
-def plot_2D_time_altitude(histograms_instance, log_z=True):
+def plot_2d_time_altitude(histograms_instance, log_z=True):
     """
     Plot the 2D histogram of the time and altitude where the photon was produced.
 
@@ -190,10 +190,10 @@ def plot_2D_time_altitude(histograms_instance, log_z=True):
         List of figures for the given telescopes.
 
     """
-    return _kernel_plot_2D_photons(histograms_instance, "time_altitude", log_z=log_z)
+    return _kernel_plot_2d_photons(histograms_instance, "time_altitude", log_z=log_z)
 
 
-def plot_2D_num_photons_per_telescope(histograms_instance, log_z=True):
+def plot_2d_num_photons_per_telescope(histograms_instance, log_z=True):
     """
     Plot the 2D histogram of the number of photons per event and per telescope.
 
@@ -210,10 +210,10 @@ def plot_2D_num_photons_per_telescope(histograms_instance, log_z=True):
         List of figures for the given telescopes.
 
     """
-    return _kernel_plot_2D_photons(histograms_instance, "num_photons_per_telescope", log_z=log_z)
+    return _kernel_plot_2d_photons(histograms_instance, "num_photons_per_telescope", log_z=log_z)
 
 
-def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
+def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
     """
     Create the figure of a 1D plot. The parameter `property` indicate which plot.
 
@@ -238,17 +238,17 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
     ValueError
         if `property` is not allowed.
     """
-    if property_name not in histograms_instance._dict_1D_distributions:
+    if property_name not in histograms_instance._dict_1d_distributions:
         msg = (
             f"This property does not exist. The valid entries are "
-            f"{histograms_instance._dict_1D_distributions}"
+            f"{histograms_instance._dict_1d_distributions}"
         )
         _logger.error(msg)
         raise ValueError
 
     function = getattr(
         histograms_instance,
-        histograms_instance._dict_1D_distributions[property_name]["function"],
+        histograms_instance._dict_1d_distributions[property_name]["function"],
     )
     hist_values, bin_edges = function()
     all_figs = []
@@ -261,20 +261,20 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
             width=np.abs(np.diff(bin_edges[i_hist])),
         )
         if (
-            histograms_instance._dict_1D_distributions[property_name]["axis unit"]
+            histograms_instance._dict_1d_distributions[property_name]["axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_1D_distributions[property_name]['bin edges']} "
-                f"({histograms_instance._dict_1D_distributions[property_name]['axis unit']})"
+                f"{histograms_instance._dict_1d_distributions[property_name]['bin edges']} "
+                f"({histograms_instance._dict_1d_distributions[property_name]['axis unit']})"
             )
         else:
             ax.set_xlabel(
-                f"{histograms_instance._dict_1D_distributions[property_name]['bin edges']} "
+                f"{histograms_instance._dict_1d_distributions[property_name]['bin edges']} "
             )
         if property_name == "density":
             ax.set_ylabel(
-                f"Density ({histograms_instance._dict_1D_distributions[property_name]['axis unit']}"
+                f"Density ({histograms_instance._dict_1d_distributions[property_name]['axis unit']}"
                 r"$^{-2}$)"
             )
         else:
@@ -284,12 +284,12 @@ def _kernel_plot_1D_photons(histograms_instance, property_name, log_y=True):
             ax.set_yscale("log")
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
-                f"{histograms_instance._dict_1D_distributions[property_name]['file name']}"
+                f"{histograms_instance._dict_1d_distributions[property_name]['file name']}"
                 "_all_tels"
             )
         else:
             ax.set_title(
-                f"{histograms_instance._dict_1D_distributions[property_name]['file name']}"
+                f"{histograms_instance._dict_1d_distributions[property_name]['file name']}"
                 f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         all_figs.append(fig)
@@ -313,7 +313,7 @@ def plot_wavelength_distr(histograms_instance, log_y=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_1D_photons(histograms_instance, "wavelength", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "wavelength", log_y=log_y)
 
 
 def plot_counts_distr(histograms_instance, log_y=True):
@@ -332,7 +332,7 @@ def plot_counts_distr(histograms_instance, log_y=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_1D_photons(histograms_instance, "counts", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "counts", log_y=log_y)
 
 
 def plot_density_distr(histograms_instance, log_y=True):
@@ -351,7 +351,7 @@ def plot_density_distr(histograms_instance, log_y=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_1D_photons(histograms_instance, "density", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "density", log_y=log_y)
 
 
 def plot_time_distr(histograms_instance, log_y=True):
@@ -370,7 +370,7 @@ def plot_time_distr(histograms_instance, log_y=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_1D_photons(histograms_instance, "time", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "time", log_y=log_y)
 
 
 def plot_altitude_distr(histograms_instance, log_y=True):
@@ -389,7 +389,7 @@ def plot_altitude_distr(histograms_instance, log_y=True):
     list
         List of figures for the given telescopes.
     """
-    return _kernel_plot_1D_photons(histograms_instance, "altitude", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "altitude", log_y=log_y)
 
 
 def plot_photon_per_event_distr(histograms_instance, log_y=True):
@@ -410,7 +410,7 @@ def plot_photon_per_event_distr(histograms_instance, log_y=True):
 
     """
 
-    return _kernel_plot_1D_photons(histograms_instance, "num_photons_per_event", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "num_photons_per_event", log_y=log_y)
 
 
 def plot_photon_per_telescope_distr(histograms_instance, log_y=True):
@@ -431,10 +431,10 @@ def plot_photon_per_telescope_distr(histograms_instance, log_y=True):
 
     """
 
-    return _kernel_plot_1D_photons(histograms_instance, "num_photons_per_telescope", log_y=log_y)
+    return _kernel_plot_1d_photons(histograms_instance, "num_photons_per_telescope", log_y=log_y)
 
 
-def plot_1D_event_header_distribution(
+def plot_1d_event_header_distribution(
     histograms_instance, event_header_element, log_y=True, bins=50, hist_range=None
 ):
     """
@@ -459,7 +459,7 @@ def plot_1D_event_header_distribution(
         List of figures for the given telescopes.
 
     """
-    hist_values, bin_edges = histograms_instance.event_1D_histogram(
+    hist_values, bin_edges = histograms_instance.event_1d_histogram(
         event_header_element, bins=bins, hist_range=hist_range
     )
     fig, ax = plt.subplots()
@@ -483,11 +483,11 @@ def plot_1D_event_header_distribution(
 
     if log_y is True:
         ax.set_yscale("log")
-    ax.set_title(f"hist_1D_{event_header_element}")
+    ax.set_title(f"hist_1d_{event_header_element}")
     return fig
 
 
-def plot_2D_event_header_distribution(
+def plot_2d_event_header_distribution(
     histograms_instance,
     event_header_element_1,
     event_header_element_2,
@@ -519,7 +519,7 @@ def plot_2D_event_header_distribution(
         List of figures for the given telescopes.
 
     """
-    hist_values, x_bin_edges, y_bin_edges = histograms_instance.event_2D_histogram(
+    hist_values, x_bin_edges, y_bin_edges = histograms_instance.event_2d_histogram(
         event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
     )
     fig, ax = plt.subplots()
@@ -551,7 +551,7 @@ def plot_2D_event_header_distribution(
         ax.set_ylabel(f"{event_header_element_2}")
 
     ax.set_facecolor("black")
-    ax.set_title(f"hist_2D_{event_header_element_1}_{event_header_element_2}")
+    ax.set_title(f"hist_2d_{event_header_element_1}_{event_header_element_2}")
     fig.colorbar(mesh)
     return fig
 

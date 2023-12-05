@@ -283,7 +283,7 @@ def main():
         )
 
         if plot:
-            fig = visualize.plot_1D(
+            fig = visualize.plot_1d(
                 data_to_plot,
                 plot_difference=True,
                 no_markers=True,
