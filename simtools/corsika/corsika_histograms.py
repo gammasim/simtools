@@ -75,14 +75,6 @@ class CorsikaHistograms:
         else:
             self.hdf5_file_name = hdf5_file_name
 
-        self._initialize_attributes()
-        self.read_event_information()
-        self._initialize_header()
-
-    def _initialize_attributes(self):
-        """
-        Initializes the class attributes.
-        """
         self._telescope_indices = None
         self._telescope_positions = None
         self.num_events = None
@@ -109,6 +101,12 @@ class CorsikaHistograms:
         self._allowed_1d_labels = {"wavelength", "time", "altitude"}
         self._allowed_2d_labels = {"counts", "density", "direction", "time_altitude"}
         self._header = None
+        self.hist_position = None
+        self.hist_direction = None
+        self.hist_time_altitude = None
+
+        self.read_event_information()
+        self._initialize_header()
 
     @property
     def hdf5_file_name(self):
@@ -944,21 +942,21 @@ class CorsikaHistograms:
         """
 
         bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
-        bin_edges_1d_list, hist1D_list = [], []
+        bin_edges_1d_list, hist_1d_list = [], []
 
-        hist2D_values_list, x_position_list, y_position_list = self.get_2d_photon_position_distr()
+        hist_2d_values_list, x_position_list, y_position_list = self.get_2d_photon_position_distr()
 
         for i_hist, _ in enumerate(x_position_list):
-            hist1D, bin_edges_1d = convert_2d_to_radial_distr(
-                hist2D_values_list[i_hist],
+            hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
+                hist_2d_values_list[i_hist],
                 x_position_list[i_hist],
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
             )
             bin_edges_1d_list.append(bin_edges_1d)
-            hist1D_list.append(hist1D)
-        return np.array(hist1D_list), np.array(bin_edges_1d_list)
+            hist_1d_list.append(hist_1d)
+        return np.array(hist_1d_list), np.array(bin_edges_1d_list)
 
     def get_photon_density_distr(self, bins=None, max_dist=None):
         """
@@ -982,21 +980,21 @@ class CorsikaHistograms:
             usually in meter.
         """
         bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
-        bin_edges_1d_list, hist1D_list = [], []
+        bin_edges_1d_list, hist_1d_list = [], []
 
-        hist2D_values_list, x_position_list, y_position_list = self.get_2d_photon_density_distr()
+        hist_2d_values_list, x_position_list, y_position_list = self.get_2d_photon_density_distr()
 
         for i_hist, _ in enumerate(x_position_list):
-            hist1D, bin_edges_1d = convert_2d_to_radial_distr(
-                hist2D_values_list[i_hist],
+            hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
+                hist_2d_values_list[i_hist],
                 x_position_list[i_hist],
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
             )
             bin_edges_1d_list.append(bin_edges_1d)
-            hist1D_list.append(hist1D)
-        return np.array(hist1D_list), np.array(bin_edges_1d_list)
+            hist_1d_list.append(hist_1d)
+        return np.array(hist_1d_list), np.array(bin_edges_1d_list)
 
     def get_photon_wavelength_distr(self):
         """
@@ -1152,7 +1150,7 @@ class CorsikaHistograms:
         return self.__meta_dict
 
     @property
-    def _dict_1d_distributions(self):
+    def dict_1d_distributions(self):
         """
         Dictionary to label the 1D distributions according to the class methods.
 
@@ -1224,7 +1222,7 @@ class CorsikaHistograms:
             If True overwrites the histograms already saved in the hdf5 file.
         """
 
-        for _, function_dict in self._dict_1d_distributions.items():
+        for _, function_dict in self.dict_1d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
             hist_1d_list, x_bin_edges_list = function()
@@ -1265,14 +1263,9 @@ class CorsikaHistograms:
                 )
 
     @property
-    def dict_2d_distributions(self, overwrite=False):
+    def dict_2d_distributions(self):
         """
         Dictionary to label the 2D distributions according to the class methods.
-
-        Parameters
-        ----------
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
 
         Returns
         -------

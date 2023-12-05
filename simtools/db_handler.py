@@ -881,7 +881,7 @@ class DatabaseHandler:
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise BulkWriteError.details from exc
+            raise Exception(BulkWriteError.details) from exc
 
     def copy_documents(self, db_name, collection, query, db_to_copy_to, collection_to_copy_to=None):
         """
@@ -931,7 +931,7 @@ class DatabaseHandler:
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise BulkWriteError.details from exc
+            raise Exception(BulkWriteError.details) from exc
 
     def delete_query(self, db_name, collection, query):
         """

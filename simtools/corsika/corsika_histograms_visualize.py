@@ -238,17 +238,17 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
     ValueError
         if `property` is not allowed.
     """
-    if property_name not in histograms_instance._dict_1d_distributions:
+    if property_name not in histograms_instance.dict_1d_distributions:
         msg = (
             f"This property does not exist. The valid entries are "
-            f"{histograms_instance._dict_1d_distributions}"
+            f"{histograms_instance.dict_1d_distributions}"
         )
         _logger.error(msg)
         raise ValueError
 
     function = getattr(
         histograms_instance,
-        histograms_instance._dict_1d_distributions[property_name]["function"],
+        histograms_instance.dict_1d_distributions[property_name]["function"],
     )
     hist_values, bin_edges = function()
     all_figs = []
@@ -261,20 +261,20 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
             width=np.abs(np.diff(bin_edges[i_hist])),
         )
         if (
-            histograms_instance._dict_1d_distributions[property_name]["axis unit"]
+            histograms_instance.dict_1d_distributions[property_name]["axis unit"]
             is not u.dimensionless_unscaled
         ):
             ax.set_xlabel(
-                f"{histograms_instance._dict_1d_distributions[property_name]['bin edges']} "
-                f"({histograms_instance._dict_1d_distributions[property_name]['axis unit']})"
+                f"{histograms_instance.dict_1d_distributions[property_name]['bin edges']} "
+                f"({histograms_instance.dict_1d_distributions[property_name]['axis unit']})"
             )
         else:
             ax.set_xlabel(
-                f"{histograms_instance._dict_1d_distributions[property_name]['bin edges']} "
+                f"{histograms_instance.dict_1d_distributions[property_name]['bin edges']} "
             )
         if property_name == "density":
             ax.set_ylabel(
-                f"Density ({histograms_instance._dict_1d_distributions[property_name]['axis unit']}"
+                f"Density ({histograms_instance.dict_1d_distributions[property_name]['axis unit']}"
                 r"$^{-2}$)"
             )
         else:
@@ -284,12 +284,12 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
             ax.set_yscale("log")
         if histograms_instance.individual_telescopes is False:
             ax.set_title(
-                f"{histograms_instance._dict_1d_distributions[property_name]['file name']}"
+                f"{histograms_instance.dict_1d_distributions[property_name]['file name']}"
                 "_all_tels"
             )
         else:
             ax.set_title(
-                f"{histograms_instance._dict_1d_distributions[property_name]['file name']}"
+                f"{histograms_instance.dict_1d_distributions[property_name]['file name']}"
                 f"_tel_index_{histograms_instance.telescope_indices[i_hist]}",
             )
         all_figs.append(fig)
