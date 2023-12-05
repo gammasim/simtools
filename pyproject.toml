@@ -89,7 +89,10 @@ simtools-validate-optics = "simtools.applications.validate_optics:main"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.
-good-names = ["e", "i", "j", "k", "x", "y", "n", "f", "r", "ex", "db", "im", "sh", "ax", "ce", "xx", "yy", "zz"]
+good-names = [
+    "e", "i", "j", "k", "x", "y", "n", "f", "r", "ex", "db", "im", "sh", "ax", "ce", "xx", "yy", "zz",
+    "C1", "C2", "C3", "C4", "C4x", "N1", "N2", "N3", "N4", "N4x",
+    ]
 # Maximum number of characters on a single line.
 max-line-length = 100
 # Maximum number of lines in a module.
@@ -103,15 +106,28 @@ ignore = ["__init__.py", "scm_version.py", "_version.py"]
 # See discussion in issue 521
 # Agreed to not have module docstring (missing-module-docstring)
 # Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
-disable = ["missing-module-docstring", "unpacking-non-sequence"]
+disable = [
+    "missing-module-docstring",
+    "unpacking-non-sequence",
+    "logging-format-interpolation",
+    "fixme",
+]
 # see https://github.com/pylint-dev/pylint/issues/2289
 generated-members = ["gist_heat_r"]
 
 [tool.pylint.design]
+# Maximum number of branch for function / method body. (default=12)
+max-branches = 20
 # Maximum number of arguments for function / method (default=5).
-max-args = 10
+max-args = 12
 # Maximum number of locals for function / method body (default=15).
-max-locals = 25
+max-locals = 50
+# Maximum number of attributes for a class (see R0902). (default=7)
+max-attributes = 20
+# Maximum number of statements in function / method body. (default=50)
+max-statements = 80
+# Maximum number of public methods for a class (see R0904). (default=20)
+max-public-methods = 35
 
 [tool.black]
 line-length = 100

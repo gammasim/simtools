@@ -179,7 +179,7 @@ def main():
     # Simulated cumulative PSF
     data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
 
-    fig = visualize.plot_1D(data_to_plot)
+    fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
 
     plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
@@ -190,7 +190,7 @@ def main():
 
     # Plotting image
     data_to_plot = im.get_image_data()
-    fig = visualize.plot_hist_2D(data_to_plot, bins=80)
+    fig = visualize.plot_hist_2d(data_to_plot, bins=80)
     circle = plt.Circle((0, 0), im.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")

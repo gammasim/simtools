@@ -184,9 +184,9 @@ def test_fill_histograms_no_rotation(corsika_output_file_name):
     assert np.count_nonzero(corsika_histograms_instance_fill.hist_direction[0].values()) > 0
 
 
-def test_get_hist_1D_projection(corsika_histograms_instance_set_histograms, caplog):
+def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
     with pytest.raises(ValueError):
-        corsika_histograms_instance_set_histograms._get_hist_1D_projection("label_not_valid")
+        corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
         assert "label_not_valid is not valid." in caplog.text
 
     labels = ["wavelength", "time", "altitude"]
@@ -196,13 +196,13 @@ def test_get_hist_1D_projection(corsika_histograms_instance_set_histograms, capl
     expected_std = [153.4, 378.2, 483.8]
     for i_hist, hist_label in enumerate(labels):
         (
-            hist_1D_list,
+            hist_1d_list,
             x_bin_edges_list,
-        ) = corsika_histograms_instance_set_histograms._get_hist_1D_projection(hist_label)
+        ) = corsika_histograms_instance_set_histograms._get_hist_1d_projection(hist_label)
         assert np.shape(x_bin_edges_list) == expected_shape_of_bin_edges[i_hist]
-        assert np.shape(hist_1D_list) == expected_shape_of_values[i_hist]
-        assert pytest.approx(np.mean(hist_1D_list), 1e-2) == expected_mean[i_hist]
-        assert pytest.approx(np.std(hist_1D_list), 1e-2) == expected_std[i_hist]
+        assert np.shape(hist_1d_list) == expected_shape_of_values[i_hist]
+        assert pytest.approx(np.mean(hist_1d_list), 1e-2) == expected_mean[i_hist]
+        assert pytest.approx(np.std(hist_1d_list), 1e-2) == expected_std[i_hist]
 
 
 def test_set_histograms_all_telescopes_1_histogram(corsika_histograms_instance):
@@ -285,19 +285,19 @@ def test_raise_if_no_histogram(corsika_output_file_name, caplog):
         assert "The histograms were not created." in caplog
 
 
-def test_get_hist_2D_projection(corsika_histograms_instance, caplog):
+def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
     corsika_histograms_instance.set_histograms()
 
     label = "hist_non_existent"
     with pytest.raises(ValueError):
-        corsika_histograms_instance._get_hist_2D_projection(label)
+        corsika_histograms_instance._get_hist_2d_projection(label)
         assert "label is not valid." in caplog.text
 
     labels = ["counts", "density", "direction", "time_altitude"]
     hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are approximately the same
     # (except for the density hist, which is divided by the area)
     for i_label, label in enumerate(labels):
-        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2D_projection(
+        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2d_projection(
             label
         )
         assert np.shape(x_bin_edges) == (1, 101)
@@ -309,18 +309,18 @@ def test_get_hist_2D_projection(corsika_histograms_instance, caplog):
     corsika_histograms_instance.set_histograms(telescope_indices=[0, 1, 2])
     hist_sums = [3677, 9.2, 3677, 3677]
     for i_label, label in enumerate(labels):
-        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2D_projection(
+        hist_values, x_bin_edges, y_bin_edges = corsika_histograms_instance._get_hist_2d_projection(
             label
         )
         assert pytest.approx(np.sum(hist_values), 1e-2) == hist_sums[i_label]
 
 
-def test_get_2D_photon_position_distr(corsika_histograms_instance_set_histograms):
-    density = corsika_histograms_instance_set_histograms.get_2D_photon_density_distr()
+def test_get_2d_photon_position_distr(corsika_histograms_instance_set_histograms):
+    density = corsika_histograms_instance_set_histograms.get_2d_photon_density_distr()
 
     # Test the values of the histogram
     assert pytest.approx(np.sum(density[0]), 1e-2) == 29
-    counts = corsika_histograms_instance_set_histograms.get_2D_photon_position_distr()
+    counts = corsika_histograms_instance_set_histograms.get_2d_photon_position_distr()
     assert pytest.approx(np.sum(counts[0]), 1e-2) == 11633
 
     # The bin edges should be the same
@@ -328,37 +328,37 @@ def test_get_2D_photon_position_distr(corsika_histograms_instance_set_histograms
     assert (counts[2] == density[2]).all()
 
 
-def test_get_2D_photon_direction_distr(corsika_histograms_instance_set_histograms):
+def test_get_2d_photon_direction_distr(corsika_histograms_instance_set_histograms):
     for returned_variable in range(3):
         assert (
-            corsika_histograms_instance_set_histograms.get_2D_photon_direction_distr()[
+            corsika_histograms_instance_set_histograms.get_2d_photon_direction_distr()[
                 returned_variable
             ]
-            == corsika_histograms_instance_set_histograms._get_hist_2D_projection("direction")[
+            == corsika_histograms_instance_set_histograms._get_hist_2d_projection("direction")[
                 returned_variable
             ]
         ).all()
 
 
-def test_get_2D_photon_time_altitude_distr(corsika_histograms_instance_set_histograms):
+def test_get_2d_photon_time_altitude_distr(corsika_histograms_instance_set_histograms):
     for returned_variable in range(3):
         assert (
-            corsika_histograms_instance_set_histograms.get_2D_photon_time_altitude_distr()[
+            corsika_histograms_instance_set_histograms.get_2d_photon_time_altitude_distr()[
                 returned_variable
             ]
-            == corsika_histograms_instance_set_histograms._get_hist_2D_projection("time_altitude")[
+            == corsika_histograms_instance_set_histograms._get_hist_2d_projection("time_altitude")[
                 returned_variable
             ]
         ).all()
 
 
-def test_get_2D_num_photons_distr(corsika_histograms_instance_set_histograms):
+def test_get_2d_num_photons_distr(corsika_histograms_instance_set_histograms):
     corsika_histograms_instance_set_histograms.set_histograms(telescope_indices=[0, 4, 10])
     (
         num_photons_per_event_per_telescope,
         num_events_array,
         telescope_indices_array,
-    ) = corsika_histograms_instance_set_histograms.get_2D_num_photons_distr()
+    ) = corsika_histograms_instance_set_histograms.get_2d_num_photons_distr()
     assert np.shape(num_events_array) == (1, 3)  # number of events in this output file + 1
     # (bin edges of hist)
     assert (telescope_indices_array == [0, 1, 2, 3]).all()
@@ -379,7 +379,7 @@ def test_get_2D_num_photons_distr(corsika_histograms_instance_set_histograms):
 def test_get_photon_altitude_distr(corsika_histograms_instance_set_histograms):
     for returned_variable in range(2):
         assert (
-            corsika_histograms_instance_set_histograms._get_hist_1D_projection("altitude")[
+            corsika_histograms_instance_set_histograms._get_hist_1d_projection("altitude")[
                 returned_variable
             ]
             == corsika_histograms_instance_set_histograms.get_photon_altitude_distr()[
@@ -391,7 +391,7 @@ def test_get_photon_altitude_distr(corsika_histograms_instance_set_histograms):
 def test_get_photon_time_of_emission_distr(corsika_histograms_instance_set_histograms):
     for returned_variable in range(2):
         assert (
-            corsika_histograms_instance_set_histograms._get_hist_1D_projection("time")[
+            corsika_histograms_instance_set_histograms._get_hist_1d_projection("time")[
                 returned_variable
             ]
             == corsika_histograms_instance_set_histograms.get_photon_time_of_emission_distr()[
@@ -403,7 +403,7 @@ def test_get_photon_time_of_emission_distr(corsika_histograms_instance_set_histo
 def test_get_photon_wavelength_distr(corsika_histograms_instance_set_histograms):
     for returned_variable in range(2):
         assert (
-            corsika_histograms_instance_set_histograms._get_hist_1D_projection("wavelength")[
+            corsika_histograms_instance_set_histograms._get_hist_1d_projection("wavelength")[
                 returned_variable
             ]
             == corsika_histograms_instance_set_histograms.get_photon_wavelength_distr()[
@@ -442,7 +442,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
     )
 
     (
-        hist_1D_list,
+        hist_1d_list,
         x_bin_edges_list,
     ) = corsika_histograms_instance_set_histograms.get_photon_radial_distr(bins=100, max_dist=1200)
     assert np.amax(x_bin_edges_list) == 1200
@@ -450,7 +450,7 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
 
     # Test if the keyword density changes the output histogram but not the bin_edges
     (
-        hist_1D_list_dens,
+        hist_1d_list_dens,
         x_bin_edges_list_dens,
     ) = corsika_histograms_instance_set_histograms.get_photon_density_distr(
         bins=100,
@@ -459,10 +459,10 @@ def test_get_photon_radial_distr_input_some_tel_and_density(
     assert (x_bin_edges_list_dens == x_bin_edges_list).all()
 
     assert (
-        pytest.approx(np.sum(hist_1D_list_dens), 1e-2) == 1.86
+        pytest.approx(np.sum(hist_1d_list_dens), 1e-2) == 1.86
     )  # density smaller because it divides
     # by the area (not counts per bin)
-    assert pytest.approx(np.sum(hist_1D_list), 1e-2) == 744.17
+    assert pytest.approx(np.sum(hist_1d_list), 1e-2) == 744.17
 
 
 def test_get_photon_radial_distr_input_all_tel(corsika_histograms_instance):
@@ -723,8 +723,8 @@ def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
         )
 
 
-def test_event_1D_histogram(corsika_histograms_instance_set_histograms):
-    hist, bin_edges = corsika_histograms_instance_set_histograms.event_1D_histogram(
+def test_event_1d_histogram(corsika_histograms_instance_set_histograms):
+    hist, bin_edges = corsika_histograms_instance_set_histograms.event_1d_histogram(
         "total_energy", bins=5, hist_range=(5, 15)
     )
     assert np.size(bin_edges) == 6
@@ -732,8 +732,8 @@ def test_event_1D_histogram(corsika_histograms_instance_set_histograms):
     assert hist[2] == 2
 
 
-def test_event_2D_histogram(corsika_histograms_instance_set_histograms):
-    hist, x_bin_edges, _ = corsika_histograms_instance_set_histograms.event_2D_histogram(
+def test_event_2d_histogram(corsika_histograms_instance_set_histograms):
+    hist, x_bin_edges, _ = corsika_histograms_instance_set_histograms.event_2d_histogram(
         "total_energy", "first_interaction_height", bins=(5, 5), hist_range=[[5, 15], [-60e5, -5e5]]
     )
     assert np.size(x_bin_edges) == 6
@@ -775,11 +775,11 @@ def test_meta_dict(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms._meta_dict == expected_meta_dict
 
 
-def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
-    expected_dict_1D_distributions = {
+def test_dict_1d_distributions(corsika_histograms_instance_set_histograms):
+    expected_dict_1d_distributions = {
         "wavelength": {
             "function": "get_photon_wavelength_distr",
-            "file name": "hist_1D_photon_wavelength_distr",
+            "file name": "hist_1d_photon_wavelength_distr",
             "title": "Photon wavelength distribution",
             "bin edges": "wavelength",
             "axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
@@ -788,8 +788,8 @@ def test_dict_1D_distributions(corsika_histograms_instance_set_histograms):
         }
     }
     assert (
-        corsika_histograms_instance_set_histograms._dict_1D_distributions["wavelength"]
-        == expected_dict_1D_distributions["wavelength"]
+        corsika_histograms_instance_set_histograms._dict_1d_distributions["wavelength"]
+        == expected_dict_1d_distributions["wavelength"]
     )
 
 
@@ -820,11 +820,11 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     )
 
 
-def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
-    expected_dict_2D_distributions = {
+def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
+    expected_dict_2d_distributions = {
         "counts": {
-            "function": "get_2D_photon_position_distr",
-            "file name": "hist_2D_photon_count_distr",
+            "function": "get_2d_photon_position_distr",
+            "file name": "hist_2d_photon_count_distr",
             "title": "Photon count distribution on the ground",
             "x bin edges": "x position on the ground",
             "x axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
@@ -837,20 +837,20 @@ def test_dict_2D_distributions(corsika_histograms_instance_set_histograms):
         }
     }
     assert (
-        corsika_histograms_instance_set_histograms._dict_2D_distributions["counts"]
-        == expected_dict_2D_distributions["counts"]
+        corsika_histograms_instance_set_histograms._dict_2d_distributions["counts"]
+        == expected_dict_2d_distributions["counts"]
     )
 
 
-def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histograms, io_handler):
+def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histograms, io_handler):
     corsika_event_header_example = {
-        "total_energy": "event_1D_histograms_total_energy",
-        "azimuth": "event_1D_histograms_azimuth",
-        "zenith": "event_1D_histograms_zenith",
-        "first_interaction_height": "event_1D_histograms_first_interaction_height",
+        "total_energy": "event_1d_histograms_total_energy",
+        "azimuth": "event_1d_histograms_azimuth",
+        "zenith": "event_1d_histograms_zenith",
+        "first_interaction_height": "event_1d_histograms_first_interaction_height",
     }
     for event_header_element, _ in corsika_event_header_example.items():
-        corsika_histograms_instance_set_histograms.export_event_header_1D_histogram(
+        corsika_histograms_instance_set_histograms.export_event_header_1d_histogram(
             event_header_element, bins=50, hist_range=None
         )
 
@@ -858,19 +858,19 @@ def test_export_event_header_1D_histogram(corsika_histograms_instance_set_histog
     assert len(tables) == 4
 
 
-def test_export_event_header_2D_histogram(corsika_histograms_instance_set_histograms, io_handler):
+def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histograms, io_handler):
     # Test writing the default photon histograms as well
     corsika_histograms_instance_set_histograms.export_histograms()
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
     assert len(tables) == 12
 
     corsika_event_header_example = {
-        ("azimuth", "zenith"): "event_2D_histograms_azimuth_zenith",
+        ("azimuth", "zenith"): "event_2d_histograms_azimuth_zenith",
     }
 
     # Test writing (appending) event header histograms
     for event_header_element, file_name in corsika_event_header_example.items():
-        corsika_histograms_instance_set_histograms.export_event_header_2D_histogram(
+        corsika_histograms_instance_set_histograms.export_event_header_2d_histogram(
             event_header_element[0], event_header_element[1], bins=50, hist_range=None
         )
     tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
