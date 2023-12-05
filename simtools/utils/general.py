@@ -31,7 +31,7 @@ __all__ = [
     "sort_arrays",
     "validate_config_data",
     "get_log_excerpt",
-    "convert_2D_to_radial_distr",
+    "convert_2d_to_radial_distr",
     "save_dict_to_file",
 ]
 
@@ -920,7 +920,7 @@ def get_file_age(file_path):
     return file_age_minutes
 
 
-def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
+def convert_2d_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
     Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
@@ -979,7 +979,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     # acount for it using weights below.
 
     weights, radial_bin_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
-    histogram_1D = np.empty_like(weights, dtype=float)
+    histogram_1d = np.empty_like(weights, dtype=float)
 
     for i_radial, _ in enumerate(radial_bin_edges[:-1]):
         # Here we sum all the events within a radial interval 'dr' and then divide by the number of
@@ -988,10 +988,10 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
             distance_sorted < radial_bin_edges[i_radial + 1]
         )
         if weights[i_radial] != 0:
-            histogram_1D[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
+            histogram_1d[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
         else:
-            histogram_1D[i_radial] = 0
-    return histogram_1D, radial_bin_edges
+            histogram_1d[i_radial] = 0
+    return histogram_1d, radial_bin_edges
 
 
 def save_dict_to_file(dictionary, file_name):

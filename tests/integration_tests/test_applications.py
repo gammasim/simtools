@@ -421,7 +421,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "generate_corsika_histograms::1D_and_2D_run_header": [
+    "generate_corsika_histograms::1d_and_2d_run_header": [
         [
             "--IACT_file",
             "./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South." "corsikaio",
@@ -429,7 +429,7 @@ APP_LIST = {
             "--hdf5",
             "--hdf5_file_name",
             "test_file_1D_and_2D_run_header.hdf5",
-            "--event_2D_histograms",
+            "--event_2d_histograms",
             "zenith",
             "azimuth",
             "--event_1D_histograms",
@@ -460,7 +460,7 @@ APP_LIST = {
             "--hdf5",
             "--hdf5_file_name",
             "test_file_2D_run_header.hdf5",
-            "--event_2D_histograms",
+            "--event_2d_histograms",
             "zenith",
             "azimuth",
             "--output_path",
