@@ -222,8 +222,8 @@ def main():
     # Drawing parameters randonly
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
-    N_RUNS = 50
-    for _ in range(N_RUNS):
+    n_runs = 50
+    for _ in range(n_runs):
         mrra_range = 0.004 if not args_dict["fixed"] else 0
         mrf_range = 0.1
         mrra2_range = 0.03

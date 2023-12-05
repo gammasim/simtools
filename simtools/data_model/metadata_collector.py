@@ -114,6 +114,7 @@ class MetadataCollector:
             pass
 
         self._logger.warning("No schema file found.")
+        return ''
 
     def get_data_model_schema_dict(self):
         """
