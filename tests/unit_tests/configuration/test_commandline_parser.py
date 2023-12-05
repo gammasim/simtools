@@ -62,6 +62,7 @@ def test_zenith_angle(caplog):
         match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
     ):
         parser.CommandLineParser.zenith_angle(190)
+
     with pytest.raises(TypeError):
         parser.CommandLineParser.zenith_angle("North")
         assert "The zenith angle provided is not a valid numeric value" in caplog.text
