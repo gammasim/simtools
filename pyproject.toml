@@ -87,6 +87,10 @@ simtools-validate-file-using-schema = "simtools.applications.validate_file_using
 simtools-validate-optics = "simtools.applications.validate_optics:main"
 
 [tool.pylint.main]
+init-hook = '''
+import sys
+sys.path.append('.')
+'''
 # Good variable names which should always be accepted, separated by a comma.
 good-names = ["e", "i", "j", "k", "x", "y", "n", "f", "r", "ex", "db", "im", "sh", "ax", "ce", "xx", "yy", "zz"]
 # Maximum number of characters on a single line.
