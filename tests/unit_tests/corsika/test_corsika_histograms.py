@@ -788,7 +788,7 @@ def test_dict_1d_distributions(corsika_histograms_instance_set_histograms):
         }
     }
     assert (
-        corsika_histograms_instance_set_histograms._dict_1d_distributions["wavelength"]
+        corsika_histograms_instance_set_histograms.dict_1d_distributions["wavelength"]
         == expected_dict_1d_distributions["wavelength"]
     )
 

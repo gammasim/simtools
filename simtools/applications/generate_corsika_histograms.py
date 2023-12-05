@@ -466,7 +466,7 @@ def main():
             args_dict["event_1d_histograms"],
             args_dict["pdf"],
             args_dict["hdf5"],
-            overwrite=False if args_dict["hdf5"] else True,
+            overwrite=not args_dict["hdf5"],
         )
     if args_dict["event_2d_histograms"] is not None:
         _derive_event_2d_histograms(
@@ -474,7 +474,7 @@ def main():
             args_dict["event_2d_histograms"],
             args_dict["pdf"],
             args_dict["hdf5"],
-            overwrite=False if args_dict["hdf5"] or args_dict["event_1d_histograms"] else True,
+            overwrite=not (args_dict["hdf5"] or args_dict["event_1d_histograms"]),
         )
 
     final_time = time.time()
