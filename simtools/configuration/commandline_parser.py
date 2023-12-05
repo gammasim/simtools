@@ -360,13 +360,15 @@ class CommandLineParser(argparse.ArgumentParser):
         logger = logging.getLogger(__name__)
 
         try:
-            fangle = float(angle) * u.deg
-        except ValueError:
-            fangle = u.Quantity(angle).to("deg")
-        except TypeError:
+            try:
+                fangle = float(angle) * u.deg
+            except ValueError:
+                fangle = u.Quantity(angle).to("deg")
+        except TypeError as exc:
             logger.error(
                 "The zenith angle provided is not a valid numerical or astropy.Quantity value."
             )
+            raise exc
         if fangle < 0.0 * u.deg or fangle > 180.0 * u.deg:
             raise argparse.ArgumentTypeError(
                 f"The provided zenith angle, {angle:.1f}, "
