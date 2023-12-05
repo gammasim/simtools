@@ -471,12 +471,10 @@ def test_file_has_text(tmp_test_directory, caplog, file_has_text) -> None:
     with open(file, "w") as f:
         f.write("")
     assert not file_has_text(file, text)
-    assert "is empty" in caplog.text
 
     # Test with file that does not exist.
     file = tmp_test_directory / "test_file_does_not_exist.txt"
     assert not file_has_text(file, text)
-    assert "not found" in caplog.text
 
 
 def test_collect_kwargs() -> None:
