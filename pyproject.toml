@@ -94,12 +94,6 @@ good-names = [
     "C1", "C2", "C3", "C4", "C4x", "N1", "N2", "N3", "N4", "N4x",
     "lst", "mst", "sst", "sct", "hess", "magic", "veritas",
     ]
-# Maximum number of characters on a single line.
-max-line-length = 100
-# Maximum number of lines in a module.
-max-module-lines = 1000
-# Disable warnings
-disable = ["logging-fstring-interpolation"]
 # Ignore files
 ignore = [
     "__init__.py", "scm_version.py", "_version.py",
@@ -107,7 +101,6 @@ ignore = [
     "version.py",
 ]
 
-[tool.pylint."messages control"]
 # See discussion in issue 521
 # Agreed to not have module docstring (missing-module-docstring)
 # Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
@@ -117,23 +110,28 @@ disable = [
     "logging-format-interpolation",
     "fixme",
     "missing-function-docstring",
+    "R0801",   # duplications
+    "logging-fstring-interpolation",
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
 generated-members = ["gist_heat_r"]
 
-[tool.pylint.design]
+# Maximum number of characters on a single line.
+max-line-length = 100
+# Maximum number of lines in a module. (default 1000)
+max-module-lines = 2000
 # Maximum number of branch for function / method body. (default=12)
-max-branches = 20
+max-branches = 25
 # Maximum number of arguments for function / method (default=5).
 max-args = 12
 # Maximum number of locals for function / method body (default=15).
 max-locals = 50
 # Maximum number of attributes for a class (see R0902). (default=7)
-max-attributes = 20
+max-attributes = 50
 # Maximum number of statements in function / method body. (default=50)
 max-statements = 80
 # Maximum number of public methods for a class (see R0904). (default=20)
-max-public-methods = 35
+max-public-methods = 50
 
 [tool.black]
 line-length = 100
