@@ -23,32 +23,29 @@ sys.path.insert(0, os.path.abspath("../../simtools/applications"))
 sys.path.insert(0, os.path.abspath("../.."))
 
 
-def get_authors_from_citation_file(file_name):
+def get_authors_from_citation_file():
     """
     Read list of authors from CITATION.cff file
 
     """
-    try:
-        with open("../../CITATION.cff") as file:
-            citation = yaml.safe_load(file)
-    except FileNotFoundError:
-        raise
+    with open("../../CITATION.cff", encoding="utf-8") as file:
+        citation = yaml.safe_load(file)
 
-    author = ""
+    tmp_author = ""
     try:
         for person in citation["authors"]:
-            author = author + person["given-names"] + " " + person["family-names"]
-            author += " (" + person["affiliation"] + "), "
+            tmp_author = tmp_author + person["given-names"] + " " + person["family-names"]
+            tmp_author += " (" + person["affiliation"] + "), "
     except KeyError:
         pass
-    return author[:-2]
+    return tmp_author[:-2]
 
 
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
 copyright = "2023, gammasim-tools, simtools developers"
-author = get_authors_from_citation_file("../CITATION.cff")
+author = get_authors_from_citation_file()
 rst_epilog = f"""
 .. |author| replace:: {author}
 """
