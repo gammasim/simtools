@@ -49,9 +49,20 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
-        self.nsb_spectrum = None
+        self.nsb_spectrum = nsb_spectrum
+
+    @property
+    def nsb_spectrum(self):
+        """nsb_spectrum property"""
+        return self._nsb_spectrum
+
+    @nsb_spectrum.setter
+    def nsb_spectrum(self, nsb_spectrum):
+        """Setter for nsb_spectrum"""
         if nsb_spectrum is not None:
-            self.nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
+            self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
+        else:
+            self._nsb_spectrum = None
 
     def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
