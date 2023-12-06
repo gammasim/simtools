@@ -281,11 +281,16 @@ class CameraEfficiency:
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
         """
         nsb_pixel_pe_per_ns, nsb_rate_ref_conditions = self.calc_nsb_rate()
+        nsb_spectrum_text = (
+            f"NSB spectrum file: {self.config.nsb_spectrum}"
+            if self.config.nsb_spectrum
+            else "default sim_telarray spectrum."
+        )
         summary = (
             f"Results summary for {self._telescope_model.name} at "
-            f"zenith={self.config.zenith_angle:.1f}, "
-            f"azimuth={self.config.azimuth_angle:.1f}\n"
-            f"Using the NSB spectrum file: {self.config.nsb_spectrum}\n"
+            f"zenith={self.config.zenith_angle:.1f} deg, "
+            f"azimuth={self.config.azimuth_angle:.1f} deg\n"
+            f"Using the {nsb_spectrum_text}\n"
             f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
             "Camera nominal efficiency with gaps (B-TEL-1170): "
             f"{self.calc_camera_efficiency():.4f}\n"
@@ -303,7 +308,7 @@ class CameraEfficiency:
         return summary
 
     def export_results(self):
-        """Export results to a csv file."""
+        """Export results to a ecsv file."""
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
