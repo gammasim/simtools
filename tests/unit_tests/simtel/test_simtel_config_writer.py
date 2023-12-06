@@ -6,7 +6,6 @@ import pytest
 
 from simtools.layout.array_layout import ArrayLayout
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils.general import file_has_text
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -32,7 +31,9 @@ def layout(io_handler, db_config):
 
 
 # @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Current'")
-def test_write_array_config_file(simtel_config_writer, layout, telescope_model_lst, io_handler):
+def test_write_array_config_file(
+    simtel_config_writer, layout, telescope_model_lst, io_handler, file_has_text
+):
     file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", dir_type="test")
     simtel_config_writer.write_array_config_file(
         config_file_path=file,
@@ -43,7 +44,7 @@ def test_write_array_config_file(simtel_config_writer, layout, telescope_model_l
     assert file_has_text(file, "TELESCOPE == 1")
 
 
-def test_write_tel_config_file(simtel_config_writer, io_handler):
+def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     file = io_handler.get_output_file(
         file_name="simtel-config-writer_telescope.txt", dir_type="test"
     )
