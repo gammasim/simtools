@@ -68,7 +68,8 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
-          tags: ${{ steps.meta.outputs.tags }}
+            #          tags: ${{ steps.meta.outputs.tags }}
+          tags: prod-test
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
 
       - name: Test Docker image
