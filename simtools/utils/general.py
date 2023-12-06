@@ -1,8 +1,10 @@
+"""
+General functions useful across different parts of the code.
+"""
+
 import copy
 import logging
-import mmap
 import os
-import re
 import tempfile
 import time
 import urllib.error
@@ -12,11 +14,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import astropy.units as u
-import numpy as np
-from astropy.coordinates.errors import UnitsError
 from astropy.io.misc import yaml
 
 __all__ = [
+    "change_dict_keys_case",
     "collect_data_from_yaml_or_dict",
     "collect_final_lines",
     "collect_kwargs",
@@ -25,14 +26,11 @@ __all__ = [
     "MissingRequiredConfigEntry",
     "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
-    "rotate",
     "separate_args_and_config_data",
     "set_default_kwargs",
-    "sort_arrays",
     "validate_config_data",
     "get_log_excerpt",
-    "convert_2d_to_radial_distr",
-    "save_dict_to_file",
+    "sort_arrays",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -52,41 +50,6 @@ class InvalidConfigEntry(Exception):
 
 class InvalidConfigData(Exception):
     """Exception for invalid configuration data."""
-
-
-def file_has_text(file, text):
-    """
-    Check whether a file contain a certain piece of text.
-
-    Parameters
-    ----------
-    file: str
-        Path of the file.
-    text: str
-        Piece of text to be searched for.
-
-    Returns
-    -------
-    bool
-        True if file has text.
-    """
-
-    try:
-        with open(file, "rb", 0) as string_file, mmap.mmap(
-            string_file.fileno(), 0, access=mmap.ACCESS_READ
-        ) as text_file_input:
-            re_search_1 = re.compile(f"{text}".encode())
-            search_result_1 = re_search_1.search(text_file_input)
-            if search_result_1 is None:
-                return False
-
-            return True
-    except FileNotFoundError:
-        _logger.warning(f"File {file} not found.")
-        return False
-    except ValueError:
-        _logger.warning(f"File {file} is empty.")
-        return False
 
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False):
@@ -214,7 +177,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
 def _check_value_entry_length(value, par_name, par_info):
     """
-    Validate length of user input parmeters
+    Validate length of user input parameters
 
     Parameters
     ----------
@@ -516,29 +479,6 @@ def set_default_kwargs(in_kwargs, **kwargs):
     return in_kwargs
 
 
-def sort_arrays(*args):
-    """Sort arrays
-
-    Parameters
-    ----------
-    *args
-        Arguments to be sorted.
-    Returns
-    -------
-    list
-        Sorted args.
-    """
-
-    if len(args) == 0:
-        return args
-    order_array = copy.copy(args[0])
-    new_args = []
-    for arg in args:
-        _, value = zip(*sorted(zip(order_array, arg)))
-        new_args.append(list(value))
-    return new_args
-
-
 def collect_final_lines(file, n_lines):
     """
     Collect final lines.
@@ -768,117 +708,6 @@ def find_file(name, loc):
     raise FileNotFoundError(msg)
 
 
-def change_dict_keys_case(data_dict, lower_case=True):
-    """
-    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
-    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
-
-    Parameters
-    ----------
-    data_dict: dict
-        Dictionary to be converted.
-    lower_case: bool
-        Change keys to lower (upper) case if True (False).
-    """
-
-    _return_dict = {}
-    try:
-        for key in data_dict.keys():
-            if lower_case:
-                _key_changed = key.lower()
-            else:
-                _key_changed = key.upper()
-            if isinstance(data_dict[key], dict):
-                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-            elif isinstance(data_dict[key], list):
-                _tmp_list = []
-                for _list_entry in data_dict[key]:
-                    if isinstance(_list_entry, dict):
-                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-                    else:
-                        _tmp_list.append(_list_entry)
-                _return_dict[_key_changed] = _tmp_list
-            else:
-                _return_dict[_key_changed] = data_dict[key]
-    except AttributeError:
-        _logger.error(f"Input is not a proper dictionary: {data_dict}")
-        raise
-
-    return _return_dict
-
-
-@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
-    """
-    Transform the x and y coordinates of the telescopes according to two rotations:
-    `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y) and
-    `rotation_angle_around_y_axis` allows to rotate the observation plane in space.
-    The function returns the rotated x and y values in the same unit given.
-    The direction of rotation of the elements in the plane is counterclockwise, i.e.,
-    the rotation of the coordinate system is clockwise.
-
-    Parameters
-    ----------
-    x: numpy.array or list
-        x positions of the entries (e.g. telescopes), usually in meters.
-    y: numpy.array or list
-        y positions of the entries (e.g. telescopes), usually in meters.
-    rotation_angle_around_z_axis: astropy.units.rad
-        Angle to rotate the array in the observation plane (around z axis) in radians.
-    rotation_angle_around_y_axis: astropy.units.rad
-        Angle to rotate the observation plane around the y axis in radians.
-
-    Returns
-    -------
-    2-tuple of list
-        x and y positions of the rotated entry (e.g. telescopes) positions.
-
-    Raises
-    ------
-    TypeError:
-        If type of x and y parameters are not valid.
-    RuntimeError:
-        If the length of x and y are different.
-    UnitsError:
-        If the unit of x and y are different.
-    """
-
-    allowed_types = (list, np.ndarray, u.Quantity, float, int)
-    if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
-        raise TypeError("x and y types are not valid! Cannot perform transformation.")
-
-    if not isinstance(x, (list, np.ndarray)):
-        x = [x]
-    if not isinstance(y, (list, np.ndarray)):
-        y = [y]
-
-    if (
-        np.sum(
-            np.array([isinstance(x, type_now) for type_now in allowed_types[:-2]])
-            * np.array([isinstance(y, type_now) for type_now in allowed_types[:-2]])
-        )
-        == 0
-    ):
-        raise TypeError("x and y are not from the same type! Cannot perform transformation.")
-
-    if len(x) != len(y):
-        raise RuntimeError(
-            "Cannot perform coordinate transformation when x and y have different lengths."
-        )
-    if all(isinstance(variable, (u.Quantity)) for variable in [x, y]):
-        if not isinstance(x[0].unit, type(y[0].unit)):
-            raise UnitsError(
-                "Cannot perform coordinate transformation when x and y have different units."
-            )
-
-    x_trans = np.cos(rotation_around_y_axis) * (
-        x * np.cos(rotation_around_z_axis) - y * np.sin(rotation_around_z_axis)
-    )
-    y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
-
-    return x_trans, y_trans
-
-
 def get_log_excerpt(log_file, n_last_lines=30):
     """
     Get an excerpt from a log file, namely the n_last_lines of the file.
@@ -920,103 +749,62 @@ def get_file_age(file_path):
     return file_age_minutes
 
 
-def convert_2d_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
+def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
+    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
+    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
-    hist2d: numpy.ndarray
-        The histogram counts.
-    xaxis: numpy.array
-        The values of the x axis (histogram bin edges) on the ground.
-    yaxis: numpy.array
-        The values of the y axis (histogram bin edges) on the ground.
-    bins: float
-        Number of bins in distance.
-    max_dist: float
-       Maximum distance to consider in the 1D histogram, usually in meters.
+    data_dict: dict
+        Dictionary to be converted.
+    lower_case: bool
+        Change keys to lower (upper) case if True (False).
+    """
 
+    _return_dict = {}
+    try:
+        for key in data_dict.keys():
+            if lower_case:
+                _key_changed = key.lower()
+            else:
+                _key_changed = key.upper()
+            if isinstance(data_dict[key], dict):
+                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
+            elif isinstance(data_dict[key], list):
+                _tmp_list = []
+                for _list_entry in data_dict[key]:
+                    if isinstance(_list_entry, dict):
+                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
+                    else:
+                        _tmp_list.append(_list_entry)
+                _return_dict[_key_changed] = _tmp_list
+            else:
+                _return_dict[_key_changed] = data_dict[key]
+    except AttributeError:
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
+        raise
+    return _return_dict
+
+
+def sort_arrays(*args):
+    """Sort arrays
+
+    Parameters
+    ----------
+    *args
+        Arguments to be sorted.
     Returns
     -------
-    np.array
-        The values of the 1D histogram with size = int(max_dist/bin_size).
-    np.array
-        The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
-
+    list
+        Sorted args.
     """
 
-    # Check if the histogram will make sense
-    bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
-    for axis in [xaxis, yaxis]:
-        if (bins_step < np.diff(axis)).any():
-            msg = (
-                f"The histogram with number of bins {bins} and maximum distance of {max_dist} "
-                f"resulted in a bin size smaller than the original array. Please adjust those "
-                f"parameters to increase the bin size and avoid nan in the histogram values."
-            )
-            _logger.warning(msg)
-            break
-
-    grid_2d_x, grid_2d_y = np.meshgrid(xaxis[:-1], yaxis[:-1])  # [:-1], since xaxis and yaxis are
-    # the hist bin_edges (n + 1).
-    # radial_distance_map maps the distance to the center from each element in a square matrix.
-    radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
-    # The sorting and unravel_index give us the two indices for the position of the sorted element
-    # in the original 2d matrix
-    x_indices_sorted, y_indices_sorted = np.unravel_index(
-        np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
-    )
-
-    # We construct a 1D array with the histogram counts sorted according to the distance to the
-    # center.
-    hist_sorted = np.array(
-        [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
-    )
-    distance_sorted = np.sort(radial_distance_map, axis=None)
-
-    # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
-    # acount for it using weights below.
-
-    weights, radial_bin_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
-    histogram_1d = np.empty_like(weights, dtype=float)
-
-    for i_radial, _ in enumerate(radial_bin_edges[:-1]):
-        # Here we sum all the events within a radial interval 'dr' and then divide by the number of
-        # bins that fit this interval.
-        indices_to_sum = (distance_sorted >= radial_bin_edges[i_radial]) * (
-            distance_sorted < radial_bin_edges[i_radial + 1]
-        )
-        if weights[i_radial] != 0:
-            histogram_1d[i_radial] = np.sum(hist_sorted[indices_to_sum]) / weights[i_radial]
-        else:
-            histogram_1d[i_radial] = 0
-    return histogram_1d, radial_bin_edges
-
-
-def save_dict_to_file(dictionary, file_name):
-    """
-    Save dictionary to a file.
-
-    Parameters
-    ----------
-    dictionary: dict
-        Dictionary to be saved into a file.
-    file_name: str or Path
-        Name of file to be saved with path.
-
-    Raises
-    ------
-    IOError:
-        if writing to file_name fails.
-    """
-
-    file_name = Path(file_name).with_suffix(".yml")
-    _logger.info(f"Exporting histogram configuration to {file_name}")
-    try:
-        with open(file_name, "w", encoding="utf-8") as file:
-            yaml.dump(dictionary, file)
-    except IOError:
-        msg = f"Failed to write to {file_name}."
-        _logger.error(msg)
-        raise
+    if len(args) == 0:
+        return args
+    order_array = copy.copy(args[0])
+    new_args = []
+    for arg in args:
+        _, value = zip(*sorted(zip(order_array, arg)))
+        new_args.append(list(value))
+    return new_args

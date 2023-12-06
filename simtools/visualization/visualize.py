@@ -12,7 +12,7 @@ from cycler import cycler
 from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
 
-from simtools.utils import general as gen
+from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.utils.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
@@ -627,13 +627,13 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
-        pos_x_rotated, pos_y_rotated = gen.rotate(
+        pos_x_rotated, pos_y_rotated = transf.rotate(
             telescopes["pos_x"], telescopes["pos_y"], rotate_angle
         )
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    pos_x_rotated, pos_y_rotated = gen.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
+    pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
