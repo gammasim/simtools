@@ -29,7 +29,8 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['dev', 'prod']
+#        type: ['dev', 'prod']
+        type: [prod']
 
     steps:
       - name: Checkout repository
@@ -60,11 +61,26 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
           flavor: latest=true
 
-      - name: Build and push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
+          load: true
+          file: ./docker/Dockerfile-${{ matrix.type }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
+
+      - name: Test Docker image
+        run: |
+          docker run --rm ${{ steps.meta.outputs.tags }}
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64/v8
+          load: true
           push:
             ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
           file: ./docker/Dockerfile-${{ matrix.type }}
