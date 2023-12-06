@@ -1,5 +1,6 @@
 import logging
 
+import astropy.units as u
 from astropy.table import Table
 
 __all__ = ["InvalidMirrorListFile", "Mirrors"]
@@ -36,7 +37,7 @@ class Mirrors:
 
     def _read_mirror_list(self):
         """
-        Read the mirror lists from disk and store the data. Allow reading of mirro lists in \
+        Read the mirror lists from disk and store the data. Allow reading of mirror lists in \
         sim_telarray and ecsv format
         """
 
@@ -54,15 +55,16 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-
-        # TODO - temporary hard wired geopars - should come from DB
-        self.diameter = 120
-        self.shape = 1
-        self._logger.debug(f"Shape = {self.shape}")
-        self._logger.debug(f"Diameter = {self.diameter}")
+        # Getting mirror parameters from mirror list. Diameter and shape are identical between mirrors.
 
         _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
+
+        self.shape = u.Quantity(_mirror_table['shape_code'])[0].value
+        self.diameter = u.Quantity(_mirror_table['diameter'])[0].value
+        self._logger.debug(f"Shape = {self.shape}")
+        self._logger.debug(f"Diameter = {self.diameter}")
+
         try:
             self._mirrors["flen"] = list(_mirror_table["mirror_panel_radius"].to("cm").value / 2.0)
             self.number_of_mirrors = len(self._mirrors["flen"])
