@@ -106,7 +106,7 @@ def read_hdf5(hdf5_file_name):
 
     with tables.open_file(hdf5_file_name, mode="r") as file:
         for node in file.walk_nodes("/", "Table"):
-            table_path = node._v_pathname
+            table_path = node._v_pathname  # pylint: disable=protected-access
             table = read_table(hdf5_file_name, table_path)
             tables_list.append(table)
     return tables_list
