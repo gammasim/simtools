@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gabed91f</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g9e9534f</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=ff688835"></script>
+    <script src="../../_static/documentation_options.js?v=81ae6a17"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gabed91f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g9e9534f</p>
 
 
 
@@ -84,11 +84,13 @@
           <div class="body" role="main">
             
   <h1>Source code for utils.general</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">General functions useful across different parts of the code.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">mmap</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">urllib.error</span>
@@ -98,11 +100,10 @@
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy.coordinates.errors</span> <span class="kn">import</span> <span class="n">UnitsError</span>
 <span class="kn">from</span> <span class="nn">astropy.io.misc</span> <span class="kn">import</span> <span class="n">yaml</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;change_dict_keys_case&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_data_from_yaml_or_dict&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_final_lines&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_kwargs&quot;</span><span class="p">,</span>
@@ -111,14 +112,11 @@
     <span class="s2">&quot;MissingRequiredConfigEntry&quot;</span><span class="p">,</span>
     <span class="s2">&quot;UnableToIdentifyConfigEntry&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_level_from_user&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rotate&quot;</span><span class="p">,</span>
     <span class="s2">&quot;separate_args_and_config_data&quot;</span><span class="p">,</span>
     <span class="s2">&quot;set_default_kwargs&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;sort_arrays&quot;</span><span class="p">,</span>
     <span class="s2">&quot;validate_config_data&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_excerpt&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;convert_2D_to_radial_distr&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;save_dict_to_file&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sort_arrays&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -150,41 +148,6 @@
 <span class="k">class</span> <span class="nc">InvalidConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration data.&quot;&quot;&quot;</span></div>
 
-
-
-<span class="k">def</span> <span class="nf">file_has_text</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check whether a file contain a certain piece of text.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file: str</span>
-<span class="sd">        Path of the file.</span>
-<span class="sd">    text: str</span>
-<span class="sd">        Piece of text to be searched for.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    bool</span>
-<span class="sd">        True if file has text.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">string_file</span><span class="p">,</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span>
-            <span class="n">string_file</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_READ</span>
-        <span class="p">)</span> <span class="k">as</span> <span class="n">text_file_input</span><span class="p">:</span>
-            <span class="n">re_search_1</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
-            <span class="n">search_result_1</span> <span class="o">=</span> <span class="n">re_search_1</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text_file_input</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">search_result_1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
-
-            <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> is empty.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="validate_config_data">
@@ -315,7 +278,7 @@
 
 <span class="k">def</span> <span class="nf">_check_value_entry_length</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate length of user input parmeters</span>
+<span class="sd">    Validate length of user input parameters</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -626,32 +589,6 @@
 
 
 
-<div class="viewcode-block" id="sort_arrays">
-<a class="viewcode-back" href="../../utils.html#utils.general.sort_arrays">[docs]</a>
-<span class="k">def</span> <span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort arrays</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    *args</span>
-<span class="sd">        Arguments to be sorted.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        Sorted args.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">args</span>
-    <span class="n">order_array</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">order_array</span><span class="p">,</span> <span class="n">arg</span><span class="p">)))</span>
-        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">new_args</span></div>
-
-
-
 <div class="viewcode-block" id="collect_final_lines">
 <a class="viewcode-back" href="../../utils.html#utils.general.collect_final_lines">[docs]</a>
 <span class="k">def</span> <span class="nf">collect_final_lines</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">):</span>
@@ -673,7 +610,7 @@
     <span class="n">list_of_lines</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.gz&quot;</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">gzip</span>
+        <span class="kn">import</span> <span class="nn">gzip</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
 
         <span class="n">file_open_function</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span>
     <span class="k">else</span><span class="p">:</span>
@@ -890,117 +827,6 @@
     <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\</span>
-<span class="sd">    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    data_dict: dict</span>
-<span class="sd">        Dictionary to be converted.</span>
-<span class="sd">    lower_case: bool</span>
-<span class="sd">        Change keys to lower (upper) case if True (False).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">_return_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">lower_case</span><span class="p">:</span>
-                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">lower_case</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">_tmp_list</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">_list_entry</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="n">lower_case</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">)</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tmp_list</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input is not a proper dictionary: </span><span class="si">{</span><span class="n">data_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span>
-
-    <span class="k">return</span> <span class="n">_return_dict</span>
-
-
-<span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">rotation_angle_phi</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">rotation_angle_theta</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rotation_around_z_axis</span><span class="p">,</span> <span class="n">rotation_around_y_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Transform the x and y coordinates of the telescopes according to two rotations:</span>
-<span class="sd">    `rotation_angle_around_z_axis` gives the rotation on the observation plane (x, y) and</span>
-<span class="sd">    `rotation_angle_around_y_axis` allows to rotate the observation plane in space.</span>
-<span class="sd">    The function returns the rotated x and y values in the same unit given.</span>
-<span class="sd">    The direction of rotation of the elements in the plane is counterclockwise, i.e.,</span>
-<span class="sd">    the rotation of the coordinate system is clockwise.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    x: numpy.array or list</span>
-<span class="sd">        x positions of the entries (e.g. telescopes), usually in meters.</span>
-<span class="sd">    y: numpy.array or list</span>
-<span class="sd">        y positions of the entries (e.g. telescopes), usually in meters.</span>
-<span class="sd">    rotation_angle_around_z_axis: astropy.units.rad</span>
-<span class="sd">        Angle to rotate the array in the observation plane (around z axis) in radians.</span>
-<span class="sd">    rotation_angle_around_y_axis: astropy.units.rad</span>
-<span class="sd">        Angle to rotate the observation plane around the y axis in radians.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    2-tuple of list</span>
-<span class="sd">        x and y positions of the rotated entry (e.g. telescopes) positions.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    TypeError:</span>
-<span class="sd">        If type of x and y parameters are not valid.</span>
-<span class="sd">    RuntimeError:</span>
-<span class="sd">        If the length of x and y are different.</span>
-<span class="sd">    UnitsError:</span>
-<span class="sd">        If the unit of x and y are different.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">allowed_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="p">(</span><span class="n">allowed_types</span><span class="p">))</span> <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;x and y types are not valid! Cannot perform transformation.&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">type_now</span><span class="p">)</span> <span class="k">for</span> <span class="n">type_now</span> <span class="ow">in</span> <span class="n">allowed_types</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]])</span>
-            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">type_now</span><span class="p">)</span> <span class="k">for</span> <span class="n">type_now</span> <span class="ow">in</span> <span class="n">allowed_types</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]])</span>
-        <span class="p">)</span>
-        <span class="o">==</span> <span class="mi">0</span>
-    <span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;x and y are not from the same type! Cannot perform transformation.&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;Cannot perform coordinate transformation when x and y have different lengths.&quot;</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span> <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="n">UnitsError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot perform coordinate transformation when x and y have different units.&quot;</span>
-            <span class="p">)</span>
-
-    <span class="n">x_trans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rotation_around_y_axis</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
-        <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rotation_around_z_axis</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rotation_around_z_axis</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">y_trans</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rotation_around_z_axis</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rotation_around_z_axis</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">x_trans</span><span class="p">,</span> <span class="n">y_trans</span>
-
-
 <div class="viewcode-block" id="get_log_excerpt">
 <a class="viewcode-back" href="../../utils.html#utils.general.get_log_excerpt">[docs]</a>
 <span class="k">def</span> <span class="nf">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">n_last_lines</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
@@ -1045,111 +871,70 @@
     <span class="k">return</span> <span class="n">file_age_minutes</span>
 
 
-<div class="viewcode-block" id="convert_2D_to_radial_distr">
-<a class="viewcode-back" href="../../utils.html#utils.general.convert_2D_to_radial_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_2D_to_radial_distr</span><span class="p">(</span><span class="n">hist2d</span><span class="p">,</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<div class="viewcode-block" id="change_dict_keys_case">
+<a class="viewcode-back" href="../../utils.html#utils.general.change_dict_keys_case">[docs]</a>
+<span class="k">def</span> <span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.</span>
+<span class="sd">    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\</span>
+<span class="sd">    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    hist2d: numpy.ndarray</span>
-<span class="sd">        The histogram counts.</span>
-<span class="sd">    xaxis: numpy.array</span>
-<span class="sd">        The values of the x axis (histogram bin edges) on the ground.</span>
-<span class="sd">    yaxis: numpy.array</span>
-<span class="sd">        The values of the y axis (histogram bin edges) on the ground.</span>
-<span class="sd">    bins: float</span>
-<span class="sd">        Number of bins in distance.</span>
-<span class="sd">    max_dist: float</span>
-<span class="sd">       Maximum distance to consider in the 1D histogram, usually in meters.</span>
+<span class="sd">    data_dict: dict</span>
+<span class="sd">        Dictionary to be converted.</span>
+<span class="sd">    lower_case: bool</span>
+<span class="sd">        Change keys to lower (upper) case if True (False).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">_return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">lower_case</span><span class="p">:</span>
+                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">lower_case</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">_tmp_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">_list_entry</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="n">lower_case</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">)</span>
+                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tmp_list</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input is not a proper dictionary: </span><span class="si">{</span><span class="n">data_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">return</span> <span class="n">_return_dict</span></div>
+
+
+
+<div class="viewcode-block" id="sort_arrays">
+<a class="viewcode-back" href="../../utils.html#utils.general.sort_arrays">[docs]</a>
+<span class="k">def</span> <span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort arrays</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args</span>
+<span class="sd">        Arguments to be sorted.</span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    np.array</span>
-<span class="sd">        The values of the 1D histogram with size = int(max_dist/bin_size).</span>
-<span class="sd">    np.array</span>
-<span class="sd">        The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.</span>
-
+<span class="sd">    list</span>
+<span class="sd">        Sorted args.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># Check if the histogram will make sense</span>
-    <span class="n">bins_step</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">max_dist</span> <span class="o">/</span> <span class="n">bins</span>  <span class="c1"># in the 2D array, the positive and negative direction count.</span>
-    <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">[</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">bins_step</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The histogram with number of bins </span><span class="si">{</span><span class="n">bins</span><span class="si">}</span><span class="s2"> and maximum distance of </span><span class="si">{</span><span class="n">max_dist</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;resulted in a bin size smaller than the original array. Please adjust those &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;parameters to increase the bin size and avoid nan in the histogram values.&quot;</span>
-            <span class="p">)</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">break</span>
-
-    <span class="n">grid_2d_x</span><span class="p">,</span> <span class="n">grid_2d_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xaxis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">yaxis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># [:-1], since xaxis and yaxis are</span>
-    <span class="c1"># the hist bin_edges (n + 1).</span>
-    <span class="c1"># radial_distance_map maps the distance to the center from each element in a square matrix.</span>
-    <span class="n">radial_distance_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">grid_2d_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">grid_2d_y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-    <span class="c1"># The sorting and unravel_index give us the two indices for the position of the sorted element</span>
-    <span class="c1"># in the original 2d matrix</span>
-    <span class="n">x_indices_sorted</span><span class="p">,</span> <span class="n">y_indices_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">radial_distance_map</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">radial_distance_map</span><span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="c1"># We construct a 1D array with the histogram counts sorted according to the distance to the</span>
-    <span class="c1"># center.</span>
-    <span class="n">hist_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">hist2d</span><span class="p">[</span><span class="n">i_x</span><span class="p">,</span> <span class="n">i_y</span><span class="p">]</span> <span class="k">for</span> <span class="n">i_x</span><span class="p">,</span> <span class="n">i_y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_indices_sorted</span><span class="p">,</span> <span class="n">y_indices_sorted</span><span class="p">)]</span>
-    <span class="p">)</span>
-    <span class="n">distance_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">radial_distance_map</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-    <span class="c1"># For larger distances, we have more elements in a slice &#39;dr&#39; in radius, hence, we need to</span>
-    <span class="c1"># acount for it using weights below.</span>
-
-    <span class="n">weights</span><span class="p">,</span> <span class="n">radial_bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">distance_sorted</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">))</span>
-    <span class="n">histogram_1D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">i_radial</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">radial_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="c1"># Here we sum all the events within a radial interval &#39;dr&#39; and then divide by the number of</span>
-        <span class="c1"># bins that fit this interval.</span>
-        <span class="n">indices_to_sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">distance_sorted</span> <span class="o">&gt;=</span> <span class="n">radial_bin_edges</span><span class="p">[</span><span class="n">i_radial</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
-            <span class="n">distance_sorted</span> <span class="o">&lt;</span> <span class="n">radial_bin_edges</span><span class="p">[</span><span class="n">i_radial</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">weights</span><span class="p">[</span><span class="n">i_radial</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">histogram_1D</span><span class="p">[</span><span class="n">i_radial</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_sorted</span><span class="p">[</span><span class="n">indices_to_sum</span><span class="p">])</span> <span class="o">/</span> <span class="n">weights</span><span class="p">[</span><span class="n">i_radial</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">histogram_1D</span><span class="p">[</span><span class="n">i_radial</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">return</span> <span class="n">histogram_1D</span><span class="p">,</span> <span class="n">radial_bin_edges</span></div>
-
-
-
-<div class="viewcode-block" id="save_dict_to_file">
-<a class="viewcode-back" href="../../utils.html#utils.general.save_dict_to_file">[docs]</a>
-<span class="k">def</span> <span class="nf">save_dict_to_file</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Save dictionary to a file.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    dictionary: dict</span>
-<span class="sd">        Dictionary to be saved into a file.</span>
-<span class="sd">    file_name: str or Path</span>
-<span class="sd">        Name of file to be saved with path.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    IOError:</span>
-<span class="sd">        if writing to file_name fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">)</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting histogram configuration to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to write to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span></div>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">args</span>
+    <span class="n">order_array</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">order_array</span><span class="p">,</span> <span class="n">arg</span><span class="p">)))</span>
+        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">new_args</span></div>
 
 </pre></div>
 

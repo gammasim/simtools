@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gabed91f</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g9e9534f</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=ff688835"></script>
+    <script src="_static/documentation_options.js?v=81ae6a17"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gabed91f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g9e9534f</p>
 
 
 
@@ -123,6 +123,7 @@ the util module.</p>
 </ul>
 <section id="module-utils.general">
 <span id="general"></span><span id="utilsgeneral"></span><h2>general<a class="headerlink" href="#module-utils.general" title="Link to this heading">¶</a></h2>
+<p>General functions useful across different parts of the code.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="utils.general.InvalidConfigData">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigData</span></span><a class="reference internal" href="_modules/utils/general.html#InvalidConfigData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.InvalidConfigData" title="Link to this definition">¶</a></dt>
@@ -145,6 +146,22 @@ the util module.</p>
 <dt class="sig sig-object py" id="utils.general.UnableToIdentifyConfigEntry">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">UnableToIdentifyConfigEntry</span></span><a class="reference internal" href="_modules/utils/general.html#UnableToIdentifyConfigEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.UnableToIdentifyConfigEntry" title="Link to this definition">¶</a></dt>
 <dd><p>Exception for unable to indentify configuration entry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.general.change_dict_keys_case">
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">change_dict_keys_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#change_dict_keys_case"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.change_dict_keys_case" title="Link to this definition">¶</a></dt>
+<dd><p>Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_dict: dict</strong></dt><dd><p>Dictionary to be converted.</p>
+</dd>
+<dt><strong>lower_case: bool</strong></dt><dd><p>Change keys to lower (upper) case if True (False).</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -214,36 +231,6 @@ the util module.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.general.convert_2D_to_radial_distr">
-<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">convert_2D_to_radial_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist2d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xaxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#convert_2D_to_radial_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.convert_2D_to_radial_distr" title="Link to this definition">¶</a></dt>
-<dd><p>Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>hist2d: numpy.ndarray</strong></dt><dd><p>The histogram counts.</p>
-</dd>
-<dt><strong>xaxis: numpy.array</strong></dt><dd><p>The values of the x axis (histogram bin edges) on the ground.</p>
-</dd>
-<dt><strong>yaxis: numpy.array</strong></dt><dd><p>The values of the y axis (histogram bin edges) on the ground.</p>
-</dd>
-<dt><strong>bins: float</strong></dt><dd><p>Number of bins in distance.</p>
-</dd>
-<dt><strong>max_dist: float</strong></dt><dd><p>Maximum distance to consider in the 1D histogram, usually in meters.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.array</dt><dd><p>The values of the 1D histogram with size = int(max_dist/bin_size).</p>
-</dd>
-<dt>np.array</dt><dd><p>The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="utils.general.get_log_excerpt">
 <span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">get_log_excerpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_last_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#get_log_excerpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.get_log_excerpt" title="Link to this definition">¶</a></dt>
 <dd><p>Get an excerpt from a log file, namely the n_last_lines of the file.</p>
@@ -279,69 +266,6 @@ the util module.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>logging.LEVEL</dt><dd><p>The requested logging level to be used as input to logging.setLevel().</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.general.rotate">
-<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_around_z_axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_around_y_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.general.rotate" title="Link to this definition">¶</a></dt>
-<dd><p>Transform the x and y coordinates of the telescopes according to two rotations:
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_angle_around_z_axis</span></code> gives the rotation on the observation plane (x, y) and
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_angle_around_y_axis</span></code> allows to rotate the observation plane in space.
-The function returns the rotated x and y values in the same unit given.
-The direction of rotation of the elements in the plane is counterclockwise, i.e.,
-the rotation of the coordinate system is clockwise.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x: numpy.array or list</strong></dt><dd><p>x positions of the entries (e.g. telescopes), usually in meters.</p>
-</dd>
-<dt><strong>y: numpy.array or list</strong></dt><dd><p>y positions of the entries (e.g. telescopes), usually in meters.</p>
-</dd>
-<dt><strong>rotation_angle_around_z_axis: astropy.units.rad</strong></dt><dd><p>Angle to rotate the array in the observation plane (around z axis) in radians.</p>
-</dd>
-<dt><strong>rotation_angle_around_y_axis: astropy.units.rad</strong></dt><dd><p>Angle to rotate the observation plane around the y axis in radians.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>2-tuple of list</dt><dd><p>x and y positions of the rotated entry (e.g. telescopes) positions.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>TypeError:</dt><dd><p>If type of x and y parameters are not valid.</p>
-</dd>
-<dt>RuntimeError:</dt><dd><p>If the length of x and y are different.</p>
-</dd>
-<dt>UnitsError:</dt><dd><p>If the unit of x and y are different.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.general.save_dict_to_file">
-<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">save_dict_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#save_dict_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.save_dict_to_file" title="Link to this definition">¶</a></dt>
-<dd><p>Save dictionary to a file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>dictionary: dict</strong></dt><dd><p>Dictionary to be saved into a file.</p>
-</dd>
-<dt><strong>file_name: str or Path</strong></dt><dd><p>Name of file to be saved with path.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>IOError:</dt><dd><p>if writing to file_name fails.</p>
 </dd>
 </dl>
 </dd>

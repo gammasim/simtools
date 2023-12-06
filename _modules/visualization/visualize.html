@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.visualize &#8212; simtools v0.1.dev1+gabed91f</title>
+    <title>visualization.visualize &#8212; simtools v0.1.dev1+g9e9534f</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=ff688835"></script>
+    <script src="../../_static/documentation_options.js?v=81ae6a17"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gabed91f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g9e9534f</p>
 
 
 
@@ -98,7 +98,7 @@
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
 <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
 
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">geometry</span> <span class="k">as</span> <span class="n">transf</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span> <span class="nn">simtools.utils.names</span> <span class="kn">import</span> <span class="n">mst</span><span class="p">,</span> <span class="n">sct</span>
 <span class="kn">from</span> <span class="nn">simtools.visualization</span> <span class="kn">import</span> <span class="n">legend_handlers</span> <span class="k">as</span> <span class="n">leg_h</span>
@@ -734,13 +734,13 @@
     <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">tel_counters</span> <span class="o">=</span> <span class="p">{</span><span class="n">one_telescope</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">one_telescope</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">all_telescope_class_names</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">rotate_angle</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span>
+        <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">transf</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span>
             <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;pos_x&quot;</span><span class="p">],</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;pos_y&quot;</span><span class="p">],</span> <span class="n">rotate_angle</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;pos_x&quot;</span><span class="p">],</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;pos_y&quot;</span><span class="p">]</span>
 
-    <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">transf</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
         <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">4</span>
