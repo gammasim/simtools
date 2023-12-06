@@ -104,6 +104,14 @@ This is especially recommended to identify warnings and errors by Sphinx (e.g., 
 docstrings or RST files). The documentation can be viewed locally in a browser starting from the
 file ``./build/html/index.html``.
 
+The documentation is written in reStructuredText (RST) format.
+Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
+
+Hints:
+
+- make sure that headings are underlined with the correct number of ``=`` characters
+- make sure that the indentation is correct and aligned
+- use unicode for special characters (e.g., ``\u00B2`` for superscript 2); see `unicode table <https://unicode-table.com/en/>`_
 
 Writing Applications
 ====================
@@ -141,7 +149,14 @@ configurations from command line, configuration file, or environmental variables
 Check the :ref:`commandline_parser <configurationcommandline_parser>` module for generic command line arguments before introducing new ones in applications
 
 The documentation of application uses the in-line doc string.
-Note that sphinx requires an explicit listing of new applications in `application.rst <https://github.com/gammasim/simtools/blob/main/docs/source/applications.rst>`_.
+
+Adding an applications requires the following changes:
+
+- add application code to the `simtools/applications <https://github.com/gammasim/simtools/tree/main/simtools/applications>`_
+- add integration tests to `tests/integration_tests <https://github.com/gammasim/simtools/tree/main/tests/integration_tests>`_
+- modify `pyproject.toml file for pip <https://github.com/gammasim/simtools/blob/main/pyproject.toml>`_ (replace "_" by "-" and add "simtools-" to the application name)
+- add application to documentation in `docs/sources/applications.rst <https://github.com/gammasim/simtools/blob/main/docs/source/applications.rst>`_
+
 
 Dependencies
 ============

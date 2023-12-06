@@ -3,11 +3,11 @@ import os
 from copy import copy
 from pathlib import Path
 
-from simtools import io_handler
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     MissingRequiredInputInCorsikaConfigData,
 )
+from simtools.io_operations import io_handler
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_yaml_or_dict
 
@@ -96,7 +96,7 @@ class CorsikaRunner:
 
         self.label = label
         self.site = names.validate_site_name(site)
-        self.layout_name = names.validate_layout_array_name(layout_name)
+        self.layout_name = names.validate_array_layout_name(layout_name)
 
         self._keep_seeds = keep_seeds
 

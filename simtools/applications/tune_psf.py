@@ -37,11 +37,11 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
-        Model version (default="Current").
+        Model version.
     src_distance (float, optional)
-        Source distance in km (default=10).
+        Source distance in km.
     zenith (float, optional)
-        Zenith angle in deg (default=20).
+        Zenith angle in deg.
     data (str, optional)
         Name of the data file with the measured cumulative PSF.
     plot_all (activation mode, optional)
@@ -51,7 +51,7 @@
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------
@@ -94,8 +94,8 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.model.model_utils import split_simtel_parameter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
@@ -127,12 +127,12 @@ def main():
     )
     config.parser.add_argument(
         "--src_distance",
-        help="Source distance in km (default=10)",
+        help="Source distance in km",
         type=float,
         default=10,
     )
     config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg (default=20)", type=float, default=20
+        "--zenith", help="Zenith angle in deg", type=float, default=20
     )
     config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str

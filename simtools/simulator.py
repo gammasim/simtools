@@ -8,9 +8,9 @@ import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -206,7 +206,7 @@ class Simulator:
 
         try:
             self.site = names.validate_site_name(self._corsika_config_data.pop("site"))
-            self.layout_name = names.validate_layout_array_name(
+            self.layout_name = names.validate_array_layout_name(
                 self._corsika_config_data.pop("layout_name")
             )
         except KeyError:
@@ -332,7 +332,7 @@ class Simulator:
 
         try:
             _array_model_data["site"] = names.validate_site_name(_rest_data.pop("site"))
-            _array_model_data["layout_name"] = names.validate_layout_array_name(
+            _array_model_data["layout_name"] = names.validate_array_layout_name(
                 _rest_data.pop("layout_name")
             )
             _array_model_data["model_version"] = _rest_data.pop("model_version")
@@ -648,7 +648,6 @@ class Simulator:
                     file_type="output", **self._simulation_runner.get_info_for_file_name(run)
                 )
                 self._results["output"].append(str(output_file_name))
-
         return self._results["output"]
 
     def get_list_of_histogram_files(self):

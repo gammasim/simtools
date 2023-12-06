@@ -8,7 +8,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools import io_handler
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
 from simtools.utils import names
@@ -446,7 +446,6 @@ class CameraEfficiency:
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
-        print("nsb_integral = ", nsb_integral)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]

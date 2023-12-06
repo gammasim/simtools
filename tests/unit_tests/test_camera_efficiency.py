@@ -123,9 +123,8 @@ def test_calc_reflectivity(camera_efficiency_lst, results_file):
 def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
-    assert camera_efficiency_lst.calc_nsb_rate() == pytest.approx(
-        0.24421390533203186
-    )  # Value for Prod5 LST-1
+    _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
+    assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
 
 
 def test_export_results(simtel_path, telescope_model_lst, caplog):

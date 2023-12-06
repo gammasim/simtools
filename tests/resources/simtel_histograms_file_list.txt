@@ -1,0 +1,1 @@
+./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
