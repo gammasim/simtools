@@ -198,6 +198,20 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
+    "validate_camera_efficiency::MST-FlashCam-D": [
+        [
+            "--site",
+            "South",
+            "--telescope",
+            "MST-FlashCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTOUTPUTDIR/",
+            "--nsb_spectrum",
+            "tests/resources/benn_ellison_spectrum_for_testing.txt",
+        ]
+    ],
     "validate_camera_efficiency::SST-D": [
         [
             "--site",
