@@ -352,7 +352,7 @@ class Configurator:
                     _list_args += value
                 elif isinstance(value, u.Quantity):
                     _list_args.append("--" + key)
-                    _list_args.append(str(value.value))
+                    _list_args.append(str(value))
                 elif not isinstance(value, bool) and value is not None and len(str(value)) > 0:
                     _list_args.append("--" + key)
                     _list_args.append(str(value))
