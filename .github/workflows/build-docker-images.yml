@@ -73,7 +73,7 @@ jobs:
 
       - name: Test Docker image
         run: |
-          docker run --rm ${{ steps.meta.outputs.tags }}
+          docker run --rm simtools-prod
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
