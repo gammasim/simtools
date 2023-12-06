@@ -9,20 +9,20 @@ import numpy as np
 from astropy.coordinates.errors import UnitsError
 
 __all__ = [
-    "convert_2D_to_radial_distr",
+    "convert_2d_to_radial_distr",
     "rotate",
 ]
 
 _logger = logging.getLogger(__name__)
 
 
-def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
+def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
-    Convert a 2D histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
+    Convert a 2d histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
     Parameters
     ----------
-    hist2d: numpy.ndarray
+    hist_2d: numpy.ndarray
         The histogram counts.
     xaxis: numpy.array
         The values of the x axis (histogram bin edges) on the ground.
@@ -43,7 +43,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
 
     # Check if the histogram will make sense
-    bins_step = 2 * max_dist / bins  # in the 2D array, the positive and negative direction count.
+    bins_step = 2 * max_dist / bins  # in the 2d array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
         if (bins_step < np.diff(axis)).any():
             msg = (
@@ -67,7 +67,7 @@ def convert_2D_to_radial_distr(hist2d, xaxis, yaxis, bins=50, max_dist=1000):
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
     hist_sorted = np.array(
-        [hist2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
+        [hist_2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
     )
     distance_sorted = np.sort(radial_distance_map, axis=None)
 
