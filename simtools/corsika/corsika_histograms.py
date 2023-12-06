@@ -947,7 +947,7 @@ class CorsikaHistograms:
         for i_hist, _ in enumerate(x_position_list):
             hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
                 hist_2d_values_list[i_hist],
-                x_position_list[i_hist],
+                x_position_list[i_hist],  # pylint: disable=unnecessary-list-index-lookup
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
@@ -985,7 +985,7 @@ class CorsikaHistograms:
         for i_hist, _ in enumerate(x_position_list):
             hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
                 hist_2d_values_list[i_hist],
-                x_position_list[i_hist],
+                x_position_list[i_hist],  # pylint: disable=unnecessary-list-index-lookup
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
