@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
 #        type: ['dev', 'prod']
-        type: [prod']
+        type: ['prod']
 
     steps:
       - name: Checkout repository
@@ -68,8 +68,7 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
-            #          tags: ${{ steps.meta.outputs.tags }}
-          tags: prod-test
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
 
       - name: Test Docker image
