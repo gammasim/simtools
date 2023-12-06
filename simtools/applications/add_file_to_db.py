@@ -23,7 +23,7 @@
         The DB to insert the files to. \
         The choices are either the default CTA simulation DB or a sandbox for testing.
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print.
 
     Example
     -------

@@ -32,7 +32,7 @@
     nsb_spectrum (str, optional)
         File with NSB spectrum to use (following sim_telarray required format).
     verbosity (str, optional)
-        Log level to print (default=INFO).
+        Log level to print
 
     Example
     -------
@@ -65,10 +65,10 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools import io_handler
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 
 

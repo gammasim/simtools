@@ -120,15 +120,16 @@ def test_get_telescope_patch(manual_corsika_dict_north, manual_corsika_dict_sout
 
 def test_plot_array(
     telescope_north_test_file,
-    layout_array_north_instance,
+    array_layout_north_instance,
     telescope_south_test_file,
-    layout_array_south_instance,
+    array_layout_south_instance,
 ):
     def test_one_site(test_file, instance):
         telescope_table = instance.read_telescope_list_file(test_file)
         telescopes_dict = instance.include_radius_into_telescope_table(telescope_table)
         fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
         assert isinstance(fig_out, type(plt.figure()))
+        plt.close()
 
-    test_one_site(telescope_north_test_file, layout_array_north_instance)
-    test_one_site(telescope_south_test_file, layout_array_south_instance)
+    test_one_site(telescope_north_test_file, array_layout_north_instance)
+    test_one_site(telescope_south_test_file, array_layout_south_instance)

@@ -5,7 +5,7 @@
     Submit model parameter (value, table) through the command line.
 
     Input data and metadata is validated, and if necessary enriched
-    and converted following a predescribed schema.
+    and converted following a pre-described schema.
 
     Command line arguments
     ----------------------
@@ -33,7 +33,7 @@
 
     .. code-block:: console
 
-        INFO::model_data_writer(l70)::write_data::Writing data to\
+        INFO::model_data_writer(l70)::write_data::Writing data to \
             /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv
 
 """
@@ -78,7 +78,7 @@ def _parse(label, description):
         "--input",
         help="input data file",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--schema",
@@ -101,16 +101,14 @@ def main():
     _metadata = MetadataCollector(args_dict=args_dict)
 
     data_validator = validate_data.DataValidator(
-        schema_file=args_dict.get("schema", None),
+        schema_file=_metadata.get_data_model_schema_file_name(),
         data_file=args_dict["input"],
     )
 
-    file_writer = writer.ModelDataWriter(
-        product_data_file=args_dict["output_file"],
-        product_data_format=args_dict["output_file_format"],
-    )
-    file_writer.write(
-        metadata=_metadata.top_level_meta, product_data=data_validator.validate_and_transform()
+    writer.ModelDataWriter.dump(
+        args_dict=args_dict,
+        metadata=_metadata.top_level_meta,
+        product_data=data_validator.validate_and_transform(),
     )
 
 

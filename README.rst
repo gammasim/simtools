@@ -26,7 +26,7 @@ simtools
 .. image:: https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7
    :target: https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
-.. image:: https://codecov.io/gh/gammasim/simtools/branch/master/graph/badge.svg?token=AYAIRPARCH
+.. image:: https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH
    :target: https://codecov.io/gh/gammasim/simtools
 
 Simulation tools and applications for the `Cherenkov Telescope Array (CTAO) <https://www.cta-observatory.org>`_.
@@ -52,7 +52,7 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 - `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code
 - `workflows <https://github.com/gammasim/workflows>`_ for setting, derivation and validation of simulation model parameters
 - `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
-- :ref:`databases <Databases>`, especially the model parameter database
+- `databases <https://gammasim.github.io/simtools/databases.html>`_, especially the model parameter database
 
 simtools is under rapid development with continuous changes and additions planned.
 Please contact the developers before using it: simtools-developer@desy.de
@@ -82,7 +82,7 @@ Install simtools with mamba (recommended for developers):
     conda activate simtools
     pip install -e .
 
-For more detail see the :ref:`Getting_Started` section of the manual.
+For more detail see the `Getting_Started <https://gammasim.github.io/simtools/getting_started.html>`_ section of the manual.
 
 Authors
 =======
@@ -97,3 +97,8 @@ Citing this Software
 ====================
 
 Please cite this software if it use used for a publication, see the `Zenodo record <https://doi.org/10.5281/zenodo.6346696>`_ and `CITATION.cff <https://github.com/gammasim/simtools/blob/main/CITATION.cff>`_ .
+
+Acknowledgements
+================
+
+This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – project number 460248186 (PUNCH4NFDI).

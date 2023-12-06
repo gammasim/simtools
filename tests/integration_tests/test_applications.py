@@ -21,6 +21,11 @@ logger.setLevel(logging.DEBUG)
 
 
 APP_LIST = {
+    "submit_data_from_external::help": [
+        [
+            "--help",
+        ]
+    ],
     # Optics
     "compare_cumulative_psf": [
         [
@@ -37,11 +42,6 @@ APP_LIST = {
             "--test",
             "--output_path",
             "TESTOUTPUTDIR/",
-        ]
-    ],
-    "submit_data_from_external::help": [
-        [
-            "--help",
         ]
     ],
     "submit_data_from_external::submit_table": [
@@ -222,9 +222,47 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_simtel_histograms::help": [
+    "generate_default_metadata": [
         [
-            "--help",
+            "--schema",
+            "simtools/schemas/metadata.schema.yml",
+            "--output_path",
+            "TESTOUTPUTDIR/test_generate_default_metadata",
+        ]
+    ],
+    "generate_simtel_array_histograms::file_lists": [
+        [
+            "--hist_file_names",
+            "./tests/resources/simtel_histograms_file_list.txt",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
+        ]
+    ],
+    "generate_simtel_array_histograms::hist_file_names_pdf": [
+        [
+            "--hist_file_names",
+            "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
+        ]
+    ],
+    "generate_simtel_array_histograms::hist_file_names_pdf_no_name": [
+        [
+            "--hist_file_names",
+            "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            "--pdf",
+        ]
+    ],
+    "generate_simtel_array_histograms::hist_file_names_pdf_hdf5": [
+        [
+            "--hist_file_names",
+            "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            "--output_file_name",
+            "TESTOUTPUTDIR/test_simtel_hist_name",
+            "--pdf",
+            "--hdf5",
         ]
     ],
     # Layout
@@ -234,14 +272,14 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file": [
+    "plot_array_layout::one_file": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_with_name": [
+    "plot_array_layout::one_file_with_name": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test",
@@ -249,7 +287,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_with_name_and_extension": [
+    "plot_array_layout::one_file_with_name_and_extension": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--figure_name test.png",
@@ -257,7 +295,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_one_angle": [
+    "plot_array_layout::one_file_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20",
@@ -265,7 +303,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::one_file_two_angles": [
+    "plot_array_layout::one_file_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv",
             "--rotate_angle 20 30",
@@ -273,7 +311,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files": [
+    "plot_array_layout::two_files": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -281,7 +319,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files_one_angle": [
+    "plot_array_layout::two_files_one_angle": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -290,7 +328,7 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::two_files_two_angles": [
+    "plot_array_layout::two_files_two_angles": [
         [
             "--telescope_list data/layout/telescope_positions-North-TestLayout.ecsv "
             "data/layout/telescope_positions-South-TestLayout.ecsv",
@@ -299,40 +337,40 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name": [
+    "plot_array_layout::layout_name": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name_one_angle": [
+    "plot_array_layout::layout_name_one_angle": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--rotate_angle 20",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_name_two_angles": [
+    "plot_array_layout::layout_name_two_angles": [
         [
-            "--layout_array_name North-4LST",
+            "--array_layout_name North-4LST",
             "--rotate_angle 20 30",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_two_names_one_angle": [
+    "plot_array_layout::layout_two_names_one_angle": [
         [
-            "--layout_array_name North-4LST South-4LST",
+            "--array_layout_name North-4LST South-4LST",
             "--rotate_angle 20",
             "--output_path",
             "TESTOUTPUTDIR/",
         ]
     ],
-    "plot_layout_array::layout_two_names_two_angles": [
+    "plot_array_layout::layout_two_names_two_angles": [
         [
-            "--layout_array_name North-4LST South-4LST",
+            "--array_layout_name North-4LST South-4LST",
             "--rotate_angle 20 30",
             "--output_path",
             "TESTOUTPUTDIR/",
@@ -615,11 +653,11 @@ APP_LIST = {
     ],
     # print_array
     "print_array_elements::print_all": [
-        ["--array_element_list", "tests/resources/telescope_positions-South-4MST.ecsv"],
+        ["--input", "tests/resources/telescope_positions-South-4MST.ecsv"],
     ],
     "print_array_elements::print_compact": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--compact",
             "corsika",
@@ -629,7 +667,7 @@ APP_LIST = {
     ],
     "print_array_elements::export_utm": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "utm",
@@ -639,7 +677,7 @@ APP_LIST = {
     ],
     "print_array_elements::export_corsika": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-South-4MST.ecsv",
             "--export",
             "corsika",
@@ -650,7 +688,7 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_nocors_utm": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "utm",
@@ -660,7 +698,7 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_nocors_corsika": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--compact",
             "corsika",
@@ -670,17 +708,19 @@ APP_LIST = {
     ],
     "print_array_elements::print_compact_corsika_telescopeheights": [
         [
-            "--array_element_list",
+            "--input",
             "tests/resources/telescope_positions-North-utm.ecsv",
             "--export",
             "corsika",
             "--use_corsika_telescope_height",
+            "--select_assets",
+            "LSTN MSTN LSTS MSTS SSTS",
             "--output_path",
             "TESTOUTPUTDIR/",
         ],
     ],
-    # validate_schema_files
-    "validate_schema_files": [
+    # validate_file_using_schema
+    "validate_file_using_schema": [
         [
             "--schema",
             "TESTMODELDIR/jsonschema.yml",

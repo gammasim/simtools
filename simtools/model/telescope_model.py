@@ -9,7 +9,8 @@ from astropy import units as u
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools import db_handler, io_handler
+from simtools import db_handler
+from simtools.io_operations import io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
