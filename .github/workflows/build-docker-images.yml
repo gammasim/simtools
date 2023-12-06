@@ -10,7 +10,7 @@ on:
       - 'v*'
   pull_request:
     branches: ["main"]
-      #    types: [review_requested, ready_for_review]
+    types: [review_requested, ready_for_review]
   release:
     types: [published]
   schedule:
@@ -80,7 +80,6 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          load: true
           push:
             ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
           file: ./docker/Dockerfile-${{ matrix.type }}
