@@ -19,6 +19,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TEST_TAG: user/app:test
 
 jobs:
 
@@ -51,6 +52,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
+        if: matrix.type == 'prod'
         uses: docker/metadata-action@v5
         with:
           tags: |
@@ -63,17 +65,17 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
+        if: matrix.type == 'prod'
         with:
           context: .
           platforms: linux/amd64
           push: false
           file: ./docker/Dockerfile-${{ matrix.type }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
+          tags: ${{ env.TEST_TAG }}
 
       - name: Test Docker image
         run: |
-          docker run --rm simtools-prod
+          docker run --rm ${{ env.TEST_TAG }}
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
