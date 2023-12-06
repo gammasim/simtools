@@ -699,7 +699,7 @@ class CorsikaHistograms:
         """
 
         for histogram in self._allowed_histograms:
-            if not hasattr(self, histogram):
+            if getattr(self, histogram) is None:
                 msg = (
                     "The histograms were not created. Please, use `create_histograms` to create "
                     "histograms from the CORSIKA output file."
