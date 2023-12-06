@@ -65,7 +65,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8
           load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
