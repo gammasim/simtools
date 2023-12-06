@@ -24,13 +24,17 @@
     model_version (str, optional)
         Model version (default='Current')
     zenith_angle (float, optional)
-        Zenith angle in degrees (between 0 and 180) (default=20).
+        Zenith angle in degrees (between 0 and 180).
     azimuth_angle (float, optional)
         Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
         one of north, south, east or west (case insensitive). Note that North is 0 degrees
-        and the azimuth grows clockwise, so East is 90 degrees (default=0).
+        and the azimuth grows clockwise, so East is 90 degrees.
     nsb_spectrum (str, optional)
-        File with NSB spectrum to use (following sim_telarray required format).
+        File with NSB spectrum to use for the efficiency simulation.
+        The expected format is two columns with wavelength in nm and
+        NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
+        If the file has more than two columns, the first and third are used,
+        and the second is ignored.
     verbosity (str, optional)
         Log level to print
 
@@ -43,6 +47,8 @@
     .. code-block:: console
 
         simtools-validate-camera-efficiency --site North \
+            --azimuth_angle 0 --zenith_angle 20 \
+            --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \
             --telescope MST-NectarCam-D --model_version prod5
 
     The output is saved in simtools-output/validate_camera_efficiency.
@@ -105,9 +111,13 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--nsb_spectrum",
-        # FIXME - describe format of the sim_telarray file or better, use a standard
-        # format and convert on the fly to sim_telarray format
-        help="File with NSB spectrum to use (following sim_telarray required format).",
+        help=(
+            "File with NSB spectrum to use for the efficiency simulation."
+            "The expected format is two columns with wavelength in nm and "
+            "NSB flux with the units: [1e9 * ph/m2/s/sr/nm]."
+            "If the file has more than two columns, the first and third are used,"
+            "and the second is ignored."
+        ),
         type=str,
         default=None,
         required=False,
