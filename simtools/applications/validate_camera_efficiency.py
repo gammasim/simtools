@@ -122,7 +122,12 @@ def _parse(label):
         default=None,
         required=False,
     )
-    return config.initialize(db_config=True, telescope_model=True)
+    _args_dict, _db_config = config.initialize(db_config=True, telescope_model=True)
+    if _args_dict["site"] is None or _args_dict["telescope"] is None:
+        config.parser.print_help()
+        print("\n\nSite and telescope must be provided\n\n")
+        raise RuntimeError("Site and telescope must be provided")
+    return _args_dict, _db_config
 
 
 def main():
