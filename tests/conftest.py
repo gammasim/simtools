@@ -326,3 +326,12 @@ def array_config_data(simulator_config_data):
 @pytest.fixture
 def shower_config_data(simulator_config_data):
     return simulator_config_data["common"] | simulator_config_data["showers"]
+
+
+@pytest.fixture(autouse=True)
+def check_db_admin_user(request):
+    marker = request.node.get_closest_marker("requires_db_admin")
+    if marker is not None:
+        user = os.environ.get("SIMTOOLS_DB_API_USER")
+        if user != "admin":
+            pytest.skip("Test requires SIMTOOLS_DB_API_USER to be set to 'admin'")

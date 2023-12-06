@@ -633,3 +633,7 @@ addopts="-v --cov=simtools --cov-report=xml --cov-report=term"
 testpaths="tests/unit_tests/"
 # Ignore the warning about fontTools.misc.py23
 filterwarnings="ignore:The py23 module has been deprecated:DeprecationWarning"
+# Registre markers
+markers = [
+    "requires_db_admin",
+    ]
