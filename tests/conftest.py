@@ -10,7 +10,6 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
-from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 
@@ -279,6 +278,8 @@ def corsika_output_file_name():
 
 @pytest.fixture
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
+    from simtools.corsika.corsika_histograms import CorsikaHistograms
+
     return CorsikaHistograms(
         corsika_output_file_name, output_path=io_handler.get_output_directory(dir_type="test")
     )
