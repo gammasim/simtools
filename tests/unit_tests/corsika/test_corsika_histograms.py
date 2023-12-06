@@ -278,7 +278,7 @@ def test_set_histograms_passing_config(corsika_histograms_instance):
     assert corsika_histograms_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
 
 
-def test_raise_if_no_histogram(corsika_output_file_name, caplog):
+def test_raise_if_no_histogram(corsika_output_file_name, caplog, io_handler):
     corsika_histograms_instance_not_hist = CorsikaHistograms(corsika_output_file_name)
     with pytest.raises(HistogramNotCreated):
         corsika_histograms_instance_not_hist._raise_if_no_histogram()
