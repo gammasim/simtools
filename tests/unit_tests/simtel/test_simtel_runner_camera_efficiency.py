@@ -45,6 +45,24 @@ def test_make_run_command(simtel_runner_camera_efficiency):
     command = simtel_runner_camera_efficiency._make_run_command()
 
     assert "testeff" in command
+    assert "-fnsb" not in command
+    assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
+    assert "-flen 2.15191 -spix 0.62" in command
+    assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
+    assert "-teltrans 0.92362" in command
+    assert "weighted_average_1D_transmission_astri_window_new.dat" in command
+    assert "-fqe PDE_V_4.4V_LVR5_ext.txt" in command
+
+
+def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
+    simtel_runner_camera_efficiency.nsb_spectrum = (
+        "tests/resources/benn_ellison_spectrum_for_testing.txt"
+    )
+    command = simtel_runner_camera_efficiency._make_run_command()
+
+    assert "testeff" in command
+    assert "-fnsb" in command
+    assert "benn_ellison_spectrum_for_testing.txt" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
     assert "-flen 2.15191 -spix 0.62" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
