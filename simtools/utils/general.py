@@ -395,7 +395,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
         _logger.debug(msg)
         return None
 
-    _logger.error(msg)
+    _logger.debug(msg)
     raise InvalidConfigData(msg)
 
 
