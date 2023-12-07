@@ -103,9 +103,7 @@ def _parse(label):
         type=float,
         default=10,
     )
-    config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg", type=float, default=20
-    )
+    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument(
         "--max_offset",
         help="Maximum offset angle in deg",
