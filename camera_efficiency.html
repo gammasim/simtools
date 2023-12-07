@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Camera Efficiency &#8212; simtools v0.1.dev1+g92b1c92</title>
+    <title>Camera Efficiency &#8212; simtools v0.1.dev1+g6de4c67</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=fd4e4c64"></script>
+    <script src="_static/documentation_options.js?v=80c6e41f"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g6de4c67</p>
 
 
 
@@ -179,7 +179,10 @@ function can be used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>nsb_rate</dt><dd><p>NSB rate in p.e./ns</p>
+<dt>nsb_rate_provided_spectrum: float</dt><dd><p>NSB pixel rate in p.e./ns for the provided NSB spectrum</p>
+</dd>
+<dt>nsb_rate_ref_conditions: float</dt><dd><p>NSB pixel rate in p.e./ns for reference conditions
+(<a class="reference external" href="https://jama.cta-observatory.org/perspective.req#/items/26694">https://jama.cta-observatory.org/perspective.req#/items/26694</a>?projectId=11)</p>
 </dd>
 </dl>
 </dd>
@@ -237,7 +240,7 @@ function can be used.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.export_results">
 <span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/camera_efficiency.html#CameraEfficiency.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.export_results" title="Link to this definition">¶</a></dt>
-<dd><p>Export results to a csv file.</p>
+<dd><p>Export results to a ecsv file.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -309,6 +312,14 @@ config_data or config_file arguments.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.results_summary">
+<span class="sig-name descname"><span class="pre">results_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/camera_efficiency.html#CameraEfficiency.results_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.results_summary" title="Link to this definition">¶</a></dt>
+<dd><p>Print a summary of the results.
+Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
+The summary includes the various CTAO requirements and the final expected NSB pixel rate.</p>
 </dd></dl>
 
 <dl class="py method">

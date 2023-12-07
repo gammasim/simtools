@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g92b1c92</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g6de4c67</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=fd4e4c64"></script>
+    <script src="_static/documentation_options.js?v=80c6e41f"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g6de4c67</p>
 
 
 
@@ -1145,7 +1145,19 @@ and converted following a pre-described schema.</p>
 </dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version</p>
+<dt>model_version (str, optional)</dt><dd><p>Model version (default=’Current’)</p>
+</dd>
+<dt>zenith_angle (float, optional)</dt><dd><p>Zenith angle in degrees (between 0 and 180).</p>
+</dd>
+<dt>azimuth_angle (float, optional)</dt><dd><p>Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
+one of north, south, east or west (case insensitive). Note that North is 0 degrees
+and the azimuth grows clockwise, so East is 90 degrees.</p>
+</dd>
+<dt>nsb_spectrum (str, optional)</dt><dd><p>File with NSB spectrum to use for the efficiency simulation.
+The expected format is two columns with wavelength in nm and
+NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
+If the file has more than two columns, the first and third are used,
+and the second is ignored (native sim_telarray behaviour).</p>
 </dd>
 <dt>verbosity (str, optional)</dt><dd><p>Log level to print</p>
 </dd>
@@ -1155,7 +1167,7 @@ and converted following a pre-described schema.</p>
 <h3>Example<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h3>
 <p>MST-NectarCam - Prod5</p>
 <p>Runtime &lt; 1 min.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-efficiency --site North             --telescope MST-NectarCam-D --model_version prod5</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-efficiency --site North             --azimuth_angle 0 --zenith_angle 20             --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt             --telescope MST-NectarCam-D --model_version prod5</span>
 </pre></div>
 </div>
 <p>The output is saved in simtools-output/validate_camera_efficiency.</p>
