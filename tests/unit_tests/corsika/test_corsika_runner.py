@@ -6,7 +6,6 @@ import shutil
 import astropy.units as u
 import pytest
 
-import simtools.utils.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
@@ -80,11 +79,11 @@ def test_prepare_run_script_with_invalid_run(corsika_runner):
             _ = corsika_runner.prepare_run_script(run_number=run)
 
 
-def test_prepare_run_script_with_extra(corsika_runner):
+def test_prepare_run_script_with_extra(corsika_runner, file_has_text):
     extra = ["testing", "testing-extra-2"]
     script = corsika_runner.prepare_run_script(run_number=3, extra_commands=extra)
 
-    assert gen.file_has_text(script, "testing-extra-2")
+    assert file_has_text(script, "testing-extra-2")
     with open(script, "r") as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content

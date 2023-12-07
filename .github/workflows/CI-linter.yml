@@ -1,0 +1,136 @@
+---
+name: CI-linting
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(find . -type f \
+          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
+          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
+
+      - name: install packages not included in super-linter
+        run: |
+          pip install validate-pyproject restructuredtext-lint
+
+      - name: pyproject.toml
+        run: |
+          validate-pyproject pyproject.toml
+
+      # RST linter
+      # Note: unclear how to suppress error messages
+      # (use grep -v in this case)
+    #  - name: restructuredtext-lint
+    #    run: |
+    #      rst-lint README.rst docs/source |
+    #       grep -v "Unknown directive type" |
+    #       grep -v "Unknown interpreted text role" |
+    #       grep -v "Cannot analyze code. Pygments package not found."
+
+      - name: Check whether the citation metadata from CITATION.cff is valid
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
+
+      - name: yaml_config used by super-linter
+        run: |
+          # TODO - very large line length
+          echo 'rules:' > yaml_config.yaml
+          echo '  line-length:' >> yaml_config.yaml
+          echo '    max: 250' >> yaml_config.yaml
+
+      # Dependencies required to avoid errors
+      # reported by linters
+      - name: Install mamba dependencies
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+
+      - name: Python dependencies
+        run: |
+          pip install -e '.[tests,dev,doc]'
+          pip install pylint
+
+      - name: pylint
+        run: |
+          pylint $(git ls-files 'simtools/*.py')
+
+
+      - name: Lint Code Base
+        uses: super-linter/super-linter@v5
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          # github actions
+          VALIDATE_GITHUB_ACTIONS: true
+          # yaml
+          VALIDATE_YAML: true
+          YAML_CONFIG_FILE: yaml_config.yaml
+          YAML_ERROR_ON_WARNING: false
+          # isort
+          VALIDATE_PYTHON_ISORT: true
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+          # flake8
+          VALIDATE_PYTHON_FLAKE8: true
+          # black
+          VALIDATE_PYTHON_BLACK: true
+          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+          # markdown
+          VALIDATE_MARKDOWN: true
+          # docker
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          # copy and paste
+          VALIDATE_JSCPD_ALL_CODEBASE: true
+          # .env file
+          VALIDATE_ENV: true
+          # language
+          VALIDATE_NATURAL_LANGUAGE: true
+          # bash
+          VALIDATE_BASH: true
+          # path for linter rules
+          LINTER_RULES_PATH: ./
+          # create a log file
+          CREATE_LOG_FILE: true
+          LOG_FILE: superlinter.log
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload super-linter log file
+      # and keep it for 5 days
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: super-linter reports
+          path: |
+             superlinter.log
+             retention-days: 5
