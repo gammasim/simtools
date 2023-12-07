@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Validate yaml file using a json schema file.
+    Validate yaml or ecsv file using a json schema file.
 
     Command line arguments
     ----------------------
@@ -34,7 +34,7 @@ import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import metadata_model
+from simtools.data_model import metadata_model, validate_data
 
 
 def _parse(label, description):
@@ -61,12 +61,11 @@ def _parse(label, description):
     return config.initialize(paths=False)
 
 
-def main():
-    label = Path(__file__).stem
-    args_dict, _ = _parse(label, description="Parameter file schema checking")
+def _validate_yaml_file(args_dict, logger):
+    """
+    Validate a yaml file
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    """
 
     try:
         with open(args_dict["file_name"], "r", encoding="utf-8") as file:
@@ -76,6 +75,35 @@ def main():
         raise
 
     metadata_model.validate_schema(data, args_dict["schema"])
+
+
+def _validate_ecsv_file(args_dict):
+    """
+    Validate an ecsv file
+
+    """
+
+    data_validator = validate_data.DataValidator(
+        schema_file=args_dict["schema"],
+        data_file=args_dict["file_name"],
+    )
+    data_validator.validate_and_transform()
+
+
+def main():
+    label = Path(__file__).stem
+    args_dict, _ = _parse(label, description="Validate yaml or ecsv file using a json schema file.")
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    # check if file name ends with yml or yaml
+    if args_dict["file_name"].endswith(".yml") or args_dict["file_name"].endswith(".yaml"):
+        _validate_yaml_file(args_dict, logger)
+    elif args_dict["file_name"].endswith(".ecsv"):
+        _validate_ecsv_file(args_dict)
+    else:
+        logger.error(f"File extension not supported for {args_dict['file_name']}")
 
 
 if __name__ == "__main__":
