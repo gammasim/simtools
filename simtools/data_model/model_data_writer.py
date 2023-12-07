@@ -90,8 +90,6 @@ class ModelDataWriter:
 
         Parameters
         ----------
-        metadata: dict
-            Metadata to be written.
         product_data: astropy Table
             Model data to be validated
         validate_schema_file: str
