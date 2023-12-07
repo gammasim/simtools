@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db_handler &#8212; simtools v0.1.dev1+g44cbe1f</title>
+    <title>db_handler &#8212; simtools v0.1.dev1+g92b1c92</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=9f775e06"></script>
+    <script src="../_static/documentation_options.js?v=fd4e4c64"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g44cbe1f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
 
 
 
@@ -185,7 +185,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">Lock</span><span class="p">():</span>
+                <span class="n">lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+                <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
                     <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_mongo_db</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_open_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -379,7 +380,7 @@
 
             <span class="k">raise</span>
 
-        <span class="n">dest_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+        <span class="n">dest_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_model_parameters_yaml</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span>
@@ -998,7 +999,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">(</span><span class="n">db_entries</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">BulkWriteError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="o">.</span><span class="n">details</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+            <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">details</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.copy_documents">
@@ -1051,7 +1052,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">(</span><span class="n">db_entries</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">BulkWriteError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="o">.</span><span class="n">details</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+            <span class="k">raise</span> <span class="n">BulkWriteError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">details</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.delete_query">
@@ -1523,9 +1524,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The file </span><span class="si">{</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> exists in the DB. Returning its ID&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>  <span class="c1"># pylint: disable=protected-access</span>
                 <span class="p">{</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]}</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">_id</span>  <span class="c1"># pylint: disable=protected-access;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">_id</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_file</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 

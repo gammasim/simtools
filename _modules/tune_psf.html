@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tune_psf &#8212; simtools v0.1.dev1+g44cbe1f</title>
+    <title>tune_psf &#8212; simtools v0.1.dev1+g92b1c92</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=9f775e06"></script>
+    <script src="../_static/documentation_options.js?v=fd4e4c64"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g44cbe1f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
 
 
 
@@ -220,9 +220,7 @@
         <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--zenith&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in deg&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">20</span>
-    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--zenith&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in deg&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--data&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Data file name with the measured PSF vs radius [cm]&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span>
     <span class="p">)</span>
@@ -300,11 +298,11 @@
     <span class="n">mar_0</span> <span class="o">=</span> <span class="n">split_simtel_parameter</span><span class="p">(</span><span class="n">raw_par</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">&quot;Previous parameter values: </span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;MRRA = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mrra_0</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;MRF = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mfr_0</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;MRRA2 = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mrra2_0</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;MAR = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mar_0</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Previous parameter values:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRRA = </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">mrra_0</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRF = </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">mfr_0</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MRRA2 = </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">mrra2_0</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;MAR = </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">mar_0</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">]:</span>
@@ -313,8 +311,8 @@
     <span class="c1"># Drawing parameters randonly</span>
     <span class="c1"># Range around the previous values are hardcoded</span>
     <span class="c1"># Number of runs is hardcoded</span>
-    <span class="n">N_RUNS</span> <span class="o">=</span> <span class="mi">50</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_RUNS</span><span class="p">):</span>
+    <span class="n">n_runs</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
         <span class="n">mrra_range</span> <span class="o">=</span> <span class="mf">0.004</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="n">mrf_range</span> <span class="o">=</span> <span class="mf">0.1</span>
         <span class="n">mrra2_range</span> <span class="o">=</span> <span class="mf">0.03</span>
@@ -374,7 +372,7 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1D</span><span class="p">(</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1d</span><span class="p">(</span>
                 <span class="n">data_to_plot</span><span class="p">,</span>
                 <span class="n">plot_difference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

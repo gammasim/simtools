@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.visualize &#8212; simtools v0.1.dev1+g44cbe1f</title>
+    <title>visualization.visualize &#8212; simtools v0.1.dev1+g92b1c92</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=9f775e06"></script>
+    <script src="../../_static/documentation_options.js?v=fd4e4c64"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g44cbe1f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
 
 
 
@@ -108,9 +108,9 @@
     <span class="s2">&quot;get_lines&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_markers&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_telescope_patch&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;plot_1D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_1d&quot;</span><span class="p">,</span>
     <span class="s2">&quot;plot_array&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;plot_hist_2D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plot_hist_2d&quot;</span><span class="p">,</span>
     <span class="s2">&quot;plot_table&quot;</span><span class="p">,</span>
     <span class="s2">&quot;set_style&quot;</span><span class="p">,</span>
 <span class="p">]</span>
@@ -370,9 +370,9 @@
 
 
 
-<div class="viewcode-block" id="plot_1D">
-<a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_1D">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_1D</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="plot_1d">
+<a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_1d">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_1d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \</span>
 <span class="sd">    added at the bottom to allow easy comparison. Additional options, such as plot title, plot</span>
@@ -584,13 +584,13 @@
     <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
         <span class="n">data_dict</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">([</span><span class="n">table</span><span class="p">[</span><span class="n">x_axis</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">y_title</span><span class="p">])</span>
 
-    <span class="k">return</span> <span class="n">plot_1D</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">plot_1d</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 
-<div class="viewcode-block" id="plot_hist_2D">
-<a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_hist_2D">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_hist_2D</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="plot_hist_2d">
+<a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_hist_2d">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_hist_2d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\</span>
 <span class="sd">    axes limits, log scale, etc.) should be done using the returned plt instance.</span>
@@ -617,7 +617,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="c1"># Set default style since the usual options do not affect 2D plots (for now).</span>
+    <span class="c1"># Set default style since the usual options do not affect 2d plots (for now).</span>
     <span class="n">set_style</span><span class="p">()</span>
 
     <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>

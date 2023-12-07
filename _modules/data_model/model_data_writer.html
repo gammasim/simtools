@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.model_data_writer &#8212; simtools v0.1.dev1+g44cbe1f</title>
+    <title>data_model.model_data_writer &#8212; simtools v0.1.dev1+g92b1c92</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=9f775e06"></script>
+    <script src="../../_static/documentation_options.js?v=fd4e4c64"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g44cbe1f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
 
 
 
@@ -150,7 +150,6 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">validate_schema_file</span><span class="p">:</span>
             <span class="n">product_data</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">(</span>
-                <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
                 <span class="n">product_data</span><span class="o">=</span><span class="n">product_data</span><span class="p">,</span>
                 <span class="n">validate_schema_file</span><span class="o">=</span><span class="n">validate_schema_file</span><span class="p">,</span>
             <span class="p">)</span>
@@ -180,15 +179,13 @@
 
 <div class="viewcode-block" id="ModelDataWriter.validate_and_transform">
 <a class="viewcode-back" href="../../data_model.html#data_model.model_data_writer.ModelDataWriter.validate_and_transform">[docs]</a>
-    <span class="k">def</span> <span class="nf">validate_and_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">product_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validate_schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">validate_and_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">product_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validate_schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate product data using jsonschema given in metadata.</span>
 <span class="sd">        If necessary, transform product data to match schema.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        metadata: dict</span>
-<span class="sd">            Metadata to be written.</span>
 <span class="sd">        product_data: astropy Table</span>
 <span class="sd">            Model data to be validated</span>
 <span class="sd">        validate_schema_file: str</span>

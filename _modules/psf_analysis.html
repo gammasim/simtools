@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>psf_analysis &#8212; simtools v0.1.dev1+g44cbe1f</title>
+    <title>psf_analysis &#8212; simtools v0.1.dev1+g92b1c92</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=9f775e06"></script>
+    <script src="../_static/documentation_options.js?v=fd4e4c64"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g44cbe1f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g92b1c92</p>
 
 
 
@@ -139,7 +139,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">centroid_x</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">centroid_y</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span> <span class="o">=</span> <span class="n">total_scattered_area</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_PSF</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_psf</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">focal_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cm_to_deg</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">/</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">focal_length</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_has_focal_length</span> <span class="o">=</span> <span class="kc">True</span>
@@ -166,7 +166,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading sim_telarray file </span><span class="si">{</span><span class="n">photons_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_photons</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.gz&quot;</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">gzip</span>
+            <span class="kn">import</span> <span class="nn">gzip</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
 
             <span class="n">file_open_function</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span>
         <span class="k">else</span><span class="p">:</span>
@@ -296,10 +296,10 @@
         <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;deg&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_focal_length</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;PSF cannot be computed in deg because focal length is not set&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">fraction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_PSF</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fraction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_psf</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_psf</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
         <span class="n">unit_factor</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;cm&quot;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cm_to_deg</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_PSF</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">*</span> <span class="n">unit_factor</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_psf</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">*</span> <span class="n">unit_factor</span></div>
 
 
 <div class="viewcode-block" id="PSFImage.set_psf">
@@ -321,7 +321,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;PSF cannot be set in deg because focal length is not set&quot;</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="n">unit_factor</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;cm&quot;</span> <span class="k">else</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cm_to_deg</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_PSF</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">unit_factor</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_psf</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">unit_factor</span></div>
 
 
     <span class="k">def</span> <span class="nf">_compute_psf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
@@ -333,7 +333,7 @@
 <span class="sd">        fraction: float</span>
 <span class="sd">            Fraction of photons within the containing radius</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_PSF</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_psf</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_psf</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_psf</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_find_psf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -362,21 +362,21 @@
         <span class="n">target_number</span> <span class="o">=</span> <span class="n">fraction</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_detected_photons</span>
         <span class="n">current_radius</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">radius_sig</span>
         <span class="n">start_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum_photons_in_radius</span><span class="p">(</span><span class="n">current_radius</span><span class="p">)</span>
-        <span class="n">SCALE</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">current_radius</span> <span class="o">*</span> <span class="n">current_radius</span> <span class="o">/</span> <span class="n">start_number</span><span class="p">)</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">current_radius</span> <span class="o">*</span> <span class="n">current_radius</span> <span class="o">/</span> <span class="n">start_number</span><span class="p">)</span>
         <span class="n">delta_number</span> <span class="o">=</span> <span class="n">start_number</span> <span class="o">-</span> <span class="n">target_number</span>
         <span class="n">n_iter</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">MAX_ITER</span> <span class="o">=</span> <span class="mi">100</span>
-        <span class="n">TOLERANCE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_detected_photons</span> <span class="o">/</span> <span class="mf">1000.0</span>
+        <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">tolerance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_detected_photons</span> <span class="o">/</span> <span class="mf">1000.0</span>
         <span class="n">found_radius</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">while</span> <span class="ow">not</span> <span class="n">found_radius</span> <span class="ow">and</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="n">MAX_ITER</span><span class="p">:</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">found_radius</span> <span class="ow">and</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="n">max_iter</span><span class="p">:</span>
             <span class="n">n_iter</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">dr</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta_number</span> <span class="o">*</span> <span class="n">SCALE</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">target_number</span><span class="p">)</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta_number</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">target_number</span><span class="p">)</span>
             <span class="k">while</span> <span class="n">current_radius</span> <span class="o">+</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">dr</span> <span class="o">*=</span> <span class="mf">0.5</span>
             <span class="n">current_radius</span> <span class="o">+=</span> <span class="n">dr</span>
             <span class="n">current_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum_photons_in_radius</span><span class="p">(</span><span class="n">current_radius</span><span class="p">)</span>
             <span class="n">delta_number</span> <span class="o">=</span> <span class="n">current_number</span> <span class="o">-</span> <span class="n">target_number</span>
-            <span class="n">found_radius</span> <span class="o">=</span> <span class="n">fabs</span><span class="p">(</span><span class="n">delta_number</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOLERANCE</span>
+            <span class="n">found_radius</span> <span class="o">=</span> <span class="n">fabs</span><span class="p">(</span><span class="n">delta_number</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tolerance</span>
 
         <span class="k">if</span> <span class="n">found_radius</span><span class="p">:</span>
             <span class="c1"># Diameter = 2 * radius</span>
@@ -500,7 +500,7 @@
             <span class="n">psf_ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">kwargs_for_image</span> <span class="o">=</span> <span class="n">collect_kwargs</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">kwargs_for_PSF</span> <span class="o">=</span> <span class="n">collect_kwargs</span><span class="p">(</span><span class="s2">&quot;psf&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">kwargs_for_psf</span> <span class="o">=</span> <span class="n">collect_kwargs</span><span class="p">(</span><span class="s2">&quot;psf&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
         <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
         <span class="c1"># Image histogram</span>
@@ -509,7 +509,7 @@
 
         <span class="c1"># PSF circle</span>
         <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">centralized</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid_y</span><span class="p">)</span>
-        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_for_PSF</span><span class="p">)</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_for_psf</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
 
         <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
