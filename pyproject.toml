@@ -50,6 +50,7 @@ dependencies = [
 ]
 "dev" = [
     "flake8",
+    "pylint",
     "pre-commit",
 ]
 "doc" = [
