@@ -12,7 +12,7 @@ from cycler import cycler
 from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
 
-from simtools.utils import general as gen
+from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.utils.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
@@ -22,9 +22,9 @@ __all__ = [
     "get_lines",
     "get_markers",
     "get_telescope_patch",
-    "plot_1D",
+    "plot_1d",
     "plot_array",
-    "plot_hist_2D",
+    "plot_hist_2d",
     "plot_table",
     "set_style",
 ]
@@ -272,7 +272,7 @@ def get_lines():
     return LINES
 
 
-def plot_1D(data, **kwargs):
+def plot_1d(data, **kwargs):
     """
     Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \
     added at the bottom to allow easy comparison. Additional options, such as plot title, plot
@@ -481,10 +481,10 @@ def plot_table(table, y_title, **kwargs):
     for column in table.keys()[1:]:
         data_dict[column] = QTable([table[x_axis], table[column]], names=[x_axis, y_title])
 
-    return plot_1D(data_dict, **kwargs)
+    return plot_1d(data_dict, **kwargs)
 
 
-def plot_hist_2D(data, **kwargs):
+def plot_hist_2d(data, **kwargs):
     """
     Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\
     axes limits, log scale, etc.) should be done using the returned plt instance.
@@ -511,7 +511,7 @@ def plot_hist_2D(data, **kwargs):
     else:
         title = ""
 
-    # Set default style since the usual options do not affect 2D plots (for now).
+    # Set default style since the usual options do not affect 2d plots (for now).
     set_style()
 
     gs = gridspec.GridSpec(1, 1)
@@ -627,13 +627,13 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
     if rotate_angle != 0:
-        pos_x_rotated, pos_y_rotated = gen.rotate(
+        pos_x_rotated, pos_y_rotated = transf.rotate(
             telescopes["pos_x"], telescopes["pos_y"], rotate_angle
         )
     else:
         pos_x_rotated, pos_y_rotated = telescopes["pos_x"], telescopes["pos_y"]
 
-    pos_x_rotated, pos_y_rotated = gen.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
+    pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4

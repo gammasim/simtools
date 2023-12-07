@@ -131,9 +131,7 @@ def main():
         type=float,
         default=10,
     )
-    config.parser.add_argument(
-        "--zenith", help="Zenith angle in deg", type=float, default=20
-    )
+    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument(
         "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
     )
@@ -211,11 +209,11 @@ def main():
     mar_0 = split_simtel_parameter(raw_par)[0]
 
     logger.debug(
-        "Previous parameter values: \n"
-        "MRRA = " + str(mrra_0) + "\n"
-        "MRF = " + str(mfr_0) + "\n"
-        "MRRA2 = " + str(mrra2_0) + "\n"
-        "MAR = " + str(mar_0) + "\n"
+        "Previous parameter values:\n"
+        f"MRRA = {str(mrra_0)}\n"
+        f"MRF = {str(mfr_0)}\n"
+        f"MRRA2 = {str(mrra2_0)}\n"
+        f"MAR = {str(mar_0)}\n"
     )
 
     if args_dict["fixed"]:
@@ -224,8 +222,8 @@ def main():
     # Drawing parameters randonly
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
-    N_RUNS = 50
-    for _ in range(N_RUNS):
+    n_runs = 50
+    for _ in range(n_runs):
         mrra_range = 0.004 if not args_dict["fixed"] else 0
         mrf_range = 0.1
         mrra2_range = 0.03
@@ -285,7 +283,7 @@ def main():
         )
 
         if plot:
-            fig = visualize.plot_1D(
+            fig = visualize.plot_1d(
                 data_to_plot,
                 plot_difference=True,
                 no_markers=True,
