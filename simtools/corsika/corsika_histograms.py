@@ -81,8 +81,8 @@ class CorsikaHistograms:
         self._num_photons_per_event = None
         self._num_photons_per_telescope = None
         self.__meta_dict = None
-        self.__dict_2d_distributions = None
-        self.__dict_1d_distributions = None
+        self._dict_2d_distributions = None
+        self._dict_1d_distributions = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._hist_config = None
@@ -1157,7 +1157,7 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 1D distributions.
         """
-        self.__dict_1d_distributions = {
+        self._dict_1d_distributions = {
             "wavelength": {
                 "function": "get_photon_wavelength_distr",
                 "file name": "hist_1d_photon_wavelength_distr",
@@ -1208,7 +1208,7 @@ class CorsikaHistograms:
                 "axis unit": u.dimensionless_unscaled,
             },
         }
-        return self.__dict_1d_distributions
+        return self._dict_1d_distributions
 
     def _export_1d_histograms(self, overwrite=False):
         """
@@ -1270,8 +1270,8 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 2D distributions.
         """
-        if self.__dict_2d_distributions is None:
-            self.__dict_2d_distributions = {
+        if self._dict_2d_distributions is None:
+            self._dict_2d_distributions = {
                 "counts": {
                     "function": "get_2d_photon_position_distr",
                     "file name": "hist_2d_photon_count_distr",
@@ -1318,7 +1318,7 @@ class CorsikaHistograms:
                     "y axis unit": u.dimensionless_unscaled,
                 },
             }
-        return self.__dict_2d_distributions
+        return self._dict_2d_distributions
 
     def _export_2d_histograms(self, overwrite):
         """
