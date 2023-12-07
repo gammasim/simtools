@@ -720,12 +720,20 @@ APP_LIST = {
         ],
     ],
     # validate_file_using_schema
-    "validate_file_using_schema": [
+    "validate_file_using_schema:yml_input": [
         [
             "--schema",
             "TESTMODELDIR/jsonschema.yml",
             "--file_name",
             "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        ]
+    ],
+    "validate_file_using_schema:ecsv_input": [
+        [
+            "--schema",
+            "tests/resources/MST_mirror_2f_measurements.schema.yml",
+            "--file_name",
+            "tests/resources/MLTdata-preproduction.ecsv",
         ]
     ],
 }
