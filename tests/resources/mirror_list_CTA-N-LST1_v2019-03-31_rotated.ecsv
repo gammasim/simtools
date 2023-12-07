@@ -4,7 +4,7 @@
 # - {name: x_pos, unit: cm, datatype: float64}
 # - {name: y_pos, unit: cm, datatype: float64}
 # - {name: diameter, unit: cm, datatype: float64}
-# - {name: focal_length, datatype: float64}
+# - {name: focal_length, unit: cm, datatype: float64}
 # - {name: shape_code, datatype: int32}
 # - {name: z_pos, unit: cm, datatype: float64}
 # - {name: mirror_number, datatype: int32}
