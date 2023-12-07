@@ -106,6 +106,7 @@ class CorsikaRunner:
         self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
         self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
+        self._corsika_parameters_file = corsika_parameters_file
         corsika_config_data = collect_data_from_yaml_or_dict(
             corsika_config_file, corsika_config_data
         )
@@ -151,6 +152,7 @@ class CorsikaRunner:
                 layout_name=self.layout_name,
                 corsika_config_data=self._corsika_config_data,
                 simtel_source_path=self._simtel_source_path,
+                corsika_parameters_file=self._corsika_parameters_file,
             )
             # CORSIKA input file used as template for all runs
             self._corsika_input_file = self.corsika_config.get_input_file(use_multipipe)
