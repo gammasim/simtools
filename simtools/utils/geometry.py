@@ -60,9 +60,10 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
     radial_distance_map = np.sqrt(grid_2d_x**2 + grid_2d_y**2)
     # The sorting and unravel_index give us the two indices for the position of the sorted element
     # in the original 2d matrix
-    x_indices_sorted, y_indices_sorted = np.unravel_index(
+    sorted_indices = np.unravel_index(
         np.argsort(radial_distance_map, axis=None), np.shape(radial_distance_map)
     )
+    x_indices_sorted, y_indices_sorted = sorted_indices[0], sorted_indices[1]
 
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
