@@ -20,8 +20,11 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_from_command_line(configurator, args_dict):
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
+
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=[], require_command_line=True)
 
     configurator._fill_from_command_line(arg_list=["--data_path", Path("abc")])
     _tmp_config = copy(dict(args_dict))
