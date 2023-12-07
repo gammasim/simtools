@@ -34,7 +34,7 @@
         The expected format is two columns with wavelength in nm and
         NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
         If the file has more than two columns, the first and third are used,
-        and the second is ignored.
+        and the second is ignored (native sim_telarray behaviour).
     verbosity (str, optional)
         Log level to print
 
@@ -116,7 +116,7 @@ def _parse(label):
             "The expected format is two columns with wavelength in nm and "
             "NSB flux with the units: [1e9 * ph/m2/s/sr/nm]."
             "If the file has more than two columns, the first and third are used,"
-            "and the second is ignored."
+            "and the second is ignored (native sim_telarray behaviour)."
         ),
         type=str,
         default=None,
