@@ -81,7 +81,7 @@ class JobManager:
         Parameters
         ----------
         run_script: str
-            Shell script descring the job to be submitted.
+            Shell script describing the job to be submitted.
         run_out_file: str or Path
             Redirect output/error/job stream to this file (out,err,job suffix).
         log_file: str or Path
