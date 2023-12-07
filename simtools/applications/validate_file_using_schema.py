@@ -34,8 +34,7 @@ import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import validate_data
-from simtools.data_model import metadata_model
+from simtools.data_model import metadata_model, validate_data
 
 
 def _parse(label, description):
