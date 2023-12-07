@@ -13,11 +13,10 @@
 
 import os
 import sys
+from pathlib import Path
 
 import toml
 import yaml
-
-from pathlib import Path
 
 import simtools.version
 
