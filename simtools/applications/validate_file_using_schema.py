@@ -77,7 +77,7 @@ def _validate_yaml_file(args_dict, logger):
     metadata_model.validate_schema(data, args_dict["schema"])
 
 
-def _validate_ecsv_file(args_dict, logger):
+def _validate_ecsv_file(args_dict):
     """
     Validate an ecsv file
 
@@ -101,7 +101,7 @@ def main():
     if args_dict["file_name"].endswith(".yml") or args_dict["file_name"].endswith(".yaml"):
         _validate_yaml_file(args_dict, logger)
     elif args_dict["file_name"].endswith(".ecsv"):
-        _validate_ecsv_file(args_dict, logger)
+        _validate_ecsv_file(args_dict)
     else:
         logger.error(f"File extension not supported for {args_dict['file_name']}")
 
