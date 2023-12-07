@@ -88,8 +88,8 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # RayTracing - default parameters
         self._rep_number = 0
-        self.RUNS_PER_SET = 1 if self.config.single_mirror_mode else 20
-        self.PHOTONS_PER_RUN = 100000
+        self.runs_per_set = 1 if self.config.single_mirror_mode else 20
+        self.photons_per_run = 100000
 
         self._load_required_files(force_simulate)
 
@@ -172,7 +172,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += super()._config_option(
             "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle
         )
-        command += super()._config_option("star_photons", str(self.PHOTONS_PER_RUN))
+        command += super()._config_option("star_photons", str(self.photons_per_run))
         command += super()._config_option("telescope_phi", "0")
         command += super()._config_option("camera_transmission", "1.0")
         command += super()._config_option("nightsky_background", "all:0.")

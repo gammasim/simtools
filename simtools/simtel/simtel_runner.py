@@ -45,7 +45,7 @@ class SimtelRunner:
         self._script_dir = None
         self._script_file = None
 
-        self.RUNS_PER_SET = 1
+        self.runs_per_set = 1
 
     def __repr__(self):
         return f"SimtelRunner(label={self.label})\n"
@@ -140,8 +140,8 @@ class SimtelRunner:
                     file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
-            N = 1 if test else self.RUNS_PER_SET
-            for _ in range(N):
+            n = 1 if test else self.runs_per_set
+            for _ in range(n):
                 file.write(f"{command}\n\n")
 
             # Printing out runtime
@@ -178,10 +178,10 @@ class SimtelRunner:
             self._logger.info(f"Running (test) with command: {command}")
             self._run_simtel_and_check_output(command)
         else:
-            self._logger.debug(f"Running ({self.RUNS_PER_SET}x) with command: {command}")
+            self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
             self._run_simtel_and_check_output(command)
 
-            for _ in range(self.RUNS_PER_SET - 1):
+            for _ in range(self.runs_per_set - 1):
                 self._run_simtel_and_check_output(command)
 
         self._check_run_result(run_number=run_number)

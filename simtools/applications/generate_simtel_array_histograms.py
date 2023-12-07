@@ -136,10 +136,10 @@ def main():
                     for line in file:
                         # Removing '\n' from filename, in case it is left there.
                         histogram_files.append(line.replace("\n", ""))
-        except FileNotFoundError:
+        except FileNotFoundError as exc:
             msg = f"{one_file} is not a file."
             logger.error(msg)
-            raise FileNotFoundError
+            raise FileNotFoundError from exc
 
     # If no output name is passed, the tool gets the name of the first histogram of the list
     if config_parser["output_file_name"] is None:
@@ -159,7 +159,7 @@ def main():
 
     # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
-    simtel_histograms._combine_histogram_files()
+    simtel_histograms.combine_histogram_files()
 
     if config_parser["pdf"]:
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
