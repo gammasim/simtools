@@ -13,11 +13,10 @@
 
 import os
 import sys
+from pathlib import Path
 
 import toml
 import yaml
-
-from pathlib import Path
 
 import simtools.version
 
@@ -31,20 +30,17 @@ def get_authors_from_citation_file():
     Read list of authors from CITATION.cff file
 
     """
-    try:
-        with open(Path(__file__).parent / "../../CITATION.cff") as file:
-            citation = yaml.safe_load(file)
-    except FileNotFoundError:
-        raise
+    with open(Path(__file__).parent / "../../CITATION.cff", encoding="utf-8") as file:
+        citation = yaml.safe_load(file)
 
-    author = ""
+    tmp_author = ""
     try:
         for person in citation["authors"]:
-            author = author + person["given-names"] + " " + person["family-names"]
-            author += " (" + person["affiliation"] + "), "
+            tmp_author = tmp_author + person["given-names"] + " " + person["family-names"]
+            tmp_author += " (" + person["affiliation"] + "), "
     except KeyError:
         pass
-    return author[:-2]
+    return tmp_author[:-2]
 
 
 def get_python_version_from_pyproject():

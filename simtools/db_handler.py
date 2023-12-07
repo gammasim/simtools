@@ -94,7 +94,8 @@ class DatabaseHandler:
         """
         if self.mongo_db_config:
             if DatabaseHandler.db_client is None:
-                with Lock():
+                lock = Lock()
+                with lock:
                     DatabaseHandler.db_client = self._open_mongo_db()
 
     def _open_mongo_db(self):
@@ -279,7 +280,7 @@ class DatabaseHandler:
 
             raise
 
-        dest_file.write_text(file.read_text())
+        dest_file.write_text(file.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _get_model_parameters_yaml(
         self, telescope_model_name, model_version, only_applicable=False
@@ -881,7 +882,7 @@ class DatabaseHandler:
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise BulkWriteError.details from exc
+            raise BulkWriteError(str(exc.details)) from exc
 
     def copy_documents(self, db_name, collection, query, db_to_copy_to, collection_to_copy_to=None):
         """
@@ -931,7 +932,7 @@ class DatabaseHandler:
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
-            raise BulkWriteError.details from exc
+            raise BulkWriteError(str(exc.details)) from exc
 
     def delete_query(self, db_name, collection, query):
         """
@@ -1385,9 +1386,9 @@ class DatabaseHandler:
             self._logger.warning(
                 f"The file {kwargs['filename']} exists in the DB. Returning its ID"
             )
-            return file_system.find_one(
+            return file_system.find_one(  # pylint: disable=protected-access
                 {"filename": kwargs["filename"]}
-            )._id  # pylint: disable=protected-access;
+            )._id
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
 

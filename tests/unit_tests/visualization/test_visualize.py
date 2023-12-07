@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def test_plot_1D(db, io_handler):
-    logger.debug("Testing plot_1D")
+def test_plot_1d(db, io_handler):
+    logger.debug("Testing plot_1d")
 
     x_title = "Wavelength [nm]"
     y_title = "Mirror reflectivity [%]"
@@ -47,10 +47,10 @@ def test_plot_1D(db, io_handler):
         new_data[y_title] = new_data[y_title] * (1 - 0.1 * (i + 1))
         data[f"{100 * (1 - 0.1 * (i + 1))}%% reflectivity"] = new_data
 
-    plt = visualize.plot_1D(data, title=title, palette="autumn")
+    plt = visualize.plot_1d(data, title=title, palette="autumn")
 
     plot_file = io_handler.get_output_file(
-        file_name="plot_1D.pdf", sub_dir="plots", dir_type="test"
+        file_name="plot_1d.pdf", sub_dir="plots", dir_type="test"
     )
     if plot_file.exists():
         plot_file.unlink()
