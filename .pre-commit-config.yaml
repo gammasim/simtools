@@ -22,9 +22,21 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        args:
+          [
+            "-rn",  # Only display messages
+            "-sn",  # Don't display the score
+          ]
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
-    rev: v2.3.0 # most recent docstr-coverage release or commit sha
+    rev: v2.3.0  # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
