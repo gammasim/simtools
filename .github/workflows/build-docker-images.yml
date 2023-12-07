@@ -68,8 +68,7 @@ jobs:
         if: matrix.type == 'prod'
         with:
           context: .
-          platforms: linux/amd64
-          push: false
+          load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
 
