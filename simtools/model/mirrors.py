@@ -55,7 +55,7 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-        # Getting mirror parameters from mirror list. Diameter and shape are identical between mirrors.
+        # Getting mirror parameters from mirror list.
 
         _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
