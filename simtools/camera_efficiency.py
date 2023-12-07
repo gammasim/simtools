@@ -133,26 +133,29 @@ class CameraEfficiency:
         """Define the variables for the file names, including the results, simtel and log file."""
         # Results file
         file_name_results = names.camera_efficiency_results_file_name(
-            self._telescope_model.site,
-            self._telescope_model.name,
-            self.config.zenith_angle,
-            self.label,
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            zenith_angle=self.config.zenith_angle,
+            azimuth_angle=self.config.azimuth_angle,
+            label=self.label,
         )
         self._file_results = self._base_directory.joinpath(file_name_results)
         # sim_telarray output file
         file_name_simtel = names.camera_efficiency_simtel_file_name(
-            self._telescope_model.site,
-            self._telescope_model.name,
-            self.config.zenith_angle,
-            self.label,
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            zenith_angle=self.config.zenith_angle,
+            azimuth_angle=self.config.azimuth_angle,
+            label=self.label,
         )
         self._file_simtel = self._base_directory.joinpath(file_name_simtel)
         # Log file
         file_name_log = names.camera_efficiency_log_file_name(
-            self._telescope_model.site,
-            self._telescope_model.name,
-            self.config.zenith_angle,
-            self.label,
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            zenith_angle=self.config.zenith_angle,
+            azimuth_angle=self.config.azimuth_angle,
+            label=self.label,
         )
         self._file_log = self._base_directory.joinpath(file_name_log)
 
@@ -174,6 +177,7 @@ class CameraEfficiency:
             file_simtel=self._file_simtel,
             file_log=self._file_log,
             label=self.label,
+            nsb_spectrum=self.config.nsb_spectrum,
         )
         simtel.run(test=self.test, force=force)
 
@@ -262,25 +266,7 @@ class CameraEfficiency:
         self._has_results = True
 
         print("\33[40;37;1m")
-        self._logger.info(f"Spectrum weighted reflectivity: {self.calc_reflectivity():.4f}")
-        self._logger.info(
-            f"Camera nominal efficiency with gaps (B-TEL-1170): {self.calc_camera_efficiency():.4f}"
-        )
-        self._logger.info(
-            "Telescope total efficiency"
-            f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}"
-        )
-        self._logger.info(
-            (
-                "Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
-                "(A-PERF-2025/B-TEL-0090): "
-                f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}"
-            )
-        )
-        self._logger.info(
-            "Expected NSB pixel rate for the reference NSB: "
-            f"{self.calc_nsb_rate():.4f} [p.e./ns]"
-        )
+        self._logger.info(f"\n{self.results_summary()}")
         print("\033[0m")
 
         if export:
@@ -288,15 +274,54 @@ class CameraEfficiency:
 
     # END of analyze
 
+    def results_summary(self):
+        """
+        Print a summary of the results.
+        Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
+        The summary includes the various CTAO requirements and the final expected NSB pixel rate.
+        """
+        nsb_pixel_pe_per_ns, nsb_rate_ref_conditions = self.calc_nsb_rate()
+        nsb_spectrum_text = (
+            f"NSB spectrum file: {self.config.nsb_spectrum}"
+            if self.config.nsb_spectrum
+            else "default sim_telarray spectrum."
+        )
+        summary = (
+            f"Results summary for {self._telescope_model.name} at "
+            f"zenith={self.config.zenith_angle:.1f} deg, "
+            f"azimuth={self.config.azimuth_angle:.1f} deg\n"
+            f"Using the {nsb_spectrum_text}\n"
+            f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
+            "Camera nominal efficiency with gaps (B-TEL-1170): "
+            f"{self.calc_camera_efficiency():.4f}\n"
+            "Telescope total efficiency"
+            f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
+            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
+            "(A-PERF-2025/B-TEL-0090): "
+            f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
+            "Expected NSB pixel rate for the provided NSB spectrum: "
+            f"{nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
+            "Expected NSB pixel rate for the reference NSB: "
+            f"{nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
+        )
+
+        return summary
+
     def export_results(self):
-        """Export results to a csv file."""
+        """Export results to a ecsv file."""
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info(f"Exporting results to {self._file_results}")
+            self._logger.info(f"Exporting testeff table to {self._file_results}")
             astropy.io.ascii.write(
                 self._results, self._file_results, format="basic", overwrite=True
             )
+            _results_summary_file = (
+                str(self._file_results).replace(".ecsv", ".txt").replace("-table-", "-summary-")
+            )
+            self._logger.info(f"Exporting summary results to {_results_summary_file}")
+            with open(_results_summary_file, "w", encoding="utf-8") as file:
+                file.write(self.results_summary())
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
@@ -404,21 +429,21 @@ class CameraEfficiency:
 
         Returns
         -------
-        nsb_rate
-            NSB rate in p.e./ns
+        nsb_rate_provided_spectrum: float
+            NSB pixel rate in p.e./ns for the provided NSB spectrum
+        nsb_rate_ref_conditions: float
+            NSB pixel rate in p.e./ns for reference conditions
+            (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
 
-        nsb_pe_per_ns = (
+        nsb_rate_provided_spectrum = (
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()
             * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
             / self._telescope_model.get_telescope_transmission_parameters()[0]
         )
 
-        print(self._telescope_model.get_on_axis_eff_optical_area().to("m2").value)
-
-        # NSB input spectrum is from Benn & Ellison
-        # (integral is in ph/(cm2 ns sr) ) from 300 - 650 nm:
+        # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 651 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
         n1_integral_edges = self._results["N1"][
@@ -426,12 +451,12 @@ class CameraEfficiency:
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
-        nsb_rate = (
-            nsb_pe_per_ns
+        nsb_rate_ref_conditions = (
+            nsb_rate_provided_spectrum
             * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
             / nsb_integral
         )
-        return nsb_rate
+        return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
 
     def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
         """

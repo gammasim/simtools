@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from simtools.simtel.simtel_runner import SimtelRunner
 
@@ -32,6 +33,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         file_simtel=None,
         file_log=None,
         zenith_angle=None,
+        nsb_spectrum=None,
     ):
         """
         Initialize SimtelRunner.
@@ -47,6 +49,20 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
+        self.nsb_spectrum = nsb_spectrum
+
+    @property
+    def nsb_spectrum(self):
+        """nsb_spectrum property"""
+        return self._nsb_spectrum
+
+    @nsb_spectrum.setter
+    def nsb_spectrum(self, nsb_spectrum):
+        """Setter for nsb_spectrum"""
+        if nsb_spectrum is not None:
+            self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
+        else:
+            self._nsb_spectrum = None
 
     def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
         """Tells if simulations should be run again based on the existence of output files."""
@@ -102,6 +118,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
             )
 
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/testeff"))
+        if self.nsb_spectrum is not None:
+            command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
         command += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
@@ -190,3 +208,31 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         )
 
         return one_dim_file
+
+    def _validate_or_fix_nsb_spectrum_file_format(self, nsb_spectrum_file):
+        """
+        Validate or fix the nsb spectrum file format.
+        The nsb spectrum file format required by sim_telarray has three columns:
+            wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],
+        where the second column is ignored by sim_telarray and the third is used for the NSB flux.
+        This function makes sure the file has at least three columns,
+        by copying the second column to the third.
+        """
+
+        validated_nsb_spectrum_file = (
+            self._telescope_model.get_config_directory() / Path(nsb_spectrum_file).name
+        )
+        with open(nsb_spectrum_file, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+        with open(validated_nsb_spectrum_file, "w", encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith("#"):
+                    file.write(line)
+                    continue
+                split_line = line.split()
+                if len(split_line) == 2:
+                    split_line.append(split_line[1])
+                    file.write(f"{split_line[0]} {split_line[1]} {split_line[2]}\n")
+                else:
+                    file.write(line)
+        return validated_nsb_spectrum_file
