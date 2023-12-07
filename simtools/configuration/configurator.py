@@ -32,7 +32,7 @@ class Configurator:
     - configuration dict when calling the class
     - environmental variables
 
-    Assigns unique ACIVITY_ID to this configuration (uuid).
+    Assigns unique ACTIVITY_ID to this configuration (uuid).
 
     Configuration parameter names are converted always to lower case.
 
@@ -97,6 +97,7 @@ class Configurator:
 
     def initialize(
         self,
+        require_command_line=True,
         paths=True,
         output=False,
         telescope_model=False,
@@ -116,6 +117,8 @@ class Configurator:
 
         Parameters
         ----------
+        require_command_line: bool
+            Require at least one command line argument.
         paths: bool
             Add path configuration to list of args.
         output: bool
@@ -149,7 +152,7 @@ class Configurator:
             job_submission=job_submission,
         )
 
-        self._fill_from_command_line()
+        self._fill_from_command_line(require_command_line=require_command_line)
         try:
             self._fill_from_config_file(self.config["config"])
         except KeyError:
@@ -169,14 +172,30 @@ class Configurator:
 
         return self.config, _db_dict
 
-    def _fill_from_command_line(self, arg_list=None):
+    def _fill_from_command_line(self, arg_list=None, require_command_line=True):
         """
         Fill configuration parameters from command line arguments.
+
+        Parameters
+        ----------
+        arg_list: list
+            List of arguments.
+        require_command_line: bool
+            Require at least one command line argument.
+
+        Raises
+        ------
+        InvalidConfigurationParameter
+              invalid configuration.
 
         """
 
         if arg_list is None:
             arg_list = sys.argv[1:]
+
+        if require_command_line and len(arg_list) == 0:
+            self._logger.debug("No command line arguments given, printing help.")
+            arg_list = ["--help"]
 
         self._fill_config(arg_list)
 
