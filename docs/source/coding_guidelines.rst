@@ -37,6 +37,16 @@ In rare cases, one might want to skip pre-commit checks with
 
     git commit --no-verify
 
+Code Linting
+============
+
+Linters of almost all file types are run by the CI-linter workflow.
+
+To run pylint locally, use:
+
+.. code-block::
+
+    pylint $(git ls-files 'simtools/*.py')
 
 API documentation
 -----------------
