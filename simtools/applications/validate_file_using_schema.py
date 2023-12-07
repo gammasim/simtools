@@ -32,10 +32,10 @@ from pathlib import Path
 
 import yaml
 
-import simtools.data_model.metadata_model as metadata_model
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import validate_data
+from simtools.data_model import metadata_model
 
 
 def _parse(label, description):

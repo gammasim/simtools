@@ -713,7 +713,7 @@ class TelescopeModel:
                 label=self.label,
             )
 
-    def is_file_2D(self, par):
+    def is_file_2d(self, par):
         """
         Check if the file referenced by par is a 2D table.
 
@@ -734,8 +734,8 @@ class TelescopeModel:
         file_name = self.get_parameter_value(par)
         file = self.get_config_directory().joinpath(file_name)
         with open(file, "r", encoding="utf-8") as f:
-            is2D = "@RPOL@" in f.read()
-        return is2D
+            is_2d = "@RPOL@" in f.read()
+        return is_2d
 
     def read_two_dim_wavelength_angle(self, file_name):
         """
