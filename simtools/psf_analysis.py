@@ -51,7 +51,7 @@ class PSFImage:
         self.centroid_x = None
         self.centroid_y = None
         self._total_area = total_scattered_area
-        self._stored_PSF = {}
+        self._stored_psf = {}
         if focal_length is not None:
             self._cm_to_deg = 180.0 / pi / focal_length
             self._has_focal_length = True
@@ -76,7 +76,7 @@ class PSFImage:
         self._logger.info(f"Reading sim_telarray file {photons_file}")
         self._total_photons = 0
         if Path(photons_file).suffix == ".gz":
-            import gzip
+            import gzip  # pylint: disable=import-outside-toplevel
 
             file_open_function = gzip.open
         else:
@@ -197,10 +197,10 @@ class PSFImage:
         if unit == "deg" and not self._has_focal_length:
             self._logger.error("PSF cannot be computed in deg because focal length is not set")
             return None
-        if fraction not in self._stored_PSF:
+        if fraction not in self._stored_psf:
             self._compute_psf(fraction)
         unit_factor = 1 if unit == "cm" else self._cm_to_deg
-        return self._stored_PSF[fraction] * unit_factor
+        return self._stored_psf[fraction] * unit_factor
 
     def set_psf(self, value, fraction=0.8, unit="cm"):
         """
@@ -219,7 +219,7 @@ class PSFImage:
             self._logger.error("PSF cannot be set in deg because focal length is not set")
             return
         unit_factor = 1 if unit == "cm" else 1.0 / self._cm_to_deg
-        self._stored_PSF[fraction] = value * unit_factor
+        self._stored_psf[fraction] = value * unit_factor
 
     def _compute_psf(self, fraction):
         """
@@ -230,7 +230,7 @@ class PSFImage:
         fraction: float
             Fraction of photons within the containing radius
         """
-        self._stored_PSF[fraction] = self._find_psf(fraction)
+        self._stored_psf[fraction] = self._find_psf(fraction)
 
     def _find_psf(self, fraction):
         """
@@ -259,21 +259,21 @@ class PSFImage:
         target_number = fraction * self._number_of_detected_photons
         current_radius = 1.5 * radius_sig
         start_number = self._sum_photons_in_radius(current_radius)
-        SCALE = 0.5 * sqrt(current_radius * current_radius / start_number)
+        scale = 0.5 * sqrt(current_radius * current_radius / start_number)
         delta_number = start_number - target_number
         n_iter = 0
-        MAX_ITER = 100
-        TOLERANCE = self._number_of_detected_photons / 1000.0
+        max_iter = 100
+        tolerance = self._number_of_detected_photons / 1000.0
         found_radius = False
-        while not found_radius and n_iter < MAX_ITER:
+        while not found_radius and n_iter < max_iter:
             n_iter += 1
-            dr = -delta_number * SCALE / sqrt(target_number)
+            dr = -delta_number * scale / sqrt(target_number)
             while current_radius + dr < 0:
                 dr *= 0.5
             current_radius += dr
             current_number = self._sum_photons_in_radius(current_radius)
             delta_number = current_number - target_number
-            found_radius = fabs(delta_number) < TOLERANCE
+            found_radius = fabs(delta_number) < tolerance
 
         if found_radius:
             # Diameter = 2 * radius
@@ -392,7 +392,7 @@ class PSFImage:
             psf_ls="--",
         )
         kwargs_for_image = collect_kwargs("image", kwargs)
-        kwargs_for_PSF = collect_kwargs("psf", kwargs)
+        kwargs_for_psf = collect_kwargs("psf", kwargs)
 
         ax = plt.gca()
         # Image histogram
@@ -401,7 +401,7 @@ class PSFImage:
 
         # PSF circle
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)
-        circle = plt.Circle(center, self.get_psf(0.8) / 2, **kwargs_for_PSF)
+        circle = plt.Circle(center, self.get_psf(0.8) / 2, **kwargs_for_psf)
         ax.add_artist(circle)
 
         ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
