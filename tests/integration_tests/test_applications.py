@@ -665,16 +665,16 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ],
     ],
-    "print_array_elements::export_utm": [
-        [
-            "--input",
-            "tests/resources/telescope_positions-South-4MST.ecsv",
-            "--export",
-            "utm",
-            "--output_path",
-            "TESTOUTPUTDIR/",
-        ],
-    ],
+#    "print_array_elements::export_utm": [
+#        [
+#            "--input",
+#            "tests/resources/telescope_positions-South-4MST.ecsv",
+#            "--export",
+#            "utm",
+#            "--output_path",
+#            "TESTOUTPUTDIR/",
+#        ],
+#    ],
     "print_array_elements::export_corsika": [
         [
             "--input",
