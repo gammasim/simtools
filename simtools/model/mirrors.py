@@ -72,7 +72,7 @@ class Mirrors:
             self._mirrors["pos_x"] = list(_mirror_table["x_pos"].to("cm").value)
             self._mirrors["pos_y"] = list(_mirror_table["y_pos"].to("cm").value)
             self._mirrors["diameter"] = list(_mirror_table["diameter"].to("cm").value)
-            self._mirrors["shape"] = list(_mirror_table["shape_code"].to("cm").value)
+            self._mirrors["shape"] = list(_mirror_table["shape_code"].value)
         except KeyError:
             self._logger.debug(
                 f"Missing column for mirror panel focal length (flen) in {self._mirror_list_file}"
