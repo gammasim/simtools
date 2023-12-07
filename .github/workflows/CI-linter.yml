@@ -126,8 +126,6 @@ jobs:
           LOG_FILE: superlinter.log
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          python_package_directory: .
 
       # Upload super-linter log file
       # and keep it for 5 days
