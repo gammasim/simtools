@@ -66,6 +66,7 @@ def _user_confirm():
             return answer == "y"
         except EOFError:
             return False
+    return False
 
 
 def main():

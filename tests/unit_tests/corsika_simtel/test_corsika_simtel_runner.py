@@ -97,7 +97,7 @@ def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
 
 def test_export_multipipe_script(corsika_simtel_runner):
     corsika_simtel_runner.export_multipipe_script()
-    script = Path(corsika_simtel_runner.corsika_config._config_file_path.parent).joinpath(
+    script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
         corsika_simtel_runner.corsika_config.get_file_name("multipipe")
     )
 
@@ -112,11 +112,11 @@ def test_export_multipipe_script(corsika_simtel_runner):
 
 def test_export_multipipe_executable(corsika_simtel_runner):
     corsika_simtel_runner.export_multipipe_script()
-    multipipe_file = Path(corsika_simtel_runner.corsika_config._config_file_path.parent).joinpath(
+    multipipe_file = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
         corsika_simtel_runner.corsika_config.get_file_name("multipipe")
     )
     corsika_simtel_runner._export_multipipe_executable(multipipe_file)
-    script = Path(corsika_simtel_runner.corsika_config._config_file_path.parent).joinpath(
+    script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
         "run_cta_multipipe"
     )
 
