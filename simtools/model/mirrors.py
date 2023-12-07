@@ -66,13 +66,13 @@ class Mirrors:
         self._logger.debug(f"Diameter = {self.diameter}")
 
         try:
-            self._mirrors["flen"] = list(_mirror_table["mirror_panel_radius"].to("cm").value / 2.0)
+            self._mirrors["flen"] = list(_mirror_table["focal_length"].to("cm").value / 2.0)
             self.number_of_mirrors = len(self._mirrors["flen"])
-            self._mirrors["number"] = list(range(self.number_of_mirrors))
-            self._mirrors["pos_x"] = [0.0] * self.number_of_mirrors
-            self._mirrors["pos_y"] = [0.0] * self.number_of_mirrors
-            self._mirrors["diameter"] = [self.diameter] * self.number_of_mirrors
-            self._mirrors["shape"] = [self.shape] * self.number_of_mirrors
+            self._mirrors["mirror_number"] = list(_mirror_table["mirror_number"].value)
+            self._mirrors["pos_x"] = list(_mirror_table["x_pos"].to("cm").value)
+            self._mirrors["pos_y"] = list(_mirror_table["y_pos"].to("cm").value)
+            self._mirrors["diameter"] = list(_mirror_table["diameter"].to("cm").value)
+            self._mirrors["shape"] = list(_mirror_table["shape_code"].to("cm").value)
         except KeyError:
             self._logger.debug(
                 f"Missing column for mirror panel focal length (flen) in {self._mirror_list_file}"
