@@ -60,7 +60,6 @@ class ModelDataWriter:
         )
         if validate_schema_file:
             product_data = writer.validate_and_transform(
-                metadata=metadata,
                 product_data=product_data,
                 validate_schema_file=validate_schema_file,
             )
@@ -84,15 +83,13 @@ class ModelDataWriter:
         if product_data is not None:
             self.write_data(product_data=product_data)
 
-    def validate_and_transform(self, metadata=None, product_data=None, validate_schema_file=None):
+    def validate_and_transform(self, product_data=None, validate_schema_file=None):
         """
         Validate product data using jsonschema given in metadata.
         If necessary, transform product data to match schema.
 
         Parameters
         ----------
-        metadata: dict
-            Metadata to be written.
         product_data: astropy Table
             Model data to be validated
         validate_schema_file: str

@@ -18,7 +18,7 @@ from simtools import version
 from simtools.io_operations import io_handler
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
 from simtools.utils.general import collect_data_from_yaml_or_dict
-from simtools.utils.geometry import convert_2D_to_radial_distr, rotate
+from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 
 
@@ -72,14 +72,6 @@ class CorsikaHistograms:
         else:
             self.hdf5_file_name = hdf5_file_name
 
-        self._initialize_attributes()
-        self.read_event_information()
-        self._initialize_header()
-
-    def _initialize_attributes(self):
-        """
-        Initializes the class attributes.
-        """
         self._telescope_indices = None
         self._telescope_positions = None
         self.num_events = None
@@ -89,8 +81,8 @@ class CorsikaHistograms:
         self._num_photons_per_event = None
         self._num_photons_per_telescope = None
         self.__meta_dict = None
-        self.__dict_2D_distributions = None
-        self.__dict_1D_distributions = None
+        self._dict_2d_distributions = None
+        self._dict_1d_distributions = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
         self._hist_config = None
@@ -103,9 +95,15 @@ class CorsikaHistograms:
         self.event_information = None
         self._individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
-        self._allowed_1D_labels = {"wavelength", "time", "altitude"}
-        self._allowed_2D_labels = {"counts", "density", "direction", "time_altitude"}
+        self._allowed_1d_labels = {"wavelength", "time", "altitude"}
+        self._allowed_2d_labels = {"counts", "density", "direction", "time_altitude"}
         self._header = None
+        self.hist_position = None
+        self.hist_direction = None
+        self.hist_time_altitude = None
+
+        self.read_event_information()
+        self._initialize_header()
 
     @property
     def hdf5_file_name(self):
@@ -637,7 +635,7 @@ class CorsikaHistograms:
 
         num_photons_per_event_per_telescope_to_set = []
         start_time = time.time()
-        self._logger.debug("Starting reading the file at {}.".format(start_time))
+        self._logger.debug(f"Starting reading the file at {start_time}.")
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
@@ -699,7 +697,7 @@ class CorsikaHistograms:
         """
 
         for histogram in self._allowed_histograms:
-            if not hasattr(self, histogram):
+            if not hasattr(self, histogram) or getattr(self, histogram) is None:
                 msg = (
                     "The histograms were not created. Please, use `create_histograms` to create "
                     "histograms from the CORSIKA output file."
@@ -707,7 +705,7 @@ class CorsikaHistograms:
                 self._logger.error(msg)
                 raise HistogramNotCreated
 
-    def _get_hist_2D_projection(self, label):
+    def _get_hist_2d_projection(self, label):
         """
         Helper function to get 2D distributions.
 
@@ -731,8 +729,8 @@ class CorsikaHistograms:
             if label is not valid.
         """
 
-        if label not in self._allowed_2D_labels:
-            msg = f"label is not valid. Valid entries are {self._allowed_2D_labels}"
+        if label not in self._allowed_2d_labels:
+            msg = f"label is not valid. Valid entries are {self._allowed_2d_labels}"
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
@@ -761,7 +759,7 @@ class CorsikaHistograms:
 
         return np.array(hist_values), np.array(x_bin_edges), np.array(y_bin_edges)
 
-    def get_2D_photon_position_distr(self):
+    def get_2d_photon_position_distr(self):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground.
 
@@ -774,9 +772,9 @@ class CorsikaHistograms:
         numpy.array
             The y bin edges of the count histograms in y, usually in meters.
         """
-        return self._get_hist_2D_projection("counts")
+        return self._get_hist_2d_projection("counts")
 
-    def get_2D_photon_density_distr(self):
+    def get_2d_photon_density_distr(self):
         """
         Get 2D histograms of position of the Cherenkov photons on the ground. It returns the photon
         density per square meter.
@@ -790,9 +788,9 @@ class CorsikaHistograms:
         numpy.array
             The y bin edges of the density/count histograms in y, usually in meters.
         """
-        return self._get_hist_2D_projection("density")
+        return self._get_hist_2d_projection("density")
 
-    def get_2D_photon_direction_distr(self):
+    def get_2d_photon_direction_distr(self):
         """
         Get 2D histograms of incoming direction of the Cherenkov photons on the ground.
 
@@ -805,9 +803,9 @@ class CorsikaHistograms:
         numpy.array
             The y bin edges of the direction histograms in cos(y)
         """
-        return self._get_hist_2D_projection("direction")
+        return self._get_hist_2d_projection("direction")
 
-    def get_2D_photon_time_altitude_distr(self):
+    def get_2d_photon_time_altitude_distr(self):
         """
         Get 2D histograms of the time and altitude of the photon production.
 
@@ -820,9 +818,9 @@ class CorsikaHistograms:
         numpy.array
             The y bin edges of the time_altitude histograms, usually in km.
         """
-        return self._get_hist_2D_projection("time_altitude")
+        return self._get_hist_2d_projection("time_altitude")
 
-    def get_2D_num_photons_distr(self):
+    def get_2d_num_photons_distr(self):
         """
         Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
         accounting for the events from the telescopes given by `self.telescope_indices`.
@@ -842,11 +840,11 @@ class CorsikaHistograms:
         telescope_counter = np.arange(len(self.telescope_indices) + 1).reshape(
             1, len(self.telescope_indices) + 1
         )
-        hist_2D = np.array(self.num_photons_per_event_per_telescope)
-        hist_2D = hist_2D.reshape((1, len(self.telescope_indices), self.num_events))
-        return (hist_2D, num_events_array, telescope_counter)
+        hist_2d = np.array(self.num_photons_per_event_per_telescope)
+        hist_2d = hist_2d.reshape((1, len(self.telescope_indices), self.num_events))
+        return (hist_2d, num_events_array, telescope_counter)
 
-    def _get_hist_1D_projection(self, label):
+    def _get_hist_1d_projection(self, label):
         """
         Helper function to get 1D distributions.
 
@@ -868,13 +866,13 @@ class CorsikaHistograms:
             if label is not valid.
         """
 
-        if label not in self._allowed_1D_labels:
-            msg = f"{label} is not valid. Valid entries are {self._allowed_1D_labels}"
+        if label not in self._allowed_1d_labels:
+            msg = f"{label} is not valid. Valid entries are {self._allowed_1d_labels}"
             self._logger.error(msg)
             raise ValueError
         self._raise_if_no_histogram()
 
-        x_bin_edges_list, hist_1D_list = [], []
+        x_bin_edges_list, hist_1d_list = [], []
         for i_hist, _ in enumerate(self.hist_position):
             if label == "wavelength":
                 mini_hist = self.hist_position[i_hist][sum, sum, :]
@@ -884,8 +882,8 @@ class CorsikaHistograms:
                 mini_hist = self.hist_time_altitude[i_hist][sum, :]
 
             x_bin_edges_list.append(mini_hist.axes.edges.T.flatten()[0])
-            hist_1D_list.append(mini_hist.view().T)
-        return np.array(hist_1D_list), np.array(x_bin_edges_list)
+            hist_1d_list.append(mini_hist.view().T)
+        return np.array(hist_1d_list), np.array(x_bin_edges_list)
 
     def _get_bins_max_dist(self, bins=None, max_dist=None):
         """Auxiliary function to get the number of bins and the max distance to generate the
@@ -942,21 +940,21 @@ class CorsikaHistograms:
         """
 
         bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
-        bin_edges_1D_list, hist1D_list = [], []
+        bin_edges_1d_list, hist_1d_list = [], []
 
-        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_position_distr()
+        hist_2d_values_list, x_position_list, y_position_list = self.get_2d_photon_position_distr()
 
         for i_hist, _ in enumerate(x_position_list):
-            hist1D, bin_edges_1D = convert_2D_to_radial_distr(
-                hist2D_values_list[i_hist],
-                x_position_list[i_hist],
+            hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
+                hist_2d_values_list[i_hist],
+                x_position_list[i_hist],  # pylint: disable=unnecessary-list-index-lookup
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
             )
-            bin_edges_1D_list.append(bin_edges_1D)
-            hist1D_list.append(hist1D)
-        return np.array(hist1D_list), np.array(bin_edges_1D_list)
+            bin_edges_1d_list.append(bin_edges_1d)
+            hist_1d_list.append(hist_1d)
+        return np.array(hist_1d_list), np.array(bin_edges_1d_list)
 
     def get_photon_density_distr(self, bins=None, max_dist=None):
         """
@@ -980,21 +978,21 @@ class CorsikaHistograms:
             usually in meter.
         """
         bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
-        bin_edges_1D_list, hist1D_list = [], []
+        bin_edges_1d_list, hist_1d_list = [], []
 
-        hist2D_values_list, x_position_list, y_position_list = self.get_2D_photon_density_distr()
+        hist_2d_values_list, x_position_list, y_position_list = self.get_2d_photon_density_distr()
 
         for i_hist, _ in enumerate(x_position_list):
-            hist1D, bin_edges_1D = convert_2D_to_radial_distr(
-                hist2D_values_list[i_hist],
-                x_position_list[i_hist],
+            hist_1d, bin_edges_1d = convert_2d_to_radial_distr(
+                hist_2d_values_list[i_hist],
+                x_position_list[i_hist],  # pylint: disable=unnecessary-list-index-lookup
                 y_position_list[i_hist],
                 bins=bins,
                 max_dist=max_dist,
             )
-            bin_edges_1D_list.append(bin_edges_1D)
-            hist1D_list.append(hist1D)
-        return np.array(hist1D_list), np.array(bin_edges_1D_list)
+            bin_edges_1d_list.append(bin_edges_1d)
+            hist_1d_list.append(hist_1d)
+        return np.array(hist_1d_list), np.array(bin_edges_1d_list)
 
     def get_photon_wavelength_distr(self):
         """
@@ -1008,7 +1006,7 @@ class CorsikaHistograms:
             The bin edges of the wavelength histogram in nanometers.
 
         """
-        return self._get_hist_1D_projection("wavelength")
+        return self._get_hist_1d_projection("wavelength")
 
     def get_photon_time_of_emission_distr(self):
         """
@@ -1024,7 +1022,7 @@ class CorsikaHistograms:
             The bin edges of the time histograms in ns.
 
         """
-        return self._get_hist_1D_projection("time")
+        return self._get_hist_1d_projection("time")
 
     def get_photon_altitude_distr(self):
         """
@@ -1038,7 +1036,7 @@ class CorsikaHistograms:
             The bin edges of the photon altitude histograms in km.
 
         """
-        return self._get_hist_1D_projection("altitude")
+        return self._get_hist_1d_projection("altitude")
 
     @property
     def num_photons_per_event_per_telescope(self):
@@ -1124,8 +1122,8 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-        self._export_1D_histograms(overwrite=overwrite)
-        self._export_2D_histograms(overwrite=False)
+        self._export_1d_histograms(overwrite=overwrite)
+        self._export_2d_histograms(overwrite=False)
 
     @property
     def _meta_dict(self):
@@ -1150,7 +1148,7 @@ class CorsikaHistograms:
         return self.__meta_dict
 
     @property
-    def _dict_1D_distributions(self):
+    def dict_1d_distributions(self):
         """
         Dictionary to label the 1D distributions according to the class methods.
 
@@ -1159,60 +1157,60 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 1D distributions.
         """
-        self.__dict_1D_distributions = {
+        self._dict_1d_distributions = {
             "wavelength": {
                 "function": "get_photon_wavelength_distr",
-                "file name": "hist_1D_photon_wavelength_distr",
+                "file name": "hist_1d_photon_wavelength_distr",
                 "title": "Photon wavelength distribution",
                 "bin edges": "wavelength",
                 "axis unit": self.hist_config["hist_position"]["z axis"]["start"].unit,
             },
             "counts": {
                 "function": "get_photon_radial_distr",
-                "file name": "hist_1D_photon_radial_distr",
+                "file name": "hist_1d_photon_radial_distr",
                 "title": "Radial photon distribution on the ground",
                 "bin edges": "Distance to center",
                 "axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
             "density": {
                 "function": "get_photon_density_distr",
-                "file name": "hist_1D_photon_density_distr",
+                "file name": "hist_1d_photon_density_distr",
                 "title": "Photon density distribution on the ground",
                 "bin edges": "Distance to center",
                 "axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
             "time": {
                 "function": "get_photon_time_of_emission_distr",
-                "file name": "hist_1D_photon_time_distr",
+                "file name": "hist_1d_photon_time_distr",
                 "title": "Photon time of arrival distribution",
                 "bin edges": "Time of arrival",
                 "axis unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
             },
             "altitude": {
                 "function": "get_photon_altitude_distr",
-                "file name": "hist_1D_photon_altitude_distr",
+                "file name": "hist_1d_photon_altitude_distr",
                 "title": "Photon altitude of emission distribution",
                 "bin edges": "Altitude of emission",
                 "axis unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
             },
             "num_photons_per_event": {
                 "function": "get_num_photons_per_event_distr",
-                "file name": "hist_1D_photon_per_event_distr",
+                "file name": "hist_1d_photon_per_event_distr",
                 "title": "Photons per event distribution",
                 "bin edges": "Event counter",
                 "axis unit": u.dimensionless_unscaled,
             },
             "num_photons_per_telescope": {
                 "function": "get_num_photons_per_telescope_distr",
-                "file name": "hist_1D_photon_per_telescope_distr",
+                "file name": "hist_1d_photon_per_telescope_distr",
                 "title": "Photons per telescope distribution",
                 "bin edges": "Telescope counter",
                 "axis unit": u.dimensionless_unscaled,
             },
         }
-        return self.__dict_1D_distributions
+        return self._dict_1d_distributions
 
-    def _export_1D_histograms(self, overwrite=False):
+    def _export_1d_histograms(self, overwrite=False):
         """
         Auxiliary function to export only the 1D histograms.
 
@@ -1222,16 +1220,16 @@ class CorsikaHistograms:
             If True overwrites the histograms already saved in the hdf5 file.
         """
 
-        for _, function_dict in self._dict_1D_distributions.items():
+        for _, function_dict in self.dict_1d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
-            hist_1D_list, x_bin_edges_list = function()
+            hist_1d_list, x_bin_edges_list = function()
             x_bin_edges_list = x_bin_edges_list * function_dict["axis unit"]
             if function_dict["function"] == "get_photon_density_distr":
                 histogram_value_unit = 1 / (function_dict["axis unit"] ** 2)
             else:
                 histogram_value_unit = u.dimensionless_unscaled
-            hist_1D_list = hist_1D_list * histogram_value_unit
+            hist_1d_list = hist_1d_list * histogram_value_unit
             for i_histogram, _ in enumerate(x_bin_edges_list):
                 if self.individual_telescopes:
                     hdf5_table_name = (
@@ -1242,7 +1240,7 @@ class CorsikaHistograms:
                     hdf5_table_name = f"/{function_dict['file name']}_all_tels"
 
                 table = fill_hdf5_table(
-                    hist=hist_1D_list[i_histogram],
+                    hist=hist_1d_list[i_histogram],
                     x_bin_edges=x_bin_edges_list[i_histogram],
                     y_bin_edges=None,
                     x_label=function_dict["bin edges"],
@@ -1263,25 +1261,20 @@ class CorsikaHistograms:
                 )
 
     @property
-    def _dict_2D_distributions(self, overwrite=False):
+    def dict_2d_distributions(self):
         """
         Dictionary to label the 2D distributions according to the class methods.
-
-        Parameters
-        ----------
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
 
         Returns
         -------
         dict:
             The dictionary with information about the 2D distributions.
         """
-        if self.__dict_2D_distributions is None:
-            self.__dict_2D_distributions = {
+        if self._dict_2d_distributions is None:
+            self._dict_2d_distributions = {
                 "counts": {
-                    "function": "get_2D_photon_position_distr",
-                    "file name": "hist_2D_photon_count_distr",
+                    "function": "get_2d_photon_position_distr",
+                    "file name": "hist_2d_photon_count_distr",
                     "title": "Photon count distribution on the ground",
                     "x bin edges": "x position on the ground",
                     "x axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
@@ -1289,8 +1282,8 @@ class CorsikaHistograms:
                     "y axis unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "density": {
-                    "function": "get_2D_photon_density_distr",
-                    "file name": "hist_2D_photon_density_distr",
+                    "function": "get_2d_photon_density_distr",
+                    "file name": "hist_2d_photon_density_distr",
                     "title": "Photon density distribution on the ground",
                     "x bin edges": "x position on the ground",
                     "x axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
@@ -1298,8 +1291,8 @@ class CorsikaHistograms:
                     "y axis unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "direction": {
-                    "function": "get_2D_photon_direction_distr",
-                    "file name": "hist_2D_photon_direction_distr",
+                    "function": "get_2d_photon_direction_distr",
+                    "file name": "hist_2d_photon_direction_distr",
                     "title": "Photon arrival direction",
                     "x bin edges": "x direction cosine",
                     "x axis unit": u.dimensionless_unscaled,
@@ -1307,8 +1300,8 @@ class CorsikaHistograms:
                     "y axis unit": u.dimensionless_unscaled,
                 },
                 "time_altitude": {
-                    "function": "get_2D_photon_time_altitude_distr",
-                    "file name": "hist_2D_photon_time_altitude_distr",
+                    "function": "get_2d_photon_time_altitude_distr",
+                    "file name": "hist_2d_photon_time_altitude_distr",
                     "title": "Time of arrival vs altitude of emission",
                     "x bin edges": "Time of arrival",
                     "x axis unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
@@ -1316,8 +1309,8 @@ class CorsikaHistograms:
                     "y axis unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
                 },
                 "num_photons_per_telescope": {
-                    "function": "get_2D_num_photons_distr",
-                    "file name": "hist_2D_photon_telescope_event_distr",
+                    "function": "get_2d_num_photons_distr",
+                    "file name": "hist_2d_photon_telescope_event_distr",
                     "title": "Number of photons per telescope and per event",
                     "x bin edges": "Telescope counter",
                     "x axis unit": u.dimensionless_unscaled,
@@ -1325,9 +1318,9 @@ class CorsikaHistograms:
                     "y axis unit": u.dimensionless_unscaled,
                 },
             }
-        return self.__dict_2D_distributions
+        return self._dict_2d_distributions
 
-    def _export_2D_histograms(self, overwrite):
+    def _export_2d_histograms(self, overwrite):
         """
         Auxiliary function to export only the 2D histograms.
 
@@ -1336,37 +1329,37 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-        for property_name, function_dict in self._dict_2D_distributions.items():
+        for property_name, function_dict in self.dict_2d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
 
-            hist_2D_list, x_bin_edges_list, y_bin_edges_list = function()
-            if function_dict["function"] == "get_2D_photon_density_distr":
+            hist_2d_list, x_bin_edges_list, y_bin_edges_list = function()
+            if function_dict["function"] == "get_2d_photon_density_distr":
                 histogram_value_unit = 1 / (
-                    self._dict_2D_distributions[property_name]["x axis unit"]
-                    * self._dict_2D_distributions[property_name]["y axis unit"]
+                    self.dict_2d_distributions[property_name]["x axis unit"]
+                    * self.dict_2d_distributions[property_name]["y axis unit"]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
 
-            hist_2D_list, x_bin_edges_list, y_bin_edges_list = (
-                hist_2D_list * histogram_value_unit,
-                x_bin_edges_list * self._dict_2D_distributions[property_name]["x axis unit"],
-                y_bin_edges_list * self._dict_2D_distributions[property_name]["y axis unit"],
+            hist_2d_list, x_bin_edges_list, y_bin_edges_list = (
+                hist_2d_list * histogram_value_unit,
+                x_bin_edges_list * self.dict_2d_distributions[property_name]["x axis unit"],
+                y_bin_edges_list * self.dict_2d_distributions[property_name]["y axis unit"],
             )
 
             for i_histogram, _ in enumerate(x_bin_edges_list):
                 if self.individual_telescopes:
                     hdf5_table_name = (
-                        f"/{self._dict_2D_distributions[property_name]['file name']}"
+                        f"/{self.dict_2d_distributions[property_name]['file name']}"
                         f"_tel_index_{self.telescope_indices[i_histogram]}"
                     )
                 else:
                     hdf5_table_name = (
-                        f"/{self._dict_2D_distributions[property_name]['file name']}" f"_all_tels"
+                        f"/{self.dict_2d_distributions[property_name]['file name']}" f"_all_tels"
                     )
                 table = fill_hdf5_table(
-                    hist=hist_2D_list[i_histogram],
+                    hist=hist_2d_list[i_histogram],
                     x_bin_edges=x_bin_edges_list[i_histogram],
                     y_bin_edges=y_bin_edges_list[i_histogram],
                     x_label=function_dict["x bin edges"],
@@ -1379,12 +1372,12 @@ class CorsikaHistograms:
                     f"{self.hdf5_file_name}."
                 )
                 # Always appending to table due to the file previously created
-                # by self._export_1D_histograms.
+                # by self._export_1d_histograms.
                 write_table(
                     table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
                 )
 
-    def export_event_header_1D_histogram(
+    def export_event_header_1d_histogram(
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
         """
@@ -1404,7 +1397,7 @@ class CorsikaHistograms:
             If True overwrites the histograms already saved in the hdf5 file.
         """
 
-        hist, bin_edges = self.event_1D_histogram(
+        hist, bin_edges = self.event_1d_histogram(
             event_header_element, bins=bins, hist_range=hist_range
         )
         bin_edges *= self.event_information[event_header_element].unit
@@ -1416,7 +1409,7 @@ class CorsikaHistograms:
             y_label=None,
             meta_data=self._meta_dict,
         )
-        hdf5_table_name = f"/event_2D_histograms_{event_header_element}"
+        hdf5_table_name = f"/event_2d_histograms_{event_header_element}"
 
         self._logger.info(
             f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
@@ -1428,7 +1421,7 @@ class CorsikaHistograms:
             append = True
         write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
-    def export_event_header_2D_histogram(
+    def export_event_header_2d_histogram(
         self,
         event_header_element_1,
         event_header_element_2,
@@ -1455,7 +1448,7 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-        hist, x_bin_edges, y_bin_edges = self.event_2D_histogram(
+        hist, x_bin_edges, y_bin_edges = self.event_2d_histogram(
             event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
         )
         x_bin_edges *= self.event_information[event_header_element_1].unit
@@ -1470,7 +1463,7 @@ class CorsikaHistograms:
             meta_data=self._meta_dict,
         )
 
-        hdf5_table_name = f"/event_2D_histograms_{event_header_element_1}_{event_header_element_2}"
+        hdf5_table_name = f"/event_2d_histograms_{event_header_element_1}_{event_header_element_2}"
 
         self._logger.info(
             f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
@@ -1685,7 +1678,7 @@ class CorsikaHistograms:
             raise KeyError
         return self.header[parameter]
 
-    def event_1D_histogram(self, key, bins=50, hist_range=None):
+    def event_1d_histogram(self, key, bins=50, hist_range=None):
         """
         Create a histogram for the all events using `key` as parameter.
         Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
@@ -1724,7 +1717,7 @@ class CorsikaHistograms:
         )
         return hist, bin_edges
 
-    def event_2D_histogram(self, key_1, key_2, bins=50, hist_range=None):
+    def event_2d_histogram(self, key_1, key_2, bins=50, hist_range=None):
         """
         Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.
         Valid keys are stored in `self.all_event_keys` (CORSIKA defined).

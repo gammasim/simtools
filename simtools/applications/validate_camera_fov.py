@@ -126,14 +126,14 @@ def main():
         pixel_ids_to_print = int(args_dict["print_pixels_id"])
         if pixel_ids_to_print == 0:
             pixel_ids_to_print = -1  # so not print the zero pixel
-    except ValueError:
+    except ValueError as exc:
         if args_dict["print_pixels_id"].lower() == "all":
             pixel_ids_to_print = camera.get_number_of_pixels()
         else:
             raise ValueError(
                 f"The value provided to --print_pixels_id ({args_dict['print_pixels_id']}) "
                 "should be an integer or All"
-            )
+            ) from exc
     fig = camera.plot_pixel_layout(args_dict["camera_in_sky_coor"], pixel_ids_to_print)
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     for suffix in ["pdf", "png"]:

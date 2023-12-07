@@ -90,7 +90,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
             run_number=run_number,
             input_file="-",  # Tell sim_telarray to take the input from standard output
         )
-        multipipe_file = Path(self.corsika_config._config_file_path.parent).joinpath(
+        multipipe_file = Path(self.corsika_config.config_file_path.parent).joinpath(
             self.corsika_config.get_file_name("multipipe")
         )
         with open(multipipe_file, "w", encoding="utf-8") as file:
@@ -107,7 +107,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
             The name of the multipipe file which contains all of the multipipe commands.
         """
 
-        multipipe_executable = Path(self.corsika_config._config_file_path.parent).joinpath(
+        multipipe_executable = Path(self.corsika_config.config_file_path.parent).joinpath(
             "run_cta_multipipe"
         )
         with open(multipipe_executable, "w", encoding="utf-8") as file:
