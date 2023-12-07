@@ -60,8 +60,8 @@ class Mirrors:
         _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
-        self.shape = u.Quantity(_mirror_table['shape_code'])[0].value
-        self.diameter = u.Quantity(_mirror_table['diameter'])[0].value
+        self.shape = u.Quantity(_mirror_table["shape_code"])[0].value
+        self.diameter = u.Quantity(_mirror_table["diameter"])[0].value
         self._logger.debug(f"Shape = {self.shape}")
         self._logger.debug(f"Diameter = {self.diameter}")
 
