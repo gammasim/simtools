@@ -5,11 +5,11 @@ import sys
 import uuid
 
 import astropy.units as u
-import yaml
 from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools.io_operations import io_handler
+from simtools.utils import general as gen
 
 __all__ = [
     "Configurator",
@@ -153,10 +153,7 @@ class Configurator:
         )
 
         self._fill_from_command_line(require_command_line=require_command_line)
-        try:
-            self._fill_from_config_file(self.config["config"])
-        except KeyError:
-            pass
+        self._fill_from_config_file(self.config.get("config", None))
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
 
@@ -175,6 +172,8 @@ class Configurator:
     def _fill_from_command_line(self, arg_list=None, require_command_line=True):
         """
         Fill configuration parameters from command line arguments.
+        Triggers a print of the help if no command line arguments are given and
+        require_command_line is set.
 
         Parameters
         ----------
@@ -199,21 +198,24 @@ class Configurator:
 
         self._fill_config(arg_list)
 
-    def _fill_from_config_dict(self, _input_dict):
+    def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
         Fill configuration parameters from dictionary. Enforce that configuration parameter names\
          are lower case.
 
         Parameters
         ----------
-        _input_dict: dict
+        input_dict: dict
             dictionary with configuration parameters.
+        overwrite: bool
+            overwrite existing configuration parameters.
 
         """
         _tmp_config = {}
         try:
-            for key, value in _input_dict.items():
-                self._check_parameter_configuration_status(key, value)
+            for key, value in input_dict.items():
+                if not overwrite:
+                    self._check_parameter_configuration_status(key, value)
                 _tmp_config[key.lower()] = value
         except AttributeError:
             pass
@@ -268,25 +270,33 @@ class Configurator:
 
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
-            with open(config_file, "r", encoding="utf-8") as stream:
-                _config_dict = yaml.safe_load(stream)
-            if "CTASIMPIPE" in _config_dict:
+            _config_dict = gen.collect_data_from_yaml_or_dict(
+                in_yaml=config_file, in_dict=None, allow_empty=True
+            )
+            if "CTA_SIMPIPE" in _config_dict:
                 try:
-                    self._fill_from_config_dict(_config_dict["CTASIMPIPE"]["CONFIGURATION"])
+                    self._fill_from_config_dict(
+                        input_dict=gen.change_dict_keys_case(
+                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"]
+                        ),
+                        overwrite=True,
+                    )
                 except KeyError:
-                    self._logger.info(f"No CTASIMPIPE:CONFIGURATION dict found in {config_file}.")
+                    self._logger.info(f"No CTA_SIMPIPE:CONFIGURATION dict found in {config_file}.")
             else:
-                self._fill_from_config_dict(_config_dict)
+                self._fill_from_config_dict(
+                    input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True
+                )
         # TypeError is raised for config_file=None
         except TypeError:
             pass
-        except FileNotFoundError:
+        except gen.InvalidConfigData:
             self._logger.error(f"Configuration file not found: {config_file}")
             raise
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any unconfigured configuration parameters (i.e., parameter is None)
+        Fill any configuration parameters which is not already configured (i.e., parameter is None)
         from environmental variables or from file (default: ".env").
 
         """
