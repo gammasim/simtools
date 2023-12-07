@@ -91,7 +91,7 @@ class CorsikaConfig:
         self.site = names.validate_site_name(site)
         self.primary = None
         self.eslope = None
-        self._config_file_path = None
+        self.config_file_path = None
         self._output_generic_file_name = None
         self._simtel_source_path = simtel_source_path
 
@@ -357,7 +357,7 @@ class CorsikaConfig:
 
         sub_dir = "corsika_simtel" if use_multipipe else "corsika"
         self._set_output_file_and_directory(sub_dir)
-        self._logger.debug(f"Exporting CORSIKA input file to {self._config_file_path}")
+        self._logger.debug(f"Exporting CORSIKA input file to {self.config_file_path}")
 
         def _get_text_single_line(pars):
             text = ""
@@ -377,7 +377,7 @@ class CorsikaConfig:
                     text += _get_text_single_line(new_pars)
             return text
 
-        with open(self._config_file_path, "w", encoding="utf-8") as file:
+        with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
             # Removing AZM entry first
             _user_pars_temp = copy.copy(self._user_parameters)
@@ -424,7 +424,7 @@ class CorsikaConfig:
 
             file.write("\n* [ OUTUPUT FILE ]\n")
             if use_multipipe:
-                run_cta_script = Path(self._config_file_path.parent).joinpath("run_cta_multipipe")
+                run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
                 file.write(f"TELFIL |{str(run_cta_script)}\n")
             else:
                 file.write(f"TELFIL {self._output_generic_file_name}\n")
@@ -504,7 +504,7 @@ class CorsikaConfig:
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
         self._logger.info(f"Creating directory {file_directory}, if needed.")
         file_directory.mkdir(parents=True, exist_ok=True)
-        self._config_file_path = file_directory.joinpath(config_file_name)
+        self.config_file_path = file_directory.joinpath(config_file_name)
 
         self._output_generic_file_name = self.get_file_name(file_type="output_generic")
 
@@ -535,4 +535,4 @@ class CorsikaConfig:
         """
         if not self._is_file_updated:
             self.export_input_file(use_multipipe)
-        return self._config_file_path
+        return self.config_file_path

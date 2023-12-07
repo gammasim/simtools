@@ -1,5 +1,7 @@
 import logging
+import mmap
 import os
+import re
 from pathlib import Path
 from unittest import mock
 
@@ -10,7 +12,6 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools import db_handler
 from simtools.configuration.configurator import Configurator
-from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 
@@ -279,6 +280,8 @@ def corsika_output_file_name():
 
 @pytest.fixture
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
+    from simtools.corsika.corsika_histograms import CorsikaHistograms
+
     return CorsikaHistograms(
         corsika_output_file_name, output_path=io_handler.get_output_directory(dir_type="test")
     )
@@ -335,3 +338,24 @@ def check_db_admin_user(request, db_config):
     if marker is not None:
         if _db_config.get("db_api_user", None) != "api":
             pytest.skip("Test requires SIMTOOLS_DB_API_USER to be set to 'api'")
+
+
+@pytest.fixture
+def file_has_text():
+    def wrapper(file, text):
+        try:
+            with open(file, "rb", 0) as string_file, mmap.mmap(
+                string_file.fileno(), 0, access=mmap.ACCESS_READ
+            ) as text_file_input:
+                re_search_1 = re.compile(f"{text}".encode())
+                search_result_1 = re_search_1.search(text_file_input)
+                if search_result_1 is None:
+                    return False
+
+                return True
+        except FileNotFoundError:
+            return False
+        except ValueError:
+            return False
+
+    return wrapper
