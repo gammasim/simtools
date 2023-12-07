@@ -97,9 +97,6 @@ jobs:
           VALIDATE_YAML: true
           YAML_CONFIG_FILE: yaml_config.yaml
           YAML_ERROR_ON_WARNING: false
-          # pylint
-          VALIDATE_PYTHON_PYLINT: false
-          VALIDATE_PYTHON: false
           # isort
           VALIDATE_PYTHON_ISORT: true
           PYTHON_ISORT_CONFIG_FILE: pyproject.toml
