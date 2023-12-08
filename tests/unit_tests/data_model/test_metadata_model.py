@@ -7,7 +7,7 @@ import yaml
 from simtools.data_model import metadata_model
 
 
-def test_get_default_metadata_dictionary():
+def test_get_default_metadata_dict():
     _top_meta = metadata_model.get_default_metadata_dict()
 
     assert isinstance(_top_meta, dict)
