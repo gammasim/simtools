@@ -125,22 +125,36 @@ def configurator(tmp_test_directory, simtel_path):
     return config
 
 
-@pytest.fixture
-def db_config():
+@pytest.fixture(scope="function", params=[True, False])
+def db_config(request):
     """
     Read DB configuration from tests from .env file and from environmental variables.
     (this ensures that tests run both locally and with github secrets)
 
+    DB configuration depends on read (request is False) or read write access
+    (request is True).
+
     """
+
+    db_write_access = request.param if hasattr(request, "param") else False
 
     mongo_db_config = {
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
-    for _para in _db_para:
-        if _para not in mongo_db_config:
-            mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
+
+    _db_para = {
+        "db_api_user": "db_read_user",
+        "db_api_pw": "db_read_pw",
+        "db_api_port": "db_api_port",
+        "db_server": "db_server",
+    }
+    if db_write_access:
+        _db_para["db_api_user"] = "db_api_user"
+        _db_para["db_api_pw"] = "db_api_pw"
+
+    for key, value in _db_para.items():
+        mongo_db_config[key] = mongo_db_config.get(value, os.environ.get(f"SIMTOOLS_{key.upper()}"))
     if mongo_db_config["db_api_port"] is not None:
         mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
     return mongo_db_config
@@ -150,6 +164,13 @@ def db_config():
 def db(db_config):
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     return db
+
+
+@pytest.mark.parametrize("db_config", [True], indirect=True)
+@pytest.fixture
+def db_write(db_config):
+    db_write = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    return db_write
 
 
 @pytest.fixture

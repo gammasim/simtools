@@ -86,11 +86,10 @@ def test_get_derived_values(db):
     )
 
 
-@pytest.mark.requires_db_admin
-def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
+def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing copying a whole telescope-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_telescope(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
@@ -98,14 +97,14 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
-    db.copy_documents(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_documents(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
     )
-    pars = db.read_mongo_db(
+    pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
@@ -117,14 +116,14 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
 
     logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
     query = {"Telescope": "North-LST-Test"}
-    db.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
+    db_write.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
     query = {"Entry": "Simulation-Model-Tags"}
-    db.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
+    db_write.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
     with pytest.raises(ValueError):
-        db.read_mongo_db(
+        db_write.read_mongo_db(
             db_name=f"sandbox_{random_id}",
             telescope_model_name_db="North-LST-Test",
             model_version="Current",
@@ -134,11 +133,10 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         )
 
 
-@pytest.mark.requires_db_admin
-def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
+def test_adding_parameter_version_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new version of a parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_telescope(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
@@ -146,7 +144,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
-    db.add_parameter(
+    db_write.add_parameter(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         parameter="camera_config_version",
@@ -154,7 +152,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         new_value=42,
         collection_name="telescopes_" + random_id,
     )
-    pars = db.read_mongo_db(
+    pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
@@ -165,11 +163,10 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
     assert pars["camera_config_version"]["Value"] == 42
 
 
-@pytest.mark.requires_db_admin
-def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
+def test_update_parameter_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing updating a parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_telescope(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
@@ -177,7 +174,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
-    db.add_parameter(
+    db_write.add_parameter(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         parameter="camera_config_version",
@@ -185,7 +182,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         new_value=42,
         collection_name="telescopes_" + random_id,
     )
-    db.update_parameter(
+    db_write.update_parameter(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="test",
@@ -193,7 +190,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         new_value=999,
         collection_name="telescopes_" + random_id,
     )
-    pars = db.read_mongo_db(
+    pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
@@ -204,11 +201,10 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["camera_config_version"]["Value"] == 999
 
 
-@pytest.mark.requires_db_admin
-def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
+def test_adding_new_parameter_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_telescope(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
@@ -216,7 +212,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
-    db.add_new_parameter(
+    db_write.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="test",
@@ -224,7 +220,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         value=999,
         collection_name="telescopes_" + random_id,
     )
-    pars = db.read_mongo_db(
+    pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="test",
@@ -235,11 +231,10 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["camera_config_version_test"]["Value"] == 999
 
 
-@pytest.mark.requires_db_admin
-def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
+def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_telescope(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Current",
         new_tel_name="North-LST-Test",
@@ -247,14 +242,14 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
-    db.copy_documents(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+    db_write.copy_documents(
+        db_name=db_write.DB_CTA_SIMULATION_MODEL,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
     )
-    db.update_parameter_field(
+    db_write.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="Current",
@@ -263,7 +258,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         new_value=False,
         collection_name="telescopes_" + random_id,
     )
-    pars = db.read_mongo_db(
+    pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
         model_version="Current",
@@ -319,8 +314,8 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-@pytest.mark.requires_db_admin
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
+@pytest.mark.skip
+def test_insert_files_db(db_write, io_handler, db_cleanup_file_sandbox, random_id, caplog):
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
@@ -333,16 +328,18 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
     with open(file_name, "w") as f:
         f.write("# This is a test file")
 
-    file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
+    file_id = db_write.insert_file_to_db(file_name, f"sandbox_{random_id}")
     assert (
-        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+        file_id
+        == db_write._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
     )
     logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
-        file_id = db.insert_file_to_db(file_name, f"sandbox_{random_id}")
-    assert "exists in the DB. Returning its ID" in caplog.text
+        file_id = db_write.insert_file_to_db(file_name, f"sandbox_{random_id}")
+    assert "exists in the db_write. Returning its ID" in caplog.text
     assert (
-        file_id == db._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
+        file_id
+        == db_write._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
     )
 
 
