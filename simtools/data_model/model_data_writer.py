@@ -58,7 +58,7 @@ class ModelDataWriter:
             product_data_file=args_dict.get("output_file", None),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
         )
-        if validate_schema_file:
+        if validate_schema_file and not args_dict.get("skip_output_validation", True):
             product_data = writer.validate_and_transform(
                 product_data=product_data,
                 validate_schema_file=validate_schema_file,
