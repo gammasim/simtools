@@ -16,12 +16,13 @@ def random_id():
 
 
 @pytest.fixture()
-def db_cleanup(db, random_id):
+@pytest.mark.parametrize("db_config", [True], indirect=True)
+def db_cleanup(db_write, random_id):
     yield
     # Cleanup
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
-    db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
-    db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+    db_write.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
+    db_write.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
 
 
 @pytest.fixture()
@@ -86,6 +87,7 @@ def test_get_derived_values(db):
     )
 
 
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing copying a whole telescope-----")
     db_write.copy_telescope(
@@ -133,6 +135,7 @@ def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
         )
 
 
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_adding_parameter_version_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new version of a parameter-----")
     db_write.copy_telescope(
@@ -163,6 +166,7 @@ def test_adding_parameter_version_db(db_write, random_id, db_cleanup, io_handler
     assert pars["camera_config_version"]["Value"] == 42
 
 
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_update_parameter_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing updating a parameter-----")
     db_write.copy_telescope(
@@ -201,6 +205,7 @@ def test_update_parameter_db(db_write, random_id, db_cleanup, io_handler):
     assert pars["camera_config_version"]["Value"] == 999
 
 
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_adding_new_parameter_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new parameter-----")
     db_write.copy_telescope(
@@ -231,6 +236,7 @@ def test_adding_new_parameter_db(db_write, random_id, db_cleanup, io_handler):
     assert pars["camera_config_version_test"]["Value"] == 999
 
 
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db_write.copy_telescope(
@@ -314,7 +320,7 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-@pytest.mark.skip
+@pytest.mark.parametrize("db_config", [True], indirect=True)
 def test_insert_files_db(db_write, io_handler, db_cleanup_file_sandbox, random_id, caplog):
     logger.info("----Testing inserting files to the DB-----")
     logger.info(

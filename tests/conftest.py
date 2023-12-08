@@ -166,7 +166,6 @@ def db(db_config):
     return db
 
 
-@pytest.mark.parametrize("db_config", [True], indirect=True)
 @pytest.fixture
 def db_write(db_config):
     db_write = db_handler.DatabaseHandler(mongo_db_config=db_config)
