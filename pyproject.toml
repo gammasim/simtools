@@ -47,9 +47,11 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",
+    "pytest-random-order",
 ]
 "dev" = [
     "flake8",
+    "pylint",
     "pre-commit",
 ]
 "doc" = [

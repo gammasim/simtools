@@ -108,3 +108,69 @@ def test_get_telescope_type():
         assert names.get_telescope_type(telescope_name) == ""
     telescope_name = "Not_a_telescope"
     assert names.get_telescope_type(telescope_name) == ""
+
+
+def test_camera_efficiency_names():
+    """
+    Test the various camera efficiency names functions
+    """
+
+    site = "South"
+    telescope_model_name = "LST-1"
+    zenith_angle = 20
+    azimuth_angle = 180
+    label = "test"
+    assert (
+        names.camera_efficiency_results_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg_test.ecsv"
+    )
+    assert (
+        names.camera_efficiency_simtel_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.dat"
+    )
+    assert (
+        names.camera_efficiency_log_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.log"
+    )
+
+    site = "North"
+    telescope_model_name = "MST-FlashCam-D"
+    zenith_angle = 40
+    azimuth_angle = 0
+    label = "test"
+    assert (
+        names.camera_efficiency_results_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-table-North-MST-FlashCam-D-za040deg_azm000deg_test.ecsv"
+    )
+    assert (
+        names.camera_efficiency_simtel_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-North-MST-FlashCam-D-za040deg_azm000deg_test.dat"
+    )
+    assert (
+        names.camera_efficiency_log_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-North-MST-FlashCam-D-za040deg_azm000deg_test.log"
+    )
+
+    site = "South"
+    telescope_model_name = "LST-1"
+    zenith_angle = 20
+    azimuth_angle = 180
+    label = None
+    assert (
+        names.camera_efficiency_results_file_name(
+            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        )
+        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg.ecsv"
+    )
