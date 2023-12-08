@@ -26,6 +26,8 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - toml
+  - pip:
+      - pytest-random-order
 
 # cheatsheet
 # create: conda env create -f environment.yml
