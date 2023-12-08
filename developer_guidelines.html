@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g23384ac</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gb07f74e</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=61c6481b"></script>
+    <script src="_static/documentation_options.js?v=5c83341b"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g23384ac</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb07f74e</p>
 
 
 
@@ -168,6 +168,8 @@ This should be used to avoid duplication.</p>
 </div>
 <p>The <a class="reference external" href="https://pytest-xdist.readthedocs.io/en/latest/">pytest-xdist</a> plugin is part of the developer environment
 and can be used to run unit and integration tests in parallel (e.g., <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">4</span></code> to run on four cores in parallel).</p>
+<p>Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
+<a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
 <p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span> <span class="pre">--cov</span></code>.
 Add the <code class="docutils literal notranslate"><span class="pre">--cov-report</span> <span class="pre">html</span></code> option to generate a coverage report in HTML format.</p>
 </section>
