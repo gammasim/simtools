@@ -125,7 +125,7 @@ def configurator(tmp_test_directory, simtel_path):
     return config
 
 
-@pytest.fixture(scope="function", params=[True, False])
+@pytest.fixture(scope="function")
 def db_config(request):
     """
     Read DB configuration from tests from .env file and from environmental variables.
