@@ -133,7 +133,7 @@ def test_get_file_name(corsika_runner, io_handler):
     )
 
     file_name_for_output = (
-        "corsika_run000001_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
+        "corsika_run1_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
     )
     assert corsika_runner.get_file_name(
         "output", **info_for_file_name
@@ -165,7 +165,7 @@ def test_has_file(corsika_runner, corsika_file):
     shutil.copy(
         corsika_file,
         output_directory.joinpath(
-            "corsika_run000001_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
+            "corsika_run1_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
         ),
     )
     assert corsika_runner.has_file(file_type="output", run_number=1)
