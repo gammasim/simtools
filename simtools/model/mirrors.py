@@ -83,9 +83,20 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self.mirror_table = Table.read(self._mirror_list_file, 
-                            format="ascii.no_header", 
-                            names =["pos_x","pos_y", "diameter","focal_length", "shape","pos_z","sep","mirror_number"])
+        self.mirror_table = Table.read(
+            self._mirror_list_file,
+            format="ascii.no_header",
+            names=[
+                "pos_x",
+                "pos_y",
+                "diameter",
+                "focal_length",
+                "shape",
+                "pos_z",
+                "sep",
+                "mirror_number",
+            ],
+        )
         self.shape = self.mirror_table["shape"][0]
         self.diameter = self.mirror_table["diameter"][0]
         self.number_of_mirrors = len(self.mirror_table["focal_length"])

@@ -4,7 +4,6 @@ import logging
 
 import pytest
 
-import simtools.utils.general as gen
 from simtools.model.mirrors import Mirrors
 
 logger = logging.getLogger()
