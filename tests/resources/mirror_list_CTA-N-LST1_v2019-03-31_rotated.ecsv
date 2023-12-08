@@ -1,27 +1,27 @@
 # %ECSV 1.0
 # ---
 # datatype:
-# - {name: x_pos, unit: cm, datatype: float64}
-# - {name: y_pos, unit: cm, datatype: float64}
-# - {name: diameter, unit: cm, datatype: float64}
+# - {name: mirror_x, unit: cm, datatype: float64}
+# - {name: mirror_y, unit: cm, datatype: float64}
+# - {name: mirror_diameter, unit: cm, datatype: float64}
 # - {name: focal_length, unit: cm, datatype: float64}
-# - {name: shape_code, datatype: int32}
-# - {name: z_pos, unit: cm, datatype: float64}
-# - {name: mirror_number, datatype: int32}
+# - {name: shape_type, datatype: int32}
+# - {name: mirror_z, unit: cm, datatype: float64}
+# - {name: mirror_id, datatype: int32}
 # meta: !!omap
 # - comments: ['Mirror positions and focal lengths for the LST1 prototype on La Palma, as based on the file newMirrorList.txt provided
 #       by LST team, reformated to required format by  awk', 'Updated on 31/03/19. Two mirrors (IDs 162 and 172) were exchanged for ones
 #       with similar focal lengths. Updated also in November 2023: coordinates were rotated 180 degrees and mirrored following e-mail
 #       discussions with the LST team (Subject: MAGIC and sim_telarray reflector config files).']
 # - keywords: !!omap
-#   - {mirror_shape: '1'}
+#   - {shape_type: '3'}
 #   - {mirror_radius: 12.393 m}
 #   - {surface_area: 390.98 m**2}
 #   - {projected_area: 388.38 m**2}
 #   - {center_gravity_x: 0.269 m}
 #   - {center_gravity_y: 388.38 m**2}
 # schema: astropy-2.0
-x_pos y_pos diameter focal_length shape_code z_pos mirror_number
+mirror_x mirror_y mirror_diameter focal_length shape_type mirror_z mirror_id
 1022.49 -462.0 151.0 2920.0 3 0.0 198
 1022.49 -308.0 151.0 2910.0 3 0.0 197
 1022.49 -154.0 151.0 2895.0 3 0.0 196

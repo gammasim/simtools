@@ -28,8 +28,8 @@ class Mirrors:
         self._logger.debug("Mirrors Init")
 
         self.mirror_table = Table()
-        self.diameter = None
-        self.shape = None
+        self.mirror_diameter = None
+        self.shape_type = None
         self.number_of_mirrors = 0
 
         self._mirror_list_file = mirror_list_file
@@ -60,12 +60,12 @@ class Mirrors:
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
-        self.shape = u.Quantity(self.mirror_table["shape_code"])[0].value
-        self.diameter = u.Quantity(self.mirror_table["diameter"])[0].value
+        self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0].value
+        self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0].value
         self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
-        self._logger.debug(f"Shape = {self.shape}")
-        self._logger.debug(f"Diameter = {self.diameter}")
+        self._logger.debug(f"Mirror shape_type = {self.shape_type}")
+        self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
         if self.number_of_mirrors == 0:
@@ -87,25 +87,25 @@ class Mirrors:
             self._mirror_list_file,
             format="ascii.no_header",
             names=[
-                "pos_x",
-                "pos_y",
-                "diameter",
+                "mirror_x",
+                "mirror_y",
+                "mirror_diameter",
                 "focal_length",
-                "shape",
-                "pos_z",
+                "shape_type",
+                "mirror_z",
                 "sep",
-                "mirror_number",
+                "mirror_id",
             ],
         )
-        
-        self.shape = self.mirror_table["shape"][0]
-        self.diameter = self.mirror_table["diameter"][0]
+
+        self.shape_type = self.mirror_table["shape_type"][0]
+        self.mirror_diameter = self.mirror_table["mirror_diameter"][0]
         self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
-        self._logger.debug(f"Shape = {self.shape}")
-        self._logger.debug(f"Diameter = {self.diameter}")
+        self._logger.debug(f"Mirror shape_type = {self.shape_type}")
+        self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
-        
+
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
@@ -122,19 +122,20 @@ class Mirrors:
 
         Returns
         -------
-        (pos_x, pos_y, diameter, focal_length, shape): tuple of float
-            X, Y positions, diameter, focal length and shape.
+        (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float
+            X, Y positions, mirror_diameter, focal length and shape_type.
         """
 
-        if number > self.number_of_mirrors - 1:
+        if number > self.number_of_mirrors:
             self._logger.error("Mirror number is out range")
             return None
+        mask = self.mirror_table["mirror_id"] == number
         return (
-            self.mirror_table["pos_x"][number],
-            self.mirror_table["pos_y"][number],
-            self.mirror_table["diameter"][number],
-            self.mirror_table["focal_length"][number],
-            self.mirror_table["shape"][number],
+            self.mirror_table[mask]["mirror_x"].value[0],
+            self.mirror_table[mask]["mirror_y"].value[0],
+            self.mirror_table[mask]["mirror_diameter"].value[0],
+            self.mirror_table[mask]["focal_length"].value[0],
+            self.mirror_table[mask]["shape_type"].value[0],
         )
 
     def plot_mirror_layout(self):
