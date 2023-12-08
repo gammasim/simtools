@@ -27,7 +27,7 @@ class Mirrors:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
 
-        self._mirrors = {}
+        self._mirror_table = Table()
         self.diameter = None
         self.shape = None
         self.number_of_mirrors = 0
@@ -57,26 +57,16 @@ class Mirrors:
         """
         # Getting mirror parameters from mirror list.
 
-        _mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
+        self._mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
-        self.shape = u.Quantity(_mirror_table["shape_code"])[0].value
-        self.diameter = u.Quantity(_mirror_table["diameter"])[0].value
+        self.shape = u.Quantity(self._mirror_table["shape_code"])[0].value
+        self.diameter = u.Quantity(self._mirror_table["diameter"])[0].value
+        self.number_of_mirrors = len(self._mirror_table["focal_length"])
+
         self._logger.debug(f"Shape = {self.shape}")
         self._logger.debug(f"Diameter = {self.diameter}")
-
-        try:
-            self._mirrors["flen"] = list(_mirror_table["focal_length"].to("cm").value / 2.0)
-            self.number_of_mirrors = len(self._mirrors["flen"])
-            self._mirrors["mirror_number"] = list(_mirror_table["mirror_number"].value)
-            self._mirrors["pos_x"] = list(_mirror_table["x_pos"].to("cm").value)
-            self._mirrors["pos_y"] = list(_mirror_table["y_pos"].to("cm").value)
-            self._mirrors["diameter"] = list(_mirror_table["diameter"].to("cm").value)
-            self._mirrors["shape"] = list(_mirror_table["shape_code"].value)
-        except KeyError:
-            self._logger.debug(
-                f"Missing column for mirror panel focal length (flen) in {self._mirror_list_file}"
-            )
+        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
@@ -93,35 +83,13 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self._mirrors["number"] = []
-        self._mirrors["pos_x"] = []
-        self._mirrors["pos_y"] = []
-        self._mirrors["diameter"] = []
-        self._mirrors["flen"] = []
-        self._mirrors["shape"] = []
+        self._mirror_table = Table.read(self._mirror_list_file, 
+                            format="ascii.no_header", 
+                            names =["pos_x","pos_y", "diameter","focal_length", "shape","pos_z","sep","mirror_number"])
+        self.shape = self._mirror_table["shape"][0]
+        self.diameter = self._mirror_table["diameter"][0]
+        self.number_of_mirrors = len(self._mirror_table["focal_length"])
 
-        mirror_counter = 0
-        collect_geo_pars = True
-        with open(self._mirror_list_file, "r", encoding="utf-8") as file:
-            for line in file:
-                line = line.split()
-                if "#" in line[0] or "$" in line[0]:
-                    continue
-                if collect_geo_pars:
-                    self.diameter = float(line[2])
-                    self.shape = int(line[4])
-                    collect_geo_pars = False
-                    self._logger.debug(f"Shape = {self.shape}")
-                    self._logger.debug(f"Diameter = {self.diameter}")
-
-                self._mirrors["number"].append(mirror_counter)
-                self._mirrors["pos_x"].append(float(line[0]))
-                self._mirrors["pos_y"].append(float(line[1]))
-                self._mirrors["diameter"].append(float(line[2]))
-                self._mirrors["flen"].append(float(line[3]))
-                self._mirrors["shape"].append(float(line[4]))
-                mirror_counter += 1
-        self.number_of_mirrors = mirror_counter
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
@@ -138,7 +106,7 @@ class Mirrors:
 
         Returns
         -------
-        (pos_x, pos_y, diameter, flen, shape): tuple of float
+        (pos_x, pos_y, diameter, focal_length, shape): tuple of float
             X, Y positions, diameter, focal length and shape.
         """
 
@@ -146,11 +114,11 @@ class Mirrors:
             self._logger.error("Mirror number is out range")
             return None
         return (
-            self._mirrors["pos_x"][number],
-            self._mirrors["pos_y"][number],
-            self._mirrors["diameter"][number],
-            self._mirrors["flen"][number],
-            self._mirrors["shape"][number],
+            self._mirror_table["pos_x"][number],
+            self._mirror_table["pos_y"][number],
+            self._mirror_table["diameter"][number],
+            self._mirror_table["focal_length"][number],
+            self._mirror_table["shape"][number],
         )
 
     def plot_mirror_layout(self):
