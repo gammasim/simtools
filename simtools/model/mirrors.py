@@ -27,7 +27,7 @@ class Mirrors:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
 
-        self._mirror_table = Table()
+        self.mirror_table = Table()
         self.diameter = None
         self.shape = None
         self.number_of_mirrors = 0
@@ -57,12 +57,12 @@ class Mirrors:
         """
         # Getting mirror parameters from mirror list.
 
-        self._mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
+        self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
-        self.shape = u.Quantity(self._mirror_table["shape_code"])[0].value
-        self.diameter = u.Quantity(self._mirror_table["diameter"])[0].value
-        self.number_of_mirrors = len(self._mirror_table["focal_length"])
+        self.shape = u.Quantity(self.mirror_table["shape_code"])[0].value
+        self.diameter = u.Quantity(self.mirror_table["diameter"])[0].value
+        self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
         self._logger.debug(f"Shape = {self.shape}")
         self._logger.debug(f"Diameter = {self.diameter}")
@@ -83,12 +83,12 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self._mirror_table = Table.read(self._mirror_list_file, 
+        self.mirror_table = Table.read(self._mirror_list_file, 
                             format="ascii.no_header", 
                             names =["pos_x","pos_y", "diameter","focal_length", "shape","pos_z","sep","mirror_number"])
-        self.shape = self._mirror_table["shape"][0]
-        self.diameter = self._mirror_table["diameter"][0]
-        self.number_of_mirrors = len(self._mirror_table["focal_length"])
+        self.shape = self.mirror_table["shape"][0]
+        self.diameter = self.mirror_table["diameter"][0]
+        self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
@@ -114,11 +114,11 @@ class Mirrors:
             self._logger.error("Mirror number is out range")
             return None
         return (
-            self._mirror_table["pos_x"][number],
-            self._mirror_table["pos_y"][number],
-            self._mirror_table["diameter"][number],
-            self._mirror_table["focal_length"][number],
-            self._mirror_table["shape"][number],
+            self.mirror_table["pos_x"][number],
+            self.mirror_table["pos_y"][number],
+            self.mirror_table["diameter"][number],
+            self.mirror_table["focal_length"][number],
+            self.mirror_table["shape"][number],
         )
 
     def plot_mirror_layout(self):
