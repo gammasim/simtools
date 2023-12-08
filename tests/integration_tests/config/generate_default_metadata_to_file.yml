@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: generate_default_metadata
+  CONFIGURATION:
+    OUTPUT_FILE: test.yml
+    USE_PLAIN_OUTPUT_PATH: True
+      #  INTEGRATION_TESTS:
+      #    - REFERENCE_OUTPUT_FILE: ./tests/resources/telescope_positions-North-corsika.ecsv

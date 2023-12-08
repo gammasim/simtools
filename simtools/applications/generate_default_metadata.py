@@ -57,7 +57,7 @@ def _parse(label, description):
         "--schema",
         help="schema file describing input data",
         type=str,
-        required=True,
+        required=False,
     )
     config.parser.add_argument(
         "--output_file",
@@ -66,7 +66,7 @@ def _parse(label, description):
         required=False,
     )
 
-    return config.initialize(output=False)
+    return config.initialize(output=False, require_command_line=True)
 
 
 def main():
