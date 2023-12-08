@@ -97,10 +97,15 @@ class Mirrors:
                 "mirror_number",
             ],
         )
+        
         self.shape = self.mirror_table["shape"][0]
         self.diameter = self.mirror_table["diameter"][0]
         self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
+        self._logger.debug(f"Shape = {self.shape}")
+        self._logger.debug(f"Diameter = {self.diameter}")
+        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
+        
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
