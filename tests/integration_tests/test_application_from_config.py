@@ -10,6 +10,7 @@ import uuid
 from pathlib import Path
 
 import numpy as np
+import pytest
 import yaml
 from astropy.table import Table
 
@@ -48,15 +49,6 @@ def get_list_of_test_configurations():
         configs.append(_dict.get("CTA_SIMPIPE", None))
 
     return configs
-
-
-def run_application(cmd):
-    """
-    Run the application with the given command.
-
-    """
-    logger.info(f"Running application: {cmd}")
-    return os.system(cmd)
 
 
 def compare_ecsv_files(file1, file2):
@@ -108,7 +100,7 @@ def validate_application_output(config):
 
 def get_tmp_config_file(config, output_path):
     """
-    Write a temporary config file for the application.
+    Write a temporary config file for the application to be tested.
     Change output path and file name to values suitable for tests.
 
     """
@@ -127,28 +119,27 @@ def get_tmp_config_file(config, output_path):
     return tmp_config_file
 
 
-def test_applications_from_config(tmp_test_directory):
+@pytest.mark.parametrize("config", get_list_of_test_configurations())
+def test_applications_from_config(tmp_test_directory, config):
     """
     Test all applications from config files found in the config directory.
     Test output is written to a temporary directory and tested.
 
     """
 
-    configs = get_list_of_test_configurations()
+    tmp_output_path = Path(tmp_test_directory).joinpath(str(uuid.uuid4()))
+    tmp_output_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Temporary output path: {tmp_output_path}")
+    config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
 
-    for config in configs:
-        tmp_output_path = Path(tmp_test_directory).joinpath(str(uuid.uuid4()))
-        tmp_output_path.mkdir(parents=True, exist_ok=True)
-        config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
+    cmd = get_application_command(
+        app=config.get("APPLICATION", None),
+        config_file=config_file,
+    )
+    logger.info(f"Application configuration: {config}")
 
-        cmd = get_application_command(
-            app=config.get("APPLICATION", None),
-            config_file=config_file,
-        )
-        logger.info(f"Application configuration: {config}")
+    logger.info(f"Running application: {cmd}")
+    assert os.system(cmd) == 0
 
-        run_status = run_application(cmd)
-        assert run_status == 0
-
-        output_status = validate_application_output(config)
-        assert output_status == 0
+    output_status = validate_application_output(config)
+    assert output_status == 0
