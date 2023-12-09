@@ -275,7 +275,7 @@ class ArrayLayout:
         """
         Initialize array center and coordinate systems.
         By definition, the array center is at (0,0) in
-        the CORSIKA coordinate system.
+        the ground coordinate system.
 
         Parameters
         ----------
@@ -293,7 +293,7 @@ class ArrayLayout:
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
-        self._array_center.set_coordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
+        self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
         self._set_array_center_mercator(center_dict)
         self._set_array_center_utm(center_dict)
         self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
@@ -326,7 +326,7 @@ class ArrayLayout:
         Set array center coordinates in UTM system.
         Convert array center position to WGS84 system
         (as latitudes are required for the definition
-        for the definition of the CORSIKA coordinate system)
+        for the definition of the ground coordinate system)
 
         """
         try:
@@ -552,7 +552,7 @@ class ArrayLayout:
         """
         for row in table:
             tel = self._load_telescope_names(row)
-            self._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
             self._try_set_altitude(row, tel, table)
@@ -694,7 +694,7 @@ class ArrayLayout:
 
         """
 
-        table = QTable(meta=self._get_export_metadata(crs_name == "corsika"))
+        table = QTable(meta=self._get_export_metadata(crs_name == "ground"))
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
         pos_x, pos_y, pos_z = [], [], []
