@@ -17,17 +17,26 @@ class ModelDataWriter:
 
     Parameters
     ----------
+    product_data_file: str
+        Name of output file.
+    product_data_format: str
+        Format of output file.
     args_dict: Dictionary
         Dictionary with configuration parameters.
     """
 
-    def __init__(self, product_data_file=None, product_data_format=None):
+    def __init__(self, product_data_file=None, product_data_format=None, args_dict=None):
         """
         Initialize model data writer.
         """
 
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
+        if args_dict is not None:
+            self.io_handler.set_paths(
+                output_path=args_dict.get("output_path", None),
+                use_plain_output_path=args_dict.get("use_plain_output_path", False),
+            )
         try:
             self.product_data_file = self.io_handler.get_output_file(
                 file_name=product_data_file, dir_type="simtools-result"
@@ -37,7 +46,7 @@ class ModelDataWriter:
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     @staticmethod
-    def dump(args_dict, metadata=None, product_data=None, validate_schema_file=False):
+    def dump(args_dict, metadata=None, product_data=None, validate_schema_file=None):
         """
         Write model data and metadata (as static method).
 
@@ -57,8 +66,9 @@ class ModelDataWriter:
         writer = ModelDataWriter(
             product_data_file=args_dict.get("output_file", None),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
+            args_dict=args_dict,
         )
-        if validate_schema_file and not args_dict.get("skip_output_validation", True):
+        if validate_schema_file is not None and not args_dict.get("skip_output_validation", True):
             product_data = writer.validate_and_transform(
                 product_data=product_data,
                 validate_schema_file=validate_schema_file,
