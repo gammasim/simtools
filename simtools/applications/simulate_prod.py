@@ -258,7 +258,9 @@ def main():
             files_to_tar = log_files[:1] + histogram_files[:1]
             for file_to_tar in files_to_tar:
                 tar.add(file_to_tar, arcname=Path(file_to_tar).name)
-        directory_for_grid_upload = Path("directory_for_grid_upload")
+        directory_for_grid_upload = Path(args_dict.get("output_path", "./")).joinpath(
+            "directory_for_grid_upload"
+        )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
         for file_to_move in [*output_files, tar_file_name]:
             source_file = Path(file_to_move)
