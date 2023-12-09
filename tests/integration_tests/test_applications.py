@@ -638,6 +638,8 @@ APP_LIST = {
             "10",
             "--data_directory",
             "TESTOUTPUTDIR/",
+            "--output_path",
+            "./",
         ]
     ],
     "simulate_prod::gamma_20_deg_pack_for_grid": [
@@ -663,6 +665,8 @@ APP_LIST = {
             "--data_directory",
             "TESTOUTPUTDIR/",
             "--pack_for_grid_register",
+            "--output_path",
+            "TESTOUTPUTDIR",
         ]
     ],
     # print_array
