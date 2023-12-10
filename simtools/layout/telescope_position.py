@@ -47,8 +47,8 @@ class TelescopePosition:
         telstr = self.name
         if self.has_coordinates("ground"):
             telstr += (
-                f"\t CORSIKA x(->North): {self.crs['corsika']['xx']['value']:0.2f} "
-                f"y(->West): {self.crs['corsika']['yy']['value']:0.2f}"
+                f"\t CORSIKA x(->North): {self.crs['ground']['xx']['value']:0.2f} "
+                f"y(->West): {self.crs['ground']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
             telstr += (

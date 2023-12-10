@@ -762,7 +762,7 @@ class ArrayLayout:
 
         corsika_list = ""
         for tel in self._telescope_list:
-            pos_x, pos_y, pos_z = tel.get_coordinates("corsika")
+            pos_x, pos_y, pos_z = tel.get_coordinates("ground")
             try:
                 sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
                     names.get_telescope_type(tel.name)
