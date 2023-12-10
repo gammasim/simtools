@@ -74,6 +74,8 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
 
     with pytest.raises(InvalidCoordSystem):
         tel.get_coordinates("not_valid_crs")
+    with pytest.raises(InvalidCoordSystem):
+        tel.get_coordinates("not_valid_crs", coordinate_field="value")
 
     tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
@@ -93,6 +95,11 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
     assert _x.unit == "m"
     assert _y.unit == "m"
     assert _z.unit == "m"
+
+    _x, _y, _z = tel.get_coordinates("ground", coordinate_field="value")
+    assert pytest.approx(_x, 0.1) == 50.0
+    assert pytest.approx(_y, 0.1) == -25.0
+    assert pytest.approx(_z, 0.1) == 2178
 
 
 def test_get_coordinate_variable():
@@ -166,6 +173,14 @@ def test_convert(crs_wgs84, crs_local, crs_utm):
     _lat, _lon = tel._convert(crs_local, crs_wgs84, test_position["pos_x"], None)
     assert np.isnan(_lat)
     assert np.isnan(_lon)
+    _lat, _lon = tel._convert(crs_local, crs_wgs84, None, test_position["pos_y"])
+    assert np.isnan(_lat)
+    assert np.isnan(_lon)
+
+    # (invalid) mercator to local
+    _x, _y = tel._convert(crs_wgs84, crs_local, +95.0, _lon)
+    assert np.isnan(_x)
+    assert np.isnan(_y)
 
 
 def test_get_reference_system_from(crs_utm):
@@ -290,3 +305,70 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert np.isnan(tel_nan.crs["mercator"]["yy"]["value"])
     assert np.isnan(tel_nan.crs["utm"]["xx"]["value"])
     assert np.isnan(tel_nan.crs["utm"]["yy"]["value"])
+
+
+def test_get_altitude():
+    telescope = TelescopePosition(name="LST-01")
+    assert np.isnan(telescope.get_altitude())
+
+    telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
+    assert pytest.approx(telescope.get_altitude().value, 0.1) == 2100.0
+
+
+def test_print_compact_format(capsys):
+    telescope = TelescopePosition(name="LST-01")
+    telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
+    expected_output = "LST-01 100.00 200.00 2100.00"
+    telescope.print_compact_format(
+        crs_name="ground",
+        corsika_obs_level=None,
+        corsika_sphere_center=None,
+    )
+    _output = capsys.readouterr().out
+    # ignore differences in spaces
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    expected_output = "LST-01 100.00 200.00 115.00"
+    telescope.print_compact_format(
+        crs_name="ground",
+        corsika_obs_level=2000.0 * u.m,
+        corsika_sphere_center=15.0 * u.m,
+    )
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    expected_output = "telescope_name position_x position_y pos_z\nLST-01 100.00 200.00 115.00"
+    telescope.print_compact_format(
+        crs_name="ground",
+        corsika_obs_level=2000.0 * u.m,
+        corsika_sphere_center=15.0 * u.m,
+        print_header=True,
+    )
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    telescope.set_coordinates("mercator", xx=28.7621661, yy=-17.8920302, zz=2100.0)
+    expected_output = "LST-01 28.76216610 -17.89203020    2100.00"
+    telescope.print_compact_format("mercator")
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+    # corsika_sphere should have no impact on output
+    telescope.print_compact_format("mercator", corsika_sphere_center=15.0 * u.m)
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
+    expected_output = "LST-01 217611.23 3185066.28    2100.00"
+    telescope.print_compact_format("utm")
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
+    telescope.geo_code = "ABC"
+    expected_output = "LST-01 217611.23 3185066.28    2100.00  ABC"
+    telescope.print_compact_format("utm")
+    _output = capsys.readouterr().out
+    assert "".join(expected_output.split()) == "".join(_output.split())
+
+    with pytest.raises(InvalidCoordSystem):
+        telescope.print_compact_format("not_a_crs")
