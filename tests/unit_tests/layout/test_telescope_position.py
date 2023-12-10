@@ -53,7 +53,7 @@ def test_str(crs_wgs84, crs_local, crs_utm):
     _tcors = tel.__str__()
     assert _tcors == "LST-01"
 
-    tel.set_coordinates("corsika", 50, -25.0, 2158.0 * u.m)
+    tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
     _tcors = tel.__str__()
     _test_string = "LST-01\t CORSIKA x(->North): 50.00 y(->West): -25.00"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
@@ -75,10 +75,10 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
     with pytest.raises(InvalidCoordSystem):
         tel.get_coordinates("not_valid_crs")
 
-    tel.set_coordinates("corsika", 50, -25.0, 2158.0 * u.m)
+    tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
 
-    _x, _y, _z = tel.get_coordinates("corsika")
+    _x, _y, _z = tel.get_coordinates("ground")
     assert _x.unit == "m"
     assert _y.unit == "m"
     assert _z.unit == "m"
@@ -190,18 +190,18 @@ def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
     with pytest.raises(InvalidCoordSystem):
         tel.has_coordinates("not_a_system")
 
-    assert not tel.has_coordinates("corsika")
+    assert not tel.has_coordinates("ground")
     assert not tel.has_coordinates("utm")
     assert not tel.has_coordinates("mercator")
 
-    tel.set_coordinates("corsika", 0.0, 0.0, 2158.0 * u.m)
-    assert tel.has_coordinates("corsika")
-    assert not tel.has_coordinates("corsika", True)
+    tel.set_coordinates("ground", 0.0, 0.0, 2158.0 * u.m)
+    assert tel.has_coordinates("ground")
+    assert not tel.has_coordinates("ground", True)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
-    assert tel.has_coordinates("corsika", True)
+    assert tel.has_coordinates("ground", True)
     assert tel.has_coordinates("utm", True)
     assert tel.has_coordinates("mercator", True)
-    assert tel.has_coordinates("corsika", False)
+    assert tel.has_coordinates("ground", False)
     assert tel.has_coordinates("utm", False)
     assert tel.has_coordinates("mercator", False)
 
@@ -217,13 +217,13 @@ def test_has_altitude():
 
     tel.set_coordinates("utm", 217611 * u.m, 3185066 * u.m, 1.0 * u.km)
     assert tel.has_altitude("utm")
-    assert not tel.has_altitude("corsika")
+    assert not tel.has_altitude("ground")
     assert not tel.has_altitude("mercator")
     tel.set_coordinates("utm", 217611 * u.m, 3185066 * u.m, np.nan)
     assert not tel.has_altitude("utm")
     tel.set_altitude(1 * u.km)
     assert tel.has_altitude("utm")
-    assert tel.has_altitude("corsika")
+    assert tel.has_altitude("ground")
     assert tel.has_altitude("mercator")
     assert tel.has_altitude()
 
@@ -273,7 +273,7 @@ def test_altitude_transformations():
 def test_convert_all(crs_wgs84, crs_local, crs_utm):
     tel = TelescopePosition(name="LST-01")
 
-    tel.set_coordinates("corsika", 0.0, 0.0, 2158.0 * u.m)
+    tel.set_coordinates("ground", 0.0, 0.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
 
     assert 28.7621 == pytest.approx(tel.crs["mercator"]["xx"]["value"], 1.0e-4)
@@ -284,7 +284,7 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert 2158.0 == pytest.approx(tel.crs["utm"]["zz"]["value"], 1.0e-9)
 
     tel_nan = TelescopePosition(name="LST-02")
-    tel_nan.set_coordinates("corsika", np.nan, np.nan, 2158.0 * u.m)
+    tel_nan.set_coordinates("ground", np.nan, np.nan, 2158.0 * u.m)
     tel_nan.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
     assert np.isnan(tel_nan.crs["mercator"]["xx"]["value"])
     assert np.isnan(tel_nan.crs["mercator"]["yy"]["value"])

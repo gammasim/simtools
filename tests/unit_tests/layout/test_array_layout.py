@@ -87,7 +87,7 @@ def test_initialize_coordinate_systems(
 ):
     def test_one_site(center_data_dict, instance, easting, northing):
         instance._initialize_coordinate_systems()
-        _x, _y, _z = instance._array_center.get_coordinates("corsika")
+        _x, _y, _z = instance._array_center.get_coordinates("ground")
         assert _x == 0.0 * u.m and _y == 0.0 * u.m
         assert np.isnan(_z.value)
         _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
@@ -95,7 +95,7 @@ def test_initialize_coordinate_systems(
 
         if center_data_dict is not None:
             instance._initialize_coordinate_systems(center_data_dict)
-            _x, _y, _z = instance._array_center.get_coordinates("corsika")
+            _x, _y, _z = instance._array_center.get_coordinates("ground")
             assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == center_data_dict["center_alt"]
             _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
             assert _lat.value == pytest.approx(center_data_dict["center_lat"].value, 1.0e-2)
@@ -224,11 +224,11 @@ def test_add_tel(
     def test_one_site(instance, test_file, altitude):
         ArrayLayout.read_telescope_list_file(test_file)
         ntel_before = instance.get_number_of_telescopes()
-        instance.add_telescope("LST-00", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
+        instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
         ntel_after = instance.get_number_of_telescopes()
         assert ntel_before + 1 == ntel_after
 
-        instance.add_telescope("LST-00", "corsika", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
+        instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
     test_one_site(array_layout_north_instance, telescope_north_test_file, 2192.0)
@@ -245,28 +245,28 @@ def test_build_layout(
     def test_one_site(layout, site_label):
         layout.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-02",
-            crs_name="corsika",
+            crs_name="ground",
             xx=-57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-02",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=-57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-04",
-            crs_name="corsika",
+            crs_name="ground",
             xx=-57.5 * u.m,
             yy=-57.5 * u.m,
             tel_corsika_z=0 * u.m,
@@ -274,7 +274,7 @@ def test_build_layout(
 
         layout.convert_coordinates()
         layout.print_telescope_list()
-        _table = layout.export_telescope_list_table(crs_name="corsika")
+        _table = layout.export_telescope_list_table(crs_name="ground")
         _export_file = tmp_test_directory / "test_layout.ecsv"
         _table.write(_export_file, format="ascii.ecsv", overwrite=True)
 
@@ -327,7 +327,7 @@ def test_get_corsika_input_list(
     def test_one_site(layout):
         layout.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
@@ -349,7 +349,7 @@ def test_altitude_from_corsika_z(
     def test_one_site(instance, result1, result2):
         instance.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
@@ -512,9 +512,9 @@ def test_try_set_coordinate(
         table = ArrayLayout.read_telescope_list_file(test_file)
         for step, row in enumerate(table[:6]):
             tel = instance._load_telescope_names(row)
-            instance._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
-            assert pytest.approx(tel.crs["corsika"]["xx"]["value"], 0.1) == manual_xx[step]
-            assert pytest.approx(tel.crs["corsika"]["yy"]["value"], 0.1) == manual_yy[step]
+            instance._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
+            assert pytest.approx(tel.crs["ground"]["xx"]["value"], 0.1) == manual_xx[step]
+            assert pytest.approx(tel.crs["ground"]["yy"]["value"], 0.1) == manual_yy[step]
 
     test_one_site(
         array_layout_north_instance, telescope_north_test_file, manual_xx_north, manual_yy_north
