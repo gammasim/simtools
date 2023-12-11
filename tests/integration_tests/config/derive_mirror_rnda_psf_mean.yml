@@ -8,5 +8,5 @@ CTA_SIMPIPE:
     MIRROR_LIST: ./tests/resources/MLTdata-preproduction.ecsv
     PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4
     RNDA: 0.0063
-    TEST: TRUE
+    TEST: true
     OUTPUT_PATH: simtools-tests

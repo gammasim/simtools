@@ -7,5 +7,5 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod5
     data: ./tests/resources/PSFcurve_data_v2.txt"
     ZENITH: 20
-    TEST: TRUE
+    TEST: true
     OUTPUT_PATH: simtools-tests

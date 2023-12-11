@@ -4,8 +4,8 @@ CTA_SIMPIPE:
   CONFIGURATION:
     PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
     TASK: simulate
-    SHOWERS_ONLY: True
-    TEST: True
+    SHOWERS_ONLY: true
+    TEST: true
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output

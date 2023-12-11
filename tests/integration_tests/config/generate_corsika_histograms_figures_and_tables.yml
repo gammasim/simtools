@@ -5,6 +5,6 @@ CTA_SIMPIPE:
     IACT_FILE:
       - ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.
       - corsikaio
-    HDF5: True
+    HDF5: true
     HD5_FILE_NAME: test_file_tables.hdf5
     OUTPUT_PATH: simtools-tests

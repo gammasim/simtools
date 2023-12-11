@@ -5,9 +5,9 @@ CTA_SIMPIPE:
     IACT_FILE:
       - ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.
       - corsikaio
-    PDF: True
-    HDF5: True
+    PDF: true
+    HDF5: true
     HD5_FILE_NAME: test_file_individual_telescopes_and_indices.hdf5
     TELESCOPE_INDICES: "0 1 2"
-    INDIVIDUAL_TELESCOPES: True
+    INDIVIDUAL_TELESCOPES: true
     OUTPUT_PATH: simtools-tests

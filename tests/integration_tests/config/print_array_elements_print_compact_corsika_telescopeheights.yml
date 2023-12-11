@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: corsika
-    USE_CORSIKA_TELESCOPE_HEIGHT: False
+    USE_CORSIKA_TELESCOPE_HEIGHT: false
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
     SELECT_ASSETS:
