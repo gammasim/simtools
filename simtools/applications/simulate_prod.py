@@ -49,6 +49,9 @@
         Run number (actual run number will be 'start_run' + 'run').
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data
+    pack_for_grid_register (bool, optional)
+        Set whether to prepare a tarball for registering the output files on the grid.
+        The files are written to the `output_path/directory_for_grid_upload` directory.
     log_level (str, optional)
         Log level to print.
 
@@ -61,7 +64,7 @@
         simtools-simulate-prod \
         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
         --site north --primary gamma --azimuth_angle north --zenith_angle 20 \
-         --start_run 0 --run 1
+        --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
     and the output in corsika-data and simtel-data. The location of the latter directories
@@ -187,7 +190,7 @@ def _parse(description=None):
         help="The directory where to save the corsika-data and simtel-data output directories.",
         type=str.lower,
         required=False,
-        default="./",
+        default="./simtools-output/",
     )
     config.parser.add_argument(
         "--pack_for_grid_register",
@@ -227,7 +230,7 @@ def main():
     if args_dict["label"] is not None:
         label = args_dict["label"]
     if "data_directory" in args_dict:
-        config_data["common"]["data_directory"] = args_dict["data_directory"]
+        config_data["common"]["data_directory"] = Path(args_dict["data_directory"]) / label
 
     simulator = Simulator(
         label=label,
@@ -258,7 +261,7 @@ def main():
             files_to_tar = log_files[:1] + histogram_files[:1]
             for file_to_tar in files_to_tar:
                 tar.add(file_to_tar, arcname=Path(file_to_tar).name)
-        directory_for_grid_upload = Path(args_dict.get("output_path", "./")).joinpath(
+        directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
             "directory_for_grid_upload"
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
