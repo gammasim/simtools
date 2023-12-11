@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-print-array-elements
+  TEST_NAME: print_compact_nocors_utm
+  CONFIGURATION:
+    INPUT: tests/resources/telescope_positions-South-4MST.ecsv"
+    COMPACT: corsika
+    OUTPUT_PATH: simtools-tests
