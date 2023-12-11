@@ -5,7 +5,6 @@
 
 import logging
 import os
-import uuid
 from pathlib import Path
 
 import numpy as np
@@ -138,7 +137,10 @@ def test_applications_from_config(tmp_test_directory, config):
 
     """
 
-    tmp_output_path = Path(tmp_test_directory).joinpath(str(uuid.uuid4()))
+    try:
+        tmp_output_path = Path(tmp_test_directory).joinpath(config["APPLICATION"])
+    except KeyError:
+        logger.error("fNo application defined in config file {config}.")
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
