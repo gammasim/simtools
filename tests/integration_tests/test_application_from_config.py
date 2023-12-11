@@ -3,7 +3,6 @@
 #
 
 
-import glob
 import logging
 import os
 import uuid
@@ -41,7 +40,7 @@ def get_list_of_test_configurations():
 
     """
 
-    config_files = glob.glob(str(Path(__file__).parent / "config/*.yml"))
+    config_files = Path(__file__).parent.glob("config/*.yml")
 
     configs = []
     for config_file in config_files:
@@ -51,11 +50,20 @@ def get_list_of_test_configurations():
     return configs
 
 
-def compare_ecsv_files(file1, file2):
+def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
     """
     Compare two ecsv files:
     - same column table names
     - numerical values in columns are close
+
+    Parameters
+    ----------
+    file1: str
+        First file to compare
+    file2: str
+        Second file to compare
+    tolerance: float
+        Tolerance for comparing numerical values.
 
     """
 
@@ -67,8 +75,6 @@ def compare_ecsv_files(file1, file2):
 
     assert table1.colnames == table2.colnames
 
-    # hardwired tolerance; not clear if this is good
-    tolerance = 1e-5
     for col_name in table1.colnames:
         if np.issubdtype(table1[col_name].dtype, np.number):
             assert np.allclose(table1[col_name], table2[col_name], rtol=tolerance)
@@ -93,6 +99,7 @@ def validate_application_output(config):
                 Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
                     config["CONFIGURATION"]["OUTPUT_FILE"]
                 ),
+                integration_test.get("TOLERANCE", 1.0e-5),
             )
 
     return 0
