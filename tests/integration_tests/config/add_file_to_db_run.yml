@@ -3,6 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: run
   CONFIGURATION:
     FILE_NAME:
-     - ./tests/resources/MLTdata-preproduction.meta.yml
-     - ./tests/resources/MLTdata-preproduction.ecsv
+      - ./tests/resources/MLTdata-preproduction.meta.yml
+      - ./tests/resources/MLTdata-preproduction.ecsv
     DB: sandbox

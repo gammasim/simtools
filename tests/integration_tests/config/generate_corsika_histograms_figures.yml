@@ -5,5 +5,5 @@ CTA_SIMPIPE:
     IACT_FILE:
       - ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.
       - corsikaio
-    PDF: True
+    PDF: true
     OUTPUT_PATH: simtools-tests

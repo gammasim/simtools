@@ -7,5 +7,5 @@ CTA_SIMPIPE:
     MAX_OFFSET: 1.0
     SRC_DISTANCE: 11.
     ZENITH: 20
-    TEST: TRUE
+    TEST: true
     OUTPUT_PATH: simtools-tests

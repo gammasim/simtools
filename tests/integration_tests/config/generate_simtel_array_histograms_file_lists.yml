@@ -3,6 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: hist_file_names
   CONFIGURATION:
     HIST_FILE_NAMES: ./tests/resources/simtel_histograms_file_list.txt
-    PDF: True
+    PDF: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
     OUTPUT_PATH: simtools-tests

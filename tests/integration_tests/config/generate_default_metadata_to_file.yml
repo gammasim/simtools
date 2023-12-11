@@ -4,6 +4,3 @@ CTA_SIMPIPE:
   CONFIGURATION:
     OUTPUT_FILE: test.yml
     OUTPUT_PATH: simtools-tests
-      # Add here reference yaml file
-      #  INTEGRATION_TESTS:
-      #    - REFERENCE_OUTPUT_FILE: ./tests/resources/default_metadata.yml

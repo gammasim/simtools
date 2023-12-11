@@ -5,8 +5,8 @@ CTA_SIMPIPE:
     IACT_FILE:
       - ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.
       - corsikaio
-    PDF: True
-    HDF5: True
+    PDF: true
+    HDF5: true
     HD5_FILE_NAME: test_file_2D_run_header.hdf5
     EVENT_2D_HISTOGRAMS:
       - zenith

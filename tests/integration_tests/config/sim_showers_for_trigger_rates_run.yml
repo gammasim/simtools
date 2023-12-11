@@ -7,6 +7,6 @@ CTA_SIMPIPE:
     PRIMARY: proton
     NRUNS: 2
     NEVENTS: 10000
-    TEST: True
+    TEST: true
     SUBMIT_COMMAND: local
     OUTPUT_PATH: simtools-output
