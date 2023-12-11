@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: validate_file_using_schema
+  APPLICATION: simtools-validate-file-using-schema
   TEST_NAME: ecsv_input
   CONFIGURATION:
     SCHEMA: ./tests/resources/MST_mirror_2f_measurements.schema.yml
