@@ -84,7 +84,7 @@ def _parse(label, description):
         help="Name of the histogram files to be plotted or the text file containing the list of "
         "histogram files.",
         nargs="+",
-        required=True,
+        required=False,
         type=str,
     )
 
@@ -105,9 +105,9 @@ def _parse(label, description):
     )
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
-    if not config_parser["pdf"]:
-        if not config_parser["hdf5"]:
-            config.parser.error("At least one argument is required: `--pdf` or `--hdf5`.")
+    #    if not config_parser["pdf"]:
+    #        if not config_parser["hdf5"]:
+    #            config.parser.error("At least one argument is required: `--pdf` or `--hdf5`.")
 
     return config_parser
 
