@@ -1,5 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-print-array-elements
+  TEST_NAME: utm_to_corsika
   CONFIGURATION:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: corsika

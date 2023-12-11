@@ -48,9 +48,19 @@ def get_list_of_test_configurations():
 
     # list of all applications
     _applications = list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
-    # add for all applications "--help" call
     for _app in _applications:
-        configs.append({"APPLICATION": _app, "CONFIGURATION": {"HELP": True}})
+        logger.info(f"Add help for application{_app}")
+        # add for all applications "--help" call
+        # TODO - disabled, as not all application have help implemented
+        # configs.append(
+        # {"APPLICATION": _app, "TEST_NAME": "help", "CONFIGURATION": {"HELP": True}})
+        # add for all applications "--version" call
+        configs.append(
+            {"APPLICATION": _app, "TEST_NAME": "version", "CONFIGURATION": {"VERSION": True}}
+        )
+        # TODO - disabled, as not all applications can be called without command line parameters
+        # add for all applications call without config file
+        # configs.append({"APPLICATION": _app, "TEST_NAME": "no_config"})
 
     return configs
 
@@ -138,12 +148,18 @@ def test_applications_from_config(tmp_test_directory, config):
     """
 
     try:
-        tmp_output_path = Path(tmp_test_directory).joinpath(config["APPLICATION"])
-    except KeyError:
-        logger.error("fNo application defined in config file {config}.")
+        tmp_output_path = Path(tmp_test_directory).joinpath(
+            config["APPLICATION"] + "-" + config["TEST_NAME"]
+        )
+    except KeyError as exc:
+        logger.error(f"No application defined in config file {config}.")
+        raise exc
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
-    config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
+    if "CONFIGURATION" in config:
+        config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
+    else:
+        config_file = None
 
     cmd = get_application_command(
         app=config.get("APPLICATION", None),
