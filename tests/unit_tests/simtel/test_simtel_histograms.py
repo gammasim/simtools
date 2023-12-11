@@ -2,8 +2,10 @@
 
 import logging
 
+import matplotlib.pyplot as plt
 import pytest
 from astropy.table import Table
+from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -75,3 +77,18 @@ def test_combine_histogram_files(simtel_array_histograms_file):
     assert (
         2 * instance_alone.combined_hists[0]["data"] == instance_all.combined_hists[0]["data"]
     ).all()
+
+
+def test_plot_one_histogram(simtel_array_histograms_instance):
+    """
+    Plot all histograms into pdf pages and save the figure as a pdf file.
+    Parameters
+    ----------
+    fig_name: str
+        Name of the output figure file.
+    """
+
+    fig, ax = plt.subplots()
+    simtel_array_histograms_instance.plot_one_histogram(0, ax)
+    quadmesh = ax.collections[0]
+    assert isinstance(quadmesh, QuadMesh)
