@@ -206,19 +206,21 @@ def test_config_data_from_yaml_file(db, io_handler, db_config):
 
 
 def test_get_file_name(corsika_config, io_handler):
-    file_name = "proton_South_4LST_za20-az0deg_cone0-5_test-corsika-config"
+    file_name = "proton_South_4LST_za020-azm000deg_cone0-5_test-corsika-config"
 
     assert (
         corsika_config.get_file_name("config_tmp", run_number=1)
-        == f"corsika_config_run1_{file_name}.txt"
+        == f"corsika_config_run000001_{file_name}.txt"
     )
     with pytest.raises(ValueError):
-        assert corsika_config.get_file_name("config_tmp") == f"corsika_config_run1_{file_name}.txt"
+        assert (
+            corsika_config.get_file_name("config_tmp")
+            == f"corsika_config_run000001_{file_name}.txt"
+        )
 
     assert corsika_config.get_file_name("config") == f"corsika_config_{file_name}.input"
     assert corsika_config.get_file_name("output_generic") == (
-        "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
-        "_South_4LST_test-corsika-config.zst"
+        "corsika_run000010_proton_za020deg_azm000deg_South_4LST_test-corsika-config.zst"
     )
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
