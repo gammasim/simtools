@@ -49,7 +49,7 @@ def test_export_histograms(simtel_array_histograms_instance, io_handler):
         assert isinstance(table, Table)
 
 
-def test_number_of_histograms(simtel_array_histograms_file):
+def test_number_of_histograms(simtel_array_histograms_file, simtel_array_histograms_instance):
     instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
     # If combined_hists is None
     assert instance_alone.combined_hists is None
