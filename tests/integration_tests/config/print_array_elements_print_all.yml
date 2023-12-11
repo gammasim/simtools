@@ -1,0 +1,5 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-print-array-elements
+  TEST_NAME: print_compact_all
+  CONFIGURATION:
+    INPUT: tests/resources/telescope_positions-South-4MST.ecsv"
