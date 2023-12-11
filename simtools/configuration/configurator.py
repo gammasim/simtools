@@ -196,7 +196,24 @@ class Configurator:
             self._logger.debug("No command line arguments given, printing help.")
             arg_list = ["--help"]
 
+        if "--config" in arg_list:
+            self._reset_required_arguments()
+
         self._fill_config(arg_list)
+
+    def _reset_required_arguments(self):
+        """
+        Reset required parser arguments (i.e., arguments added with "required=True").
+        Includes also mutually exclusive groups.
+
+        Access protected attributes of parser (no public method available).
+
+        """
+
+        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
+            group.required = False
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            action.required = False
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
