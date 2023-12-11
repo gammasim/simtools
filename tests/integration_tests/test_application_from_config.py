@@ -47,6 +47,12 @@ def get_list_of_test_configurations():
         _dict = gen.collect_data_from_yaml_or_dict(in_yaml=config_file, in_dict=None)
         configs.append(_dict.get("CTA_SIMPIPE", None))
 
+    # list of all applications
+    _applications = list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
+    # add for all applications "--help" call
+    for _app in _applications:
+        configs.append({"APPLICATION": _app, "CONFIGURATION": {"HELP": True}})
+
     return configs
 
 
@@ -114,10 +120,8 @@ def get_tmp_config_file(config, output_path):
 
     tmp_config_file = output_path / "tmp_config.yml"
 
-    try:
-        config["OUTPUT_PATH"] = str(output_path)
-    except KeyError:
-        pass
+    config.update({"OUTPUT_PATH": str(output_path)})
+    config.update({"USE_PLAIN_OUTPUT_PATH": True})
 
     # write config to a yaml file in tmp directory
     with open(tmp_config_file, "w", encoding="utf-8") as file:

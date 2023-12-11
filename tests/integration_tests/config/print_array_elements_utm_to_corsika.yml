@@ -1,12 +1,11 @@
 CTA_SIMPIPE:
-  APPLICATION: print_array_elements
+  APPLICATION: simtools-print-array-elements
   CONFIGURATION:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: corsika
     USE_CORSIKA_TELESCOPE_HEIGHT: True
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
-    USE_PLAIN_OUTPUT_PATH: True
     SELECT_ASSETS:
       - LSTN
       - MSTN
