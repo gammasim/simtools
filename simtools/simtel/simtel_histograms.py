@@ -68,7 +68,8 @@ class SimtelHistograms:
         return self.combined_hists[i_hist]["title"]
 
     def combine_histogram_files(self):
-        """Combine histograms from all files into one single list of histograms."""
+        """Add the values of the same type of histogram from the various lists into a single
+        histogram list."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
         n_files = 0
