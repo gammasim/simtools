@@ -45,3 +45,33 @@ def test_export_histograms(simtel_array_histograms_instance, io_handler):
     assert len(list_of_tables) == 144
     for table in list_of_tables:
         assert isinstance(table, Table)
+
+
+def test_number_of_histograms(simtel_array_histograms_instance):
+    assert (
+        len(simtel_array_histograms_instance.combined_hists)
+        == simtel_array_histograms_instance.number_of_histograms
+    )
+
+
+def test_get_histogram_title(simtel_array_histograms_instance):
+    assert (
+        simtel_array_histograms_instance.get_histogram_title(0)
+        == "Events, without weights (Ra, log10(E))"
+    )
+
+
+def test_combine_histogram_files(simtel_array_histograms_file):
+    # Reading one histogram file
+    instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    instance_alone.combine_histogram_files()
+
+    # Passing the same file twice
+    instance_all = SimtelHistograms(
+        histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
+    )
+    instance_all.combine_histogram_files()
+
+    assert (
+        2 * instance_alone.combined_hists[0]["data"] == instance_all.combined_hists[0]["data"]
+    ).all()
