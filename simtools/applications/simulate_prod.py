@@ -48,7 +48,9 @@
     run (int, required)
         Run number (actual run number will be 'start_run' + 'run').
     data_directory (str, optional)
-        The location of the output directories corsika-data and simtel-data
+        The location of the output directories corsika-data and simtel-data.
+        the label is added to the data_directory, such that the output
+        will be written to `data_directory/label/simtel-data`.
     pack_for_grid_register (bool, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
         The files are written to the `output_path/directory_for_grid_upload` directory.
@@ -67,8 +69,11 @@
         --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
-    and the output in corsika-data and simtel-data. The location of the latter directories
-    can be set to a different location via the option --data_directory.
+    together with the actual simulation output in corsika-data and simtel-data within.
+    The location of the latter directories can be set
+    to a different location via the option --data_directory,
+    but the label is always added to the data_directory, such that the output
+    will be written to `data_directory/label/simtel-data`.
 
     Expected final print-out message:
 
@@ -187,7 +192,11 @@ def _parse(description=None):
     )
     config.parser.add_argument(
         "--data_directory",
-        help="The directory where to save the corsika-data and simtel-data output directories.",
+        help=(
+            "The directory where to save the corsika-data and simtel-data output directories."
+            "the label is added to the data_directory, such that the output"
+            "will be written to `data_directory/label/simtel-data`."
+        ),
         type=str.lower,
         required=False,
         default="./simtools-output/",
