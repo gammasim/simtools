@@ -2,7 +2,4 @@ CTA_SIMPIPE:
   APPLICATION: simtools-make-regular-arrays
   TEST_NAME: run
   CONFIGURATION:
-    OUTPUT_FILE: test.yml
-      # Add here reference yaml file
-      #  INTEGRATION_TESTS:
-      #    - REFERENCE_OUTPUT_FILE: ./tests/resources/default_metadata.yml
+    OUTPUT_PATH: simtools-tests
