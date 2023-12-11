@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-simtel-array-histograms
+  TEST_NAME: hist_file_names_pdf_no_name
+  CONFIGURATION:
+    HIST_FILE_NAMES: ./tests/resources/simtel_histograms_file_list.txt
+    PDF: True
+    OUTPUT_PATH: simtools-tests
