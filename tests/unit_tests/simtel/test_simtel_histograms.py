@@ -49,23 +49,30 @@ def test_export_histograms(simtel_array_histograms_instance, io_handler):
         assert isinstance(table, Table)
 
 
-def test_number_of_histograms(simtel_array_histograms_instance):
+def test_number_of_histograms(simtel_array_histograms_file):
+    instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    # If combined_hists is None
+    assert instance_alone.combined_hists is None
+    assert instance_alone.number_of_histograms == 145
     assert (
         len(simtel_array_histograms_instance.combined_hists)
         == simtel_array_histograms_instance.number_of_histograms
     )
 
 
-def test_get_histogram_title(simtel_array_histograms_instance):
-    assert (
-        simtel_array_histograms_instance.get_histogram_title(0)
-        == "Events, without weights (Ra, log10(E))"
-    )
+def test_get_histogram_title(simtel_array_histograms_file, simtel_array_histograms_instance):
+    instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    # If combined_hists is None
+    assert instance_alone.combined_hists is None
+    assert instance_alone.number_of_histograms == 145
+    for instance in [instance_alone, simtel_array_histograms_instance]:
+        assert instance.get_histogram_title(0) == "Events, without weights (Ra, log10(E))"
 
 
 def test_combine_histogram_files(simtel_array_histograms_file):
     # Reading one histogram file
     instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+
     instance_alone.combine_histogram_files()
 
     # Passing the same file twice
