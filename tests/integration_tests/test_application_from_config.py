@@ -49,18 +49,18 @@ def get_list_of_test_configurations():
     # list of all applications
     _applications = list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
     for _app in _applications:
-        logger.info(f"Add help for application{_app}")
         # add for all applications "--help" call
         # TODO - disabled, as not all application have help implemented
         # configs.append(
-        # {"APPLICATION": _app, "TEST_NAME": "help", "CONFIGURATION": {"HELP": True}})
+        # {"APPLICATION": _app, "TEST_NAME": "auto-help", "CONFIGURATION": {"HELP": True}})
         # add for all applications "--version" call
-        configs.append(
-            {"APPLICATION": _app, "TEST_NAME": "version", "CONFIGURATION": {"VERSION": True}}
-        )
+        # configs.append(
+        #    {"APPLICATION": _app, "TEST_NAME": "auto-version", "CONFIGURATION": {"VERSION": True}}
+        # )
         # TODO - disabled, as not all applications can be called without command line parameters
         # add for all applications call without config file
-        # configs.append({"APPLICATION": _app, "TEST_NAME": "no_config"})
+        # configs.append({"APPLICATION": _app, "TEST_NAME": "auto-no_config"})
+        logger.info("Missing implementations of help, versions, no command line parameter")
 
     return configs
 
@@ -128,7 +128,6 @@ def get_tmp_config_file(config, output_path):
     """
 
     tmp_config_file = output_path / "tmp_config.yml"
-
     config.update({"OUTPUT_PATH": str(output_path)})
     config.update({"USE_PLAIN_OUTPUT_PATH": True})
 
