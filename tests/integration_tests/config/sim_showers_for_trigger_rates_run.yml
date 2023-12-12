@@ -10,3 +10,4 @@ CTA_SIMPIPE:
     TEST: true
     SUBMIT_COMMAND: local
     OUTPUT_PATH: simtools-output
+    DATA_DIRECTORY: simtools-output
