@@ -71,9 +71,6 @@
 
         d80 in cm = 3.3662565358159013
 
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
 """
 
 import logging

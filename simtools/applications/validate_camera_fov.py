@@ -49,10 +49,6 @@
         Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\
         /application-plots/validate_camera_fov_LST-1_pixel_layout.png
 
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
