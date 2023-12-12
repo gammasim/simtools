@@ -45,6 +45,8 @@ class SimtelConfigWriter:
         "atmospheric_profile",
         "magnetic_field",
         "EPSG",
+        "mirror_panel_shape",
+        "mirror_panel_diameter",
     ]
 
     def __init__(
