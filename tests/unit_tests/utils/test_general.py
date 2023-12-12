@@ -630,11 +630,13 @@ def test_sort_arrays() -> None:
                 "key1": "This is a string\n with a newline",
                 "key2": ["List item 1\n", "List item 2\n"],
                 "key3": {"nested_key": "Nested string\n with a newline"},
+                "key4": [{"nested_dict": "string2\n"}, {"nested_dict2": "string3\n"}],
             },
             {
                 "key1": "This is a string with a newline",
                 "key2": ["List item 1", "List item 2"],
                 "key3": {"nested_key": "Nested string with a newline"},
+                "key4": [{"nested_dict": "string2"}, {"nested_dict2": "string3"}],
             },
         ),
     ],

@@ -806,11 +806,18 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
             if isinstance(value, str):
                 data_dict[key] = value.replace(substring, "")
             elif isinstance(value, list):
-                data_dict[key] = [
+                modified_items = [
                     item.replace(substring, "") if isinstance(item, str) else item for item in value
                 ]
+                modified_items = [
+                    remove_substring_recursively_from_dict(item, substring)
+                    if isinstance(item, dict)
+                    else item
+                    for item in modified_items
+                ]
+                data_dict[key] = modified_items
             elif isinstance(value, dict):
-                data_dict[key] = remove_substring_recursively_from_dict(value)
+                data_dict[key] = remove_substring_recursively_from_dict(value, substring)
     except AttributeError:
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
