@@ -12,3 +12,4 @@ CTA_SIMPIPE:
     RUN: 2
     NSHOW: 10
     DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output
