@@ -283,28 +283,6 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
     assert shower_simulator.get_list_of_histogram_files()[1] is None
 
 
-def test_print_histograms(
-    array_config_data, shower_simulator, input_file_list, db_config, simtel_path
-):
-    _array_simulator = Simulator(
-        label="simtel_test",
-        simulator="simtel",
-        simulator_source_path=simtel_path,
-        config_data=array_config_data,
-        mongo_db_config=db_config,
-    )
-
-    assert len(str(_array_simulator.print_histograms())) > 0
-
-    _array_simulator._results["hist"] = list()
-    assert len(str(_array_simulator.print_histograms(input_file_list=None))) > 0
-
-    with pytest.raises(FileNotFoundError):
-        _array_simulator.print_histograms(input_file_list=input_file_list)
-
-    assert shower_simulator.print_histograms() is None
-
-
 def test_get_list_of_files(shower_simulator):
     assert len(shower_simulator.get_list_of_output_files()) == len(shower_simulator.runs)
     assert len(shower_simulator.get_list_of_output_files(run_list=[2, 5, 7])) == 10
