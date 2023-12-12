@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>io_operations.io_handler &#8212; simtools v0.1.dev1+gb968320</title>
+    <title>io_operations.io_handler &#8212; simtools v0.1.dev1+ge2e2d47</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=3faf3c9f"></script>
+    <script src="../../_static/documentation_options.js?v=e9ff4173"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb968320</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge2e2d47</p>
 
 
 
@@ -190,13 +190,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_plain_output_path</span><span class="p">:</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">output_directory_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
-                    <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\-result$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">dir_type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-output&quot;</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error creating output directory name from </span><span class="si">{</span><span class="n">dir_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">raise</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-output&quot;</span><span class="p">):</span>
+                <span class="n">output_directory_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">output_directory_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                        <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\-result$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">dir_type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-output&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error creating output directory name from </span><span class="si">{</span><span class="n">dir_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span>
             <span class="n">label_dir</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;d-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">output_directory_prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">label_dir</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sub_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

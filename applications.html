@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+gb968320</title>
+    <title>Applications &#8212; simtools v0.1.dev1+ge2e2d47</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=3faf3c9f"></script>
+    <script src="_static/documentation_options.js?v=e9ff4173"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb968320</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge2e2d47</p>
 
 
 
@@ -984,7 +984,12 @@ It allows the transformation system to keep using sequential run numbers without
 </dd>
 <dt>run (int, required)</dt><dd><p>Run number (actual run number will be ‘start_run’ + ‘run’).</p>
 </dd>
-<dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data</p>
+<dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data.
+the label is added to the data_directory, such that the output
+will be written to <code class="xref py py-obj docutils literal notranslate"><span class="pre">data_directory/label/simtel-data</span></code>.</p>
+</dd>
+<dt>pack_for_grid_register (bool, optional)</dt><dd><p>Set whether to prepare a tarball for registering the output files on the grid.
+The files are written to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">output_path/directory_for_grid_upload</span></code> directory.</p>
 </dd>
 <dt>log_level (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
@@ -993,12 +998,15 @@ It allows the transformation system to keep using sequential run numbers without
 <section id="id45">
 <h3>Example<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h3>
 <p>Run the application:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5         --site north --primary gamma --azimuth_angle north --zenith_angle 20          --start_run 0 --run 1</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5         --site north --primary gamma --azimuth_angle north --zenith_angle 20         --start_run 0 --run 1</span>
 </pre></div>
 </div>
 <p>By default the configuration is saved in simtools-output/test-production
-and the output in corsika-data and simtel-data. The location of the latter directories
-can be set to a different location via the option –data_directory.</p>
+together with the actual simulation output in corsika-data and simtel-data within.
+The location of the latter directories can be set
+to a different location via the option –data_directory,
+but the label is always added to the data_directory, such that the output
+will be written to <code class="xref py py-obj docutils literal notranslate"><span class="pre">data_directory/label/simtel-data</span></code>.</p>
 <p>Expected final print-out message:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::array_layout(l569)::read_telescope_list_file::Reading array elements from ...</span>
 <span class="go">WARNING::corsika_runner(l127)::_load_corsika_config_data::data_directory not given</span>
