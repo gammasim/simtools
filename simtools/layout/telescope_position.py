@@ -45,10 +45,10 @@ class TelescopePosition:
 
         """
         telstr = self.name
-        if self.has_coordinates("corsika"):
+        if self.has_coordinates("ground"):
             telstr += (
-                f"\t CORSIKA x(->North): {self.crs['corsika']['xx']['value']:0.2f} "
-                f"y(->West): {self.crs['corsika']['yy']['value']:0.2f}"
+                f"\t CORSIKA x(->North): {self.crs['ground']['xx']['value']:0.2f} "
+                f"y(->West): {self.crs['ground']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
             telstr += (
@@ -94,7 +94,7 @@ class TelescopePosition:
             _zz = self.crs[crs_name]["zz"]["value"]
             _zz_header = self.crs[crs_name]["zz"]["name"]
             if (
-                crs_name == "corsika"
+                crs_name == "ground"
                 and corsika_obs_level is not None
                 and corsika_sphere_center is not None
             ):
@@ -481,7 +481,7 @@ class TelescopePosition:
 
         """
 
-        self._set_coordinate_system("corsika", crs_local)
+        self._set_coordinate_system("ground", crs_local)
         self._set_coordinate_system("utm", crs_utm)
         self._set_coordinate_system("mercator", crs_wgs84)
 
@@ -517,7 +517,7 @@ class TelescopePosition:
         """
 
         return {
-            "corsika": {
+            "ground": {
                 "crs": None,
                 "xx": {"name": "position_x", "value": np.nan, "unit": u.Unit("m")},
                 "yy": {"name": "position_y", "value": np.nan, "unit": u.Unit("m")},
