@@ -290,11 +290,13 @@ class Configurator:
             _config_dict = gen.collect_data_from_yaml_or_dict(
                 in_yaml=config_file, in_dict=None, allow_empty=True
             )
+            # yaml parser adds \n in multiline strings, remove them
+            _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "CTA_SIMPIPE" in _config_dict:
                 try:
                     self._fill_from_config_dict(
                         input_dict=gen.change_dict_keys_case(
-                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"]
+                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"],
                         ),
                         overwrite=True,
                     )
