@@ -148,10 +148,10 @@ def get_tmp_config_file(config, output_path):
     if "OUTPUT_PATH" in config:
         config.update({"OUTPUT_PATH": str(Path(output_path).joinpath(config["OUTPUT_PATH"]))})
         config.update({"USE_PLAIN_OUTPUT_PATH": True})
-    else:
-        config["OUTPUT_PATH"] = str(output_path)
     if "DATA_DIRECTORY" in config:
         config.update({"DATA_DIRECTORY": str(Path(output_path).joinpath(config["DATA_DIRECTORY"]))})
+    if "OUTPUT_FILE" in config:
+        config.update({"OUTPUT_FILE": str(Path(output_path).joinpath(config["OUTPUT_FILE"]))})
 
     # write config to a yaml file in tmp directory
     with open(tmp_config_file, "w", encoding="utf-8") as file:
