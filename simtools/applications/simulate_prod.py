@@ -233,13 +233,12 @@ def main():
     config_data["common"]["zenith"] = args_dict["zenith_angle"]
     config_data["common"]["phi"] = args_dict["azimuth_angle"]
     label = config_data["common"].pop("label", "test-production")
+    config_data["common"]["data_directory"] = Path(args_dict["data_directory"]) / label
 
     if args_dict["nshow"] is not None:
         config_data["showers"]["nshow"] = args_dict["nshow"]
     if args_dict["label"] is not None:
         label = args_dict["label"]
-    if "data_directory" in args_dict:
-        config_data["common"]["data_directory"] = Path(args_dict["data_directory"]) / label
 
     simulator = Simulator(
         label=label,
