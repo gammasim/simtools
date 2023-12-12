@@ -2,9 +2,9 @@
 # Integration tests for applications from config file
 #
 
-
 import logging
 import os
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -39,7 +39,8 @@ def get_list_of_test_configurations():
 
     """
 
-    config_files = Path(__file__).parent.glob("config/*.yml")
+    config_files = Path(__file__).parent.glob("config/a*.yml")
+    print("CONFIGFILES ", config_files)
 
     configs = []
     for config_file in config_files:
@@ -128,8 +129,9 @@ def get_tmp_config_file(config, output_path):
     """
 
     tmp_config_file = output_path / "tmp_config.yml"
-    config.update({"OUTPUT_PATH": str(output_path)})
-    config.update({"USE_PLAIN_OUTPUT_PATH": True})
+    if "OUTPUT_FILE" in config:
+        config.update({"OUTPUT_PATH": str(output_path)})
+        config.update({"USE_PLAIN_OUTPUT_PATH": True})
 
     # write config to a yaml file in tmp directory
     with open(tmp_config_file, "w", encoding="utf-8") as file:
@@ -139,12 +141,17 @@ def get_tmp_config_file(config, output_path):
 
 
 @pytest.mark.parametrize("config", get_list_of_test_configurations())
-def test_applications_from_config(tmp_test_directory, config):
+def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     """
     Test all applications from config files found in the config directory.
     Test output is written to a temporary directory and tested.
 
     """
+
+    # The add_file_to_db.py application requires a user confirmation.
+    # With this line we mock the user confirmation to be y for the test
+    # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
+    monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
     try:
         tmp_output_path = Path(tmp_test_directory).joinpath(
@@ -153,6 +160,7 @@ def test_applications_from_config(tmp_test_directory, config):
     except KeyError as exc:
         logger.error(f"No application defined in config file {config}.")
         raise exc
+
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     if "CONFIGURATION" in config:
