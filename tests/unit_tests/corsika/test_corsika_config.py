@@ -219,8 +219,10 @@ def test_get_file_name(corsika_config, io_handler):
         )
 
     assert corsika_config.get_file_name("config") == f"corsika_config_{file_name}.input"
+    # The test below includes the placeholder XXXXXX for the run number because
+    # that is the way we get the run number later in the CORSIKA input file with zero padding.
     assert corsika_config.get_file_name("output_generic") == (
-        "corsika_run000010_proton_za020deg_azm000deg_South_4LST_test-corsika-config.zst"
+        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_4LST_test-corsika-config.zst"
     )
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
