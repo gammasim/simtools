@@ -32,14 +32,19 @@ def get_application_command(app, config_file=None):
     return cmd
 
 
-def get_list_of_test_configurations():
+def get_list_of_test_configurations(get_test_names=False):
     """
     Read all config files in the config directory and return a list
-    of configuration dicts (equivalent to list of application tests)
+    of configuration dicts (equivalent to list of application tests).
+
+    Parameters:
+    -----------
+    get_test_names: bool
+        If True, return a list of test names instead of a list of configuration dicts.
 
     """
 
-    config_files = Path(__file__).parent.glob("config/a*.yml")
+    config_files = Path(__file__).parent.glob("config/*.yml")
     print("CONFIGFILES ", config_files)
 
     configs = []
@@ -62,6 +67,12 @@ def get_list_of_test_configurations():
         # add for all applications call without config file
         # configs.append({"APPLICATION": _app, "TEST_NAME": "auto-no_config"})
         logger.info("Missing implementations of help, versions, no command line parameter")
+
+    if get_test_names:
+        return [
+            f"{item.get('APPLICATION', 'no-app-name')}_{item.get('TEST_NAME', 'no-test-name')}"
+            for item in configs
+        ]
 
     return configs
 
@@ -129,9 +140,11 @@ def get_tmp_config_file(config, output_path):
     """
 
     tmp_config_file = output_path / "tmp_config.yml"
-    if "OUTPUT_FILE" in config:
+    if "OUTPUT_PATH" in config:
         config.update({"OUTPUT_PATH": str(output_path)})
         config.update({"USE_PLAIN_OUTPUT_PATH": True})
+    if "DATA_DIRECTORY" in config:
+        config["DATA_DIRECTORY"] = str(output_path) + "/data"
 
     # write config to a yaml file in tmp directory
     with open(tmp_config_file, "w", encoding="utf-8") as file:
@@ -140,7 +153,11 @@ def get_tmp_config_file(config, output_path):
     return tmp_config_file
 
 
-@pytest.mark.parametrize("config", get_list_of_test_configurations())
+@pytest.mark.parametrize(
+    "config",
+    get_list_of_test_configurations(),
+    ids=get_list_of_test_configurations(get_test_names=True),
+)
 def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     """
     Test all applications from config files found in the config directory.
