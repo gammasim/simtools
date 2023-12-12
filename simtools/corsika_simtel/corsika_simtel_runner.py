@@ -156,7 +156,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         command += super()._config_option(
             "output_file", self.get_file_name("output", **info_for_file_name)
         )
-        command += super()._config_option("random_state", "auto")
+        command += super()._config_option("random_state", "none")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
         command += f" | gzip > {self.get_file_name('log', **info_for_file_name)} 2>&1 || exit"
