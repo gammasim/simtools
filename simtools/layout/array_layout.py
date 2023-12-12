@@ -223,6 +223,8 @@ class ArrayLayout:
         Set CORSIKA sphere parameters from dictionary. Type of input varies and depend on data \
         source for these parameters.
 
+        Example for sphere_dict: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
+
         Parameters
         ----------
         sphere_dict: dict
