@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gd30eba0</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gb968320</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=babc4889"></script>
+    <script src="../../_static/documentation_options.js?v=3faf3c9f"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gd30eba0</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb968320</p>
 
 
 
@@ -248,7 +248,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Append association metadata set through configurator.</span>
 
-<span class="sd">        TODO - this function might go in future, as instrument</span>
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        This function might go in future, as instrument</span>
 <span class="sd">        information will not be given via command line.</span>
 
 <span class="sd">        Parameters</span>
@@ -376,7 +378,6 @@
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;SIM&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;R1&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;service&quot;</span>
-        <span class="c1"># TODO - introduce consistent naming of DL3 data model and model parameter schema files</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>

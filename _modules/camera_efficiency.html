@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+gd30eba0</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+gb968320</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=babc4889"></script>
+    <script src="../_static/documentation_options.js?v=3faf3c9f"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gd30eba0</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb968320</p>
 
 
 
@@ -89,7 +89,6 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
 <span class="kn">import</span> <span class="nn">astropy.io.ascii</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
 
@@ -574,40 +573,6 @@
             <span class="o">/</span> <span class="n">nsb_integral</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">nsb_rate_provided_spectrum</span><span class="p">,</span> <span class="n">nsb_rate_ref_conditions</span></div>
-
-
-<div class="viewcode-block" id="CameraEfficiency.plot">
-<a class="viewcode-back" href="../camera_efficiency.html#camera_efficiency.CameraEfficiency.plot">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># FIXME - remove this function, probably not needed</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot key vs wavelength.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        key: str</span>
-<span class="sd">            cherenkov or nsb</span>
-<span class="sd">        **kwargs:</span>
-<span class="sd">            kwargs for plt.plot</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        KeyError</span>
-<span class="sd">            If key is not among the valid options.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cherenkov&quot;</span><span class="p">,</span> <span class="s2">&quot;nsb&quot;</span><span class="p">]:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid key to plot&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-        <span class="n">first_letter</span> <span class="o">=</span> <span class="s2">&quot;C&quot;</span> <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;cherenkov&quot;</span> <span class="k">else</span> <span class="s2">&quot;N&quot;</span>
-        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;4x&quot;</span><span class="p">]:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">],</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">first_letter</span> <span class="o">+</span> <span class="n">par</span><span class="p">],</span>
-                <span class="n">label</span><span class="o">=</span><span class="n">first_letter</span> <span class="o">+</span> <span class="n">par</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.plot_cherenkov_efficiency">
