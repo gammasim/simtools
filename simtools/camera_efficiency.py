@@ -3,7 +3,6 @@ import re
 from collections import defaultdict
 
 import astropy.io.ascii
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
 
@@ -457,37 +456,6 @@ class CameraEfficiency:
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
-
-    def plot(self, key, **kwargs):  # FIXME - remove this function, probably not needed
-        """
-        Plot key vs wavelength.
-
-        Parameters
-        ----------
-        key: str
-            cherenkov or nsb
-        **kwargs:
-            kwargs for plt.plot
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        if key not in ["cherenkov", "nsb"]:
-            msg = "Invalid key to plot"
-            self._logger.error(msg)
-            raise KeyError(msg)
-
-        ax = plt.gca()
-        first_letter = "C" if key == "cherenkov" else "N"
-        for par in ["1", "2", "3", "4", "4x"]:
-            ax.plot(
-                self._results["wl"],
-                self._results[first_letter + par],
-                label=first_letter + par,
-                **kwargs,
-            )
 
     def plot_cherenkov_efficiency(self):
         """
