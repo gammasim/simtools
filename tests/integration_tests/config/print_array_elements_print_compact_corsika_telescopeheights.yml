@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: print_compact_corsika_telescopeheights
   CONFIGURATION:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
-    EXPORT: corsika
+    EXPORT: ground
     USE_CORSIKA_TELESCOPE_HEIGHT: false
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
