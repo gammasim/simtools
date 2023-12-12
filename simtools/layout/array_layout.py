@@ -222,8 +222,7 @@ class ArrayLayout:
 
         return corsika_dict
 
-    @staticmethod
-    def _initialize_sphere_parameters(sphere_dict):
+    def _initialize_sphere_parameters(self, sphere_dict):
         """
         Set CORSIKA sphere parameters from dictionary. Type of input varies and depend on data \
         source for these parameters.
@@ -249,8 +248,9 @@ class ArrayLayout:
                     _sphere_dict_cleaned[key] = u.Quantity(value)
                 else:
                     _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
-        except (TypeError, KeyError):
-            pass
+        except (TypeError, KeyError) as exc:
+            self._logger.error(f"Error setting CORSIKA sphere parameters from {sphere_dict}")
+            raise exc
 
         return _sphere_dict_cleaned
 

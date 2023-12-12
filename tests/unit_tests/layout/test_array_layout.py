@@ -480,27 +480,27 @@ def test_from_corsika_file_to_dict(
         )
 
 
-def test_initialize_sphere_parameters():
+def test_initialize_sphere_parameters(array_layout_north_instance):
     w_1 = {"LST": 16.0 * u.m}
-    t_1 = ArrayLayout._initialize_sphere_parameters(w_1)
+    t_1 = array_layout_north_instance._initialize_sphere_parameters(w_1)
     assert pytest.approx(t_1["LST"].value, 0.1) == 16.0
     assert t_1["LST"].unit == u.m
 
     w_2 = {"LST": "16. m", "MST": 12.0 * u.m}
-    t_2 = ArrayLayout._initialize_sphere_parameters(w_2)
+    t_2 = array_layout_north_instance._initialize_sphere_parameters(w_2)
     assert pytest.approx(t_2["LST"].value, 0.1) == 16.0
     assert t_2["LST"].unit == u.m
     assert pytest.approx(t_2["MST"].value, 0.1) == 12.0
     assert t_2["MST"].unit == u.m
 
     w_3 = {"LST": {"value": 10.0, "unit": "m"}}
-    t_3 = ArrayLayout._initialize_sphere_parameters(w_3)
+    t_3 = array_layout_north_instance._initialize_sphere_parameters(w_3)
     assert pytest.approx(t_3["LST"].value, 0.1) == 10.0
     assert t_3["LST"].unit == u.m
 
     w_4 = {"LST": 16.0}
-    t_4 = ArrayLayout._initialize_sphere_parameters(w_4)
-    assert t_4 == {}
+    with pytest.raises(TypeError):
+        array_layout_north_instance._initialize_sphere_parameters(w_4)
 
 
 def test_initialize_corsika_telescope_from_dict(
