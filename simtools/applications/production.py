@@ -105,7 +105,7 @@ def _parse(description=None):
         "--productionconfig",
         help="Simulation configuration file",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--task",
@@ -117,7 +117,7 @@ def _parse(description=None):
             "resources (print report of computing resources)"
         ),
         type=str,
-        required=False,
+        required=True,
         choices=["simulate", "file_list", "inspect", "resources"],
     )
     config.parser.add_argument(
