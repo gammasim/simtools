@@ -10,8 +10,8 @@
 
     The entire simulation chain is performed, i.e., shower simulations with CORSIKA
     which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
-    This script assumes that all the necessary configuration files for CORSIKA and
-    sim_telarray are available. FIXME - This is not true at the moment, need to fix I guess.
+    This script produces all the necessary configuration files for CORSIKA and
+    sim_telarray before running simulation.
     The multipipe scripts will be produced as part of this script.
 
     This script does not provide a mechanism to submit jobs to a batch system like others
