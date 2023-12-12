@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+import simtools.io_operations.io_handler as io_handler_module
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -112,3 +114,7 @@ def test_get_data_file(args_dict, io_handler):
         io_handler.get_input_data_file(file_name="test-file.txt", test=True)
         == Path("tests/resources/test-file.txt").absolute()
     )
+
+    io_handler.data_path = None
+    with pytest.raises(io_handler_module.IncompleteIOHandlerInit):
+        io_handler.get_input_data_file(file_name="test-file.txt")

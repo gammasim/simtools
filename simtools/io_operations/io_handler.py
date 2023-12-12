@@ -6,6 +6,10 @@ from pathlib import Path
 __all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
+class IncompleteIOHandlerInit(Exception):
+    """Exception raised when IOHandler is not initialized"""
+
+
 class IOHandlerSingleton(type):
     """
     Singleton base class
@@ -161,6 +165,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         if test:
             file_prefix = Path("tests/resources/")
-        else:
+        elif self.data_path is not None:
             file_prefix = Path(self.data_path).joinpath(parent_dir)
+        else:
+            raise IncompleteIOHandlerInit
         return file_prefix.joinpath(file_name).absolute()
