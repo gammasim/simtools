@@ -7,6 +7,4 @@ CTA_SIMPIPE:
     USE_CORSIKA_TELESCOPE_HEIGHT: false
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
-    SELECT_ASSETS:
-      - LSTN
-      - MSTN
+    SELECT_ASSETS: ['LSTN', 'MSTN']
