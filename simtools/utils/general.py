@@ -26,6 +26,7 @@ __all__ = [
     "MissingRequiredConfigEntry",
     "UnableToIdentifyConfigEntry",
     "get_log_level_from_user",
+    "remove_substring_recursively_from_dict",
     "separate_args_and_config_data",
     "set_default_kwargs",
     "validate_config_data",
@@ -785,6 +786,35 @@ def change_dict_keys_case(data_dict, lower_case=True):
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
     return _return_dict
+
+
+def remove_substring_recursively_from_dict(data_dict, substring="\n"):
+    """
+    Remove substrings from all strings in a dictionary. Recursively crawls through the dictionary
+    This e.g., allows to remove all newline characters from a dictionary.
+
+    Parameters
+    ----------
+    data_dict: dict
+        Dictionary to be converted.
+    substring: str
+        Substring to be removed.
+
+    """
+    try:
+        for key, value in data_dict.items():
+            if isinstance(value, str):
+                data_dict[key] = value.replace(substring, "")
+            elif isinstance(value, list):
+                data_dict[key] = [
+                    item.replace(substring, "") if isinstance(item, str) else item for item in value
+                ]
+            elif isinstance(value, dict):
+                data_dict[key] = remove_substring_recursively_from_dict(value)
+    except AttributeError:
+        _logger.error(f"Input is not a proper dictionary: {data_dict}")
+        raise
+    return data_dict
 
 
 def sort_arrays(*args):

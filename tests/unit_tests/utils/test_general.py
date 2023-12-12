@@ -620,3 +620,28 @@ def test_sort_arrays() -> None:
     args = [list(reversed(range(10)))]
     new_args = gen.sort_arrays(*args)
     assert new_args == [list(range(10))]
+
+
+@pytest.mark.parametrize(
+    "input_data, expected_output",
+    [
+        (
+            {
+                "key1": "This is a string\n with a newline",
+                "key2": ["List item 1\n", "List item 2\n"],
+                "key3": {"nested_key": "Nested string\n with a newline"},
+            },
+            {
+                "key1": "This is a string with a newline",
+                "key2": ["List item 1", "List item 2"],
+                "key3": {"nested_key": "Nested string with a newline"},
+            },
+        ),
+    ],
+)
+def test_remove_substring_recursively_from_dict(input_data, expected_output):
+    result = gen.remove_substring_recursively_from_dict(input_data, "\n")
+    assert result == expected_output
+
+    with pytest.raises(AttributeError):
+        gen.remove_substring_recursively_from_dict([2])
