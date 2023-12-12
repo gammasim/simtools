@@ -1,8 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-print-array-elements
-  TEST_NAME: corsika_to_corsika
+  TEST_NAME: ground_to_ground
   CONFIGURATION:
     INPUT: tests/resources/telescope_positions-South-4MST.ecsv
-    EXPORT: corsika
+    EXPORT: ground
     USE_CORSIKA_TELESCOPE_HEIGHT: true
     OUTPUT_PATH: simtools-tests
