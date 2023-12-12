@@ -6,7 +6,7 @@
     Get a parameter entry from DB for a specific telescope or a site.
     The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
-    If no version is provided, the value of the current model is printed..
+    If no version is provided, the value of the released model is printed..
 
     Command line arguments
     ----------------------
@@ -64,7 +64,7 @@ def main():
             "Get a parameter entry from DB for a specific telescope or a site. "
             "The application receives a parameter name a site, a telescope (if applicable), "
             " and optionally a version. It then prints out the parameter entry. "
-            "If no version is provided, the value of the current model is printed. "
+            "If no version is provided, the value of the released model is printed. "
         )
     )
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)

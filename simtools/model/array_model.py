@@ -95,8 +95,8 @@ class ArrayModel:
             "model_version" not in array_config_data.keys()
             or array_config_data["model_version"] is None
         ):
-            self._logger.warning("model_version not given in array_config_data - using current")
-            self.model_version = "current"
+            self._logger.warning("model_version not given in array_config_data - using 'Released'")
+            self.model_version = "Released"
         else:
             self.model_version = names.validate_model_version_name(
                 array_config_data["model_version"]

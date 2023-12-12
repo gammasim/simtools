@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 def simtel_config_writer():
     simtel_config_writer = SimtelConfigWriter(
         site="North",
-        model_version="Current",
+        model_version="Released",
         label="test-simtel-config-writer",
         telescope_model_name="test_telecope",
     )
@@ -30,7 +30,7 @@ def layout(io_handler, db_config):
     return layout
 
 
-# @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Current'")
+# @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Released'")
 def test_write_array_config_file(
     simtel_config_writer, layout, telescope_model_lst, io_handler, file_has_text
 ):
