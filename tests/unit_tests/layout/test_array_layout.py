@@ -68,6 +68,11 @@ def array_layout_south_four_LST_instance(
     return layout
 
 
+def test_array_layout_empty():
+    layout = ArrayLayout()
+    assert layout.get_number_of_telescopes() == 0
+
+
 def test_from_array_layout_name(io_handler, db_config):
     layout = ArrayLayout.from_array_layout_name(
         mongo_db_config=db_config, array_layout_name="South-TestLayout"

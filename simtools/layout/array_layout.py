@@ -174,9 +174,14 @@ class ArrayLayout:
             If file_name does not exist.
         """
         if file_name is None:
-            corsika_parameters_dict = collect_data_from_yaml_or_dict(
-                self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
-            )
+            try:
+                corsika_parameters_dict = collect_data_from_yaml_or_dict(
+                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
+                    None,
+                )
+            except io_handler.IncompleteIOHandlerInit:
+                self._logger.info("Error reading CORSIKA parameters from file")
+                return {}
         else:
             if not isinstance(file_name, Path):
                 file_name = Path(file_name)
