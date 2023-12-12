@@ -489,8 +489,9 @@ class CorsikaConfig:
         if file_type == "config":
             return f"corsika_config_{file_name}.input"
         if file_type == "output_generic":
+            # The XXXXXX will be replaced by the run number after the pfp step with sed
             file_name = (
-                f"corsika_run{self._user_parameters['RUNNR'][0]:06}_"
+                f"corsika_runXXXXXX_"
                 f"{self.primary}_za{int(self._user_parameters['THETAP'][0]):03}deg_"
                 f"azm{int(self._user_parameters['AZM'][0]):03}deg"
                 f"_{self.site}_{self.layout_name}{file_label}.zst"
