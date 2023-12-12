@@ -4,6 +4,7 @@ import logging
 import uuid
 
 import pytest
+from astropy import units as u
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -216,8 +217,40 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
         version="test",
-        parameter="camera_config_version_test",
+        parameter="new_test_parameter_str",
+        value="hello",
+        collection_name="telescopes_" + random_id,
+    )
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="new_test_parameter_int",
         value=999,
+        collection_name="telescopes_" + random_id,
+    )
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="new_test_parameter_float",
+        value=999.9,
+        collection_name="telescopes_" + random_id,
+    )
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="new_test_parameter_quantity",
+        value=999.9 * u.m,
+        collection_name="telescopes_" + random_id,
+    )
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="North-LST-Test",
+        version="test",
+        parameter="new_test_parameter_quantity_str",
+        value="999.9 cm",
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
@@ -228,7 +261,18 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["camera_config_version_test"]["Value"] == 999
+    assert pars["new_test_parameter_str"]["Value"] == "hello"
+    assert pars["new_test_parameter_str"]["Type"] == "str"
+    assert pars["new_test_parameter_int"]["Value"] == 999
+    assert pars["new_test_parameter_int"]["Type"] == "int"
+    assert pars["new_test_parameter_float"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_float"]["Type"] == "float"
+    assert pars["new_test_parameter_quantity"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_quantity"]["Type"] == "float"
+    assert pars["new_test_parameter_quantity"]["units"] == "m"
+    assert pars["new_test_parameter_quantity_str"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_quantity_str"]["Type"] == "float"
+    assert pars["new_test_parameter_quantity_str"]["units"] == "cm"
 
 
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
