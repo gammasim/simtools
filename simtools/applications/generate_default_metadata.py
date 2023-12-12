@@ -57,7 +57,7 @@ def _parse(label, description):
         "--schema",
         help="schema file describing input data",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--output_file",

@@ -123,13 +123,13 @@ def _parse(description=None):
             "(contains the default setup which can be overwritten by the command line options)"
         ),
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--primary",
         help="Primary particle to simulate.",
         type=str.lower,
-        required=False,
+        required=True,
         choices=[
             "gamma",
             "gamma_diffuse",
@@ -151,13 +151,13 @@ def _parse(description=None):
             "the azimuth grows clockwise, so East is 90 degrees."
         ),
         type=CommandLineParser.azimuth_angle,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--zenith_angle",
         help="Zenith angle in degrees (between 0 and 180).",
         type=CommandLineParser.zenith_angle,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--nshow",
@@ -174,13 +174,13 @@ def _parse(description=None):
             "repetition."
         ),
         type=int,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--run",
         help="Run number (actual run number will be 'start_run' + 'run')",
         type=int,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--data_directory",
