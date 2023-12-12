@@ -274,7 +274,7 @@ class SimtelRunnerArray(SimtelRunner):
         command += super()._config_option("power_law", "2.5")
         command += super()._config_option("histogram_file", histogram_file)
         command += super()._config_option("output_file", output_file)
-        command += super()._config_option("random_state", "auto")
+        command += super()._config_option("random_state", "none")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
         command += f" > {self._log_file} 2>&1 || exit"
