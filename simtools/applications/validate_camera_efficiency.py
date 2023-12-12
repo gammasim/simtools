@@ -22,7 +22,7 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default='Current')
+        Model version (default='Released')
     zenith_angle (float, optional)
         Zenith angle in degrees (between 0 and 180).
     azimuth_angle (float, optional)

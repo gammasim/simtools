@@ -252,7 +252,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--model_version",
                 help="model version",
                 type=str,
-                default="Current",
+                default="Released",
             )
 
     @staticmethod

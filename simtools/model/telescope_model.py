@@ -48,7 +48,7 @@ class TelescopeModel:
         site,
         telescope_model_name,
         mongo_db_config,
-        model_version="Current",
+        model_version="Released",
         label=None,
     ):
         """
