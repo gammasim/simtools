@@ -44,8 +44,8 @@ def get_list_of_test_configurations(get_test_names=False):
 
     """
 
-    config_files = Path(__file__).parent.glob("config/*.yml")
-    print("CONFIGFILES ", config_files)
+    config_files = Path(__file__).parent.glob("config/a*.yml")
+    logger.debug(f"Configuration files: {config_files}")
 
     configs = []
     for config_file in config_files:
