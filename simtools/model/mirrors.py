@@ -140,7 +140,6 @@ class Mirrors:
 
     def plot_mirror_layout(self):
         """
-        Plot the mirror layout.
-
-        TODO
+        Plot the mirror layout (not implemented yet).
         """
+        raise NotImplementedError

@@ -1,0 +1,11 @@
+# Do not fail coverage tests when coverage drop by 0.1%
+# Copied from https://github.com/astropy/astropy/blob/main/codecov.yml
+comment: off
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        # adjust accordingly based on how flaky your tests are
+        # this allows a 0.1% drop from the previous base commit coverage
+        threshold: 0.1%

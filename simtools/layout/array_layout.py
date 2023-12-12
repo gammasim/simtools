@@ -174,9 +174,14 @@ class ArrayLayout:
             If file_name does not exist.
         """
         if file_name is None:
-            corsika_parameters_dict = collect_data_from_yaml_or_dict(
-                self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
-            )
+            try:
+                corsika_parameters_dict = collect_data_from_yaml_or_dict(
+                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
+                    None,
+                )
+            except io_handler.IncompleteIOHandlerInit:
+                self._logger.info("Error reading CORSIKA parameters from file")
+                return {}
         else:
             if not isinstance(file_name, Path):
                 file_name = Path(file_name)
@@ -210,7 +215,7 @@ class ArrayLayout:
 
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
-        _site_pars = db.get_site_parameters(self.site, "Current", only_applicable=True)
+        _site_pars = db.get_site_parameters(self.site, "Released", only_applicable=True)
         corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
             _site_pars["altitude"]["units"]
         )
@@ -833,7 +838,7 @@ class ArrayLayout:
 
     def print_telescope_list(self, compact_printing="", corsika_z=False):
         """
-        Print list of telescopes in current layout.
+        Print list of telescopes in latest released layout.
 
         Parameters
         ----------
