@@ -61,10 +61,6 @@
         simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
         _efficiency_MST-NectarCam-D_nsb
 
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
