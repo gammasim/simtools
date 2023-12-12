@@ -139,7 +139,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
         weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
-        # TODO: Think how to create multiple run commands for various pipes (e.g., NSB levels)
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
         command += f" -I{self.array_model.get_config_directory()}"
@@ -156,7 +155,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         command += super()._config_option(
             "output_file", self.get_file_name("output", **info_for_file_name)
         )
-        command += super()._config_option("random_state", "auto")
+        command += super()._config_option("random_state", "none")
         command += super()._config_option("show", "all")
         command += f" {kwargs['input_file']}"
         command += f" | gzip > {self.get_file_name('log', **info_for_file_name)} 2>&1 || exit"
