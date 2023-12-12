@@ -1309,24 +1309,24 @@ class DatabaseHandler:
 
     def _convert_version_to_tagged(self, model_version, db_name):
         """Convert to tagged version, if needed."""
-        if model_version in ["Current", "Latest"]:
+        if model_version in ["Released", "Latest"]:
             return self._get_tagged_version(db_name, model_version)
 
         return model_version
 
     @staticmethod
-    def _get_tagged_version(db_name, version="Current"):
+    def _get_tagged_version(db_name, version="Released"):
         """
-        Get the tag of the "Current" or "Latest" version of the MC Model.
-        The "Current" is the latest stable MC Model,
-        the latest is the latest tag (not necessarily stable, but can be equivalent to "Current").
+        Get the tag of the "Released" or "Latest" version of the MC Model.
+        The "Released" is the latest stable MC Model,
+        the latest is the latest tag (not necessarily stable, but can be equivalent to "Released").
 
         Parameters
         ----------
         db_name: str
             the name of the DB
         version: str
-            Can be "Current" or "Latest" (default: "Current").
+            Can be "Released" or "Latest" (default: "Released").
 
         Returns
         -------
@@ -1336,12 +1336,12 @@ class DatabaseHandler:
         Raises
         ------
         ValueError
-            if version not valid. Valid versions are: 'Current' and 'Latest'.
+            if version not valid. Valid versions are: 'Released' and 'Latest'.
 
         """
 
-        if version not in ["Current", "Latest"]:
-            raise ValueError('The only default versions are "Current" or "Latest"')
+        if version not in ["Released", "Latest"]:
+            raise ValueError('The only default versions are "Released" or "Latest"')
 
         collection = DatabaseHandler.db_client[db_name].metadata
         query = {"Entry": "Simulation-Model-Tags"}

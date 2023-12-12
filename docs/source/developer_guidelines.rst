@@ -77,6 +77,9 @@ This should be used to avoid duplication.
 The `pytest-xdist <https://pytest-xdist.readthedocs.io/en/latest/>`_ plugin is part of the developer environment
 and can be used to run unit and integration tests in parallel (e.g., ``pytest -n 4`` to run on four cores in parallel).
 
+Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
+`pytest-random-order <https://pypi.org/project/pytest-random-order/>`_ plugin with ``pytest --random-order``.
+
 Check the test coverage with ``pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov``.
 Add the ``--cov-report html`` option to generate a coverage report in HTML format.
 

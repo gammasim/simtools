@@ -477,20 +477,23 @@ class CorsikaConfig:
             )
         file_name = (
             f"{self.primary}_{self.site}_{self.layout_name}_"
-            f"za{int(self._user_parameters['THETAP'][0]):d}-"
-            f"az{int(self._user_parameters['AZM'][0]):d}deg"
+            f"za{int(self._user_parameters['THETAP'][0]):03}-"
+            f"azm{int(self._user_parameters['AZM'][0]):03}deg"
             f"{view_cone}{file_label}"
         )
 
         if file_type == "config_tmp":
             if run_number is not None:
-                return f"corsika_config_run{run_number}_{file_name}.txt"
+                return f"corsika_config_run{run_number:06}_{file_name}.txt"
             raise ValueError("Must provide a run number for a temporary CORSIKA config file")
         if file_type == "config":
             return f"corsika_config_{file_name}.input"
         if file_type == "output_generic":
+            # The XXXXXX will be replaced by the run number after the pfp step with sed
             file_name = (
-                "corsika_run${RUNNR}_${PRMNAME}_za${ZA}deg_azm${AZM}deg"
+                f"corsika_runXXXXXX_"
+                f"{self.primary}_za{int(self._user_parameters['THETAP'][0]):03}deg_"
+                f"azm{int(self._user_parameters['AZM'][0]):03}deg"
                 f"_{self.site}_{self.layout_name}{file_label}.zst"
             )
             return file_name

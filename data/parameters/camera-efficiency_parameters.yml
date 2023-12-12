@@ -5,3 +5,14 @@ zenith_angle:
     value: 20
     unit: !astropy.units.Unit {unit: deg}
   names: ['zenith', 'theta']
+azimuth_angle:
+  len: 1
+  unit: !astropy.units.Unit {unit: deg}
+  default: !astropy.units.Quantity
+    value: 0
+    unit: !astropy.units.Unit {unit: deg}
+  names: ['azimuth', 'phi']
+nsb_spectrum:
+  len: 1
+  unit: null
+  default: null

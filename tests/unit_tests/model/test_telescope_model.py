@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 
 logger = logging.getLogger()
@@ -15,18 +14,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def lst_config_file(db, io_handler):
-    test_file_name = "CTA-North-LST-1-Current_test-telescope-model.cfg"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        file_name=test_file_name,
-    )
-
-    cfg_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
-    )
-    return cfg_file
+def lst_config_file():
+    """Return the path to test config file for LST-1"""
+    return "tests/resources/CTA-North-LST-1-Released_test-telescope-model.cfg"
 
 
 @pytest.fixture

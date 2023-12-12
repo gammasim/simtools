@@ -6,6 +6,10 @@ from pathlib import Path
 __all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
+class IncompleteIOHandlerInit(Exception):
+    """Exception raised when IOHandler is not initialized"""
+
+
 class IOHandlerSingleton(type):
     """
     Singleton base class
@@ -90,13 +94,16 @@ class IOHandler(metaclass=IOHandlerSingleton):
         if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
-            try:
-                output_directory_prefix = Path(self.output_path).joinpath(
-                    re.sub(r"\-result$", "", dir_type) + "-output"
-                )
-            except TypeError:
-                self._logger.error(f"Error creating output directory name from {dir_type}")
-                raise
+            if str(self.output_path).endswith("-output"):
+                output_directory_prefix = Path(self.output_path)
+            else:
+                try:
+                    output_directory_prefix = Path(self.output_path).joinpath(
+                        re.sub(r"\-result$", "", dir_type) + "-output"
+                    )
+                except TypeError:
+                    self._logger.error(f"Error creating output directory name from {dir_type}")
+                    raise
             label_dir = label if label is not None else "d-" + str(datetime.date.today())
             path = output_directory_prefix.joinpath(label_dir)
         if sub_dir is not None:
@@ -161,6 +168,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         if test:
             file_prefix = Path("tests/resources/")
-        else:
+        elif self.data_path is not None:
             file_prefix = Path(self.data_path).joinpath(parent_dir)
+        else:
+            raise IncompleteIOHandlerInit
         return file_prefix.joinpath(file_name).absolute()
