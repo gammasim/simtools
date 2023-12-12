@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.telescope_position &#8212; simtools v0.1.dev1+g88fb8d3</title>
+    <title>layout.telescope_position &#8212; simtools v0.1.dev1+ge384569</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=be65a5c3"></script>
+    <script src="../../_static/documentation_options.js?v=834639dd"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g88fb8d3</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge384569</p>
 
 
 
@@ -136,10 +136,10 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">telstr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_coordinates</span><span class="p">(</span><span class="s2">&quot;corsika&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_coordinates</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
             <span class="n">telstr</span> <span class="o">+=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> CORSIKA x(-&gt;North): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="s1">&#39;corsika&#39;</span><span class="p">][</span><span class="s1">&#39;xx&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;y(-&gt;West): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="s1">&#39;corsika&#39;</span><span class="p">][</span><span class="s1">&#39;yy&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> CORSIKA x(-&gt;North): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="s1">&#39;ground&#39;</span><span class="p">][</span><span class="s1">&#39;xx&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;y(-&gt;West): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="s1">&#39;ground&#39;</span><span class="p">][</span><span class="s1">&#39;yy&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_coordinates</span><span class="p">(</span><span class="s2">&quot;utm&quot;</span><span class="p">):</span>
             <span class="n">telstr</span> <span class="o">+=</span> <span class="p">(</span>
@@ -187,7 +187,7 @@
             <span class="n">_zz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
             <span class="n">_zz_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;corsika&quot;</span>
+                <span class="n">crs_name</span> <span class="o">==</span> <span class="s2">&quot;ground&quot;</span>
                 <span class="ow">and</span> <span class="n">corsika_obs_level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">corsika_sphere_center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="p">):</span>
@@ -595,7 +595,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="n">crs_local</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="n">crs_local</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;utm&quot;</span><span class="p">,</span> <span class="n">crs_utm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;mercator&quot;</span><span class="p">,</span> <span class="n">crs_wgs84</span><span class="p">)</span>
 
@@ -632,7 +632,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;corsika&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ground&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">&quot;xx&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;position_x&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)},</span>
                 <span class="s2">&quot;yy&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;position_y&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)},</span>

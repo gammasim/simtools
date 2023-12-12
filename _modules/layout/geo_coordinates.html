@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.geo_coordinates &#8212; simtools v0.1.dev1+g88fb8d3</title>
+    <title>layout.geo_coordinates &#8212; simtools v0.1.dev1+ge384569</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=be65a5c3"></script>
+    <script src="../../_static/documentation_options.js?v=834639dd"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g88fb8d3</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge384569</p>
 
 
 
@@ -96,7 +96,7 @@
 <span class="k">class</span> <span class="nc">GeoCoordinates</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Geospatial Coordinate systems.</span>
-<span class="sd">    Defines UTM, WGS84 and local (CORSIKA) coordinate systems.</span>
+<span class="sd">    Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -154,6 +154,8 @@
     <span class="k">def</span> <span class="nf">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Local coordinate system definition.</span>
+<span class="sd">        This is a cartesian coordinate system with the origin at the array center.</span>
+<span class="sd">        X-axis points towards geographic North, y-axis towards geographic West.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -176,7 +178,7 @@
                     <span class="sa">f</span><span class="s2">&quot; +axis=nwu +units=m +k_0=</span><span class="si">{</span><span class="n">_scale_factor_k_0</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
                 <span class="n">crs_local</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_proj4</span><span class="p">(</span><span class="n">proj4_string</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Local (CORSIKA) coordinate system: </span><span class="si">{</span><span class="n">crs_local</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground (sim_telarray) coordinate system: </span><span class="si">{</span><span class="n">crs_local</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">crs_local</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to derive local coordinate system. Missing reference point&quot;</span><span class="p">)</span>
