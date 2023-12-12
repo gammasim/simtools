@@ -121,7 +121,7 @@ def main():
             if array_name[0] == "1":
                 layout.add_telescope(
                     telescope_name=tel_size + "-01",
-                    crs_name="corsika",
+                    crs_name="ground",
                     xx=0 * u.m,
                     yy=0 * u.m,
                     tel_corsika_z=0 * u.m,
@@ -130,28 +130,28 @@ def main():
             else:
                 layout.add_telescope(
                     telescope_name=tel_size + "-01",
-                    crs_name="corsika",
+                    crs_name="ground",
                     xx=telescope_distance[tel_size],
                     yy=telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
                     telescope_name=tel_size + "-02",
-                    crs_name="corsika",
+                    crs_name="ground",
                     xx=-telescope_distance[tel_size],
                     yy=telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
                     telescope_name=tel_size + "-03",
-                    crs_name="corsika",
+                    crs_name="ground",
                     xx=telescope_distance[tel_size],
                     yy=-telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
                 )
                 layout.add_telescope(
                     telescope_name=tel_size + "-04",
-                    crs_name="corsika",
+                    crs_name="ground",
                     xx=-telescope_distance[tel_size],
                     yy=-telescope_distance[tel_size],
                     tel_corsika_z=0 * u.m,
@@ -163,7 +163,7 @@ def main():
                 args_dict=args_dict,
                 metadata=None,
                 product_data=layout.export_telescope_list_table(
-                    crs_name="corsika",
+                    crs_name="ground",
                     corsika_z=False,
                 ),
             )
