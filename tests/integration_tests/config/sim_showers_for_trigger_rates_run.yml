@@ -9,5 +9,6 @@ CTA_SIMPIPE:
     NEVENTS: 10000
     TEST: true
     SUBMIT_COMMAND: local
+    DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     DATA_DIRECTORY: simtools-output
