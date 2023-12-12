@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+ge2e2d47</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g446b2c4</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=e9ff4173"></script>
+    <script src="_static/documentation_options.js?v=8775c8d1"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+ge2e2d47</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g446b2c4</p>
 
 
 
@@ -175,11 +175,15 @@ Follows the CTA Top-Level Data Model.</p>
 <span id="model-data-writer"></span><span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#module-data_model.model_data_writer" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">¶</a></dt>
 <dd><p>Writer for simulation model data and metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>product_data_file: str</strong></dt><dd><p>Name of output file.</p>
+</dd>
+<dt><strong>product_data_format: str</strong></dt><dd><p>Format of output file.</p>
+</dd>
 <dt><strong>args_dict: Dictionary</strong></dt><dd><p>Dictionary with configuration parameters.</p>
 </dd>
 </dl>
@@ -187,7 +191,7 @@ Follows the CTA Top-Level Data Model.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.dump">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump" title="Link to this definition">¶</a></dt>
 <dd><p>Write model data and metadata (as static method).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
