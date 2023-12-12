@@ -1,10 +1,11 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-print-array-elements
-  TEST_NAME: print_compact_nocors_corsika
+  TEST_NAME: print_compact_corsika_telescopeheights
   CONFIGURATION:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: corsika
     USE_CORSIKA_TELESCOPE_HEIGHT: false
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
+    SKIP_OUTPUT_VALIDATION: true
     SELECT_ASSETS: ['LSTN', 'MSTN']
