@@ -37,7 +37,7 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
 def test_reading_db_lst(db):
     logger.info("----Testing reading LST-----")
     assert 1 == 1
-    pars = db.get_model_parameters("north", "lst-1", "Current")
+    pars = db.get_model_parameters("north", "lst-1", "Released")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["Value"] == 1
         assert pars["camera_pixels"]["Value"] == 1855
@@ -48,7 +48,7 @@ def test_reading_db_lst(db):
 
 def test_reading_db_mst_nc(db):
     logger.info("----Testing reading MST-NectarCam-----")
-    pars = db.get_model_parameters("north", "mst-NectarCam-D", "Current")
+    pars = db.get_model_parameters("north", "mst-NectarCam-D", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1855
     else:
@@ -57,7 +57,7 @@ def test_reading_db_mst_nc(db):
 
 def test_reading_db_mst_fc(db):
     logger.info("----Testing reading MST-FlashCam-----")
-    pars = db.get_model_parameters("north", "mst-FlashCam-D", "Current")
+    pars = db.get_model_parameters("north", "mst-FlashCam-D", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1764
     else:
@@ -66,7 +66,7 @@ def test_reading_db_mst_fc(db):
 
 def test_reading_db_sst(db):
     logger.info("----Testing reading SST-----")
-    pars = db.get_model_parameters("south", "sst-D", "Current")
+    pars = db.get_model_parameters("south", "sst-D", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 2048
     else:
@@ -93,7 +93,7 @@ def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
     db_write.copy_telescope(
         db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
-        version_to_copy="Current",
+        version_to_copy="Released",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -109,7 +109,7 @@ def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
     pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
-        model_version="Current",
+        model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
@@ -128,7 +128,7 @@ def test_copy_telescope_db(db_write, random_id, db_cleanup, io_handler):
         db_write.read_mongo_db(
             db_name=f"sandbox_{random_id}",
             telescope_model_name_db="North-LST-Test",
-            model_version="Current",
+            model_version="Released",
             run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             collection_name="telescopes_" + random_id,
             write_files=False,
@@ -141,7 +141,7 @@ def test_adding_parameter_version_db(db_write, random_id, db_cleanup, io_handler
     db_write.copy_telescope(
         db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
-        version_to_copy="Current",
+        version_to_copy="Released",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -172,7 +172,7 @@ def test_update_parameter_db(db_write, random_id, db_cleanup, io_handler):
     db_write.copy_telescope(
         db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
-        version_to_copy="Current",
+        version_to_copy="Released",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -211,7 +211,7 @@ def test_adding_new_parameter_db(db_write, random_id, db_cleanup, io_handler):
     db_write.copy_telescope(
         db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
-        version_to_copy="Current",
+        version_to_copy="Released",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -242,7 +242,7 @@ def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
     db_write.copy_telescope(
         db_name=db_write.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
-        version_to_copy="Current",
+        version_to_copy="Released",
         new_tel_name="North-LST-Test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -258,7 +258,7 @@ def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
     db_write.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         telescope="North-LST-Test",
-        version="Current",
+        version="Released",
         parameter="camera_pixels",
         field="Applicable",
         new_value=False,
@@ -267,7 +267,7 @@ def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
     pars = db_write.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name_db="North-LST-Test",
-        model_version="Current",
+        model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
@@ -277,14 +277,14 @@ def test_update_parameter_field_db(db_write, random_id, db_cleanup, io_handler):
 
 def test_reading_db_sites(db):
     logger.info("----Testing reading La Palma parameters-----")
-    pars = db.get_site_parameters("North", "Current")
+    pars = db.get_site_parameters("North", "Released")
     if db.mongo_db_config:
         assert pars["altitude"]["Value"] == 2158
     else:
         assert pars["altitude"] == 2158
 
     logger.info("----Testing reading Paranal parameters-----")
-    pars = db.get_site_parameters("South", "Current")
+    pars = db.get_site_parameters("South", "Released")
     if db.mongo_db_config:
         assert pars["altitude"]["Value"] == 2147
     else:
@@ -293,7 +293,7 @@ def test_reading_db_sites(db):
 
 def test_separating_get_and_write(db, io_handler):
     logger.info("----Testing getting parameters and exporting model files-----")
-    pars = db.get_model_parameters("north", "lst-1", "Current")
+    pars = db.get_model_parameters("north", "lst-1", "Released")
 
     file_list = list()
     for par_now in pars.values():

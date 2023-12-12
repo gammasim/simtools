@@ -100,7 +100,7 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--input",
         help="list of array element positions",
-        required=True,
+        required=False,
     )
     config.parser.add_argument(
         "--input_meta",
@@ -144,7 +144,7 @@ def _parse(label=None, description=None):
         default=None,
         nargs="+",
     )
-    return config.initialize(output=True)
+    return config.initialize(output=True, require_command_line=True)
 
 
 def main():

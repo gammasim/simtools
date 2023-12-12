@@ -151,7 +151,9 @@ class MetadataCollector:
         """
         Append association metadata set through configurator.
 
-        TODO - this function might go in future, as instrument
+        Note
+        ----
+        This function might go in future, as instrument
         information will not be given via command line.
 
         Parameters
@@ -279,7 +281,6 @@ class MetadataCollector:
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
         product_dict["data"]["type"] = "service"
-        # TODO - introduce consistent naming of DL3 data model and model parameter schema files
         try:
             product_dict["data"]["association"] = self.schema_dict["instrument"]["class"]
         except KeyError:

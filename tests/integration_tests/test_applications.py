@@ -198,6 +198,20 @@ APP_LIST = {
             "TESTOUTPUTDIR/",
         ]
     ],
+    "validate_camera_efficiency::MST-FlashCam-D": [
+        [
+            "--site",
+            "South",
+            "--telescope",
+            "MST-FlashCam-D",
+            "--model_version",
+            "prod5",
+            "--output_path",
+            "TESTOUTPUTDIR/",
+            "--nsb_spectrum",
+            "tests/resources/benn_ellison_spectrum_for_testing.txt",
+        ]
+    ],
     "validate_camera_efficiency::SST-D": [
         [
             "--site",
@@ -624,6 +638,8 @@ APP_LIST = {
             "10",
             "--data_directory",
             "TESTOUTPUTDIR/",
+            "--output_path",
+            "TESTOUTPUTDIR/",
         ]
     ],
     "simulate_prod::gamma_20_deg_pack_for_grid": [
@@ -649,6 +665,8 @@ APP_LIST = {
             "--data_directory",
             "TESTOUTPUTDIR/",
             "--pack_for_grid_register",
+            "--output_path",
+            "TESTOUTPUTDIR",
         ]
     ],
     # print_array
@@ -673,6 +691,7 @@ APP_LIST = {
             "utm",
             "--output_path",
             "TESTOUTPUTDIR/",
+            "--skip_output_validation",
         ],
     ],
     "print_array_elements::export_corsika": [
@@ -720,12 +739,20 @@ APP_LIST = {
         ],
     ],
     # validate_file_using_schema
-    "validate_file_using_schema": [
+    "validate_file_using_schema::yml_input": [
         [
             "--schema",
             "TESTMODELDIR/jsonschema.yml",
             "--file_name",
             "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        ]
+    ],
+    "validate_file_using_schema::ecsv_input": [
+        [
+            "--schema",
+            "tests/resources/MST_mirror_2f_measurements.schema.yml",
+            "--file_name",
+            "tests/resources/MLTdata-preproduction.ecsv",
         ]
     ],
 }
