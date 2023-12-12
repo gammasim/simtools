@@ -22,7 +22,7 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version (default='Current')
+        Model version (default='Released')
     zenith_angle (float, optional)
         Zenith angle in degrees (between 0 and 180).
     azimuth_angle (float, optional)
@@ -61,10 +61,6 @@
         simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
         _efficiency_MST-NectarCam-D_nsb
 
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging

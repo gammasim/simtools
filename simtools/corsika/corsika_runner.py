@@ -241,6 +241,8 @@ class CorsikaRunner:
             if use_pfp:
                 file.write("\n# Running pfp\n")
                 file.write(pfp_command)
+                file.write("\n# Replacing the XXXXXX placeholder with the run number\n")
+                file.write(f"sed -i 's/XXXXXX/{run_number:06}/g' {corsika_input_tmp_file}\n")
             else:
                 file.write("\n# Copying CORSIKA input file to run location\n")
                 file.write(f"cp {self._corsika_input_file} {corsika_input_tmp_file}")
