@@ -32,9 +32,10 @@
         Zenith angle in deg.
     azimuth (float, optional)
         Azimuth angle in deg.
-    output (str, optional)
-        Path of the directory to store the output simulations. By default, \
-        the standard output directory defined by config will be used.
+    data_directory (str, optional)
+        The location of the output directories corsika-data.
+        the label is added to the data_directory, such that the output
+        will be written to `data_directory/label/corsika-data`.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
         run script will be printed.
@@ -109,12 +110,16 @@ def _parse(label=None, description=None):
     config.parser.add_argument("--nevents", help="Number of events/run", type=int, default=100000)
     config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument("--azimuth", help="Azimuth angle in deg", type=float, default=0)
-    # TODO confusing with output_path?
     config.parser.add_argument(
-        "--output",
-        help="Path of the output directory where the simulations will be saved.",
-        type=str,
-        default=None,
+        "--data_directory",
+        help=(
+            "The directory where to save the corsika-data output directories."
+            "the label is added to the data_directory, such that the output"
+            "will be written to `data_directory/label/corsika-data`."
+        ),
+        type=str.lower,
+        required=False,
+        default="./simtools-output/",
     )
     return config.initialize(telescope_model=True, job_submission=True, db_config=True)
 
@@ -131,9 +136,8 @@ def main():
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
-    print(output_dir)
     shower_config_data = {
-        "data_directory": args_dict["output"],
+        "data_directory": Path(args_dict["data_directory"]) / label,
         "site": args_dict["site"],
         "layout_name": args_dict["array"],
         "run_range": [1, args_dict["nruns"] + 1],

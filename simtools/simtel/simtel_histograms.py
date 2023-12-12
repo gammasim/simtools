@@ -1,12 +1,10 @@
 import copy
 import logging
 
-import matplotlib.pyplot as plt
 import numpy as np
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
-from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
@@ -44,18 +42,6 @@ class SimtelHistograms:
         self.combined_hists = None
         self.__meta_dict = None
 
-    def plot_and_save_figures(self, fig_name):
-        """
-        Plot all histograms and save a single pdf file.
-
-        Parameters
-        ----------
-        fig_name: str
-            Name of the output figure file.
-        """
-        self.combine_histogram_files()
-        self._plot_combined_histograms(fig_name)
-
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
@@ -82,7 +68,8 @@ class SimtelHistograms:
         return self.combined_hists[i_hist]["title"]
 
     def combine_histogram_files(self):
-        """Combine histograms from all files into one single list of histograms."""
+        """Add the values of the same type of histogram from the various lists into a single
+        histogram list."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
         n_files = 0
@@ -123,37 +110,6 @@ class SimtelHistograms:
                     n_files += int(count_file)
 
         self._logger.debug(f"End of reading {n_files} files")
-
-    def _plot_combined_histograms(self, fig_name):
-        """
-        Plot all histograms into pdf pages and save the figure as a pdf file.
-
-        Parameters
-        ----------
-        fig_name: str
-            Name of the output figure file.
-        """
-
-        pdf_pages = PdfPages(fig_name)
-        for i_hist, histo in enumerate(self.combined_hists):
-            # Test case: processing only 1/10 of the histograms
-            if self._is_test and i_hist % 10 != 0:
-                self._logger.debug(f"Skipping (test=True): {histo['title']}")
-                continue
-
-            self._logger.debug(f"Processing: {histo['title']}")
-
-            fig = plt.figure(figsize=(8, 6))
-            ax = plt.gca()
-
-            self.plot_one_histogram(i_hist, ax)
-
-            plt.tight_layout()
-            pdf_pages.savefig(fig)
-            plt.close()
-
-        if pdf_pages.get_pagecount() > 0:
-            pdf_pages.close()
 
     def plot_one_histogram(self, i_hist, ax):
         """

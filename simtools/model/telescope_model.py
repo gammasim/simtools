@@ -132,8 +132,9 @@ class TelescopeModel:
 
         Notes
         -----
-        Todo: Dealing with ifdef/indef etc. By now it just keeps the last version of the parameters
-        in the file.
+        This function does not deal with ifdef/indef etc., it just keeps the last version
+        of the parameters in the file. This is fine for now since we do not
+        expect to read from sim_telarray config files in the future.
 
         Parameters
         ----------
