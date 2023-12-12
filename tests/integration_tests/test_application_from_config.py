@@ -49,7 +49,13 @@ def get_list_of_test_configurations(get_test_names=False):
 
     configs = []
     for config_file in config_files:
-        _dict = gen.collect_data_from_yaml_or_dict(in_yaml=config_file, in_dict=None)
+        # read config file
+        # remove new line characters from config - otherwise issues
+        # with especially long file names
+        _dict = gen.remove_substring_recursively_from_dict(
+            gen.collect_data_from_yaml_or_dict(in_yaml=config_file, in_dict=None), substring="\n"
+        )
+        print("AAAA", _dict)
         configs.append(_dict.get("CTA_SIMPIPE", None))
 
     # list of all applications

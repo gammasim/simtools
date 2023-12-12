@@ -333,3 +333,27 @@ def test_get_db_parameters():
     configurator.config = {}
     db_params = configurator._get_db_parameters()
     assert db_params == {}
+
+
+def test_reset_requirements_parameter():
+    configurator = Configurator()
+    configurator.parser.add_argument("--arg", required=True)
+    configurator.config["arg"] = True
+
+    configurator._reset_required_arguments()
+
+    for action in configurator.parser._actions:
+        assert action.required is False
+
+
+def test_reset_required_arguments_group():
+    configurator = Configurator()
+    group = configurator.parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--arg1")
+    group.add_argument("--arg2")
+    configurator.config["arg1"] = True
+
+    configurator._reset_required_arguments()
+
+    for group in configurator.parser._mutually_exclusive_groups:
+        assert group.required is False
