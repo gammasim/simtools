@@ -145,6 +145,13 @@ class CommandLineParser(argparse.ArgumentParser):
             default="ecsv",
             required=False,
         )
+        _job_group.add_argument(
+            "--skip_output_validation",
+            help="skip output data validation against schema",
+            default=False,
+            required=False,
+            action="store_true",
+        )
 
     def initialize_application_execution_arguments(self):
         """
@@ -245,7 +252,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--model_version",
                 help="model version",
                 type=str,
-                default="Current",
+                default="Released",
             )
 
     @staticmethod

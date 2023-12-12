@@ -371,7 +371,7 @@ def get_reference_columns():
         {
             "name": "wavelength",
             "description": "wavelength",
-            "required_column": True,
+            "required": True,
             "units": "nm",
             "type": "double",
             "required_range": {"unit": "nm", "min": 300, "max": 700},
@@ -380,7 +380,7 @@ def get_reference_columns():
         {
             "name": "qe",
             "description": "average quantum or photon detection efficiency",
-            "required_column": True,
+            "required": True,
             "units": "dimensionless",
             "type": "double",
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
@@ -388,7 +388,7 @@ def get_reference_columns():
         {
             "name": "position_x",
             "description": "x position",
-            "required_column": False,
+            "required": False,
             "units": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
@@ -397,7 +397,7 @@ def get_reference_columns():
         {
             "name": "position_y",
             "description": "y position",
-            "required_column": False,
+            "required": False,
             "units": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
@@ -406,7 +406,7 @@ def get_reference_columns():
         {
             "name": "abc",
             "description": "not required",
-            "required_column": False,
+            "required": False,
             "units": "kg",
             "type": "double",
             "allowed_range": {"unit": "kg", "min": 0.0, "max": 100.0},
@@ -414,7 +414,7 @@ def get_reference_columns():
         {
             "name": "no_units",
             "description": "not required",
-            "required_column": False,
+            "required": False,
             "type": "double",
         },
     ]

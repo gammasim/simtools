@@ -22,7 +22,19 @@
     telescope (str, required)
         Telescope model name (e.g. LST-1, SST-D, ...)
     model_version (str, optional)
-        Model version
+        Model version (default='Released')
+    zenith_angle (float, optional)
+        Zenith angle in degrees (between 0 and 180).
+    azimuth_angle (float, optional)
+        Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
+        one of north, south, east or west (case insensitive). Note that North is 0 degrees
+        and the azimuth grows clockwise, so East is 90 degrees.
+    nsb_spectrum (str, optional)
+        File with NSB spectrum to use for the efficiency simulation.
+        The expected format is two columns with wavelength in nm and
+        NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
+        If the file has more than two columns, the first and third are used,
+        and the second is ignored (native sim_telarray behaviour).
     verbosity (str, optional)
         Log level to print
 
@@ -35,6 +47,8 @@
     .. code-block:: console
 
         simtools-validate-camera-efficiency --site North \
+            --azimuth_angle 0 --zenith_angle 20 \
+            --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \
             --telescope MST-NectarCam-D --model_version prod5
 
     The output is saved in simtools-output/validate_camera_efficiency.
@@ -47,10 +61,6 @@
         simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
         _efficiency_MST-NectarCam-D_nsb
 
-    .. todo::
-
-        * Change default model to default (after this feature is implemented in db_handler)
-        * Fix the set_style. For some reason, sphinx cannot built docs with it on.
 """
 
 import logging
@@ -59,6 +69,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 
@@ -75,7 +86,44 @@ def _parse(label):
             "Plot the camera efficiency vs wavelength for cherenkov and NSB light."
         ),
     )
-    return config.initialize(db_config=True, telescope_model=True)
+    config.parser.add_argument(
+        "--azimuth_angle",
+        help=(
+            "Telescope pointing direction in azimuth. "
+            "It can be in degrees between 0 and 360 or one of north, south, east or west "
+            "(case insensitive). Note that North is 0 degrees and "
+            "the azimuth grows clockwise, so East is 90 degrees."
+        ),
+        type=CommandLineParser.azimuth_angle,
+        default=0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--zenith_angle",
+        help="Zenith angle in degrees (between 0 and 180).",
+        type=CommandLineParser.zenith_angle,
+        default=20,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--nsb_spectrum",
+        help=(
+            "File with NSB spectrum to use for the efficiency simulation."
+            "The expected format is two columns with wavelength in nm and "
+            "NSB flux with the units: [1e9 * ph/m2/s/sr/nm]."
+            "If the file has more than two columns, the first and third are used,"
+            "and the second is ignored (native sim_telarray behaviour)."
+        ),
+        type=str,
+        default=None,
+        required=False,
+    )
+    _args_dict, _db_config = config.initialize(db_config=True, telescope_model=True)
+    if _args_dict["site"] is None or _args_dict["telescope"] is None:
+        config.parser.print_help()
+        print("\n\nSite and telescope must be provided\n\n")
+        raise RuntimeError("Site and telescope must be provided")
+    return _args_dict, _db_config
 
 
 def main():
@@ -105,6 +153,12 @@ def main():
     ce = CameraEfficiency(
         telescope_model=tel_model,
         simtel_source_path=args_dict["simtel_path"],
+        label=label,
+        config_data={
+            "zenith_angle": args_dict["zenith_angle"],
+            "azimuth_angle": args_dict["azimuth_angle"],
+            "nsb_spectrum": args_dict["nsb_spectrum"],
+        },
     )
     ce.simulate(force=True)
     ce.analyze(force=True)

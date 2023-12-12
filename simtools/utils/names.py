@@ -83,7 +83,7 @@ all_model_version_names = {
     "2020-06-28": ["prod5"],
     "prod4-prototype": [""],
     "default": [],
-    "Current": [],
+    "Released": [],
     "Latest": [],
 }
 
@@ -686,7 +686,9 @@ def ray_tracing_plot_file_name(
     return name
 
 
-def camera_efficiency_results_file_name(site, telescope_model_name, zenith_angle, label):
+def camera_efficiency_results_file_name(
+    site, telescope_model_name, zenith_angle, azimuth_angle, label
+):
     """
     Camera efficiency results file name.
 
@@ -698,6 +700,8 @@ def camera_efficiency_results_file_name(site, telescope_model_name, zenith_angle
         LST-1, MST-FlashCam, ...
     zenith_angle: float
         Zenith angle (deg).
+    azimuth_angle: float
+        Azimuth angle (deg).
     label: str
         Instance label.
 
@@ -706,13 +710,18 @@ def camera_efficiency_results_file_name(site, telescope_model_name, zenith_angle
     str
         File name.
     """
-    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
-    name += f"_{label}" if label is not None else ""
-    name += ".ecsv"
+    _label = f"_{label}" if label is not None else ""
+    name = (
+        f"camera-efficiency-table-{site}-{telescope_model_name}-"
+        f"za{round(zenith_angle):03}deg_azm{round(azimuth_angle):03}deg"
+        f"{_label}.ecsv"
+    )
     return name
 
 
-def camera_efficiency_simtel_file_name(site, telescope_model_name, zenith_angle, label):
+def camera_efficiency_simtel_file_name(
+    site, telescope_model_name, zenith_angle, azimuth_angle, label
+):
     """
     Camera efficiency simtel output file name.
 
@@ -724,6 +733,8 @@ def camera_efficiency_simtel_file_name(site, telescope_model_name, zenith_angle,
         LST-1, MST-FlashCam-D, ...
     zenith_angle: float
         Zenith angle (deg).
+    azimuth_angle: float
+        Azimuth angle (deg).
     label: str
         Instance label.
 
@@ -732,13 +743,16 @@ def camera_efficiency_simtel_file_name(site, telescope_model_name, zenith_angle,
     str
         File name.
     """
-    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
-    name += f"_{label}" if label is not None else ""
-    name += ".dat"
+    _label = f"_{label}" if label is not None else ""
+    name = (
+        f"camera-efficiency-{site}-{telescope_model_name}-"
+        f"za{round(zenith_angle):03}deg_azm{round(azimuth_angle):03}deg"
+        f"{_label}.dat"
+    )
     return name
 
 
-def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, label):
+def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, azimuth_angle, label):
     """
     Camera efficiency log file name.
 
@@ -750,6 +764,8 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
         LST-1, MST-FlashCam-D, ...
     zenith_angle: float
         Zenith angle (deg).
+    azimuth_angle: float
+        Azimuth angle (deg).
     label: str
         Instance label.
 
@@ -758,9 +774,12 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, la
     str
         File name.
     """
-    name = f"camera-efficiency-{site}-{telescope_model_name}-za{zenith_angle:.1f}"
-    name += f"_{label}" if label is not None else ""
-    name += ".log"
+    _label = f"_{label}" if label is not None else ""
+    name = (
+        f"camera-efficiency-{site}-{telescope_model_name}"
+        f"-za{round(zenith_angle):03}deg_azm{round(azimuth_angle):03}deg"
+        f"{_label}.log"
+    )
     return name
 
 

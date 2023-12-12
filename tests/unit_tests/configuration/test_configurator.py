@@ -20,8 +20,11 @@ logger.setLevel(logging.DEBUG)
 
 
 def test_fill_from_command_line(configurator, args_dict):
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
+
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=[], require_command_line=True)
 
     configurator._fill_from_command_line(arg_list=["--data_path", Path("abc")])
     _tmp_config = copy(dict(args_dict))
@@ -34,7 +37,7 @@ def test_fill_from_command_line(configurator, args_dict):
 
 def test_fill_from_config_dict(configurator, args_dict):
     # _fill_from_environmental_variables() is always called after _fill_from_command_line()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
     configurator._fill_from_config_dict({})
     assert args_dict == configurator.config
@@ -52,7 +55,7 @@ def test_fill_from_config_dict(configurator, args_dict):
 
 def test_fill_from_config_file_not_existing_file(configurator):
     # _fill_from_config_file() is always called after _fill_from_command_line()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
     # config_file not found raises FileNotFoundError
     with pytest.raises(FileNotFoundError):
@@ -89,7 +92,7 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
         "output_path": "./abc/",
         "test": True,
     }
-    _tmp_dict_workflow = {"CTASIMPIPE": {"CONFIGURATION": _tmp_dict}}
+    _tmp_dict_workflow = {"CTA_SIMPIPE": {"CONFIGURATION": _tmp_dict}}
     _workflow_file = tmp_test_directory / "configuration-test.yml"
     with open(_workflow_file, "w") as output:
         yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
@@ -106,8 +109,8 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
 
-    # test that no KeyError is raised for "CTASIMPIPE:NO_CONFIGURATION"
-    _tmp_dict_workflow = {"CTASIMPIPE": {"NO_CONFIGURATION": _tmp_dict}}
+    # test that no KeyError is raised for "CTA_SIMPIPE:NO_CONFIGURATION"
+    _tmp_dict_workflow = {"CTA_SIMPIPE": {"NO_CONFIGURATION": _tmp_dict}}
     _workflow_file = tmp_test_directory / "configuration-test-2.yml"
     with open(_workflow_file, "w") as output:
         yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
@@ -130,7 +133,7 @@ def test_initialize_io_handler(configurator, tmp_test_directory):
 
 
 def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     configurator.config["output_path"] = Path(tmp_test_directory)
 
     # default value (no change)
@@ -190,7 +193,7 @@ def test_convert_stringnone_to_none():
 
 def test_get_db_parameters_from_env(configurator, args_dict):
     configurator.parser.initialize_db_config_arguments()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     configurator._fill_from_environmental_variables()
 
     args_dict["db_api_user"] = "db_user"
@@ -204,7 +207,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
 
 def test_initialize_output(configurator):
     configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
     # outputfile for testing
     configurator.config["test"] = True
@@ -233,7 +236,7 @@ def test_initialize_output(configurator):
 def test_fill_from_environmental_variables(configurator):
     configurator.parser.initialize_output_arguments()
     configurator.parser.initialize_db_config_arguments()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
     _config_save = copy(configurator.config)
 
@@ -279,7 +282,7 @@ def test_fill_from_environmental_variables(configurator):
 
 def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
     configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(arg_list=[])
+    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
 
     # write a temporary file into tmp_test_directory with the environmental variables
     _env_file = tmp_test_directory / "test_env_file"

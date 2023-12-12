@@ -13,7 +13,6 @@ from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
-from simtools.simtel.simtel_histograms import SimtelHistograms
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 from simtools.utils import names
 
@@ -79,7 +78,7 @@ class Simulator:
     simulator: choices: [simtel, corsika]
         implemented are sim_telarray and CORSIKA
     simulator_source_path: str or Path
-        Location of exectutables for simulation software \
+        Location of executables for simulation software \
             (e.g. path with CORSIKA or sim_telarray)
     label: str
         Instance label.
@@ -592,34 +591,6 @@ class Simulator:
             self._results["input"].append(None)
             self._results["hist"].append(None)
             self._results["log"].append(None)
-
-    def print_histograms(self, input_file_list=None):
-        """
-        Print histograms and save a pdf file.
-
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
-
-        Returns
-        -------
-        path
-            Path of the pdf file.
-        """
-
-        fig_name = None
-
-        if self.simulator in ["simtel", "corsika_simtel"]:
-            if len(self._results["hist"]) == 0 and input_file_list is not None:
-                self._fill_results_without_run(input_file_list)
-
-            fig_name = self._output_directory.joinpath("histograms.pdf")
-            hist_file_list = self.get_list_of_histogram_files()
-            simtel_histograms = SimtelHistograms(hist_file_list)
-            simtel_histograms.plot_and_save_figures(fig_name)
-
-        return fig_name
 
     def get_list_of_output_files(self, run_list=None, run_range=None):
         """

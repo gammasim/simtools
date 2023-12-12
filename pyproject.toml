@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=65",
+  "setuptools_scm[toml]>=6.2",
+]
 
 [tool.setuptools]
 packages=["simtools"]
@@ -11,66 +14,70 @@ write_to = "simtools/_version.py"
 
 [project]
 name = "gammasimtools"
-dynamic = ["version"]
 description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
 license = { file="LICENSE" }
 authors = [
   { name="simtools developers", email="simtools-developer@desy.de" }
 ]
-classifiers = [
-    "Intended Audience :: Science/Research",
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD License",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Astronomy",
-]
 requires-python = ">=3.9"
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Astronomy",
+]
+dynamic = [
+  "version",
+]
 dependencies = [
-    "astropy",
-    "boost-histogram",
-    "ctapipe",
-    "eventio",
-    "jsonschema",
-    "matplotlib",
-    "numpy",
-    "pymongo",
-    "pyproj",
-    "python-dotenv",
-    "pyyaml",
-    "scipy",
-    "toml",
+  "astropy",
+  "boost-histogram",
+  "ctapipe",
+  "eventio",
+  "jsonschema",
+  "matplotlib",
+  "numpy",
+  "pymongo",
+  "pyproj",
+  "python-dotenv",
+  "pyyaml",
+  "scipy",
+  "toml",
 ]
-
 [project.optional-dependencies]
-"tests" = [
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
-]
 "dev" = [
-    "flake8",
-    "pre-commit",
+  "flake8",
+  "pre-commit",
+  "pylint",
 ]
 "doc" = [
-    "numpydoc",
-    "sphinx",
-    "sphinx_rtd_theme",
+  "numpydoc",
+  "sphinx",
+  "sphinx_rtd_theme",
 ]
-
+"tests" = [
+  "pytest",
+  "pytest-cov",
+  "pytest-random-order",
+  "pytest-xdist",
+]
 [project.urls]
+"bug tracker" = "https://github.com/gammasim/simtools/issues"
 "documentation" = "https://gammasim.github.io/simtools/"
 "repository" = "https://github.com/gammasim/simtools"
-"bug tracker" = "https://github.com/gammasim/simtools/issues"
-
 [project.scripts]
 simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
 simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
 simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
-simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
 simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
+simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
 simtools-get-parameter = "simtools.applications.get_parameter:main"
 simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
 simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"

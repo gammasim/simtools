@@ -138,8 +138,8 @@ class DataValidator:
         """
         Validate that
         - required data columns are available
-        -  columns are in the correct units (if necessary apply a unit conversion)
-        -  ranges (minimum, maximum) are correct.
+        - columns are in the correct units (if necessary apply a unit conversion)
+        - ranges (minimum, maximum) are correct.
 
         This is not applied to columns of type 'string'.
 
@@ -170,7 +170,7 @@ class DataValidator:
         """
 
         for entry in self._reference_data_columns:
-            if entry.get("required_column", False):
+            if entry.get("required", False):
                 if entry["name"] in self.data_table.columns:
                     self._logger.debug(f"Found required data column {entry['name']}")
                 else:
