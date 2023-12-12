@@ -83,7 +83,7 @@ all_model_version_names = {
     "2020-06-28": ["prod5"],
     "prod4-prototype": [""],
     "default": [],
-    "Current": [],
+    "Released": [],
     "Latest": [],
 }
 

@@ -12,6 +12,79 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+def test_write(tmp_test_directory):
+    # both none (no exception expected)
+    w_1 = writer.ModelDataWriter()
+    w_1.write(metadata=None, product_data=None)
+
+    # metadata not none
+    _metadata = {"name": "test_metadata"}
+    w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
+    w_1.write(metadata=_metadata, product_data=None)
+
+    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+
+    # product_data not none
+    empty_table = astropy.table.Table()
+    w_1.write(metadata=None, product_data=empty_table)
+
+    assert Path(w_1.product_data_file).exists()
+
+    # both not none
+    w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
+    w_1.write(metadata=_metadata, product_data=empty_table)
+    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+    assert Path(w_1.product_data_file).exists()
+
+
+def test_dump(args_dict, tmp_test_directory):
+    _metadata = {"name": "test_metadata"}
+    empty_table = astropy.table.Table()
+
+    args_dict["use_plain_output_path"] = True
+    args_dict["output_file"] = "test_file.ecsv"
+    args_dict["skip_output_validation"] = True
+    writer.ModelDataWriter().dump(
+        args_dict=args_dict,
+        metadata=_metadata,
+        product_data=empty_table,
+        validate_schema_file=None,
+    )
+
+    assert Path(args_dict["output_path"]).joinpath(args_dict["output_file"]).exists()
+    assert (
+        Path(args_dict["output_path"])
+        .joinpath(args_dict["output_file"].replace("ecsv", "metadata.yml"))
+        .exists()
+    )
+
+    # Test only that output validation is queried, as the validation itself is
+    # tested in test_validate_and_transform (therefore: expect KeyError)
+    args_dict["skip_output_validation"] = False
+    with pytest.raises(KeyError):
+        writer.ModelDataWriter().dump(
+            args_dict=args_dict,
+            metadata=_metadata,
+            product_data=empty_table,
+            validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        )
+
+
+def test_validate_and_transform(tmp_test_directory):
+    w_1 = writer.ModelDataWriter()
+    with pytest.raises(TypeError):
+        w_1.validate_and_transform(product_data=None, validate_schema_file=None)
+
+    _table = astropy.table.Table.read(
+        "tests/resources/MLTdata-preproduction.ecsv", format="ascii.ecsv"
+    )
+    return_table = w_1.validate_and_transform(
+        product_data=_table,
+        validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+    )
+    assert len(_table.columns) == len(return_table.columns)
+
+
 def test_write_metadata(tmp_test_directory):
     # test writer of metadata
     _metadata = {"name": "test_metadata"}
