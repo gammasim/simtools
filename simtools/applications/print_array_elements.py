@@ -14,7 +14,8 @@
     Available coordinate systems are:
 
     1. UTM system
-    2. CORSIKA coordinates
+    2. ground system (similar to sim_telarray system with x-axis pointing toward \
+        geographic north and y-axis pointing towards the west)
     3. Mercator system
 
     Command line arguments
@@ -25,7 +26,7 @@
         Compact output in requested coordinate system; possible are corsika,utm,mercator
     export (str)
         Export array element list to file in requested coordinate system; \
-            possible are corsika,utm,mercator
+            possible are ground, utm, mercator
     use_corsika_telescope_height (bool)
         Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)
     select_assets (str)
@@ -40,7 +41,7 @@
 
         simtools-print-array-elements \\
             --input tests/resources/telescope_positions-South-4MST.ecsv \\
-            --compact corsika
+            --compact ground
 
     Expected final print-out message:
 
@@ -53,14 +54,14 @@
         MST-04     150.72      73.57    2159.00
 
     The following example converts a list of telescope positions in UTM coordinates \
-    and writes the output to a file in CORSIKA coordinates. Also selects only a subset \
-    of the array elements (telescopes; ignore calibration devices):
+    and writes the output to a file in ground (sim_telarray) coordinates. Also selects \
+    only a subset of the array elements (telescopes; ignore calibration devices):
 
     .. code-block:: console
 
         simtools-print-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
-            --export corsika --use_corsika_telescope_height \\
+            --export ground --use_corsika_telescope_height \\
             --select_assets LSTN, MSTN, SSTN
 
     Expected output is a ecsv file in the directory printed to the screen.
@@ -114,7 +115,7 @@ def _parse(label=None, description=None):
         required=False,
         default="",
         choices=[
-            "corsika",
+            "ground",
             "utm",
             "mercator",
         ],
@@ -125,7 +126,7 @@ def _parse(label=None, description=None):
         required=False,
         default=None,
         choices=[
-            "corsika",
+            "ground",
             "utm",
             "mercator",
         ],
