@@ -22,6 +22,17 @@ def get_application_command(app, config_file=None):
     """
     Return the command to run the application with the given config file.
 
+    Parameters
+    ----------
+    app: str
+        Name of the application.
+    config_file: str
+        Configuration file.
+
+    Returns
+    -------
+    str: command to run the application test.
+
     """
     if app.find("simtools-") < 0:
         cmd = "python simtools/applications/" + app + ".py"
