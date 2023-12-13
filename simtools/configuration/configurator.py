@@ -309,9 +309,9 @@ class Configurator:
                     input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True
                 )
         # TypeError is raised for config_file=None
-        except TypeError:
+        except (TypeError, AttributeError):
             pass
-        except gen.InvalidConfigData:
+        except FileNotFoundError:
             self._logger.error(f"Configuration file not found: {config_file}")
             raise
 
