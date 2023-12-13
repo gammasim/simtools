@@ -357,7 +357,7 @@ def main():
         ray = RayTracing.from_kwargs(
             telescope_model=tel,
             single_mirror_mode=True,
-            mirror_numbers=list(range(1, 3)) if args_dict["test"] else "all",
+            mirror_numbers=list(range(1, 10)) if args_dict["test"] else "all",
             simtel_source_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
