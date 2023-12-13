@@ -52,6 +52,9 @@ def test_fill_from_config_dict(configurator, args_dict):
     # No AttributeError is raised for non-dict inputs
     configurator._fill_from_config_dict("abc")
 
+    # No error raise for None arguments
+    configurator._fill_from_config_dict(None)
+
 
 def test_fill_from_config_file_not_existing_file(configurator):
     # _fill_from_config_file() is always called after _fill_from_command_line()
