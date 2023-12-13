@@ -820,6 +820,8 @@ def extract_type_of_value(value) -> str:
     _type = str(type(value))
     if "numpy" in _type:
         return re.sub(r"\d+", "", _type.split("'")[1].split(".")[-1])
+    if "astropy" in _type:
+        raise NotImplementedError("Astropy types are not supported yet.")
 
     _type = _type.split("'")[1]
     return _type
