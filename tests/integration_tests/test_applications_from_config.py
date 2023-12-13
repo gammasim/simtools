@@ -51,7 +51,12 @@ def get_list_of_test_configurations(get_test_names=False):
     Parameters:
     -----------
     get_test_names: bool
-        If True, return a list of test names instead of a list of configuration dicts.
+        If True, return a list of test names instead of a list of configuration dictionaries.
+
+    Returns
+    -------
+    list:
+        of test names or of configuration dictionaries.
 
     """
 
