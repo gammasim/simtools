@@ -9,6 +9,7 @@ from copy import copy
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.io.misc import yaml
 
@@ -647,3 +648,73 @@ def test_remove_substring_recursively_from_dict(input_data, expected_output):
 
     with pytest.raises(AttributeError):
         gen.remove_substring_recursively_from_dict([2])
+
+
+def test_extract_type_of_value() -> None:
+    """
+    Test the extract_type_of_value function.
+    """
+    # Test with a string.
+    assert gen.extract_type_of_value("str") == "str"
+
+    # Test with a list.
+    assert gen.extract_type_of_value([1, 2, 3]) == "list"
+
+    # Test with a tuple.
+    assert gen.extract_type_of_value((1, 2, 3)) == "tuple"
+
+    # Test with a dictionary
+    assert gen.extract_type_of_value({"a": 1, "b": 2}) == "dict"
+
+    # Test with a non-iterable object (int).
+    assert gen.extract_type_of_value(123) == "int"
+
+    # Test with a non-iterable object (float).
+    assert gen.extract_type_of_value(123.0) == "float"
+
+    # Test with a non-iterable object (bool).
+    assert gen.extract_type_of_value(True) == "bool"
+
+    # Test with a non-iterable object (None).
+    assert gen.extract_type_of_value(None) == "NoneType"
+
+    # Test with a numpy object (numpy.float64).
+    assert gen.extract_type_of_value(np.float64(123.0)) == "float"
+
+    # Test that astropy types are not implemented
+    with pytest.raises(NotImplementedError):
+        assert gen.extract_type_of_value(1 * u.m)
+
+
+def test_get_value_unit_type() -> None:
+    """Test the get_value_unit_type function."""
+    # Test with a string.
+    assert gen.get_value_unit_type("hello") == ("hello", None, "str")
+
+    # Test with int.
+    assert gen.get_value_unit_type(1) == (1, None, "int")
+
+    # Test with float.
+    assert gen.get_value_unit_type(1.0) == (pytest.approx(1.0), None, "float")
+
+    # Test with bool.
+    assert gen.get_value_unit_type(True) == (True, None, "bool")
+
+    # Test with None.
+    assert gen.get_value_unit_type(None) == (None, None, "NoneType")
+
+    # Test with Quantity.
+    assert gen.get_value_unit_type(1 * u.m) == (pytest.approx(1), "m", "float")
+
+    # Test with Quantity.
+    assert gen.get_value_unit_type(1.5 * u.cm) == (pytest.approx(1.5), "cm", "float")
+
+    # Test with Quantity with no unit.
+    assert gen.get_value_unit_type(1 * u.dimensionless_unscaled) == (
+        pytest.approx(1),
+        None,
+        "float",
+    )
+
+    # Test with string representation of Quantity.
+    assert gen.get_value_unit_type("1 m") == (pytest.approx(1), "m", "float")
