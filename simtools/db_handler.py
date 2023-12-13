@@ -48,8 +48,6 @@ class DatabaseHandler:
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
 
-    db_client = None
-
     def __init__(self, mongo_db_config=None):
         """
         Initialize the DatabaseHandler class.
@@ -66,6 +64,8 @@ class DatabaseHandler:
         self.mongo_db_config = mongo_db_config
         self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
+
+        self.db_client = None
 
         self._set_up_connection()
 
@@ -93,10 +93,10 @@ class DatabaseHandler:
         Open the connection to MongoDB.
         """
         if self.mongo_db_config:
-            if DatabaseHandler.db_client is None:
+            if self.db_client is None:
                 lock = Lock()
                 with lock:
-                    DatabaseHandler.db_client = self._open_mongo_db()
+                    self.db_client = self._open_mongo_db()
 
     def _open_mongo_db(self):
         """
@@ -449,7 +449,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
         _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
@@ -606,7 +606,7 @@ class DatabaseHandler:
         """
 
         _site_validated = names.validate_site_name(site)
-        collection = DatabaseHandler.db_client[db_name].sites
+        collection = self.db_client[db_name].sites
         _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
@@ -633,9 +633,8 @@ class DatabaseHandler:
 
         return _parameters
 
-    @staticmethod
     def get_descriptions(
-        db_name=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collection_name="telescopes"
+        self, db_name=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collection_name="telescopes"
     ):
         """
         Get parameter descriptions from MongoDB
@@ -653,7 +652,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         _parameters = {}
 
@@ -691,7 +690,7 @@ class DatabaseHandler:
         """
 
         _site_validated = names.validate_site_name(site)
-        collection = DatabaseHandler.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
+        collection = self.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
         _parameters = {}
 
         _model_version = self._convert_version_to_tagged(
@@ -761,8 +760,7 @@ class DatabaseHandler:
 
         return _pars
 
-    @staticmethod
-    def _get_file_mongo_db(db_name, file_name):
+    def _get_file_mongo_db(self, db_name, file_name):
         """
         Extract a file from MongoDB and return GridFS file instance
 
@@ -785,15 +783,14 @@ class DatabaseHandler:
 
         """
 
-        db = DatabaseHandler.db_client[db_name]
+        db = self.db_client[db_name]
         file_system = gridfs.GridFS(db)
         if file_system.exists({"filename": file_name}):
             return file_system.find_one({"filename": file_name})
 
         raise FileNotFoundError(f"The file {file_name} does not exist in the database {db_name}")
 
-    @staticmethod
-    def _write_file_from_mongo_to_disk(db_name, path, file):
+    def _write_file_from_mongo_to_disk(self, db_name, path, file):
         """
         Extract a file from MongoDB and write it to disk
 
@@ -807,7 +804,7 @@ class DatabaseHandler:
             A file instance returned by GridFS find_one
         """
 
-        db = DatabaseHandler.db_client[db_name]
+        db = self.db_client[db_name]
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
@@ -861,7 +858,7 @@ class DatabaseHandler:
             f"to the new telescope {new_tel_name} in the {db_to_copy_to} DB"
         )
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
         db_entries = []
 
         _version_to_copy = self._convert_version_to_tagged(
@@ -878,7 +875,7 @@ class DatabaseHandler:
             db_entries.append(post)
 
         self._logger.info(f"Creating new telescope {new_tel_name}")
-        collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
+        collection = self.db_client[db_to_copy_to][collection_to_copy_to]
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
@@ -916,7 +913,7 @@ class DatabaseHandler:
 
         """
 
-        _collection = DatabaseHandler.db_client[db_name][collection]
+        _collection = self.db_client[db_name][collection]
         if collection_to_copy_to is None:
             collection_to_copy_to = collection
         db_entries = []
@@ -928,7 +925,7 @@ class DatabaseHandler:
         self._logger.info(
             f"Copying documents matching the following query {query}\nto {db_to_copy_to}"
         )
-        _collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
+        _collection = self.db_client[db_to_copy_to][collection_to_copy_to]
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
@@ -959,7 +956,7 @@ class DatabaseHandler:
 
         """
 
-        _collection = DatabaseHandler.db_client[db_name][collection]
+        _collection = self.db_client[db_name][collection]
 
         if "Version" in query:
             query["Version"] = self._convert_version_to_tagged(
@@ -1009,7 +1006,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         _model_version = self._convert_version_to_tagged(
             version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -1099,7 +1096,7 @@ class DatabaseHandler:
         if field not in allowed_fields:
             raise ValueError(f"The field to change must be one of {', '.join(allowed_fields)}")
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         _model_version = self._convert_version_to_tagged(
             version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -1188,7 +1185,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         _new_version = self._convert_version_to_tagged(
             new_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
@@ -1270,7 +1267,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         db_entry = {}
         if "telescopes" in collection_name:
@@ -1318,8 +1315,7 @@ class DatabaseHandler:
 
         return model_version
 
-    @staticmethod
-    def _get_tagged_version(db_name, version="Released"):
+    def _get_tagged_version(self, db_name, version="Released"):
         """
         Get the tag of the "Released" or "Latest" version of the MC Model.
         The "Released" is the latest stable MC Model,
@@ -1347,7 +1343,7 @@ class DatabaseHandler:
         if version not in ["Released", "Latest"]:
             raise ValueError('The only default versions are "Released" or "Latest"')
 
-        collection = DatabaseHandler.db_client[db_name].metadata
+        collection = self.db_client[db_name].metadata
         query = {"Entry": "Simulation-Model-Tags"}
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
@@ -1377,7 +1373,7 @@ class DatabaseHandler:
 
         """
 
-        db = DatabaseHandler.db_client[db_name]
+        db = self.db_client[db_name]
         file_system = gridfs.GridFS(db)
 
         if "content_type" not in kwargs:
@@ -1434,7 +1430,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.db_client[db_name][collection_name]
 
         query = {
             "Parameter": parameter,
