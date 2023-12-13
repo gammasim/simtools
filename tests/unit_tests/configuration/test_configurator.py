@@ -85,6 +85,11 @@ def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
 
+    # test that no error is raised
+    configurator._fill_from_config_file(config_file=None)
+    with pytest.raises(FileNotFoundError):
+        configurator._fill_from_config_file(config_file="abc")
+
 
 def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
     _tmp_config = copy(dict(args_dict))
