@@ -801,6 +801,10 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
     substring: str
         Substring to be removed.
 
+    Raises
+    ------
+    AttributeError:
+        if input is not a proper dictionary.
     """
     try:
         for key, value in data_dict.items():
