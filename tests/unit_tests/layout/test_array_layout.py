@@ -92,7 +92,7 @@ def test_initialize_coordinate_systems(
 ):
     def test_one_site(center_data_dict, instance, easting, northing):
         instance._initialize_coordinate_systems()
-        _x, _y, _z = instance._array_center.get_coordinates("corsika")
+        _x, _y, _z = instance._array_center.get_coordinates("ground")
         assert _x == 0.0 * u.m and _y == 0.0 * u.m
         assert np.isnan(_z.value)
         _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
@@ -100,7 +100,7 @@ def test_initialize_coordinate_systems(
 
         if center_data_dict is not None:
             instance._initialize_coordinate_systems(center_data_dict)
-            _x, _y, _z = instance._array_center.get_coordinates("corsika")
+            _x, _y, _z = instance._array_center.get_coordinates("ground")
             assert _x == 0.0 * u.m and _y == 0.0 * u.m and _z == center_data_dict["center_alt"]
             _lat, _lon, _z = instance._array_center.get_coordinates("mercator")
             assert _lat.value == pytest.approx(center_data_dict["center_lat"].value, 1.0e-2)
@@ -180,6 +180,8 @@ def test_read_telescope_list_file(
     tmp_table.write(tmp_test_directory / "tmp_table_float32.ecsv", format="ascii.ecsv")
     with pytest.raises(InvalidCoordinateDataType):
         ArrayLayout.read_telescope_list_file(tmp_test_directory / "tmp_table_float32.ecsv")
+    with pytest.raises(FileNotFoundError):
+        ArrayLayout.read_telescope_list_file(tmp_test_directory / "file_doesnt_exist.ecsv")
 
 
 def test_initialize_array_layout_from_telescope_file(
@@ -229,11 +231,11 @@ def test_add_tel(
     def test_one_site(instance, test_file, altitude):
         ArrayLayout.read_telescope_list_file(test_file)
         ntel_before = instance.get_number_of_telescopes()
-        instance.add_telescope("LST-00", "corsika", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
+        instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
         ntel_after = instance.get_number_of_telescopes()
         assert ntel_before + 1 == ntel_after
 
-        instance.add_telescope("LST-00", "corsika", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
+        instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
     test_one_site(array_layout_north_instance, telescope_north_test_file, 2192.0)
@@ -247,43 +249,68 @@ def test_build_layout(
     db_config,
     io_handler,
 ):
-    def test_one_site(layout, site_label):
+    def test_one_site(
+        layout, site_label, add_geocode=False, asset_code=False, sequence_number=False
+    ):
         layout.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-02",
-            crs_name="corsika",
+            crs_name="ground",
             xx=-57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-02",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=-57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
         layout.add_telescope(
             telescope_name="LST-04",
-            crs_name="corsika",
+            crs_name="ground",
             xx=-57.5 * u.m,
             yy=-57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
+        if add_geocode:
+            for tel in layout._telescope_list:
+                tel.geo_code = "test_geo_code"
+        if asset_code:
+            for tel in layout._telescope_list:
+                tel.asset_code = "test_asset_code"
+        if sequence_number:
+            for tel in layout._telescope_list:
+                tel.sequence_number = 1
 
         layout.convert_coordinates()
         layout.print_telescope_list()
-        _table = layout.export_telescope_list_table(crs_name="corsika")
+        _table = layout.export_telescope_list_table(crs_name="ground")
         _export_file = tmp_test_directory / "test_layout.ecsv"
         _table.write(_export_file, format="ascii.ecsv", overwrite=True)
 
         assert isinstance(_table, QTable)
+
+        if add_geocode:
+            assert "geo_code" in _table.colnames
+            return
+        if asset_code and not sequence_number:
+            assert "asset_code" not in _table.colnames
+            return
+        if not asset_code and sequence_number:
+            assert "sequence_number" not in _table.colnames
+            return
+        if asset_code and sequence_number:
+            assert "asset_code" in _table.colnames
+            assert "sequence_number" in _table.colnames
+            return
 
         # Building a second layout from the file exported by the first one
         layout_2 = ArrayLayout(site=site_label, mongo_db_config=db_config, name="test_layout_2")
@@ -296,6 +323,16 @@ def test_build_layout(
 
     test_one_site(array_layout_north_four_LST_instance, "North")
     test_one_site(array_layout_south_four_LST_instance, "South")
+    test_one_site(array_layout_north_four_LST_instance, "North", add_geocode=True)
+    test_one_site(
+        array_layout_north_four_LST_instance, "North", asset_code=True, sequence_number=False
+    )
+    test_one_site(
+        array_layout_north_four_LST_instance, "North", asset_code=False, sequence_number=True
+    )
+    test_one_site(
+        array_layout_north_four_LST_instance, "North", asset_code=True, sequence_number=True
+    )
 
 
 def test_converting_center_coordinates_north(array_layout_north_four_LST_instance):
@@ -332,7 +369,7 @@ def test_get_corsika_input_list(
     def test_one_site(layout):
         layout.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
@@ -354,7 +391,7 @@ def test_altitude_from_corsika_z(
     def test_one_site(instance, result1, result2):
         instance.add_telescope(
             telescope_name="LST-01",
-            crs_name="corsika",
+            crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
             tel_corsika_z=0 * u.m,
@@ -429,6 +466,42 @@ def test_from_corsika_file_to_dict(
             file_name="file_doesnt_exist.yml"
         )
 
+    _save_db_config = array_layout_north_instance.mongo_db_config
+    array_layout_north_instance.mongo_db_config = None
+    with pytest.raises(ValueError):
+        corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
+            file_name=corsika_config_file
+        )
+    array_layout_north_instance.mongo_db_config = _save_db_config
+    array_layout_north_instance.site = None
+    with pytest.raises(ValueError):
+        corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
+            file_name=corsika_config_file
+        )
+
+
+def test_initialize_sphere_parameters(array_layout_north_instance):
+    w_1 = {"LST": 16.0 * u.m}
+    t_1 = array_layout_north_instance._initialize_sphere_parameters(w_1)
+    assert pytest.approx(t_1["LST"].value, 0.1) == 16.0
+    assert t_1["LST"].unit == u.m
+
+    w_2 = {"LST": "16. m", "MST": 12.0 * u.m}
+    t_2 = array_layout_north_instance._initialize_sphere_parameters(w_2)
+    assert pytest.approx(t_2["LST"].value, 0.1) == 16.0
+    assert t_2["LST"].unit == u.m
+    assert pytest.approx(t_2["MST"].value, 0.1) == 12.0
+    assert t_2["MST"].unit == u.m
+
+    w_3 = {"LST": {"value": 10.0, "unit": "m"}}
+    t_3 = array_layout_north_instance._initialize_sphere_parameters(w_3)
+    assert pytest.approx(t_3["LST"].value, 0.1) == 10.0
+    assert t_3["LST"].unit == u.m
+
+    w_4 = {"LST": 16.0}
+    with pytest.raises(TypeError):
+        array_layout_north_instance._initialize_sphere_parameters(w_4)
+
 
 def test_initialize_corsika_telescope_from_dict(
     array_layout_north_instance,
@@ -447,6 +520,15 @@ def test_initialize_corsika_telescope_from_dict(
 
     test_one_site(array_layout_north_instance, manual_corsika_dict_north)
     test_one_site(array_layout_south_instance, manual_corsika_dict_south)
+
+    manual_corsika_dict_north["corsika_obs_level"] = "not_a_quantity"
+    array_layout_north_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_north)
+    assert np.isnan(array_layout_north_instance._corsika_telescope["corsika_obs_level"])
+
+    # no errors should be raised for missing fields
+    manual_corsika_dict_south.pop("corsika_obs_level")
+    manual_corsika_dict_south.pop("corsika_sphere_radius")
+    array_layout_south_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_south)
 
 
 def test_assign_unit_to_quantity(array_layout_north_instance):
@@ -517,9 +599,9 @@ def test_try_set_coordinate(
         table = ArrayLayout.read_telescope_list_file(test_file)
         for step, row in enumerate(table[:6]):
             tel = instance._load_telescope_names(row)
-            instance._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
-            assert pytest.approx(tel.crs["corsika"]["xx"]["value"], 0.1) == manual_xx[step]
-            assert pytest.approx(tel.crs["corsika"]["yy"]["value"], 0.1) == manual_yy[step]
+            instance._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
+            assert pytest.approx(tel.crs["ground"]["xx"]["value"], 0.1) == manual_xx[step]
+            assert pytest.approx(tel.crs["ground"]["yy"]["value"], 0.1) == manual_yy[step]
 
     test_one_site(
         array_layout_north_instance, telescope_north_test_file, manual_xx_north, manual_yy_north
@@ -544,3 +626,14 @@ def test_get_corsika_sphere_center(telescope_north_test_file, caplog):
     with caplog.at_level(logging.WARNING):
         assert layout._get_corsika_sphere_center("") == 0.0 * u.m
     assert "Missing definition of CORSIKA sphere center for telescope  of type " in caplog.text
+
+
+def test_len(telescope_north_test_file):
+    layout = ArrayLayout(telescope_list_file=telescope_north_test_file)
+    assert len(layout) == 19
+
+
+def test_getitem(telescope_north_test_file):
+    layout = ArrayLayout(telescope_list_file=telescope_north_test_file)
+
+    assert layout[0].name == "LST-01"
