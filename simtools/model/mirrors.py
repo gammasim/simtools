@@ -1,8 +1,8 @@
 import logging
 
 import astropy.units as u
-from astropy.table import Table
 import numpy as np
+from astropy.table import Table
 
 __all__ = ["InvalidMirrorListFile", "Mirrors"]
 
@@ -132,7 +132,7 @@ class Mirrors:
             return None
 
         if type(self.mirror_table["mirror_id"][0]) is np.str_:
-            mask = self.mirror_table["mirror_id"] == 'id='+str(number)
+            mask = self.mirror_table["mirror_id"] == "id=" + str(number)
         elif type(self.mirror_table["mirror_id"][0]) is np.int32:
             mask = self.mirror_table["mirror_id"] == number
 
