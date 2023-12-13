@@ -131,9 +131,9 @@ class Mirrors:
             self._logger.error("Mirror number is out range")
             return None
 
-        if type(self.mirror_table["mirror_id"][0]) is np.str_:
+        if isinstance(self.mirror_table["mirror_id"][0], np.str_):
             mask = self.mirror_table["mirror_id"] == "id=" + str(number)
-        elif type(self.mirror_table["mirror_id"][0]) is np.int32:
+        elif isinstance(self.mirror_table["mirror_id"][0], np.int32):
             mask = self.mirror_table["mirror_id"] == number
 
         return (
