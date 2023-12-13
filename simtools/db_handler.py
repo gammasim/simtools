@@ -1282,8 +1282,12 @@ class DatabaseHandler:
 
         db_entry["Version"] = version
         db_entry["Parameter"] = parameter
-        db_entry["Value"] = value
-        db_entry["Type"] = kwargs["Type"] if "Type" in kwargs else str(type(value))
+
+        _base_value, _base_unit, _base_type = gen.get_value_unit_type(value)
+        db_entry["Value"] = _base_value
+        if _base_unit is not None:
+            db_entry["units"] = _base_unit
+        db_entry["Type"] = kwargs["Type"] if "Type" in kwargs else _base_type
 
         files_to_add_to_db = set()
         db_entry["File"] = False
