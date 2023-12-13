@@ -173,18 +173,6 @@ def db_write(db_config):
 
 
 @pytest.fixture
-def db_no_config_file():
-    """
-    Same as db above, but without DB variable defined,
-    since we do not want to set the config file as well.
-    Otherwise it creates a conflict between the config file
-    set by set_db and the one set by set_simtools
-    """
-    db = db_handler.DatabaseHandler(mongo_db_config=None)
-    return db
-
-
-@pytest.fixture
 def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
