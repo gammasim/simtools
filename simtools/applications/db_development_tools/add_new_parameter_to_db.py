@@ -12,6 +12,8 @@
 
 import logging
 
+import astropy.units as u
+
 import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.configuration import configurator
@@ -30,12 +32,13 @@ def main():
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     # epsgs = [32628, 32719]
-    parameter = {"camera_filter_incidence_angle": "sst_photon_incidence_angle_camera_window.ecsv"}
+    parameter = {
+        "mirror_panel_shape": 1,
+        "mirror_panel_diameter": 84.6 * u.cm,
+    }
 
     telescopes = [
         "South-SST-Structure-D",
-        "South-SST-Camera-D",
-        "South-SST-ASTRI-D",
     ]
 
     for telescope_now in telescopes:
@@ -56,8 +59,7 @@ def main():
                     value=par_value,
                     collection_name="telescopes",
                     Applicable=True,
-                    Type=str(str),
-                    File=True,
+                    File=False,
                     file_prefix="./",
                 )
                 pars = db.read_mongo_db(
@@ -68,7 +70,11 @@ def main():
                     collection_name="telescopes",
                     write_files=False,
                 )
-                assert pars[par_now]["Value"] == par_value
+                if isinstance(par_value, u.Quantity):
+                    assert pars[par_now]["Value"] == par_value.value
+                    assert pars[par_now]["units"] == par_value.unit.to_string()
+                else:
+                    assert pars[par_now]["Value"] == par_value
 
 
 if __name__ == "__main__":
