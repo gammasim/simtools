@@ -27,12 +27,13 @@ def db_cleanup(db_write, random_id):
 
 
 @pytest.fixture()
-def db_cleanup_file_sandbox(db_no_config_file, random_id):
+@pytest.mark.parametrize("db_config", [True], indirect=True)
+def db_cleanup_file_sandbox(db_write, random_id):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
-    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
-    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
+    db_write.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
+    db_write.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
 def test_reading_db_lst(db):
@@ -386,7 +387,7 @@ def test_insert_files_db(db_write, io_handler, db_cleanup_file_sandbox, random_i
     logger.info("Now test inserting the same file again, this time expect a warning")
     with caplog.at_level(logging.WARNING):
         file_id = db_write.insert_file_to_db(file_name, f"sandbox_{random_id}")
-    assert "exists in the db_write. Returning its ID" in caplog.text
+    assert "exists in the DB. Returning its ID" in caplog.text
     assert (
         file_id
         == db_write._get_file_mongo_db(f"sandbox_{random_id}", f"test_file_{random_id}.dat")._id
