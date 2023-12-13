@@ -2,6 +2,7 @@ import logging
 
 import astropy.units as u
 from astropy.table import Table
+import numpy as np
 
 __all__ = ["InvalidMirrorListFile", "Mirrors"]
 
@@ -129,7 +130,12 @@ class Mirrors:
         if number > self.number_of_mirrors:
             self._logger.error("Mirror number is out range")
             return None
-        mask = self.mirror_table["mirror_id"] == number
+
+        if type(self.mirror_table["mirror_id"][0]) is np.str_:
+            mask = self.mirror_table["mirror_id"] == 'id='+str(number)
+        elif type(self.mirror_table["mirror_id"][0]) is np.int32:
+            mask = self.mirror_table["mirror_id"] == number
+
         return (
             self.mirror_table[mask]["mirror_x"].value[0],
             self.mirror_table[mask]["mirror_y"].value[0],
@@ -140,6 +146,7 @@ class Mirrors:
 
     def plot_mirror_layout(self):
         """
-        Plot the mirror layout (not implemented yet).
+        Plot the mirror layout.
+
+        TODO
         """
-        raise NotImplementedError
