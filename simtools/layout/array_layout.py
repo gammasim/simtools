@@ -222,11 +222,12 @@ class ArrayLayout:
 
         return corsika_dict
 
-    @staticmethod
-    def _initialize_sphere_parameters(sphere_dict):
+    def _initialize_sphere_parameters(self, sphere_dict):
         """
         Set CORSIKA sphere parameters from dictionary. Type of input varies and depend on data \
         source for these parameters.
+
+        Example for sphere_dict: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
 
         Parameters
         ----------
@@ -247,8 +248,9 @@ class ArrayLayout:
                     _sphere_dict_cleaned[key] = u.Quantity(value)
                 else:
                     _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
-        except (TypeError, KeyError):
-            pass
+        except (TypeError, KeyError) as exc:
+            self._logger.error(f"Error setting CORSIKA sphere parameters from {sphere_dict}")
+            raise exc
 
         return _sphere_dict_cleaned
 
@@ -280,7 +282,7 @@ class ArrayLayout:
         """
         Initialize array center and coordinate systems.
         By definition, the array center is at (0,0) in
-        the CORSIKA coordinate system.
+        the ground coordinate system.
 
         Parameters
         ----------
@@ -298,7 +300,7 @@ class ArrayLayout:
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
-        self._array_center.set_coordinates("corsika", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
+        self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
         self._set_array_center_mercator(center_dict)
         self._set_array_center_utm(center_dict)
         self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
@@ -331,7 +333,7 @@ class ArrayLayout:
         Set array center coordinates in UTM system.
         Convert array center position to WGS84 system
         (as latitudes are required for the definition
-        for the definition of the CORSIKA coordinate system)
+        for the definition of the ground coordinate system)
 
         """
         try:
@@ -557,7 +559,7 @@ class ArrayLayout:
         """
         for row in table:
             tel = self._load_telescope_names(row)
-            self._try_set_coordinate(row, tel, table, "corsika", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
             self._try_set_altitude(row, tel, table)
@@ -699,7 +701,7 @@ class ArrayLayout:
 
         """
 
-        table = QTable(meta=self._get_export_metadata(crs_name == "corsika"))
+        table = QTable(meta=self._get_export_metadata(crs_name == "ground"))
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
         pos_x, pos_y, pos_z = [], [], []
@@ -767,7 +769,7 @@ class ArrayLayout:
 
         corsika_list = ""
         for tel in self._telescope_list:
-            pos_x, pos_y, pos_z = tel.get_coordinates("corsika")
+            pos_x, pos_y, pos_z = tel.get_coordinates("ground")
             try:
                 sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
                     names.get_telescope_type(tel.name)

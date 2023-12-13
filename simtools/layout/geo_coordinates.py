@@ -8,7 +8,7 @@ import pyproj
 class GeoCoordinates:
     """
     Geospatial Coordinate systems.
-    Defines UTM, WGS84 and local (CORSIKA) coordinate systems.
+    Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.
 
     """
 
@@ -58,6 +58,8 @@ class GeoCoordinates:
     def crs_local(self, reference_point):
         """
         Local coordinate system definition.
+        This is a cartesian coordinate system with the origin at the array center.
+        X-axis points towards geographic North, y-axis towards geographic West.
 
         Parameters
         ----------
@@ -80,7 +82,7 @@ class GeoCoordinates:
                     f" +axis=nwu +units=m +k_0={_scale_factor_k_0}"
                 )
                 crs_local = pyproj.CRS.from_proj4(proj4_string)
-                self._logger.debug(f"Local (CORSIKA) coordinate system: {crs_local}")
+                self._logger.debug(f"Ground (sim_telarray) coordinate system: {crs_local}")
                 return crs_local
         except AttributeError:
             self._logger.error("Failed to derive local coordinate system. Missing reference point")
