@@ -131,8 +131,12 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
 def validate_application_output(config):
     """
     Validate application output against expected output.
-
     Expected output is defined in configuration file.
+
+    Parameters
+    ----------
+    config: dict
+        dictionary with the configuration for the application test.
 
     """
 
@@ -157,6 +161,13 @@ def get_tmp_config_file(config, output_path):
     """
     Write a temporary config file for the application to be tested.
     Change output path and file name to values suitable for tests.
+
+    Parameters
+    ----------
+    config: dict
+        Dictionary with the configuration for the application test.
+    output_path: str
+        Output path.
 
     """
 
