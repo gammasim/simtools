@@ -153,8 +153,10 @@ class Configurator:
         )
 
         self._fill_from_command_line(require_command_line=require_command_line)
-        self._fill_from_config_file(self.config.get("config", None))
-        self._fill_from_config_dict(self.config_class_init)
+        if self.config.get("config") is not None:
+            self._fill_from_config_file(self.config.get("config"))
+        if self.config_class_init is not None:
+            self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
 
         if self.config.get("activity_id", None) is None:
