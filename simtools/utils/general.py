@@ -5,6 +5,7 @@ General functions useful across different parts of the code.
 import copy
 import logging
 import os
+import re
 import tempfile
 import time
 import urllib.error
@@ -808,3 +809,61 @@ def sort_arrays(*args):
         _, value = zip(*sorted(zip(order_array, arg)))
         new_args.append(list(value))
     return new_args
+
+
+def extract_type_of_value(value) -> str:
+    """
+    Extract the string representation of the the type of a value.
+    For example, for a string, it returns 'str' rather than '<class 'str'>'.
+    Take into account also the case where the value is a numpy type.
+    """
+    _type = str(type(value))
+    if "numpy" in _type:
+        return re.sub(r"\d+", "", _type.split("'")[1].split(".")[-1])
+    if "astropy" in _type:
+        raise NotImplementedError("Astropy types are not supported yet.")
+
+    _type = _type.split("'")[1]
+    return _type
+
+
+def get_value_unit_type(value):
+    """
+    Get the value, unit and type of a value.
+    The value is stripped of its unit and the unit is returned
+    in its string form (i.e., to_string()).
+    The type is returned as a string representation of the type.
+    For example, for a string, it returns 'str' rather than '<class 'str'>'.
+
+    Note that Quantities are always floats, even if the original value is represented as an int.
+
+    Parameters
+    ----------
+    value: str, int, float, bool, u.Quantity
+        Value to be parsed.
+
+    Returns
+    -------
+    type of value, str, str
+        Value, unit in string representation (to_string())),
+        and string representation of the type of the value.
+    """
+
+    base_value = value
+    base_unit = None
+    base_type = ""
+    if isinstance(value, (str, u.Quantity)):
+        try:
+            _quantity_value = u.Quantity(value)
+            base_value = _quantity_value.value
+            base_type = extract_type_of_value(base_value)
+            if _quantity_value.unit.to_string() != "":
+                base_unit = _quantity_value.unit.to_string()
+        except TypeError:
+            base_value = value
+            base_type = "str"
+    else:
+        base_value = value
+        base_type = extract_type_of_value(base_value)
+
+    return base_value, base_unit, base_type
