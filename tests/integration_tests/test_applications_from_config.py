@@ -210,7 +210,13 @@ def prepare_configuration(config, output_path):
 def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     """
     Test all applications from config files found in the config directory.
-    Test output is written to a temporary directory and tested.
+
+    Parameters
+    ----------
+    tmp_test_directory: str
+        Temporary directory, into which test configuration and output is written.
+    config: dict
+        Dictionary with the configuration parameters for the test.
 
     """
 
