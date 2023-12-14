@@ -78,7 +78,7 @@ jobs:
 
       - name: Test Docker image
         run: >
-          docker run --rm ${{ env.TEST_TAG }} simtools-print-array-elements --help
+          docker run --rm -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} simtools-print-array-elements --config /workdir/external/tests/integration_tests/config/print_array_elements_utm_to_corsika.yml
 #           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} \
 #           --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv \
 #           --compact ground
