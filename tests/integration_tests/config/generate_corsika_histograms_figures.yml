@@ -1,0 +1,9 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-corsika-histograms
+  TEST_NAME: figures
+  CONFIGURATION:
+    IACT_FILE: |
+      ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+    PDF: true
+    OUTPUT_PATH: simtools-tests
+    TEST: true

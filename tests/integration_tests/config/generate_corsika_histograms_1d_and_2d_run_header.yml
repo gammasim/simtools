@@ -1,0 +1,15 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-corsika-histograms
+  TEST_NAME: 1d_and_2d_run_header
+  CONFIGURATION:
+    IACT_FILE: |
+      ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+    PDF: true
+    HDF5: true
+    HDF5_FILE_NAME: test_file_1d_and_2d_run_header.hdf5
+    EVENT_2D_HISTOGRAMS:
+      - zenith
+      - azimuth
+    EVENT_1D_HISTOGRAMS: total_energy
+    OUTPUT_PATH: simtools-tests
+    TEST: true

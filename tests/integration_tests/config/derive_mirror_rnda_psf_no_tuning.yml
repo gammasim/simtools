@@ -1,0 +1,13 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-derive-mirror-rnda
+  TEST_NAME: psf_measurement
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: MST-FlashCam-D
+    CONTAINMENT_FRACTION: 0.8
+    MIRROR_LIST: ./tests/resources/MLTdata-preproduction.ecsv
+    PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
+    USE_RANDOM_FLEN: true
+    RNDA: 0.0063
+    TEST: true
+    OUTPUT_PATH: simtools-tests

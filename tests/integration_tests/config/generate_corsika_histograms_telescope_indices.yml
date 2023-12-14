@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-corsika-histograms
+  TEST_NAME: telescope_indices
+  CONFIGURATION:
+    IACT_FILE: |
+      ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+    PDF: true
+    HDF5: true
+    HDF5_FILE_NAME: test_file_telescope_indices.hdf5
+    TELESCOPE_INDICES: ['0', '1', '2']
+    OUTPUT_PATH: simtools-tests
+    TEST: true

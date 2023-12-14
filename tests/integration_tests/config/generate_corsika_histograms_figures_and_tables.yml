@@ -1,0 +1,10 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-corsika-histograms
+  TEST_NAME: tables
+  CONFIGURATION:
+    IACT_FILE: |
+      ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
+    HDF5: true
+    HDF5_FILE_NAME: test_file_tables.hdf5
+    OUTPUT_PATH: simtools-tests
+    TEST: true

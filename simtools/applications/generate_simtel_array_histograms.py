@@ -165,7 +165,12 @@ def main():
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
         pdf_pages = PdfPages(f"{output_file_name}.pdf")
 
-        for i_hist in range(n_lists * simtel_histograms.number_of_histograms):
+        if config_parser["test"]:
+            number_of_histograms = 2
+        else:
+            number_of_histograms = simtel_histograms.number_of_histograms
+
+        for i_hist in range(n_lists * number_of_histograms):
             title = simtel_histograms.get_histogram_title(i_hist)
 
             logger.debug(f"Processing: {title}")
