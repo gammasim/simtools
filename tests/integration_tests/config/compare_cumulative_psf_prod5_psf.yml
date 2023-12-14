@@ -1,0 +1,11 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-compare-cumulative-psf
+  TEST_NAME: run
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: LST-1
+    MODEL_VERSION: prod5
+    DATA: ./tests/resources/PSFcurve_data_v2.txt
+    ZENITH: 20
+    TEST: true
+    OUTPUT_PATH: simtools-tests
