@@ -55,7 +55,6 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        if: matrix.type == 'prod'
         uses: docker/metadata-action@v5
         with:
           tags: |
