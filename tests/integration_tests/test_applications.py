@@ -251,7 +251,6 @@ APP_LIST = {
             "--output_file_name",
             "TESTOUTPUTDIR/test_simtel_hist_name",
             "--pdf",
-            "--test",
         ]
     ],
     "generate_simtel_array_histograms::hist_file_names_pdf": [
@@ -261,7 +260,6 @@ APP_LIST = {
             "--output_file_name",
             "TESTOUTPUTDIR/test_simtel_hist_name",
             "--pdf",
-            "--test",
         ]
     ],
     "generate_simtel_array_histograms::hist_file_names_pdf_no_name": [
@@ -269,7 +267,6 @@ APP_LIST = {
             "--hist_file_names",
             "./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
             "--pdf",
-            "--test",
         ]
     ],
     "generate_simtel_array_histograms::hist_file_names_pdf_hdf5": [
@@ -280,7 +277,6 @@ APP_LIST = {
             "TESTOUTPUTDIR/test_simtel_hist_name",
             "--pdf",
             "--hdf5",
-            "--test",
         ]
     ],
     # Layout
