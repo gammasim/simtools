@@ -1,0 +1,8 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-submit-data-from-external
+  TEST_NAME: submit_yml
+  CONFIGURATION:
+    INPUT: ./tests/resources/reference_position_mercator.yml
+    SCHEMA: ./tests/resources/reference_position_mercator.schema.yml
+    OUTPUT_PATH: simtools-tests
+    OUTPUT_FILE: test.ecsv
