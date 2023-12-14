@@ -79,6 +79,7 @@ jobs:
       - name: Test Docker image
         run: >
           docker run --rm -it \
+          ${{ env.TEST_TAG }} \
            simtools-print-array-elements --help
 #           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} \
 #           --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv \
