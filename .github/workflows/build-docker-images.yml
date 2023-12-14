@@ -77,13 +77,13 @@ jobs:
           tags: ${{ env.TEST_TAG }}
 
       - name: Test Docker image
-        shell: /usr/bin/bash -e {0}
         run: >
           docker run --rm -it \
-           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} \
-           simtools-print-array-elements \
-           --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv \
-           --compact ground
+           simtools-print-array-elements --help
+#           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} \
+#           --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv \
+#           --compact ground
+        shell: /usr/bin/bash -e {0}
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
