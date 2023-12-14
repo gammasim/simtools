@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-get-parameter
+  TEST_NAME: site_parameter
+  CONFIGURATION:
+    SITE: North
+    PARAMETER: altitude
