@@ -157,10 +157,10 @@ def validate_application_output(config):
     return 0
 
 
-def get_tmp_config_file(config, output_path):
+def write_and_get_tmp_config_file(config, output_path):
     """
     Write a temporary config file for the application to be tested.
-    Change output path and file name to values suitable for tests.
+    Change output path and file to paths provided with output_path.
 
     Parameters
     ----------
@@ -168,6 +168,10 @@ def get_tmp_config_file(config, output_path):
         Dictionary with the configuration for the application test.
     output_path: str
         Output path.
+
+    Returns
+    -------
+    str: path to the temporary config file.
 
     """
 
@@ -215,7 +219,9 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     if "CONFIGURATION" in config:
-        config_file = get_tmp_config_file(config["CONFIGURATION"], output_path=tmp_output_path)
+        config_file = write_and_get_tmp_config_file(
+            config["CONFIGURATION"], output_path=tmp_output_path
+        )
     else:
         config_file = None
 
