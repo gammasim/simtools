@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g3e7fa3b</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g94bb429</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=fe6cd65c"></script>
+    <script src="_static/documentation_options.js?v=6c8d5533"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g3e7fa3b</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g94bb429</p>
 
 
 
@@ -236,27 +236,53 @@ This application should complement the ones for updating parameters,     adding 
 <span id="derive-mirror-rnda"></span><h2>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">¶</a></h2>
 <section id="id5">
 <h3>Summary<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<p>Derive the simulation model parameter <strong>mirror_reflection_random_angle</strong>     (sometimes called mirror roughness) to match the measured containment diameter     of the optical point-spread function (PSF) of individual mirror panels.</p>
+<p>Derive the simulation model parameter <strong>mirror_reflection_random_angle</strong>
+(sometimes called mirror roughness) to match the measured containment diameter
+of the optical point-spread function (PSF) of individual mirror panels.</p>
 </section>
 <section id="description">
 <h3>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h3>
-<p>This application derives the value of the simulation model parameter     <em>mirror_reflection_random_angle</em> using measurements of the focal length     and PSF of individual mirror panels.</p>
+<p>This application derives the value of the simulation model parameter
+<em>mirror_reflection_random_angle</em> using measurements of the focal length
+and PSF of individual mirror panels.</p>
 <p>PSF measurements are provided by one of the following options:</p>
-<ul class="simple">
-<li><p>mean and sigma value obtained from the measurement of containment diameters of a number of      mirror panels in cm (<code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_mean</span></code> and      <code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_sigma</span></code>)</p></li>
+<blockquote>
+<div><ul class="simple">
+<li><p>mean and sigma value obtained from the measurement of containment diameters of a number of
+mirror panels in cm (<code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_mean</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_sigma</span></code>)</p></li>
 <li><p>file (table) with measured PSF for each mirror panel spot size (<code class="docutils literal notranslate"><span class="pre">--psf_measurement</span></code>)</p></li>
 </ul>
-<p>The containment fraction used for the PSF diameter calculation is set through     the argument <code class="docutils literal notranslate"><span class="pre">--containment_fraction</span></code> (typically 0.8 = 80%).</p>
-<p>Mirror panels are simulated individually, using one of the following options to set the     mirror panel focal length:</p>
-<ul class="simple">
-<li><p>file (table) with measured focal lengths per mirror panel (provided through <code class="docutils literal notranslate"><span class="pre">--mirror_list</span></code>)</p></li>
-<li><p>randomly generated focal lengths using an expected spread (value given through      <code class="docutils literal notranslate"><span class="pre">--random_flen</span></code>) around the mean focal length (provided through the      <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a>). This option is switched with <code class="docutils literal notranslate"><span class="pre">--use_random_flen</span></code>.</p></li>
+</div></blockquote>
+<p>The containment fraction used for the PSF diameter calculation is set through
+the argument <code class="docutils literal notranslate"><span class="pre">--containment_fraction</span></code> (typically 0.8 = 80%).</p>
+<p>Mirror panels are simulated individually, using one of the following options to set the
+mirror panel focal length:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>file (table) with measured focal lengths per mirror panel
+(provided through <code class="docutils literal notranslate"><span class="pre">--mirror_list</span></code>)</p></li>
+<li><p>randomly generated focal lengths using an expected spread (value given through
+<code class="docutils literal notranslate"><span class="pre">--random_flen</span></code>) around the mean focal length (provided through the
+<a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a>). This option is switched with <code class="docutils literal notranslate"><span class="pre">--use_random_flen</span></code>.</p></li>
 </ul>
+</div></blockquote>
 <p>The tuning algorithm requires a starting value for the random reflection angle. This is either
 taken from the <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a> (default) or can be set using the argument <code class="docutils literal notranslate"><span class="pre">--rnda</span></code>.</p>
-<p>Ray-tracing simulations are performed for single mirror configurations for each     mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors     is compared with the mean measured containment diameter. The algorithm defines a new value for     the random reflection angle based on the sign of the difference between measured and simulated     containment diameters and a new set of simulations is performed. This process is repeated     until the sign of the difference changes, meaning that the two final values of the random     reflection angle brackets the optimal. These two values are used to find the optimal one by     a linear interpolation. Finally, simulations are performed by using the interpolated value,     which is defined as the desired optimal.</p>
-<p>The option <code class="docutils literal notranslate"><span class="pre">--no_tuning</span></code> can be used if one only wants to simulate one value for the random     reflection angle and compare the results with the measured ones.</p>
-<p>Results of the tuning are plotted. See examples of the PSF containment diameter     D80 vs random reflection angle plot, on the left, and the D80 distributions     (per mirror panel), on the right.</p>
+<p>Ray-tracing simulations are performed for single mirror configurations for each
+mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
+is compared with the mean measured containment diameter. The algorithm defines a new value for
+the random reflection angle based on the sign of the difference between measured and simulated
+containment diameters and a new set of simulations is performed. This process is repeated
+until the sign of the difference changes, meaning that the two final values of the random
+reflection angle brackets the optimal. These two values are used to find the optimal one by
+a linear interpolation. Finally, simulations are performed by using the interpolated value,
+which is defined as the desired optimal.</p>
+<p>The option <code class="docutils literal notranslate"><span class="pre">--no_tuning</span></code> can be used if one only wants to simulate one value for the random
+reflection angle and compare the results with the measured ones.</p>
+<p>Results of the tuning are plotted. See examples of the PSF containment diameter
+D80 vs random reflection angle plot, on the left, and the D80 distributions
+(per mirror panel), on the right.</p>
 <a class="reference internal image-reference" href="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="derive-rnda-plot"><img alt="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="derive-rnda-plot" src="_images/derive_mirror_rnda_North-MST-FlashCam-D.png" style="width: 49%;" /></a>
 <a class="reference internal image-reference" href="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png"><img alt="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" src="_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" style="width: 49%;" /></a>
 <p>This application uses the following <a class="reference internal" href="simulation_software.html#simulationsoftware"><span class="std std-ref">Simulation Software</span></a> tools:</p>
@@ -282,13 +308,18 @@ taken from the <a class="reference internal" href="databases.html#model-paramete
 </dd>
 <dt>containment_fraction (float, required)</dt><dd><p>Containment fraction for diameter calculation</p>
 </dd>
-<dt>rnda (float, optional)</dt><dd><p>Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the         default model is read from the simulation model database.</p>
+<dt>rnda (float, optional)</dt><dd><p>Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the
+default model is read from the simulation model database.</p>
 </dd>
 <dt>mirror_list (file, optional)</dt><dd><p>Table with mirror ID and panel radius.</p>
 </dd>
-<dt>use_random_flen (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_flen can be         used to replace the default random_focal_length from the model.</p>
+<dt>use_random_flen (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_flen can be
+used to replace the default random_focal_length from the model.</p>
 </dd>
-<dt>random_flen (float, optional)</dt><dd><p>Value of the random focal lengths to replace the default random_focal_length. Only used if          use_random_flen is activated.</p>
+<dt>random_flen (float, optional)</dt><dd><dl class="simple">
+<dt>Value of the random focal lengths to replace the default random_focal_length. Only used if</dt><dd><p>use_random_flen is activated.</p>
+</dd>
+</dl>
 </dd>
 <dt>no_tuning (activation mode, optional)</dt><dd><p>Turn off the tuning - A single case will be simulated and plotted.</p>
 </dd>
