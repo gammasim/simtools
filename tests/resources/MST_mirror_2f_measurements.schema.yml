@@ -14,15 +14,15 @@ base_schema_version: 0.1.0
 data:
   - type: datatable
     table_columns:
-      - name: mirror_panel_id
+      - name: mirror_id
         description: |-
           Mirror panel ID.
         required: true
         units: dimensionless
         type: string
-      - name: mirror_panel_radius
+      - name: mirror_panel_diameter
         description: |-
-          Mirror panel radius.
+          Mirror panel diameter.
         required: true
         units: cm
         type: double
@@ -38,4 +38,21 @@ data:
           (best value, not at nominal distance).
         required: false
         units: cm
+        type: double
+      - name: mirror_x 
+        description: |-
+          Mirror panel position x.
+        required: false
+        units: cm
+        type: double
+      - name: mirror_y
+        description: |-
+          Mirror panel position y.
+        required: false
+        units: cm
+        type: double
+      - name: shape_type
+        description: |-
+          Mirror panel shape type code.
+        required: false
         type: double
