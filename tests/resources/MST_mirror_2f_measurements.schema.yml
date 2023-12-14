@@ -39,7 +39,7 @@ data:
         required: false
         units: cm
         type: double
-      - name: mirror_x 
+      - name: mirror_x
         description: |-
           Mirror panel position x.
         required: false

@@ -68,8 +68,8 @@ class Mirrors:
             self._logger.debug(f"Mirror shape_type = {self.shape_type}")
             self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
             self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
-        except:
-            self._logger.debug(f"Mirror shape_type not in mirror file")
+        except KeyError:
+            self._logger.debug("Mirror shape_type not in mirror file")
             self.number_of_mirrors = len(self.mirror_table["mirror_id"])
 
         if "focal_length" not in self.mirror_table.colnames:
@@ -138,16 +138,13 @@ class Mirrors:
         def get_mirror_table_mask():
             if isinstance(self.mirror_table["mirror_id"][0], np.str_):
                 mask = self.mirror_table["mirror_id"] == "id=" + str(number)
-                return mask
-            elif isinstance(self.mirror_table["mirror_id"][0], np.int32):
+            if isinstance(self.mirror_table["mirror_id"][0], np.int32):
                 mask = self.mirror_table["mirror_id"] == number
-                return mask
+            return mask
 
         mask = get_mirror_table_mask()
-        if np.all(mask == False):
-            self._logger.error(
-                "Mirror id{} not in table, using first mirror instead".format(number)
-            )
+        if not np.any(mask):
+            self._logger.error(f"Mirror id{number} not in table, using first mirror instead")
             mask[0] = True
 
         try:
@@ -158,8 +155,9 @@ class Mirrors:
                 self.mirror_table[mask]["focal_length"].value[0],
                 self.mirror_table[mask]["shape_type"].value[0],
             )
-        except:
-            self._logger.debug(f"Mirror list missing required column")
+        except KeyError:
+            self._logger.debug("Mirror list missing required column")
+            return None
 
     def plot_mirror_layout(self):
         """
