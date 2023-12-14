@@ -39,7 +39,7 @@ docker run --rm -it --env-file .env \
     ghcr.io/gammasim/simtools-prod:latest \
     simtools-print-array-elements \
     --array_element_list ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
-    --export ground --use_corsika_telescope_height \
+    --export corsika --use_corsika_telescope_height \
     --output_path /workdir/external/
 ```
 
