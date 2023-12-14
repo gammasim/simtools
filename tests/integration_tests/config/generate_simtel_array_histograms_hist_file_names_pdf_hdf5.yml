@@ -8,3 +8,4 @@ CTA_SIMPIPE:
     HDF5: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
     OUTPUT_PATH: simtools-tests
+    TEST: true
