@@ -145,6 +145,7 @@ class ArrayModel:
         """
 
         # Getting site parameters from DB
+        self._logger.debug("Getting site parameters from DB")
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._site_parameters = db.get_site_parameters(
             self.site, self.model_version, only_applicable=True
@@ -175,7 +176,7 @@ class ArrayModel:
                     telescope_model_name=tel_model_name,
                     model_version=self.model_version,
                     label=self.label,
-                    mongo_db_config=self.mongo_db_config,
+                    db=db,
                 )
             else:
                 # Telescope name already exists.
