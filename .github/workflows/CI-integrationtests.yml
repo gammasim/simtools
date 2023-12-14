@@ -10,8 +10,8 @@ env:
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
-  #  pull_request:
-  #  types: [opened, synchronize]
+  pull_request:
+    types: [opened, synchronize]
   schedule:
     - cron: "0 0 * * *"
 

@@ -9,8 +9,8 @@ env:
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
 
 on:
-  #  pull_request:
-  #  types: [opened, synchronize]
+  pull_request:
+    types: [opened, synchronize]
   schedule:
     - cron: "0 0 * * *"
 
