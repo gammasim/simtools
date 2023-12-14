@@ -8,6 +8,6 @@ CTA_SIMPIPE:
     MIRROR_LIST: ./tests/resources/MLTdata-preproduction.ecsv
     PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
     USE_RANDOM_FLEN: true
-    RNDA: 0.003
+    RNDA: 0.0063
     TEST: true
     OUTPUT_PATH: simtools-tests
