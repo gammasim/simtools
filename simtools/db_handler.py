@@ -238,7 +238,7 @@ class DatabaseHandler:
             for info in parameters.values():
                 if not info["File"]:
                     continue
-                if Path(info["Value"]).joinpath(dest).exists():
+                if Path(dest).joinpath(info["Value"]).exists():
                     self._logger.debug(f"File {info['Value']} already exists in {dest}")
                     continue
                 file = self._get_file_mongo_db(
