@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: one_file_two_angles
+  CONFIGURATION:
+    TELESCOPE_LIST: data/layout/telescope_positions-North-TestLayout.ecsv
+    ROTATE_ANGLE: ["20", "30"]
+    OUTPUT_PATH: simtools-tests

@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-derive-mirror-rnda
+  TEST_NAME: psf_random_flen
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: MST-FlashCam-D
+    CONTAINMENT_FRACTION: 0.8
+    PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4
+    USE_RANDOM_FLEN: true
+    RNDA: 0.0063
+    TEST: true
+    OUTPUT_PATH: simtools-tests

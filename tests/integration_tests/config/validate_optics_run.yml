@@ -1,0 +1,11 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-validate-optics
+  TEST_NAME: run
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: LST-1
+    MAX_OFFSET: 1.0
+    SRC_DISTANCE: 11.
+    ZENITH: 20
+    TEST: true
+    OUTPUT_PATH: simtools-tests

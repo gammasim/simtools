@@ -1,0 +1,9 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-submit-data-from-external
+  TEST_NAME: submit_table
+  CONFIGURATION:
+    INPUT_META: ./tests/resources/MLTdata-preproduction.meta.yml
+    INPUT: ./tests/resources/MLTdata-preproduction.ecsv
+    SCHEMA: ./tests/resources/MST_mirror_2f_measurements.schema.yml
+    OUTPUT_PATH: simtools-tests
+    OUTPUT_FILE: test.ecsv
