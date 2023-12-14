@@ -77,8 +77,16 @@ jobs:
           tags: ${{ env.TEST_TAG }}
 
       - name: Test Docker image
-        run: |
-          docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} simtools-print-array-elements --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv --compact ground
+        run: >
+          docker run --rm -it \
+           -e "SIMTOOLS_DB_API_PORT = ${{ env.SIMTOOLS_DB_API_PORT }}" \
+           -e "SIMTOOLS_DB_API_USER = ${{ env.SIMTOOLS_DB_API_USER }}" \
+           -e "SIMTOOLS_DB_API_PW = ${{ env.SIMTOOLS_DB_API_PW }}" \
+           -e "SIMTOOLS_DB_SERVER = ${{ env.SIMTOOLS_DB_SERVER }}" \
+           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} \
+           simtools-print-array-elements \
+           --input /workdir/external/tests/resources/telescope_positions-North-utm.ecsv \
+           --compact ground
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
