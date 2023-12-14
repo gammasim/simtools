@@ -52,6 +52,9 @@ def test_fill_from_config_dict(configurator, args_dict):
     # No AttributeError is raised for non-dict inputs
     configurator._fill_from_config_dict("abc")
 
+    # No error raise for None arguments
+    configurator._fill_from_config_dict(None)
+
 
 def test_fill_from_config_file_not_existing_file(configurator):
     # _fill_from_config_file() is always called after _fill_from_command_line()
@@ -84,6 +87,11 @@ def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
             else:
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
+
+    # test that no error is raised
+    configurator._fill_from_config_file(config_file=None)
+    with pytest.raises(FileNotFoundError):
+        configurator._fill_from_config_file(config_file="abc")
 
 
 def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
@@ -333,3 +341,27 @@ def test_get_db_parameters():
     configurator.config = {}
     db_params = configurator._get_db_parameters()
     assert db_params == {}
+
+
+def test_reset_requirements_parameter():
+    configurator = Configurator()
+    configurator.parser.add_argument("--arg", required=True)
+    configurator.config["arg"] = True
+
+    configurator._reset_required_arguments()
+
+    for action in configurator.parser._actions:
+        assert action.required is False
+
+
+def test_reset_required_arguments_group():
+    configurator = Configurator()
+    group = configurator.parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--arg1")
+    group.add_argument("--arg2")
+    configurator.config["arg1"] = True
+
+    configurator._reset_required_arguments()
+
+    for group in configurator.parser._mutually_exclusive_groups:
+        assert group.required is False

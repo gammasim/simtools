@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-get-file-from-db
+  TEST_NAME: test-data
+  CONFIGURATION:
+    FILE_NAME: PSFcurve_data_v2.txt
+    OUTPUT_PATH: simtools-output

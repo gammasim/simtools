@@ -1,0 +1,15 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-simulate-prod
+  TEST_NAME: gamma_20_deg
+  CONFIGURATION:
+    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test.yml
+    MODEL_VERSION: prod5
+    SITE: North
+    PRIMARY: gamma
+    AZIMUTH_ANGLE: North
+    ZENITH_ANGLE: 20
+    START_RUN: 0
+    RUN: 2
+    NSHOW: 10
+    DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output

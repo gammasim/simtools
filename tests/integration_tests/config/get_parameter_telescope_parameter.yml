@@ -1,0 +1,8 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-get-parameter
+  TEST_NAME: telescope_parameter
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: LST-1
+    PARAMETER: mirror_list
+    MODEL_VERSION: prod5

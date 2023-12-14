@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-produce-array-config
+  TEST_NAME: run
+  CONFIGURATION:
+    ARRAY_CONFIG: ./tests/resources/array_config_test.yml
+    OUTPUT_PATH: simtools-output
