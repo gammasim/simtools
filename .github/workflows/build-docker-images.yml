@@ -78,6 +78,7 @@ jobs:
       # test the prod image with one application using the database
       # and the sim_telarray installation
       - name: Test Docker image
+        if: matrix.type == 'prod'
         run: >
           docker run --rm
           -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
