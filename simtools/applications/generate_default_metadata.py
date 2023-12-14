@@ -66,7 +66,7 @@ def _parse(label, description):
         required=False,
     )
 
-    return config.initialize(output=False)
+    return config.initialize(output=False, require_command_line=True)
 
 
 def main():

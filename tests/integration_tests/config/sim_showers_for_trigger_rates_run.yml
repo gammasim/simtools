@@ -1,0 +1,13 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-sim-showers-for-trigger-rates
+  TEST_NAME: run
+  CONFIGURATION:
+    ARRAY: 4LST
+    SITE: North
+    PRIMARY: proton
+    NRUNS: 2
+    NEVENTS: 10000
+    TEST: true
+    SUBMIT_COMMAND: local
+    DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output
