@@ -7,3 +7,4 @@ CTA_SIMPIPE:
     PDF: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
     OUTPUT_PATH: simtools-tests
+    TEST: true

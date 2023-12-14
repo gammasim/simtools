@@ -9,3 +9,4 @@ CTA_SIMPIPE:
     HDF5_FILE_NAME: test_file_21_run_header.hdf5
     EVENT_1D_HISTOGRAMS: total_energy
     OUTPUT_PATH: simtools-tests
+    TEST: true

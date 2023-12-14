@@ -7,3 +7,4 @@ CTA_SIMPIPE:
     HDF5: true
     HDF5_FILE_NAME: test_file_tables.hdf5
     OUTPUT_PATH: simtools-tests
+    TEST: true
