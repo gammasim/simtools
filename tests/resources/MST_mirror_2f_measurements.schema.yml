@@ -20,7 +20,7 @@ data:
         required: true
         units: dimensionless
         type: string
-      - name: mirror_panel_diameter
+      - name: mirror_diameter
         description: |-
           Mirror panel diameter.
         required: true
@@ -55,4 +55,5 @@ data:
         description: |-
           Mirror panel shape type code.
         required: false
+        units: dimensionless
         type: double
