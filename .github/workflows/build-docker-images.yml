@@ -78,8 +78,13 @@ jobs:
 
       - name: Test Docker image
         run: >
-          docker run --rm -e "SIMTOOLS_DB_API_PORT = ${{ env.SIMTOOLS_DB_API_PORT }}" -e "SIMTOOLS_DB_API_USER = ${{ env.SIMTOOLS_DB_API_USER }}" -e "SIMTOOLS_DB_API_PW = ${{ env.SIMTOOLS_DB_API_PW }}" -e "SIMTOOLS_DB_API_SERVER = ${{ env.SIMTOOLS_DB_API_SERVER }}"  -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} bash -c "cd /workdir/external && simtools-print-array-elements --config /workdir/external/tests/integration_tests/config/print_array_elements_utm_to_corsika.yml"
-          docker run --rm -e "SIMTOOLS_DB_API_PORT = ${{ env.SIMTOOLS_DB_API_PORT }}" -e "SIMTOOLS_DB_API_USER = ${{ env.SIMTOOLS_DB_API_USER }}" -e "SIMTOOLS_DB_API_PW = ${{ env.SIMTOOLS_DB_API_PW }}" -e "SIMTOOLS_DB_API_SERVER = ${{ env.SIMTOOLS_DB_API_SERVER }}"  -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }} bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
+          docker run --rm
+           -e "SIMTOOLS_DB_API_PORT = ${{ env.SIMTOOLS_DB_API_PORT }}"
+           -e "SIMTOOLS_DB_API_USER = ${{ env.SIMTOOLS_DB_API_USER }}"
+           -e "SIMTOOLS_DB_API_PW = ${{ env.SIMTOOLS_DB_API_PW }}"
+           -e "SIMTOOLS_DB_API_SERVER = ${{ env.SIMTOOLS_DB_API_SERVER }}"
+           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
+          bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
         shell: /usr/bin/bash -e {0}
 
       - name: Push Docker image
