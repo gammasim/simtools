@@ -47,8 +47,9 @@ class TelescopeModel:
         self,
         site,
         telescope_model_name,
-        mongo_db_config,
+        mongo_db_config=None,
         model_version="Released",
+        db=None,
         label=None,
     ):
         """
@@ -71,7 +72,12 @@ class TelescopeModel:
         self._camera = None
 
         self.io_handler = io_handler.IOHandler()
-        self.mongo_db_config = mongo_db_config
+        self.db = None
+        if db is not None:
+            self.db = db
+        elif mongo_db_config is not None:
+            self._logger.debug("Connecting to DB")
+            self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
 
@@ -240,19 +246,20 @@ class TelescopeModel:
     def _load_parameters_from_db(self):
         """Read parameters from DB and store them in _parameters."""
 
-        if self.mongo_db_config is None:
+        if self.db is None:
             return
 
         self._logger.debug("Reading telescope parameters from DB")
 
         self._set_config_file_directory_and_name()
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._parameters = db.get_model_parameters(
+        self._parameters = self.db.get_model_parameters(
             self.site, self.name, self.model_version, only_applicable=True
         )
 
         self._logger.debug("Reading site parameters from DB")
-        _site_pars = db.get_site_parameters(self.site, self.model_version, only_applicable=True)
+        _site_pars = self.db.get_site_parameters(
+            self.site, self.model_version, only_applicable=True
+        )
         self._parameters.update(_site_pars)
 
     def has_parameter(self, par_name):
@@ -498,7 +505,6 @@ class TelescopeModel:
 
     def export_model_files(self):
         """Exports the model files into the config file directory."""
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
 
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
@@ -506,7 +512,7 @@ class TelescopeModel:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        db.export_model_files(pars_from_db, self._config_file_directory)
+        self.db.export_model_files(pars_from_db, self._config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
     def print_parameters(self):
@@ -530,11 +536,10 @@ class TelescopeModel:
     def export_derived_files(self):
         """Write to disk a file from the derived values DB."""
 
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         for par_now in self.derived.values():
             if par_now["File"]:
-                db.export_file_db(
-                    db_name=db.DB_DERIVED_VALUES,
+                self.db.export_file_db(
+                    db_name=self.db.DB_DERIVED_VALUES,
                     dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
                     file_name=par_now["Value"],
                 )
@@ -664,16 +669,14 @@ class TelescopeModel:
     def _load_reference_data(self):
         """Load the reference data for this telescope from the DB."""
         self._logger.debug("Reading reference data from DB")
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._reference_data = db.get_reference_data(
+        self._reference_data = self.db.get_reference_data(
             self.site, self.model_version, only_applicable=True
         )
 
     def _load_derived_values(self):
         """Load the derived values for this telescope from the DB."""
         self._logger.debug("Reading derived data from DB")
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._derived = db.get_derived_values(
+        self._derived = self.db.get_derived_values(
             self.site,
             self.name,
             self.model_version,

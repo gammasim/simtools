@@ -20,17 +20,17 @@ default:
 proton:
   viewcone: [0 deg, 10 deg]
   showers:
-    run_range: [1, 20]
-    nshow: 10000
-    erange: [30 GeV, 600 TeV]
+    run_range: [1, 2]
+    nshow: 5
+    erange: [30 GeV, 100 GeV]
     cscat: [20, 2000.0 m, 0]
 
 gamma:
   viewcone: [0 deg, 0 deg]
   showers:
-    run_range: [1, 10]
-    nshow: 10000
-    erange: [10 GeV, 300 TeV]
+    run_range: [1, 2]
+    nshow: 5
+    erange: [10 GeV, 80 GeV]
     cscat: [5, 1500.0 m, 0]
   array:
     MST-05:
