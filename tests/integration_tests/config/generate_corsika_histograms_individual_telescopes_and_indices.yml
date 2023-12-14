@@ -10,3 +10,4 @@ CTA_SIMPIPE:
     TELESCOPE_INDICES: ['0', '1', '2']
     INDIVIDUAL_TELESCOPES: true
     OUTPUT_PATH: simtools-tests
+    TEST: true

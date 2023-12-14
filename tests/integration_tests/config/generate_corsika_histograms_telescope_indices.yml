@@ -9,3 +9,4 @@ CTA_SIMPIPE:
     HDF5_FILE_NAME: test_file_telescope_indices.hdf5
     TELESCOPE_INDICES: ['0', '1', '2']
     OUTPUT_PATH: simtools-tests
+    TEST: true
