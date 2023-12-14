@@ -16,10 +16,10 @@
 
     PSF measurements are provided by one of the following options:
 
-    * mean and sigma value obtained from the measurement of containment diameters of a number of
-     mirror panels in cm (``--psf_measurement_containment_mean`` and
-     ``--psf_measurement_containment_sigma``)
-    * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
+        * mean and sigma value obtained from the measurement of containment diameters of a number of
+          mirror panels in cm (``--psf_measurement_containment_mean`` and
+          ``--psf_measurement_containment_sigma``)
+        * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
 
     The containment fraction used for the PSF diameter calculation is set through
     the argument ``--containment_fraction`` (typically 0.8 = 80%).
@@ -27,10 +27,11 @@
     Mirror panels are simulated individually, using one of the following options to set the
     mirror panel focal length:
 
-    * file (table) with measured focal lengths per mirror panel (provided through ``--mirror_list``)
-    * randomly generated focal lengths using an expected spread (value given through
-     ``--random_flen``) around the mean focal length (provided through the
-     :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
+        * file (table) with measured focal lengths per mirror panel
+          (provided through ``--mirror_list``)
+        * randomly generated focal lengths using an expected spread (value given through
+          ``--random_flen``) around the mean focal length (provided through the
+          :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
 
     The tuning algorithm requires a starting value for the random reflection angle. This is either
     taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
