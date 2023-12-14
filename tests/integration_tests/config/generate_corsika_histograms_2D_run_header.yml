@@ -11,3 +11,4 @@ CTA_SIMPIPE:
       - zenith
       - azimuth
     OUTPUT_PATH: simtools-tests
+    TEST: true

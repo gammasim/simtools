@@ -12,3 +12,4 @@ CTA_SIMPIPE:
       - azimuth
     EVENT_1D_HISTOGRAMS: total_energy
     OUTPUT_PATH: simtools-tests
+    TEST: true

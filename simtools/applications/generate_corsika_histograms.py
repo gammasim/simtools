@@ -284,7 +284,7 @@ def _parse(label, description):
     return config_parser, _
 
 
-def _plot_figures(corsika_histograms_instance):
+def _plot_figures(corsika_histograms_instance, test=False):
     """
     Auxiliary function to centralize the plotting functions.
 
@@ -292,6 +292,8 @@ def _plot_figures(corsika_histograms_instance):
     ----------
     corsika_histograms_instance: `CorsikaHistograms` instance.
         The CorsikaHistograms instance created in main.
+    test: bool
+        If true plots the figures for the first two functions only.
     """
 
     plot_function_names = [
@@ -300,6 +302,8 @@ def _plot_figures(corsika_histograms_instance):
         if plotting_method.startswith("plot_")
         and "event_header_distribution" not in plotting_method
     ]
+    if test:
+        plot_function_names = plot_function_names[:2]
 
     figure_list = []
     for function_name in plot_function_names:
@@ -455,7 +459,9 @@ def main():
 
     # Cherenkov photons
     if args_dict["pdf"]:
-        _plot_figures(corsika_histograms_instance=corsika_histograms_instance)
+        _plot_figures(
+            corsika_histograms_instance=corsika_histograms_instance, test=args_dict["test"]
+        )
     if args_dict["hdf5"]:
         corsika_histograms_instance.export_histograms(overwrite=overwrite)
 
