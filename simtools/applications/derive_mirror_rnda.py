@@ -3,53 +3,54 @@
 """
     Summary
     -------
-    Derive the simulation model parameter **mirror_reflection_random_angle** \
-    (sometimes called mirror roughness) to match the measured containment diameter \
+    Derive the simulation model parameter **mirror_reflection_random_angle**
+    (sometimes called mirror roughness) to match the measured containment diameter
     of the optical point-spread function (PSF) of individual mirror panels.
 
     Description
     -----------
 
-    This application derives the value of the simulation model parameter \
-    *mirror_reflection_random_angle* using measurements of the focal length \
+    This application derives the value of the simulation model parameter
+    *mirror_reflection_random_angle* using measurements of the focal length
     and PSF of individual mirror panels.
 
     PSF measurements are provided by one of the following options:
 
-    * mean and sigma value obtained from the measurement of containment diameters of a number of \
-     mirror panels in cm (``--psf_measurement_containment_mean`` and \
-     ``--psf_measurement_containment_sigma``)
-    * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
+        * mean and sigma value obtained from the measurement of containment diameters of a number of
+          mirror panels in cm (``--psf_measurement_containment_mean`` and
+          ``--psf_measurement_containment_sigma``)
+        * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
 
-    The containment fraction used for the PSF diameter calculation is set through \
+    The containment fraction used for the PSF diameter calculation is set through
     the argument ``--containment_fraction`` (typically 0.8 = 80%).
 
-    Mirror panels are simulated individually, using one of the following options to set the \
+    Mirror panels are simulated individually, using one of the following options to set the
     mirror panel focal length:
 
-    * file (table) with measured focal lengths per mirror panel (provided through ``--mirror_list``)
-    * randomly generated focal lengths using an expected spread (value given through \
-     ``--random_flen``) around the mean focal length (provided through the \
-     :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
+        * file (table) with measured focal lengths per mirror panel
+          (provided through ``--mirror_list``)
+        * randomly generated focal lengths using an expected spread (value given through
+          ``--random_flen``) around the mean focal length (provided through the
+          :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
 
     The tuning algorithm requires a starting value for the random reflection angle. This is either
     taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
 
-    Ray-tracing simulations are performed for single mirror configurations for each \
-    mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors \
-    is compared with the mean measured containment diameter. The algorithm defines a new value for \
-    the random reflection angle based on the sign of the difference between measured and simulated \
-    containment diameters and a new set of simulations is performed. This process is repeated \
-    until the sign of the difference changes, meaning that the two final values of the random \
-    reflection angle brackets the optimal. These two values are used to find the optimal one by \
-    a linear interpolation. Finally, simulations are performed by using the interpolated value, \
+    Ray-tracing simulations are performed for single mirror configurations for each
+    mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
+    is compared with the mean measured containment diameter. The algorithm defines a new value for
+    the random reflection angle based on the sign of the difference between measured and simulated
+    containment diameters and a new set of simulations is performed. This process is repeated
+    until the sign of the difference changes, meaning that the two final values of the random
+    reflection angle brackets the optimal. These two values are used to find the optimal one by
+    a linear interpolation. Finally, simulations are performed by using the interpolated value,
     which is defined as the desired optimal.
 
-    The option ``--no_tuning`` can be used if one only wants to simulate one value for the random \
+    The option ``--no_tuning`` can be used if one only wants to simulate one value for the random
     reflection angle and compare the results with the measured ones.
 
-    Results of the tuning are plotted. See examples of the PSF containment diameter \
-    D80 vs random reflection angle plot, on the left, and the D80 distributions \
+    Results of the tuning are plotted. See examples of the PSF containment diameter
+    D80 vs random reflection angle plot, on the left, and the D80 distributions
     (per mirror panel), on the right.
 
     .. _derive_rnda_plot:
@@ -78,15 +79,15 @@
     containment_fraction (float, required)
         Containment fraction for diameter calculation
     rnda (float, optional)
-        Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the \
+        Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the
         default model is read from the simulation model database.
     mirror_list (file, optional)
         Table with mirror ID and panel radius.
     use_random_flen (activation mode, optional)
-        Use random focal lengths, instead of the measured ones. The argument random_flen can be \
+        Use random focal lengths, instead of the measured ones. The argument random_flen can be
         used to replace the default random_focal_length from the model.
     random_flen (float, optional)
-        Value of the random focal lengths to replace the default random_focal_length. Only used if \
+        Value of the random focal lengths to replace the default random_focal_length. Only used if
          use_random_flen is activated.
     no_tuning (activation mode, optional)
         Turn off the tuning - A single case will be simulated and plotted.
@@ -315,7 +316,9 @@ def _get_psf_containment(logger, args_dict):
 
     """
 
-    _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv")
+    # If this is a test, read just the first few lines since we only simulate those mirrors
+    data_end = args_dict["number_of_mirrors_to_test"] + 1 if args_dict["test"] else None
+    _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end)
     try:
         args_dict["psf_measurement_containment_mean"] = np.nanmean(
             np.array(_psf_list["psf_opt"].to("cm").value)
@@ -345,6 +348,9 @@ def main():
 
     tel = _define_telescope_model(label, args_dict, db_config)
 
+    if args_dict["test"]:
+        args_dict["number_of_mirrors_to_test"] = 4
+
     if args_dict["psf_measurement"]:
         _get_psf_containment(logger, args_dict)
     if not args_dict["psf_measurement_containment_mean"]:
@@ -357,7 +363,9 @@ def main():
         ray = RayTracing.from_kwargs(
             telescope_model=tel,
             single_mirror_mode=True,
-            mirror_numbers=list(range(1, 10)) if args_dict["test"] else "all",
+            mirror_numbers=list(range(1, args_dict["number_of_mirrors_to_test"] + 1))
+            if args_dict["test"]
+            else "all",
             simtel_source_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
@@ -398,6 +406,10 @@ def main():
         collect_results(rnda, mean_d80, sig_d80)
         while not stop:
             rnda = rnda - (0.1 * rnda_start * sign_delta)
+            if rnda < 0:
+                rnda = 0
+                collect_results(rnda, mean_d80, sig_d80)
+                break
             mean_d80, sig_d80 = run(rnda)
             new_sign_delta = np.sign(mean_d80 - args_dict["psf_measurement_containment_mean"])
             stop = new_sign_delta != sign_delta
