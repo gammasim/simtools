@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gd984fa0</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+gc0b912d</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=6b66f246"></script>
+    <script src="_static/documentation_options.js?v=61985620"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gd984fa0</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc0b912d</p>
 
 
 
@@ -266,6 +266,29 @@ the util module.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>logging.LEVEL</dt><dd><p>The requested logging level to be used as input to logging.setLevel().</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.general.remove_substring_recursively_from_dict">
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">remove_substring_recursively_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">substring</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\n'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#remove_substring_recursively_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.remove_substring_recursively_from_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Remove substrings from all strings in a dictionary. Recursively crawls through the dictionary
+This e.g., allows to remove all newline characters from a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_dict: dict</strong></dt><dd><p>Dictionary to be converted.</p>
+</dd>
+<dt><strong>substring: str</strong></dt><dd><p>Substring to be removed.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>AttributeError:</dt><dd><p>if input is not a proper dictionary.</p>
 </dd>
 </dl>
 </dd>

@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+gd984fa0</title>
+    <title>Applications &#8212; simtools v0.1.dev1+gc0b912d</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=6b66f246"></script>
+    <script src="_static/documentation_options.js?v=61985620"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gd984fa0</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc0b912d</p>
 
 
 
@@ -363,7 +363,7 @@ are to be found in the CORSIKA manual, e.g., “total_energy”, “zenith”, �
 <section id="id9">
 <h3>Command line arguments<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <dl class="simple">
-<dt>IACT_file (str, required)</dt><dd><p>The name of the CORSIKA IACT file resulted from the CORSIKA simulation.</p>
+<dt>iact_file (str, required)</dt><dd><p>The name of the CORSIKA IACT file resulted from the CORSIKA simulation.</p>
 </dd>
 <dt>telescope_indices (list, optional)</dt><dd><p>The list with the telescope indices to be considered in the generation of the histograms.
 Telescopes that are not in the list will not contribute with photons to the histograms.
@@ -472,7 +472,7 @@ histogram for <code class="xref py py-obj docutils literal notranslate"><span cl
 <h3>Example<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <p>Generate the histograms for a test IACT file:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-corsika-histograms --IACT_file /workdir/external/simtools/tests/            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/tests/            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5</span>
 <span class="go">    --event_2d_histograms zenith azimuth --event_1d_histograms total_energy</span>
 </pre></div>
 </div>
