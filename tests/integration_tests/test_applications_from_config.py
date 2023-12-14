@@ -201,6 +201,15 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     Test all applications from config files found in the config directory.
     Test output is written to a temporary directory and tested.
 
+    Parameters
+    ----------
+    tmp_test_directory: str
+        The directory where the configuration files are located.
+    config: dict
+        The dictionary with the configuration parameters for the test.
+    monkeypatch: list
+        test name.
+
     """
 
     # The add_file_to_db.py application requires a user confirmation.
