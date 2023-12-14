@@ -30,7 +30,7 @@
 
     Command line arguments
     ----------------------
-    IACT_file (str, required)
+    iact_file (str, required)
         The name of the CORSIKA IACT file resulted from the CORSIKA simulation.
 
     telescope_indices (list, optional)
@@ -151,7 +151,7 @@
 
      .. code-block:: console
 
-        simtools-generate-corsika-histograms --IACT_file /workdir/external/simtools/tests/\
+        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/tests/\
             resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5
             --event_2d_histograms zenith azimuth --event_1d_histograms total_energy
 
@@ -200,7 +200,7 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--IACT_file",
+        "--iact_file",
         help="Name of the CORSIKA IACT file from which to generate the histograms.",
         type=str,
         required=True,
@@ -421,7 +421,7 @@ def main():
     logger.info("Starting the application.")
 
     corsika_histograms_instance = CorsikaHistograms(
-        args_dict["IACT_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
+        args_dict["iact_file"], output_path=output_path, hdf5_file_name=args_dict["hdf5_file_name"]
     )
     if args_dict["telescope_indices"] is not None:
         try:

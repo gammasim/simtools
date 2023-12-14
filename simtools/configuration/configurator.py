@@ -153,7 +153,7 @@ class Configurator:
         )
 
         self._fill_from_command_line(require_command_line=require_command_line)
-        self._fill_from_config_file(self.config.get("config", None))
+        self._fill_from_config_file(self.config.get("config"))
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
 
@@ -196,7 +196,24 @@ class Configurator:
             self._logger.debug("No command line arguments given, printing help.")
             arg_list = ["--help"]
 
+        if "--config" in arg_list:
+            self._reset_required_arguments()
+
         self._fill_config(arg_list)
+
+    def _reset_required_arguments(self):
+        """
+        Reset required parser arguments (i.e., arguments added with "required=True").
+        Includes also mutually exclusive groups.
+
+        Access protected attributes of parser (no public method available).
+
+        """
+
+        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
+            group.required = False
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            action.required = False
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
@@ -273,11 +290,13 @@ class Configurator:
             _config_dict = gen.collect_data_from_yaml_or_dict(
                 in_yaml=config_file, in_dict=None, allow_empty=True
             )
+            # yaml parser adds \n in multiline strings, remove them
+            _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "CTA_SIMPIPE" in _config_dict:
                 try:
                     self._fill_from_config_dict(
                         input_dict=gen.change_dict_keys_case(
-                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"]
+                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"],
                         ),
                         overwrite=True,
                     )
@@ -288,9 +307,9 @@ class Configurator:
                     input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True
                 )
         # TypeError is raised for config_file=None
-        except TypeError:
+        except (TypeError, AttributeError):
             pass
-        except gen.InvalidConfigData:
+        except FileNotFoundError:
             self._logger.error(f"Configuration file not found: {config_file}")
             raise
 

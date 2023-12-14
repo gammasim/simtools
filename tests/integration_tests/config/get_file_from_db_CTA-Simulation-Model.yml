@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-get-file-from-db
+  TEST_NAME: CTA-Simulation-Model
+  CONFIGURATION:
+    FILE_NAME: mirror_CTA-S-LST_v2020-04-07.dat
+    OUTPUT_PATH: simtools-output

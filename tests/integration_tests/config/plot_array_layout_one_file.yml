@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: one_file
+  CONFIGURATION:
+    TELESCOPE_LIST: data/layout/telescope_positions-North-TestLayout.ecsv
+    OUTPUT_PATH: simtools-tests

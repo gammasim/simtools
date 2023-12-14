@@ -1,0 +1,11 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-production
+  TEST_NAME: showers_only
+  CONFIGURATION:
+    PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
+    TASK: simulate
+    SHOWERS_ONLY: true
+    TEST: true
+    SUBMIT_COMMAND: local
+    DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output
