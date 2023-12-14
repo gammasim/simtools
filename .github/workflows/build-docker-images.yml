@@ -18,8 +18,8 @@ on:
 
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_READ_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_READ_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -34,8 +34,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-#        type: ['dev', 'prod']
-        type: ['prod']
+        type: ['dev', 'prod']
 
     steps:
       - name: Checkout repository
@@ -76,6 +75,8 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
 
+      # test the prod image with one application using the database
+      # and the sim_telarray installation
       - name: Test Docker image
         run: >
           docker run --rm
