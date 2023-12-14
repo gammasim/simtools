@@ -17,6 +17,10 @@ on:
     - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
 
 env:
+  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_READ_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_READ_PW }}
+  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   TEST_TAG: user/app:test
