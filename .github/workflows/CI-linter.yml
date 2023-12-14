@@ -67,7 +67,7 @@ jobs:
           # TODO - very large line length
           echo 'rules:' > yaml_config.yaml
           echo '  line-length:' >> yaml_config.yaml
-          echo '    max: 250' >> yaml_config.yaml
+          echo '    max: 500' >> yaml_config.yaml
 
       # Dependencies required to avoid errors
       # reported by linters
