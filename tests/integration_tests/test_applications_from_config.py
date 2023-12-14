@@ -18,7 +18,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def get_application_command(app, config_file=None):
+def get_application_command(app, config_file=None, config_string=None):
     """
     Return the command to run the application with the given config file.
 
@@ -28,6 +28,8 @@ def get_application_command(app, config_file=None):
         Name of the application.
     config_file: str
         Configuration file.
+    config_string: str
+        Configuration string (e.g., '--version')
 
     Returns
     -------
@@ -38,7 +40,9 @@ def get_application_command(app, config_file=None):
         cmd = "python simtools/applications/" + app + ".py"
     else:
         cmd = app
-    if config_file is not None:
+    if config_string is not None:
+        cmd += f" {config_string}"
+    elif config_file is not None:
         cmd += f" --config {config_file}"
     return cmd
 
@@ -60,7 +64,8 @@ def get_list_of_test_configurations(get_test_names=False):
 
     """
 
-    config_files = Path(__file__).parent.glob("config/*.yml")
+    # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
+    config_files = sorted(list(Path(__file__).parent.glob("config/*.yml")))
     logger.debug(f"Configuration files: {config_files}")
 
     configs = []
@@ -74,20 +79,21 @@ def get_list_of_test_configurations(get_test_names=False):
         configs.append(_dict.get("CTA_SIMPIPE", None))
 
     # list of all applications
-    _applications = list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
+    # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
+    _applications = sorted(
+        list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
+    )
     for _app in _applications:
         # add for all applications "--help" call
-        # TODO - disabled, as not all application have help implemented
-        # configs.append(
-        # {"APPLICATION": _app, "TEST_NAME": "auto-help", "CONFIGURATION": {"HELP": True}})
+        configs.append(
+            {"APPLICATION": _app, "TEST_NAME": "auto-help", "CONFIGURATION": {"HELP": True}}
+        )
         # add for all applications "--version" call
-        # configs.append(
-        #    {"APPLICATION": _app, "TEST_NAME": "auto-version", "CONFIGURATION": {"VERSION": True}}
-        # )
-        # TODO - disabled, as not all applications can be called without command line parameters
+        configs.append(
+            {"APPLICATION": _app, "TEST_NAME": "auto-version", "CONFIGURATION": {"VERSION": True}}
+        )
         # add for all applications call without config file
-        # configs.append({"APPLICATION": _app, "TEST_NAME": "auto-no_config"})
-        logger.info("Missing implementations of help, versions, no command line parameter")
+        configs.append({"APPLICATION": _app, "TEST_NAME": "auto-no_config"})
 
     if get_test_names:
         return [
@@ -157,9 +163,10 @@ def validate_application_output(config):
     return 0
 
 
-def write_and_get_tmp_config_file(config, output_path):
+def prepare_configuration(config, output_path):
     """
-    Write a temporary config file for the application to be tested.
+    Prepare configuration. This means either to write a temporary config file
+    or to return a single string for single boolean options (e.g., --version).
     Change output path and file to paths provided with output_path.
 
     Parameters
@@ -172,8 +179,12 @@ def write_and_get_tmp_config_file(config, output_path):
     Returns
     -------
     str: path to the temporary config file.
+    str: configuration string.
 
     """
+
+    if len(config) == 1 and next(iter(config.values())) is True:
+        return None, "--" + list(config.keys())[0].lower()
 
     tmp_config_file = output_path / "tmp_config.yml"
     if "OUTPUT_PATH" in config:
@@ -184,11 +195,11 @@ def write_and_get_tmp_config_file(config, output_path):
     if "OUTPUT_FILE" in config:
         config.update({"OUTPUT_FILE": str(Path(output_path).joinpath(config["OUTPUT_FILE"]))})
 
-    # write config to a yaml file in tmp directory
+    logger.info(f"Writing config file: {tmp_config_file}")
     with open(tmp_config_file, "w", encoding="utf-8") as file:
         yaml.safe_dump(config, file, sort_keys=False)
 
-    return tmp_config_file
+    return tmp_config_file, None
 
 
 @pytest.mark.parametrize(
@@ -219,15 +230,17 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     if "CONFIGURATION" in config:
-        config_file = write_and_get_tmp_config_file(
+        config_file, config_string = prepare_configuration(
             config["CONFIGURATION"], output_path=tmp_output_path
         )
     else:
         config_file = None
+        config_string = None
 
     cmd = get_application_command(
         app=config.get("APPLICATION", None),
         config_file=config_file,
+        config_string=config_string,
     )
     logger.info(f"Application configuration: {config}")
 
