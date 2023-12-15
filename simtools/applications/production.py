@@ -248,6 +248,11 @@ def main():
     if args_dict["label"] is None:
         args_dict["label"] = label
 
+    if args_dict["corsika_files"] is not None and args_dict["array_only"] is False:
+        msg = "`--corsika_files` option should be used only with `--array_only` argument."
+        logger.error(msg)
+        raise TypeError
+
     shower_simulators = {}
     for primary, config_data in shower_configs.items():
         if "data_directory" in args_dict:
@@ -297,6 +302,7 @@ def main():
                 if not isinstance(args_dict["corsika_files"], list):
                     args_dict["corsika_files"] = [args_dict["corsika_files"]]
                 input_list = args_dict["corsika_files"]
+                logger.info(f"Getting CORSIKA files: {input_list}.")
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
