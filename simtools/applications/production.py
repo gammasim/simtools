@@ -43,7 +43,11 @@
         If activated, no job will be submitted, but all configuration files \
         and run scripts will be created.
     data_directory (str, optional)
-        The location of the output directories corsika-data and simtel-data
+        The location of the output directories corsika-data and simtel-data.
+    corsika_files (str, optional)
+        The CORSIKA files to pass to simtel_array.
+        Used only with `showers_only` option in case the CORSIKA output files are not in the
+        data_directory with the usual substructure of directories.
     verbosity (str, optional)
         Log level to print.
 
@@ -142,6 +146,13 @@ def _parse(description=None):
         type=str.lower,
         required=False,
         default="./",
+    )
+    config.parser.add_argument(
+        "--corsika_files",
+        help="The CORSIKA files to pass to simtel_array.",
+        type=str.lower,
+        required=False,
+        default=None,
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -270,17 +281,22 @@ def main():
                 mongo_db_config=db_config,
             )
         for primary, array in array_simulators.items():
-            input_list = shower_simulators[primary].get_list_of_output_files()
-
-            for corsika_file in input_list:
-                if not Path(corsika_file).exists():
-                    msg = (
-                        f"CORSIKA file {corsika_file} does not exist. Please run the production "
-                        f"with the `showers_only` option first."
-                    )
-                    logger.error(msg)
-                    raise FileNotFoundError
-
+            if args_dict["corsika_files"] is None:
+                input_list = shower_simulators[primary].get_list_of_output_files()
+                for corsika_file in input_list:
+                    if not Path(corsika_file).exists():
+                        msg = (
+                            f"CORSIKA file {corsika_file} does not exist. Please run the "
+                            f"production with the `--showers_only` option first or point to the "
+                            f"tool to the correct path to the corsika files with "
+                            f"`--corsika_directory`."
+                        )
+                        logger.error(msg)
+                        raise FileNotFoundError
+            else:
+                if not isinstance(args_dict["corsika_files"], list):
+                    args_dict["corsika_files"] = [args_dict["corsika_files"]]
+                input_list = args_dict["corsika_files"]
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
