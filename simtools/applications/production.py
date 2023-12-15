@@ -44,9 +44,6 @@
         and run scripts will be created.
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data
-    input_file_list (list, optional)
-        List with the CORSIKA .zst files to hand in to the simtel_array simulator.
-        Only considered if used in conjunction with the array_only option.
     verbosity (str, optional)
         Log level to print.
 
@@ -79,6 +76,7 @@
 
 import logging
 from copy import copy
+from pathlib import Path
 
 from astropy.io.misc import yaml
 
@@ -156,13 +154,6 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
-    group.add_argument(
-        "--input_file_list",
-        help="List of CORSIKA files to be be passed to the simtel_array simulator.",
-        required=False,
-        default=None,
-    )
-
     return config.initialize(db_config=True, job_submission=True)
 
 
@@ -279,10 +270,17 @@ def main():
                 mongo_db_config=db_config,
             )
         for primary, array in array_simulators.items():
-            if args_dict["input_file_list"] is None:
-                input_list = shower_simulators[primary].get_list_of_output_files()
-            else:
-                input_list = args_dict["input_file_list"]
+            input_list = shower_simulators[primary].get_list_of_output_files()
+
+            for corsika_file in input_list:
+                if not Path(corsika_file).exists():
+                    msg = (
+                        f"CORSIKA file {corsika_file} does not exist. Please run the production "
+                        f"with the `showers_only` option first."
+                    )
+                    logger.error(msg)
+                    raise FileNotFoundError
+
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
