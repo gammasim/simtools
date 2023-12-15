@@ -5,7 +5,6 @@ CTA_SIMPIPE:
     PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
     TASK: simulate
     ARRAY_ONLY: true
-    TEST: true
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
