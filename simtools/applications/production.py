@@ -44,6 +44,9 @@
         and run scripts will be created.
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data
+    input_file_list (list, optional)
+        List with the CORSIKA .zst files to hand in to the simtel_array simulator.
+        Only considered if used in conjunction with the array_only option.
     verbosity (str, optional)
         Log level to print.
 
@@ -153,6 +156,13 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
+    group.add_argument(
+        "--input_file_list",
+        help="List of CORSIKA files to be be passed to the simtel_array simulator.",
+        required=False,
+        default=None,
+    )
+
     return config.initialize(db_config=True, job_submission=True)
 
 
@@ -221,7 +231,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         for key, value in this_default.items():
             config_showers[primary][key] = value
             config_arrays[primary][key] = value
-
     return label, config_showers, config_arrays
 
 
@@ -270,7 +279,10 @@ def main():
                 mongo_db_config=db_config,
             )
         for primary, array in array_simulators.items():
-            input_list = shower_simulators[primary].get_list_of_output_files()
+            if args_dict["input_file_list"] is None:
+                input_list = shower_simulators[primary].get_list_of_output_files()
+            else:
+                input_list = args_dict["input_file_list"]
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
