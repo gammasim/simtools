@@ -288,21 +288,22 @@ def main():
         for primary, array in array_simulators.items():
             if args_dict["corsika_files"] is None:
                 input_list = shower_simulators[primary].get_list_of_output_files()
-                for corsika_file in input_list:
-                    if not Path(corsika_file).exists():
-                        msg = (
-                            f"CORSIKA file {corsika_file} does not exist. Please run the "
-                            f"production with the `--showers_only` option first or point to the "
-                            f"tool to the correct path to the corsika files with "
-                            f"`--corsika_directory`."
-                        )
-                        logger.error(msg)
-                        raise FileNotFoundError
             else:
                 if not isinstance(args_dict["corsika_files"], list):
                     args_dict["corsika_files"] = [args_dict["corsika_files"]]
                 input_list = args_dict["corsika_files"]
-                logger.info(f"Getting CORSIKA files: {input_list}.")
+
+            for corsika_file in input_list:
+                if not Path(corsika_file).exists():
+                    msg = (
+                        f"CORSIKA file {corsika_file} does not exist. Please run the "
+                        f"production with the `--showers_only` option first or point the "
+                        f"tool to the correct path to the corsika files with "
+                        f"`--corsika_directory`."
+                    )
+                    logger.error(msg)
+                    raise FileNotFoundError
+            logger.info(f"Getting CORSIKA files: {input_list}.")
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
