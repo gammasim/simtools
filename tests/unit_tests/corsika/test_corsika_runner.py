@@ -43,7 +43,7 @@ def corsika_runner(corsika_config_data, io_handler, simtel_path, db_config):
 @pytest.fixture
 def corsika_file(io_handler):
     corsika_file = io_handler.get_input_data_file(
-        file_name="run1_proton_za20deg_azm0deg_north_1lst_test-lst-array.corsika.zst", test=True
+        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
     )
     return corsika_file
 
