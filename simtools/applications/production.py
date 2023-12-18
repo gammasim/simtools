@@ -47,7 +47,7 @@
     corsika_files (str, optional)
         The CORSIKA files to pass to simtel_array.
         If it is provided, these CORSIKA files are used and the application does not search for them
-         in the data directory.
+        in the data directory.
         This option should only be used in combination with the `showers_only` option.
     verbosity (str, optional)
         Log level to print.
