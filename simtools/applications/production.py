@@ -46,8 +46,9 @@
         The location of the output directories corsika-data and simtel-data.
     corsika_files (str, optional)
         The CORSIKA files to pass to simtel_array.
-        Used only with `showers_only` option in case the CORSIKA output files are not in the
-        data_directory with the usual substructure of directories.
+        If it is provided, these CORSIKA files are used and the application does not search for them
+         in the data directory.
+        This option should only be used in combination with the `showers_only` option.
     verbosity (str, optional)
         Log level to print.
 
@@ -150,7 +151,7 @@ def _parse(description=None):
     config.parser.add_argument(
         "--corsika_files",
         help="The CORSIKA files to pass to simtel_array.",
-        type=str.lower,
+        type=str,
         required=False,
         default=None,
     )
@@ -251,7 +252,7 @@ def main():
     if args_dict["corsika_files"] is not None and args_dict["array_only"] is False:
         msg = "`--corsika_files` option should be used only with `--array_only` argument."
         logger.error(msg)
-        raise TypeError
+        raise ValueError
 
     shower_simulators = {}
     for primary, config_data in shower_configs.items():
