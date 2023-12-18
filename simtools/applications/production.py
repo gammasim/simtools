@@ -298,9 +298,9 @@ def main():
                 if not Path(corsika_file).exists():
                     msg = (
                         f"CORSIKA file {corsika_file} does not exist. Please run the "
-                        f"production with the `--showers_only` option first or point the "
-                        f"tool to the correct path to the corsika files with "
-                        f"`--corsika_directory`."
+                        "production with the `--showers_only` option first or point the "
+                        "tool to the correct path to the corsika files with "
+                        "`--corsika_directory`."
                     )
                     logger.error(msg)
                     raise FileNotFoundError
