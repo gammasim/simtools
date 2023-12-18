@@ -43,7 +43,12 @@
         If activated, no job will be submitted, but all configuration files \
         and run scripts will be created.
     data_directory (str, optional)
-        The location of the output directories corsika-data and simtel-data
+        The location of the output directories corsika-data and simtel-data.
+    corsika_files (str, optional)
+        The CORSIKA files to pass to simtel_array.
+        If it is provided, these CORSIKA files are used and the application does not search for them
+        in the data directory.
+        This option should only be used in combination with the `showers_only` option.
     verbosity (str, optional)
         Log level to print.
 
@@ -76,6 +81,7 @@
 
 import logging
 from copy import copy
+from pathlib import Path
 
 from astropy.io.misc import yaml
 
@@ -141,6 +147,13 @@ def _parse(description=None):
         type=str.lower,
         required=False,
         default="./",
+    )
+    config.parser.add_argument(
+        "--corsika_files",
+        help="The CORSIKA files to pass to simtel_array.",
+        type=str,
+        required=False,
+        default=None,
     )
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -221,7 +234,6 @@ def _proccess_simulation_config_file(config_file, primary_config, logger):
         for key, value in this_default.items():
             config_showers[primary][key] = value
             config_arrays[primary][key] = value
-
     return label, config_showers, config_arrays
 
 
@@ -236,6 +248,11 @@ def main():
     )
     if args_dict["label"] is None:
         args_dict["label"] = label
+
+    if args_dict["corsika_files"] is not None and args_dict["array_only"] is False:
+        msg = "`--corsika_files` option should be used only with `--array_only` argument."
+        logger.error(msg)
+        raise ValueError
 
     shower_simulators = {}
     for primary, config_data in shower_configs.items():
@@ -270,7 +287,24 @@ def main():
                 mongo_db_config=db_config,
             )
         for primary, array in array_simulators.items():
-            input_list = shower_simulators[primary].get_list_of_output_files()
+            if args_dict["corsika_files"] is None:
+                input_list = shower_simulators[primary].get_list_of_output_files()
+            else:
+                if not isinstance(args_dict["corsika_files"], list):
+                    args_dict["corsika_files"] = [args_dict["corsika_files"]]
+                input_list = args_dict["corsika_files"]
+
+            for corsika_file in input_list:
+                if not Path(corsika_file).exists():
+                    msg = (
+                        f"CORSIKA file {corsika_file} does not exist. Please run the "
+                        "production with the `--showers_only` option first or point the "
+                        "tool to the correct path to the corsika files with "
+                        "`--corsika_directory`."
+                    )
+                    logger.error(msg)
+                    raise FileNotFoundError
+            logger.info(f"Getting CORSIKA files: {input_list}.")
             _task_function = getattr(array, args_dict["task"])
             _task_function(input_file_list=input_list)
 
