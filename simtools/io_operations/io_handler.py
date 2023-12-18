@@ -50,11 +50,11 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Parameters
         ----------
         output_path: str or Path
-            Parent path of the output files created by this class.
+            Path pointing to the output directory.
         data_path: str or Path
-            Parent path of the data files.
+            Path pointing to the data files (e.g., CORSIKA or sim_telarray output).
         model_path: str or Path
-            Parent path of the output files created by this class.
+            Path pointing to the model file directory.
         use_plain_output_path: bool
             Use plain output path without adding tool name and date
 
@@ -89,6 +89,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
         ------
         FileNotFoundError
             if error creating directory
+        TypeError
+            raised for errors while creating directory name
         """
 
         if self.use_plain_output_path:
@@ -164,6 +166,12 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Returns
         -------
         Path
+
+        Raises
+        ------
+        IncompleteIOHandlerInit
+            if data_path is not set
+
         """
 
         if test:
