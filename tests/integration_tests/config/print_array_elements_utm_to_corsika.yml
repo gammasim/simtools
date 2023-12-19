@@ -8,6 +8,7 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
     SELECT_ASSETS: ['LSTN', 'MSTN']
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |
         ./tests/resources/telescope_positions-North-corsika.ecsv

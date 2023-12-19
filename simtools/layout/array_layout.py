@@ -6,6 +6,7 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools import db_handler
+from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -615,7 +616,11 @@ class ArrayLayout:
         telescope_list_file: str or Path
             Path to the telescope list file.
         """
-        table = self.read_telescope_list_file(telescope_list_file=telescope_list_file)
+        # TODO
+        #        table = self.read_telescope_list_file(telescope_list_file=telescope_list_file)
+        table = data_reader.DataReader.read_table_from_file(
+            file_name=telescope_list_file, validate=True
+        )
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
