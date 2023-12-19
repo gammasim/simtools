@@ -347,6 +347,7 @@ definitions:
       - boolean
       - datatable
       - double
+      - float64
       - int
       - string
       - uint
