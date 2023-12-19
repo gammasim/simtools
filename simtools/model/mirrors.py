@@ -61,8 +61,8 @@ class Mirrors:
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
         try:
-            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0].value
-            self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0].value
+            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
+            self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
             self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
             self._logger.debug(f"Mirror shape_type = {self.shape_type}")
@@ -137,7 +137,7 @@ class Mirrors:
 
         def get_mirror_table_mask():
             if isinstance(self.mirror_table["mirror_id"][0], np.str_):
-                mask = self.mirror_table["mirror_id"] == "id=" + str(number)
+                mask = self.mirror_table["mirror_id"] == f"id={number}"
             if isinstance(self.mirror_table["mirror_id"][0], np.int32):
                 mask = self.mirror_table["mirror_id"] == number
             return mask

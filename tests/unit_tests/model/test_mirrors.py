@@ -30,7 +30,7 @@ def test_read_mirror_list_from_ecsv(io_handler):
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
     assert 198 == mirrors.number_of_mirrors
-    assert 151.0 == pytest.approx(mirrors.mirror_diameter)
+    assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
     assert 3 == mirrors.shape_type
 
     mirror_list_file = io_handler.get_input_data_file(
