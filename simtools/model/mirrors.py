@@ -70,7 +70,7 @@ class Mirrors:
             self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
         except KeyError:
             self._logger.debug("Mirror shape_type not in mirror file")
-            self.number_of_mirrors = len(self.mirror_table["mirror_id"])
+            self.number_of_mirrors = len(self.mirror_table["mirror_panel_id"])
 
         if "focal_length" not in self.mirror_table.colnames:
             self.mirror_table["focal_length"] = (
@@ -103,7 +103,7 @@ class Mirrors:
                 "shape_type",
                 "mirror_z",
                 "sep",
-                "mirror_id",
+                "mirror_panel_id",
             ],
         )
 
@@ -136,10 +136,10 @@ class Mirrors:
         """
 
         def get_mirror_table_mask():
-            if isinstance(self.mirror_table["mirror_id"][0], np.str_):
-                mask = self.mirror_table["mirror_id"] == f"id={number}"
-            if isinstance(self.mirror_table["mirror_id"][0], np.int32):
-                mask = self.mirror_table["mirror_id"] == number
+            if isinstance(self.mirror_table["mirror_panel_id"][0], np.str_):
+                mask = self.mirror_table["mirror_panel_id"] == f"id={number}"
+            if isinstance(self.mirror_table["mirror_panel_id"][0], np.int32):
+                mask = self.mirror_table["mirror_panel_id"] == number
             return mask
 
         mask = get_mirror_table_mask()

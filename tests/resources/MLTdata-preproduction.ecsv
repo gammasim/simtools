@@ -1,7 +1,7 @@
 # %ECSV 1.0
 # ---
 # datatype:
-# - {name: mirror_id, datatype: string, description: mirror panel ID}
+# - {name: mirror_panel_id, datatype: string, description: mirror panel ID}
 # - {name: mirror_diameter, unit: m, datatype: float32, description: mirror panel radius (2f)}
 # - {name: psf_opt, unit: mm, datatype: float32, description: Average spot size of MLT mirror panels from 2f measurement (d80)}
 # - {name: psf, unit: mm, datatype: float32, description: Average spot size of MLT mirror panels from 2f measurement (d80) at nominal
@@ -11,7 +11,7 @@
 # - {name: mirror_y, unit: cm, datatype: float64}
 # - {name: shape_type, datatype: int32}
 # schema: astropy-2.0
-mirror_id mirror_diameter psf_opt psf surface_ref mirror_x mirror_y shape_type
+mirror_panel_id mirror_diameter psf_opt psf surface_ref mirror_x mirror_y shape_type
 054 63.614 15.46 20.97 90.2 0.0 0.0 0
 055 63.47 13.81 30.19 96.3 0.0 0.0 0
 056 64.654 14.32 15.37 95.2 0.0 0.0 0

@@ -14,7 +14,7 @@ base_schema_version: 0.1.0
 data:
   - type: datatable
     table_columns:
-      - name: mirror_id
+      - name: mirror_panel_id
         description: |-
           Mirror panel ID.
         required: true
