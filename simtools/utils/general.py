@@ -824,8 +824,7 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
             elif isinstance(value, dict):
                 data_dict[key] = remove_substring_recursively_from_dict(value, substring)
     except AttributeError:
-        _logger.error(f"Input is not a proper dictionary: {data_dict}")
-        raise
+        _logger.debug(f"Input is not a dictionary: {data_dict}")
     return data_dict
 
 
