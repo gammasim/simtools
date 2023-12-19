@@ -8,6 +8,9 @@ implementation of the metadata model.
 import datetime
 import getpass
 import logging
+from pathlib import Path
+
+from astropy.table import Table
 
 import simtools.constants
 import simtools.utils.general as gen
@@ -35,7 +38,7 @@ class MetadataCollector:
 
     """
 
-    def __init__(self, args_dict, data_model_name=None):
+    def __init__(self, args_dict, metadata_file_name=None, data_model_name=None):
         """
         Initialize metadata collector.
 
@@ -51,7 +54,9 @@ class MetadataCollector:
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
-        self.input_metadata = self._read_input_metadata_from_file()
+        self.input_metadata = self._read_input_metadata_from_file(
+            metadata_file_name=metadata_file_name
+        )
         self.collect_meta_data()
 
     def collect_meta_data(self):
@@ -83,6 +88,7 @@ class MetadataCollector:
 
         """
 
+        # from command line
         try:
             if self.args_dict["schema"]:
                 self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
@@ -90,6 +96,7 @@ class MetadataCollector:
         except KeyError:
             pass
 
+        # from metadata
         try:
             if self.top_level_meta["cta"]["product"]["data"]["model"]["url"]:
                 self._logger.debug(
@@ -100,10 +107,12 @@ class MetadataCollector:
         except KeyError:
             pass
 
+        # from data model name
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
             return f"{simtools.constants.SCHEMA_URL}{self.data_model_name}.schema.yml"
 
+        # from input metadata
         try:
             self._logger.debug(
                 "Schema file from input metadata: "
@@ -217,9 +226,16 @@ class MetadataCollector:
         except (KeyError, TypeError):
             self._logger.debug("No input product metadata appended to associated data.")
 
-    def _read_input_metadata_from_file(self):
+    def _read_input_metadata_from_file(self, metadata_file_name=None):
         """
-        Read and validate input metadata from file.
+        Read and validate input metadata from file. In case of an ecsv file including a
+        table, the metadata is read from the table meta data. Returns empty dict in case
+        no file is given.
+
+        Parameter
+        ---------
+        metadata_file_name: str or Path
+            Name of metadata file.
 
         Returns
         -------
@@ -228,23 +244,44 @@ class MetadataCollector:
 
         Raises
         ------
-        gen.InvalidConfigData
+        gen.InvalidConfigData, FileNotFoundError
             if metadata cannot be read from file.
 
         """
 
-        if self.args_dict is None or self.args_dict.get("input_meta", None) is None:
+        try:
+            metadata_file_name = (
+                self.args_dict.get("input_meta", None)
+                if metadata_file_name is None
+                else metadata_file_name
+            )
+        except TypeError:
+            pass
+
+        if metadata_file_name is None:
             self._logger.debug("No input metadata file defined.")
             return {}
 
-        try:
-            self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
-            _input_metadata = gen.collect_data_from_yaml_or_dict(
-                in_yaml=self.args_dict["input_meta"], in_dict=None
-            )
-        except (gen.InvalidConfigData, FileNotFoundError):
-            self._logger.error("Failed reading metadata from file.")
-            raise
+        # metadata from yml file
+        if Path(metadata_file_name).suffix == ".yml":
+            try:
+                self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
+                _input_metadata = gen.collect_data_from_yaml_or_dict(
+                    in_yaml=self.args_dict["input_meta"], in_dict=None
+                )
+            except (gen.InvalidConfigData, FileNotFoundError):
+                self._logger.error("Failed reading metadata from %s", metadata_file_name)
+                raise
+        # metadata from table meta in ecsv file
+        elif Path(metadata_file_name).suffix == ".ecsv":
+            try:
+                _input_metadata = Table.read(metadata_file_name, format="ascii.ecsv").meta
+            except FileNotFoundError:
+                self._logger.error("Failed reading metadata from %s", metadata_file_name)
+                raise
+        else:
+            self._logger.error("Unknown metadata file format: %s", metadata_file_name)
+            raise gen.InvalidConfigData
 
         metadata_model.validate_schema(_input_metadata, None)
 

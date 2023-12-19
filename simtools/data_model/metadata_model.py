@@ -66,9 +66,7 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
     """
 
-    _logger.debug(f"Loading default schema from {schema_file}")
     schema, _ = _load_schema(schema_file)
-
     return _fill_defaults(schema["definitions"], observatory)
 
 
