@@ -23,7 +23,7 @@
 
         simtools-validate-file-using-schema \
          --file_name tests/resources/MLTdata-preproduction.meta.yml \
-         --schema simtools/schemas/metadata.schema.yml
+         --schema simtools/schemas/metadata.metaschema.yml
 
 """
 
