@@ -78,6 +78,8 @@ class DataValidator:
         (doing this successfully is understood as
         file validation).
 
+        TODO! What is the non-validation case?
+
         """
 
         try:

@@ -571,6 +571,12 @@ class ArrayLayout:
         """
         Read list of telescopes from a ecsv file.
 
+        TODO - this should be replaced
+        - read QTable
+        - read metadata and find validation schema
+        - validate
+        - return QTable and metadata
+
         Parameters
         ----------
         telescope_list_file: str or Path
