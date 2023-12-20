@@ -228,7 +228,7 @@ class MetadataCollector:
         except (KeyError, TypeError):
             self._logger.debug("No input product metadata appended to associated data.")
 
-    def _read_input_metadata_from_file(self, metadata_file_name=None):
+    def _read_input_metadata_from_file(self, metadata_file_name=None, observatory="CTA"):
         """
         Read and validate input metadata from file. In case of an ecsv file including a
         table, the metadata is read from the table meta data. Returns empty dict in case
@@ -238,6 +238,8 @@ class MetadataCollector:
         ---------
         metadata_file_name: str or Path
             Name of metadata file.
+        observatory: str
+            Observatory name.
 
         Returns
         -------
@@ -277,9 +279,11 @@ class MetadataCollector:
         # metadata from table meta in ecsv file
         elif Path(metadata_file_name).suffix == ".ecsv":
             try:
-                _input_metadata = Table.read(metadata_file_name, format="ascii.ecsv").meta
-            except FileNotFoundError:
-                self._logger.error("Failed reading metadata from %s", metadata_file_name)
+                _input_metadata = Table.read(metadata_file_name).meta[observatory]
+            except (FileNotFoundError, KeyError):
+                self._logger.error(
+                    "Failed reading metadata for %s from %s", observatory, metadata_file_name
+                )
                 raise
         else:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
