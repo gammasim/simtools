@@ -4,12 +4,14 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-__all__ = ["InvalidMirrorListFile", "Mirrors"]
+__all__ = ["InvalidMirrorListFile", "MissingValuesDB", "Mirrors"]
 
 
 class InvalidMirrorListFile(Exception):
     """Exception for invalid mirror list file."""
 
+class MissingValuesDB(Exception):
+    """Exception for missing values in DB."""
 
 class Mirrors:
     """
@@ -92,7 +94,7 @@ class Mirrors:
         self.number_of_mirrors = np.shape(self.mirror_table)[0]
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
-        if "focal_length" not in self.mirror_table.colnames:
+        if self.parameters is None:
             try:
                 self.mirror_table["focal_length"] = (
                     self.mirror_table["mirror_panel_radius"].to("cm").value / 2
@@ -100,18 +102,25 @@ class Mirrors:
             except KeyError:
                 self._logger.debug("mirror_panel_radius not contained in mirror list")
 
-            else:
+        else:
+            try:
                 self.mirror_table["focal_length"] = self.number_of_mirrors * [
                     u.Quantity(
                         self.parameters["mirror_focal_length"]["Value"],
                         self.parameters["mirror_focal_length"]["units"],
                     )
                 ]
+            except KeyError:
+                self._logger.debug("mirror_focal_length not contained in db")
 
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
-            raise InvalidMirrorListFile()
+            raise InvalidMirrorListFile
+        if self.mirror_diameter is None and self.shape_type is None:
+            msg = "Problem with retrieving mirror_diameter and shape_type"
+            self._logger.error(msg)
+            raise MissingValuesDB
 
     def _read_mirror_list_from_sim_telarray(self):
         """

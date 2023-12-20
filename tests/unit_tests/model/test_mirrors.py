@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from simtools.model.mirrors import Mirrors
+from simtools.model.mirrors import Mirrors, MissingValuesDB
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -32,14 +32,6 @@ def test_read_mirror_list_from_ecsv(io_handler):
     assert 198 == mirrors.number_of_mirrors
     assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
     assert 3 == mirrors.shape_type
-
-    mirror_list_file = io_handler.get_input_data_file(
-        file_name="telescope_positions-North-utm.ecsv",
-        test=True,
-    )
-    logger.info(f"Using false mirror list {mirror_list_file}")
-    with pytest.raises(KeyError):
-        mirrors = Mirrors(mirror_list_file)
     mirror_list_file = io_handler.get_input_data_file(
         file_name="MLTdata-preproduction.ecsv",
         test=True,
@@ -47,6 +39,13 @@ def test_read_mirror_list_from_ecsv(io_handler):
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
     assert 1590.35 == pytest.approx(mirrors.mirror_table["focal_length"][0])
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name="telescope_positions-North-utm.ecsv",
+        test=True,
+    )
+    logger.info(f"Using false mirror list {mirror_list_file}")
+    with pytest.raises(MissingValuesDB):
+        mirrors = Mirrors(mirror_list_file)
 
 
 def test_get_single_mirror_parameters(io_handler):
