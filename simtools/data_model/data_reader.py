@@ -3,8 +3,7 @@ import logging
 from astropy.table import QTable
 
 from simtools.data_model import validate_data
-
-# from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.metadata_collector import MetadataCollector
 
 __all__ = ["DataReader"]
 
@@ -85,8 +84,10 @@ class DataReader:
         """
         print(file_name, metadata_file)
 
-        # if self.data_table:
-        #    self.metadata = MetadataCollector(args_dict=None, data_model_name=None)
+        if self.data_table:
+            self.metadata = MetadataCollector(
+                args_dict=None, metadata_file_name=file_name, data_model_name=None
+            )
 
     def validate_and_transform(self, schema_file=None):
         """
