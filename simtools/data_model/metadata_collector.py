@@ -33,6 +33,8 @@ class MetadataCollector:
     ----------
     args_dict: dict
         Command line parameters
+    metadata_file_name: str
+        Name of metadata file
     data_model_name: str
         Name of data model parameter
 
