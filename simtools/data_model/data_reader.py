@@ -64,30 +64,29 @@ class DataReader:
             raise exc
         reader.logger.info("Reading table data from %s", file_name)
 
-        reader.read_metadata(file_name, metadata_file)
+        reader.read_metadata(
+            metadata_file=metadata_file if metadata_file is not None else file_name
+        )
 
         # TMPTMP
         validate = False
         return reader.validate_and_transform(schema_file) if validate else reader.data_table
 
-    def read_metadata(self, file_name, metadata_file=None):
+    def read_metadata(self, metadata_file):
         """
-        Read metadata from file.
+        Read metadata from file (either a metadata file in yaml format or from
+        the metadata section of a data file)
 
         Parameters:
         -----------
-        file_name: str or Path
-            Name of file to be read.
         metadata_file: str or Path
             Name of metadata file to be read.
 
         """
-        print(file_name, metadata_file)
 
-        if self.data_table:
-            self.metadata = MetadataCollector(
-                args_dict=None, metadata_file_name=file_name, data_model_name=None
-            )
+        self.metadata = MetadataCollector(
+            args_dict=None, metadata_file_name=metadata_file, data_model_name=None
+        )
 
     def validate_and_transform(self, schema_file=None):
         """
