@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>I/O &#8212; simtools v0.1.dev1+g9f0dbd3</title>
+    <title>I/O &#8212; simtools v0.1.dev1+gc1b42a6</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=6a6bfaa1"></script>
+    <script src="_static/documentation_options.js?v=b8decdf8"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -31,7 +31,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g9f0dbd3</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc1b42a6</p>
 
 
 
@@ -142,6 +142,12 @@
 <dt>Path</dt><dd></dd>
 </dl>
 </dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>IncompleteIOHandlerInit</dt><dd><p>if data_path is not set</p>
+</dd>
+</dl>
+</dd>
 </dl>
 </dd></dl>
 
@@ -172,6 +178,8 @@ output paths appended by ‘simtools-output’.</p>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>FileNotFoundError</dt><dd><p>if error creating directory</p>
+</dd>
+<dt>TypeError</dt><dd><p>raised for errors while creating directory name</p>
 </dd>
 </dl>
 </dd>
@@ -213,11 +221,11 @@ use_plain_output_path option.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>output_path: str or Path</strong></dt><dd><p>Parent path of the output files created by this class.</p>
+<dt><strong>output_path: str or Path</strong></dt><dd><p>Path pointing to the output directory.</p>
 </dd>
-<dt><strong>data_path: str or Path</strong></dt><dd><p>Parent path of the data files.</p>
+<dt><strong>data_path: str or Path</strong></dt><dd><p>Path pointing to the data files (e.g., CORSIKA or sim_telarray output).</p>
 </dd>
-<dt><strong>model_path: str or Path</strong></dt><dd><p>Parent path of the output files created by this class.</p>
+<dt><strong>model_path: str or Path</strong></dt><dd><p>Path pointing to the model file directory.</p>
 </dd>
 <dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path without adding tool name and date</p>
 </dd>

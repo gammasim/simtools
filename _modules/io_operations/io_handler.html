@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>io_operations.io_handler &#8212; simtools v0.1.dev1+g9f0dbd3</title>
+    <title>io_operations.io_handler &#8212; simtools v0.1.dev1+gc1b42a6</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=6a6bfaa1"></script>
+    <script src="../../_static/documentation_options.js?v=b8decdf8"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g9f0dbd3</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gc1b42a6</p>
 
 
 
@@ -143,11 +143,11 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        output_path: str or Path</span>
-<span class="sd">            Parent path of the output files created by this class.</span>
+<span class="sd">            Path pointing to the output directory.</span>
 <span class="sd">        data_path: str or Path</span>
-<span class="sd">            Parent path of the data files.</span>
+<span class="sd">            Path pointing to the data files (e.g., CORSIKA or sim_telarray output).</span>
 <span class="sd">        model_path: str or Path</span>
-<span class="sd">            Parent path of the output files created by this class.</span>
+<span class="sd">            Path pointing to the model file directory.</span>
 <span class="sd">        use_plain_output_path: bool</span>
 <span class="sd">            Use plain output path without adding tool name and date</span>
 
@@ -185,6 +185,8 @@
 <span class="sd">        ------</span>
 <span class="sd">        FileNotFoundError</span>
 <span class="sd">            if error creating directory</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            raised for errors while creating directory name</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_plain_output_path</span><span class="p">:</span>
@@ -266,6 +268,12 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Path</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IncompleteIOHandlerInit</span>
+<span class="sd">            if data_path is not set</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">test</span><span class="p">:</span>
