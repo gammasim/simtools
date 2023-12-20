@@ -8,7 +8,7 @@
     ----------------------
     schema (str, optional)
         Schema file describing the input data
-        (default: simtools/schemas/metadata.schema.yml)
+        (default: simtools/schemas/metadata.metaschema.yml)
     output_file (str, optional)
         Output file name.
 
@@ -17,7 +17,7 @@
     .. code-block:: console
 
         simtools-generate-default-metadata
-            --schema simtools/schemas/metadata.schema.yml
+            --schema simtools/schemas/metadata.metaschema.yml
             --output_file default_metadata.yml
 
 

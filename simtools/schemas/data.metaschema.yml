@@ -1,0 +1,395 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimtoolsDataAndModelParameters'
+title: SimPipe Data and Model Parameter Metaschema
+description: YAML representation of data and model parameter metaschema
+version: 0.1.0
+name: data.metaschema
+type: object
+additionalProperties: false
+
+
+definitions:
+  SimtoolsDataAndModelParameters:
+    type: object
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+        description: "title for schema file"
+      version:
+        type: string
+        description: "version of this schema file (semver)"
+      base_schema:
+        type: string
+        description: "name of base schema (e.g. simpipe-schema)"
+      base_schema_url:
+        type: string
+        description: "url to base schema definition"
+      base_schema_version:
+        type: string
+        description: "version of base schema applied to this file (semver)"
+      name:
+        type: string
+        description: "name of model parameter"
+      developer_note:
+        type: string
+        description: "notes for developers"
+      short_description:
+        type: string
+        description: "short description of model parameter"
+      description:
+        type: string
+        description: "description of model parameter"
+      instrument:
+        $ref: '#/definitions/Instrument'
+        description: "associated instruments and sites"
+      data:
+        $ref: '#/definitions/DataUnion'
+      activity:
+        $ref: '#/definitions/Activity'
+      source:
+        type: array
+        items:
+          $ref: '#/definitions/Source'
+      simulation_software:
+        description: |-
+          "name of simulation software"
+        type: array
+        items:
+          $ref: '#/definitions/SimulationSoftware'
+    required:
+      - version
+      - base_schema
+      - base_schema_version
+      - name
+      - data
+      - description
+    title: SimulationModelParameters
+  Activity:
+    type: object
+    additionalProperties: false
+    properties:
+      setting:
+        type: array
+        items:
+          $ref: '#/definitions/Setting'
+        description: "setting workflows"
+      validation:
+        type: array
+        items:
+          $ref: '#/definitions/Validation'
+        description: "validation workflows"
+    required:
+      - setting
+      - validation
+    title: Activity
+  Datum:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: |-
+          "use numpy basic types where possible
+          (https://numpy.org/doc/stable/user/basics.types.html).
+          Use `file` if the parameter describes a file name.
+          Use `data_table` if the parameter describes a data table
+          (requires TABLE_COLUMNS description)"
+      units:
+        $ref: '#/definitions/Units'
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+      allowed_values:
+        type: array
+      default:
+        type:
+          - number
+          - string
+          - boolean
+      table_columns:
+        type: array
+        items:
+          $ref: '#/definitions/TableColumn'
+      required:
+        type: boolean
+      condition:
+        type: string
+      description:
+        type: string
+      developer_note:
+        type: string
+    required:
+      - type
+    title: Datum
+  DataClass:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: "parameter type"
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+      required:
+        type: boolean
+        description: "required or optional parameter"
+      default:
+        type:
+          - number
+          - string
+          - boolean
+        description: "default value"
+      units:
+        $ref: '#/definitions/Units'
+        description: |-
+          "parameter units
+          (using astropy names wherever possible)"
+    required:
+      - type
+      - units
+    title: DataClass
+  ValueRange:
+    type: object
+    additionalProperties: false
+    properties:
+      min:
+        type: number
+      max:
+        type: number
+    title: ValueRange
+  TableColumn:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: "column name"
+      description:
+        type: string
+        description: "column description"
+      developer_note:
+        type: string
+        description: "notes for developers"
+      required:
+        type: boolean
+        description: "required or optional data column"
+      default:
+        type:
+          - number
+          - string
+          - boolean
+        description: "default value"
+      condition:
+        type: string
+        description: "condition to change this column to a required data column"
+      units:
+        type: string
+        description: "column units"
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: "column data type"
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+        description: "allowed range of values in data column"
+      allowed_values:
+        type: array
+        description: "list of allowed values in data column"
+      required_range:
+        $ref: '#/definitions/ValueRange'
+        description: "required range of values in data column"
+      column_type:
+        type: string
+        enum:
+          - independent
+          - dependent
+        description: |-
+          "column type to allow several dependent columns in 3D
+          tables"
+      input_processing:
+        type: array
+        description: |
+          "input data processing steps applied to data columns"
+        items:
+          type: string
+          enum:
+            - remove_duplicates
+            - sort
+            - allow_nan
+      table_columns:
+        type: array
+        items:
+          $ref: '#/definitions/TableColumn'
+    required:
+      - description
+      - name
+      - type
+      - units
+    title: TableColumn
+  Instrument:
+    type: object
+    additionalProperties: false
+    properties:
+      class:
+        type: string
+        description: "instrument class"
+        enum:
+          - Camera
+          - Site
+          - Structure
+          - Telescope
+      type:
+        type: array
+        items:
+          $ref: '#/definitions/InstrumentTypeElement'
+      site:
+        type: array
+        description: "associated CTAO site"
+        items:
+          type: string
+          enum:
+            - North
+            - South
+    required:
+      - class
+      - type
+    title: Instrument
+  InstrumentTypeElement:
+    type: string
+    description: "specific type of instrument"
+    enum:
+      - Atmosphere
+      - FlashCam
+      - LSTCam
+      - LSTStructure
+      - MSTStructure
+      - NectarCam
+      - Observatory
+      - SCTCam
+      - SCTStructure
+      - SSTCam
+      - SSTStructure
+      - None
+    title: InstrumentTypeElement
+  SimulationSoftware:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        $ref: '#/definitions/SimulationSoftwareName'
+      version:
+        type: string
+        description: |-
+          "version of simulation software this parameter is used"
+    required:
+      - name
+    title: SimulationSoftware
+  DataUnion:
+    anyOf:
+      - type: array
+        items:
+          $ref: '#/definitions/Datum'
+      - $ref: '#/definitions/DataClass'
+    title: DataUnion
+  Setting:
+    type: string
+    description: "list of setting workflows"
+    enum:
+      - SetArrayElementCoordinates
+      - SetEffectiveFocalLength
+      - SetGeomagneticField
+      - SetLightGuideEfficiency
+      - SetMirrorPanelAlignment
+      - SetMirrorPanelRandomReflection
+      - SetNightSkyBackgroundRate
+      - SetParameterFromExternal
+      - SetPhotonDelay
+      - SetReadoutPulseShape
+      - SetSinglePhotoElectronResponse
+      - SetTelescopeEfficiency
+      - SetTelescopeFiducialSphere
+      - SetTelescopeShadowingParameters
+      - SetTriggerThresholdsFromRateScan
+      - None
+    title: Setting
+  Validation:
+    type: string
+    description: "list of validation workflows"
+    enum:
+      - ValidateArrayElementCoordinates
+      - ValidateAtmosphericModel
+      - ValidateCameraChargeResponse
+      - ValidateCameraGainsAndEfficiency
+      - ValidateCameraGeometry
+      - ValidateCameraLinearity
+      - ValidateCameraPlateScale
+      - ValidateCameraTimeResponse
+      - ValidateMirrorPanelParameters
+      - ValidateNightSkyBackgroundMeasurement
+      - ValidateOpticalPSF
+      - ValidateParameterByExpert
+      - ValidatePedestalEvents
+      - ValidatePixelStatus
+      - ValidateReadout
+      - ValidateSinglePhotoElectronResponse
+      - ValidateTelescopeEfficiency
+      - ValidateTelescopeShadowing
+      - ValidateTelescopeSimulationModel
+      - ValidateTelescopeStructure
+      - ValidateTriggerPerformance
+      - ValidationWorkflowMissing
+      - None
+  TableColumnType:
+    type: string
+    enum:
+      - boolean
+      - datatable
+      - double
+      - int
+      - string
+      - uint
+    title: TableColumnType
+  Units:
+    type: string
+    description: |-
+      "Units correspond to astropy unit names
+      (wherever possible)"
+    enum:
+      - dimensionless
+      - ns
+      - V
+      - mV
+      - deg
+      - m
+      - cm
+      - nm
+      - uT
+      - adc_counts
+      - MHz
+      - GHz
+      - adc_counts / mV
+      - mV * ns
+      - pct
+      - uA
+    title: Units
+  SimulationSoftwareName:
+    type: string
+    description: |-
+      "Names of simulation software"
+    enum:
+      - sim_telarray
+      - corsika
+      - gammasim-tools
+    title: Name
+  Source:
+    type: string
+    description: "origin of data / how it is obtained"
+    enum:
+      - Initial instrument setup
+      - Calibration
+      - External
+      - Observation execution
+      - SimPipe Derived
+    title: Source
