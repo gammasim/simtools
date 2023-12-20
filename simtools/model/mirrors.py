@@ -21,7 +21,7 @@ class Mirrors:
         mirror list in sim_telarray or ecsv format (with panel focal length only).
     """
 
-    def __init__(self, mirror_list_file):
+    def __init__(self, mirror_list_file, parameters=None):
         """
         Initialize Mirrors.
         """
@@ -32,6 +32,7 @@ class Mirrors:
         self.mirror_diameter = None
         self.shape_type = None
         self.number_of_mirrors = 0
+        self.parameters = parameters
 
         self._mirror_list_file = mirror_list_file
         self._read_mirror_list()
@@ -60,22 +61,52 @@ class Mirrors:
 
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
-        try:
-            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
-            self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
-            self.number_of_mirrors = len(self.mirror_table["focal_length"])
+        if self.parameters is None:
+            try:
+                self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
+                self._logger.debug(f"Mirror shape_type = {self.shape_type}")
+            except KeyError:
+                self._logger.debug("Mirror shape_type not in mirror file")
+        else:
+            try:
+                self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
+            except KeyError:
+                self._logger.debug("Mirror mirror_panel_shape not contained in db")
 
-            self._logger.debug(f"Mirror shape_type = {self.shape_type}")
-            self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
-            self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
-        except KeyError:
-            self._logger.debug("Mirror shape_type not in mirror file")
-            self.number_of_mirrors = len(self.mirror_table["mirror_panel_id"])
+        if self.parameters is None:
+            try:
+                self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
+                self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
+            except KeyError:
+                self._logger.debug("Mirror mirror_panel_diameter not in mirror file")
+        else:
+            try:
+                self.mirror_diameter = u.Quantity(
+                    self.parameters["mirror_panel_diameter"]["Value"],
+                    self.parameters["mirror_panel_diameter"]["units"],
+                )
+
+            except KeyError:
+                self._logger.debug("Mirror mirror_panel_diameter not contained in db")
+
+        self.number_of_mirrors = np.shape(self.mirror_table)[0]
+        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
         if "focal_length" not in self.mirror_table.colnames:
-            self.mirror_table["focal_length"] = (
-                self.mirror_table["mirror_diameter"].to("cm").value / 4.0
-            )
+            try:
+                self.mirror_table["focal_length"] = (
+                    self.mirror_table["mirror_panel_radius"].to("cm").value / 2
+                )
+            except KeyError:
+                self._logger.debug("mirror_panel_radius not contained in mirror list")
+
+            else:
+                self.mirror_table["focal_length"] = self.number_of_mirrors * [
+                    u.Quantity(
+                        self.parameters["mirror_focal_length"]["Value"],
+                        self.parameters["mirror_focal_length"]["units"],
+                    )
+                ]
 
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
@@ -137,7 +168,15 @@ class Mirrors:
 
         def get_mirror_table_mask():
             if isinstance(self.mirror_table["mirror_panel_id"][0], np.str_):
-                mask = self.mirror_table["mirror_panel_id"] == f"id={number}"
+                mask = (
+                    np.array(
+                        [
+                            "".join(filter(str.isdigit, string))
+                            for string in self.mirror_table["mirror_panel_id"]
+                        ]
+                    )
+                    == f"{number}"
+                )
             if isinstance(self.mirror_table["mirror_panel_id"][0], np.int32):
                 mask = self.mirror_table["mirror_panel_id"] == number
             return mask
@@ -148,7 +187,7 @@ class Mirrors:
             mask[0] = True
 
         try:
-            return (
+            return_values = (
                 self.mirror_table[mask]["mirror_x"].value[0],
                 self.mirror_table[mask]["mirror_y"].value[0],
                 self.mirror_table[mask]["mirror_diameter"].value[0],
@@ -157,11 +196,11 @@ class Mirrors:
             )
         except KeyError:
             self._logger.debug("Mirror list missing required column")
-            return None
-
-    def plot_mirror_layout(self):
-        """
-        Plot the mirror layout.
-
-        TODO
-        """
+            return_values = (
+                0,
+                0,
+                self.mirror_diameter.value,
+                self.mirror_table[mask]["focal_length"].value[0],
+                self.shape_type,
+            )
+        return return_values
