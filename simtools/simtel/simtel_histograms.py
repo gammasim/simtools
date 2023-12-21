@@ -145,7 +145,8 @@ class SimtelHistograms:
 
     def derive_trigger_rate_histograms(self):
         """
-        Calculates the trigger rate histograms.
+        Calculates the trigger rate histograms, i.e., the rate in which the events are triggered
+        in each bin of impact distance and log energy.
         The estimate is based on the existing histograms defined by the id=1 and id=2 in
         `pyeventio`.
 
