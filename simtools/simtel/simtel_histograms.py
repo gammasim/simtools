@@ -43,7 +43,7 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
-        self.derive_trigger_ratio_histograms()
+        self.derive_trigger_rate_histograms()
 
     @property
     def number_of_histograms(self):
@@ -145,7 +145,7 @@ class SimtelHistograms:
         self._logger.debug(f"End of reading {n_files} files")
 
     @u.quantity_input(livetime=u.s)
-    def derive_trigger_ratio_histograms(self, livetime=1 * u.s):
+    def derive_trigger_rate_histograms(self, livetime=1 * u.s):
         """
         Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
         are triggered in each bin of impact distance and log energy for each histogram file.
@@ -171,18 +171,29 @@ class SimtelHistograms:
                 elif hist["id"] == 2:
                     trigged_events_histogram[i_file] = hist["data"]
 
-        list_of_trigger_ratio_hists = []
+        list_of_trigger_rate_hists = []
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            event_ratio_histogram = (
+            event_rate_histogram = (
                 trigged_events_histogram[i_file]
                 / events_histogram[i_file]
                 * area_dict[i_file]
                 / livetime
             )
 
-            event_ratio_histogram[np.isnan(event_ratio_histogram)] = 0
-            list_of_trigger_ratio_hists.append(event_ratio_histogram)
-        return list_of_trigger_ratio_hists
+            event_rate_histogram[np.isnan(event_rate_histogram)] = 0
+            list_of_trigger_rate_hists.append(event_rate_histogram)
+        return list_of_trigger_rate_hists
+
+    def integrate_histogram_in_energy(self, hist):
+        """
+        Integrates the trigger rate histogram in energy based on the bin edges from the histogram.
+
+        Parameters
+        ----------
+        hist: numpy.ndarray
+            The histogram to integrate.
+
+        """
 
     def plot_one_histogram(self, i_hist, ax):
         """
