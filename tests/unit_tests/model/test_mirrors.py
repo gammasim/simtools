@@ -5,13 +5,13 @@ import logging
 import pytest
 from astropy.utils.diff import report_diff_values
 
-from simtools.model.mirrors import Mirrors
+from simtools.model.mirrors import InvalidMirrorListFile, Mirrors
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_read_list(db, io_handler):
+def test_read_mirror_list_from_sim_telarray(db, io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat",
         test=True,
@@ -40,6 +40,13 @@ def test_read_mirror_list_from_ecsv(io_handler):
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
     assert 1590.35 == pytest.approx(mirrors.mirror_table["focal_length"][0])
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_empty.ecsv",
+        test=True,
+    )
+    logger.info(f"Using mirror list {mirror_list_file}")
+    with pytest.raises(InvalidMirrorListFile):
+        mirrors = Mirrors(mirror_list_file)
 
 
 def test_get_mirror_table(io_handler):
@@ -92,6 +99,7 @@ def test_get_single_mirror_parameters(io_handler):
         shape_type,
     ) = mirrors.get_single_mirror_parameters(198)
     assert_mirror_parameters()
+
     logger.info("Wrong mirror id returns the first mirror table row")
     mirrors = Mirrors(mirror_list_file)
     (
@@ -102,3 +110,16 @@ def test_get_single_mirror_parameters(io_handler):
         shape_type,
     ) = mirrors.get_single_mirror_parameters(9999)
     assert_mirror_parameters()
+
+    logger.info("Removing column mirror_x")
+    mirrors = Mirrors(mirror_list_file)
+    mirrors.mirror_table.rename_column("mirror_x", "mirror_xa")
+    (
+        mirror_x,
+        mirror_y,
+        mirror_diameter,
+        focal_length,
+        shape_type,
+    ) = mirrors.get_single_mirror_parameters(198)
+    assert 0 == mirror_x
+    assert 2920.0 == focal_length

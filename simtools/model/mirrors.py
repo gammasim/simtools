@@ -61,6 +61,15 @@ class Mirrors:
 
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
+
+        self.number_of_mirrors = np.shape(self.mirror_table)[0]
+        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
+
+        if self.number_of_mirrors == 0:
+            msg = "Problem reading mirror list file"
+            self._logger.error(msg)
+            raise InvalidMirrorListFile
+
         try:
             self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
             self._logger.debug(f"Mirror shape_type = {self.shape_type}")
@@ -84,9 +93,6 @@ class Mirrors:
             except TypeError:
                 self._logger.debug("Mirror mirror_panel_diameter not contained in db")
 
-        self.number_of_mirrors = np.shape(self.mirror_table)[0]
-        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
-
         if "focal_length" not in self.mirror_table.colnames:
             try:
                 self.mirror_table["focal_length"] = (
@@ -104,11 +110,6 @@ class Mirrors:
                     ]
                 except KeyError:
                     self._logger.debug("mirror_focal_length not contained in db")
-
-        if self.number_of_mirrors == 0:
-            msg = "Problem reading mirror list file"
-            self._logger.error(msg)
-            raise InvalidMirrorListFile
 
     def _read_mirror_list_from_sim_telarray(self):
         """
@@ -142,11 +143,6 @@ class Mirrors:
         self._logger.debug(f"Mirror shape_type = {self.shape_type}")
         self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
-
-        if self.number_of_mirrors == 0:
-            msg = "Problem reading mirror list file"
-            self._logger.error(msg)
-            raise InvalidMirrorListFile()
 
     def get_mirror_table(self):
         """
@@ -206,7 +202,7 @@ class Mirrors:
             return_values = (
                 0,
                 0,
-                self.mirror_diameter.value,
+                self.mirror_diameter,
                 self.mirror_table[mask]["focal_length"].value[0],
                 self.shape_type,
             )
