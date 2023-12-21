@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+from astropy.utils.diff import report_diff_values
 
 from simtools.model.mirrors import Mirrors
 
@@ -39,6 +40,18 @@ def test_read_mirror_list_from_ecsv(io_handler):
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
     assert 1590.35 == pytest.approx(mirrors.mirror_table["focal_length"][0])
+
+
+def test_get_mirror_table(io_handler):
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
+        test=True,
+    )
+    logger.info(f"Using mirror list {mirror_list_file}")
+    mirrors = Mirrors(mirror_list_file)
+
+    report = report_diff_values(mirrors.mirror_table, mirrors.get_mirror_table())
+    assert report is True
 
 
 def test_get_single_mirror_parameters(io_handler):

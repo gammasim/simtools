@@ -148,6 +148,16 @@ class Mirrors:
             self._logger.error(msg)
             raise InvalidMirrorListFile()
 
+    def get_mirror_table(self):
+        """
+        Get the mirror list.
+
+        Returns
+        -------
+        mirror table: astropy.table.table.Table
+        """
+        return self.mirror_table
+
     def get_single_mirror_parameters(self, number):
         """
         Get parameters for a single mirror given by number.
