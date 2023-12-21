@@ -10,9 +10,8 @@ __all__ = ["DataReader"]
 
 class DataReader:
     """
-    Reader for simulation data and metadata. Data includes input to simulation tools
-    and reading of simulation model parameters. Allows to validate data against a schema
-    at the time of reading.
+    Data reader for input data to simulation tools. Reads data and metadata from file
+    and allows to validate data against a schema.
 
     """
 
@@ -29,6 +28,7 @@ class DataReader:
     def read_table_from_file(file_name, schema_file=None, validate=True, metadata_file=None):
         """
         Read astropy table from file and validate against schema.
+        Metadata is read from metadata file or from the metadata section of the data file.
         Schema for validation can be given as argument, or is determined
         from the metadata associated to the file.
 
@@ -56,11 +56,10 @@ class DataReader:
         """
 
         reader = DataReader()
-
         try:
-            reader.data_table = QTable.read(file_name, format="ascii.ecsv")
+            reader.data_table = QTable.read(file_name)
         except FileNotFoundError as exc:
-            reader.logger.error("Error reading list of array elements from %s", file_name)
+            reader.logger.error("Error reading tabled data from %s", file_name)
             raise exc
         reader.logger.info("Reading table data from %s", file_name)
 
@@ -68,9 +67,17 @@ class DataReader:
             metadata_file=metadata_file if metadata_file is not None else file_name
         )
 
-        # TMPTMP
-        validate = False
-        return reader.validate_and_transform(schema_file) if validate else reader.data_table
+        schema_file = (
+            schema_file
+            if schema_file is not None
+            else reader.metadata.get_data_model_schema_file_name()
+        )
+
+        return (
+            reader.validate_and_transform(schema_file=schema_file)
+            if validate
+            else reader.data_table
+        )
 
     def read_metadata(self, metadata_file):
         """
@@ -88,9 +95,9 @@ class DataReader:
             args_dict=None, metadata_file_name=metadata_file, data_model_name=None
         )
 
-    def validate_and_transform(self, schema_file=None):
+    def validate_and_transform(self, schema_file):
         """
-        Validate data using jsonschema. If necessary, transform data to match schema requirements.
+        Validate and transform data using the DataValidator module.
 
         Parameters:
         -----------
@@ -102,74 +109,10 @@ class DataReader:
         astropy Table
             Table read from file.
 
-        Raises
-        ------
-        FileNotFoundError
-            If file does not exist.
-
         """
-
-        schema_file = self._get_schema_file(self.data_table) if schema_file is None else schema_file
 
         _validator = validate_data.DataValidator(
             schema_file=schema_file,
             data_table=self.data_table,
         )
         return _validator.validate_and_transform()
-
-    def _get_schema_file(self, table):
-        """
-        Get schema file name.
-
-        Parameters:
-        -----------
-        table: astropy Table
-            Table to be validated.
-
-        Returns:
-        --------
-        str
-            Schema file name.
-
-        Raises
-        ------
-        FileNotFoundError
-            If file does not exist_.
-
-        """
-
-        try:
-            _schema_file = table.meta[""]
-        except KeyError:
-            self.logger.debug("No metadata found in table")
-
-        _schema_file = (
-            "https://raw.githubusercontent.com/gammasim/"
-            "workflows/main/schemas/array_coordinates_UTM.schema.yml"
-        )
-
-        return _schema_file
-
-    def _get_metadata_from_table(self, table):
-        """
-        Get metadata from astropy table.
-        Return empty dict in case no metadata is found.
-
-        Parameters:
-        -----------
-        table: astropy Table
-            Table with metadata
-
-        Returns:
-        --------
-        dict
-            Metadata.
-
-        """
-
-        try:
-            return dict(table.meta)
-        except TypeError:
-            self.logger.info("No metadata found in table")
-
-        return {}
