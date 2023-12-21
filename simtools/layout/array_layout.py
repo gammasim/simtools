@@ -80,7 +80,9 @@ class ArrayLayout:
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
             self.initialize_array_layout_from_telescope_file(
-                telescope_list_file, telescope_list_metadata_file, validate
+                telescope_list_file=telescope_list_file,
+                telescope_list_metadata_file=telescope_list_metadata_file,
+                validate=validate,
             )
 
     @classmethod
