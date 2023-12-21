@@ -160,7 +160,9 @@ def main():
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     layout = array_layout.ArrayLayout(
-        telescope_list_file=args_dict["input"], telescope_list_metadata_file=args_dict["input_meta"]
+        telescope_list_file=args_dict["input"],
+        telescope_list_metadata_file=args_dict["input_meta"],
+        validate=True,
     )
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()

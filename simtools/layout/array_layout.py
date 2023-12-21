@@ -56,6 +56,7 @@ class ArrayLayout:
         corsika_telescope_data=None,
         telescope_list_file=None,
         telescope_list_metadata_file=None,
+        validate=False,
     ):
         """
         Initialize ArrayLayout.
@@ -79,7 +80,7 @@ class ArrayLayout:
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
             self.initialize_array_layout_from_telescope_file(
-                telescope_list_file, telescope_list_metadata_file
+                telescope_list_file, telescope_list_metadata_file, validate
             )
 
     @classmethod
@@ -572,7 +573,7 @@ class ArrayLayout:
             self._telescope_list.append(tel)
 
     def initialize_array_layout_from_telescope_file(
-        self, telescope_list_file, telescope_list_metadata_file=None
+        self, telescope_list_file, telescope_list_metadata_file=None, validate=False
     ):
         """
         Initialize the Layout array from a telescope list file.
@@ -591,7 +592,7 @@ class ArrayLayout:
         """
         table = DataReader.read_table_from_file(
             file_name=telescope_list_file,
-            validate=True,
+            validate=validate,
             metadata_file=telescope_list_metadata_file,
         )
         self._initialize_corsika_telescope(table.meta)
