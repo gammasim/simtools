@@ -42,6 +42,7 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
+        self.derive_trigger_rate_histograms()
 
     @property
     def number_of_histograms(self):
@@ -89,7 +90,6 @@ class SimtelHistograms:
                         self._logger.warning(f"Problematic file {file}")
                         continue
                     self._list_of_histograms.append(hists)
-
         return self._list_of_histograms
 
     def _check_consistency(self, first_hist_file, second_hist_file):
@@ -143,12 +143,34 @@ class SimtelHistograms:
 
         self._logger.debug(f"End of reading {n_files} files")
 
-    def derive_trigger_rate_histogram(self):
+    def derive_trigger_rate_histograms(self):
         """
         Calculates the trigger rate histograms.
         The estimate is based on the existing histograms defined by the id=1 and id=2 in
         `pyeventio`.
+
+        Returns
+        -------
+        list:
+            List with the trigger rate histograms for each file.
         """
+
+        events_histogram = {}
+        trigged_events_histogram = {}
+        for i_file, hists_one_file in enumerate(self.list_of_histograms):
+            for hist in hists_one_file:
+                if hist["id"] == 1:
+                    events_histogram[i_file] = hist["content_outside"]
+                elif hist["id"] == 2:
+                    trigged_events_histogram[i_file] = hist["content_outside"]
+
+        list_of_trigger_rate_hists = []
+        for i_file, hists_one_file in enumerate(self.list_of_histograms):
+            event_rate_histogram = events_histogram[i_file] / trigged_events_histogram[i_file]
+
+            event_rate_histogram[np.isnan(event_rate_histogram)] = 0
+            list_of_trigger_rate_hists.append(event_rate_histogram)
+        return list_of_trigger_rate_hists
 
     def plot_one_histogram(self, i_hist, ax):
         """
