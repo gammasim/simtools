@@ -43,7 +43,7 @@ def validate_schema(data, schema_file):
     except jsonschema.exceptions.ValidationError:
         _logger.error(f"Failed using {schema}")
         raise
-    _logger.debug(f"Succeeded using {schema_file}")
+    _logger.debug(f"Successful validation of data using schema from {schema_file}")
 
 
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
