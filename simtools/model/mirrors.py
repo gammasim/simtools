@@ -4,14 +4,12 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-__all__ = ["InvalidMirrorListFile", "MissingValuesDB", "Mirrors"]
+__all__ = ["InvalidMirrorListFile", "Mirrors"]
 
 
 class InvalidMirrorListFile(Exception):
     """Exception for invalid mirror list file."""
 
-class MissingValuesDB(Exception):
-    """Exception for missing values in DB."""
 
 class Mirrors:
     """
@@ -63,64 +61,54 @@ class Mirrors:
 
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
-        if self.parameters is None:
-            try:
-                self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
-                self._logger.debug(f"Mirror shape_type = {self.shape_type}")
-            except KeyError:
-                self._logger.debug("Mirror shape_type not in mirror file")
-        else:
+        try:
+            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
+            self._logger.debug(f"Mirror shape_type = {self.shape_type}")
+        except KeyError:
+            self._logger.debug("Mirror shape_type not in mirror file")
             try:
                 self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
-            except KeyError:
+            except TypeError:
                 self._logger.debug("Mirror mirror_panel_shape not contained in db")
 
-        if self.parameters is None:
-            try:
-                self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
-                self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
-            except KeyError:
-                self._logger.debug("Mirror mirror_panel_diameter not in mirror file")
-        else:
+        try:
+            self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
+            self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
+        except KeyError:
+            self._logger.debug("Mirror mirror_panel_diameter not in mirror file")
             try:
                 self.mirror_diameter = u.Quantity(
                     self.parameters["mirror_panel_diameter"]["Value"],
                     self.parameters["mirror_panel_diameter"]["units"],
                 )
-
-            except KeyError:
+            except TypeError:
                 self._logger.debug("Mirror mirror_panel_diameter not contained in db")
 
         self.number_of_mirrors = np.shape(self.mirror_table)[0]
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
-        if self.parameters is None:
+        if "focal_length" not in self.mirror_table.colnames:
             try:
                 self.mirror_table["focal_length"] = (
                     self.mirror_table["mirror_panel_radius"].to("cm").value / 2
                 )
             except KeyError:
                 self._logger.debug("mirror_panel_radius not contained in mirror list")
-
-        else:
-            try:
-                self.mirror_table["focal_length"] = self.number_of_mirrors * [
-                    u.Quantity(
-                        self.parameters["mirror_focal_length"]["Value"],
-                        self.parameters["mirror_focal_length"]["units"],
-                    )
-                ]
-            except KeyError:
-                self._logger.debug("mirror_focal_length not contained in db")
+                try:
+                    print("NUMBER OF MIRRORS: ", self.number_of_mirrors)
+                    self.mirror_table["focal_length"] = self.number_of_mirrors * [
+                        u.Quantity(
+                            self.parameters["mirror_focal_length"]["Value"],
+                            self.parameters["mirror_focal_length"]["units"],
+                        )
+                    ]
+                except KeyError:
+                    self._logger.debug("mirror_focal_length not contained in db")
 
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
             raise InvalidMirrorListFile
-        if self.mirror_diameter is None and self.shape_type is None:
-            msg = "Problem with retrieving mirror_diameter and shape_type"
-            self._logger.error(msg)
-            raise MissingValuesDB
 
     def _read_mirror_list_from_sim_telarray(self):
         """
