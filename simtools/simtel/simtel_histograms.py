@@ -2,6 +2,7 @@ import copy
 import logging
 
 import numpy as np
+from astropy import units as u
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
@@ -42,7 +43,7 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
-        self.derive_trigger_rate_histograms()
+        self.derive_trigger_ratio_histograms()
 
     @property
     def number_of_histograms(self):
@@ -143,35 +144,45 @@ class SimtelHistograms:
 
         self._logger.debug(f"End of reading {n_files} files")
 
-    def derive_trigger_rate_histograms(self):
+    @u.quantity_input(livetime=u.s)
+    def derive_trigger_ratio_histograms(self, livetime=1 * u.s):
         """
-        Calculates the trigger rate histograms, i.e., the rate in which the events are triggered
-        in each bin of impact distance and log energy.
-        The estimate is based on the existing histograms defined by the id=1 and id=2 in
-        `pyeventio`.
+        Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
+        are triggered in each bin of impact distance and log energy for each histogram file.
+        The livetime gives the amount of time used in a small production to produce the histograms
+        used. It is assumed that the livetime is the same for all the histogram files used.
 
         Returns
         -------
         list:
-            List with the trigger rate histograms for each file.
+            List with the trigger ratio histograms for each file.
         """
 
         events_histogram = {}
         trigged_events_histogram = {}
+        area_dict = {}
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
             for hist in hists_one_file:
                 if hist["id"] == 1:
-                    events_histogram[i_file] = hist["content_outside"]
+                    events_histogram[i_file] = hist["data"]
+                    area_dict[i_file] = np.pi * (
+                        (hist["upper_x"] * u.m) ** 2 - (hist["lower_x"] * u.m) ** 2
+                    )
                 elif hist["id"] == 2:
-                    trigged_events_histogram[i_file] = hist["content_outside"]
+                    trigged_events_histogram[i_file] = hist["data"]
 
-        list_of_trigger_rate_hists = []
+        list_of_trigger_ratio_hists = []
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            event_rate_histogram = events_histogram[i_file] / trigged_events_histogram[i_file]
+            event_ratio_histogram = (
+                events_histogram[i_file]
+                / trigged_events_histogram[i_file]
+                * area_dict[i_file]
+                / livetime
+            )
 
-            event_rate_histogram[np.isnan(event_rate_histogram)] = 0
-            list_of_trigger_rate_hists.append(event_rate_histogram)
-        return list_of_trigger_rate_hists
+            event_ratio_histogram[np.isnan(event_ratio_histogram)] = 0
+            list_of_trigger_ratio_hists.append(event_ratio_histogram)
+        return list_of_trigger_ratio_hists
 
     def plot_one_histogram(self, i_hist, ax):
         """
