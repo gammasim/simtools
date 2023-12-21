@@ -6,7 +6,7 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools import db_handler
-from simtools.data_model import data_reader
+from simtools.data_model.data_reader import DataReader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -55,6 +55,7 @@ class ArrayLayout:
         layout_center_data=None,
         corsika_telescope_data=None,
         telescope_list_file=None,
+        telescope_list_metadata_file=None,
     ):
         """
         Initialize ArrayLayout.
@@ -77,7 +78,9 @@ class ArrayLayout:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
-            self.initialize_array_layout_from_telescope_file(telescope_list_file)
+            self.initialize_array_layout_from_telescope_file(
+                telescope_list_file, telescope_list_metadata_file
+            )
 
     @classmethod
     def from_array_layout_name(cls, mongo_db_config, array_layout_name, label=None):
@@ -567,41 +570,9 @@ class ArrayLayout:
 
             self._telescope_list.append(tel)
 
-    @staticmethod
-    def read_telescope_list_file(telescope_list_file):
-        """
-        Read list of telescopes from a ecsv file.
-
-        Parameters
-        ----------
-        telescope_list_file: str or Path
-            Path to the telescope list file.
-
-        Returns
-        -------
-        astropy.QTable
-            Astropy table with the telescope layout information.
-
-        Raises
-        ------
-        FileNotFoundError
-            If file cannot be opened.
-
-        """
-        _logger = logging.getLogger(__name__)
-        try:
-            table = QTable.read(telescope_list_file, format="ascii.ecsv")
-        except FileNotFoundError:
-            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
-            raise
-        _logger.info(f"Reading array elements from {telescope_list_file}")
-        if np.any([col.dtype == np.float32 for col in table.columns.values()]):
-            msg = "Columns with float32 dtype detected. Insufficient precision, use float64."
-            raise InvalidCoordinateDataType(msg)
-
-        return table
-
-    def initialize_array_layout_from_telescope_file(self, telescope_list_file):
+    def initialize_array_layout_from_telescope_file(
+        self, telescope_list_file, telescope_list_metadata_file=None
+    ):
         """
         Initialize the Layout array from a telescope list file.
 
@@ -609,11 +580,13 @@ class ArrayLayout:
         ----------
         telescope_list_file: str or Path
             Path to the telescope list file.
+        telescope_list_metadata_file: str or Path
+            Path to the telescope list metadata file.
         """
-        # TODO
-        #        table = self.read_telescope_list_file(telescope_list_file=telescope_list_file)
-        table = data_reader.DataReader.read_table_from_file(
-            file_name=telescope_list_file, validate=True
+        table = DataReader.read_table_from_file(
+            file_name=telescope_list_file,
+            validate=True,
+            metadata_file=telescope_list_metadata_file,
         )
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)

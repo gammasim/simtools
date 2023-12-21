@@ -49,7 +49,7 @@ class MetadataCollector:
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
-        self.args_dict = args_dict
+        self.args_dict = args_dict if args_dict else {}
         self.data_model_name = data_model_name
         self.schema_file = None
         self.schema_dict = None
@@ -95,7 +95,7 @@ class MetadataCollector:
             if self.args_dict["schema"]:
                 self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
                 return self.args_dict["schema"]
-        except KeyError:
+        except (KeyError, TypeError):
             pass
 
         # from metadata
@@ -269,9 +269,9 @@ class MetadataCollector:
         # metadata from yml file
         if Path(metadata_file_name).suffix == ".yml":
             try:
-                self._logger.debug(f"Reading meta data from {self.args_dict['input_meta']}")
+                self._logger.debug("Reading meta data from %s", metadata_file_name)
                 _input_metadata = gen.collect_data_from_yaml_or_dict(
-                    in_yaml=self.args_dict["input_meta"], in_dict=None
+                    in_yaml=metadata_file_name, in_dict=None
                 )
             except (gen.InvalidConfigData, FileNotFoundError):
                 self._logger.error("Failed reading metadata from %s", metadata_file_name)
@@ -279,7 +279,7 @@ class MetadataCollector:
         # metadata from table meta in ecsv file
         elif Path(metadata_file_name).suffix == ".ecsv":
             try:
-                _input_metadata = Table.read(metadata_file_name).meta[observatory]
+                _input_metadata = {observatory: Table.read(metadata_file_name).meta[observatory]}
             except (FileNotFoundError, KeyError):
                 self._logger.error(
                     "Failed reading metadata for %s from %s", observatory, metadata_file_name
