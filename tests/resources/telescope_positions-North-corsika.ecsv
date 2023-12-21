@@ -61,6 +61,50 @@
 #     SST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 3.0
+#   cta:
+#     activity:
+#       end: '2023-12-21T12:49:24'
+#       id: abaddff2-25bf-4d4b-90ea-30c7443cd0d6
+#       name: print_array_elements
+#       software: {name: simtools, version: 0.5.2.dev1089+gf69028b0.d20231221}
+#       start: '2023-12-21T12:49:24'
+#       type: software
+#     contact: {email: null, name: maierg, organization: CTAO}
+#     context:
+#       associated_data:
+#       - creation_time: null
+#         data:
+#           association: null
+#           category: null
+#           level: null
+#           model: {name: null, type: null, url: null, version: null}
+#           type: null
+#         description: null
+#         filename: null
+#         format: null
+#         id: null
+#         valid: {end: null, start: null}
+#       associated_elements:
+#       - {class: null, description: null, id: null, site: null, subtype: null, type: null}
+#       document:
+#       - {creation_time: null, id: null, title: null, type: null, url: null}
+#     instrument: {class: null, description: null, id: null, site: null, subtype: null, type: null}
+#     process: {id: null, subtype: null, type: simulation}
+#     product:
+#       creation_time: '2023-12-21T12:49:24'
+#       data:
+#         association: Site
+#         category: SIM
+#         level: R1
+#         model: {name: array_coordinates, type: simpipe-schema, url: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates.schema.yml',
+#           version: 0.1.0}
+#         type: service
+#       description: Telescope positions.
+#       filename: telescope_positions-North-corsika.ecsv
+#       format: ecsv
+#       id: abaddff2-25bf-4d4b-90ea-30c7443cd0d6
+#       valid: {end: null, start: null}
+#     reference: {version: 1.0.0}
 # schema: astropy-2.0
 asset_code sequence_number geo_code position_x position_y position_z
 LSTN 01 2B5 -70.90626052065193 -52.351285629006924 45.0
