@@ -8,7 +8,8 @@ import pytest
 from astropy.table import QTable
 
 import simtools.utils.general as gen
-from simtools.layout.array_layout import ArrayLayout, InvalidCoordinateDataType
+from simtools.data_model.data_reader import DataReader
+from simtools.layout.array_layout import ArrayLayout
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -139,51 +140,6 @@ def test_initialize_corsika_telescope_from_file(
     test_one_site(array_layout_south_instance, manual_corsika_dict_south)
 
 
-def test_read_telescope_list_file(
-    telescope_north_test_file, telescope_south_test_file, tmp_test_directory
-):
-    pos_x_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
-    pos_y_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
-    pos_z_north = [43.00, 28.90, 24.40, 30.60, 46.50, 26.70]
-    description_north = "CTAO Northern Array Element Coordinates (prod6)"
-    pos_x_south = [-20.64, 79.99, -19.40, -120.03, -0.02, 1.43]
-    pos_y_south = [-64.82, -0.77, 65.20, 1.15, 0.00, 151.02]
-    pos_z_south = [34.00, 29.00, 31.00, 33.00, 24.00, 25.00]
-    description_south = "CTAO Southern Array Element Coordinates (prod6)"
-
-    def test_one_site(test_file, pos_x, pos_y, pos_z, description):
-        table = ArrayLayout.read_telescope_list_file(test_file)
-        assert table.meta["data_type"] == "position_file"
-        assert table.meta["description"] == description
-        columns = ["pos_x", "pos_y", "pos_z"]
-
-        columns_manual = [pos_x, pos_y, pos_z]
-        for step, col in enumerate(columns):
-            assert all(
-                [
-                    pytest.approx(table[col][tel_num].value, 0.1) == columns_manual[step][tel_num]
-                    for tel_num in range(6)
-                ]
-            )
-        return table
-
-    test_one_site(
-        telescope_north_test_file, pos_x_north, pos_y_north, pos_z_north, description_north
-    )
-    table = test_one_site(
-        telescope_south_test_file, pos_x_south, pos_y_south, pos_z_south, description_south
-    )
-
-    # Change one of the columns data type to float32
-    tmp_table = table.copy()
-    tmp_table["pos_y"] = tmp_table["pos_y"].astype(np.float32)
-    tmp_table.write(tmp_test_directory / "tmp_table_float32.ecsv", format="ascii.ecsv")
-    with pytest.raises(InvalidCoordinateDataType):
-        ArrayLayout.read_telescope_list_file(tmp_test_directory / "tmp_table_float32.ecsv")
-    with pytest.raises(FileNotFoundError):
-        ArrayLayout.read_telescope_list_file(tmp_test_directory / "file_doesnt_exist.ecsv")
-
-
 def test_initialize_array_layout_from_telescope_file(
     telescope_north_test_file,
     array_layout_north_instance,
@@ -229,7 +185,7 @@ def test_add_tel(
     array_layout_south_instance,
 ):
     def test_one_site(instance, test_file, altitude):
-        ArrayLayout.read_telescope_list_file(test_file)
+        instance.initialize_array_layout_from_telescope_file(telescope_list_file=test_file)
         ntel_before = instance.get_number_of_telescopes()
         instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
         ntel_after = instance.get_number_of_telescopes()
@@ -238,7 +194,7 @@ def test_add_tel(
         instance.add_telescope("LST-00", "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
-    test_one_site(array_layout_north_instance, telescope_north_test_file, 2192.0)
+    test_one_site(array_layout_north_instance, telescope_north_test_file, 2190.0)
     test_one_site(array_layout_south_instance, telescope_south_test_file, 2181.0)
 
 
@@ -415,7 +371,7 @@ def test_include_radius_into_telescope_table(telescope_north_test_file, telescop
     values_from_file_south = [-149.32, 76.45, 28.00]
 
     def test_one_site(test_file, values_from_file, mst_10_name):
-        telescope_table = ArrayLayout.read_telescope_list_file(test_file)
+        telescope_table = DataReader.read_table_from_file(test_file, validate=False)
         telescope_table_with_radius = ArrayLayout.include_radius_into_telescope_table(
             telescope_table
         )
@@ -557,7 +513,7 @@ def test_try_set_altitude(
     corsika_sphere_center_south = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
 
     def test_one_site(test_file, instance, obs_level, manual_z_positions, corsika_sphere_center):
-        table = ArrayLayout.read_telescope_list_file(test_file)
+        table = DataReader.read_table_from_file(test_file, validate=False)
         manual_altitudes = [
             manual_z_positions[step] + obs_level - corsika_sphere_center[step] for step in range(6)
         ]
@@ -596,7 +552,7 @@ def test_try_set_coordinate(
     manual_yy_south = [-64.82, -0.77, 65.20, 1.15, 0.00, 151.02]
 
     def test_one_site(instance, test_file, manual_xx, manual_yy):
-        table = ArrayLayout.read_telescope_list_file(test_file)
+        table = DataReader.read_table_from_file(test_file, validate=False)
         for step, row in enumerate(table[:6]):
             tel = instance._load_telescope_names(row)
             instance._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")

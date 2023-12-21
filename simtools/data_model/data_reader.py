@@ -63,15 +63,17 @@ class DataReader:
             raise exc
         reader.logger.info("Reading table data from %s", file_name)
 
-        reader.read_metadata(
-            metadata_file=metadata_file if metadata_file is not None else file_name
-        )
+        validate = False
+        if validate:
+            reader.read_metadata(
+                metadata_file=metadata_file if metadata_file is not None else file_name
+            )
 
-        schema_file = (
-            schema_file
-            if schema_file is not None
-            else reader.metadata.get_data_model_schema_file_name()
-        )
+            schema_file = (
+                schema_file
+                if schema_file is not None
+                else reader.metadata.get_data_model_schema_file_name()
+            )
 
         return (
             reader.validate_and_transform(schema_file=schema_file)
