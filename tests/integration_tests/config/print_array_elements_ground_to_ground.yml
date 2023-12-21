@@ -6,4 +6,4 @@ CTA_SIMPIPE:
     EXPORT: ground
     USE_CORSIKA_TELESCOPE_HEIGHT: true
     OUTPUT_PATH: simtools-tests
-    SELECT_ASSETS: ['LSTN', 'MSTN']
+    SELECT_ASSETS: ['LST', 'MST']

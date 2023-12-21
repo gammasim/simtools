@@ -180,7 +180,7 @@ class ArrayLayout:
         FileNotFoundError:
             If file_name does not exist.
         """
-        # TODOTODO
+        # TODO TODO
         if file_name is None:
             try:
                 corsika_parameters_dict = collect_data_from_yaml_or_dict(
