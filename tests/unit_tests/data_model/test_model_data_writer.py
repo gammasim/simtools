@@ -85,28 +85,28 @@ def test_validate_and_transform(tmp_test_directory):
     assert len(_table.columns) == len(return_table.columns)
 
 
-def test_write_metadata(tmp_test_directory):
+def test_write_metadata_to_yml(tmp_test_directory):
     # test writer of metadata
     _metadata = {"name": "test_metadata"}
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
-        w_1.write_metadata(metadata=_metadata)
+        w_1.write_metadata_to_yml(metadata=_metadata)
 
-    yml_file = w_1.write_metadata(
+    yml_file = w_1.write_metadata_to_yml(
         metadata=_metadata, yml_file=tmp_test_directory.join("test_file.yml")
     )
     assert Path(yml_file).exists()
 
     with pytest.raises(FileNotFoundError):
-        w_1.write_metadata(
+        w_1.write_metadata_to_yml(
             metadata=_metadata, yml_file="./this_directory_is_not_there/test_file.yml"
         )
 
     with pytest.raises(AttributeError):
-        w_1.write_metadata(metadata=None, yml_file=tmp_test_directory.join("test_file.yml"))
+        w_1.write_metadata_to_yml(metadata=None, yml_file=tmp_test_directory.join("test_file.yml"))
 
     with pytest.raises(TypeError):
-        w_1.write_metadata(
+        w_1.write_metadata_to_yml(
             metadata=_metadata,
             yml_file=None,
         )

@@ -75,24 +75,6 @@ class ModelDataWriter:
             )
         writer.write(metadata=metadata, product_data=product_data)
 
-    def write(self, metadata=None, product_data=None):
-        """
-        Write model data and metadata
-
-        Parameters
-        ----------
-        metadata: dict
-            Metadata to be written.
-        product_data: astropy Table
-            Model data to be written
-
-        """
-
-        if metadata is not None:
-            self.write_metadata(metadata=metadata)
-        if product_data is not None:
-            self.write_data(product_data=product_data)
-
     def validate_and_transform(self, product_data=None, validate_schema_file=None):
         """
         Validate product data using jsonschema given in metadata.
@@ -113,33 +95,40 @@ class ModelDataWriter:
         )
         return _validator.validate_and_transform()
 
-    def write_data(self, product_data):
+    def write(self, product_data=None, metadata=None):
         """
-        Write model data.
+        Write model data and metadata
 
         Parameters
         ----------
         product_data: astropy Table
-            Model data to be written.
+            Model data to be written
+        metadata: dict
+            Metadata to be written.
 
         Raises
         ------
         FileNotFoundError
-            if data writing was not sucessfull.
+            if data writing was not successful.
 
         """
 
+        if product_data is None:
+            return
+
+        if metadata is not None:
+            product_data.meta.update(metadata)
+
         try:
-            if product_data is not None:
-                self._logger.info(f"Writing data to {self.product_data_file}")
-                product_data.write(
-                    self.product_data_file, format=self.product_data_format, overwrite=True
-                )
+            self._logger.info(f"Writing data to {self.product_data_file}")
+            product_data.write(
+                self.product_data_file, format=self.product_data_format, overwrite=True
+            )
         except astropy.io.registry.base.IORegistryError:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
 
-    def write_metadata(self, metadata, yml_file=None, keys_lower_case=False):
+    def write_metadata_to_yml(self, metadata, yml_file=None, keys_lower_case=False):
         """
         Write model metadata file (yaml file format).
 
