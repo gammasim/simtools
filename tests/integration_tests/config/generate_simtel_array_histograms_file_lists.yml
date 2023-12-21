@@ -7,3 +7,6 @@ CTA_SIMPIPE:
     OUTPUT_FILE_NAME: test_simtel_hist_name
     OUTPUT_PATH: simtools-tests
     TEST: true
+    USE_PLAIN_OUTPUT_PATH: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/test_simtel_hist_name.pdf
