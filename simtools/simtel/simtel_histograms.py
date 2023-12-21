@@ -39,6 +39,7 @@ class SimtelHistograms:
             histogram_files = [histogram_files]
         self._histogram_files = histogram_files
         self._is_test = test
+        self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
 
@@ -67,17 +68,18 @@ class SimtelHistograms:
             self.combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
-    def get_list_of_histograms(self):
-        """Returns a list with the histograms for each file.
+    @property
+    def list_of_histograms(self):
+        """
+        Returns a list with the histograms for each file.
 
         Returns
         -------
         list:
-            List of all histograms read from the files.
-
+            List of histograms.
         """
 
-        list_of_histograms = []
+        self._list_of_histograms = []
         for file in self._histogram_files:
             with EventIOFile(file) as f:
                 for o in yield_toplevel_of_type(f, Histograms):
@@ -86,9 +88,9 @@ class SimtelHistograms:
                     except Exception:  # pylint: disable=broad-except
                         self._logger.warning(f"Problematic file {file}")
                         continue
-                    list_of_histograms.append(hists)
+                    self._list_of_histograms.append(hists)
 
-        return list_of_histograms
+        return self._list_of_histograms
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -123,9 +125,8 @@ class SimtelHistograms:
         histogram list."""
         # Processing and combining histograms from multiple files
         self.combined_hists = []
-        list_of_histograms = self.get_list_of_histograms()
         n_files = 0
-        for hists_one_file in list_of_histograms:
+        for hists_one_file in self.list_of_histograms:
             count_file = True
 
             if len(self.combined_hists) == 0:
