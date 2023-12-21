@@ -51,11 +51,8 @@
 #         MODEL: {NAME: array_coordinates_utm, URL: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates_UTM.schema.yml',
 #           VERSION: 0.1.0}
 #         TYPE: Service
-#       DESCRIPTION: 'Telescope positions for the CTAO Northern site
-#
-#         (UTM coordinate system). Consistent with
-#
-#         document CTA-SPE-PSC-000000-0001 1c.'
+#       DESCRIPTION: Telescope positions for the CTAO Northern site (UTM coordinate system). Consistent with document CTA-SPE-PSC-000000-0001
+#         1c.
 #       FILENAME: telescope_positions-North-utm.ecsv
 #       FORMAT: ascii.ecsv
 #       ID: null
