@@ -385,8 +385,8 @@ def test_include_radius_into_telescope_table(telescope_north_test_file, telescop
                 == value_manual
             )
 
-    test_one_site(telescope_north_test_file, values_from_file_north, "MSTN-10")
-    test_one_site(telescope_south_test_file, values_from_file_south, "MSTS-10")
+    test_one_site(telescope_north_test_file, values_from_file_north, "MST-10")
+    test_one_site(telescope_south_test_file, values_from_file_south, "MST-10")
 
 
 def test_from_corsika_file_to_dict(
@@ -593,4 +593,4 @@ def test_len(telescope_north_test_file):
 def test_getitem(telescope_north_test_file):
     layout = ArrayLayout(telescope_list_file=telescope_north_test_file)
 
-    assert layout[0].name == "LSTN-01"
+    assert layout[0].name == "LST-01"

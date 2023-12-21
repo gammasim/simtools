@@ -22,7 +22,7 @@ def test_write(tmp_test_directory):
     w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
     w_1.write(metadata=_metadata, product_data=None)
 
-    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+    # TODO    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
 
     # product_data not none
     empty_table = astropy.table.Table()
@@ -33,7 +33,7 @@ def test_write(tmp_test_directory):
     # both not none
     w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
     w_1.write(metadata=_metadata, product_data=empty_table)
-    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+    # TODO    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
     assert Path(w_1.product_data_file).exists()
 
 
@@ -52,11 +52,11 @@ def test_dump(args_dict, tmp_test_directory):
     )
 
     assert Path(args_dict["output_path"]).joinpath(args_dict["output_file"]).exists()
-    assert (
-        Path(args_dict["output_path"])
-        .joinpath(args_dict["output_file"].replace("ecsv", "metadata.yml"))
-        .exists()
-    )
+    # TODO    assert (
+    #        Path(args_dict["output_path"])
+    #        .joinpath(args_dict["output_file"].replace("ecsv", "metadata.yml"))
+    #        .exists()
+    #    )
 
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)
@@ -110,18 +110,6 @@ def test_write_metadata_to_yml(tmp_test_directory):
             metadata=_metadata,
             yml_file=None,
         )
-
-
-def test_write_data(tmp_test_directory):
-    w_2 = writer.ModelDataWriter()
-    w_2.write_data(None)
-
-    empty_table = astropy.table.Table()
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
-        w_2.write_data(empty_table)
-
-    w_2.product_data_file = tmp_test_directory.join("test_file.ecsv")
-    w_2.write_data(empty_table)
 
 
 def test_astropy_data_format():

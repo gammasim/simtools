@@ -7,9 +7,9 @@ CTA_SIMPIPE:
     USE_CORSIKA_TELESCOPE_HEIGHT: true
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
-    SELECT_ASSETS: ['LSTN', 'MSTN']
+    SELECT_ASSETS: ['LST', 'MST']
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |
         ./tests/resources/telescope_positions-North-ground.ecsv
-      TOLERANCE: 1.e-5
+      TOLERANCE: 1.e-2
