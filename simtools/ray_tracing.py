@@ -182,6 +182,7 @@ class RayTracing:
                 simtel = SimtelRunnerRayTracing(
                     simtel_source_path=self._simtel_source_path,
                     telescope_model=self._telescope_model,
+                    test=test,
                     config_data={
                         "zenith_angle": self.config.zenith_angle * u.deg,
                         "source_distance": self._source_distance * u.km,

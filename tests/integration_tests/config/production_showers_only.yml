@@ -5,7 +5,10 @@ CTA_SIMPIPE:
     PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
     TASK: simulate
     SHOWERS_ONLY: true
-    TEST: true
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        corsika-data/North/proton/data/run000001/corsika_run000001_proton_za020deg_azm000deg_North_
+        TestLayout_test-production.zst

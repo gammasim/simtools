@@ -21,7 +21,7 @@ def test_get_data_model_schema_file_name():
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file is None
 
-    args_dict = {"schema": "simtools/schemas/metadata.schema.yml"}
+    args_dict = {"schema": "simtools/schemas/metadata.metaschema.yml"}
     _collector = metadata_collector.MetadataCollector(args_dict)
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == args_dict["schema"]
@@ -59,7 +59,7 @@ def test_get_data_model_schema_file_name():
 
 def test_get_data_model_schema_dict(args_dict_site):
     metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata.schema_file_name = "simtools/schemas/metadata.schema.yml"
+    metadata.schema_file_name = "simtools/schemas/metadata.metaschema.yml"
 
     assert isinstance(metadata.get_data_model_schema_dict(), dict)
 

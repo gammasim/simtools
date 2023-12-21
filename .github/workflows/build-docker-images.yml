@@ -17,8 +17,13 @@ on:
     - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
 
 env:
+  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_READ_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_READ_PW }}
+  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TEST_TAG: user/app:test
 
 jobs:
 
@@ -60,13 +65,36 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
           flavor: latest=true
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        if: matrix.type == 'prod'
+        with:
+          context: .
+          load: true
+          file: ./docker/Dockerfile-${{ matrix.type }}
+          tags: ${{ env.TEST_TAG }}
+
+      # test the prod image with one application using the database
+      # and the sim_telarray installation
+      - name: Test Docker image
+        if: matrix.type == 'prod'
+        run: >
+          docker run --rm
+          -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
+          -e "SIMTOOLS_DB_API_PORT=${{ env.SIMTOOLS_DB_API_PORT }}"
+          -e "SIMTOOLS_DB_API_USER=${{ env.SIMTOOLS_DB_API_USER }}"
+          -e "SIMTOOLS_DB_API_PW=${{ env.SIMTOOLS_DB_API_PW }}"
+          -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}" -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
+          bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
+        shell: /usr/bin/bash -e {0}
+
+      - name: Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           push:
-            ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+            ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
