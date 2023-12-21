@@ -323,7 +323,7 @@ class MetadataCollector:
         # DATA:CATEGORY
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
-        product_dict["data"]["type"] = "service"
+        product_dict["data"]["type"] = "Service"
         try:
             product_dict["data"]["association"] = self.schema_dict["instrument"]["class"]
         except KeyError:
