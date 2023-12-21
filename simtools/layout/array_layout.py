@@ -177,6 +177,7 @@ class ArrayLayout:
         FileNotFoundError:
             If file_name does not exist.
         """
+        # TODOTODO
         if file_name is None:
             try:
                 corsika_parameters_dict = collect_data_from_yaml_or_dict(
@@ -582,6 +583,11 @@ class ArrayLayout:
             Path to the telescope list file.
         telescope_list_metadata_file: str or Path
             Path to the telescope list metadata file.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Table with the telescope layout information.
         """
         table = DataReader.read_table_from_file(
             file_name=telescope_list_file,
@@ -591,6 +597,8 @@ class ArrayLayout:
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
+
+        return table
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
