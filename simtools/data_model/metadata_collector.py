@@ -95,7 +95,7 @@ class MetadataCollector:
             if self.args_dict["schema"]:
                 self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
                 return self.args_dict["schema"]
-        except (KeyError, TypeError):
+        except KeyError:
             pass
 
         # from metadata
