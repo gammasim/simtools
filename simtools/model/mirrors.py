@@ -134,10 +134,13 @@ class Mirrors:
                 "sep",
                 "mirror_panel_id",
             ],
+            units=["cm", "cm", "cm", "cm", None, "cm", None, None],
         )
 
         self.shape_type = self.mirror_table["shape_type"][0]
-        self.mirror_diameter = self.mirror_table["mirror_diameter"][0]
+        self.mirror_diameter = u.Quantity(
+            self.mirror_table["mirror_diameter"][0], self.mirror_table["mirror_diameter"].unit
+        )
         self.number_of_mirrors = len(self.mirror_table["focal_length"])
 
         self._logger.debug(f"Mirror shape_type = {self.shape_type}")
@@ -202,7 +205,7 @@ class Mirrors:
             return_values = (
                 0,
                 0,
-                self.mirror_diameter,
+                self.mirror_diameter.value,
                 self.mirror_table[mask]["focal_length"].value[0],
                 self.shape_type,
             )
