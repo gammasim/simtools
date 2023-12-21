@@ -544,7 +544,9 @@ class ArrayLayout:
         try:
             tel.set_altitude(
                 self._altitude_from_corsika_z(
-                    pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
+                    pos_z=self._assign_unit_to_quantity(
+                        row["position_z"], table["position_z"].unit
+                    ),
                     tel_name=tel.name,
                 )
             )
@@ -567,7 +569,7 @@ class ArrayLayout:
         """
         for row in table:
             tel = self._load_telescope_names(row)
-            self._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
             self._try_set_altitude(row, tel, table)
