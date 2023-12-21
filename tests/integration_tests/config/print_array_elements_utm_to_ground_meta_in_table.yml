@@ -11,5 +11,5 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |
-        ./tests/resources/telescope_positions-North-corsika.ecsv
+        ./tests/resources/telescope_positions-North-ground.ecsv
       TOLERANCE: 1.e-5
