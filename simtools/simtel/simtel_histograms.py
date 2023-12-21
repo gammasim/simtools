@@ -174,8 +174,8 @@ class SimtelHistograms:
         list_of_trigger_ratio_hists = []
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
             event_ratio_histogram = (
-                events_histogram[i_file]
-                / trigged_events_histogram[i_file]
+                trigged_events_histogram[i_file]
+                / events_histogram[i_file]
                 * area_dict[i_file]
                 / livetime
             )
