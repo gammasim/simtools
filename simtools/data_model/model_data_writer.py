@@ -117,7 +117,7 @@ class ModelDataWriter:
             return
 
         if metadata is not None:
-            product_data.meta.update(metadata)
+            product_data.meta.update(gen.change_dict_keys_case(metadata, False))
 
         try:
             self._logger.info(f"Writing data to {self.product_data_file}")
