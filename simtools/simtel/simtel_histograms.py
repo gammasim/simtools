@@ -67,49 +67,87 @@ class SimtelHistograms:
             self.combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
-    def combine_histogram_files(self):
-        """Add the values of the same type of histogram from the various lists into a single
-        histogram list."""
-        # Processing and combining histograms from multiple files
-        self.combined_hists = []
-        n_files = 0
+    def get_list_of_histograms(self):
+        """Returns a list with the histograms for each file.
+
+        Returns
+        -------
+        list:
+            List of all histograms read from the files.
+
+        """
+
+        list_of_histograms = []
         for file in self._histogram_files:
-            count_file = True
             with EventIOFile(file) as f:
                 for o in yield_toplevel_of_type(f, Histograms):
                     try:
                         hists = o.parse()
                     except Exception:  # pylint: disable=broad-except
                         self._logger.warning(f"Problematic file {file}")
-                        count_file = False
                         continue
+                    list_of_histograms.append(hists)
 
-                    if len(self.combined_hists) == 0:
-                        # First file
-                        self.combined_hists = copy.copy(hists)
+        return list_of_histograms
 
-                    else:
-                        # Remaining files
-                        for hist, this_combined_hist in zip(hists, self.combined_hists):
-                            # Checking consistency of histograms
-                            for key_to_test in [
-                                "lower_x",
-                                "upper_x",
-                                "n_bins_x",
-                                "title",
-                            ]:
-                                if hist[key_to_test] != this_combined_hist[key_to_test]:
-                                    msg = "Trying to add histograms with inconsistent dimensions"
-                                    self._logger.error(msg)
-                                    raise BadHistogramFormat(msg)
+    def _check_consistency(self, first_hist_file, second_hist_file):
+        """
+        Checks whether two histograms have the same format.
+        Raises an error in case they are not consistent.
 
-                            this_combined_hist["data"] = np.add(
-                                this_combined_hist["data"], hist["data"]
-                            )
+        Parameters
+        ----------
+        first_hist_file: dict
+            One histogram from a single file.
+        second_hist_file: dict
+            One histogram from a single file.
 
-                    n_files += int(count_file)
+        Raises
+        ------
+        BadHistogramFormat:
+            if the format of the histograms have inconsistent dimensions.
+        """
+        for key_to_test in [
+            "lower_x",
+            "upper_x",
+            "n_bins_x",
+            "title",
+        ]:
+            if first_hist_file[key_to_test] != second_hist_file[key_to_test]:
+                msg = "Trying to add histograms with inconsistent dimensions"
+                self._logger.error(msg)
+                raise BadHistogramFormat(msg)
+
+    def combine_histogram_files(self):
+        """Add the values of the same type of histogram from the various lists into a single
+        histogram list."""
+        # Processing and combining histograms from multiple files
+        self.combined_hists = []
+        list_of_histograms = self.get_list_of_histograms()
+        n_files = 0
+        for hists_one_file in list_of_histograms:
+            count_file = True
+
+            if len(self.combined_hists) == 0:
+                # First file
+                self.combined_hists = copy.copy(hists_one_file)
+
+            else:
+                for hist, this_combined_hist in zip(hists_one_file, self.combined_hists):
+                    self._check_consistency(hist, this_combined_hist)
+
+                    this_combined_hist["data"] = np.add(this_combined_hist["data"], hist["data"])
+
+            n_files += int(count_file)
 
         self._logger.debug(f"End of reading {n_files} files")
+
+    def derive_trigger_rate_histogram(self):
+        """
+        Calculates the trigger rate histograms.
+        The estimate is based on the existing histograms defined by the id=1 and id=2 in
+        `pyeventio`.
+        """
 
     def plot_one_histogram(self, i_hist, ax):
         """
