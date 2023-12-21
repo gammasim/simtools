@@ -25,7 +25,7 @@ class DataReader:
         self.metadata = None
 
     @staticmethod
-    def read_table_from_file(file_name, schema_file=None, validate=True, metadata_file=None):
+    def read_table_from_file(file_name, schema_file=None, validate=False, metadata_file=None):
         """
         Read astropy table from file and validate against schema.
         Metadata is read from metadata file or from the metadata section of the data file.
@@ -63,7 +63,6 @@ class DataReader:
             raise exc
         reader.logger.info("Reading table data from %s", file_name)
 
-        validate = False
         if validate:
             reader.read_metadata(
                 metadata_file=metadata_file if metadata_file is not None else file_name
