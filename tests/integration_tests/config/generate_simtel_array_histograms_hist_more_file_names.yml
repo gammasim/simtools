@@ -3,8 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: hist_more_file_names
   CONFIGURATION:
     HIST_FILE_NAMES: |
-      ./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst ./tests
-      /resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
+      ./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst ./tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
     PDF: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
     OUTPUT_PATH: simtools-tests
