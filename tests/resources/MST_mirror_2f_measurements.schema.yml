@@ -23,17 +23,17 @@ data:
           Mirror panel radius.
         required: true
         units: cm
-        type: double
+        type: float64
       - name: psf
         description: |-
           Spot size of mirror panel PSF at nominal distance.
         required: true
         units: cm
-        type: double
+        type: float64
       - name: psf_opt
         description: |-
           Spot size of mirror panel PSF
           (best value, not at nominal distance).
         required: false
         units: cm
-        type: double
+        type: float64
