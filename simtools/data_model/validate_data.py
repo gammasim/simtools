@@ -154,6 +154,7 @@ class DataValidator:
             if not np.issubdtype(col.dtype, np.number):
                 continue
             self._check_for_not_a_number(col, col_name)
+            self._check_datatype(col, col_name)
             col = self._check_and_convert_units(col, col_name)
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
@@ -292,6 +293,40 @@ class DataValidator:
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
+
+    def _check_datatype(self, col, column_name):
+        """
+        Check column data type.
+
+        Parameters
+        ----------
+        col: astropy.column or Quantity
+            data column to be converted
+        column_name: str
+            column name
+
+        Returns
+        -------
+        bool
+            true if data type is correct
+
+        Raises
+        ------
+        TypeError
+            if data type is not correct
+
+        """
+
+        reference_dtype = self._get_reference_data_column(column_name).get("type", None)
+
+        if not np.issubdtype(col.dtype, reference_dtype):
+            self._logger.error(
+                f"Invalid data type in column '{column_name}'. "
+                f"Expected type '{reference_dtype}', found '{col.dtype}'"
+            )
+            raise TypeError
+
+        return True
 
     def _check_for_not_a_number(self, col, col_name):
         """

@@ -315,6 +315,25 @@ def test_get_unique_column_requirements():
     assert data_validator._get_unique_column_requirement() == ["wavelength"]
 
 
+def test_check_datatype(caplog):
+    data_validator = validate_data.DataValidator()
+    data_validator._reference_data_columns = get_reference_columns()
+
+    assert data_validator._check_datatype(
+        Column([300.0, 350.0, 315.0], dtype="double", name="wavelength"), "wavelength"
+    )
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(TypeError):
+            assert data_validator._check_datatype(
+                Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
+            )
+    assert (
+        "Invalid data type in column 'wavelength'. Expected type 'double', found 'float32'"
+        in caplog.text
+    )
+
+
 def test_check_for_not_a_number():
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
