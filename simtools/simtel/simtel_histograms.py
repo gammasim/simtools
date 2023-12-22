@@ -43,9 +43,6 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
-        # This line is here for testing
-        hists = self.derive_trigger_rate_histograms()
-        self.integrate_trigger_rate_histograms(hists)
 
     @property
     def number_of_histograms(self):
@@ -146,8 +143,7 @@ class SimtelHistograms:
 
         self._logger.debug(f"End of reading {n_files} files")
 
-    @u.quantity_input(livetime=u.s)
-    def derive_trigger_rate_histograms(self, livetime=1 * u.s):
+    def _derive_trigger_rate_histograms(self, livetime=1):
         """
         Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
         are triggered in each bin of impact distance and log energy for each histogram file.
@@ -155,12 +151,20 @@ class SimtelHistograms:
         used. It is assumed that the livetime is the same for all the histogram files used and that
         the radius (x-axis in the histograms) is given in meters.
 
+        Parameters
+        ----------
+        livetime: astropy.Quantity
+            Time used in the simulation that produced the histograms.
+
         Returns
         -------
         list:
             List with the trigger ratio histograms for each file.
         """
-
+        if isinstance(livetime, u.Quantity):
+            livetime = livetime.to(u.s)
+        else:
+            livetime = livetime * u.s
         events_histogram = {}
         trigged_events_histogram = {}
         # Save the appropriate histograms to a dictionary
@@ -207,14 +211,14 @@ class SimtelHistograms:
             list_of_trigger_rate_hists.append(event_rate_histogram)
         return list_of_trigger_rate_hists
 
-    def integrate_trigger_rate_histograms(self, hists):
+    def _integrate_trigger_rate_histograms(self, hists):
         """
-        Integrates the trigger rate histogram in energy based on the histogram bin edges.
+        Integrates in energy the trigger rate histogram based on the histogram bin edges.
 
         Parameters
         ----------
         hists: list
-            List with the integrated histograms.
+            List with the final trigger rate for each histogram.
         """
 
         list_of_integrated_hists = []
@@ -226,8 +230,22 @@ class SimtelHistograms:
                 integrated_hist[i_radius] = np.sum(
                     hist["data"][:-1, i_radius].value * np.diff(energy_axis)
                 )
-            list_of_integrated_hists.append(np.array(integrated_hist) * hist["data"][0, 0].unit)
+
+            list_of_integrated_hists.append(np.sum(integrated_hist) * hist["data"][0, 0].unit)
         return list_of_integrated_hists
+
+    def trigger_rate_per_histogram(self, livetime=1 * u.s):
+        """
+        Estimates the trigger rate for each histogram passed.
+
+        Parameters
+        ----------
+        livetime: astropy.Quantity
+            Time used in the simulation that produced the histograms.
+        """
+        hists = self._derive_trigger_rate_histograms(livetime=livetime)
+        trigger_rates = self._integrate_trigger_rate_histograms(hists)
+        return trigger_rates
 
     def plot_one_histogram(self, i_hist, ax):
         """
