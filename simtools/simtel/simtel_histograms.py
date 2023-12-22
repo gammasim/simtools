@@ -43,7 +43,9 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.combined_hists = None
         self.__meta_dict = None
-        self.derive_trigger_rate_histograms()
+        # This line is here for testing
+        hists = self.derive_trigger_rate_histograms()
+        self.integrate_trigger_rate_histograms(hists)
 
     @property
     def number_of_histograms(self):
@@ -150,7 +152,8 @@ class SimtelHistograms:
         Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
         are triggered in each bin of impact distance and log energy for each histogram file.
         The livetime gives the amount of time used in a small production to produce the histograms
-        used. It is assumed that the livetime is the same for all the histogram files used.
+        used. It is assumed that the livetime is the same for all the histogram files used and that
+        the radius (x-axis in the histograms) is given in meters.
 
         Returns
         -------
@@ -160,40 +163,71 @@ class SimtelHistograms:
 
         events_histogram = {}
         trigged_events_histogram = {}
-        area_dict = {}
+        # Save the appropriate histograms to a dictionary
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
             for hist in hists_one_file:
                 if hist["id"] == 1:
-                    events_histogram[i_file] = hist["data"]
-                    area_dict[i_file] = np.pi * (
-                        (hist["upper_x"] * u.m) ** 2 - (hist["lower_x"] * u.m) ** 2
-                    )
+                    events_histogram[i_file] = hist
+
                 elif hist["id"] == 2:
-                    trigged_events_histogram[i_file] = hist["data"]
+                    trigged_events_histogram[i_file] = hist
 
         list_of_trigger_rate_hists = []
+        # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            event_rate_histogram = (
-                trigged_events_histogram[i_file]
-                / events_histogram[i_file]
-                * area_dict[i_file]
+            event_rate_histogram = copy.copy(events_histogram[i_file])
+            area_dict = np.pi * (
+                (events_histogram[i_file]["upper_x"]) ** 2
+                - (events_histogram[i_file]["lower_x"]) ** 2
+            )
+            event_rate_histogram["data"] = (
+                trigged_events_histogram[i_file]["data"]
+                / events_histogram[i_file]["data"]
+                * area_dict
                 / livetime
             )
+            event_rate_histogram["data"][np.isnan(event_rate_histogram["data"])] = 0
+            # Keeping only the necessary information for proceeding with integration
+            keys_to_keep = [
+                "data",
+                "lower_x",
+                "lower_y",
+                "upper_x",
+                "upper_y",
+                "entries",
+                "n_bins_x",
+                "n_bins_y",
+            ]
+            event_rate_histogram = {
+                key: event_rate_histogram[key]
+                for key in keys_to_keep
+                if key in event_rate_histogram
+            }
 
-            event_rate_histogram[np.isnan(event_rate_histogram)] = 0
             list_of_trigger_rate_hists.append(event_rate_histogram)
         return list_of_trigger_rate_hists
 
-    def integrate_histogram_in_energy(self, hist):
+    def integrate_trigger_rate_histograms(self, hists):
         """
-        Integrates the trigger rate histogram in energy based on the bin edges from the histogram.
+        Integrates the trigger rate histogram in energy based on the histogram bin edges.
 
         Parameters
         ----------
-        hist: numpy.ndarray
-            The histogram to integrate.
-
+        hists: list
+            List with the integrated histograms.
         """
+
+        list_of_integrated_hists = []
+        for _, hist in enumerate(hists):
+            energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
+            radius_axis = np.logspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
+            integrated_hist = np.zeros_like(radius_axis)
+            for i_radius, _ in enumerate(radius_axis):
+                integrated_hist[i_radius] = np.sum(
+                    hist["data"][:-1, i_radius].value * np.diff(energy_axis)
+                )
+            list_of_integrated_hists.append(np.array(integrated_hist) * hist["data"][0, 0].unit)
+        return list_of_integrated_hists
 
     def plot_one_histogram(self, i_hist, ax):
         """
