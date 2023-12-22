@@ -169,8 +169,6 @@ class DataValidator:
 
         """
 
-        print("FFFF", self._reference_data_columns)
-        print("GGGG", self.data_table.columns)
         for entry in self._reference_data_columns:
             if entry.get("required", False):
                 if entry["name"] in self.data_table.columns:

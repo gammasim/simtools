@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import pytest
+import yaml
 from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
@@ -16,23 +17,38 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_validate_and_transform():
+def test_validate_and_transform(caplog):
     data_validator = validate_data.DataValidator()
     # no input file defined
-    with pytest.raises(TypeError):
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(TypeError):
+            data_validator.validate_and_transform()
+    assert "No data or data table to validate" in caplog.text
+
+    data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
+    data_validator.schema_file_name = "tests/resources/MST_mirror_2f_measurements.schema.yml"
+    with caplog.at_level(logging.INFO):
         data_validator.validate_and_transform()
+    assert "Validating tabled data from:" in caplog.text
 
 
-def test_validate_data_file():
+def test_validate_data_file(caplog):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
 
-    data_validator._data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
-    data_validator.validate_data_file()
+    data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
+    with caplog.at_level(logging.INFO):
+        data_validator.validate_data_file()
+    assert "Validating tabled data from:" in caplog.text
+
+    data_validator.data_file_name = "tests/resources/reference_position_mercator.yml"
+    with caplog.at_level(logging.INFO):
+        data_validator.validate_data_file()
+    assert "Validating data from:" in caplog.text
 
 
-def test_validate_data_columns():
+def test_validate_data_columns(tmp_test_directory, caplog):
     data_validator = validate_data.DataValidator()
     with pytest.raises(TypeError):
         data_validator._validate_data_table()
@@ -51,6 +67,16 @@ def test_validate_data_columns():
     )
     data_validator_3.validate_data_file()
     data_validator_3._validate_data_table()
+
+    _incomplete_schema = {"data": []}
+    with open(tmp_test_directory / "incomplete_data_schema.schema.yml", "w") as _file:
+        yaml.dump(_incomplete_schema, _file)
+
+    data_validator_3.schema_file_name = tmp_test_directory / "incomplete_data_schema.schema.yml"
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(IndexError):
+            data_validator_3._validate_data_table()
+    assert "Error reading validation schema from" in caplog.text
 
 
 def test_sort_data():
@@ -90,6 +116,13 @@ def test_sort_data():
 
     assert identical_sorted
     assert identical_reverse_sorted
+
+    data_validator_reverse.data_table = None
+    with pytest.raises(AttributeError):
+        data_validator_reverse._sort_data()
+    data_validator.data_table = None
+    with pytest.raises(AttributeError):
+        data_validator._sort_data()
 
 
 def test_check_data_for_duplicates():
@@ -153,7 +186,7 @@ def test_interval_check_required_range():
     assert not data_validator._interval_check((350.0, 500.0), (300.0, 600), "required_range")
 
 
-def test_check_range():
+def test_check_range(caplog):
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
@@ -168,6 +201,17 @@ def test_check_range():
 
     with pytest.raises(KeyError):
         data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "failed_range")
+
+    col_3 = Column(name="qe", data=[0.1, 5.00], dtype="float32")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
+    assert "Value for column 'qe' out of range" in caplog.text
+    col_3 = Column(name="qe", data=[-0.1, 0.5], dtype="float32")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
+    assert "Value for column 'qe' out of range" in caplog.text
 
 
 def test_check_and_convert_units():
@@ -341,6 +385,26 @@ def test_read_validation_schema(tmp_test_directory):
     data_validator._read_validation_schema(
         schema_file=str(tmp_test_directory), parameter="mirror_2f_measurement"
     )
+
+    _incomplete_schema = {"description": "test schema"}
+    # write yaml file in temp directory
+    with open(tmp_test_directory / "incomplete_schema.schema.yml", "w") as _file:
+        yaml.dump(_incomplete_schema, _file)
+
+    with pytest.raises(KeyError):
+        data_validator._read_validation_schema(
+            schema_file=str(tmp_test_directory), parameter="incomplete_schema"
+        )
+
+
+# incomplete test
+def test_validate_data_dict():
+    data_validator = validate_data.DataValidator(
+        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
+    )
+    data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "units": ["", "", ""]}
+    with pytest.raises(KeyError):
+        data_validator._validate_data_dict()
 
 
 def get_reference_columns_name_colx():

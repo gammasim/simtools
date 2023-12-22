@@ -105,7 +105,7 @@ class TelescopePosition:
                         corsika_sphere_center,
                     )
                 ).value
-                _zz_header = "pos_z"
+                _zz_header = "position_z"
 
             if crs_name == "mercator":
                 telstr = (
