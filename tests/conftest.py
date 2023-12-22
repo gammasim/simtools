@@ -274,6 +274,11 @@ def telescope_north_test_file():
 
 
 @pytest.fixture
+def telescope_north_utm_test_file():
+    return "tests/resources/telescope_positions-North-utm.ecsv"
+
+
+@pytest.fixture
 def telescope_south_test_file():
     return "tests/resources/telescope_positions-South-ground.ecsv"
 

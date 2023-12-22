@@ -22,8 +22,6 @@ def test_write(tmp_test_directory):
     w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
     w_1.write(metadata=_metadata, product_data=None)
 
-    # TODO    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
-
     # product_data not none
     empty_table = astropy.table.Table()
     w_1.write(metadata=None, product_data=empty_table)
@@ -31,10 +29,20 @@ def test_write(tmp_test_directory):
     assert Path(w_1.product_data_file).exists()
 
     # both not none
+    data = {"pixel": [25, 30, 28]}
+    small_table = astropy.table.Table(data)
     w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
-    w_1.write(metadata=_metadata, product_data=empty_table)
-    # TODO    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+    w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
+
+    # check that table and metadata is good
+    table = astropy.table.Table.read(w_1.product_data_file, format="ascii.ecsv")
+    assert "pixel" in table.colnames
+    assert "NAME" in table.meta.keys()
+
+    w_1.product_data_format = "not_an_astropy_format"
+    with pytest.raises(astropy.io.registry.base.IORegistryError):
+        w_1.write(metadata=None, product_data=empty_table)
 
 
 def test_dump(args_dict, tmp_test_directory):
@@ -52,11 +60,6 @@ def test_dump(args_dict, tmp_test_directory):
     )
 
     assert Path(args_dict["output_path"]).joinpath(args_dict["output_file"]).exists()
-    # TODO    assert (
-    #        Path(args_dict["output_path"])
-    #        .joinpath(args_dict["output_file"].replace("ecsv", "metadata.yml"))
-    #        .exists()
-    #    )
 
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)

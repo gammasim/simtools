@@ -6,7 +6,7 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools import db_handler
-from simtools.data_model.data_reader import DataReader
+from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -594,7 +594,7 @@ class ArrayLayout:
         astropy.table.QTable
             Table with the telescope layout information.
         """
-        table = DataReader.read_table_from_file(
+        table = data_reader.read_table_from_file(
             file_name=telescope_list_file,
             validate=validate,
             metadata_file=telescope_list_metadata_file,

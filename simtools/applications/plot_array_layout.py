@@ -45,7 +45,7 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model.data_reader import DataReader
+from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
 from simtools.visualization.visualize import plot_array
@@ -157,7 +157,7 @@ def main():
             else:
                 plot_file_name = args_dict["figure_name"]
 
-            telescope_table = DataReader.read_table_from_file(one_file)
+            telescope_table = data_reader.read_table_from_file(one_file)
             telescopes_dict = ArrayLayout.include_radius_into_telescope_table(telescope_table)
             fig_out = plot_array(
                 telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
