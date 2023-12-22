@@ -234,7 +234,7 @@ class SimtelHistograms:
             list_of_integrated_hists.append(np.sum(integrated_hist) * hist["data"][0, 0].unit)
         return list_of_integrated_hists
 
-    def trigger_rate_per_histogram(self, livetime=1 * u.s):
+    def trigger_rate_per_histogram(self, livetime=1):
         """
         Estimates the trigger rate for each histogram passed.
 
