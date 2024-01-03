@@ -541,7 +541,7 @@ def test_collect_data_dict_from_json():
     file = "tests/resources/altitude.json"
     data = gen.collect_data_from_yaml_or_dict(file, None)
     assert len(data) == 5
-    assert data['units'] == 'm'
+    assert data["units"] == "m"
 
 
 def test_collect_data_from_http_yaml():
