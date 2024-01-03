@@ -143,7 +143,7 @@ class SimtelHistograms:
 
         self._logger.debug(f"End of reading {n_files} files")
 
-    def _derive_trigger_rate_histograms(self, livetime=1):
+    def _derive_trigger_rate_histograms(self, livetime):
         """
         Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
         are triggered in each bin of impact distance and log energy for each histogram file.
@@ -234,7 +234,7 @@ class SimtelHistograms:
             list_of_integrated_hists.append(np.sum(integrated_hist) * hist["data"][0, 0].unit)
         return list_of_integrated_hists
 
-    def trigger_rate_per_histogram(self, livetime=1):
+    def trigger_rate_per_histogram(self, livetime):
         """
         Estimates the trigger rate for each histogram passed.
 
