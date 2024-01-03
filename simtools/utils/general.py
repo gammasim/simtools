@@ -3,6 +3,7 @@ General functions useful across different parts of the code.
 """
 
 import copy
+import json
 import logging
 import os
 import re
@@ -348,7 +349,14 @@ def collect_data_from_http_yaml(url):
     try:
         with tempfile.NamedTemporaryFile() as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
-            data = yaml.load(tmp_file)
+            if url.endswith("yml"):
+                data = yaml.load(tmp_file)
+            elif url.endswith("json"):
+                data = json.load(tmp_file)
+            else:
+                msg = f"File extension of {url} not supported (should be json or yaml)"
+                _logger.error(msg)
+                raise TypeError(msg)
     except TypeError:
         msg = "Invalid url {url}"
         _logger.error(msg)
@@ -385,6 +393,9 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
             _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
         if is_url(str(in_yaml)):
             data = collect_data_from_http_yaml(in_yaml)
+        elif Path(in_yaml).suffix.lower() == ".json":
+            with open(in_yaml, encoding="utf-8") as file:
+                data = json.load(file)
         else:
             with open(in_yaml, encoding="utf-8") as file:
                 data = yaml.load(file)
