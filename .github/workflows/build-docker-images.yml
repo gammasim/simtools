@@ -42,8 +42,7 @@ jobs:
 
       - name: Set build arguments
         run: |
-          echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
+          echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
