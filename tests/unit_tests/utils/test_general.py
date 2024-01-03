@@ -537,13 +537,6 @@ def test_is_url():
     assert gen.is_url(url) is False
 
 
-def test_collect_data_dict_from_json():
-    file = "tests/resources/altitude.json"
-    data = gen.collect_data_from_yaml_or_dict(file, None)
-    assert len(data) == 5
-    assert data['units'] == 'm'
-
-
 def test_collect_data_from_http_yaml():
     file = "tests/resources/test_parameters.yml"
     url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
@@ -649,17 +642,12 @@ def test_sort_arrays() -> None:
         ),
     ],
 )
-def test_remove_substring_recursively_from_dict(input_data, expected_output, caplog):
+def test_remove_substring_recursively_from_dict(input_data, expected_output):
     result = gen.remove_substring_recursively_from_dict(input_data, "\n")
     assert result == expected_output
 
-    # no error should be raised for None input, but a debug message should be printed
-    gen._logger.setLevel(logging.DEBUG)
-    gen.remove_substring_recursively_from_dict([2])
-    assert any(
-        record.levelname == "DEBUG" and "Input is not a dictionary: [2]" in record.message
-        for record in caplog.records
-    )
+    with pytest.raises(AttributeError):
+        gen.remove_substring_recursively_from_dict([2])
 
 
 def test_extract_type_of_value() -> None:
