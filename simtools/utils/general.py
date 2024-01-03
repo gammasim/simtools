@@ -349,7 +349,7 @@ def collect_data_from_http_yaml(url):
     try:
         with tempfile.NamedTemporaryFile() as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
-            if url.endswith("yml"):
+            if url.endswith("yml") or url.endswith("yaml"):
                 data = yaml.load(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
