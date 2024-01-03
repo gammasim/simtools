@@ -4,6 +4,7 @@ import logging
 
 import matplotlib.pyplot as plt
 import pytest
+from astropy import units as u
 from astropy.table import Table
 from matplotlib.collections import QuadMesh
 
@@ -87,15 +88,13 @@ def test_combine_histogram_files(simtel_array_histograms_file):
 
 
 def test_plot_one_histogram(simtel_array_histograms_instance):
-    """
-    Plot all histograms into pdf pages and save the figure as a pdf file.
-    Parameters
-    ----------
-    fig_name: str
-        Name of the output figure file.
-    """
-
     fig, ax = plt.subplots()
     simtel_array_histograms_instance.plot_one_histogram(0, ax)
     quadmesh = ax.collections[0]
     assert isinstance(quadmesh, QuadMesh)
+
+
+def test_trigger_rate_per_histogram(simtel_array_histograms_instance):
+    trigger_rate = simtel_array_histograms_instance.trigger_rate_per_histogram(livetime=5 * u.h)
+    assert pytest.approx(trigger_rate[0].value, 0.1) == 37972.1
+    assert trigger_rate[0].unit == 1 / u.s
