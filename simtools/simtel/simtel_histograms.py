@@ -145,8 +145,9 @@ class SimtelHistograms:
 
     def _derive_trigger_rate_histograms(self, livetime):
         """
-        Calculates the trigger ratio histograms per unit time, i.e., the ratio in which the events
-        are triggered in each bin of impact distance and log energy for each histogram file.
+        Calculates the trigger rate histograms, i.e., the ratio in which the events
+        are triggered in each bin of impact distance and log energy for each histogram file for
+        the livetime defined by `livetime`.
         The livetime gives the amount of time used in a small production to produce the histograms
         used. It is assumed that the livetime is the same for all the histogram files used and that
         the radius (x-axis in the histograms) is given in meters.
@@ -154,12 +155,12 @@ class SimtelHistograms:
         Parameters
         ----------
         livetime: astropy.Quantity
-            Time used in the simulation that produced the histograms.
+            Time used in the simulation that produced the histograms. E.g., 5*u.h, 50*u.h.
 
         Returns
         -------
         list:
-            List with the trigger ratio histograms for each file.
+            List with the trigger rate histograms for each file.
         """
         if isinstance(livetime, u.Quantity):
             livetime = livetime.to(u.s)
