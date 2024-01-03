@@ -12,6 +12,7 @@ from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
 import simtools.utils.general as gen
+from simtools import db_from_repo_handler
 from simtools.io_operations import io_handler
 from simtools.model.model_utils import get_telescope_class
 from simtools.utils import names
@@ -540,6 +541,9 @@ class DatabaseHandler:
                 _site,
                 _model_version,
                 only_applicable,
+            )
+            _pars = db_from_repo_handler.update_site_parameters_from_repo(
+                _pars, site, model_version
             )
             return _pars
 
