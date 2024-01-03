@@ -14,4 +14,3 @@ CTA_SIMPIPE:
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
-    LOG_LEVEL: DEBUG

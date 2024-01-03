@@ -250,6 +250,8 @@ class MetadataCollector:
         ------
         gen.InvalidConfigData, FileNotFoundError
             if metadata cannot be read from file.
+        KeyError:
+            if metadata does not exist for the given observatory.
 
         """
 

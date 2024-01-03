@@ -587,6 +587,8 @@ class ArrayLayout:
             Path to the telescope list file.
         telescope_list_metadata_file: str or Path
             Path to the telescope list metadata file.
+        validate: bool
+            Validate the telescope list file.
 
         Returns
         -------
