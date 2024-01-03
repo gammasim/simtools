@@ -371,12 +371,12 @@ def collect_data_from_http_yaml(url):
 
 def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict or as a yaml file.
+    Collect input data that can be given either as a dict or as a yaml/json file.
 
     Parameters
     ----------
     in_yaml: str
-        Name of the yaml file.
+        Name of the yaml/json file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
