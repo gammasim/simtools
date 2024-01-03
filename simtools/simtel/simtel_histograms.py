@@ -11,10 +11,10 @@ from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
 from simtools.utils.names import sanitize_name
 
-__all__ = ["BadHistogramFormat", "SimtelHistograms"]
+__all__ = ["InconsistentHistogramFormat", "SimtelHistograms"]
 
 
-class BadHistogramFormat(Exception):
+class InconsistentHistogramFormat(Exception):
     """Exception for bad histogram format."""
 
 
@@ -106,7 +106,7 @@ class SimtelHistograms:
 
         Raises
         ------
-        BadHistogramFormat:
+        InconsistentHistogramFormat:
             if the format of the histograms have inconsistent dimensions.
         """
         for key_to_test in [
@@ -118,7 +118,7 @@ class SimtelHistograms:
             if first_hist_file[key_to_test] != second_hist_file[key_to_test]:
                 msg = "Trying to add histograms with inconsistent dimensions"
                 self._logger.error(msg)
-                raise BadHistogramFormat(msg)
+                raise InconsistentHistogramFormat(msg)
 
     def combine_histogram_files(self):
         """Add the values of the same type of histogram from the various lists into a single
