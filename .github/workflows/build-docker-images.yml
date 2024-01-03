@@ -70,7 +70,7 @@ jobs:
         if: matrix.type == 'prod'
         with:
           context: .
-          build-args: "${GITHUB_REF#refs/heads/}"
+          build-args: "BUILD_BRANCH=${GITHUB_REF#refs/heads/}"
           load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
