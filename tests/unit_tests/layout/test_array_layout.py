@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
-import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFile
 
@@ -40,31 +39,23 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture
-def array_layout_north_four_LST_instance(
-    north_layout_center_data_dict, manual_corsika_dict_north, db_config
-):
+def array_layout_north_four_LST_instance(db_config):
     layout = ArrayLayout(
         site="North",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
-        layout_center_data=north_layout_center_data_dict,
-        corsika_telescope_data=manual_corsika_dict_north,
     )
     return layout
 
 
 @pytest.fixture
-def array_layout_south_four_LST_instance(
-    south_layout_center_data_dict, manual_corsika_dict_south, db_config
-):
+def array_layout_south_four_LST_instance(db_config):
     layout = ArrayLayout(
         site="South",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
-        layout_center_data=south_layout_center_data_dict,
-        corsika_telescope_data=manual_corsika_dict_south,
     )
     return layout
 
@@ -411,54 +402,6 @@ def test_include_radius_into_telescope_table(telescope_north_test_file, telescop
 
     test_one_site(telescope_north_test_file, values_from_file_north, "MST-10")
     test_one_site(telescope_south_test_file, values_from_file_south, "MST-10")
-
-
-def test_from_corsika_file_to_dict(
-    array_layout_north_instance, manual_corsika_dict_north, db, io_handler
-):
-    def run(corsika_dict):
-        for key, value in corsika_dict.items():
-            if isinstance(value, dict):
-                for tel_type, subvalue in value.items():
-                    assert subvalue == manual_corsika_dict_north[key][tel_type]
-            else:
-                assert value == manual_corsika_dict_north[key]
-
-    corsika_dict = array_layout_north_instance._from_corsika_file_to_dict()
-    run(corsika_dict)
-
-    test_file_name = "corsika_parameters_2.yml"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(sub_dir="parameters", dir_type="test"),
-        file_name=test_file_name,
-    )
-
-    corsika_config_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(sub_dir="parameters", dir_type="test")
-    )
-    corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
-        file_name=corsika_config_file
-    )
-    run(corsika_dict)
-
-    with pytest.raises(FileNotFoundError):
-        corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
-            file_name="file_doesnt_exist.yml"
-        )
-
-    _save_db_config = array_layout_north_instance.mongo_db_config
-    array_layout_north_instance.mongo_db_config = None
-    with pytest.raises(ValueError):
-        corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
-            file_name=corsika_config_file
-        )
-    array_layout_north_instance.mongo_db_config = _save_db_config
-    array_layout_north_instance.site = None
-    with pytest.raises(ValueError):
-        corsika_dict = array_layout_north_instance._from_corsika_file_to_dict(
-            file_name=corsika_config_file
-        )
 
 
 def test_initialize_sphere_parameters(array_layout_north_instance):
