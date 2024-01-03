@@ -155,7 +155,7 @@ class SimtelHistograms:
         Parameters
         ----------
         livetime: astropy.Quantity
-            Time used in the simulation that produced the histograms. E.g., 5*u.h, 50*u.h.
+            Time used in the simulation that produced the histograms. E.g., 1*u.h.
 
         Returns
         -------
