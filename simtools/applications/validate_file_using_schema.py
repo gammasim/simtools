@@ -2,7 +2,7 @@
 """
     Summary
     -------
-    Validate yaml, json, or ecsv file using a json schema file.
+    Validate yaml or ecsv file using a json schema file.
 
     Command line arguments
     ----------------------
@@ -29,6 +29,8 @@
 
 import logging
 from pathlib import Path
+
+import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -59,14 +61,15 @@ def _parse(label, description):
     return config.initialize(paths=False)
 
 
-def _validate_yaml_or_json_file(args_dict, logger):
+def _validate_yaml_file(args_dict, logger):
     """
-    Validate a yaml or json file
+    Validate a yaml file
 
     """
 
     try:
-        data = gen.collect_data_from_yaml_or_dict(in_yaml=args_dict["file_name"], in_dict=None)
+        with open(args_dict["file_name"], "r", encoding="utf-8") as file:
+            data = yaml.safe_load(file)
     except FileNotFoundError:
         logger.error(f"Input file {args_dict['file_name']} not found")
         raise
@@ -94,8 +97,9 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    if any(args_dict["file_name"].endswith(ext) for ext in (".yml", ".yaml", ".json")):
-        _validate_yaml_or_json_file(args_dict, logger)
+    # check if file name ends with yml or yaml
+    if args_dict["file_name"].endswith(".yml") or args_dict["file_name"].endswith(".yaml"):
+        _validate_yaml_file(args_dict, logger)
     elif args_dict["file_name"].endswith(".ecsv"):
         _validate_ecsv_file(args_dict)
     else:
