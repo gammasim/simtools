@@ -40,6 +40,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set build arguments
+        run: |
+          if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
+            echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
+          fi
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -70,6 +77,7 @@ jobs:
         if: matrix.type == 'prod'
         with:
           context: .
+          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           load: true
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
