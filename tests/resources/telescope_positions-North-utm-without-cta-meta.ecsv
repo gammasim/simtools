@@ -1,0 +1,54 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: asset_code, datatype: string, description: operational asset code}
+# - {name: sequence_number, datatype: string, description: sequence number}
+# - {name: utm_east, unit: m, datatype: float64}
+# - {name: utm_north, unit: m, datatype: float64}
+# - {name: alt, unit: m, datatype: float64, description: telescope position upwards relative to NNN}
+# - {name: geo_code, datatype: string, description: Geographical Position Code}
+# meta: !!omap
+# - data_type: position_file
+# - description: "CTAO Northern Array Element Coordinates"
+# - center_northing: "3185067.275 m"
+# - center_easting: "217608.975 m"
+# - center_alt: "2177.0 m"
+# - corsika_obs_level: "2156 m"
+# - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
+# - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
+# - EPSG: 32628
+# - comments: |-
+#       following CTA-SPE-PSC-000000-0001 1c
+#       Subset of positions defined in reference repository
+#       https://gitlab.cta-observatory.org/cta-science/array-element-positions/-/tree/main
+#       Array center coordinates defined as centre of the 4 LST
+#       position (this is slightly different to the definition
+#       in CTA-SPE-PSC-000000-0001 1c)
+#       Never change positions here. This should always be
+#       synchronized with the reference repository
+asset_code sequence_number utm_east utm_north alt geo_code
+LST 01 217659.6 3184995.1 2185.0 2B5
+LST 02 217542.2 3185033.6 2172.5 2B4
+LST 03 217560.6 3185143.8 2168.2 1B0
+LST 04 217673.5 3185096.6 2172.8 1B1
+MST 01 217598.4 3184855.8 2195.5 4B3
+MST 02 217436.4 3184918.1 2175.7 4B1
+MST 03 217401.1 3185099.2 2158.4 2B2
+MST 04 217540.4 3185244.7 2156.5 3B0
+MST 05 217807.0 3185194.2 2178.0  3B5
+MST 06 217801.9 3184978.6 2192.0  2B6
+MST 07 217771.4 3184847.4 2212.0 4B6
+MST 10 217962.3 3185078.9 2209.0 1B4
+MST 15 217609.8 3185071.9 2176.5  0A1
+RLD 01 217381.0 3185155.0 2158.5 2B1
+STP 01 217703.0 3184911.0 2194.7 4B5
+MSP 01 217463.1 3185305.0 2143.4 Nan
+ILL 01 nan nan nan Nan
+ILL 02 nan nan nan Nan
+CEI 01 217463.1 3185305.0 2143.4 Nan
+WST 01 217471.0 3185112.0 2160.0 2B3
+WST 02 217770.0 3185094.0 2181.0 1B2
+WST 03 217718.0 3184875.0 2215.0 4B4
+ASC 01 217463.1 3185305.0 2143.4 Nan
+DUS 01 217463.1 3185305.0 2143.4 Nan
+LIS 01 217463.1 3185305.0 2143.4 Nan

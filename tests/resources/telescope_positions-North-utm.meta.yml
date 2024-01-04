@@ -25,7 +25,7 @@ CTA:
     ID: null
   # Description of the submitted data product
   PRODUCT:
-    DESCRIPTION: |-
+    DESCRIPTION: >
       Telescope positions for the CTAO Northern site
       (UTM coordinate system). Consistent with
       document CTA-SPE-PSC-000000-0001 1c.

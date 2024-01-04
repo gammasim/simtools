@@ -105,7 +105,7 @@ class TelescopePosition:
                         corsika_sphere_center,
                     )
                 ).value
-                _zz_header = "pos_z"
+                _zz_header = "position_z"
 
             if crs_name == "mercator":
                 telstr = (
@@ -353,7 +353,7 @@ class TelescopePosition:
             np.isfinite(
                 np.array(
                     [self.crs[crs_name]["xx"]["value"], self.crs[crs_name]["yy"]["value"]],
-                    dtype=float,
+                    dtype=np.float64,
                 )
             )
         )
