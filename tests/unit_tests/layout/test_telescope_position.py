@@ -337,7 +337,7 @@ def test_print_compact_format(capsys):
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
-    expected_output = "telescope_name position_x position_y pos_z\nLST-01 100.00 200.00 115.00"
+    expected_output = "telescope_name position_x position_y position_z\nLST-01 100.00 200.00 115.00"
     telescope.print_compact_format(
         crs_name="ground",
         corsika_obs_level=2000.0 * u.m,

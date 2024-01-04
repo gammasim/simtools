@@ -22,8 +22,6 @@ def test_write(tmp_test_directory):
     w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
     w_1.write(metadata=_metadata, product_data=None)
 
-    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
-
     # product_data not none
     empty_table = astropy.table.Table()
     w_1.write(metadata=None, product_data=empty_table)
@@ -31,10 +29,20 @@ def test_write(tmp_test_directory):
     assert Path(w_1.product_data_file).exists()
 
     # both not none
+    data = {"pixel": [25, 30, 28]}
+    small_table = astropy.table.Table(data)
     w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
-    w_1.write(metadata=_metadata, product_data=empty_table)
-    assert Path(str(w_1.product_data_file).replace("ecsv", "metadata.yml")).exists()
+    w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
+
+    # check that table and metadata is good
+    table = astropy.table.Table.read(w_1.product_data_file, format="ascii.ecsv")
+    assert "pixel" in table.colnames
+    assert "NAME" in table.meta.keys()
+
+    w_1.product_data_format = "not_an_astropy_format"
+    with pytest.raises(astropy.io.registry.base.IORegistryError):
+        w_1.write(metadata=None, product_data=empty_table)
 
 
 def test_dump(args_dict, tmp_test_directory):
@@ -52,11 +60,6 @@ def test_dump(args_dict, tmp_test_directory):
     )
 
     assert Path(args_dict["output_path"]).joinpath(args_dict["output_file"]).exists()
-    assert (
-        Path(args_dict["output_path"])
-        .joinpath(args_dict["output_file"].replace("ecsv", "metadata.yml"))
-        .exists()
-    )
 
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)
@@ -85,43 +88,31 @@ def test_validate_and_transform(tmp_test_directory):
     assert len(_table.columns) == len(return_table.columns)
 
 
-def test_write_metadata(tmp_test_directory):
+def test_write_metadata_to_yml(tmp_test_directory):
     # test writer of metadata
     _metadata = {"name": "test_metadata"}
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
-        w_1.write_metadata(metadata=_metadata)
+        w_1.write_metadata_to_yml(metadata=_metadata)
 
-    yml_file = w_1.write_metadata(
+    yml_file = w_1.write_metadata_to_yml(
         metadata=_metadata, yml_file=tmp_test_directory.join("test_file.yml")
     )
     assert Path(yml_file).exists()
 
     with pytest.raises(FileNotFoundError):
-        w_1.write_metadata(
+        w_1.write_metadata_to_yml(
             metadata=_metadata, yml_file="./this_directory_is_not_there/test_file.yml"
         )
 
     with pytest.raises(AttributeError):
-        w_1.write_metadata(metadata=None, yml_file=tmp_test_directory.join("test_file.yml"))
+        w_1.write_metadata_to_yml(metadata=None, yml_file=tmp_test_directory.join("test_file.yml"))
 
     with pytest.raises(TypeError):
-        w_1.write_metadata(
+        w_1.write_metadata_to_yml(
             metadata=_metadata,
             yml_file=None,
         )
-
-
-def test_write_data(tmp_test_directory):
-    w_2 = writer.ModelDataWriter()
-    w_2.write_data(None)
-
-    empty_table = astropy.table.Table()
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
-        w_2.write_data(empty_table)
-
-    w_2.product_data_file = tmp_test_directory.join("test_file.ecsv")
-    w_2.write_data(empty_table)
 
 
 def test_astropy_data_format():

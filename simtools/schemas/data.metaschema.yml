@@ -20,15 +20,15 @@ definitions:
       version:
         type: string
         description: "version of this schema file (semver)"
-      base_schema:
+      meta_schema:
         type: string
-        description: "name of base schema (e.g. simpipe-schema)"
-      base_schema_url:
+        description: "name of meta schema (e.g. simpipe-schema)"
+      meta_schema_url:
         type: string
-        description: "url to base schema definition"
-      base_schema_version:
+        description: "url to meta schema definition"
+      meta_schema_version:
         type: string
-        description: "version of base schema applied to this file (semver)"
+        description: "version of meta schema applied to this file (semver)"
       name:
         type: string
         description: "name of model parameter"
@@ -60,8 +60,8 @@ definitions:
           $ref: '#/definitions/SimulationSoftware'
     required:
       - version
-      - base_schema
-      - base_schema_version
+      - meta_schema
+      - meta_schema_version
       - name
       - data
       - description
@@ -347,6 +347,7 @@ definitions:
       - boolean
       - datatable
       - double
+      - float64
       - int
       - string
       - uint
