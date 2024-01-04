@@ -154,7 +154,7 @@ class DataValidator:
             if not np.issubdtype(col.dtype, np.number):
                 continue
             self._check_for_not_a_number(col, col_name)
-            self._check_datatype(col, col_name)
+            self._check_data_type(col, col_name)
             col = self._check_and_convert_units(col, col_name)
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
@@ -294,7 +294,7 @@ class DataValidator:
 
         return u.Unit(reference_unit)
 
-    def _check_datatype(self, col, column_name):
+    def _check_data_type(self, col, column_name):
         """
         Check column data type.
 
@@ -304,11 +304,6 @@ class DataValidator:
             data column to be converted
         column_name: str
             column name
-
-        Returns
-        -------
-        bool
-            true if data type is correct
 
         Raises
         ------
@@ -325,8 +320,6 @@ class DataValidator:
                 f"Expected type '{reference_dtype}', found '{col.dtype}'"
             )
             raise TypeError
-
-        return True
 
     def _check_for_not_a_number(self, col, col_name):
         """
