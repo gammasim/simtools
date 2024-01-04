@@ -29,7 +29,7 @@ def test_read_table_from_file_and_validate(telescope_north_test_file):
 
     assert isinstance(
         data_reader.read_table_from_file(
-            "tests/resources/telescope_positions-North-utm-withoutmeta.ecsv",
+            "tests/resources/telescope_positions-North-utm-without-cta-meta.ecsv",
             validate=True,
             metadata_file="tests/resources/telescope_positions-North-utm.meta.yml",
         ),
