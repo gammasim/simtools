@@ -6,6 +6,7 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools import db_handler
+from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -54,6 +55,8 @@ class ArrayLayout:
         layout_center_data=None,
         corsika_telescope_data=None,
         telescope_list_file=None,
+        telescope_list_metadata_file=None,
+        validate=False,
     ):
         """
         Initialize ArrayLayout.
@@ -76,7 +79,11 @@ class ArrayLayout:
             self._initialize_coordinate_systems(layout_center_data)
             self._initialize_corsika_telescope(corsika_telescope_data)
         else:
-            self.initialize_array_layout_from_telescope_file(telescope_list_file)
+            self.initialize_array_layout_from_telescope_file(
+                telescope_list_file=telescope_list_file,
+                telescope_list_metadata_file=telescope_list_metadata_file,
+                validate=validate,
+            )
 
     @classmethod
     def from_array_layout_name(cls, mongo_db_config, array_layout_name, label=None):
@@ -536,7 +543,9 @@ class ArrayLayout:
         try:
             tel.set_altitude(
                 self._altitude_from_corsika_z(
-                    pos_z=self._assign_unit_to_quantity(row["pos_z"], table["pos_z"].unit),
+                    pos_z=self._assign_unit_to_quantity(
+                        row["position_z"], table["position_z"].unit
+                    ),
                     tel_name=tel.name,
                 )
             )
@@ -559,48 +568,16 @@ class ArrayLayout:
         """
         for row in table:
             tel = self._load_telescope_names(row)
-            self._try_set_coordinate(row, tel, table, "ground", "pos_x", "pos_y")
+            self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
             self._try_set_altitude(row, tel, table)
 
             self._telescope_list.append(tel)
 
-    @staticmethod
-    def read_telescope_list_file(telescope_list_file):
-        """
-        Read list of telescopes from a ecsv file.
-
-        Parameters
-        ----------
-        telescope_list_file: str or Path
-            Path to the telescope list file.
-
-        Returns
-        -------
-        astropy.QTable
-            Astropy table with the telescope layout information.
-
-        Raises
-        ------
-        FileNotFoundError
-            If file cannot be opened.
-
-        """
-        _logger = logging.getLogger(__name__)
-        try:
-            table = QTable.read(telescope_list_file, format="ascii.ecsv")
-        except FileNotFoundError:
-            _logger.error(f"Error reading list of array elements from {telescope_list_file}")
-            raise
-        _logger.info(f"Reading array elements from {telescope_list_file}")
-        if np.any([col.dtype == np.float32 for col in table.columns.values()]):
-            msg = "Columns with float32 dtype detected. Insufficient precision, use float64."
-            raise InvalidCoordinateDataType(msg)
-
-        return table
-
-    def initialize_array_layout_from_telescope_file(self, telescope_list_file):
+    def initialize_array_layout_from_telescope_file(
+        self, telescope_list_file, telescope_list_metadata_file=None, validate=False
+    ):
         """
         Initialize the Layout array from a telescope list file.
 
@@ -608,11 +585,26 @@ class ArrayLayout:
         ----------
         telescope_list_file: str or Path
             Path to the telescope list file.
+        telescope_list_metadata_file: str or Path
+            Path to the telescope list metadata file.
+        validate: bool
+            Validate the telescope list file.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Table with the telescope layout information.
         """
-        table = self.read_telescope_list_file(telescope_list_file=telescope_list_file)
+        table = data_reader.read_table_from_file(
+            file_name=telescope_list_file,
+            validate=validate,
+            metadata_file=telescope_list_metadata_file,
+        )
         self._initialize_corsika_telescope(table.meta)
         self._initialize_coordinate_systems(table.meta)
         self._load_telescope_list(table)
+
+        return table
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """

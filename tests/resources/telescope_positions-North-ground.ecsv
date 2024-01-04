@@ -1,0 +1,115 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: telescope_name, datatype: string}
+# - {name: position_x, unit: m, datatype: float64}
+# - {name: position_y, unit: m, datatype: float64}
+# - {name: position_z, unit: m, datatype: float64}
+# - {name: geo_code, datatype: string}
+# meta:
+#   CTA:
+#     ACTIVITY:
+#       END: '2023-12-21T12:55:11'
+#       ID: 4488a138-1384-439f-af0d-9f9a3e639481
+#       NAME: print_array_elements
+#       SOFTWARE: {NAME: simtools, VERSION: 0.5.2.dev1089+gf69028b0.d20231221}
+#       START: '2023-12-21T12:55:11'
+#       TYPE: software
+#     CONTACT: {EMAIL: null, NAME: maierg, ORGANIZATION: CTAO}
+#     CONTEXT:
+#       ASSOCIATED_DATA:
+#       - CREATION_TIME: null
+#         DATA:
+#           ASSOCIATION: null
+#           CATEGORY: null
+#           LEVEL: null
+#           MODEL: {NAME: null, TYPE: null, URL: null, VERSION: null}
+#           TYPE: null
+#         DESCRIPTION: null
+#         FILENAME: null
+#         FORMAT: null
+#         ID: null
+#         VALID: {END: null, START: null}
+#       ASSOCIATED_ELEMENTS:
+#       - {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#       DOCUMENT:
+#       - {CREATION_TIME: null, ID: null, TITLE: null, TYPE: null, URL: null}
+#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
+#     PRODUCT:
+#       CREATION_TIME: '2023-12-21T12:55:11'
+#       DATA:
+#         ASSOCIATION: Site
+#         CATEGORY: SIM
+#         LEVEL: R1
+#         MODEL: {NAME: array_coordinates, TYPE: simpipe-schema, URL: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates.schema.yml',
+#           VERSION: 0.1.0}
+#         TYPE: Service
+#       DESCRIPTION: Telescope positions.
+#       FILENAME: telescope_positions-North-corsika.ecsv
+#       FORMAT: ecsv
+#       ID: 4488a138-1384-439f-af0d-9f9a3e639481
+#       VALID: {END: null, START: null}
+#     REFERENCE: {VERSION: 1.0.0}
+#   EPSG: 32628
+#   __serialized_columns__:
+#     position_x:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id001 !astropy.units.Unit {unit: m}
+#       value: !astropy.table.SerializedColumn {name: position_x}
+#     position_y:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: position_y}
+#     position_z:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: position_z}
+#   array_name: null
+#   center_alt: !astropy.units.Quantity
+#     unit: *id001
+#     value: 2177.0
+#   center_easting: !astropy.units.Quantity
+#     unit: *id001
+#     value: 217608.975
+#   center_northing: !astropy.units.Quantity
+#     unit: *id001
+#     value: 3185067.275
+#   corsika_obs_level: !astropy.units.Quantity
+#     unit: *id001
+#     value: 2156.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.0
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.25
+#   corsika_sphere_radius:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 12.5
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.15
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.0
+# schema: astropy-2.0
+telescope_name position_x position_y position_z geo_code
+LST-01     -70.91     -52.35      45.00  2B5
+LST-02     -35.28      65.92      32.50  2B4
+LST-03      75.31      50.21      28.20  1B0
+LST-04      30.88     -63.78      32.80  1B1
+MST-01    -211.62       5.43      48.50  4B3
+MST-02    -153.29     168.86      28.70  4B1
+MST-03      26.86     208.54      11.40  2B2
+MST-04     175.66      72.85       9.50  3B0
+MST-05     131.67    -194.83      31.00  3B5
+MST-06     -83.94    -194.98      45.00  2B6
+MST-07    -215.81    -167.68      65.00  4B6
+MST-10      20.20    -352.85      62.00  1B4
+MST-15       4.64      -0.71      29.50  0A1
