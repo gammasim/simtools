@@ -321,6 +321,8 @@ class DataValidator:
             )
             raise TypeError
 
+        self._logger.debug(f"Data column '{column_name}' has correct data type")
+
     def _check_for_not_a_number(self, col, col_name):
         """
         Check that column values are finite and not NaN.
