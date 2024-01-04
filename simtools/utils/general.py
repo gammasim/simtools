@@ -20,7 +20,7 @@ from astropy.io.misc import yaml
 
 __all__ = [
     "change_dict_keys_case",
-    "collect_data_from_yaml_or_dict",
+    "collect_data_from_file_or_dict",
     "collect_final_lines",
     "collect_kwargs",
     "InvalidConfigData",
@@ -369,7 +369,7 @@ def collect_data_from_http(url):
     return data
 
 
-def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
+def collect_data_from_file_or_dict(in_yaml, in_dict, allow_empty=False):
     """
     Collect input data that can be given either as a dict or as a yaml/json file.
 
@@ -410,42 +410,6 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
 
     _logger.debug(msg)
     raise InvalidConfigData(msg)
-
-
-def collect_dict_from_file(file_path, file_name=None):
-    """
-    Collect input data from a file.
-
-    File_path can be a yaml file name or a directory.
-    In the latter case, file_name is used to find the file.
-
-    Note that this method returns an empty dict if the file is not found
-    (while gen.collect_data_from_yaml_or_dict returns None).
-
-    Parameters
-    ----------
-    file_path: str
-        Name of the yaml file or directory.
-    file_name: str
-        Name of the file to be found in the directory.
-
-    """
-
-    _dict = {}
-    try:
-        _dict = (
-            collect_data_from_yaml_or_dict(in_yaml=file_path, in_dict=None, allow_empty=True) or {}
-        )
-    except IsADirectoryError:
-        try:
-            _file = Path(file_path).joinpath(file_name)
-            _dict = (
-                collect_data_from_yaml_or_dict(in_yaml=_file, in_dict=None, allow_empty=True) or {}
-            )
-        except (TypeError, KeyError):
-            pass
-
-    return _dict
 
 
 def collect_kwargs(label, in_kwargs):

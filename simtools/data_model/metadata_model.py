@@ -92,7 +92,7 @@ def _load_schema(schema_file=None):
     if schema_file is None:
         schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
-    schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
+    schema = gen.collect_data_from_file_or_dict(in_yaml=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
 
     return schema, schema_file
