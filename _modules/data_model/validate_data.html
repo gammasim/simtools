@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+geb50b6b</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gb8efb79</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=8cd76693"></script>
+    <script src="../../_static/documentation_options.js?v=94fdbd35"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+geb50b6b</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb8efb79</p>
 
 
 
@@ -248,6 +248,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_not_a_number</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_data_type</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span>
             <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_convert_units</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_range</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;allowed_range&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_range</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;required_range&quot;</span><span class="p">)</span>
@@ -386,6 +387,35 @@
             <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
 
         <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_data_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">column_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check column data type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        col: astropy.column or Quantity</span>
+<span class="sd">            data column to be converted</span>
+<span class="sd">        column_name: str</span>
+<span class="sd">            column name</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            if data type is not correct</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">reference_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reference_data_column</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">reference_dtype</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid data type in column &#39;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected type &#39;</span><span class="si">{</span><span class="n">reference_dtype</span><span class="si">}</span><span class="s2">&#39;, found &#39;</span><span class="si">{</span><span class="n">col</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data column &#39;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">&#39; has correct data type&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_for_not_a_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
