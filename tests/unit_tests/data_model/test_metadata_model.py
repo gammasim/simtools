@@ -35,7 +35,7 @@ def test_validate_schema(tmp_test_directory):
         "required": ["name", "age"],
     }
 
-    schema_file = os.path.join(tmp_test_directory, "schema.json")
+    schema_file = os.path.join(tmp_test_directory, "schema.yml")
     with open(schema_file, "w", encoding="utf-8") as f:
         yaml.dump(sample_schema, f)
 
