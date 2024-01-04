@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gee18187</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+geb50b6b</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=28c8e701" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=01bd0d11"></script>
+    <script src="../../_static/documentation_options.js?v=8cd76693"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -28,7 +28,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gee18187</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+geb50b6b</p>
 
 
 
@@ -94,6 +94,9 @@
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">getpass</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">import</span> <span class="nn">simtools.constants</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
@@ -118,12 +121,14 @@
 <span class="sd">    ----------</span>
 <span class="sd">    args_dict: dict</span>
 <span class="sd">        Command line parameters</span>
+<span class="sd">    metadata_file_name: str</span>
+<span class="sd">        Name of metadata file (only required when args_dict is None)</span>
 <span class="sd">    data_model_name: str</span>
 <span class="sd">        Name of data model parameter</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize metadata collector.</span>
 
@@ -132,14 +137,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span> <span class="k">if</span> <span class="n">args_dict</span> <span class="k">else</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span> <span class="o">=</span> <span class="n">data_model_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span>
             <span class="n">data_dict</span><span class="o">=</span><span class="n">metadata_model</span><span class="o">.</span><span class="n">get_default_metadata_dict</span><span class="p">(),</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_input_metadata_from_file</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_input_metadata_from_file</span><span class="p">(</span>
+            <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">metadata_file_name</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collect_meta_data</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MetadataCollector.collect_meta_data">
@@ -176,6 +183,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="c1"># from command line</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema file from command line: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -183,6 +191,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
 
+        <span class="c1"># from metadata</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="s2">&quot;cta&quot;</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -193,10 +202,12 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
 
+        <span class="c1"># from data model name</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema file from data model name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">SCHEMA_URL</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_model_name</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span>
 
+        <span class="c1"># from input metadata</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Schema file from input metadata: &quot;</span>
@@ -314,9 +325,18 @@
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No input product metadata appended to associated data.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_read_input_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_read_input_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTA&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read and validate input metadata from file.</span>
+<span class="sd">        Read and validate input metadata from file. In case of an ecsv file including a</span>
+<span class="sd">        table, the metadata is read from the table meta data. Returns empty dict in case</span>
+<span class="sd">        no file is given.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        metadata_file_name: str or Path</span>
+<span class="sd">            Name of metadata file.</span>
+<span class="sd">        observatory: str</span>
+<span class="sd">            Observatory name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -325,23 +345,48 @@
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        gen.InvalidConfigData</span>
+<span class="sd">        gen.InvalidConfigData, FileNotFoundError</span>
 <span class="sd">            if metadata cannot be read from file.</span>
+<span class="sd">        KeyError:</span>
+<span class="sd">            if metadata does not exist for the given observatory.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">metadata_file_name</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">metadata_file_name</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">metadata_file_name</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">metadata_file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No input metadata file defined.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{}</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading meta data from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;input_meta&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
-                <span class="n">in_yaml</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed reading metadata from file.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
+        <span class="c1"># metadata from yml file</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">metadata_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.yml&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading meta data from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">)</span>
+                <span class="n">_input_metadata</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_yaml_or_dict</span><span class="p">(</span>
+                    <span class="n">in_yaml</span><span class="o">=</span><span class="n">metadata_file_name</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed reading metadata from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">)</span>
+                <span class="k">raise</span>
+        <span class="c1"># metadata from table meta in ecsv file</span>
+        <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="n">metadata_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_input_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">observatory</span><span class="p">:</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">metadata_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="n">observatory</span><span class="p">]}</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed reading metadata for </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">observatory</span><span class="p">,</span> <span class="n">metadata_file_name</span>
+                <span class="p">)</span>
+                <span class="k">raise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unknown metadata file format: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span>
 
         <span class="n">metadata_model</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">(</span><span class="n">_input_metadata</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -377,7 +422,7 @@
         <span class="c1"># DATA:CATEGORY</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;SIM&quot;</span>
         <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;R1&quot;</span>
-        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;service&quot;</span>
+        <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Service&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">product_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;association&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
