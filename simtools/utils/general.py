@@ -317,24 +317,24 @@ def is_url(url):
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
-    except ValueError:
+    except AttributeError:
         return False
 
 
-def collect_data_from_http_yaml(url):
+def collect_data_from_http(url):
     """
-    Download yaml file from url and return it contents as dict.
+    Download yaml or json file from url and return it contents as dict.
     File is downloaded as a temporary file and deleted afterwards.
 
     Parameters
     ----------
     url: str
-        URL of the yaml file.
+        URL of the yaml/json file.
 
     Returns
     -------
     dict
-        Dictionary containing the yaml file contents.
+        Dictionary containing the file content.
 
     Raises
     ------
@@ -349,7 +349,7 @@ def collect_data_from_http_yaml(url):
     try:
         with tempfile.NamedTemporaryFile() as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
-            if url.endswith("yml"):
+            if url.endswith("yml") or url.endswith("yaml"):
                 data = yaml.load(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
@@ -392,7 +392,7 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
         if in_dict is not None:
             _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
         if is_url(str(in_yaml)):
-            data = collect_data_from_http_yaml(in_yaml)
+            data = collect_data_from_http(in_yaml)
         elif Path(in_yaml).suffix.lower() == ".json":
             with open(in_yaml, encoding="utf-8") as file:
                 data = json.load(file)
