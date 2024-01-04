@@ -319,9 +319,13 @@ def test_check_data_type(caplog):
     data_validator = validate_data.DataValidator()
     data_validator._reference_data_columns = get_reference_columns()
 
-    data_validator._check_data_type(
-        Column([300.0, 350.0, 315.0], dtype="double", name="wavelength"), "wavelength"
-    )
+    with caplog.at_level(logging.DEBUG):
+        data_validator._check_data_type(
+            Column([300.0, 350.0, 315.0], dtype="double", name="wavelength"), "wavelength"
+        )
+    assert "Data column 'wavelength' has correct data type" in caplog.text
+
+    print("AAA", caplog.text)
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(TypeError):
