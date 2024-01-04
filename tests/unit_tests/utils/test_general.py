@@ -531,8 +531,6 @@ def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
     url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
-    # TEMPORARY - will be changed to 'main' before merging (this file is adding in this PR)
-    url = "https://raw.githubusercontent.com/gammasim/simtools/json-reader/"
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
