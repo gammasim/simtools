@@ -34,7 +34,7 @@ class MetadataCollector:
     args_dict: dict
         Command line parameters
     metadata_file_name: str
-        Name of metadata file
+        Name of metadata file (only required when args_dict is None)
     data_model_name: str
         Name of data model parameter
 
@@ -250,6 +250,8 @@ class MetadataCollector:
         ------
         gen.InvalidConfigData, FileNotFoundError
             if metadata cannot be read from file.
+        KeyError:
+            if metadata does not exist for the given observatory.
 
         """
 

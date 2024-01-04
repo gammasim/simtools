@@ -122,8 +122,6 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
 
-    n_lists = len(config_parser["hist_file_names"])
-
     # Building list of histograms from the input files
     histogram_files = []
     for one_file in config_parser["hist_file_names"]:
@@ -170,13 +168,13 @@ def main():
         else:
             number_of_histograms = simtel_histograms.number_of_histograms
 
-        for i_hist in range(n_lists * number_of_histograms):
+        for i_hist in range(number_of_histograms):
             title = simtel_histograms.get_histogram_title(i_hist)
 
             logger.debug(f"Processing: {title}")
 
-            fig, axs = plt.subplots(1, n_lists, figsize=(6 * n_lists, 6))
-            simtel_histograms.plot_one_histogram(i_hist, axs)
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+            simtel_histograms.plot_one_histogram(i_hist, ax)
 
             plt.tight_layout()
             pdf_pages.savefig(fig)
