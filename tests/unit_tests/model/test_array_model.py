@@ -21,7 +21,7 @@ def test_input_validation(db_config, io_handler):
 
     am.print_telescope_list()
 
-    assert am.number_of_telescopes == 19
+    assert am.number_of_telescopes == 13
 
 
 def test_exporting_config_files(db_config, io_handler):
