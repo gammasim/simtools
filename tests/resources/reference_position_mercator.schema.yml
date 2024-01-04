@@ -17,7 +17,7 @@ data:
   - name: ref_lat
     description: |-
       Latitude of site reference position
-    type: double
+    type: float64
     units: deg
     allowed_range:
       min: -90.
@@ -25,7 +25,7 @@ data:
   - name: ref_long
     description: |-
       Longitude of site reference position
-    type: double
+    type: float64
     units: deg
     allowed_range:
       min: -180.
