@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-print-array-elements
   TEST_NAME: utm_to_ground_meta_in_yml
   CONFIGURATION:
-    INPUT: tests/resources/telescope_positions-North-utm-withoutmeta.ecsv
+    INPUT: tests/resources/telescope_positions-North-utm-without-cta-meta.ecsv
     INPUT_META: tests/resources/telescope_positions-North-utm.meta.yml
     EXPORT: ground
     USE_CORSIKA_TELESCOPE_HEIGHT: true

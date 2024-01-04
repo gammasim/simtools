@@ -180,7 +180,6 @@ class ArrayLayout:
         FileNotFoundError:
             If file_name does not exist.
         """
-        # TODO TODO
         if file_name is None:
             try:
                 corsika_parameters_dict = collect_data_from_yaml_or_dict(
@@ -588,6 +587,8 @@ class ArrayLayout:
             Path to the telescope list file.
         telescope_list_metadata_file: str or Path
             Path to the telescope list metadata file.
+        validate: bool
+            Validate the telescope list file.
 
         Returns
         -------
