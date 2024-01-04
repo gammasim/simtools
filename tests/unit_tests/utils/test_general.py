@@ -58,7 +58,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     _reference_dict = gen.collect_data_from_yaml_or_dict(_file, None)
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    _url_dict = gen.collect_data_from_http_yaml(_url + _file)
+    _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
 
@@ -68,7 +68,7 @@ def test_collect_dict_from_url(io_handler) -> None:
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
     with pytest.raises(urllib.error.HTTPError):
-        gen.collect_data_from_http_yaml(_url + _file)
+        gen.collect_data_from_http(_url + _file)
 
 
 def test_collect_dict_from_file() -> None:
@@ -550,26 +550,26 @@ def test_collect_data_dict_from_json():
     assert data["units"] == "m"
 
 
-def test_collect_data_from_http_yaml():
+def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
     url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
     # TEMPORARY - will be changed to 'main' before merging (this file is adding in this PR)
     url = "https://raw.githubusercontent.com/gammasim/simtools/json-reader/"
-    data = gen.collect_data_from_http_yaml(url + file)
+    data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
     file = "tests/resources/altitude.json"
-    data = gen.collect_data_from_http_yaml(url + file)
+    data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
     file = "tests/resources/simtel_histograms_file_list.txt"
     with pytest.raises(TypeError):
-        data = gen.collect_data_from_http_yaml(url + file)
+        data = gen.collect_data_from_http(url + file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
     with pytest.raises(urllib.error.HTTPError):
-        data = gen.collect_data_from_http_yaml(url + file)
+        data = gen.collect_data_from_http(url + file)
 
 
 def test_change_dict_keys_case(caplog) -> None:
