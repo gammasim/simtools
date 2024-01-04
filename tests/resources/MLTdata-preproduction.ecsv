@@ -2,10 +2,10 @@
 # ---
 # datatype:
 # - {name: mirror_panel_id, datatype: string, description: mirror panel ID}
-# - {name: mirror_panel_radius, unit: m, datatype: float32, description: mirror panel radius (2f)}
-# - {name: psf_opt, unit: 'mm', datatype: float32, description: Average spot size of MLT mirror panels from 2f measurement (d80), best value (not at nominal distance)}
-# - {name: psf, unit: 'mm', datatype: float32, description: Average spot size of MLT mirror panels from 2f measurement (d80) at nominal distance of 32.14 m}
-# - {name: surface_ref, unit: '', datatype: float32, description: Average surface reflectivity between 300 nm and 500 nm (%)}
+# - {name: mirror_panel_radius, unit: m, datatype: float64, description: mirror panel radius (2f)}
+# - {name: psf_opt, unit: 'mm', datatype: float64, description: Average spot size of MLT mirror panels from 2f measurement (d80), best value (not at nominal distance)}
+# - {name: psf, unit: 'mm', datatype: float64, description: Average spot size of MLT mirror panels from 2f measurement (d80) at nominal distance of 32.14 m}
+# - {name: surface_ref, unit: '', datatype: float64, description: Average surface reflectivity between 300 nm and 500 nm (%)}
 mirror_panel_id  mirror_panel_radius psf_opt  psf  surface_ref
 MLT-054    31.807    15.46    20.97    90.2
 MLT-055    31.735    13.81    30.19    96.3
