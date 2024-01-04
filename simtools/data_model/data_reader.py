@@ -25,7 +25,7 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
     schema_file: str or Path
         Name of schema file to be used for validation.
     validate: bool
-        Validate data against schema.
+        Validate data against schema (if true).
     metadata_file: str or Path
         Name of metadata file to be read.
 
