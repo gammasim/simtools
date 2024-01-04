@@ -82,7 +82,7 @@ class DataValidator:
 
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml"):
-                self.data = gen.collect_data_from_yaml_or_dict(self.data_file_name, None)
+                self.data = gen.collect_data_from_file_or_dict(self.data_file_name, None)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -490,15 +490,20 @@ class DataValidator:
         dict
            validation schema
 
+        Raises
+        ------
+        KeyError
+            if 'data' can not be read from dict in schema file
+
         """
 
         try:
             if Path(schema_file).is_dir():
-                return gen.collect_dict_from_file(
-                    file_path=schema_file,
-                    file_name=parameter + ".schema.yml",
+                return gen.collect_data_from_file_or_dict(
+                    in_yaml=Path(schema_file) / (parameter + ".schema.yml"),
+                    in_dict=None,
                 )["data"]
-            return gen.collect_dict_from_file(schema_file)["data"]
+            return gen.collect_data_from_file_or_dict(in_yaml=schema_file, in_dict=None)["data"]
         except KeyError:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise

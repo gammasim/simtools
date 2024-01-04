@@ -139,7 +139,7 @@ class MetadataCollector:
         """
 
         try:
-            return gen.collect_data_from_yaml_or_dict(in_yaml=self.schema_file, in_dict=None)
+            return gen.collect_data_from_file_or_dict(in_yaml=self.schema_file, in_dict=None)
         except gen.InvalidConfigData:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
@@ -272,7 +272,7 @@ class MetadataCollector:
         if Path(metadata_file_name).suffix == ".yml":
             try:
                 self._logger.debug("Reading meta data from %s", metadata_file_name)
-                _input_metadata = gen.collect_data_from_yaml_or_dict(
+                _input_metadata = gen.collect_data_from_file_or_dict(
                     in_yaml=metadata_file_name, in_dict=None
                 )
             except (gen.InvalidConfigData, FileNotFoundError):
