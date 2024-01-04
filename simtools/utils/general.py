@@ -312,12 +312,17 @@ def is_url(url):
     bool
         True if url is a valid URL.
 
+    Raises
+    ------
+    AttributeError
+        If url is not a string.
+
     """
 
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
-    except ValueError:
+    except AttributeError:
         return False
 
 
