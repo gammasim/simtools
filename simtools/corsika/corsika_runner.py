@@ -9,7 +9,7 @@ from simtools.corsika.corsika_config import (
 )
 from simtools.io_operations import io_handler
 from simtools.utils import names
-from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 
@@ -107,7 +107,7 @@ class CorsikaRunner:
         self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
         self._corsika_parameters_file = corsika_parameters_file
-        corsika_config_data = collect_data_from_yaml_or_dict(
+        corsika_config_data = collect_data_from_file_or_dict(
             corsika_config_file, corsika_config_data
         )
         self._load_corsika_config_data(corsika_config_data)
