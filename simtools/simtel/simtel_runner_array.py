@@ -68,11 +68,11 @@ class SimtelRunnerArray(SimtelRunner):
         self._base_directory = self.io_handler.get_output_directory(self.label, "array-simulator")
 
         # Loading config_data
-        _config_data_in = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        _config_data_in = gen.collect_data_from_file_or_dict(config_file, config_data)
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "simtel-runner-array_parameters.yml"
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
+        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         self._load_simtel_data_directories()

@@ -10,7 +10,7 @@ import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
 from simtools.utils import names
-from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = [
     "CorsikaConfig",
@@ -113,7 +113,7 @@ class CorsikaConfig:
 
         self._corsika_parameters = self.load_corsika_parameters_file(corsika_parameters_file)
 
-        corsika_config_data = collect_data_from_yaml_or_dict(
+        corsika_config_data = collect_data_from_file_or_dict(
             corsika_config_file, corsika_config_data
         )
         self.set_user_parameters(corsika_config_data)

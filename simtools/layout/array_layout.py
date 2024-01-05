@@ -11,7 +11,7 @@ from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.utils import names
-from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["InvalidTelescopeListFile", "ArrayLayout"]
 
@@ -182,7 +182,7 @@ class ArrayLayout:
         """
         if file_name is None:
             try:
-                corsika_parameters_dict = collect_data_from_yaml_or_dict(
+                corsika_parameters_dict = collect_data_from_file_or_dict(
                     self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
                     None,
                 )
@@ -193,7 +193,7 @@ class ArrayLayout:
             if not isinstance(file_name, Path):
                 file_name = Path(file_name)
             if file_name.exists():
-                corsika_parameters_dict = collect_data_from_yaml_or_dict(file_name, None)
+                corsika_parameters_dict = collect_data_from_file_or_dict(file_name, None)
             else:
                 raise FileNotFoundError
 
