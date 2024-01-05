@@ -1,6 +1,9 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-generate-default-metadata
-  TEST_NAME: test
+  TEST_NAME: test-yaml
   CONFIGURATION:
     OUTPUT_FILE: test.yml
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: test.yml
+    - FILE_TYPE: yml
