@@ -7,7 +7,7 @@ from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
-from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["ArrayModel", "InvalidArrayConfigData"]
 
@@ -47,7 +47,7 @@ class ArrayModel:
         self.model_version = None
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
-        array_config_data = collect_data_from_yaml_or_dict(array_config_file, array_config_data)
+        array_config_data = collect_data_from_file_or_dict(array_config_file, array_config_data)
         self._load_array_data(array_config_data)
         self._set_config_file_directory()
         self._build_array_model()

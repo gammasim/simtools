@@ -17,7 +17,7 @@ from eventio import IACTFile
 from simtools import version
 from simtools.io_operations import io_handler
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
-from simtools.utils.general import collect_data_from_yaml_or_dict
+from simtools.utils.general import collect_data_from_file_or_dict
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 
@@ -344,7 +344,7 @@ class CorsikaHistograms:
             input_dict = input_config
         else:
             input_yaml = input_config
-        self._hist_config = collect_data_from_yaml_or_dict(input_yaml, input_dict, allow_empty=True)
+        self._hist_config = collect_data_from_file_or_dict(input_yaml, input_dict, allow_empty=True)
 
     def hist_config_to_yaml(self, file_name=None):
         """
