@@ -66,7 +66,7 @@ def _validate_yaml_or_json_file(args_dict, logger):
     """
 
     try:
-        data = gen.collect_data_from_file_or_dict(in_yaml=args_dict["file_name"], in_dict=None)
+        data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
     except FileNotFoundError:
         logger.error(f"Input file {args_dict['file_name']} not found")
         raise

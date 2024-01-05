@@ -369,13 +369,13 @@ def collect_data_from_http(url):
     return data
 
 
-def collect_data_from_file_or_dict(in_yaml, in_dict, allow_empty=False):
+def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     """
     Collect input data that can be given either as a dict or as a yaml/json file.
 
     Parameters
     ----------
-    in_yaml: str
+    file_name: str
         Name of the yaml/json file.
     in_dict: dict
         Data as dict.
@@ -388,22 +388,22 @@ def collect_data_from_file_or_dict(in_yaml, in_dict, allow_empty=False):
         Data as dict.
     """
 
-    if in_yaml is not None:
+    if file_name is not None:
         if in_dict is not None:
-            _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
-        if is_url(str(in_yaml)):
-            data = collect_data_from_http(in_yaml)
-        elif Path(in_yaml).suffix.lower() == ".json":
-            with open(in_yaml, encoding="utf-8") as file:
+            _logger.warning("Both in_dict and file_name were given - file_name will be used")
+        if is_url(str(file_name)):
+            data = collect_data_from_http(file_name)
+        elif Path(file_name).suffix.lower() == ".json":
+            with open(file_name, encoding="utf-8") as file:
                 data = json.load(file)
         else:
-            with open(in_yaml, encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 data = yaml.load(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "Input has not been provided (neither by yaml file, nor by dict)"
+    msg = "Input has not been provided (neither by file, nor by dict)"
     if allow_empty:
         _logger.debug(msg)
         return None
