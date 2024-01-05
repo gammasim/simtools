@@ -46,11 +46,11 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
     assert d3 == d2
 
     assert gen.collect_data_from_file_or_dict(None, None, allow_empty=True) is None
-    assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+    assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
     with pytest.raises(InvalidConfigData):
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
-        assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+        assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
 
 def test_collect_dict_from_url(io_handler) -> None:
