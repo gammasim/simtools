@@ -530,10 +530,10 @@ class DataValidator:
         try:
             if Path(schema_file).is_dir():
                 return gen.collect_data_from_file_or_dict(
-                    in_yaml=Path(schema_file) / (parameter + ".schema.yml"),
+                    file_name=Path(schema_file) / (parameter + ".schema.yml"),
                     in_dict=None,
                 )["data"]
-            return gen.collect_data_from_file_or_dict(in_yaml=schema_file, in_dict=None)["data"]
+            return gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)["data"]
         except KeyError:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise
