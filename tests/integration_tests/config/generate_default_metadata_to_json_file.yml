@@ -1,0 +1,9 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-default-metadata
+  TEST_NAME: test-json
+  CONFIGURATION:
+    OUTPUT_FILE: test.json
+    OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: test.json
+    - FILE_TYPE: json

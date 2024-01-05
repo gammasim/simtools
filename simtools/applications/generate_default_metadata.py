@@ -23,6 +23,7 @@
 
     """
 
+import json
 import logging
 from pathlib import Path
 
@@ -31,6 +32,7 @@ import yaml
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import metadata_model
+from simtools.io_operations import io_handler
 
 
 def _parse(label, description):
@@ -83,14 +85,24 @@ def main():
     if args_dict["output_file"] is None:
         print(default_values)
     else:
-        _logger.info(f"Writing default values to {args_dict['output_file']}")
-        with open(args_dict["output_file"], "w", encoding="utf-8") as file:
-            yaml.dump(
-                default_values,
-                file,
-                default_flow_style=False,
-                sort_keys=False,
-            )
+        _io_handler = io_handler.IOHandler()
+        _out_file = _io_handler.get_output_file(args_dict["output_file"])
+        _logger.info(f"Writing default values to {_out_file}")
+        if "yml" in args_dict["output_file"]:
+            with open(_out_file, "w", encoding="utf-8") as file:
+                yaml.dump(
+                    default_values,
+                    file,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
+        if "json" in args_dict["output_file"]:
+            with open(_out_file, "w", encoding="utf-8") as file:
+                json.dump(
+                    default_values,
+                    file,
+                    sort_keys=False,
+                )
 
 
 if __name__ == "__main__":
