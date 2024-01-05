@@ -83,7 +83,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         # Loading config_data
         self.config = gen.validate_config_data(
-            gen.collect_data_from_yaml_or_dict(config_file, config_data),
+            gen.collect_data_from_file_or_dict(config_file, config_data),
             self.ray_tracing_default_configuration(True),
         )
 

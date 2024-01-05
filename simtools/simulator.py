@@ -177,7 +177,7 @@ class Simulator:
             Path to yaml file containing configurable data.
 
         """
-        simulator_config_data = gen.collect_data_from_yaml_or_dict(config_file, config_data)
+        simulator_config_data = gen.collect_data_from_file_or_dict(config_file, config_data)
         if self.simulator == "corsika":
             self._load_corsika_config_and_model(simulator_config_data)
         if self.simulator == "simtel":
@@ -236,7 +236,7 @@ class Simulator:
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
+        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
 
         self.array_model = ArrayModel(

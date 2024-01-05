@@ -34,35 +34,35 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
         with open(test_yaml_file, "w") as output:
             yaml.dump(dict_for_yaml, output, sort_keys=False)
 
-    d1 = gen.collect_data_from_yaml_or_dict(None, in_dict)
+    d1 = gen.collect_data_from_file_or_dict(None, in_dict)
     assert "k2" in d1.keys()
     assert d1["k1"] == 2
 
-    d2 = gen.collect_data_from_yaml_or_dict(test_yaml_file, None)
+    d2 = gen.collect_data_from_file_or_dict(test_yaml_file, None)
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    d3 = gen.collect_data_from_yaml_or_dict(test_yaml_file, in_dict)
+    d3 = gen.collect_data_from_file_or_dict(test_yaml_file, in_dict)
     assert d3 == d2
 
-    assert gen.collect_data_from_yaml_or_dict(None, None, allow_empty=True) is None
-    assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+    assert gen.collect_data_from_file_or_dict(None, None, allow_empty=True) is None
+    assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
     with pytest.raises(InvalidConfigData):
-        gen.collect_data_from_yaml_or_dict(None, None, allow_empty=False)
-        assert "Input has not been provided (neither by yaml file, nor by dict)" in caplog.text
+        gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
+        assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
 
 def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/test_parameters.yml"
-    _reference_dict = gen.collect_data_from_yaml_or_dict(_file, None)
+    _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
     _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
 
-    _dict = gen.collect_data_from_yaml_or_dict(_url + _file, None)
+    _dict = gen.collect_data_from_file_or_dict(_url + _file, None)
     assert isinstance(_dict, dict)
     assert len(_dict) > 0
 
@@ -71,32 +71,9 @@ def test_collect_dict_from_url(io_handler) -> None:
         gen.collect_data_from_http(_url + _file)
 
 
-def test_collect_dict_from_file() -> None:
-    # Test 1: file_path is a yaml file
-    file_path = "tests/resources/test_parameters.yml"
-    file_name = None
-    _dict = gen.collect_dict_from_file(file_path, file_name)
-    assert isinstance(_dict, dict)
-    assert len(_dict) == 7
-
-    # Test 2: file_path is a directory
-    file_path = "tests/resources/"
-    file_name = "test_parameters.yml"
-    _dict = gen.collect_dict_from_file(file_path, file_name)
-    assert isinstance(_dict, dict)
-    assert len(_dict) == 7
-
-    # Test 3: file_path is a directory, but file_name is not given
-    file_path = "tests/resources/"
-    file_name = None
-    _dict = gen.collect_dict_from_file(file_path, file_name)
-    assert isinstance(_dict, dict)
-    assert len(_dict) == 0
-
-
 def test_validate_config_data(args_dict, io_handler, caplog) -> None:
     parameter_file = io_handler.get_input_data_file(file_name="test_parameters.yml", test=True)
-    parameters = gen.collect_data_from_yaml_or_dict(parameter_file, None)
+    parameters = gen.collect_data_from_file_or_dict(parameter_file, None)
 
     validated_data = gen.validate_config_data(
         config_data=None,
@@ -545,7 +522,7 @@ def test_is_url():
 
 def test_collect_data_dict_from_json():
     file = "tests/resources/altitude.json"
-    data = gen.collect_data_from_yaml_or_dict(file, None)
+    data = gen.collect_data_from_file_or_dict(file, None)
     assert len(data) == 5
     assert data["units"] == "m"
 
@@ -554,8 +531,6 @@ def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
     url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
-    # TEMPORARY - will be changed to 'main' before merging (this file is adding in this PR)
-    url = "https://raw.githubusercontent.com/gammasim/simtools/json-reader/"
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
