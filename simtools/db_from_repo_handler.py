@@ -36,7 +36,7 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site, f"{key}.json")
         if file_path.exists():
             logger.info(f"Updating parameter {key} for {site} from repository file {file_path}")
-            parameters[key] = gen.collect_data_from_yaml_or_dict(in_yaml=file_path, in_dict=None)
+            parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
             logger.info(f"Old value: {value}, new value: {parameters[key]}")
         else:
             logger.info(f"Parameter {key} for {site} not found in repository (file {file_path})")
