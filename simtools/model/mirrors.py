@@ -77,9 +77,9 @@ class Mirrors:
             self._logger.debug("Mirror shape_type not in mirror file")
             try:
                 self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
-            except TypeError:
+            except TypeError as error:
                 self._logger.error("Mirror mirror_panel_shape not contained in DB")
-                raise TypeError
+                raise TypeError("Mirror mirror_panel_shape not contained in DB") from error
 
         try:
             self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
@@ -136,7 +136,12 @@ class Mirrors:
             ],
             units=["cm", "cm", "cm", "cm", None, "cm", None, None],
         )
-        self.mirror_table["mirror_panel_id"] = np.array([int("".join(filter(str.isdigit, string))) for string in self.mirror_table["mirror_panel_id"]])
+        self.mirror_table["mirror_panel_id"] = np.array(
+            [
+                int("".join(filter(str.isdigit, string)))
+                for string in self.mirror_table["mirror_panel_id"]
+            ]
+        )
 
         self.shape_type = self.mirror_table["shape_type"][0]
         self.mirror_diameter = u.Quantity(
@@ -177,7 +182,6 @@ class Mirrors:
         if not np.any(mask):
             self._logger.error(f"Mirror id{number} not in table, using first mirror instead")
             mask[0] = True
-        print("VALEUES", self.shape_type, self.mirror_table["focal_length"].unit)
         try:
             return_values = (
                 self.mirror_table[mask]["mirror_x"],
