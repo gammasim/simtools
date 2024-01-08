@@ -43,7 +43,7 @@ def validate_schema(data, schema_file):
     except jsonschema.exceptions.ValidationError:
         _logger.error(f"Failed using {schema}")
         raise
-    _logger.debug(f"Succeeded using {schema_file}")
+    _logger.debug(f"Successful validation of data using schema from {schema_file}")
 
 
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
@@ -66,9 +66,7 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
     """
 
-    _logger.debug(f"Loading default schema from {schema_file}")
     schema, _ = _load_schema(schema_file)
-
     return _fill_defaults(schema["definitions"], observatory)
 
 
@@ -94,7 +92,7 @@ def _load_schema(schema_file=None):
     if schema_file is None:
         schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
-    schema = gen.collect_data_from_yaml_or_dict(in_yaml=schema_file, in_dict=None)
+    schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
 
     return schema, schema_file

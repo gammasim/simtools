@@ -125,7 +125,7 @@ def test_plot_array(
     array_layout_south_instance,
 ):
     def test_one_site(test_file, instance):
-        telescope_table = instance.read_telescope_list_file(test_file)
+        telescope_table = instance.initialize_array_layout_from_telescope_file(test_file)
         telescopes_dict = instance.include_radius_into_telescope_table(telescope_table)
         fig_out = visualize.plot_array(telescopes_dict, rotate_angle=0 * u.deg)
         assert isinstance(fig_out, type(plt.figure()))

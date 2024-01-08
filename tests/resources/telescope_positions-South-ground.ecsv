@@ -1,0 +1,153 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: telescope_name, datatype: string}
+# - {name: position_x, unit: m, datatype: float64}
+# - {name: position_y, unit: m, datatype: float64}
+# - {name: position_z, unit: m, datatype: float64}
+# - {name: geo_code, datatype: string}
+# meta:
+#   CTA:
+#     ACTIVITY:
+#       END: '2023-12-21T12:55:11'
+#       ID: 4488a138-1384-439f-af0d-9f9a3e639481
+#       NAME: print_array_elements
+#       SOFTWARE: {NAME: simtools, VERSION: 0.5.2.dev1089+gf69028b0.d20231221}
+#       START: '2023-12-21T12:55:11'
+#       TYPE: software
+#     CONTACT: {EMAIL: null, NAME: maierg, ORGANIZATION: CTAO}
+#     CONTEXT:
+#       ASSOCIATED_DATA:
+#       - CREATION_TIME: null
+#         DATA:
+#           ASSOCIATION: null
+#           CATEGORY: null
+#           LEVEL: null
+#           MODEL: {NAME: null, TYPE: null, URL: null, VERSION: null}
+#           TYPE: null
+#         DESCRIPTION: null
+#         FILENAME: null
+#         FORMAT: null
+#         ID: null
+#         VALID: {END: null, START: null}
+#       ASSOCIATED_ELEMENTS:
+#       - {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#       DOCUMENT:
+#       - {CREATION_TIME: null, ID: null, TITLE: null, TYPE: null, URL: null}
+#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
+#     PRODUCT:
+#       CREATION_TIME: '2023-12-21T12:55:11'
+#       DATA:
+#         ASSOCIATION: Site
+#         CATEGORY: SIM
+#         LEVEL: R1
+#         MODEL: {NAME: array_coordinates, TYPE: simpipe-schema, URL: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates.schema.yml',
+#           VERSION: 0.1.0}
+#         TYPE: Service
+#       DESCRIPTION: Telescope positions.
+#       FILENAME: telescope_positions-South-corsika.ecsv
+#       FORMAT: ecsv
+#       ID: 4488a138-1384-439f-af0d-9f9a3e639481
+#       VALID: {END: null, START: null}
+#     REFERENCE: {VERSION: 1.0.0}
+#   EPSG: 32719
+#   __serialized_columns__:
+#     position_x:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id001 !astropy.units.Unit {unit: m}
+#       value: !astropy.table.SerializedColumn {name: position_x}
+#     position_y:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: position_y}
+#     position_z:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: position_z}
+#   array_name: null
+#   center_alt: !astropy.units.Quantity
+#     unit: *id001
+#     value: 2162.0
+#   center_easting: !astropy.units.Quantity
+#     unit: *id001
+#     value: 366822.0
+#   center_northing: !astropy.units.Quantity
+#     unit: *id001
+#     value: 7269466.0
+#   corsika_obs_level: !astropy.units.Quantity
+#     unit: *id001
+#     value: 2147.0
+#   corsika_sphere_center:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.0
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.25
+#   corsika_sphere_radius:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 12.5
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.15
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.0
+# schema: astropy-2.0
+telescope_name position_x position_y position_z geo_code
+MST-01      -0.00      -0.00      24.00  A0A
+MST-02       1.45     151.07      25.00  A4A
+MST-03      -1.45    -151.07      31.00  A3A
+MST-04     150.79      73.60      21.00  C2A
+MST-05     149.35     -76.48      26.00  C1A
+MST-06     152.38     238.67      24.00  C4A
+MST-07     147.77    -241.55      30.00  C3A
+MST-08     313.15      -3.00      19.00  F0A
+MST-09    -150.79     -73.60      28.00  X1A
+MST-10    -149.35      76.48      28.00  X2A
+MST-11    -152.38    -238.67      38.50  X3A
+MST-12    -147.77     241.55      27.00  X4A
+MST-13    -314.70    -159.07      35.00  V1A
+MST-14    -311.59     165.08      30.50  V2A
+SST-01     199.09      -1.91      16.25  D0A
+SST-02    -230.11       2.21      22.75  W0A
+SST-03    -252.24    -322.76      40.75  W1A
+SST-04    -246.00     327.54      17.25  W2A
+SST-05    -254.66    -574.88      54.25  W3A
+SST-06    -243.58     579.66       8.25  W4A
+SST-07    -227.76    -795.27      68.25  W5A
+SST-08    -212.45     799.49      10.25  W6A
+SST-09      -4.79    -499.24      39.75  A7A
+SST-10       4.79     499.24      11.75  A8A
+SST-11      -7.19    -749.36      62.25  A9A
+SST-12       7.19     749.35      12.75  A2B
+SST-13     246.00    -327.54      27.25  E1A
+SST-14     252.24     322.76      16.75  E2A
+SST-15     243.58    -579.66      41.25  E3A
+SST-16     254.66     574.88      17.75  E4A
+SST-17     212.45    -799.49      56.25  D1A
+SST-18     227.76     795.26      25.25  D2A
+SST-19    -500.48    -125.27      31.25  T1A
+SST-20    -497.99     134.85      28.25  T2A
+SST-21    -504.03    -494.45      59.25  T3A
+SST-22    -494.45     504.03      10.25  T4A
+SST-23    -473.94    -799.91      76.25  T5A
+SST-24    -458.50     808.85      17.25  T6A
+SST-25     497.99    -134.85      12.25  H1A
+SST-26     500.48     125.27       9.25  H2A
+SST-27     494.45    -504.03      30.25  H3A
+SST-28     504.03     494.45      10.25  H4A
+SST-29     458.50    -808.86      54.25  H7A
+SST-30     473.94     799.91      37.25  H8A
+SST-31    -791.38       7.60      30.25  Q0A
+SST-32    -744.83     374.36      17.25  Q2A
+SST-33    -751.88    -359.99      54.25  Q1A
+SST-34    -811.16     656.15      10.25  Q4A
+SST-35    -823.61    -640.46      74.25  Q3A
+SST-36     790.37      -7.58       4.25  M0A
+SST-37     744.83    -374.35      15.25  M1A

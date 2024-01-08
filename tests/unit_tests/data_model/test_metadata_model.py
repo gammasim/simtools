@@ -1,3 +1,4 @@
+import logging
 import os
 
 import jsonschema
@@ -34,7 +35,7 @@ def test_validate_schema(tmp_test_directory):
         "required": ["name", "age"],
     }
 
-    schema_file = os.path.join(tmp_test_directory, "schema.json")
+    schema_file = os.path.join(tmp_test_directory, "schema.yml")
     with open(schema_file, "w", encoding="utf-8") as f:
         yaml.dump(sample_schema, f)
 
@@ -71,7 +72,7 @@ def test_resolve_references():
     assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
-def test_fill_defaults():
+def test_fill_defaults(caplog):
     schema = {
         "CTA": {
             "properties": {
@@ -126,10 +127,10 @@ def test_fill_defaults():
     assert metadata_model._fill_defaults(schema) == expected_result
 
     schema = {
-        "no_properties": {
+        "CTA": {
             "CONTACT": {
                 "type": "object",
-                "properties": {
+                "no_properties": {
                     "organization": {"type": "string", "default": "CTA"},
                     "number": {"type": "integer", "default": 30},
                 },
@@ -137,5 +138,8 @@ def test_fill_defaults():
         }
     }
 
-    with pytest.raises(KeyError):
-        metadata_model._fill_defaults(schema)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            metadata_model._fill_defaults(schema)
+
+    assert "Missing 'properties' key in schema." in caplog.text

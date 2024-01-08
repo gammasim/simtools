@@ -8,53 +8,80 @@
 # - {name: alt, unit: m, datatype: float64, description: telescope position upwards relative to NNN}
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta: !!omap
-# - data_type: position_file
-# - description: "CTAO Northern Array Element Coordinates"
-# - center_northing: "3185067.275 m"
-# - center_easting: "217608.975 m"
-# - center_alt: "2177.0 m"
-# - corsika_obs_level: "2156 m"
+# - {data_type: position_file}
+# - {description: CTAO Northern Array Element Coordinates}
+# - {center_northing: 3185067.275 m}
+# - {center_easting: 217608.975 m}
+# - {center_alt: 2177.0 m}
+# - {corsika_obs_level: 2156 m}
 # - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
 # - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
-# - EPSG: 32628
-# - comments: |-
-#       following CTA-SPE-PSC-000000-0001 1c
-#       Subset of positions defined in reference repository
-#       https://gitlab.cta-observatory.org/cta-science/array-element-positions/-/tree/main
-#       Array center coordinates defined as centre of the 4 LST
-#       position (this is slightly different to the definition
-#       in CTA-SPE-PSC-000000-0001 1c)
-#       Never change positions here. This should always be
-#       synchronized with the reference repository
+# - {EPSG: 32628}
+# - {comments: 'following CTA-SPE-PSC-000000-0001 1c
+#
+#     Subset of positions defined in reference repository
+#
+#     https://gitlab.cta-observatory.org/cta-science/array-element-positions/-/tree/main
+#
+#     Array center coordinates defined as centre of the 4 LST
+#
+#     position (this is slightly different to the definition
+#
+#     in CTA-SPE-PSC-000000-0001 1c)
+#
+#     Never change positions here. This should always be
+#
+#     synchronized with the reference repository'}
+# - CTA:
+#     ACTIVITY: {END: null, ID: null, NAME: telescope_positions, START: null, TYPE: null}
+#     CONTACT: {EMAIL: a@email.org, NAME: CTAO Project Scientist, ORGANIZATION: CTAO North}
+#     CONTEXT:
+#       ASSOCIATED_ELEMENTS:
+#       - {CLASS: array, ID: null, SITE: CTA-North, TYPE: null}
+#       DOCUMENT:
+#       - {CREATION_TIME: '2022-05-30 12:00:00', ID: CTA-SPE-PSC-000000-0001 1c, TITLE: Layouts of the CTAO Arrays, TYPE: CTAO-DOC}
+#     INSTRUMENT: {CLASS: null, ID: null, SITE: CTA-North, TYPE: null}
+#     PROCESS: {ID: null, TYPE: null}
+#     PRODUCT:
+#       CREATION_TIME: '2022-05-30 12:00:00'
+#       DATA:
+#         ASSOCIATION: Subarray
+#         CATEGORY: CAL
+#         LEVEL: R1
+#         MODEL: {NAME: array_coordinates_utm, URL: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates_UTM.schema.yml',
+#           VERSION: 0.1.0}
+#         TYPE: Service
+#       DESCRIPTION: Telescope positions for the CTAO Northern site (UTM coordinate system). Consistent with document CTA-SPE-PSC-000000-0001
+#         1c.
+#       FILENAME: telescope_positions-North-utm.ecsv
+#       FORMAT: ascii.ecsv
+#       ID: null
+#       VALID: {START: '2022-05-30 12:00:00'}
+#     REFERENCE: {VERSION: 1.0.0}
+# schema: astropy-2.0
 asset_code sequence_number utm_east utm_north alt geo_code
-LSTN    01    217659.6    3184995.1    2185.0  2B5
-LSTN    02    217542.2    3185033.6    2170.9  2B4
-LSTN    03    217560.6    3185143.8    2166.4  1B0
-LSTN    04    217673.5    3185096.6    2172.6  1B1
-MSTN    01    217598.4    3184855.8    2195.5  4B3
-MSTN    02    217436.4    3184918.1    2175.7  4B1
-MSTN    03    217401.1    3185099.2    2158.4  2B2
-MSTN    04    217540.4    3185244.7    2156.5  3B0
-MSTN    05    217801.7    3185202.8    2178.0  3B5
-MSTN    06    217796.4    3184987.0    2191.2  2B6
-MSTN    07    217771.4    3184847.4    2212.0  4B6
-MSTN    08    217275.1    3184976.3    2158.7  4B0
-MSTN    09    217970.0    3185280.3    2196.0  5B0
-MSTN    10    217962.3    3185078.9    2209.0  1B4
-MSTN    11    217939.6    3184861.8    2226.2  4B8
-MSTN    12    217262.0    3184771.7    2171.3  6B0
-MSTN    13    217470.6    3184724.4    2207.0  6B2
-MSTN    14    217678.3    3184689.4    2230.6  6B4
-MSTN    15    217611.8    3185066.7    2176.5  0A1
-RLDN    01    217381.0    3185155.0    2158.5  2B1
-STPN    01    217703.0    3184911.0    2194.7  4B5
-MSPN    01    217463.1    3185305.0    2143.4  Nan
-ILLN    01    Nan         Nan          Nan     Nan
-ILLN    02    Nan         Nan          Nan     Nan
-CEIN    01    217463.1    3185305.0    2143.4  Nan
-WSTN    01    217471.0    3185112.0    2160.0  2B3
-WSTN    02    217770.0    3185094.0    2181.0  1B2
-WSTN    03    217718.0    3184875.0    2215.0  4B4
-ASCN    01    217463.1    3185305.0    2143.4  Nan
-DUSN    01    217463.1    3185305.0    2143.4  Nan
-LISN    01    217463.1    3185305.0    2143.4  Nan
+LST 01 217659.6 3184995.1 2185.0 2B5
+LST 02 217542.2 3185033.6 2172.5 2B4
+LST 03 217560.6 3185143.8 2168.2 1B0
+LST 04 217673.5 3185096.6 2172.8 1B1
+MST 01 217598.4 3184855.8 2195.5 4B3
+MST 02 217436.4 3184918.1 2175.7 4B1
+MST 03 217401.1 3185099.2 2158.4 2B2
+MST 04 217540.4 3185244.7 2156.5 3B0
+MST 05 217807.0 3185194.2 2178.0  3B5
+MST 06 217801.9 3184978.6 2192.0  2B6
+MST 07 217771.4 3184847.4 2212.0 4B6
+MST 10 217962.3 3185078.9 2209.0 1B4
+MST 15 217609.8 3185071.9 2176.5  0A1
+RLD 01 217381.0 3185155.0 2158.5 2B1
+STP 01 217703.0 3184911.0 2194.7 4B5
+MSP 01 217463.1 3185305.0 2143.4 Nan
+ILL 01 nan nan nan Nan
+ILL 02 nan nan nan Nan
+CEI 01 217463.1 3185305.0 2143.4 Nan
+WST 01 217471.0 3185112.0 2160.0 2B3
+WST 02 217770.0 3185094.0 2181.0 1B2
+WST 03 217718.0 3184875.0 2215.0 4B4
+ASC 01 217463.1 3185305.0 2143.4 Nan
+DUS 01 217463.1 3185305.0 2143.4 Nan
+LIS 01 217463.1 3185305.0 2143.4 Nan

@@ -82,7 +82,7 @@ class DataValidator:
 
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml"):
-                self.data = gen.collect_data_from_yaml_or_dict(self.data_file_name, None)
+                self.data = gen.collect_data_from_file_or_dict(self.data_file_name, None)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -154,6 +154,7 @@ class DataValidator:
             if not np.issubdtype(col.dtype, np.number):
                 continue
             self._check_for_not_a_number(col, col_name)
+            self._check_data_type(col, col_name)
             col = self._check_and_convert_units(col, col_name)
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
@@ -292,6 +293,35 @@ class DataValidator:
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
+
+    def _check_data_type(self, col, column_name):
+        """
+        Check column data type.
+
+        Parameters
+        ----------
+        col: astropy.column or Quantity
+            data column to be converted
+        column_name: str
+            column name
+
+        Raises
+        ------
+        TypeError
+            if data type is not correct
+
+        """
+
+        reference_dtype = self._get_reference_data_column(column_name).get("type", None)
+
+        if not np.issubdtype(col.dtype, reference_dtype):
+            self._logger.error(
+                f"Invalid data type in column '{column_name}'. "
+                f"Expected type '{reference_dtype}', found '{col.dtype}'"
+            )
+            raise TypeError
+
+        self._logger.debug(f"Data column '{column_name}' has correct data type")
 
     def _check_for_not_a_number(self, col, col_name):
         """
@@ -490,15 +520,20 @@ class DataValidator:
         dict
            validation schema
 
+        Raises
+        ------
+        KeyError
+            if 'data' can not be read from dict in schema file
+
         """
 
         try:
             if Path(schema_file).is_dir():
-                return gen.collect_dict_from_file(
-                    file_path=schema_file,
-                    file_name=parameter + ".schema.yml",
+                return gen.collect_data_from_file_or_dict(
+                    file_name=Path(schema_file) / (parameter + ".schema.yml"),
+                    in_dict=None,
                 )["data"]
-            return gen.collect_dict_from_file(schema_file)["data"]
+            return gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)["data"]
         except KeyError:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise

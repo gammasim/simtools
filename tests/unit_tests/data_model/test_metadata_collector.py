@@ -105,8 +105,12 @@ def test_read_input_metadata_from_file(args_dict_site):
 
     assert metadata_1._read_input_metadata_from_file() == {}
 
-    metadata_1.args_dict["input_meta"] = "./file_does_not_exist"
+    metadata_1.args_dict["input_meta"] = "./file_does_not_exist.yml"
     with pytest.raises(FileNotFoundError):
+        metadata_1._read_input_metadata_from_file()
+
+    metadata_1.args_dict["input_meta"] = "./file_does_not_exist.not_a_good_suffix"
+    with pytest.raises(gen.InvalidConfigData):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"

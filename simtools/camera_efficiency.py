@@ -66,13 +66,13 @@ class CameraEfficiency:
         self._results = None
         self._has_results = False
 
-        _config_data_in = gen.collect_data_from_yaml_or_dict(
+        _config_data_in = gen.collect_data_from_file_or_dict(
             config_file, config_data, allow_empty=True
         )
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "camera-efficiency_parameters.yml"
         )
-        _parameters = gen.collect_data_from_yaml_or_dict(_parameter_file, None)
+        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_config_data_in, _parameters)
 
         self._load_files()

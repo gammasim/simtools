@@ -71,7 +71,7 @@ class RayTracing:
         self._telescope_model = self._validate_telescope_model(telescope_model)
 
         self.config = gen.validate_config_data(
-            gen.collect_data_from_yaml_or_dict(config_file, config_data),
+            gen.collect_data_from_file_or_dict(config_file, config_data),
             SimtelRunnerRayTracing.ray_tracing_default_configuration(False),
         )
 

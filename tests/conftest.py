@@ -264,13 +264,23 @@ def manual_corsika_dict_south():
 
 
 @pytest.fixture
+def telescope_north_with_calibration_devices_test_file():
+    return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
+
+
+@pytest.fixture
 def telescope_north_test_file():
-    return "data/layout/telescope_positions-North-TestLayout.ecsv"
+    return "tests/resources/telescope_positions-North-ground.ecsv"
+
+
+@pytest.fixture
+def telescope_north_utm_test_file():
+    return "tests/resources/telescope_positions-North-utm.ecsv"
 
 
 @pytest.fixture
 def telescope_south_test_file():
-    return "data/layout/telescope_positions-South-TestLayout.ecsv"
+    return "tests/resources/telescope_positions-South-ground.ecsv"
 
 
 @pytest.fixture
