@@ -135,6 +135,7 @@ class Mirrors:
             ],
             units=["cm", "cm", "cm", "cm", None, "cm", None, None],
         )
+        self.mirror_table["mirror_panel_id"] = np.array([int("".join(filter(str.isdigit, string))) for string in self.mirror_table["mirror_panel_id"]])
 
         self.shape_type = self.mirror_table["shape_type"][0]
         self.mirror_diameter = u.Quantity(
@@ -171,22 +172,7 @@ class Mirrors:
             X, Y positions, mirror_diameter, focal length and shape_type.
         """
 
-        def get_mirror_table_mask():
-            if isinstance(self.mirror_table["mirror_panel_id"][0], np.str_):
-                mask = (
-                    np.array(
-                        [
-                            "".join(filter(str.isdigit, string))
-                            for string in self.mirror_table["mirror_panel_id"]
-                        ]
-                    )
-                    == f"{number}"
-                )
-            if isinstance(self.mirror_table["mirror_panel_id"][0], np.int32):
-                mask = self.mirror_table["mirror_panel_id"] == number
-            return mask
-
-        mask = get_mirror_table_mask()
+        mask = self.mirror_table["mirror_panel_id"] == number
         if not np.any(mask):
             self._logger.error(f"Mirror id{number} not in table, using first mirror instead")
             mask[0] = True
