@@ -268,13 +268,15 @@ class MetadataCollector:
             self._logger.debug("No input metadata file defined.")
             return {}
 
-        # metadata from yml file
-        if Path(metadata_file_name).suffix == ".yml":
+        # metadata from yml or json file
+        if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
             try:
                 self._logger.debug("Reading meta data from %s", metadata_file_name)
                 _input_metadata = gen.collect_data_from_file_or_dict(
                     file_name=metadata_file_name, in_dict=None
                 )
+                if "Metadata" in _input_metadata:
+                    _input_metadata = _input_metadata["Metadata"]
             except (gen.InvalidConfigData, FileNotFoundError):
                 self._logger.error("Failed reading metadata from %s", metadata_file_name)
                 raise
@@ -462,7 +464,7 @@ class MetadataCollector:
             meta_dict["cta"]["product"]["description"] = self._remove_line_feed(
                 meta_dict["cta"]["product"]["description"]
             )
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
 
         return meta_dict
