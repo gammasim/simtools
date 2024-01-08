@@ -96,12 +96,11 @@ class Mirrors:
         if "focal_length" not in self.mirror_table.colnames:
             try:
                 self.mirror_table["focal_length"] = (
-                    self.mirror_table["mirror_panel_radius"].to("cm").value / 2
+                    self.mirror_table["mirror_curvature_radius"].to("cm").value / 2
                 )
             except KeyError:
-                self._logger.debug("mirror_panel_radius not contained in mirror list")
+                self._logger.debug("mirror_curvature_radius not contained in mirror list")
                 try:
-                    print("NUMBER OF MIRRORS: ", self.number_of_mirrors)
                     self.mirror_table["focal_length"] = self.number_of_mirrors * [
                         u.Quantity(
                             self.parameters["mirror_focal_length"]["Value"],
