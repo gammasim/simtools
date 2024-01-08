@@ -38,12 +38,6 @@ def validate_schema(data, schema_file):
 
     """
 
-    if schema_file is None and "meta_schema_url" in data:
-        schema_file = data["meta_schema_url"]
-        _logger.debug(f"Using schema from meta_schema_url: {schema_file}")
-    if schema_file is None:
-        print("FFFFF", data)
-
     schema, schema_file = _load_schema(schema_file)
 
     try:
