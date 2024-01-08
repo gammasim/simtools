@@ -25,7 +25,6 @@
                     "MODEL": {
                         "NAME": "altitude",
                         "VERSION": "0.1.0",
-                        "__comment": "TODO - temporary set to file in site-parameter branch (until merge)",
                         "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/site-parameters/schema/altitude.schema.yml"
                     }
                 },
