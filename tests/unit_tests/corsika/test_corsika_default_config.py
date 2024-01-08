@@ -58,6 +58,11 @@ def test_view_cone_for_primary():
     expected_view_cone = [0.0, 0.0]
     compare_lists_ignoring_units(view_cone, expected_view_cone)
 
+    config = CorsikaDefaultConfig(primary="gamma-diffuse")
+    view_cone = config.view_cone_for_primary()
+    expected_view_cone = [0.0, 10.0]
+    compare_lists_ignoring_units(view_cone, expected_view_cone)
+
     config = CorsikaDefaultConfig(primary="proton")
     view_cone = config.view_cone_for_primary()
     expected_view_cone = [0.0, 10.0]
