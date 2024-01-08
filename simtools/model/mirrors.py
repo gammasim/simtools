@@ -184,11 +184,26 @@ class Mirrors:
             mask[0] = True
         try:
             return_values = (
-                self.mirror_table[mask]["mirror_x"],
-                self.mirror_table[mask]["mirror_y"],
-                self.mirror_table[mask]["mirror_diameter"],
-                self.mirror_table[mask]["focal_length"],
-                self.mirror_table[mask]["shape_type"],
+                u.Quantity(
+                    self.mirror_table[mask]["mirror_x"].value[0],
+                    self.mirror_table[mask]["mirror_x"].unit,
+                ),
+                u.Quantity(
+                    self.mirror_table[mask]["mirror_y"].value[0],
+                    self.mirror_table[mask]["mirror_y"].unit,
+                ),
+                u.Quantity(
+                    self.mirror_table[mask]["mirror_diameter"].value[0],
+                    self.mirror_table[mask]["mirror_diameter"].unit,
+                ),
+                u.Quantity(
+                    self.mirror_table[mask]["focal_length"].value[0],
+                    self.mirror_table[mask]["focal_length"].unit,
+                ),
+                u.Quantity(
+                    self.mirror_table[mask]["shape_type"].value[0],
+                    self.mirror_table[mask]["shape_type"].unit,
+                ),
             )
         except KeyError:
             self._logger.debug("Mirror list missing required column")
@@ -196,7 +211,10 @@ class Mirrors:
                 0,
                 0,
                 self.mirror_diameter,
-                self.mirror_table[mask]["focal_length"],
+                u.Quantity(
+                    self.mirror_table[mask]["focal_length"].value[0],
+                    self.mirror_table[mask]["focal_length"].unit,
+                ),
                 self.shape_type,
             )
         return return_values

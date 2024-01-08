@@ -78,11 +78,11 @@ def test_get_single_mirror_parameters(io_handler):
     ) = mirrors.get_single_mirror_parameters(198)
 
     def assert_mirror_parameters():
-        assert 1022.49 == mirror_x.value[0]
-        assert -462.0 == mirror_y.value[0]
-        assert 151.0 == mirror_diameter.value[0]
-        assert 2920.0 == focal_length.value[0]
-        assert 3 == shape_type.value[0]
+        assert 1022.49 == mirror_x.value
+        assert -462.0 == mirror_y.value
+        assert 151.0 == mirror_diameter.value
+        assert 2920.0 == focal_length.value
+        assert 3 == shape_type.value
 
     assert_mirror_parameters()
 
@@ -123,4 +123,4 @@ def test_get_single_mirror_parameters(io_handler):
         shape_type,
     ) = mirrors.get_single_mirror_parameters(198)
     assert 0 == mirror_x
-    assert 2920.0 == focal_length.value[0]
+    assert 2920.0 == focal_length.value
