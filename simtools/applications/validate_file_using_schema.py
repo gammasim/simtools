@@ -62,8 +62,8 @@ def _parse(label, description):
 def _validate_yaml_or_json_file(args_dict, logger):
     """
     Validate a yaml or json file.
-    Schema is either given as command line argument, read from the meta_schema_url entry
-    in the data, or read from the metadata.
+    Schema is either given as command line argument, read from the meta_schema_url or from
+    the metadata section of the data dictionary.
 
     """
 
