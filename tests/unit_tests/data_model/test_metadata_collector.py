@@ -255,8 +255,8 @@ def test_process_metadata_from_file():
     meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
     _dict_test_1 = _collector._process_metadata_from_file(meta_dict_3)
 
-    meta_dict_3 = {"cta": {"product": {"description": None}}}
-    assert _collector._process_metadata_from_file(meta_dict_3) == meta_dict_3
+    meta_dict_4 = {"cta": {"product": {"description": None}}}
+    assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
 
 
 def test__remove_line_feed():
