@@ -56,6 +56,12 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
     config.parser.add_argument("--schema", help="json schema file", required=False)
+    config.parser.add_argument(
+        "--validate_metadata",
+        help="validate metadata",
+        action="store_true",
+        default=False,
+    )
     return config.initialize(paths=False)
 
 
@@ -84,9 +90,10 @@ def _validate_yaml_or_json_file(args_dict, logger):
         logger.debug(f'Using schema from meta_data_url: {args_dict["schema"]}')
 
     metadata_model.validate_schema(data, args_dict.get("schema", None))
+    logger.debug("Successful validation of yaml/json file")
 
 
-def _validate_ecsv_file(args_dict):
+def _validate_ecsv_file(args_dict, logger):
     """
     Validate an ecsv file
 
@@ -97,6 +104,18 @@ def _validate_ecsv_file(args_dict):
         data_file=args_dict["file_name"],
     )
     data_validator.validate_and_transform()
+    logger.debug("Successful validation of escv file")
+
+
+def _validate_metadata(args_dict, logger):
+    """
+    Validate metadata.
+
+    """
+
+    # metadata_collector runs the metadata validation by default, no need to do anything else
+    metadata_collector.MetadataCollector(None, metadata_file_name=args_dict["file_name"])
+    logger.debug("Successful validation of metadata")
 
 
 def main():
@@ -106,10 +125,12 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    if any(args_dict["file_name"].endswith(ext) for ext in (".yml", ".yaml", ".json")):
+    if args_dict["validate_metadata"]:
+        _validate_metadata(args_dict, logger)
+    elif any(args_dict["file_name"].endswith(ext) for ext in (".yml", ".yaml", ".json")):
         _validate_yaml_or_json_file(args_dict, logger)
     elif args_dict["file_name"].endswith(".ecsv"):
-        _validate_ecsv_file(args_dict)
+        _validate_ecsv_file(args_dict, logger)
     else:
         logger.error(f"File extension not supported for {args_dict['file_name']}")
 
