@@ -178,7 +178,7 @@ class SimtelConfigWriter:
             )
             file.write("#\n")
             file.write(
-                f"0. 0. {diameter} {flen if not set_focal_length_to_zero else 0} {shape} 0.\n"
+                f"0. 0. {diameter.to('cm').value} {flen.to('cm').value[0] if not set_focal_length_to_zero else 0} {shape} 0.\n"
             )
 
     def _write_header(self, file, title, comment_char="%"):
