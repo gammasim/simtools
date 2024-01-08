@@ -21,8 +21,6 @@ _logger = logging.getLogger(__name__)
 def validate_schema(data, schema_file):
     """
     Validate dictionary against schema.
-    If no schema is given (schema_file=None), the metadata section of the data dictionary
-    is evaluated (if present) to find the schema to be used for validation.
 
     Parameters
     ----------
