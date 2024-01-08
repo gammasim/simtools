@@ -287,8 +287,8 @@ class Configurator:
 
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
-            _config_dict = gen.collect_data_from_yaml_or_dict(
-                in_yaml=config_file, in_dict=None, allow_empty=True
+            _config_dict = gen.collect_data_from_file_or_dict(
+                file_name=config_file, in_dict=None, allow_empty=True
             )
             # yaml parser adds \n in multiline strings, remove them
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")

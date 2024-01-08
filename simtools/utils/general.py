@@ -3,6 +3,7 @@ General functions useful across different parts of the code.
 """
 
 import copy
+import json
 import logging
 import os
 import re
@@ -19,7 +20,7 @@ from astropy.io.misc import yaml
 
 __all__ = [
     "change_dict_keys_case",
-    "collect_data_from_yaml_or_dict",
+    "collect_data_from_file_or_dict",
     "collect_final_lines",
     "collect_kwargs",
     "InvalidConfigData",
@@ -316,24 +317,24 @@ def is_url(url):
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
-    except ValueError:
+    except AttributeError:
         return False
 
 
-def collect_data_from_http_yaml(url):
+def collect_data_from_http(url):
     """
-    Download yaml file from url and return it contents as dict.
+    Download yaml or json file from url and return it contents as dict.
     File is downloaded as a temporary file and deleted afterwards.
 
     Parameters
     ----------
     url: str
-        URL of the yaml file.
+        URL of the yaml/json file.
 
     Returns
     -------
     dict
-        Dictionary containing the yaml file contents.
+        Dictionary containing the file content.
 
     Raises
     ------
@@ -348,7 +349,14 @@ def collect_data_from_http_yaml(url):
     try:
         with tempfile.NamedTemporaryFile() as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
-            data = yaml.load(tmp_file)
+            if url.endswith("yml") or url.endswith("yaml"):
+                data = yaml.load(tmp_file)
+            elif url.endswith("json"):
+                data = json.load(tmp_file)
+            else:
+                msg = f"File extension of {url} not supported (should be json or yaml)"
+                _logger.error(msg)
+                raise TypeError(msg)
     except TypeError:
         msg = "Invalid url {url}"
         _logger.error(msg)
@@ -361,14 +369,14 @@ def collect_data_from_http_yaml(url):
     return data
 
 
-def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
+def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict or as a yaml file.
+    Collect input data that can be given either as a dict or as a yaml/json file.
 
     Parameters
     ----------
-    in_yaml: str
-        Name of the yaml file.
+    file_name: str
+        Name of the yaml/json file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
@@ -380,61 +388,28 @@ def collect_data_from_yaml_or_dict(in_yaml, in_dict, allow_empty=False):
         Data as dict.
     """
 
-    if in_yaml is not None:
+    if file_name is not None:
         if in_dict is not None:
-            _logger.warning("Both in_dict in_yaml were given - in_yaml will be used")
-        if is_url(str(in_yaml)):
-            data = collect_data_from_http_yaml(in_yaml)
+            _logger.warning("Both in_dict and file_name were given - file_name will be used")
+        if is_url(str(file_name)):
+            data = collect_data_from_http(file_name)
+        elif Path(file_name).suffix.lower() == ".json":
+            with open(file_name, encoding="utf-8") as file:
+                data = json.load(file)
         else:
-            with open(in_yaml, encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 data = yaml.load(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "Input has not been provided (neither by yaml file, nor by dict)"
+    msg = "Input has not been provided (neither by file, nor by dict)"
     if allow_empty:
         _logger.debug(msg)
         return None
 
     _logger.debug(msg)
     raise InvalidConfigData(msg)
-
-
-def collect_dict_from_file(file_path, file_name=None):
-    """
-    Collect input data from a file.
-
-    File_path can be a yaml file name or a directory.
-    In the latter case, file_name is used to find the file.
-
-    Note that this method returns an empty dict if the file is not found
-    (while gen.collect_data_from_yaml_or_dict returns None).
-
-    Parameters
-    ----------
-    file_path: str
-        Name of the yaml file or directory.
-    file_name: str
-        Name of the file to be found in the directory.
-
-    """
-
-    _dict = {}
-    try:
-        _dict = (
-            collect_data_from_yaml_or_dict(in_yaml=file_path, in_dict=None, allow_empty=True) or {}
-        )
-    except IsADirectoryError:
-        try:
-            _file = Path(file_path).joinpath(file_name)
-            _dict = (
-                collect_data_from_yaml_or_dict(in_yaml=_file, in_dict=None, allow_empty=True) or {}
-            )
-        except (TypeError, KeyError):
-            pass
-
-    return _dict
 
 
 def collect_kwargs(label, in_kwargs):
