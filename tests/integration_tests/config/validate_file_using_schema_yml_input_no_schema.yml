@@ -1,0 +1,5 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-validate-file-using-schema
+  TEST_NAME: yml_input_no_schema
+  CONFIGURATION:
+    FILE_NAME: tests/resources/MST_mirror_2f_measurements.schema.yml
