@@ -61,7 +61,9 @@ def _parse(label, description):
 
 def _validate_yaml_or_json_file(args_dict, logger):
     """
-    Validate a yaml or json file
+    Validate a yaml or json file.
+    Schema is either given as command line argument, read from the meta_schema_url entry
+    in the data, or read from the metadata.
 
     """
 
@@ -71,8 +73,15 @@ def _validate_yaml_or_json_file(args_dict, logger):
         logger.error(f"Input file {args_dict['file_name']} not found")
         raise
 
-    _collector = metadata_collector.MetadataCollector(args_dict)
-    print("FFF", _collector.get_data_model_schema_file_name())
+    if args_dict.get("schema", None) is None and "meta_schema_url" in data:
+        args_dict["schema"] = data["meta_schema_url"]
+        logger.debug(f'Using schema from meta_schema_url: {args_dict["schema"]}')
+    if args_dict.get("schema", None) is None:
+        _collector = metadata_collector.MetadataCollector(
+            None, metadata_file_name=args_dict["file_name"]
+        )
+        args_dict["schema"] = _collector.get_data_model_schema_file_name()
+        logger.debug(f'Using schema from meta_data_url: {args_dict["schema"]}')
 
     metadata_model.validate_schema(data, args_dict.get("schema", None))
 
