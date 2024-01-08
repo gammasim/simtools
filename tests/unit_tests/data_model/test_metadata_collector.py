@@ -116,6 +116,9 @@ def test_read_input_metadata_from_file(args_dict_site):
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
+    metadata_1.args_dict["input_meta"] = "tests/resources/altitude.json"
+    assert len(metadata_1._read_input_metadata_from_file()) > 0
+
 
 def test_fill_context_from_input_meta(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
@@ -251,6 +254,9 @@ def test_process_metadata_from_file():
 
     meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
     _dict_test_1 = _collector._process_metadata_from_file(meta_dict_3)
+
+    meta_dict_3 = {"cta": {"product": {"description": None}}}
+    assert _collector._process_metadata_from_file(meta_dict_3) == meta_dict_3
 
 
 def test__remove_line_feed():

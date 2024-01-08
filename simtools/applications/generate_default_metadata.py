@@ -101,6 +101,7 @@ def main():
                 json.dump(
                     default_values,
                     file,
+                    indent=4,
                     sort_keys=False,
                 )
 
