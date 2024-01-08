@@ -78,7 +78,8 @@ class Mirrors:
             try:
                 self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
             except TypeError:
-                self._logger.debug("Mirror mirror_panel_shape not contained in db")
+                self._logger.error("Mirror mirror_panel_shape not contained in DB")
+                raise TypeError
 
         try:
             self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
@@ -91,12 +92,12 @@ class Mirrors:
                     self.parameters["mirror_panel_diameter"]["units"],
                 )
             except TypeError:
-                self._logger.debug("Mirror mirror_panel_diameter not contained in db")
+                self._logger.debug("Mirror mirror_panel_diameter not contained in DB")
 
         if "focal_length" not in self.mirror_table.colnames:
             try:
                 self.mirror_table["focal_length"] = (
-                    self.mirror_table["mirror_curvature_radius"].to("cm").value / 2
+                    self.mirror_table["mirror_curvature_radius"].to("cm") / 2
                 )
             except KeyError:
                 self._logger.debug("mirror_curvature_radius not contained in mirror list")
@@ -108,7 +109,7 @@ class Mirrors:
                         )
                     ]
                 except KeyError:
-                    self._logger.debug("mirror_focal_length not contained in db")
+                    self._logger.debug("mirror_focal_length not contained in DB")
 
     def _read_mirror_list_from_sim_telarray(self):
         """
@@ -176,22 +177,22 @@ class Mirrors:
         if not np.any(mask):
             self._logger.error(f"Mirror id{number} not in table, using first mirror instead")
             mask[0] = True
-
+        print("VALEUES", self.shape_type, self.mirror_table["focal_length"].unit)
         try:
             return_values = (
-                self.mirror_table[mask]["mirror_x"].value[0],
-                self.mirror_table[mask]["mirror_y"].value[0],
-                self.mirror_table[mask]["mirror_diameter"].value[0],
-                self.mirror_table[mask]["focal_length"].value[0],
-                self.mirror_table[mask]["shape_type"].value[0],
+                self.mirror_table[mask]["mirror_x"],
+                self.mirror_table[mask]["mirror_y"],
+                self.mirror_table[mask]["mirror_diameter"],
+                self.mirror_table[mask]["focal_length"],
+                self.mirror_table[mask]["shape_type"],
             )
         except KeyError:
             self._logger.debug("Mirror list missing required column")
             return_values = (
                 0,
                 0,
-                self.mirror_diameter.value,
-                self.mirror_table[mask]["focal_length"].value[0],
+                self.mirror_diameter,
+                self.mirror_table[mask]["focal_length"],
                 self.shape_type,
             )
         return return_values
