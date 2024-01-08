@@ -69,25 +69,6 @@ class DatabaseHandler:
 
         self._set_up_connection()
 
-    def set_mongo_db_config(self, mongo_db_config):
-        """
-        Set the MongoDB config and open the connection to the DB.
-
-        Parameters
-        ----------
-        mongo_db_config: dict
-            Dictionary with the MongoDB configuration.
-
-        Raises
-        ------
-        KeyError
-            if there is non-valid key in the db_config.
-
-        """
-
-        self.mongo_db_config = mongo_db_config
-        self._set_up_connection()
-
     def _set_up_connection(self):
         """
         Open the connection to MongoDB.
