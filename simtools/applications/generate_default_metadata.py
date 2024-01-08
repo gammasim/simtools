@@ -88,7 +88,7 @@ def main():
         _io_handler = io_handler.IOHandler()
         _out_file = _io_handler.get_output_file(args_dict["output_file"])
         _logger.info(f"Writing default values to {_out_file}")
-        if "yml" in args_dict["output_file"]:
+        if args_dict["output_file"].endswith((".yml", ".yaml")):
             with open(_out_file, "w", encoding="utf-8") as file:
                 yaml.dump(
                     default_values,
@@ -96,7 +96,7 @@ def main():
                     default_flow_style=False,
                     sort_keys=False,
                 )
-        if "json" in args_dict["output_file"]:
+        if args_dict["output_file"].endswith(".json"):
             with open(_out_file, "w", encoding="utf-8") as file:
                 json.dump(
                     default_values,

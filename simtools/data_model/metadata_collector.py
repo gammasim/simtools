@@ -275,8 +275,11 @@ class MetadataCollector:
                 _input_metadata = gen.collect_data_from_file_or_dict(
                     file_name=metadata_file_name, in_dict=None
                 )
-                if "Metadata" in _input_metadata:
-                    _input_metadata = _input_metadata["Metadata"]
+                _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(
+                    _input_metadata
+                )
+                if len(_json_type_metadata) > 0:
+                    _input_metadata = _input_metadata[_json_type_metadata.pop()]
             except (gen.InvalidConfigData, FileNotFoundError):
                 self._logger.error("Failed reading metadata from %s", metadata_file_name)
                 raise
