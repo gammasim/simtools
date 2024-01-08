@@ -71,17 +71,6 @@ class Mirrors:
             raise InvalidMirrorListFile
 
         try:
-            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
-            self._logger.debug(f"Mirror shape_type = {self.shape_type}")
-        except KeyError:
-            self._logger.debug("Mirror shape_type not in mirror file")
-            try:
-                self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
-            except TypeError as error:
-                self._logger.error("Mirror mirror_panel_shape not contained in DB")
-                raise TypeError("Mirror mirror_panel_shape not contained in DB") from error
-
-        try:
             self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
             self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         except KeyError:
@@ -110,6 +99,17 @@ class Mirrors:
                     ]
                 except KeyError:
                     self._logger.debug("mirror_focal_length not contained in DB")
+
+        try:
+            self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
+            self._logger.debug(f"Mirror shape_type = {self.shape_type}")
+        except KeyError:
+            self._logger.debug("Mirror shape_type not in mirror file")
+            try:
+                self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
+            except TypeError as error:
+                self._logger.error("Mirror mirror_panel_shape not contained in DB")
+                raise TypeError("Mirror mirror_panel_shape not contained in DB") from error
 
     def _read_mirror_list_from_sim_telarray(self):
         """
