@@ -32,7 +32,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import metadata_model, validate_data
+from simtools.data_model import metadata_collector, metadata_model, validate_data
 
 
 def _parse(label, description):
@@ -55,7 +55,7 @@ def _parse(label, description):
 
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
-    config.parser.add_argument("--schema", help="json schema file", required=True)
+    config.parser.add_argument("--schema", help="json schema file", required=False)
     return config.initialize(paths=False)
 
 
@@ -71,7 +71,10 @@ def _validate_yaml_or_json_file(args_dict, logger):
         logger.error(f"Input file {args_dict['file_name']} not found")
         raise
 
-    metadata_model.validate_schema(data, args_dict["schema"])
+    _collector = metadata_collector.MetadataCollector(args_dict)
+    print("FFF", _collector.get_data_model_schema_file_name())
+
+    metadata_model.validate_schema(data, args_dict.get("schema", None))
 
 
 def _validate_ecsv_file(args_dict):
