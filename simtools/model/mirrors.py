@@ -180,7 +180,7 @@ class Mirrors:
 
         mask = self.mirror_table["mirror_panel_id"] == number
         if not np.any(mask):
-            self._logger.error(f"Mirror id{number} not in table, using first mirror instead")
+            self._logger.debug(f"Mirror id{number} not in table, using first mirror instead")
             mask[0] = True
         try:
             return_values = (
