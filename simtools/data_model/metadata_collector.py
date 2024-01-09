@@ -278,8 +278,13 @@ class MetadataCollector:
                 _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(
                     _input_metadata
                 )
-                if len(_json_type_metadata) > 0:
+                if len(_json_type_metadata) == 1:
                     _input_metadata = _input_metadata[_json_type_metadata.pop()]
+                elif len(_json_type_metadata) > 1:
+                    self._logger.error(
+                        "More than one metadata entry found in %s", metadata_file_name
+                    )
+                    raise gen.InvalidConfigData
             except (gen.InvalidConfigData, FileNotFoundError):
                 self._logger.error("Failed reading metadata from %s", metadata_file_name)
                 raise
