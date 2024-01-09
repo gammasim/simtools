@@ -127,7 +127,6 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
-    # test that error message starts with "More than one metadata entry found in"
     with pytest.raises(gen.InvalidConfigData):
         metadata_1._read_input_metadata_from_file()
         assert "More than one metadata entry" in caplog.text
