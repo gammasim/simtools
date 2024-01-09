@@ -2,6 +2,7 @@
 
 import copy
 import getpass
+import json
 import logging
 
 import pytest
@@ -99,7 +100,7 @@ def test_fill_associated_elements_from_args(args_dict_site):
         )
 
 
-def test_read_input_metadata_from_file(args_dict_site):
+def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
@@ -118,6 +119,17 @@ def test_read_input_metadata_from_file(args_dict_site):
 
     metadata_1.args_dict["input_meta"] = "tests/resources/altitude.json"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
+
+    test_dict = {
+        "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
+        "METADATA": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
+    }
+    with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
+        json.dump(test_dict, f)
+    metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
+    with pytest.raises(gen.InvalidConfigData):
+        metadata_1._read_input_metadata_from_file()
+        assert "More than one metadata entry" in caplog.text
 
 
 def test_fill_context_from_input_meta(args_dict_site):
@@ -255,8 +267,8 @@ def test_process_metadata_from_file():
     meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
     _dict_test_1 = _collector._process_metadata_from_file(meta_dict_3)
 
-    meta_dict_3 = {"cta": {"product": {"description": None}}}
-    assert _collector._process_metadata_from_file(meta_dict_3) == meta_dict_3
+    meta_dict_4 = {"cta": {"product": {"description": None}}}
+    assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
 
 
 def test__remove_line_feed():
