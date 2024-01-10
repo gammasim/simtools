@@ -32,7 +32,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import metadata_collector, metadata_model, validate_data
+from simtools.data_model import data_reader, metadata_collector, validate_data
 
 
 def _parse(label, description):
@@ -73,24 +73,12 @@ def _validate_yaml_or_json_file(args_dict, logger):
 
     """
 
-    try:
-        data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
-    except FileNotFoundError:
-        logger.error(f"Input file {args_dict['file_name']} not found")
-        raise
-
-    if args_dict.get("schema", None) is None and "meta_schema_url" in data:
-        args_dict["schema"] = data["meta_schema_url"]
-        logger.debug(f'Using schema from meta_schema_url: {args_dict["schema"]}')
-    if args_dict.get("schema", None) is None:
-        _collector = metadata_collector.MetadataCollector(
-            None, metadata_file_name=args_dict["file_name"]
-        )
-        args_dict["schema"] = _collector.get_data_model_schema_file_name()
-        logger.debug(f'Using schema from meta_data_url: {args_dict["schema"]}')
-
-    metadata_model.validate_schema(data, args_dict.get("schema", None))
-    logger.debug("Successful validation of yaml/json file")
+    data_reader.read_value_from_file(
+        file_name=args_dict["file_name"],
+        schema_file=args_dict["schema"],
+        validate=True,
+    )
+    logger.debug("Successful validation of json/yaml file")
 
 
 def _validate_ecsv_file(args_dict, logger):

@@ -1,9 +1,11 @@
 import logging
 
+import astropy.units as u
 from astropy.io.registry.base import IORegistryError
 from astropy.table import QTable
 
-from simtools.data_model import validate_data
+import simtools.utils.general as gen
+from simtools.data_model import metadata_model, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 __all__ = ["read_table_from_file"]
@@ -66,3 +68,62 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         return _validator.validate_and_transform()
 
     return data_table
+
+
+def read_value_from_file(file_name, schema_file=None, validate=False):
+    """
+    Read value from file and validate against schema. Expect data to follow the convention for
+    how simulation model parameters are stored in the simulation model database: to be a single
+    value stored in the 'value' field (with possible units in the 'units' field).
+    Metadata is read from metadata file or from the metadata section of the data file.
+    Schema for validation can be given as argument, or is determined
+    from the metadata associated to the file.
+
+    Parameters:
+    -----------
+    file_name: str or Path
+        Name of file to be read.
+    schema_file: str or Path
+        Name of schema file to be used for validation.
+    validate: bool
+        Validate data against schema (if true).
+
+    Returns:
+    --------
+    astro quantity or str
+        Value read from file. If units are given, return an astropy quantity, otherwise a string.
+        Return None if no value is found in the file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If file does not exist.
+
+    """
+
+    try:
+        data = gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
+    except FileNotFoundError as exc:
+        _logger.error("Error reading data from %s", file_name)
+        raise exc
+    _logger.info("Reading data from %s", file_name)
+
+    if validate:
+        if schema_file is None and "meta_schema_url" in data:
+            schema_file = data["meta_schema_url"]
+            _logger.debug(f"Using schema from meta_schema_url: {schema_file}")
+        if schema_file is None:
+            _collector = MetadataCollector(None, metadata_file_name=file_name)
+            schema_file = _collector.get_data_model_schema_file_name()
+            _logger.debug(f"Using schema from meta_data_url: {schema_file}")
+
+        metadata_model.validate_schema(data, schema_file)
+        _logger.debug("Successful validation of yaml/json file")
+
+    if "Value" not in data or data["Value"] is None:
+        return None
+
+    if "units" in data and len(data["units"]) > 0:
+        return data["Value"] * u.Unit(data["units"])
+
+    return data["Value"]
