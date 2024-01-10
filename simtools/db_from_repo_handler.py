@@ -27,7 +27,7 @@ def update_site_parameters_from_repo(parameters, site, model_version):
 
     """
 
-    logger.info(
+    logger.debug(
         f"Updating site parameters from repository for {site} site"
         f" and model version {model_version}"
     )
@@ -35,11 +35,11 @@ def update_site_parameters_from_repo(parameters, site, model_version):
     for key, value in parameters.items():
         file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site, f"{key}.json")
         if file_path.exists():
-            logger.info(f"Updating parameter {key} for {site} from repository file {file_path}")
+            logger.debug(f"Updating parameter {key} for {site} from repository file {file_path}")
             parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
-            logger.info(f"Old value: {value}, new value: {parameters[key]}")
+            logger.debug(f"Old value: {value}, new value: {parameters[key]}")
         else:
-            logger.info(f"Parameter {key} for {site} not found in repository (file {file_path})")
-            logger.info(f"Keeping old value: {value}")
+            logger.debug(f"Parameter {key} for {site} not found in repository (file {file_path})")
+            logger.debug(f"Keeping old value: {value}")
 
     return parameters
