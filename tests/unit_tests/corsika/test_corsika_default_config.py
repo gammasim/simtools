@@ -87,3 +87,8 @@ def test_interpolate_to_zenith_angle():
         45.0 * u.deg, zenith_angles_to_interpolate, values_to_interpolate
     )
     assert interpolated_value == pytest.approx(6500)
+
+
+def test_energy_slope_getter():
+    config = CorsikaDefaultConfig()
+    assert config.energy_slope == pytest.approx(-2.0)
