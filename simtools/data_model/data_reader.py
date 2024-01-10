@@ -8,7 +8,7 @@ import simtools.utils.general as gen
 from simtools.data_model import metadata_model, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
-__all__ = ["read_table_from_file"]
+__all__ = ["read_table_from_file", "read_value_from_file"]
 
 _logger = logging.getLogger(__name__)
 
