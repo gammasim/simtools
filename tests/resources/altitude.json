@@ -25,7 +25,7 @@
                     "MODEL": {
                         "NAME": "altitude",
                         "VERSION": "0.1.0",
-                        "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/altitude.schema.yml"
+                        "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/site-parameters/schema/altitude.schema.yml"
                     }
                 },
                 "FORMAT": "json",
