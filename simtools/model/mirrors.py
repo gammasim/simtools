@@ -159,7 +159,7 @@ class Mirrors:
 
         Returns
         -------
-        mirror table: astropy.table.table.Table
+        mirror table: astropy Table
         """
         return self.mirror_table
 
