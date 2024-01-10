@@ -1,0 +1,6 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-validate-file-using-schema
+  TEST_NAME: ecsv_input_test_meta
+  CONFIGURATION:
+    FILE_NAME: tests/resources/telescope_positions-North-utm.ecsv
+    VALIDATE_METADATA: true

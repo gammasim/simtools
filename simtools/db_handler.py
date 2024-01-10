@@ -47,7 +47,7 @@ class DatabaseHandler:
     DB_REFERENCE_DATA = "CTA-Reference-Data"
     DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
 
-    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
+    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
 

@@ -8,7 +8,7 @@ common:
   phi: 0 deg
   primary: gamma
 showers:
-  eslope: -2.5
+  eslope: -2.0
   viewcone: [0 deg, 0 deg]
   nshow: 10
   erange: [3 GeV, 330 TeV]
