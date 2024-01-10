@@ -157,7 +157,7 @@ class SimtelConfigWriter:
         set_focal_length_to_zero: bool
             Flag to set the focal length to zero.
         """
-        __, __, diameter, flen, shape = mirrors.get_single_mirror_parameters(mirror_number)
+        __, __, mirror_panel_diameter, focal_length, shape_type = mirrors.get_single_mirror_parameters(mirror_number)
         with open(single_mirror_list_file, "w", encoding="utf-8") as file:
             self._write_header(file, "MIRROR LIST FILE", "#")
 
@@ -177,9 +177,9 @@ class SimtelConfigWriter:
             )
             file.write("#\n")
             file.write(
-                f"0. 0. {diameter.to('cm').value} "
-                f"{flen.to('cm').value if not set_focal_length_to_zero else 0} "
-                f"{shape} 0.\n"
+                f"0. 0. {mirror_panel_diameter.to('cm').value} "
+                f"{focal_length.to('cm').value if not set_focal_length_to_zero else 0} "
+                f"{shape_type} 0.\n"
             )
 
     def _write_header(self, file, title, comment_char="%"):
