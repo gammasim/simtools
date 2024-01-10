@@ -80,9 +80,11 @@ class Mirrors:
                     self.parameters["mirror_panel_diameter"]["Value"],
                     self.parameters["mirror_panel_diameter"]["units"],
                 )
-            except TypeError:
-                self._logger.debug("Mirror mirror_panel_diameter not contained in DB")
-
+                self._logger.debug("Take mirror_panel_diameter from parameters")
+            except TypeError as error:
+                msg = "Mirror mirror_panel_diameter not contained in DB"
+                self._logger.error(msg)
+                raise TypeError(msg) from error
         if "focal_length" not in self.mirror_table.colnames:
             try:
                 self.mirror_table["focal_length"] = (
@@ -97,8 +99,11 @@ class Mirrors:
                             self.parameters["mirror_focal_length"]["units"],
                         )
                     ]
-                except KeyError:
-                    self._logger.debug("mirror_focal_length not contained in DB")
+                    self._logger.debug("Take mirror_focal_length from parameters")
+                except TypeError as error:
+                    msg = "mirror_focal_length not contained in DB"
+                    self._logger.error(msg)
+                    raise TypeError(msg) from error
 
         try:
             self.shape_type = u.Quantity(self.mirror_table["shape_type"])[0]
@@ -107,9 +112,11 @@ class Mirrors:
             self._logger.debug("Mirror shape_type not in mirror file")
             try:
                 self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
+                self._logger.debug("Take shape_type from parameters")
             except TypeError as error:
-                self._logger.error("Mirror mirror_panel_shape not contained in DB")
-                raise TypeError("Mirror mirror_panel_shape not contained in DB") from error
+                msg = "Mirror shape_type not contained in DB"
+                self._logger.error(msg)
+                raise TypeError(msg) from error
 
     def _read_mirror_list_from_sim_telarray(self):
         """
