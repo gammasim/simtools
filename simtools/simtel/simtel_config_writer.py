@@ -157,7 +157,13 @@ class SimtelConfigWriter:
         set_focal_length_to_zero: bool
             Flag to set the focal length to zero.
         """
-        __, __, mirror_panel_diameter, focal_length, shape_type = mirrors.get_single_mirror_parameters(mirror_number)
+        (
+            __,
+            __,
+            mirror_panel_diameter,
+            focal_length,
+            shape_type,
+        ) = mirrors.get_single_mirror_parameters(mirror_number)
         with open(single_mirror_list_file, "w", encoding="utf-8") as file:
             self._write_header(file, "MIRROR LIST FILE", "#")
 
