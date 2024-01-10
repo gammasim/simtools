@@ -23,7 +23,7 @@ def test_read_mirror_list_from_sim_telarray(db, io_handler):
     assert 3 == mirrors.shape_type
 
 
-def test_read_mirror_list_from_ecsv(io_handler):
+def test_read_mirror_list_from_ecsv(io_handler, tmp_test_directory, caplog):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
         test=True,
@@ -33,20 +33,85 @@ def test_read_mirror_list_from_ecsv(io_handler):
     assert 198 == mirrors.number_of_mirrors
     assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
     assert 3 == mirrors.shape_type
+    temp_mirror_table = mirrors.mirror_table.copy()
+    incomplete_mirror_table = temp_mirror_table.copy()
+    incomplete_mirror_table.remove_column("mirror_diameter")
+    with open(tmp_test_directory / "incomplete_mirror_table.ecsv", "w"):
+        incomplete_mirror_table.write(
+            f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+            format="ascii.ecsv",
+            overwrite=True,
+        )
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+        test=True,
+    )
+    with pytest.raises(TypeError):
+        mirrors = Mirrors(mirror_list_file)
+    with caplog.at_level(logging.DEBUG):
+        mirrors = Mirrors(
+            mirror_list_file, parameters={"mirror_panel_diameter": {"Value": 150, "units": "cm"}}
+        )
+    assert "Take mirror_panel_diameter from parameters" in caplog.text
+    incomplete_mirror_table = temp_mirror_table.copy()
+    incomplete_mirror_table.remove_column("focal_length")
+    with open(tmp_test_directory / "incomplete_mirror_table.ecsv", "w"):
+        incomplete_mirror_table.write(
+            f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+            format="ascii.ecsv",
+            overwrite=True,
+        )
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+        test=True,
+    )
+    with pytest.raises(TypeError):
+        mirrors = Mirrors(mirror_list_file)
+    with caplog.at_level(logging.DEBUG):
+        mirrors = Mirrors(
+            mirror_list_file, parameters={"mirror_focal_length": {"Value": 2000, "units": "cm"}}
+        )
+    assert "Take mirror_focal_length from parameters" in caplog.text
+    incomplete_mirror_table = temp_mirror_table.copy()
+    incomplete_mirror_table.remove_column("shape_type")
+    with open(tmp_test_directory / "incomplete_mirror_table.ecsv", "w"):
+        incomplete_mirror_table.write(
+            f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+            format="ascii.ecsv",
+            overwrite=True,
+        )
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+        test=True,
+    )
+    with pytest.raises(TypeError):
+        mirrors = Mirrors(mirror_list_file)
+    with caplog.at_level(logging.DEBUG):
+        mirrors = Mirrors(mirror_list_file, parameters={"mirror_panel_shape": {"Value": 3}})
+    assert "Take shape_type from parameters" in caplog.text
+
+    incomplete_mirror_table = temp_mirror_table.copy()
+    incomplete_mirror_table.remove_rows(slice(0, len(incomplete_mirror_table)))
+    logger.info("Using empty mirror table")
+    with open(tmp_test_directory / "incomplete_mirror_table.ecsv", "w"):
+        incomplete_mirror_table.write(
+            f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+            format="ascii.ecsv",
+            overwrite=True,
+        )
+    mirror_list_file = io_handler.get_input_data_file(
+        file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
+        test=True,
+    )
+    with pytest.raises(InvalidMirrorListFile):
+        mirrors = Mirrors(mirror_list_file)
+
     mirror_list_file = io_handler.get_input_data_file(
         file_name="MLTdata-preproduction.ecsv",
         test=True,
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     with pytest.raises(TypeError):
-        mirrors = Mirrors(mirror_list_file)
-
-    mirror_list_file = io_handler.get_input_data_file(
-        file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_empty.ecsv",
-        test=True,
-    )
-    logger.info(f"Using mirror list {mirror_list_file}")
-    with pytest.raises(InvalidMirrorListFile):
         mirrors = Mirrors(mirror_list_file)
 
 
