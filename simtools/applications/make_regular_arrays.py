@@ -27,15 +27,6 @@
 
         simtools-make-regular-arrays --site=North
 
-    The output is saved in simtools-output/make_regular_arrays.
-
-    Expected final print-out message:
-
-    .. code-block:: console
-
-        INFO::array_layout(l608)::export_telescope_list::Exporting telescope list to /workdir/exter\
-        nal/simtools/simtools-output/make_regular_arrays/layout/telescope_positions-North-4LS\
-        T-corsika.ecsv
 """
 
 import logging
