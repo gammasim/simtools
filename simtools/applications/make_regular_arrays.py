@@ -15,7 +15,7 @@
     site (str, required)
         observatory site (e.g., North or South).
     model_version (str, optional)
-        Model version to use. If not provided, the latest version is used.
+        Model version to use (e.g., prod6). If not provided, the latest version is used.
     verbosity (str, optional)
         Log level to print.
 
