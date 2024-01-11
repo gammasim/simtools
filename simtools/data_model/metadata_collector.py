@@ -8,6 +8,7 @@ implementation of the metadata model.
 import datetime
 import getpass
 import logging
+import urllib.error
 from pathlib import Path
 
 from astropy.table import Table
@@ -140,7 +141,7 @@ class MetadataCollector:
 
         try:
             return gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
-        except gen.InvalidConfigData:
+        except (gen.InvalidConfigData, urllib.error.HTTPError):
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 
