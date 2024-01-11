@@ -220,4 +220,3 @@ class Mirrors:
         """
         Plot the mirror layout (not implemented yet).
         """
-        pass
