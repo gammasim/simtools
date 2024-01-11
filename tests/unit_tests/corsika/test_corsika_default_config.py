@@ -8,28 +8,40 @@ def compare_lists_ignoring_units(list1, list2):
     return all(list1[i].value == pytest.approx(list2[i]) for i in range(len(list1)))
 
 
-def test_primary_setter():
-    config = CorsikaDefaultConfig()
-    config.primary = "gamma"
+def test_init():
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
     assert config.primary == "gamma"
+    assert config.zenith_angle.value == pytest.approx(20.0)
+
+
+def test_invalid_init(caplog):
+    with pytest.raises(ValueError):
+        CorsikaDefaultConfig(primary="invalid_particle", zenith_angle=20.0 * u.deg)
+        assert "Invalid primary particle: invalid_particle" in caplog.text
+
+
+def test_primary_setter():
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
+    config.primary = "proton"
+    assert config.primary == "proton"
 
 
 def test_primary_setter_invalid(caplog):
-    config = CorsikaDefaultConfig()
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
     with pytest.raises(ValueError):
         config.primary = "invalid_particle"
         assert "Invalid primary particle: invalid_particle" in caplog.text
 
 
 def test_zenith_angle_setter():
-    config = CorsikaDefaultConfig()
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
     config.zenith_angle = 30.0 * u.deg
     assert config.zenith_angle.value == pytest.approx(30.0)
 
 
 def test_zenith_angle_setter_invalid(caplog):
-    config = CorsikaDefaultConfig()
     with pytest.raises(ValueError):
+        config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
         config.zenith_angle = 5.0 * u.deg
         assert "outside of the allowed interval" in caplog.text
 
@@ -53,24 +65,24 @@ def test_number_of_showers_for_primary():
 
 
 def test_view_cone_for_primary():
-    config = CorsikaDefaultConfig(primary="gamma")
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
     view_cone = config.view_cone_for_primary()
     expected_view_cone = [0.0, 0.0]
     compare_lists_ignoring_units(view_cone, expected_view_cone)
 
-    config = CorsikaDefaultConfig(primary="gamma-diffuse")
+    config = CorsikaDefaultConfig(primary="gamma_diffuse", zenith_angle=20.0 * u.deg)
     view_cone = config.view_cone_for_primary()
     expected_view_cone = [0.0, 10.0]
     compare_lists_ignoring_units(view_cone, expected_view_cone)
 
-    config = CorsikaDefaultConfig(primary="proton")
+    config = CorsikaDefaultConfig(primary="proton", zenith_angle=20.0 * u.deg)
     view_cone = config.view_cone_for_primary()
     expected_view_cone = [0.0, 10.0]
     compare_lists_ignoring_units(view_cone, expected_view_cone)
 
 
 def test_interpolate_to_zenith_angle():
-    config = CorsikaDefaultConfig()
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
 
     # Test case 1: Interpolate energy range
     zenith_angles_to_interpolate = [30.0, 40.0, 50.0]
@@ -87,3 +99,8 @@ def test_interpolate_to_zenith_angle():
         45.0 * u.deg, zenith_angles_to_interpolate, values_to_interpolate
     )
     assert interpolated_value == pytest.approx(6500)
+
+
+def test_energy_slope_getter():
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
+    assert config.energy_slope == pytest.approx(-2.0)
