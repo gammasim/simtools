@@ -46,7 +46,7 @@ class DatabaseHandler:
     DB_REFERENCE_DATA = "CTA-Reference-Data"
     DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
 
-    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".ecsv"]
+    ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
 
@@ -67,25 +67,6 @@ class DatabaseHandler:
         self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
 
-        self._set_up_connection()
-
-    def set_mongo_db_config(self, mongo_db_config):
-        """
-        Set the MongoDB config and open the connection to the DB.
-
-        Parameters
-        ----------
-        mongo_db_config: dict
-            Dictionary with the MongoDB configuration.
-
-        Raises
-        ------
-        KeyError
-            if there is non-valid key in the db_config.
-
-        """
-
-        self.mongo_db_config = mongo_db_config
         self._set_up_connection()
 
     def _set_up_connection(self):
