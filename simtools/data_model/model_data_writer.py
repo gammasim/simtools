@@ -46,7 +46,9 @@ class ModelDataWriter:
         self.product_data_format = self._astropy_data_format(product_data_format)
 
     @staticmethod
-    def dump(args_dict, metadata=None, product_data=None, validate_schema_file=None):
+    def dump(
+        args_dict, output_file=None, metadata=None, product_data=None, validate_schema_file=None
+    ):
         """
         Write model data and metadata (as static method).
 
@@ -54,6 +56,8 @@ class ModelDataWriter:
         ----------
         args_dict: dict
             Dictionary with configuration parameters (including output file name and path).
+        output_file: string or Path
+            Name of output file (args["output_file"] is used if this parameter is not set).
         metadata: dict
             Metadata to be written.
         product_data: astropy Table
@@ -64,7 +68,9 @@ class ModelDataWriter:
         """
 
         writer = ModelDataWriter(
-            product_data_file=args_dict.get("output_file", None),
+            product_data_file=(
+                args_dict.get("output_file", None) if output_file is None else output_file
+            ),
             product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
             args_dict=args_dict,
         )

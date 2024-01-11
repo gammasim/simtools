@@ -3,3 +3,4 @@ CTA_SIMPIPE:
   TEST_NAME: run
   CONFIGURATION:
     OUTPUT_PATH: simtools-tests
+    SITE: North
