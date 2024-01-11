@@ -30,8 +30,8 @@
 """
 
 import logging
-from pathlib import Path
 import os
+from pathlib import Path
 
 import astropy.units as u
 
@@ -69,27 +69,18 @@ def main():
     # Reading site parameters from DB
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     site_pars_db = db.get_site_parameters(
-        site=args_dict["site"], model_version=args_dict["model_version"])
+        site=args_dict["site"], model_version=args_dict["model_version"]
+    )
 
     layout_center_data = {}
-    layout_center_data["center_lat"] = (
-        float(site_pars_db["ref_lat"]["Value"]) * u.deg
-    )
-    layout_center_data["center_lon"] = (
-        float(site_pars_db["ref_long"]["Value"]) * u.deg
-    )
-    layout_center_data["center_alt"] = (
-        float(site_pars_db["altitude"]["Value"]) * u.m
-    )
+    layout_center_data["center_lat"] = float(site_pars_db["ref_lat"]["Value"]) * u.deg
+    layout_center_data["center_lon"] = float(site_pars_db["ref_long"]["Value"]) * u.deg
+    layout_center_data["center_alt"] = float(site_pars_db["altitude"]["Value"]) * u.m
     layout_center_data["EPSG"] = site_pars_db["EPSG"]["Value"]
     corsika_telescope_data = {}
     corsika_telescope_data["corsika_obs_level"] = layout_center_data["center_alt"]
-    corsika_telescope_data["corsika_sphere_center"] = corsika_pars[
-        "corsika_sphere_center"
-    ]
-    corsika_telescope_data["corsika_sphere_radius"] = corsika_pars[
-        "corsika_sphere_radius"
-    ]
+    corsika_telescope_data["corsika_sphere_center"] = corsika_pars["corsika_sphere_center"]
+    corsika_telescope_data["corsika_sphere_radius"] = corsika_pars["corsika_sphere_radius"]
 
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
