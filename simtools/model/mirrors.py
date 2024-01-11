@@ -160,16 +160,6 @@ class Mirrors:
         self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
-    def get_mirror_table(self):
-        """
-        Get the mirror list.
-
-        Returns
-        -------
-        mirror table: astropy Table
-        """
-        return self.mirror_table
-
     def get_single_mirror_parameters(self, number):
         """
         Get parameters for a single mirror given by number.
