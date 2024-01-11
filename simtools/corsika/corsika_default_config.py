@@ -17,8 +17,8 @@ class CorsikaDefaultConfig:
         """
         Initialize CorsikaDefaultConfig.
         """
-        self._primary = primary
-        self._zenith_angle = zenith_angle
+        self.primary = primary
+        self.zenith_angle = zenith_angle
         self._energy_slope = -2.0
         self.energy_ranges = self._define_hardcoded_energy_ranges()
         self.number_of_showers = self._define_hardcoded_number_of_showers()
