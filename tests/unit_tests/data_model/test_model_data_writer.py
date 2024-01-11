@@ -72,6 +72,16 @@ def test_dump(args_dict, tmp_test_directory):
             validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
         )
 
+    # explicitly set output_file
+    writer.ModelDataWriter().dump(
+        args_dict=args_dict,
+        output_file="test_file_2.ecsv",
+        metadata=_metadata,
+        product_data=empty_table,
+        validate_schema_file=None,
+    )
+    assert Path(args_dict["output_path"]).joinpath("test_file_2.ecsv").exists()
+
 
 def test_validate_and_transform(tmp_test_directory):
     w_1 = writer.ModelDataWriter()

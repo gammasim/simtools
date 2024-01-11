@@ -101,6 +101,7 @@ class Configurator:
         paths=True,
         output=False,
         telescope_model=False,
+        site_model=False,
         db_config=False,
         job_submission=False,
     ):
@@ -125,6 +126,8 @@ class Configurator:
             Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
+        site_model: bool
+            Add site model configuration to list of args (not required if telescope_model is set)
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -148,6 +151,7 @@ class Configurator:
             paths=paths,
             output=output,
             telescope_model=telescope_model,
+            site_model=site_model,
             db_config=db_config,
             job_submission=job_submission,
         )
