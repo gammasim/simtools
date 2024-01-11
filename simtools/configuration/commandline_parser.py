@@ -32,6 +32,7 @@ class CommandLineParser(argparse.ArgumentParser):
         paths=True,
         output=False,
         telescope_model=False,
+        site_model=False,
         db_config=False,
         job_submission=False,
     ):
@@ -46,6 +47,8 @@ class CommandLineParser(argparse.ArgumentParser):
             Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
+        site_model: bool
+            Add site model configuration to list of args (not required of telescope_model is True).
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -54,6 +57,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         if telescope_model:
             self.initialize_telescope_model_arguments()
+        elif site_model:
+            self.initialize_telescope_model_arguments(add_telescope=False)
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
