@@ -8,9 +8,22 @@ def compare_lists_ignoring_units(list1, list2):
     return all(list1[i].value == pytest.approx(list2[i]) for i in range(len(list1)))
 
 
-def test_primary_setter():
+def test_init():
     config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
     assert config.primary == "gamma"
+    assert config.zenith_angle.value == pytest.approx(20.0)
+
+
+def test_invalid_init(caplog):
+    with pytest.raises(ValueError):
+        CorsikaDefaultConfig(primary="invalid_particle", zenith_angle=20.0 * u.deg)
+        assert "Invalid primary particle: invalid_particle" in caplog.text
+
+
+def test_primary_setter():
+    config = CorsikaDefaultConfig(primary="gamma", zenith_angle=20.0 * u.deg)
+    config.primary = "proton"
+    assert config.primary == "proton"
 
 
 def test_primary_setter_invalid(caplog):
