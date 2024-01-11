@@ -242,7 +242,10 @@ class CommandLineParser(argparse.ArgumentParser):
             Set to allow a telescope name argument.
         """
 
-        _job_group = self.add_argument_group("telescope model")
+        if add_telescope:
+            _job_group = self.add_argument_group("telescope model")
+        else:
+            _job_group = self.add_argument_group("site model")
         _job_group.add_argument(
             "--site", help="CTAO site (e.g., North, South)", type=self.site, required=False
         )
@@ -282,10 +285,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        fsite = str(value)
-        if not names.validate_site_name(fsite):
-            raise argparse.ArgumentTypeError(f"{fsite} is an invalid site")
-        return fsite
+        names.validate_site_name(str(value))
+        return str(value)
 
     @staticmethod
     def telescope(value):
@@ -309,10 +310,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        ftelescope = str(value)
-        if not names.validate_telescope_model_name(ftelescope):
-            raise argparse.ArgumentTypeError(f"{ftelescope} is an invalid telescope name")
-        return ftelescope
+        names.validate_telescope_model_name(str(value))
+        return str(value)
 
     @staticmethod
     def efficiency_interval(value):
