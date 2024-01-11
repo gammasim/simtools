@@ -215,3 +215,9 @@ class Mirrors:
                 self.shape_type,
             )
         return return_values
+
+    def plot_mirror_layout(self):
+        """
+        Plot the mirror layout (not implemented yet).
+        """
+        pass
