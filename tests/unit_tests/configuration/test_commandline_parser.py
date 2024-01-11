@@ -109,6 +109,7 @@ def test_initialize_default_arguments():
     for group in job_groups:
         assert str(group.title) in [
             "positional arguments",
+            "optional arguments",
             "options",
             "paths",
             "configuration",
