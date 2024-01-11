@@ -345,7 +345,6 @@ def collect_data_from_http(url):
 
     """
 
-    _logger.debug(f"Downloaded yaml file from {url}")
     try:
         with tempfile.NamedTemporaryFile() as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
@@ -366,6 +365,7 @@ def collect_data_from_http(url):
         _logger.error(msg)
         raise
 
+    _logger.debug(f"Downloaded yaml file from {url}")
     return data
 
 
