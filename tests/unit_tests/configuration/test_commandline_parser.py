@@ -98,3 +98,45 @@ def test_azimuth_angle(caplog):
     with pytest.raises(TypeError):
         parser.CommandLineParser.azimuth_angle([0, 10])
         assert "is not a valid number nor one of (north, south, east, west)" in caplog.text
+
+
+def test_initialize_default_arguments():
+    _parser_1 = parser.CommandLineParser()
+
+    # default arguments
+    _parser_1.initialize_default_arguments()
+    job_groups = _parser_1._action_groups
+    for group in job_groups:
+        assert str(group.title) in [
+            "positional arguments",
+            "optional arguments",
+            "options",
+            "paths",
+            "configuration",
+            "execution",
+        ]
+
+    _parser_2 = parser.CommandLineParser()
+    _parser_2.initialize_default_arguments(output=True)
+    job_groups = _parser_2._action_groups
+    assert "output" in [str(group.title) for group in job_groups]
+
+    _parser_3 = parser.CommandLineParser()
+    _parser_3.initialize_default_arguments(telescope_model=True)
+    job_groups = _parser_3._action_groups
+    assert "telescope model" in [str(group.title) for group in job_groups]
+
+    _parser_4 = parser.CommandLineParser()
+    _parser_4.initialize_default_arguments(telescope_model=False, site_model=True)
+    job_groups = _parser_4._action_groups
+    assert "site model" in [str(group.title) for group in job_groups]
+
+    _parser_5 = parser.CommandLineParser()
+    _parser_5.initialize_default_arguments(job_submission=True)
+    job_groups = _parser_5._action_groups
+    assert "job submission" in [str(group.title) for group in job_groups]
+
+    _parser_6 = parser.CommandLineParser()
+    _parser_6.initialize_default_arguments(db_config=True)
+    job_groups = _parser_6._action_groups
+    assert "MongoDB configuration" in [str(group.title) for group in job_groups]

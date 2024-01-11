@@ -32,6 +32,7 @@ class CommandLineParser(argparse.ArgumentParser):
         paths=True,
         output=False,
         telescope_model=False,
+        site_model=False,
         db_config=False,
         job_submission=False,
     ):
@@ -46,6 +47,8 @@ class CommandLineParser(argparse.ArgumentParser):
             Add output file configuration to list of args.
         telescope_model: bool
             Add telescope model configuration to list of args.
+        site_model: bool
+            Add site model configuration to list of args (not required of telescope_model is True).
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -54,6 +57,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         if telescope_model:
             self.initialize_telescope_model_arguments()
+        elif site_model:
+            self.initialize_telescope_model_arguments(add_telescope=False)
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
@@ -237,7 +242,10 @@ class CommandLineParser(argparse.ArgumentParser):
             Set to allow a telescope name argument.
         """
 
-        _job_group = self.add_argument_group("telescope model")
+        if add_telescope:
+            _job_group = self.add_argument_group("telescope model")
+        else:
+            _job_group = self.add_argument_group("site model")
         _job_group.add_argument(
             "--site", help="CTAO site (e.g., North, South)", type=self.site, required=False
         )
@@ -277,10 +285,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        fsite = str(value)
-        if not names.validate_site_name(fsite):
-            raise argparse.ArgumentTypeError(f"{fsite} is an invalid site")
-        return fsite
+        names.validate_site_name(str(value))
+        return str(value)
 
     @staticmethod
     def telescope(value):
@@ -304,10 +310,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        ftelescope = str(value)
-        if not names.validate_telescope_model_name(ftelescope):
-            raise argparse.ArgumentTypeError(f"{ftelescope} is an invalid telescope name")
-        return ftelescope
+        names.validate_telescope_model_name(str(value))
+        return str(value)
 
     @staticmethod
     def efficiency_interval(value):
