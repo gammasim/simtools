@@ -96,7 +96,7 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
     # schema explicitly given
     schema_file = (
         "https://raw.githubusercontent.com/gammasim/simulation_model/"
-        "site-parameters/schema/altitude.schema.yml"
+        "main/schema/altitude.schema.yml"
     )
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
