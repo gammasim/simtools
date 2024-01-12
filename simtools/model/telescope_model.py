@@ -664,7 +664,7 @@ class TelescopeModel:
                 "Mirror_list_file was not found in the config directory - "
                 "Using the one found in the model_path"
             )
-        self._mirrors = Mirrors(mirror_list_file)
+        self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
     def _load_reference_data(self):
         """Load the reference data for this telescope from the DB."""

@@ -27,7 +27,7 @@ CTA:
   # Description of the submitted data product
   PRODUCT:
     DESCRIPTION: |-
-      Mirror panel radius and PSF measurements
+      Mirror curvature radius and PSF measurements
       from 2f test stand
     CREATION_TIME: '2020-03-20 12:00:00'
     ID: null
