@@ -168,8 +168,9 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command += super()._config_option("random_state", "none")
         command += super()._config_option("IMAGING_LIST", str(self._photons_file))
         command += super()._config_option("stars", str(self._stars_file))
+        # TODO - understand if altitude or obslevel is needed
         command += super()._config_option(
-            "altitude", self.telescope_model.get_parameter_value("altitude")
+            "altitude", self.telescope_model.get_parameter_value("corsika_obs_level")
         )
         command += super()._config_option(
             "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle

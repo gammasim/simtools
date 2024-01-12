@@ -5,7 +5,6 @@ from pydoc import locate
 
 import astropy.io.ascii
 import numpy as np
-from astropy import units as u
 from astropy.table import Table
 
 import simtools.utils.general as gen
@@ -310,6 +309,7 @@ class TelescopeModel:
     def get_parameter_value(self, par_name):
         """
         Get the value of an existing parameter of the model.
+        TODO replaced by gen.quantity_from_db_parameter
 
         Parameters
         ----------
@@ -326,12 +326,13 @@ class TelescopeModel:
             If par_name does not match any parameter in this model.
         """
         par_info = self.get_parameter(par_name)
-        return par_info["Value"]
+        return gen.quantity_from_db_parameter(par_info, return_value=True)
 
     def get_parameter_value_with_unit(self, par_name):
         """
         Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
         If no unit is provided in the model, the value is returned without a unit.
+        TODO replaced by gen.quantity_from_db_parameter
 
         Parameters
         ----------
@@ -349,9 +350,7 @@ class TelescopeModel:
             If par_name does not match any parameter in this model.
         """
         par_info = self.get_parameter(par_name)
-        if "units" in par_info:
-            return par_info["Value"] * u.Unit(par_info["units"])
-        return par_info["Value"]
+        return gen.quantity_from_db_parameter(par_info)
 
     def add_parameter(self, par_name, value, is_file=False, is_aplicable=True):
         """
@@ -435,7 +434,7 @@ class TelescopeModel:
         self._parameters[par_name]["Value"] = value
 
         # In case parameter is a file, the model files will be outdated
-        if self._parameters[par_name]["File"]:
+        if self._parameters[par_name].get("File") or self._parameters[par_name].get("file"):
             self._is_exported_model_files_up_to_date = False
 
         self._is_config_file_up_to_date = False
@@ -537,7 +536,7 @@ class TelescopeModel:
         """Write to disk a file from the derived values DB."""
 
         for par_now in self.derived.values():
-            if par_now["File"]:
+            if par_now.get("File") or par_now.get("file"):
                 self.db.export_file_db(
                     db_name=self.db.DB_DERIVED_VALUES,
                     dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),

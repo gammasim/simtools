@@ -885,7 +885,7 @@ def get_value_unit_type(value):
     return base_value, base_unit, base_type
 
 
-def quantity_from_db_parameter(parameter):
+def quantity_from_db_parameter(parameter, return_value=False):
     """
     Return astropy quantity for a floating point parameters from the database.
     Expect parameter to be a dictionary with keys 'value', 'type', and 'unit'.
@@ -895,6 +895,8 @@ def quantity_from_db_parameter(parameter):
     ----------
     parameter: dict
         Parameter from database.
+    return_value: bool
+        If True, return always the value and not astropy quantity.
 
     Returns
     -------
@@ -913,7 +915,7 @@ def quantity_from_db_parameter(parameter):
         if isinstance(_type, str):
             # pylint: disable=eval-used
             _type = eval(_type.replace("numpy", "np").replace("<class '", "").replace("'>", ""))
-        if not np.issubdtype(_type, np.floating):
+        if not np.issubdtype(_type, np.floating) or return_value:
             return parameter.get("value") or parameter.get("Value")
     except AttributeError:
         return None
