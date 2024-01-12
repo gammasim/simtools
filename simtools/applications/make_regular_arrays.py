@@ -73,12 +73,14 @@ def main():
     )
 
     layout_center_data = {}
-    layout_center_data["center_lat"] = float(site_pars_db["ref_lat"]["Value"]) * u.deg
-    layout_center_data["center_lon"] = float(site_pars_db["ref_long"]["Value"]) * u.deg
-    layout_center_data["center_alt"] = float(site_pars_db["altitude"]["Value"]) * u.m
-    layout_center_data["EPSG"] = site_pars_db["EPSG"]["Value"]
+    layout_center_data["center_lat"] = gen.quantity_from_db_parameter(site_pars_db["ref_lat"])
+    layout_center_data["center_lon"] = gen.quantity_from_db_parameter(site_pars_db["ref_lon"])
+    layout_center_data["center_alt"] = gen.quantity_from_db_parameter(site_pars_db["altitude"])
+    layout_center_data["EPSG"] = gen.quantity_from_db_parameter(site_pars_db["EPSG"])
     corsika_telescope_data = {}
-    corsika_telescope_data["corsika_obs_level"] = layout_center_data["center_alt"]
+    corsika_telescope_data["corsika_obs_level"] = gen.quantity_from_db_parameter(
+        site_pars_db["corsika_obs_level"]
+    )
     corsika_telescope_data["corsika_sphere_center"] = corsika_pars["corsika_sphere_center"]
     corsika_telescope_data["corsika_sphere_radius"] = corsika_pars["corsika_sphere_radius"]
 
