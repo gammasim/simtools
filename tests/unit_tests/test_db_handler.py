@@ -6,6 +6,8 @@ import uuid
 import pytest
 from astropy import units as u
 
+import simtools.utils.general as gen
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -317,14 +319,14 @@ def test_reading_db_sites(db):
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.get_site_parameters("North", "Released")
     if db.mongo_db_config:
-        assert pars["altitude"]["Value"] == 2158
+        assert gen.quantity_from_db_parameter(pars["altitude"]).value == pytest.approx(2158.0)
     else:
         assert pars["altitude"] == 2158
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.get_site_parameters("South", "Released")
     if db.mongo_db_config:
-        assert pars["altitude"]["Value"] == 2147
+        assert gen.quantity_from_db_parameter(pars["altitude"]).value == pytest.approx(2162.0)
     else:
         assert pars["altitude"] == 2147
 

@@ -45,8 +45,8 @@ def update_site_parameters_from_repo(parameters, site, model_version):
             logger.debug(f"Updating parameter {key} for {site} from repository file {file_path}")
             parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
         except FileNotFoundError:
-            logger.error("Missing parameter file %s", file_path)
-            raise
+            logger.debug("Parameter %s not updated; missing repository file %s", key, file_path)
+            continue
         try:
             logger.debug(f"Updated parameter {key} for {site} from old value: {parameters[key]}")
         except KeyError:
@@ -63,4 +63,5 @@ site_parameters = {
     "ref_lon": "reference_point_longitude",
     "ref_lat": "reference_point_latitude",
     "corsika_obs_level": "corsika_observation_level",
+    "EPSG": "epsg_code",
 }
