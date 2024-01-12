@@ -121,7 +121,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
-        command += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
+        # TODO - understand if altitude or obs_level is required
+        command += f" -alt {self._telescope_model.get_parameter_value('corsika_obs_level')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length.to('m').value}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
