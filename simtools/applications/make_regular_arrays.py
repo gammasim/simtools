@@ -141,7 +141,7 @@ def main():
 
         layout.convert_coordinates()
         layout.print_telescope_list()
-        output_file = str(args_dict.get("output_file", None))
+        output_file = args_dict.get("output_file", None)
         if output_file is not None:
             base_name, file_extension = os.path.splitext(output_file)
             output_file = f"{base_name}-{args_dict['site']}-{array_name}{file_extension}"
