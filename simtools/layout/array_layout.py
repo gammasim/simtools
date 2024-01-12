@@ -5,6 +5,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
+import simtools.utils.general as gen
 from simtools import db_handler
 from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
@@ -223,8 +224,8 @@ class ArrayLayout:
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
         _site_pars = db.get_site_parameters(self.site, "Released", only_applicable=True)
-        corsika_dict["corsika_obs_level"] = _site_pars["altitude"]["Value"] * u.Unit(
-            _site_pars["altitude"]["units"]
+        corsika_dict["corsika_obs_level"] = gen.quantity_from_db_parameter(
+            _site_pars["corsika_obs_level"]
         )
 
         return corsika_dict
