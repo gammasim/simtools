@@ -39,23 +39,31 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture
-def array_layout_north_four_LST_instance(db_config):
+def array_layout_north_four_LST_instance(
+    north_layout_center_data_dict, manual_corsika_dict_north, db_config
+):
     layout = ArrayLayout(
         site="North",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
+        layout_center_data=north_layout_center_data_dict,
+        corsika_telescope_data=manual_corsika_dict_north,
     )
     return layout
 
 
 @pytest.fixture
-def array_layout_south_four_LST_instance(db_config):
+def array_layout_south_four_LST_instance(
+    south_layout_center_data_dict, manual_corsika_dict_south, db_config
+):
     layout = ArrayLayout(
         site="South",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
+        layout_center_data=south_layout_center_data_dict,
+        corsika_telescope_data=manual_corsika_dict_south,
     )
     return layout
 
