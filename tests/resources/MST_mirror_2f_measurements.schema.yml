@@ -18,9 +18,9 @@ data:
         required: true
         units: dimensionless
         type: string
-      - name: mirror_panel_radius
+      - name: mirror_curvature_radius
         description: |-
-          Mirror panel radius.
+          Mirror panel curvature radius.
         required: true
         units: cm
         type: float64
