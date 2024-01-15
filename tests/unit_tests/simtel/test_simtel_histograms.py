@@ -100,3 +100,5 @@ def test_trigger_rate_per_histogram(simtel_array_histograms_instance):
     trigger_rate = simtel_array_histograms_instance.trigger_rate_per_histogram(livetime=5 * u.h)
     assert pytest.approx(trigger_rate[0].value, 0.1) == 37972.1
     assert trigger_rate[0].unit == 1 / u.s
+    trigger_rate = simtel_array_histograms_instance.trigger_rate_per_histogram(livetime=5)
+    assert trigger_rate[0].unit == 1 / u.s
