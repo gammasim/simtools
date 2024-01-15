@@ -224,7 +224,7 @@ class ArrayModel:
             LST, MST or SST.
         """
 
-        def _proccess_single_telescope(data):
+        def _process_single_telescope(data):
             """
             Parameters
             ----------
@@ -258,7 +258,7 @@ class ArrayModel:
 
         if tel_name in self._array_config_data.keys():
             # Specific info for this telescope
-            return _proccess_single_telescope(self._array_config_data[tel_name])
+            return _process_single_telescope(self._array_config_data[tel_name])
 
         # Checking if default option exists in array_config_data
         not_contains_default_key = (
@@ -275,7 +275,7 @@ class ArrayModel:
             raise InvalidArrayConfigData(msg)
 
         # Grabbing the default option
-        return _proccess_single_telescope(self._array_config_data["default"][tel_size])
+        return _process_single_telescope(self._array_config_data["default"][tel_size])
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
