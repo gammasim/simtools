@@ -41,14 +41,12 @@ class SimtelHistograms:
         self._histogram_files = histogram_files
         self._is_test = test
         self._list_of_histograms = None
-        self.combined_hists = None
+        self._combined_hists = None
         self.__meta_dict = None
 
     @property
     def number_of_histograms(self):
         """Returns number of histograms."""
-        if self.combined_hists is None:
-            self.combine_histogram_files()
         return len(self.combined_hists)
 
     def get_histogram_title(self, i_hist):
@@ -65,8 +63,6 @@ class SimtelHistograms:
         str
             Histogram title.
         """
-        if self.combined_hists is None:
-            self.combine_histogram_files()
         return self.combined_hists[i_hist]["title"]
 
     @property
@@ -79,17 +75,17 @@ class SimtelHistograms:
         list:
             List of histograms.
         """
-
-        self._list_of_histograms = []
-        for file in self._histogram_files:
-            with EventIOFile(file) as f:
-                for o in yield_toplevel_of_type(f, Histograms):
-                    try:
-                        hists = o.parse()
-                    except Exception:  # pylint: disable=broad-except
-                        self._logger.warning(f"Problematic file {file}")
-                        continue
-                    self._list_of_histograms.append(hists)
+        if self._list_of_histograms is None:
+            self._list_of_histograms = []
+            for file in self._histogram_files:
+                with EventIOFile(file) as f:
+                    for o in yield_toplevel_of_type(f, Histograms):
+                        try:
+                            hists = o.parse()
+                        except Exception:  # pylint: disable=broad-except
+                            self._logger.warning(f"Problematic file {file}")
+                            continue
+                        self._list_of_histograms.append(hists)
         return self._list_of_histograms
 
     def _check_consistency(self, first_hist_file, second_hist_file):
@@ -120,28 +116,45 @@ class SimtelHistograms:
                 self._logger.error(msg)
                 raise InconsistentHistogramFormat(msg)
 
-    def combine_histogram_files(self):
+    @property
+    def combined_hists(self):
         """Add the values of the same type of histogram from the various lists into a single
         histogram list."""
         # Processing and combining histograms from multiple files
-        self.combined_hists = []
-        n_files = 0
-        for hists_one_file in self.list_of_histograms:
-            count_file = True
+        if self._combined_hists is None:
+            self._combined_hists = []
+            n_files = 0
+            for hists_one_file in self.list_of_histograms:
+                count_file = True
 
-            if len(self.combined_hists) == 0:
-                # First file
-                self.combined_hists = copy.copy(hists_one_file)
+                if len(self._combined_hists) == 0:
+                    # First file
+                    self._combined_hists = copy.copy(hists_one_file)
 
-            else:
-                for hist, this_combined_hist in zip(hists_one_file, self.combined_hists):
-                    self._check_consistency(hist, this_combined_hist)
+                else:
+                    for hist, this_combined_hist in zip(hists_one_file, self._combined_hists):
+                        self._check_consistency(hist, this_combined_hist)
 
-                    this_combined_hist["data"] = np.add(this_combined_hist["data"], hist["data"])
+                        this_combined_hist["data"] = np.add(
+                            this_combined_hist["data"], hist["data"]
+                        )
 
-            n_files += int(count_file)
+                n_files += int(count_file)
 
-        self._logger.debug(f"End of reading {n_files} files")
+            self._logger.debug(f"End of reading {n_files} files")
+        return self._combined_hists
+
+    @combined_hists.setter
+    def combined_hists(self, new_combined_hists):
+        """
+        Setter for combined_hists.
+
+        Parameters
+        ----------
+        new_combined_hists:
+            Combined histograms.
+        """
+        self._combined_hists = new_combined_hists
 
     def _derive_trigger_rate_histograms(self, livetime):
         """
