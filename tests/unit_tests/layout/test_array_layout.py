@@ -355,7 +355,7 @@ def test_get_corsika_input_list(
         assert "Missing definition of CORSIKA sphere radius" in caplog.text
 
         layout._corsika_telescope["corsika_sphere_radius"] = {"LST": 16.0 * u.m}
-        del layout._corsika_telescope["corsika_obs_level"]
+        del layout._corsika_telescope["corsika_observation_level"]
         with caplog.at_level(logging.ERROR):
             with pytest.raises(KeyError):
                 layout.get_corsika_input_list()
@@ -453,12 +453,12 @@ def test_initialize_corsika_telescope_from_dict(
     test_one_site(array_layout_north_instance, manual_corsika_dict_north)
     test_one_site(array_layout_south_instance, manual_corsika_dict_south)
 
-    manual_corsika_dict_north["corsika_obs_level"] = "not_a_quantity"
+    manual_corsika_dict_north["corsika_observation_level"] = "not_a_quantity"
     array_layout_north_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_north)
-    assert np.isnan(array_layout_north_instance._corsika_telescope["corsika_obs_level"])
+    assert np.isnan(array_layout_north_instance._corsika_telescope["corsika_observation_level"])
 
     # no errors should be raised for missing fields
-    manual_corsika_dict_south.pop("corsika_obs_level")
+    manual_corsika_dict_south.pop("corsika_observation_level")
     manual_corsika_dict_south.pop("corsika_sphere_radius")
     array_layout_south_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_south)
 

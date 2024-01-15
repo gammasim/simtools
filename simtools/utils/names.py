@@ -109,7 +109,7 @@ all_array_layout_names = {
 }
 
 corsika_to_simtools_names = {
-    "OBSLEV": "corsika_obs_level",
+    "OBSLEV": "corsika_observation_level",
 }
 
 

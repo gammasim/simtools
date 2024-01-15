@@ -319,14 +319,18 @@ def test_reading_db_sites(db):
     logger.info("----Testing reading La Palma parameters-----")
     pars = db.get_site_parameters("North", "Released")
     if db.mongo_db_config:
-        assert gen.quantity_from_db_parameter(pars["altitude"]).value == pytest.approx(2158.0)
+        assert gen.quantity_from_db_parameter(
+            pars["corsika_observation_level"]
+        ).value == pytest.approx(2156.0)
     else:
-        assert pars["altitude"] == 2158
+        assert pars["altitude"] == 2156
 
     logger.info("----Testing reading Paranal parameters-----")
     pars = db.get_site_parameters("South", "Released")
     if db.mongo_db_config:
-        assert gen.quantity_from_db_parameter(pars["altitude"]).value == pytest.approx(2162.0)
+        assert gen.quantity_from_db_parameter(
+            pars["corsika_observation_level"]
+        ).value == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
 

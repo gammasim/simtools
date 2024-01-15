@@ -233,7 +233,7 @@ def manual_corsika_dict_north():
             "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
             "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
         },
-        "corsika_obs_level": 2158 * u.m,
+        "corsika_observation_level": 2158 * u.m,
     }
 
 
@@ -259,7 +259,7 @@ def manual_corsika_dict_south():
             "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
             "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
         },
-        "corsika_obs_level": 2147 * u.m,
+        "corsika_observation_level": 2147 * u.m,
     }
 
 

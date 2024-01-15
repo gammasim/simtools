@@ -224,8 +224,8 @@ class ArrayLayout:
         db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
         self._logger.debug("Reading site parameters from DB")
         _site_pars = db.get_site_parameters(self.site, "Released", only_applicable=True)
-        corsika_dict["corsika_obs_level"] = gen.quantity_from_db_parameter(
-            _site_pars["corsika_obs_level"]
+        corsika_dict["corsika_observation_level"] = gen.quantity_from_db_parameter(
+            _site_pars["corsika_observation_level"]
         )
 
         return corsika_dict
@@ -274,11 +274,11 @@ class ArrayLayout:
         """
 
         try:
-            self._corsika_telescope["corsika_obs_level"] = u.Quantity(
-                corsika_dict["corsika_obs_level"]
+            self._corsika_telescope["corsika_observation_level"] = u.Quantity(
+                corsika_dict["corsika_observation_level"]
             )
         except (TypeError, KeyError):
-            self._corsika_telescope["corsika_obs_level"] = np.nan * u.m
+            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
 
         for key in ["corsika_sphere_center", "corsika_sphere_radius"]:
             try:
@@ -382,14 +382,14 @@ class ArrayLayout:
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
-                self._corsika_telescope["corsika_obs_level"],
+                self._corsika_telescope["corsika_observation_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
 
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
-                self._corsika_telescope["corsika_obs_level"],
+                self._corsika_telescope["corsika_observation_level"],
                 self._get_corsika_sphere_center(tel_name),
             )
         return np.nan
@@ -773,7 +773,7 @@ class ArrayLayout:
             try:
                 pos_z = tel.convert_telescope_altitude_to_corsika_system(
                     pos_z,
-                    self._corsika_telescope["corsika_obs_level"],
+                    self._corsika_telescope["corsika_observation_level"],
                     self._get_corsika_sphere_center(tel.name),
                 )
             except KeyError:
@@ -818,16 +818,16 @@ class ArrayLayout:
 
         for tel in self._telescope_list:
             if corsika_z:
-                _corsika_obs_level = self._corsika_telescope["corsika_obs_level"]
+                _corsika_observation_level = self._corsika_telescope["corsika_observation_level"]
                 _corsika_sphere_center = self._get_corsika_sphere_center(tel.name)
             else:
-                _corsika_obs_level = None
+                _corsika_observation_level = None
                 _corsika_sphere_center = None
 
             tel.print_compact_format(
                 crs_name=compact_printing,
                 print_header=(tel == self._telescope_list[0]),
-                corsika_obs_level=_corsika_obs_level,
+                corsika_observation_level=_corsika_observation_level,
                 corsika_sphere_center=_corsika_sphere_center,
             )
 
