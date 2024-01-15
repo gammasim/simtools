@@ -259,7 +259,7 @@ def test_altitude_transformations():
 
     _z = tel.convert_telescope_altitude_to_corsika_system(
         tel_altitude=2.177 * u.km,
-        corsika_obs_level=2158.0 * u.m,
+        corsika_observation_level=2158.0 * u.m,
         corsika_sphere_center=16.0 * u.m,
     )
     assert _z.value == pytest.approx(35.0, 0.1)
@@ -267,20 +267,20 @@ def test_altitude_transformations():
     with pytest.raises(TypeError):
         tel.convert_telescope_altitude_to_corsika_system(
             tel_altitude=2177,
-            corsika_obs_level=2158.0 * u.m,
+            corsika_observation_level=2158.0 * u.m,
             corsika_sphere_center=16.0 * u.m,
         )
 
     _alt = tel.convert_telescope_altitude_from_corsika_system(
         tel_corsika_z=35.0 * u.m,
-        corsika_obs_level=2.158 * u.km,
+        corsika_observation_level=2.158 * u.km,
         corsika_sphere_center=16.0 * u.m,
     )
     assert _alt.value == pytest.approx(2177.0, 0.1)
     with pytest.raises(TypeError):
         tel.convert_telescope_altitude_from_corsika_system(
             tel_corsika_z=35.0 * u.m,
-            corsika_obs_level=2.158,
+            corsika_observation_level=2.158,
             corsika_sphere_center=16.0 * u.m,
         )
 
@@ -321,7 +321,7 @@ def test_print_compact_format(capsys):
     expected_output = "LST-01 100.00 200.00 2100.00"
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=None,
+        corsika_observation_level=None,
         corsika_sphere_center=None,
     )
     _output = capsys.readouterr().out
@@ -331,7 +331,7 @@ def test_print_compact_format(capsys):
     expected_output = "LST-01 100.00 200.00 115.00"
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=2000.0 * u.m,
+        corsika_observation_level=2000.0 * u.m,
         corsika_sphere_center=15.0 * u.m,
     )
     _output = capsys.readouterr().out
@@ -340,7 +340,7 @@ def test_print_compact_format(capsys):
     expected_output = "telescope_name position_x position_y position_z\nLST-01 100.00 200.00 115.00"
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=2000.0 * u.m,
+        corsika_observation_level=2000.0 * u.m,
         corsika_sphere_center=15.0 * u.m,
         print_header=True,
     )

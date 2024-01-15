@@ -75,7 +75,7 @@
 #   center_northing: !astropy.units.Quantity
 #     unit: *id001
 #     value: 7269466.0
-#   corsika_obs_level: !astropy.units.Quantity
+#   corsika_observation_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2147.0
 #   corsika_sphere_center:

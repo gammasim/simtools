@@ -36,6 +36,7 @@ dynamic = [
 ]
 dependencies = [
   "astropy",
+  "bidict",
   "boost-histogram",
   "ctapipe",
   "eventio",

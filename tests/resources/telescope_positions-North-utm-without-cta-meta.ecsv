@@ -13,7 +13,7 @@
 # - center_northing: "3185067.275 m"
 # - center_easting: "217608.975 m"
 # - center_alt: "2177.0 m"
-# - corsika_obs_level: "2156 m"
+# - corsika_observation_level: "2156 m"
 # - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
 # - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
 # - EPSG: 32628

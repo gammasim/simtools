@@ -309,7 +309,6 @@ class TelescopeModel:
     def get_parameter_value(self, par_name):
         """
         Get the value of an existing parameter of the model.
-        TODO replaced by gen.quantity_from_db_parameter
 
         Parameters
         ----------
@@ -325,14 +324,12 @@ class TelescopeModel:
         InvalidParameter
             If par_name does not match any parameter in this model.
         """
-        par_info = self.get_parameter(par_name)
-        return gen.quantity_from_db_parameter(par_info, return_value=True)
+        return gen.quantity_from_db_parameter(self.get_parameter(par_name), return_value=True)
 
     def get_parameter_value_with_unit(self, par_name):
         """
         Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
         If no unit is provided in the model, the value is returned without a unit.
-        TODO replaced by gen.quantity_from_db_parameter
 
         Parameters
         ----------
@@ -349,10 +346,12 @@ class TelescopeModel:
         InvalidParameter
             If par_name does not match any parameter in this model.
         """
-        par_info = self.get_parameter(par_name)
-        return gen.quantity_from_db_parameter(par_info)
+        return gen.quantity_from_db_parameter(
+            self.get_parameter(par_name),
+            return_value=False,
+        )
 
-    def add_parameter(self, par_name, value, is_file=False, is_aplicable=True):
+    def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
         """
         Add a new parameters to the model. This function does not modify the DB, it affects only \
         the current instance.
@@ -365,7 +364,7 @@ class TelescopeModel:
             Value of the parameter.
         is_file: bool
             Indicates whether the new parameter is a file or not.
-        is_aplicable: bool
+        is_applicable: bool
             Indicates whether the new parameter is applicable or not.
 
         Raises
@@ -382,7 +381,7 @@ class TelescopeModel:
         self._parameters[par_name] = {}
         self._parameters[par_name]["Value"] = value
         self._parameters[par_name]["Type"] = type(value)
-        self._parameters[par_name]["Applicable"] = is_aplicable
+        self._parameters[par_name]["Applicable"] = is_applicable
         self._parameters[par_name]["File"] = is_file
 
         self._is_config_file_up_to_date = False

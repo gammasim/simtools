@@ -24,7 +24,7 @@
 #   center_easting: !astropy.units.Quantity
 #     unit: *id002
 #     value: 366822.017
-#   corsika_obs_level: !astropy.units.Quantity
+#   corsika_observation_level: !astropy.units.Quantity
 #     unit: *id002
 #     value: 2147
 #   corsika_sphere_radius:
