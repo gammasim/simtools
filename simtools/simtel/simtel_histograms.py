@@ -123,11 +123,8 @@ class SimtelHistograms:
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
-            n_files = 0
-            for hists_one_file in self.list_of_histograms:
-                count_file = True
-
-                if len(self._combined_hists) == 0:
+            for i_hist, hists_one_file in enumerate(self.list_of_histograms):
+                if i_hist == 0:
                     # First file
                     self._combined_hists = copy.copy(hists_one_file)
 
@@ -139,9 +136,7 @@ class SimtelHistograms:
                             this_combined_hist["data"], hist["data"]
                         )
 
-                n_files += int(count_file)
-
-            self._logger.debug(f"End of reading {n_files} files")
+            self._logger.debug(f"End of reading {len(self.list_of_histograms)} files")
         return self._combined_hists
 
     @combined_hists.setter
