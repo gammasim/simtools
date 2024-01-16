@@ -44,3 +44,20 @@ class SiteModel(ModelParameter):
             db=db,
             label=label,
         )
+
+    def get_reference_point(self):
+        """
+        Get reference point coordinates as dicts
+
+        Returns
+        -------
+        dict
+            Reference point coordinates as dict
+        """
+
+        return {
+            "center_lat": self.get_parameter_value_with_unit("reference_point_latitude"),
+            "center_lon": self.get_parameter_value_with_unit("reference_point_longitude"),
+            "center_alt": self.get_parameter_value_with_unit("reference_point_altitude"),
+            "EPSG": self.get_parameter_value("epsg_code"),
+        }

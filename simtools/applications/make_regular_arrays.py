@@ -73,17 +73,7 @@ def main():
         mongo_db_config=db_config,
     )
 
-    layout_center_data = {}
-    layout_center_data["center_lat"] = site_model.get_parameter_value_with_unit(
-        "reference_point_latitude"
-    )
-    layout_center_data["center_lon"] = site_model.get_parameter_value_with_unit(
-        "reference_point_longitude"
-    )
-    layout_center_data["center_alt"] = site_model.get_parameter_value_with_unit(
-        "reference_point_altitude"
-    )
-    layout_center_data["EPSG"] = site_model.get_parameter_value("epsg_code")
+    layout_center_data = site_model.get_reference_point()
     corsika_telescope_data = {}
     corsika_telescope_data["corsika_observation_level"] = site_model.get_parameter_value_with_unit(
         "corsika_observation_level"
