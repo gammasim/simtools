@@ -8,30 +8,24 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools import db_handler
-from simtools.io_operations import io_handler
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
+from simtools.model.model_parameter import InvalidParameter, ModelParameter
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
-__all__ = ["InvalidParameter", "TelescopeModel"]
+__all__ = ["TelescopeModel"]
 
 
-class InvalidParameter(Exception):
-    """Exception for invalid parameter."""
-
-
-class TelescopeModel:
+class TelescopeModel(ModelParameter):
     """
     TelescopeModel represents the MC model of an individual telescope. It contains the list of \
-    parameters that can be read from the DB. A set of methods are available to manipulate \
-    parameters (changing, adding, removing etc).
+    parameters that can be read from the DB.
 
     Parameters
     ----------
     site: str
-        South or North.
+        Site name (e.g., South or North).
     telescope_model_name: str
         Telescope name (ex. LST-1, ...).
     mongo_db_config: dict
@@ -56,12 +50,16 @@ class TelescopeModel:
         """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel")
+        ModelParameter.__init__(
+            self,
+            site=site,
+            telescope_model_name=telescope_model_name,
+            mongo_db_config=mongo_db_config,
+            model_version=model_version,
+            db=db,
+            label=label,
+        )
 
-        self.site = names.validate_site_name(site)
-        self.name = names.validate_telescope_model_name(telescope_model_name)
-        self.model_version = names.validate_model_version_name(model_version)
-        self.label = label
-        self._extra_label = None
         self._added_parameter_files = None
         self._single_mirror_list_file_paths = None
         self.simtel_config_writer = None
@@ -70,19 +68,6 @@ class TelescopeModel:
         self._derived = None
         self._camera = None
 
-        self.io_handler = io_handler.IOHandler()
-        self.db = None
-        if db is not None:
-            self.db = db
-        elif mongo_db_config is not None:
-            self._logger.debug("Connecting to DB")
-            self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
-
-        self._parameters = {}
-
-        self._load_parameters_from_db()
-
-        self._set_config_file_directory_and_name()
         self._is_config_file_up_to_date = False
         self._is_exported_model_files_up_to_date = False
 
@@ -122,13 +107,6 @@ class TelescopeModel:
             self._load_derived_values()
             self.export_derived_files()
         return self._derived
-
-    @property
-    def extra_label(self):
-        """
-        Return the extra label if defined, if not return ''.
-        """
-        return self._extra_label if self._extra_label is not None else ""
 
     @classmethod
     def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
@@ -210,147 +188,6 @@ class TelescopeModel:
         tel._is_exported_model_files_up_to_date = True
         return tel
 
-    def set_extra_label(self, extra_label):
-        """
-        Set an extra label for the name of the config file.
-
-        Notes
-        -----
-        The config file directory name is not affected by the extra label. Only the file name is \
-        changed. This is important for the ArrayModel class to export multiple config files in the\
-        same directory.
-
-        Parameters
-        ----------
-        extra_label: str
-            Extra label to be appended to the original label.
-        """
-
-        self._extra_label = extra_label
-        self._set_config_file_directory_and_name()
-
-    def _set_config_file_directory_and_name(self):
-        """Define the variable _config_file_directory and create directories, if needed."""
-
-        self._config_file_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir="model"
-        )
-
-        # Setting file name and the location
-        config_file_name = names.simtel_telescope_config_file_name(
-            self.site, self.name, self.model_version, self.label, self._extra_label
-        )
-        self._config_file_path = self._config_file_directory.joinpath(config_file_name)
-
-    def _load_parameters_from_db(self):
-        """Read parameters from DB and store them in _parameters."""
-
-        if self.db is None:
-            return
-
-        self._logger.debug("Reading telescope parameters from DB")
-
-        self._set_config_file_directory_and_name()
-        self._parameters = self.db.get_model_parameters(
-            self.site, self.name, self.model_version, only_applicable=True
-        )
-
-        self._logger.debug("Reading site parameters from DB")
-        _site_pars = self.db.get_site_parameters(
-            self.site, self.model_version, only_applicable=True
-        )
-        self._parameters.update(_site_pars)
-
-    def has_parameter(self, par_name):
-        """
-        Verify if the parameter is in the model.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        bool
-            True if parameter is in the model.
-        """
-        return par_name in self._parameters
-
-    def get_parameter(self, par_name):
-        """
-        Get an existing parameter of the model, including derived parameters.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        Value of the parameter
-
-        Raises
-        ------
-        InvalidParameter
-            If par_name does not match any parameter in this model.
-        """
-        try:
-            return self._parameters[par_name]
-        except KeyError:
-            pass  # search in the derived parameters
-        try:
-            return self.derived[par_name]
-        except KeyError as e:
-            msg = f"Parameter {par_name} was not found in the model"
-            self._logger.error(msg)
-            raise InvalidParameter(msg) from e
-
-    def get_parameter_value(self, par_name):
-        """
-        Get the value of an existing parameter of the model.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        Value of the parameter.
-
-        Raises
-        ------
-        InvalidParameter
-            If par_name does not match any parameter in this model.
-        """
-        return gen.quantity_from_db_parameter(self.get_parameter(par_name), return_value=True)
-
-    def get_parameter_value_with_unit(self, par_name):
-        """
-        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
-        If no unit is provided in the model, the value is returned without a unit.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \
-        provided in the model, the value is returned without a unit.
-
-        Raises
-        ------
-        InvalidParameter
-            If par_name does not match any parameter in this model.
-        """
-        return gen.quantity_from_db_parameter(
-            self.get_parameter(par_name),
-            return_value=False,
-        )
-
     def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
         """
         Add a new parameters to the model. This function does not modify the DB, it affects only \
@@ -387,6 +224,23 @@ class TelescopeModel:
         self._is_config_file_up_to_date = False
         if is_file:
             self._is_exported_model_files_up_to_date = False
+
+    def get_parameter(self, par_name):
+        """
+        Get an existing parameter of the model.
+        Includes derived parameters.
+
+        """
+        try:
+            return super().get_parameter(par_name)
+        except InvalidParameter:
+            pass
+        try:
+            return self.derived[par_name]
+        except KeyError as e:
+            msg = f"Parameter {par_name} was not found in the model"
+            self._logger.error(msg)
+            raise InvalidParameter(msg) from e
 
     def change_parameter(self, par_name, value):
         """
@@ -512,11 +366,6 @@ class TelescopeModel:
 
         self.db.export_model_files(pars_from_db, self._config_file_directory)
         self._is_exported_model_files_up_to_date = True
-
-    def print_parameters(self):
-        """Print parameters and their values for debugging purposes."""
-        for par, info in self._parameters.items():
-            print(f"{par} = {info['Value']}")
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""

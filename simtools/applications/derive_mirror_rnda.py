@@ -381,7 +381,7 @@ def main():
     if args_dict["rnda"] != 0:
         rnda_start = args_dict["rnda"]
     else:
-        rnda_start = tel.get_parameter("mirror_reflection_random_angle")["Value"]
+        rnda_start = tel.get_parameter_value("mirror_reflection_random_angle")
         if isinstance(rnda_start, str):
             rnda_start = float(rnda_start.split()[0])
 
