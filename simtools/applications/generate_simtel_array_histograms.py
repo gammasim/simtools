@@ -157,7 +157,6 @@ def main():
 
     # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
-    simtel_histograms.combine_histogram_files()
 
     if config_parser["pdf"]:
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
