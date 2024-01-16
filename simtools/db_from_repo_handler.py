@@ -17,6 +17,8 @@ def update_site_parameters_from_repo(parameters, site, model_version):
     """
     Update site parameters with values from a repository.
     Existing entries will be updated, new entries will be added.
+    TODO - model version is ignored at this point (expect that repository
+    URL is set to the correct version)
 
     Parameters
     ----------
@@ -38,29 +40,20 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         logger.debug("No repository specified, skipping site parameter update")
         return parameters
 
-    logger.debug(
-        f"Updating site parameters from repository for {site} site"
-        f" and model version {model_version}"
-    )
-
     for key, value in site_parameters.items():
-        file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site, f"{value}.json")
+        file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site, f"{key}.json")
         try:
             logger.debug(
-                f"Updating parameter {key}/{value} for {site} from repository file {file_path}"
+                f"Parameter {key}/{value} updated for {model_version} "
+                f"from repository file {file_path}"
             )
-            parameters[value] = gen.collect_data_from_file_or_dict(
-                file_name=file_path, in_dict=None
-            )
+            parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
         except FileNotFoundError:
-            logger.debug("Parameter %s not updated; missing repository file %s", key, file_path)
+            logger.debug(
+                f"Parameter {value} not updated for {model_version};"
+                f"missing repository file {file_path}"
+            )
             continue
-    #        try:
-    #            logger.debug(
-    #           f"Updated parameter {key} for {site} from old value: {parameters[key]}")
-    #        except KeyError:
-    #            logger.debug(f"Added parameter {key} for {site}")
-    #        parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
 
     return parameters
 
