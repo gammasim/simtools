@@ -189,15 +189,18 @@ class SimtelHistograms:
                 (events_histogram[i_file]["upper_x"]) ** 2
                 - (events_histogram[i_file]["lower_x"]) ** 2
             )
-            denominator = events_histogram[i_file]["data"] * area_dict / livetime
-            if denominator == 0:
-                event_rate_histogram["data"] = 0
-            else:
-                event_rate_histogram["data"] = (
-                    trigged_events_histogram[i_file]["data"] / denominator
-                )
 
-            event_rate_histogram["data"][np.isnan(event_rate_histogram["data"])] = 0
+            event_rate_histogram["data"] = (
+                np.zeros_like(trigged_events_histogram[i_file]["data"]) / livetime.unit
+            )
+            bins_with_events = events_histogram[i_file]["data"] != 0
+            event_rate_histogram["data"][bins_with_events] = (
+                trigged_events_histogram[i_file]["data"][bins_with_events]
+                / events_histogram[i_file]["data"][bins_with_events]
+                * area_dict
+                / livetime
+            )
+
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
                 "data",
