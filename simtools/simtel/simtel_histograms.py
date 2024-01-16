@@ -234,7 +234,7 @@ class SimtelHistograms:
         list_of_integrated_hists = []
         for _, hist in enumerate(hists):
             energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
-            radius_axis = np.logspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
+            radius_axis = np.linspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
             integrated_hist = np.zeros_like(radius_axis)
             for i_radius, _ in enumerate(radius_axis):
                 integrated_hist[i_radius] = np.sum(
