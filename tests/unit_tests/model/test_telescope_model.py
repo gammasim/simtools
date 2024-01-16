@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools.model.telescope_model import InvalidParameter, TelescopeModel
+from simtools.model.telescope_model import InvalidModelParameter, TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -57,7 +57,7 @@ def test_handling_parameters(telescope_model_lst):
 
     assert new_par == tel_model.get_parameter_value("new_parameter")
 
-    with pytest.raises(InvalidParameter):
+    with pytest.raises(InvalidModelParameter):
         tel_model.get_parameter("bla_bla")
 
 

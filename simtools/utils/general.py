@@ -16,7 +16,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import astropy.units as u
-import numpy as np
 from astropy.io.misc import yaml
 
 __all__ = [
@@ -883,48 +882,3 @@ def get_value_unit_type(value):
         base_type = extract_type_of_value(base_value)
 
     return base_value, base_unit, base_type
-
-
-def quantity_from_db_parameter(parameter, return_value=False):
-    """
-    Return astropy quantity for a floating point parameters from the database.
-    Expect parameter to be a dictionary with keys 'value', 'type', and 'unit'.
-    (Temporarily) accepts also 'Value' and 'units', 'Type' as key for value.
-
-    Parameters
-    ----------
-    parameter: dict
-        Parameter from database.
-    return_value: bool
-        If True, return always the value and not astropy quantity.
-
-    Returns
-    -------
-    Value depending on type of parameter.
-        Quantity of parameter if it is a floating point parameter.
-        Value of parameter if it is not a floating point parameter.
-        None if parameter is None.
-
-    """
-
-    _logger.debug(f"Getting quantity from parameter {parameter}")
-
-    try:
-        _type = parameter.get("type") or parameter.get("Type")
-        # handle string representations of types and numpy types
-        if isinstance(_type, str):
-            # pylint: disable=eval-used
-            _type = eval(_type.replace("numpy", "np").replace("<class '", "").replace("'>", ""))
-        if not np.issubdtype(_type, np.floating) or return_value:
-            return parameter.get("value") or parameter.get("Value")
-    except AttributeError:
-        return None
-
-    try:
-        return float(parameter.get("value") or parameter.get("Value")) * u.Unit(
-            parameter.get("unit") or parameter.get("units", "")
-        )
-    except (KeyError, AttributeError):
-        pass
-
-    return None

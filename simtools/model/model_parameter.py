@@ -4,23 +4,37 @@ import logging
 
 import astropy.units as u
 
-from simtools import db_handler
+from simtools import db_from_repo_handler, db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
-__all__ = ["InvalidParameter", "ModelParameter"]
+__all__ = ["InvalidModelParameter", "ModelParameter"]
 
 
-class InvalidParameter(Exception):
-    """Exception for invalid parameter."""
+class InvalidModelParameter(Exception):
+    """Exception for invalid model parameter."""
 
 
 class ModelParameter:
     """
     Base class for model parameters.
-    Provides methods to read parameters from DB
-    and methods are available to manipulate parameters
-    (changing, adding, removing etc).
+    Provides methods to read parameters from DB and manipulate parameters
+    (changing, adding, removing, etc).
+
+    Parameters
+    ----------
+    site: str
+        Site name (e.g., South or North).
+    telescope_model_name: str
+        Telescope model name (e.g., LST-1).
+    mongo_db_config: dict
+        MongoDB configuration.
+    model_version: str
+        Version of the model (ex. prod5).
+    db: DatabaseHandler
+        Database handler.
+    label: str
+        Instance label. Important for output file naming.
 
     """
 
@@ -79,7 +93,6 @@ class ModelParameter:
     def get_parameter(self, par_name):
         """
         Get an existing parameter of the model.
-        TODO: does not including derived parameters.
 
         Parameters
         ----------
@@ -92,15 +105,20 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
         try:
             return self._parameters[par_name]
+        except KeyError:
+            pass
+        try:
+            _tmp_par_name = db_from_repo_handler.site_parameters[par_name]
+            return self._parameters[_tmp_par_name]
         except KeyError as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
-            raise InvalidParameter(msg) from e
+            raise InvalidModelParameter(msg) from e
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
@@ -120,7 +138,7 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
         parameter_dict = parameter_dict if parameter_dict else self.get_parameter(par_name)
@@ -148,7 +166,7 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
         _parameter = self.get_parameter(par_name)
@@ -166,9 +184,20 @@ class ModelParameter:
         for par, info in self._parameters.items():
             print(f"{par} = {info['Value']}")
 
+    def get_config_directory(self):
+        """
+        Get the path where all the configuration files for sim_telarray are written to.
+
+        Returns
+        -------
+        Path
+            Path where all the configuration files for sim_telarray are written to.
+        """
+        return self._config_file_directory
+
     def _set_config_file_directory_and_name(self):
         """
-        Define the variable _config_file_directory and create directories, if needed.
+        Set and create the directory model parameter files are written to.
 
         """
 
@@ -186,6 +215,8 @@ class ModelParameter:
                 self.site, self.name, self.model_version, self.label, self._extra_label
             )
             self._config_file_path = self._config_file_directory.joinpath(config_file_name)
+
+        self._logger.debug(f"Config file path: {self._config_file_path}")
 
     def _load_parameters_from_db(self):
         """

@@ -2,8 +2,6 @@
 
 import logging
 
-import simtools.utils.general as gen
-
 __all__ = ["SimtelConfigWriter"]
 
 
@@ -90,7 +88,7 @@ class SimtelConfigWriter:
             for par in parameters.keys():
                 if par in self.PARS_NOT_TO_WRITE:
                     continue
-                value = gen.quantity_from_db_parameter(parameters[par], return_value=True)
+                value = parameters[par]["value"] or parameters[par]["Value"]
                 file.write(f"{par} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
@@ -220,6 +218,6 @@ class SimtelConfigWriter:
         for par in site_parameters:
             if par in self.PARS_NOT_TO_WRITE:
                 continue
-            value = gen.quantity_from_db_parameter(par, return_value=True)
+            value = site_parameters[par]["value"] or site_parameters[par]["Value"]
             file.write(self.TAB + f"{par} = {value}\n")
         file.write("\n")

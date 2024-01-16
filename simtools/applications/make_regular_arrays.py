@@ -37,10 +37,10 @@ import astropy.units as u
 
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 
 
 def main():
@@ -66,20 +66,27 @@ def main():
         _io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
     )
 
-    # Reading site parameters from DB
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    site_pars_db = db.get_site_parameters(
-        site=args_dict["site"], model_version=args_dict["model_version"]
+    site_model = SiteModel(
+        site=args_dict["site"],
+        model_version=args_dict["model_version"],
+        label=label,
+        mongo_db_config=db_config,
     )
 
     layout_center_data = {}
-    layout_center_data["center_lat"] = gen.quantity_from_db_parameter(site_pars_db["ref_lat"])
-    layout_center_data["center_lon"] = gen.quantity_from_db_parameter(site_pars_db["ref_lon"])
-    layout_center_data["center_alt"] = gen.quantity_from_db_parameter(site_pars_db["altitude"])
-    layout_center_data["EPSG"] = gen.quantity_from_db_parameter(site_pars_db["EPSG"])
+    layout_center_data["center_lat"] = site_model.get_parameter_value_with_unit(
+        "reference_point_latitude"
+    )
+    layout_center_data["center_lon"] = site_model.get_parameter_value_with_unit(
+        "reference_point_longitude"
+    )
+    layout_center_data["center_alt"] = site_model.get_parameter_value_with_unit(
+        "reference_point_altitude"
+    )
+    layout_center_data["EPSG"] = site_model.get_parameter_value("epsg_code")
     corsika_telescope_data = {}
-    corsika_telescope_data["corsika_observation_level"] = gen.quantity_from_db_parameter(
-        site_pars_db["corsika_observation_level"]
+    corsika_telescope_data["corsika_observation_level"] = site_model.get_parameter_value_with_unit(
+        "corsika_observation_level"
     )
     corsika_telescope_data["corsika_sphere_center"] = corsika_pars["corsika_sphere_center"]
     corsika_telescope_data["corsika_sphere_radius"] = corsika_pars["corsika_sphere_radius"]
