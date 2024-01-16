@@ -323,9 +323,10 @@ def test_reading_db_sites(db):
                 pars["corsika_observation_level"]["Value"]
                 or pars["corsika_observation_level"]["value"]
             )
+            assert _obs_level == pytest.approx(2156.0)
         else:
             _obs_level = pars["altitude"]["Value"] or pars["altitude"]["value"]
-        assert _obs_level == pytest.approx(2156.0)
+            assert _obs_level == pytest.approx(2158.0)
     else:
         assert pars["altitude"] == 2156
 

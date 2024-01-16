@@ -88,7 +88,7 @@ class SimtelConfigWriter:
             for par in parameters.keys():
                 if par in self.PARS_NOT_TO_WRITE:
                     continue
-                value = parameters[par]["value"] or parameters[par]["Value"]
+                value = parameters[par].get("value") or parameters[par].get("Value")
                 file.write(f"{par} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
@@ -218,6 +218,6 @@ class SimtelConfigWriter:
         for par in site_parameters:
             if par in self.PARS_NOT_TO_WRITE:
                 continue
-            value = site_parameters[par]["value"] or site_parameters[par]["Value"]
+            value = site_parameters[par].get("value") or site_parameters[par].get("Value")
             file.write(self.TAB + f"{par} = {value}\n")
         file.write("\n")
