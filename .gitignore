@@ -32,4 +32,3 @@ simtools/_version.py
 # Coverage files
 coverage*
 .coverage*
-.coverage
