@@ -80,11 +80,7 @@ class SimtelHistograms:
             for file in self._histogram_files:
                 with EventIOFile(file) as f:
                     for o in yield_toplevel_of_type(f, Histograms):
-                        try:
-                            hists = o.parse()
-                        except Exception as error_msg:  # pylint: disable=broad-except
-                            self._logger.warning(f"Problematic file {file}: {error_msg}")
-                            continue
+                        hists = o.parse()
                         self._list_of_histograms.append(hists)
         return self._list_of_histograms
 
