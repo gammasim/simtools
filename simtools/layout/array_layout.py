@@ -5,12 +5,11 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
+from simtools.model.site_model import SiteModel
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
 
@@ -221,11 +220,13 @@ class ArrayLayout:
             self._logger.error("Site was not provided, cannot set site altitude")
             raise ValueError
 
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._logger.debug("Reading site parameters from DB")
-        _site_pars = db.get_site_parameters(self.site, "Released", only_applicable=True)
-        corsika_dict["corsika_observation_level"] = gen.quantity_from_db_parameter(
-            _site_pars["corsika_observation_level"]
+        site_model = SiteModel(
+            site=self.site,
+            model_version="Released",
+            mongo_db_config=self.mongo_db_config,
+        )
+        corsika_dict["corsika_observation_level"] = site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
         )
 
         return corsika_dict

@@ -7,8 +7,6 @@ Read simulation model values from files in git repository.
 import logging
 from pathlib import Path
 
-from bidict import bidict
-
 import simtools.constants
 import simtools.utils.general as gen
 
@@ -35,6 +33,10 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         Updated dictionary with parameters.
 
     """
+
+    if simtools.constants.SIMULATION_MODEL_URL is None:
+        logger.debug("No repository specified, skipping site parameter update")
+        return parameters
 
     logger.debug(
         f"Updating site parameters from repository for {site} site"
@@ -64,12 +66,14 @@ def update_site_parameters_from_repo(parameters, site, model_version):
 
 
 # simulation_model parameter naming to DB parameter naming mapping
-site_parameters = bidict(
-    {
-        "altitude": "reference_point_altitude",
-        "ref_lon": "reference_point_longitude",
-        "ref_lat": "reference_point_latitude",
-        "corsika_obs_level": "corsika_observation_level",
-        "EPSG": "epsg_code",
-    }
-)
+site_parameters = {
+    # Note inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "reference_point_altitude": "altitude",
+    "reference_point_longitude": "ref_long",
+    "reference_point_latitude": "ref_lat",
+    # Note naming inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "corsika_observation_level": "altitude",
+    "epsg_code": "EPSG",
+}

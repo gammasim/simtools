@@ -10,7 +10,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
-from simtools.model.model_parameter import InvalidParameter, ModelParameter
+from simtools.model.model_parameter import InvalidModelParameter, ModelParameter
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
@@ -206,13 +206,13 @@ class TelescopeModel(ModelParameter):
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If an existing parameter is tried to be added.
         """
         if par_name in self._parameters:
             msg = f"Parameter {par_name} already in the model, use change_parameter instead"
             self._logger.error(msg)
-            raise InvalidParameter(msg)
+            raise InvalidModelParameter(msg)
 
         self._logger.info(f"Adding {par_name}={value} to the model")
         self._parameters[par_name] = {}
@@ -233,14 +233,14 @@ class TelescopeModel(ModelParameter):
         """
         try:
             return super().get_parameter(par_name)
-        except InvalidParameter:
+        except InvalidModelParameter:
             pass
         try:
             return self.derived[par_name]
         except KeyError as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
-            raise InvalidParameter(msg) from e
+            raise InvalidModelParameter(msg) from e
 
     def change_parameter(self, par_name, value):
         """
@@ -256,13 +256,13 @@ class TelescopeModel(ModelParameter):
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If the parameter to be changed does not exist in this model.
         """
         if par_name not in self._parameters:
             msg = f"Parameter {par_name} not in the model, use add_parameters instead"
             self._logger.error(msg)
-            raise InvalidParameter(msg)
+            raise InvalidModelParameter(msg)
 
         type_of_par_name = locate(self._parameters[par_name]["Type"])
         if not isinstance(value, type_of_par_name):
@@ -304,7 +304,7 @@ class TelescopeModel(ModelParameter):
 
         Raises
         ------
-        InvalidParameter
+        InvalidModelParameter
             If at least one of the parameters to be changed does not exist in this model.
         """
         for par, value in kwargs.items():
@@ -313,30 +313,6 @@ class TelescopeModel(ModelParameter):
             else:
                 self.add_parameter(par, value)
 
-        self._is_config_file_up_to_date = False
-
-    def remove_parameters(self, *args):
-        """
-        Remove a set of parameters from the model.
-
-        Parameters
-        ----------
-        *args
-            Each parameter to be removed has to be passed as args.
-
-        Raises
-        ------
-        InvalidParameter
-            If at least one of the parameter to be removed is not in this model.
-        """
-        for par in args:
-            if par in self._parameters:
-                self._logger.info(f"Removing parameter {par}")
-                del self._parameters[par]
-            else:
-                msg = f"Could not remove parameter {par} because it does not exist"
-                self._logger.error(msg)
-                raise InvalidParameter(msg)
         self._is_config_file_up_to_date = False
 
     def add_parameter_file(self, par_name, file_path):
@@ -409,17 +385,6 @@ class TelescopeModel(ModelParameter):
         if not self._is_config_file_up_to_date and not no_export:
             self.export_config_file()
         return self._config_file_path
-
-    def get_config_directory(self):
-        """
-        Get the path where all the configuration files for sim_telarray are written to.
-
-        Returns
-        -------
-        Path
-            Path where all the configuration files for sim_telarray are written to.
-        """
-        return self._config_file_directory
 
     def get_derived_directory(self):
         """
