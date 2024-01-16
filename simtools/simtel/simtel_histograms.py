@@ -189,13 +189,18 @@ class SimtelHistograms:
                 (events_histogram[i_file]["upper_x"]) ** 2
                 - (events_histogram[i_file]["lower_x"]) ** 2
             )
+
             event_rate_histogram["data"] = (
-                trigged_events_histogram[i_file]["data"]
-                / events_histogram[i_file]["data"]
+                np.zeros_like(trigged_events_histogram[i_file]["data"]) / livetime.unit
+            )
+            bins_with_events = events_histogram[i_file]["data"] != 0
+            event_rate_histogram["data"][bins_with_events] = (
+                trigged_events_histogram[i_file]["data"][bins_with_events]
+                / events_histogram[i_file]["data"][bins_with_events]
                 * area_dict
                 / livetime
             )
-            event_rate_histogram["data"][np.isnan(event_rate_histogram["data"])] = 0
+
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
                 "data",
@@ -229,7 +234,7 @@ class SimtelHistograms:
         list_of_integrated_hists = []
         for _, hist in enumerate(hists):
             energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
-            radius_axis = np.logspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
+            radius_axis = np.linspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
             integrated_hist = np.zeros_like(radius_axis)
             for i_radius, _ in enumerate(radius_axis):
                 integrated_hist[i_radius] = np.sum(
