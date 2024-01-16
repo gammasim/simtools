@@ -9,7 +9,10 @@ from astropy.table import Table
 from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
-from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_histograms import (
+    InconsistentHistogramFormat,
+    SimtelHistograms,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -26,7 +29,6 @@ def simtel_array_histograms_file(io_handler, corsika_output_file_name):
 @pytest.fixture
 def simtel_array_histograms_instance(simtel_array_histograms_file):
     instance = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
-    instance.combine_histogram_files()
     return instance
 
 
@@ -52,8 +54,6 @@ def test_export_histograms(simtel_array_histograms_instance, io_handler):
 
 def test_number_of_histograms(simtel_array_histograms_file, simtel_array_histograms_instance):
     instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
-    # If combined_hists is None
-    assert instance_alone.combined_hists is None
     assert instance_alone.number_of_histograms == 145
     assert (
         len(simtel_array_histograms_instance.combined_hists)
@@ -63,28 +63,31 @@ def test_number_of_histograms(simtel_array_histograms_file, simtel_array_histogr
 
 def test_get_histogram_title(simtel_array_histograms_file, simtel_array_histograms_instance):
     instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
-    # If combined_hists is None
-    assert instance_alone.combined_hists is None
     assert instance_alone.number_of_histograms == 145
     for instance in [instance_alone, simtel_array_histograms_instance]:
         assert instance.get_histogram_title(0) == "Events, without weights (Ra, log10(E))"
 
 
-def test_combine_histogram_files(simtel_array_histograms_file):
+def test_combine_histogram_files(simtel_array_histograms_file, caplog):
     # Reading one histogram file
     instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
-
-    instance_alone.combine_histogram_files()
 
     # Passing the same file twice
     instance_all = SimtelHistograms(
         histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
     )
-    instance_all.combine_histogram_files()
 
     assert (
         2 * instance_alone.combined_hists[0]["data"] == instance_all.combined_hists[0]["data"]
     ).all()
+
+    # Test inconsistency
+    instance_all.combined_hists[0]["lower_x"] = instance_all.combined_hists[0]["lower_x"] + 1
+    with pytest.raises(InconsistentHistogramFormat):
+        instance_all._combined_hists = None
+        assert instance_all._combined_hists is None
+        _ = instance_all.combined_hists
+        assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 
 def test_plot_one_histogram(simtel_array_histograms_instance):
@@ -97,4 +100,6 @@ def test_plot_one_histogram(simtel_array_histograms_instance):
 def test_trigger_rate_per_histogram(simtel_array_histograms_instance):
     trigger_rate = simtel_array_histograms_instance.trigger_rate_per_histogram(livetime=5 * u.h)
     assert pytest.approx(trigger_rate[0].value, 0.1) == 37972.1
+    assert trigger_rate[0].unit == 1 / u.s
+    trigger_rate = simtel_array_histograms_instance.trigger_rate_per_histogram(livetime=5)
     assert trigger_rate[0].unit == 1 / u.s
