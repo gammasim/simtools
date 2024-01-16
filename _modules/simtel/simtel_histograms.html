@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+g72784ce</title>
+    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+gaf46b7c</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=4a9942b1"></script>
+    <script src="../../_static/documentation_options.js?v=8e093e47"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g72784ce</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gaf46b7c</p>
 
 
 
@@ -133,14 +133,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_files</span> <span class="o">=</span> <span class="n">histogram_files</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="o">=</span> <span class="n">test</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__meta_dict</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns number of histograms.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">combine_histogram_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SimtelHistograms.get_histogram_title">
@@ -159,8 +157,6 @@
 <span class="sd">        str</span>
 <span class="sd">            Histogram title.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">combine_histogram_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">[</span><span class="n">i_hist</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span></div>
 
 
@@ -174,17 +170,13 @@
 <span class="sd">        list:</span>
 <span class="sd">            List of histograms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_files</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">yield_toplevel_of_type</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Histograms</span><span class="p">):</span>
-                    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_files</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">yield_toplevel_of_type</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Histograms</span><span class="p">):</span>
                         <span class="n">hists</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
-                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Problematic file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="k">continue</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hists</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hists</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span>
 
     <span class="k">def</span> <span class="nf">_check_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">first_hist_file</span><span class="p">,</span> <span class="n">second_hist_file</span><span class="p">):</span>
@@ -215,31 +207,40 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="n">InconsistentHistogramFormat</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelHistograms.combine_histogram_files">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.combine_histogram_files">[docs]</a>
-    <span class="k">def</span> <span class="nf">combine_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">combined_hists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the values of the same type of histogram from the various lists into a single</span>
 <span class="sd">        histogram list.&quot;&quot;&quot;</span>
         <span class="c1"># Processing and combining histograms from multiple files</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">n_files</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">hists_one_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_histograms</span><span class="p">:</span>
-            <span class="n">count_file</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i_hist</span><span class="p">,</span> <span class="n">hists_one_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_of_histograms</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i_hist</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># First file</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># First file</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_check_consistency</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span><span class="p">)</span>
 
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hists_one_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_check_consistency</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">this_combined_hist</span><span class="p">)</span>
+                        <span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
 
-                    <span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">this_combined_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of reading </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_of_histograms</span><span class="p">)</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span>
 
-            <span class="n">n_files</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count_file</span><span class="p">)</span>
+    <span class="nd">@combined_hists</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">combined_hists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_combined_hists</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter for combined_hists.</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of reading </span><span class="si">{</span><span class="n">n_files</span><span class="si">}</span><span class="s2"> files&quot;</span><span class="p">)</span></div>
-
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_combined_hists:</span>
+<span class="sd">            Combined histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="n">new_combined_hists</span>
 
     <span class="k">def</span> <span class="nf">_derive_trigger_rate_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">livetime</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
