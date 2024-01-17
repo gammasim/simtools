@@ -20,7 +20,7 @@ def lst_config_file():
 
 
 @pytest.fixture
-def telescope_model_from_config_file(lst_config_file):
+def telescope_model_from_config_file(io_handler, lst_config_file):
     label = "test-telescope-model"
     tel_model = TelescopeModel.from_config_file(
         site="North",
