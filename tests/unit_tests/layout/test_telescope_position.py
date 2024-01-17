@@ -260,7 +260,7 @@ def test_altitude_transformations():
     _z = tel.convert_telescope_altitude_to_corsika_system(
         tel_altitude=2.177 * u.km,
         corsika_observation_level=2158.0 * u.m,
-        corsika_sphere_center=16.0 * u.m,
+        telescope_axis_height=16.0 * u.m,
     )
     assert _z.value == pytest.approx(35.0, 0.1)
 
@@ -268,20 +268,20 @@ def test_altitude_transformations():
         tel.convert_telescope_altitude_to_corsika_system(
             tel_altitude=2177,
             corsika_observation_level=2158.0 * u.m,
-            corsika_sphere_center=16.0 * u.m,
+            telescope_axis_height=16.0 * u.m,
         )
 
     _alt = tel.convert_telescope_altitude_from_corsika_system(
         tel_corsika_z=35.0 * u.m,
         corsika_observation_level=2.158 * u.km,
-        corsika_sphere_center=16.0 * u.m,
+        telescope_axis_height=16.0 * u.m,
     )
     assert _alt.value == pytest.approx(2177.0, 0.1)
     with pytest.raises(TypeError):
         tel.convert_telescope_altitude_from_corsika_system(
             tel_corsika_z=35.0 * u.m,
             corsika_observation_level=2.158,
-            corsika_sphere_center=16.0 * u.m,
+            telescope_axis_height=16.0 * u.m,
         )
 
 
@@ -322,7 +322,7 @@ def test_print_compact_format(capsys):
     telescope.print_compact_format(
         crs_name="ground",
         corsika_observation_level=None,
-        corsika_sphere_center=None,
+        telescope_axis_height=None,
     )
     _output = capsys.readouterr().out
     # ignore differences in spaces
@@ -332,7 +332,7 @@ def test_print_compact_format(capsys):
     telescope.print_compact_format(
         crs_name="ground",
         corsika_observation_level=2000.0 * u.m,
-        corsika_sphere_center=15.0 * u.m,
+        telescope_axis_height=15.0 * u.m,
     )
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
@@ -341,7 +341,7 @@ def test_print_compact_format(capsys):
     telescope.print_compact_format(
         crs_name="ground",
         corsika_observation_level=2000.0 * u.m,
-        corsika_sphere_center=15.0 * u.m,
+        telescope_axis_height=15.0 * u.m,
         print_header=True,
     )
     _output = capsys.readouterr().out
@@ -353,7 +353,7 @@ def test_print_compact_format(capsys):
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
     # corsika_sphere should have no impact on output
-    telescope.print_compact_format("mercator", corsika_sphere_center=15.0 * u.m)
+    telescope.print_compact_format("mercator", telescope_axis_height=15.0 * u.m)
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 

@@ -319,10 +319,9 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = (
-                pars["corsika_observation_level"]["Value"]
-                or pars["corsika_observation_level"]["value"]
-            )
+            _obs_level = pars["corsika_observation_level"].get("Value") or pars[
+                "corsika_observation_level"
+            ].get("value")
             assert _obs_level == pytest.approx(2156.0)
         else:
             _obs_level = pars["altitude"]["Value"] or pars["altitude"]["value"]
@@ -335,12 +334,11 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = (
-                pars["corsika_observation_level"]["Value"]
-                or pars["corsika_observation_level"]["value"]
-            )
+            _obs_level = pars["corsika_observation_level"].get("Value") or pars[
+                "corsika_observation_level"
+            ].get("value")
         else:
-            _obs_level = pars["altitude"]["Value"] or pars["altitude"]["value"]
+            _obs_level = pars["altitude"].get("Value") or pars["altitude"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
