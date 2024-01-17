@@ -566,7 +566,6 @@ class ArrayLayout:
             data table with array element coordinates
 
         """
-        print(table)
         for row in table:
             tel = self._load_telescope_names(row)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
