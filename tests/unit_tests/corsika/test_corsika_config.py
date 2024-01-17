@@ -249,11 +249,11 @@ def test_load_corsika_parameters_file(corsika_config, io_handler, caplog):
     for tel_type in sphere_center:
         assert (
             sphere_center[tel_type]["value"]
-            == corsika_dict["corsika_sphere_center"][tel_type]["value"]
+            == corsika_dict["telescope_axis_height"][tel_type]["value"]
         )
         assert (
             sphere_center[tel_type]["unit"]
-            == corsika_dict["corsika_sphere_center"][tel_type]["unit"]
+            == corsika_dict["telescope_axis_height"][tel_type]["unit"]
         )
     for tel_type in sphere_radius:
         assert (

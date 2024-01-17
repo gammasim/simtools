@@ -78,7 +78,7 @@
 #   corsika_observation_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2147.0
-#   corsika_sphere_center:
+#   telescope_axis_height:
 #     LST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 16.0

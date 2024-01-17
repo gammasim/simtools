@@ -198,7 +198,7 @@ class ArrayLayout:
                 raise FileNotFoundError
 
         corsika_dict = {}
-        corsika_pars = ["corsika_sphere_radius", "corsika_sphere_center"]
+        corsika_pars = ["corsika_sphere_radius", "telescope_axis_height"]
         for simtools_par in corsika_pars:
             corsika_par = names.translate_simtools_to_corsika(simtools_par)
             corsika_dict[simtools_par] = {}
@@ -281,7 +281,7 @@ class ArrayLayout:
         except (TypeError, KeyError):
             self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
 
-        for key in ["corsika_sphere_center", "corsika_sphere_radius"]:
+        for key in ["telescope_axis_height", "corsika_sphere_radius"]:
             try:
                 self._corsika_telescope[key] = self._initialize_sphere_parameters(corsika_dict[key])
             except (TypeError, KeyError):
@@ -384,18 +384,18 @@ class ArrayLayout:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
                 self._corsika_telescope["corsika_observation_level"],
-                self._get_corsika_sphere_center(tel_name),
+                self._get_telescope_axis_height(tel_name),
             )
 
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
                 self._corsika_telescope["corsika_observation_level"],
-                self._get_corsika_sphere_center(tel_name),
+                self._get_telescope_axis_height(tel_name),
             )
         return np.nan
 
-    def _get_corsika_sphere_center(self, tel_name):
+    def _get_telescope_axis_height(self, tel_name):
         """
         Return CORSIKA sphere center value for given telescope.
 
@@ -417,7 +417,7 @@ class ArrayLayout:
         """
 
         try:
-            return self._corsika_telescope["corsika_sphere_center"][
+            return self._corsika_telescope["telescope_axis_height"][
                 names.get_telescope_type(tel_name)
             ]
         except KeyError:
@@ -775,7 +775,7 @@ class ArrayLayout:
                 pos_z = tel.convert_telescope_altitude_to_corsika_system(
                     pos_z,
                     self._corsika_telescope["corsika_observation_level"],
-                    self._get_corsika_sphere_center(tel.name),
+                    self._get_telescope_axis_height(tel.name),
                 )
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere center / obs_level")
@@ -820,16 +820,16 @@ class ArrayLayout:
         for tel in self._telescope_list:
             if corsika_z:
                 _corsika_observation_level = self._corsika_telescope["corsika_observation_level"]
-                _corsika_sphere_center = self._get_corsika_sphere_center(tel.name)
+                _telescope_axis_height = self._get_telescope_axis_height(tel.name)
             else:
                 _corsika_observation_level = None
-                _corsika_sphere_center = None
+                _telescope_axis_height = None
 
             tel.print_compact_format(
                 crs_name=compact_printing,
                 print_header=(tel == self._telescope_list[0]),
                 corsika_observation_level=_corsika_observation_level,
-                telescope_axis_height=_corsika_sphere_center,
+                telescope_axis_height=_telescope_axis_height,
             )
 
     def print_telescope_list(self, compact_printing="", corsika_z=False):

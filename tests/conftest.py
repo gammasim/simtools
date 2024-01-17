@@ -224,7 +224,7 @@ def manual_corsika_dict_north():
             "VERITAS": 9.15
             * u.m,  # Invented value (same diameter as the MST, so copy the same value)
         },
-        "corsika_sphere_center": {
+        "telescope_axis_height": {
             "LST": 16 * u.m,
             "MST": 9 * u.m,
             "SCT": 6.1 * u.m,
@@ -250,7 +250,7 @@ def manual_corsika_dict_south():
             "VERITAS": 9.15
             * u.m,  # Invented value (same diameter as the MST, so copy the same value)
         },
-        "corsika_sphere_center": {
+        "telescope_axis_height": {
             "LST": 16 * u.m,
             "MST": 9 * u.m,
             "SCT": 6.1 * u.m,

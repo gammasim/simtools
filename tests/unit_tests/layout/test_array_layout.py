@@ -132,8 +132,8 @@ def test_initialize_corsika_telescope_from_file(
 
         for key, value in corsika_dict["corsika_sphere_radius"].items():
             assert value == instance._corsika_telescope["corsika_sphere_radius"][key]
-        for key, value in corsika_dict["corsika_sphere_center"].items():
-            assert value == instance._corsika_telescope["corsika_sphere_center"][key]
+        for key, value in corsika_dict["telescope_axis_height"].items():
+            assert value == instance._corsika_telescope["telescope_axis_height"][key]
 
     test_one_site(array_layout_north_instance, manual_corsika_dict_north)
     test_one_site(array_layout_south_instance, manual_corsika_dict_south)
@@ -482,16 +482,16 @@ def test_try_set_altitude(
 ):
     obs_level_north = 2158.0
     manual_z_positions_north = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
-    corsika_sphere_center_north = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
+    telescope_axis_height_north = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
 
     obs_level_south = 2147.0
     manual_z_positions_south = [34.30, 29.40, 31.00, 33.10, 24.35, 31.00]
-    corsika_sphere_center_south = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
+    telescope_axis_height_south = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
 
-    def test_one_site(test_file, instance, obs_level, manual_z_positions, corsika_sphere_center):
+    def test_one_site(test_file, instance, obs_level, manual_z_positions, telescope_axis_height):
         table = data_reader.read_table_from_file(test_file, validate=False)
         manual_altitudes = [
-            manual_z_positions[step] + obs_level - corsika_sphere_center[step] for step in range(6)
+            manual_z_positions[step] + obs_level - telescope_axis_height[step] for step in range(6)
         ]
         for step, row in enumerate(table[:6]):
             tel = instance._load_telescope_names(row)
@@ -504,14 +504,14 @@ def test_try_set_altitude(
         array_layout_north_instance,
         obs_level_north,
         manual_z_positions_north,
-        corsika_sphere_center_north,
+        telescope_axis_height_north,
     )
     test_one_site(
         telescope_south_test_file,
         array_layout_south_instance,
         obs_level_south,
         manual_z_positions_south,
-        corsika_sphere_center_south,
+        telescope_axis_height_south,
     )
 
 
@@ -551,20 +551,20 @@ def test_try_set_coordinate(
     )
 
 
-def test_get_corsika_sphere_center(telescope_north_test_file, caplog):
+def test_get_telescope_axis_height(telescope_north_test_file, caplog):
     layout = ArrayLayout(telescope_list_file=telescope_north_test_file)
 
-    assert layout._get_corsika_sphere_center("LST") == 16.0 * u.m
+    assert layout._get_telescope_axis_height("LST") == 16.0 * u.m
 
     with caplog.at_level(logging.WARNING):
-        assert layout._get_corsika_sphere_center("not_a_telescope") == 0.0 * u.m
+        assert layout._get_telescope_axis_height("not_a_telescope") == 0.0 * u.m
     assert (
         "Missing definition of CORSIKA sphere center for telescope not_a_telescope of type"
         in caplog.text
     )
 
     with caplog.at_level(logging.WARNING):
-        assert layout._get_corsika_sphere_center("") == 0.0 * u.m
+        assert layout._get_telescope_axis_height("") == 0.0 * u.m
     assert "Missing definition of CORSIKA sphere center for telescope  of type " in caplog.text
 
 

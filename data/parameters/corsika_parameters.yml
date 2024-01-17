@@ -103,7 +103,7 @@ IACT_TUNING_PARAMETERS:
     ['MAX_BUNCHES', '1000000']
   ]
 
-corsika_sphere_center:
+telescope_axis_height:
   LST:
     value: 16
     unit: "m"
