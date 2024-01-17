@@ -119,7 +119,7 @@ corsika_to_simtools_names = {
 site_parameters = {
     # Note inconsistency between old and new model
     # altitude was the corsika observation level in the old model
-    "reference_point_altitude": {"name": "altitude", "simtel": False},
+    "reference_point_altitude": {"name": "altitude", "simtel": True},
     "reference_point_longitude": {"name": "ref_long", "simtel": False},
     "reference_point_latitude": {"name": "ref_lat", "simtel": False},
     # Note naming inconsistency between old and new model

@@ -182,8 +182,8 @@ class TelescopeModel(ModelParameter):
                     par, value = _process_line(words)
                     parameters[par] = value
 
-        for par, value in parameters.items():
-            tel.add_parameter(par, value)
+        for par_name, value in parameters.items():
+            tel.add_parameter(tel.get_parameter_name_from_simtel_name(par_name), value)
 
         tel._is_exported_model_files_up_to_date = True
         return tel
@@ -216,10 +216,10 @@ class TelescopeModel(ModelParameter):
 
         self._logger.info(f"Adding {par_name}={value} to the model")
         self._parameters[par_name] = {}
-        self._parameters[par_name]["Value"] = value
-        self._parameters[par_name]["Type"] = type(value)
-        self._parameters[par_name]["Applicable"] = is_applicable
-        self._parameters[par_name]["File"] = is_file
+        self._parameters[par_name]["value"] = value
+        self._parameters[par_name]["type"] = type(value)
+        self._parameters[par_name]["applicable"] = is_applicable
+        self._parameters[par_name]["file"] = is_file
 
         self._is_config_file_up_to_date = False
         if is_file:
@@ -229,6 +229,20 @@ class TelescopeModel(ModelParameter):
         """
         Get an existing parameter of the model.
         Includes derived parameters.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+
+        Returns
+        -------
+        Value of the parameter
+
+        Raises
+        ------
+        KeyError
+            If the parameter does not exist in the model.
 
         """
         try:
@@ -264,30 +278,30 @@ class TelescopeModel(ModelParameter):
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        type_of_par_name = locate(self._parameters[par_name]["Type"])
+        type_of_par_name = locate(self.get_parameter_type(par_name))
         if not isinstance(value, type_of_par_name):
             self._logger.warning(
                 f"The type of the provided value ({value}, {type(value)}) "
                 f"is different from the type of {par_name} "
-                f"({self._parameters[par_name]['Type']}). "
+                f"({self.get_parameter_type(par_name)}). "
                 f"Attempting to cast to the correct type."
             )
             try:
                 value = type_of_par_name(value)
             except ValueError:
                 self._logger.error(
-                    f"Could not cast {value} to {self._parameters[par_name]['Type']}."
+                    f"Could not cast {value} to {self.get_parameter_type(par_name)}."
                 )
                 raise
 
         self._logger.debug(
             f"Changing parameter {par_name} "
-            f"from {self._parameters[par_name]['Value']} to {value}"
+            f"from {self.get_parameter_value(par_name)} to {value}"
         )
-        self._parameters[par_name]["Value"] = value
+        self._parameters[par_name]["value"] = value
 
         # In case parameter is a file, the model files will be outdated
-        if self._parameters[par_name].get("File") or self._parameters[par_name].get("file"):
+        if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
         self._is_config_file_up_to_date = False
@@ -364,7 +378,7 @@ class TelescopeModel(ModelParameter):
                 self.db.export_file_db(
                     db_name=self.db.DB_DERIVED_VALUES,
                     dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
-                    file_name=par_now["Value"],
+                    file_name=(par_now.get("value") or par_now.get("Value")),
                 )
 
     def get_config_file(self, no_export=False):
@@ -467,7 +481,7 @@ class TelescopeModel(ModelParameter):
 
     def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
-        mirror_list_file_name = self._parameters["mirror_list"]["Value"]
+        mirror_list_file_name = self.get_parameter_value("mirror_list")
         try:
             mirror_list_file = gen.find_file(mirror_list_file_name, self._config_file_directory)
         except FileNotFoundError:
@@ -591,12 +605,12 @@ class TelescopeModel(ModelParameter):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
 
         ray_tracing_data = astropy.io.ascii.read(
-            self.get_derived_directory().joinpath(self.derived["ray_tracing"]["Value"])
+            self.get_derived_directory().joinpath(self.get_parameter_value("ray_tracing"))
         )
         if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
             self._logger.error(
                 f"No value for the on-axis effective optical area exists."
-                f" The minumum off-axis angle is {ray_tracing_data['Off-axis angle'][0]}"
+                f" The minimum off-axis angle is {ray_tracing_data['Off-axis angle'][0]}"
             )
             raise ValueError
         return ray_tracing_data["eff_area"][0]

@@ -179,6 +179,51 @@ class ModelParameter:
             self._logger.debug(f"Parameter {par_name} has value {_value} without units")
             return _value
 
+    def get_parameter_type(self, par_name):
+        """
+        Get the type of an existing parameter of the model.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+
+        Returns
+        -------
+        str or None
+            type of the parameter (None if no type is defined)
+
+        """
+        parameter_dict = self.get_parameter(par_name)
+        try:
+            return parameter_dict.get("type") or parameter_dict.get("Type")
+        except KeyError:
+            self._logger.debug(f"Parameter {par_name} does not have a type")
+        return None
+
+    def get_parameter_file_flag(self, par_name):
+        """
+        Get value of parameter file flag.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+
+        Returns
+        -------
+        bool
+            True if file flag is set.
+
+        """
+        parameter_dict = self.get_parameter(par_name)
+        try:
+            if parameter_dict.get("file") or parameter_dict.get("File"):
+                return True
+        except KeyError:
+            self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
+        return False
+
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par, info in self._parameters.items():
@@ -204,7 +249,6 @@ class ModelParameter:
         if self.name is None:
             return
 
-        print("AAAA", self.label)
         if self.label is not None:
             self._config_file_directory = self.io_handler.get_output_directory(
                 label=self.label, sub_dir="model"
@@ -312,8 +356,32 @@ class ModelParameter:
                 ):
                     _par_name = None
             if _par_name is not None:
-                self._logger.debug(f"Parameter {key} will be written to simtel as {_par_name}")
                 _simtel_parameter_value[_par_name] = self._parameters[key].get(
                     "value"
                 ) or self._parameters[key].get("Value")
         return _simtel_parameter_value
+
+    def get_parameter_name_from_simtel_name(self, simtel_name):
+        """
+        Get the model parameter name from the simtel parameter name.
+        Assumes that both names are equal if not defined otherwise in names.py.
+
+        Parameters
+        ----------
+        simtel_name: str
+            Simtel parameter name.
+
+        Returns
+        -------
+        str
+            Model parameter name.
+        """
+
+        _parameter_names = {}
+        _parameter_names.update(names.telescope_parameters)
+        _parameter_names.update(names.site_parameters)
+
+        for par_name, par_info in _parameter_names.items():
+            if par_info.get("name") == simtel_name:
+                return par_name
+        return simtel_name
