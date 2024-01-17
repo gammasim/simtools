@@ -78,7 +78,7 @@ def main():
     corsika_telescope_data["corsika_observation_level"] = site_model.get_parameter_value_with_unit(
         "corsika_observation_level"
     )
-    corsika_telescope_data["corsika_sphere_center"] = corsika_pars["corsika_sphere_center"]
+    corsika_telescope_data["telescope_axis_height"] = corsika_pars["telescope_axis_height"]
     corsika_telescope_data["corsika_sphere_radius"] = corsika_pars["corsika_sphere_radius"]
 
     # Telescope distances for 4 tel square arrays
