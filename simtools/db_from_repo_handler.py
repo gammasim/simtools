@@ -45,13 +45,13 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site, f"{key}.json")
         try:
             logger.debug(
-                f"Parameter {key}/{value} updated for {model_version} "
+                f"Parameter {key}/{value['name']} updated for {model_version} "
                 f"from repository file {file_path}"
             )
             parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
         except FileNotFoundError:
             logger.debug(
-                f"Parameter {value} not updated for {model_version};"
+                f"Parameter {value['name']} not updated for {model_version};"
                 f"missing repository file {file_path}"
             )
             continue
