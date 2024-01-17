@@ -64,15 +64,15 @@ def test_simtools_instrument_name():
 
 
 def test_translate_corsika_to_simtools():
-    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "corsika_sphere_center"]
-    simtools_pars = ["corsika_observation_level", "corsika_sphere_radius", "corsika_sphere_center"]
+    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "telescope_axis_height"]
+    simtools_pars = ["corsika_observation_level", "corsika_sphere_radius", "telescope_axis_height"]
     for step, corsika_par in enumerate(corsika_pars):
         assert names.translate_corsika_to_simtools(corsika_par) == simtools_pars[step]
 
 
 def test_translate_simtools_to_corsika():
-    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "corsika_sphere_center"]
-    simtools_pars = ["corsika_observation_level", "corsika_sphere_radius", "corsika_sphere_center"]
+    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "telescope_axis_height"]
+    simtools_pars = ["corsika_observation_level", "corsika_sphere_radius", "telescope_axis_height"]
     for step, simtools_par in enumerate(simtools_pars):
         assert names.translate_simtools_to_corsika(simtools_par) == corsika_pars[step]
 

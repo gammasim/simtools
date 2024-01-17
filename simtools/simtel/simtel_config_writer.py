@@ -25,29 +25,6 @@ class SimtelConfigWriter:
     """
 
     TAB = " " * 3
-    SITE_PARS = [
-        "altitude",
-        "atmospheric_transmission",
-        "ref_lat",
-        "ref_long",
-        "array_coordinates",
-        "atmospheric_profile",
-        "magnetic_field",
-    ]
-    PARS_NOT_TO_WRITE = [
-        "pixel_shape",
-        "pixel_diameter",
-        "lightguide_efficiency_angle_file",
-        "lightguide_efficiency_wavelength_file",
-        "ref_lat",
-        "ref_long",
-        "array_coordinates",
-        "atmospheric_profile",
-        "magnetic_field",
-        "EPSG",
-        "mirror_panel_shape",
-        "mirror_panel_diameter",
-    ]
 
     def __init__(
         self, site, model_version, layout_name=None, telescope_model_name=None, label=None
@@ -73,8 +50,9 @@ class SimtelConfigWriter:
         config_file_path: str or Path
             Path of the file to write on.
         parameters: dict
-            Model parameters in the same structure as used by the TelescopeModel class.
+            Model parameters
         """
+        self._logger.debug(f"Writing telescope config file {config_file_path}")
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -85,10 +63,7 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            for par in parameters.keys():
-                if par in self.PARS_NOT_TO_WRITE:
-                    continue
-                value = parameters[par].get("value") or parameters[par].get("Value")
+            for par, value in parameters.items():
                 file.write(f"{par} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
@@ -215,9 +190,6 @@ class SimtelConfigWriter:
     def _write_site_parameters(self, file, site_parameters):
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
-        for par in site_parameters:
-            if par in self.PARS_NOT_TO_WRITE:
-                continue
-            value = site_parameters[par].get("value") or site_parameters[par].get("Value")
-            file.write(self.TAB + f"{par} = {value}\n")
+        for par, value in site_parameters.items():
+            file.write(f"{par} = {value}\n")
         file.write("\n")

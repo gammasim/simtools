@@ -353,7 +353,7 @@ class TelescopeModel(ModelParameter):
         # Using SimtelConfigWriter to write the config file.
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self._config_file_path, parameters=self._parameters
+            config_file_path=self._config_file_path, parameters=self.get_simtel_parameters()
         )
 
     def export_derived_files(self):
@@ -678,3 +678,15 @@ class TelescopeModel(ModelParameter):
         file_to_write_to = self._config_file_directory.joinpath(file_name)
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
+
+    def get_simtel_parameters(self, telescope_model=True, site_model=True):
+        """
+        Get simtel site parameters as dict
+
+        Returns
+        -------
+        dict
+            simtel parameters as dict
+
+        """
+        return super().get_simtel_parameters(telescope_model=telescope_model, site_model=site_model)

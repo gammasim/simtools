@@ -1,9 +1,9 @@
 import logging
 from copy import copy
 
-from simtools import db_handler
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
@@ -146,9 +146,11 @@ class ArrayModel:
 
         # Getting site parameters from DB
         self._logger.debug("Getting site parameters from DB")
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._site_parameters = db.get_site_parameters(
-            self.site, self.model_version, only_applicable=True
+        self._site_model = SiteModel(
+            site=self.site,
+            mongo_db_config=self.mongo_db_config,
+            model_version=self.model_version,
+            label=self.label,
         )
 
         # Building telescope models
@@ -175,8 +177,8 @@ class ArrayModel:
                     site=self.site,
                     telescope_model_name=tel_model_name,
                     model_version=self.model_version,
+                    mongo_db_config=self.mongo_db_config,
                     label=self.label,
-                    db=db,
                 )
             else:
                 # Telescope name already exists.
@@ -321,11 +323,12 @@ class ArrayModel:
             model_version=self.model_version,
             label=self.label,
         )
+        print("BBBBB write config")
         simtel_writer.write_array_config_file(
             config_file_path=self._config_file_path,
             layout=self.layout,
             telescope_model=self._telescope_model,
-            site_parameters=self._site_parameters,
+            site_parameters=self._site_model.get_simtel_parameters(),
         )
         self._array_model_file_exported = True
 

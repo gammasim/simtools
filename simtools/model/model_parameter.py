@@ -267,3 +267,52 @@ class ModelParameter:
         Return the extra label if defined, if not return ''.
         """
         return self._extra_label if self._extra_label is not None else ""
+
+    def get_simtel_parameters(self, telescope_model=True, site_model=True):
+        """
+        Get simtel parameters as name and value pairs. Do not include parameters
+        labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
+
+        Parameters
+        ----------
+        telescope_model: bool
+            If True, telescope model parameters are included.
+        site_model: bool
+            If True, site model parameters are included.
+
+        Returns
+        -------
+        dict
+            simtel parameters as dict
+
+        """
+
+        _parameter_names = {}
+        if telescope_model:
+            _parameter_names.update(names.telescope_parameters)
+        if site_model:
+            _parameter_names.update(names.site_parameters)
+
+        _simtel_parameter_value = {}
+        for key in self._parameters:
+            # not all parameters are listed in names.site_parameters
+            # or site.telescope_parameters; use it as a filter list
+            try:
+                _par_name = (
+                    _parameter_names[key]["name"] if _parameter_names[key]["simtel"] else None
+                )
+            except KeyError:
+                _par_name = key
+            # check for new and old parameter names
+            for _, _simtools_name_config in _parameter_names.items():
+                if (
+                    key == _simtools_name_config["name"]
+                    and _simtools_name_config["simtel"] is False
+                ):
+                    _par_name = None
+            if _par_name is not None:
+                self._logger.debug(f"Parameter {key} will be written to simtel as {_par_name}")
+                _simtel_parameter_value[_par_name] = self._parameters[key].get(
+                    "value"
+                ) or self._parameters[key].get("Value")
+        return _simtel_parameter_value

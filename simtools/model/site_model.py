@@ -47,7 +47,7 @@ class SiteModel(ModelParameter):
 
     def get_reference_point(self):
         """
-        Get reference point coordinates as dicts
+        Get reference point coordinates as dict
 
         Returns
         -------
@@ -61,3 +61,15 @@ class SiteModel(ModelParameter):
             "center_alt": self.get_parameter_value_with_unit("reference_point_altitude"),
             "EPSG": self.get_parameter_value("epsg_code"),
         }
+
+    def get_simtel_parameters(self, telescope_model=False, site_model=True):
+        """
+        Get simtel site parameters as dict
+
+        Returns
+        -------
+        dict
+            Simtel site parameters as dict
+
+        """
+        return super().get_simtel_parameters(telescope_model=telescope_model, site_model=site_model)
