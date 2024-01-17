@@ -162,7 +162,7 @@ def main():
     layout = array_layout.ArrayLayout(
         telescope_list_file=args_dict["input"],
         telescope_list_metadata_file=args_dict["input_meta"],
-        validate=True,
+        validate=False,
     )
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
