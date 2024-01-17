@@ -13,4 +13,7 @@ SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/
 # will be replaced by the database
 # TODO Temporarily set to a local path for easier development
 # SIMULATION_MODEL_URL = "../simulation_model/verified_model/"
-SIMULATION_MODEL_URL = None
+# SIMULATION_MODEL_URL = None
+SIMULATION_MODEL_URL = (
+    "https://raw.githubusercontent.com/gammasim/simulation_model/coordinates/verified_model/"
+)
