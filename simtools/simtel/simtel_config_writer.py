@@ -165,7 +165,7 @@ class SimtelConfigWriter:
 
     def _write_header(self, file, title, comment_char="%"):
         """
-        Writes a generic header. commen_char is the character to be used for comments, which \
+        Writes a generic header. comment_char is the character to be used for comments, which \
         differs among ctypes of config files.
         """
         header = f"{comment_char}{50 * '='}\n"

@@ -129,6 +129,7 @@ site_parameters = {
     "magnetic_field": {"name": "magnetic_field", "simtel": False},
     "atmospheric_profile": {"name": "atmospheric_profile", "simtel": False},
     "atmospheric_transmission": {"name": "atmospheric_transmission", "simtel": True},
+    "array_coordinates": {"name": "array_coordinates", "simtel": False},
 }
 
 telescope_parameters = {
@@ -142,7 +143,6 @@ telescope_parameters = {
         "name": "lightguide_efficiency_wavelength_file",
         "simtel": False,
     },
-    "array_coordinates": {"name": "array_coordinates", "simtel": False},
     "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
 }

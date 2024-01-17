@@ -323,7 +323,6 @@ class ArrayModel:
             model_version=self.model_version,
             label=self.label,
         )
-        print("BBBBB write config")
         simtel_writer.write_array_config_file(
             config_file_path=self._config_file_path,
             layout=self.layout,
