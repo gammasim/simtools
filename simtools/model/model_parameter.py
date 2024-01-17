@@ -113,7 +113,7 @@ class ModelParameter:
         except KeyError:
             pass
         try:
-            _tmp_par_name = db_from_repo_handler.site_parameters[par_name]
+            _tmp_par_name = db_from_repo_handler.site_parameters[par_name]["name"]
             return self._parameters[_tmp_par_name]
         except KeyError as e:
             msg = f"Parameter {par_name} was not found in the model"
@@ -204,6 +204,7 @@ class ModelParameter:
         if self.name is None:
             return
 
+        print("AAAA", self.label)
         if self.label is not None:
             self._config_file_directory = self.io_handler.get_output_directory(
                 label=self.label, sub_dir="model"
