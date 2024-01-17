@@ -72,7 +72,7 @@ class TelescopePosition:
         crs_name,
         print_header=False,
         corsika_observation_level=None,
-        corsika_sphere_center=None,
+        telescope_axis_height=None,
     ):
         """
         Print array element coordinates in compact format.
@@ -85,8 +85,8 @@ class TelescopePosition:
             Print table header.
         corsika_observation_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
+        telescope_axis_height: astropy.Quantity
+            Height of telescope elevation axis above ground level in equivalent units of meter.
 
         Raises
         ------
@@ -100,13 +100,13 @@ class TelescopePosition:
             if (
                 crs_name == "ground"
                 and corsika_observation_level is not None
-                and corsika_sphere_center is not None
+                and telescope_axis_height is not None
             ):
                 _zz = (
                     self.convert_telescope_altitude_to_corsika_system(
                         _zz * u.Unit(self.crs[crs_name]["zz"]["unit"]),
                         corsika_observation_level,
-                        corsika_sphere_center,
+                        telescope_axis_height,
                     )
                 ).value
                 _zz_header = "position_z"
@@ -422,9 +422,9 @@ class TelescopePosition:
             raise InvalidCoordSystem from e
 
     @staticmethod
-    @u.quantity_input(tel_altitude=u.m, corsika_observation_level=u.m, corsika_sphere_center=u.m)
+    @u.quantity_input(tel_altitude=u.m, corsika_observation_level=u.m, telescope_axis_height=u.m)
     def convert_telescope_altitude_to_corsika_system(
-        tel_altitude, corsika_observation_level, corsika_sphere_center
+        tel_altitude, corsika_observation_level, telescope_axis_height
     ):
         """
         Convert telescope altitude to CORSIKA system (pos_z).
@@ -435,8 +435,8 @@ class TelescopePosition:
             Telescope altitude in equivalent units of meter.
         corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
+        telescope_axis_height: astropy.Quantity
+            Height of telescope elevation axis above ground level in equivalent units of meter.
 
         Returns
         -------
@@ -444,12 +444,12 @@ class TelescopePosition:
             Z-position of a telescope in CORSIKA system.
         """
 
-        return (tel_altitude - corsika_observation_level + corsika_sphere_center).to(u.m)
+        return (tel_altitude - corsika_observation_level + telescope_axis_height).to(u.m)
 
     @staticmethod
-    @u.quantity_input(tel_corsika_z=u.m, corsika_observation_level=u.m, corsika_sphere_center=u.m)
+    @u.quantity_input(tel_corsika_z=u.m, corsika_observation_level=u.m, telescope_axis_height=u.m)
     def convert_telescope_altitude_from_corsika_system(
-        tel_corsika_z, corsika_observation_level=None, corsika_sphere_center=None
+        tel_corsika_z, corsika_observation_level=None, telescope_axis_height=None
     ):
         """
         Convert Corsika (pos_z) to altitude.
@@ -460,15 +460,15 @@ class TelescopePosition:
             Telescope z-position in CORSIKA system in equivalent units of meter.
         corsika_observation_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
+        telescope_axis_height: astropy.Quantity
+            Height of telescope elevation axis above ground level in equivalent units of meter.
 
         Returns
         -------
         astropy.units.m
             Telescope altitude (above sea level)
         """
-        return tel_corsika_z + corsika_observation_level - corsika_sphere_center
+        return tel_corsika_z + corsika_observation_level - telescope_axis_height
 
     def convert_all(self, crs_local=None, crs_wgs84=None, crs_utm=None):
         """

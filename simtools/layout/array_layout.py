@@ -572,7 +572,7 @@ class ArrayLayout:
             tel = self._load_telescope_names(row)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
-            self._try_set_coordinate(row, tel, table, "mercator", "mercator", "lon")
+            self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")
             self._try_set_altitude(row, tel, table)
 
             self._telescope_list.append(tel)
@@ -829,7 +829,7 @@ class ArrayLayout:
                 crs_name=compact_printing,
                 print_header=(tel == self._telescope_list[0]),
                 corsika_observation_level=_corsika_observation_level,
-                corsika_sphere_center=_corsika_sphere_center,
+                telescope_axis_height=_corsika_sphere_center,
             )
 
     def print_telescope_list(self, compact_printing="", corsika_z=False):
