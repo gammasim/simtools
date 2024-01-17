@@ -9,6 +9,7 @@ from pathlib import Path
 
 import simtools.constants
 import simtools.utils.general as gen
+from simtools.utils.names import site_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +57,3 @@ def update_site_parameters_from_repo(parameters, site, model_version):
             continue
 
     return parameters
-
-
-# simulation_model parameter naming to DB parameter naming mapping
-site_parameters = {
-    # Note inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
-    "reference_point_altitude": "altitude",
-    "reference_point_longitude": "ref_long",
-    "reference_point_latitude": "ref_lat",
-    # Note naming inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
-    "corsika_observation_level": "altitude",
-    "epsg_code": "EPSG",
-}

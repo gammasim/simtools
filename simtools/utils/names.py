@@ -108,8 +108,43 @@ all_array_layout_names = {
     "TestLayout": ["test-layout"],
 }
 
+# TODO replace
 corsika_to_simtools_names = {
     "OBSLEV": "corsika_observation_level",
+}
+
+# simulation_model parameter naming to DB parameter naming mapping
+# list at least those parameters with name changes or which should
+# not be written to CORSIKA or sim_telarray configuration file
+site_parameters = {
+    # Note inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "reference_point_altitude": {"name": "altitude", "simtel": False},
+    "reference_point_longitude": {"name": "ref_long", "simtel": False},
+    "reference_point_latitude": {"name": "ref_lat", "simtel": False},
+    # Note naming inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "corsika_observation_level": {"name": "altitude", "simtel": True},
+    "epsg_code": {"name": "EPSG", "simtel": False},
+    "magnetic_field": {"name": "magnetic_field", "simtel": False},
+    "atmospheric_profile": {"name": "atmospheric_profile", "simtel": False},
+    "atmospheric_transmission": {"name": "atmospheric_transmission", "simtel": True},
+}
+
+telescope_parameters = {
+    "pixel_shape": {"name": "pixel_shape", "simtel": False},
+    "pixel_diameter": {"name": "pixel_diameter", "simtel": False},
+    "lightguide_efficiency_angle_file": {
+        "name": "lightguide_efficiency_angle_file",
+        "simtel": False,
+    },
+    "lightguide_efficiency_wavelength_file": {
+        "name": "lightguide_efficiency_wavelength_file",
+        "simtel": False,
+    },
+    "array_coordinates": {"name": "array_coordinates", "simtel": False},
+    "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
+    "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
 }
 
 

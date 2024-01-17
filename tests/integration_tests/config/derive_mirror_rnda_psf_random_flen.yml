@@ -10,3 +10,4 @@ CTA_SIMPIPE:
     RNDA: 0.0063
     TEST: true
     OUTPUT_PATH: simtools-tests
+    LOG_LEVEL: DEBUG
