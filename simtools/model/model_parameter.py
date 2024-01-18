@@ -173,10 +173,8 @@ class ModelParameter:
         _value = self.get_parameter_value(None, _parameter)
         try:
             _units = _parameter.get("unit") or _parameter.get("units")
-            self._logger.debug(f"Parameter {par_name} has units {_units}")
             return float(_value) * u.Unit(_units)
         except (KeyError, TypeError):
-            self._logger.debug(f"Parameter {par_name} has value {_value} without units")
             return _value
 
     def get_parameter_type(self, par_name):
