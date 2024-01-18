@@ -9,6 +9,7 @@ from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
+from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
@@ -272,9 +273,12 @@ class ArrayLayout:
 
         """
         self._logger.debug("Initialize CORSIKA telescope parameters from DB")
-        self._corsika_telescope[
-            "corsika_observation_level"
-        ] = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
+        try:
+            self._corsika_telescope.update(self.site_model.get_corsika_site_parameters())
+        # TEMPORARY TODO set explicitly to nan to make sure things are breaking.
+        except InvalidModelParameter:
+            self._logger.debug("Error setting CORSIKA observation level from DB")
+            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
 
     def _initialize_corsika_telescope_from_dict(self, corsika_dict):
         """
@@ -393,6 +397,12 @@ class ArrayLayout:
             Altitude or CORSIKA z-coordinate (np.nan in case of ill-defined value).
 
         """
+        self._logger.debug(
+            f"pos_z: {pos_z}, altitude: {altitude}, "
+            f"tel_name: {tel_name}, axis_height: {self._get_telescope_axis_height(tel_name)}, "
+            f"obs_level: {self._corsika_telescope['corsika_observation_level']}"
+        )
+
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
