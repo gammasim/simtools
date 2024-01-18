@@ -145,6 +145,31 @@ class MetadataCollector:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 
+    def get_site(self, from_input_meta=False):
+        """
+        Get site entry from metadata. Allow to get from collected or from input metadata
+
+        Parameters
+        ----------
+        from_input_meta: bool
+            Get site from input metadata (default: False)
+
+        Returns
+        -------
+        str
+            Site name
+
+        """
+        try:
+            return (
+                self.top_level_meta["cta"]["instrument"]["site"]
+                if not from_input_meta
+                else self.input_metadata["cta"]["instrument"]["site"]
+            )
+        except KeyError:
+            pass
+        return None
+
     def _fill_contact_meta(self, contact_dict):
         """
         Fill contact metadata fields.
@@ -258,7 +283,7 @@ class MetadataCollector:
 
         try:
             metadata_file_name = (
-                self.args_dict.get("input_meta", None)
+                self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
                 if metadata_file_name is None
                 else metadata_file_name
             )
