@@ -18,6 +18,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools.data_model import metadata_model
 from simtools.io_operations import io_handler
+from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
 
@@ -162,11 +163,13 @@ class MetadataCollector:
 
         """
         try:
-            return (
+            _site = (
                 self.top_level_meta[self.observatory]["instrument"]["site"]
                 if not from_input_meta
                 else self.input_metadata[self.observatory]["instrument"]["site"]
             )
+            if _site is not None:
+                return names.validate_site_name(_site)
         except KeyError:
             pass
         return None

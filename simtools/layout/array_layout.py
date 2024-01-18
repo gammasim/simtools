@@ -278,7 +278,8 @@ class ArrayLayout:
         # TEMPORARY TODO set explicitly to nan to make sure things are breaking.
         except InvalidModelParameter:
             self._logger.debug("Error setting CORSIKA observation level from DB")
-            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
+
+    #            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
 
     def _initialize_corsika_telescope_from_dict(self, corsika_dict):
         """
