@@ -117,7 +117,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/altitude.json"
+    metadata_1.args_dict["input_meta"] = "tests/resources/reference_point_altitude.json"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     test_dict = {

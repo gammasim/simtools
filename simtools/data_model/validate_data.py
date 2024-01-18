@@ -81,7 +81,7 @@ class DataValidator:
         """
 
         try:
-            if Path(self.data_file_name).suffix in (".yml", ".yaml"):
+            if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data = gen.collect_data_from_file_or_dict(self.data_file_name, None)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:

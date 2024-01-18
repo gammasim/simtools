@@ -49,11 +49,12 @@ def update_site_parameters_from_repo(parameters, site, model_version):
                 f"from repository file {file_path}"
             )
             parameters[key] = gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=None)
+            logger.debug(f"Parameter {key} updated to {parameters[key]}")
         except FileNotFoundError:
-            logger.debug(
-                f"Parameter {value['name']} not updated for {model_version};"
-                f"missing repository file {file_path}"
-            )
+            #            logger.debug(
+            #                f"Parameter {value['name']} not updated for {model_version};"
+            #                f"missing repository file {file_path}"
+            #            )
             continue
 
     return parameters
