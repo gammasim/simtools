@@ -226,8 +226,8 @@ class ModelParameter:
 
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
-        for par, info in self._parameters.items():
-            print(f"{par} = {info['Value']}")
+        for par in self._parameters:
+            print(f"{par} = {self.get_parameter_value(par)}")
 
     def get_config_directory(self):
         """
