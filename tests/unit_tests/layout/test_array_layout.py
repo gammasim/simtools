@@ -161,9 +161,12 @@ def test_initialize_array_layout_from_telescope_file(
     test_one_site(array_layout_south_instance, telescope_south_test_file, 51, "South")
 
 
-def test_select_assets(telescope_north_with_calibration_devices_test_file):
+def test_select_assets(telescope_north_with_calibration_devices_test_file, db_config):
     layout = ArrayLayout(
-        name="test_layout", telescope_list_file=telescope_north_with_calibration_devices_test_file
+        name="test_layout",
+        telescope_list_file=telescope_north_with_calibration_devices_test_file,
+        site="North",
+        mongo_db_config=db_config,
     )
 
     layout.select_assets(None)
@@ -378,17 +381,17 @@ def test_altitude_from_corsika_z(
         )
 
         assert instance._altitude_from_corsika_z(
-            pos_z=5.0 * u.m, altitude=None, tel_name="LST-01"
+            pos_z=result2 * u.m, altitude=None, tel_name="LST-01"
         ).value == pytest.approx(result1)
         assert instance._altitude_from_corsika_z(
-            pos_z=None, altitude=2348.0 * u.m, tel_name="LST-01"
+            pos_z=None, altitude=result1 * u.m, tel_name="LST-01"
         ).value == pytest.approx(result2)
         with pytest.raises(TypeError):
             instance._altitude_from_corsika_z(5.0, None, "LST-01")
         assert np.isnan(instance._altitude_from_corsika_z(None, None, "LST-01"))
 
-    test_one_site(array_layout_north_four_LST_instance, 2147.0, 206.0)
-    test_one_site(array_layout_south_four_LST_instance, 2136.0, 217.0)
+    test_one_site(array_layout_north_four_LST_instance, 2185.0, 45.0)
+    test_one_site(array_layout_south_four_LST_instance, 2176.0, 45.0)
 
 
 def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
