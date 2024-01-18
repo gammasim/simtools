@@ -279,7 +279,7 @@ class ModelParameter:
             )
 
         if self.site is not None:
-            self._logger.debug("Reading site parameters from DB")
+            self._logger.debug(f"Reading site parameters from DB ({self.site} site)")
             _site_pars = self.db.get_site_parameters(
                 self.site, self.model_version, only_applicable=True
             )

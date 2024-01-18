@@ -78,16 +78,6 @@
 #   corsika_observation_level: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2156.0
-#   telescope_axis_height:
-#     LST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 16.0
-#     MST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 9.0
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.25
 #   corsika_sphere_radius:
 #     LST: !astropy.units.Quantity
 #       unit: *id001
@@ -98,6 +88,16 @@
 #     SST: !astropy.units.Quantity
 #       unit: *id001
 #       value: 3.0
+#   telescope_axis_height:
+#     LST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 16.0
+#     MST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 9.0
+#     SST: !astropy.units.Quantity
+#       unit: *id001
+#       value: 3.25
 # schema: astropy-2.0
 telescope_name position_x position_y position_z geo_code
 LST-01     -70.91     -52.35      45.00  2B5

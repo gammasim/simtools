@@ -298,10 +298,11 @@ class MetadataCollector:
             self._logger.debug("No input metadata file defined.")
             return {}
 
+        self._logger.debug("Reading meta data from %s", metadata_file_name)
+
         # metadata from yml or json file
         if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
             try:
-                self._logger.debug("Reading meta data from %s", metadata_file_name)
                 _input_metadata = gen.collect_data_from_file_or_dict(
                     file_name=metadata_file_name, in_dict=None
                 )
