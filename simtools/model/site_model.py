@@ -62,6 +62,25 @@ class SiteModel(ModelParameter):
             "EPSG": self.get_parameter_value("epsg_code"),
         }
 
+    def get_corsika_site_parameters(self):
+        """
+        Get site-related CORSIKA parameters as dict.
+        Parameters are returned with units wherever possible.
+
+        TODO: needs to be extended to include all site-related CORSIKA parameters
+
+        Returns
+        -------
+        dict
+            Site-related CORSIKA parameters as dict
+        """
+
+        return {
+            "corsika_observation_level": self.get_parameter_value_with_unit(
+                "corsika_observation_level"
+            ),
+        }
+
     def get_simtel_parameters(self, telescope_model=False, site_model=True):
         """
         Get simtel site parameters as dict
