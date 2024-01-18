@@ -62,7 +62,10 @@ all_camera_names = {
 
 all_structure_names = {"Structure": ["Structure", "structure"]}
 
-all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
+all_site_names = {
+    "South": ["paranal", "south", "CTA-South"],
+    "North": ["lapalma", "north", "CTA-North"],
+}
 
 all_model_version_names = {
     "2015-07-21": [""],
