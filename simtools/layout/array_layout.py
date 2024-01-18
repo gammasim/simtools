@@ -49,6 +49,7 @@ class ArrayLayout:
     def __init__(
         self,
         mongo_db_config=None,
+        model_version="Released",
         site=None,
         label=None,
         name=None,
@@ -74,6 +75,12 @@ class ArrayLayout:
         self.telescope_list_file = None
         self._telescope_list = []
         self._epsg = None
+
+        self.site_model = SiteModel(
+            site=self.site,
+            model_version=model_version,
+            mongo_db_config=self.mongo_db_config,
+        )
 
         if telescope_list_file is None:
             self._initialize_coordinate_systems(layout_center_data)
@@ -158,6 +165,7 @@ class ArrayLayout:
             self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
 
         self._initialize_corsika_telescope_from_dict(corsika_dict)
+        self._initialize_corsika_telescope_from_db()
 
     def _from_corsika_file_to_dict(self, file_name=None):
         """
@@ -220,12 +228,7 @@ class ArrayLayout:
             self._logger.error("Site was not provided, cannot set site altitude")
             raise ValueError
 
-        site_model = SiteModel(
-            site=self.site,
-            model_version="Released",
-            mongo_db_config=self.mongo_db_config,
-        )
-        corsika_dict["corsika_observation_level"] = site_model.get_parameter_value_with_unit(
+        corsika_dict["corsika_observation_level"] = self.site_model.get_parameter_value_with_unit(
             "corsika_observation_level"
         )
 
@@ -262,6 +265,16 @@ class ArrayLayout:
             raise exc
 
         return _sphere_dict_cleaned
+
+    def _initialize_corsika_telescope_from_db(self):
+        """
+        Initialize CORSIKA telescope parameters using database.
+
+        """
+        self._logger.debug("Initialize CORSIKA telescope parameters from DB")
+        self._corsika_telescope[
+            "corsika_observation_level"
+        ] = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
 
     def _initialize_corsika_telescope_from_dict(self, corsika_dict):
         """
