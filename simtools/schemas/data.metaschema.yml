@@ -283,10 +283,6 @@ definitions:
         type: string
         description: |-
           "version of simulation software this parameter is used"
-      parameter_name:
-        type: string
-        description: |-
-          "name of simulation model parameter as used by this software"
     required:
       - name
     title: SimulationSoftware
