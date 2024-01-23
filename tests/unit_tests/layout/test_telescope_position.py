@@ -55,7 +55,7 @@ def test_str(crs_wgs84, crs_local, crs_utm):
 
     tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
     _tcors = tel.__str__()
-    _test_string = "LST-01\t CORSIKA x(->North): 50.00 y(->West): -25.00"
+    _test_string = "LST-01\t Ground x(->North): 50.00 y(->West): -25.00"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convert_all(crs_local=crs_local, crs_wgs84=crs_wgs84)
     _tcors = tel.__str__()
@@ -63,7 +63,7 @@ def test_str(crs_wgs84, crs_local, crs_utm):
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convert_all(crs_local=crs_local, crs_wgs84=crs_wgs84, crs_utm=crs_utm)
     _tcors = tel.__str__()
-    _test_string = "LST-01\t CORSIKA x(->North): 50.00 y(->West): -25.00"
+    _test_string = "LST-01\t Ground x(->North): 50.00 y(->West): -25.00"
     _test_string += "\t UTM East: 217635.45 UTM North: 3185116.68"
     _test_string += "\t Longitude: 28.76262 Latitude: -17.89177"
     assert _tcors == (_test_string + "\t Alt: 2158.00")

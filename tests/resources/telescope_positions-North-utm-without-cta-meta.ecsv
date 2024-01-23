@@ -5,7 +5,7 @@
 # - {name: sequence_number, datatype: string, description: sequence number}
 # - {name: utm_east, unit: m, datatype: float64}
 # - {name: utm_north, unit: m, datatype: float64}
-# - {name: alt, unit: m, datatype: float64, description: telescope position upwards relative to NNN}
+# - {name: altitude, unit: m, datatype: float64, description: telescope position upwards relative to NNN}
 # - {name: geo_code, datatype: string, description: Geographical Position Code}
 # meta: !!omap
 # - data_type: position_file
@@ -26,7 +26,7 @@
 #       in CTA-SPE-PSC-000000-0001 1c)
 #       Never change positions here. This should always be
 #       synchronized with the reference repository
-asset_code sequence_number utm_east utm_north alt geo_code
+asset_code sequence_number utm_east utm_north altitude geo_code
 LST 01 217659.6 3184995.1 2185.0 2B5
 LST 02 217542.2 3185033.6 2172.5 2B4
 LST 03 217560.6 3185143.8 2168.2 1B0
