@@ -649,8 +649,7 @@ def test_load_telescope_list(
     _utm_table = QTable.read(telescope_north_utm_test_file, format="ascii.ecsv")
     _utm_layout = ArrayLayout(mongo_db_config=db_config, site="North")
     _utm_layout._load_telescope_list(_utm_table)
-    # utm list includes additional calibration devices
-    assert len(_utm_layout._telescope_list) == 25
+    assert len(_utm_layout._telescope_list) == 13
     assert _utm_layout._telescope_list[0].crs["utm"]["xx"]["value"] == pytest.approx(
         _utm_table["utm_east"][0].value
     )
