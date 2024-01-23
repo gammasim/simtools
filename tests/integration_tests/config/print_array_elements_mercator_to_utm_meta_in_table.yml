@@ -1,0 +1,16 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-print-array-elements
+  TEST_NAME: mercator_to_utm_meta_in_table
+  CONFIGURATION:
+    INPUT: tests/resources/telescope_positions-North-mercator.ecsv
+    EXPORT: utm
+    OUTPUT_PATH: simtools-tests
+    OUTPUT_FILE: test.ecsv
+    SELECT_ASSETS: ['LST', 'MST']
+    SKIP_INPUT_VALIDATION: True
+    SKIP_OUTPUT_VALIDATION: True
+    LOG_LEVEL: DEBUG
+  INTEGRATION_TESTS:
+    - REFERENCE_OUTPUT_FILE: |
+        ./tests/resources/telescope_positions-North-utm.ecsv
+      TOLERANCE: 1.e-2

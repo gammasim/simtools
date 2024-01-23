@@ -145,6 +145,13 @@ def _parse(label=None, description=None):
         default=None,
         nargs="+",
     )
+    config.parser.add_argument(
+        "--skip_input_validation",
+        help="skip input data validation against schema",
+        default=False,
+        required=False,
+        action="store_true",
+    )
     return config.initialize(output=True, require_command_line=True)
 
 
@@ -162,7 +169,7 @@ def main():
     layout = array_layout.ArrayLayout(
         telescope_list_file=args_dict["input"],
         telescope_list_metadata_file=args_dict["input_meta"],
-        validate=True,
+        validate=not args_dict["skip_input_validation"],
     )
     layout.select_assets(args_dict["select_assets"])
     layout.convert_coordinates()
