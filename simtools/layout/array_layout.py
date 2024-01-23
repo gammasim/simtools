@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -12,7 +11,6 @@ from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
-from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["InvalidTelescopeListFile", "ArrayLayout"]
 
@@ -39,10 +37,6 @@ class ArrayLayout:
         Instance label.
     name: str
         Name of the layout.
-    layout_center_data: dict
-        Dict describing array center coordinates.
-    corsika_telescope_data: dict
-        Dict describing CORSIKA telescope parameters.
     telescope_list_file: str or Path
         Path to the telescope list file.
     """
@@ -54,8 +48,6 @@ class ArrayLayout:
         site=None,
         label=None,
         name=None,
-        layout_center_data=None,
-        corsika_telescope_data=None,
         telescope_list_file=None,
         telescope_list_metadata_file=None,
         validate=False,
@@ -73,8 +65,12 @@ class ArrayLayout:
         self.io_handler = io_handler.IOHandler()
         self.geo_coordinates = GeoCoordinates()
 
-        self.telescope_list_file = None
         self._telescope_list = []
+        self._corsika_parameter_dict = {}
+        self._reference_position_dict = {}
+        self._array_center = None
+
+        # TOD check - why not reference position?
         self._epsg = None
 
         self.site_model = SiteModel(
@@ -83,15 +79,11 @@ class ArrayLayout:
             mongo_db_config=self.mongo_db_config,
         )
 
-        if telescope_list_file is None:
-            self._initialize_coordinate_systems(layout_center_data)
-            self._initialize_corsika_telescope(corsika_telescope_data)
-        else:
-            self.initialize_array_layout_from_telescope_file(
-                telescope_list_file=telescope_list_file,
-                telescope_list_metadata_file=telescope_list_metadata_file,
-                validate=validate,
-            )
+        self.initialize_array_layout(
+            telescope_list_file=telescope_list_file,
+            telescope_list_metadata_file=telescope_list_metadata_file,
+            validate=validate,
+        )
 
     @classmethod
     def from_array_layout_name(cls, mongo_db_config, array_layout_name, label=None):
@@ -129,7 +121,7 @@ class ArrayLayout:
         telescope_list_file = layout.io_handler.get_input_data_file(
             "layout", f"telescope_positions-{valid_array_layout_name}.ecsv"
         )
-        layout.initialize_array_layout_from_telescope_file(telescope_list_file)
+        layout.initialize_array_layout(telescope_list_file=telescope_list_file)
 
         return layout
 
@@ -145,95 +137,6 @@ class ArrayLayout:
 
         """
         return self._telescope_list[i]
-
-    def _initialize_corsika_telescope(self, corsika_dict=None):
-        """
-        Initialize Dictionary for CORSIKA telescope parameters. Allow input from different sources
-        (dictionary, yaml, ecsv header), which require checks to handle units correctly.
-
-        Parameters
-        ----------
-        corsika_dict dict
-            dictionary with CORSIKA telescope parameters
-
-        """
-        self._corsika_telescope = {}
-
-        if corsika_dict is None:
-            self._logger.debug("Initialize CORSIKA telescope parameters from file")
-            corsika_dict = self._from_corsika_file_to_dict()
-        else:
-            self._logger.debug(f"Initialize CORSIKA telescope parameters from dict: {corsika_dict}")
-
-        self._initialize_corsika_telescope_from_dict(corsika_dict)
-        self._initialize_corsika_telescope_from_db()
-
-    def _from_corsika_file_to_dict(self, file_name=None):
-        """
-        Get the corsika parameter file and return a dictionary with the keys necessary to
-        initialize this class.
-
-        Parameters
-        ----------
-        file_name: str or Path
-            File from which to extract the corsika parameters. Default is
-            data/parameters/corsika_parameters.yml
-
-        Returns
-        ------
-        corsika_dict:
-            Dictionary with corsika telescopes information.
-
-        Raises
-        ------
-        FileNotFoundError:
-            If file_name does not exist.
-        """
-        if file_name is None:
-            try:
-                corsika_parameters_dict = collect_data_from_file_or_dict(
-                    self.io_handler.get_input_data_file("parameters", "corsika_parameters.yml"),
-                    None,
-                )
-            except io_handler.IncompleteIOHandlerInit:
-                self._logger.info("Error reading CORSIKA parameters from file")
-                return {}
-        else:
-            if not isinstance(file_name, Path):
-                file_name = Path(file_name)
-            if file_name.exists():
-                corsika_parameters_dict = collect_data_from_file_or_dict(file_name, None)
-            else:
-                raise FileNotFoundError
-
-        corsika_dict = {}
-        corsika_pars = ["corsika_sphere_radius", "telescope_axis_height"]
-        for simtools_par in corsika_pars:
-            corsika_par = names.translate_simtools_to_corsika(simtools_par)
-            corsika_dict[simtools_par] = {}
-            for key, value in corsika_parameters_dict[corsika_par].items():
-                corsika_dict[simtools_par][key] = value["value"]
-                try:
-                    unit = value["unit"]
-                    corsika_dict[simtools_par][key] = corsika_dict[simtools_par][key] * u.Unit(unit)
-                except KeyError:
-                    self._logger.warning(
-                        "Key not valid. Dictionary does not have a key 'unit'. Continuing without "
-                        "the unit."
-                    )
-
-        if self.mongo_db_config is None:
-            self._logger.error("DB connection info was not provided, cannot set site altitude")
-            raise ValueError
-        if self.site is None:
-            self._logger.error("Site was not provided, cannot set site altitude")
-            raise ValueError
-
-        corsika_dict["corsika_observation_level"] = self.site_model.get_parameter_value_with_unit(
-            "corsika_observation_level"
-        )
-
-        return corsika_dict
 
     def _initialize_sphere_parameters(self, sphere_dict):
         """
@@ -267,45 +170,49 @@ class ArrayLayout:
 
         return _sphere_dict_cleaned
 
-    def _initialize_corsika_telescope_from_db(self):
+    def _initialize_parameters_from_db(self):
         """
-        Initialize CORSIKA telescope parameters using database.
+        Initialize parameters required for transformations using the database.
 
         """
-        self._logger.debug("Initialize CORSIKA telescope parameters from DB")
+        self._logger.debug("Initialize parameters from DB")
         try:
-            self._corsika_telescope.update(self.site_model.get_corsika_site_parameters())
+            self._corsika_parameter_dict.update(self.site_model.get_corsika_site_parameters())
+            self._reference_position_dict = self.site_model.get_reference_point()
         # TEMPORARY TODO set explicitly to nan to make sure things are breaking.
         except InvalidModelParameter:
-            self._logger.debug("Error setting CORSIKA observation level from DB")
+            self._logger.debug("Error setting parameters from DB")
 
-    #            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
+    #            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
 
-    def _initialize_corsika_telescope_from_dict(self, corsika_dict):
+    def _initialize_parameters_from_dict(self, parameter_dict):
         """
-        Initialize CORSIKA telescope parameters from a dictionary.
+        Initialize parameters required for transformations from a dict.
+        (e.g., as provided in the metadata header of some telescope list file)
 
         Parameters
         ----------
-        corsika_dict dict
-            dictionary with CORSIKA telescope parameters
+        parameter_dict dict
+            dictionary with parameters
 
         """
 
         try:
-            self._corsika_telescope["corsika_observation_level"] = u.Quantity(
-                corsika_dict["corsika_observation_level"]
+            self._corsika_parameter_dict["corsika_observation_level"] = u.Quantity(
+                parameter_dict["corsika_observation_level"]
             )
         except (TypeError, KeyError):
-            self._corsika_telescope["corsika_observation_level"] = np.nan * u.m
+            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
 
         for key in ["telescope_axis_height", "corsika_sphere_radius"]:
             try:
-                self._corsika_telescope[key] = self._initialize_sphere_parameters(corsika_dict[key])
+                self._corsika_parameter_dict[key] = self._initialize_sphere_parameters(
+                    parameter_dict[key]
+                )
             except (TypeError, KeyError):
                 pass
 
-    def _initialize_coordinate_systems(self, center_dict=None):
+    def _initialize_coordinate_systems(self, _reference_position_dict=None):
         """
         Initialize array center and coordinate systems.
         By definition, the array center is at (0,0) in
@@ -313,7 +220,7 @@ class ArrayLayout:
 
         Parameters
         ----------
-        center_dict: dict
+        _reference_position_dict: dict
             dictionary with coordinates of array center.
 
         Raises
@@ -323,15 +230,20 @@ class ArrayLayout:
 
         """
 
-        center_dict = {} if center_dict is None else center_dict
+        _reference_position_dict = (
+            {} if _reference_position_dict is None else _reference_position_dict
+        )
 
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
+        # TODO - the z-position 0 is wrong
         self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
-        self._set_array_center_mercator(center_dict)
-        self._set_array_center_utm(center_dict)
-        self._array_center.set_altitude(u.Quantity(center_dict.get("center_alt", np.nan * u.m)))
-        _name = center_dict.get("array_name")
+        self._set_array_center_mercator(_reference_position_dict)
+        self._set_array_center_utm(_reference_position_dict)
+        self._array_center.set_altitude(
+            u.Quantity(_reference_position_dict.get("center_alt", np.nan * u.m))
+        )
+        _name = _reference_position_dict.get("array_name")
         self.name = _name if _name is not None else self.name
 
         self._array_center.convert_all(
@@ -340,7 +252,7 @@ class ArrayLayout:
             crs_utm=self.geo_coordinates.crs_utm(self._epsg),
         )
 
-    def _set_array_center_mercator(self, center_dict):
+    def _set_array_center_mercator(self, _reference_position_dict):
         """
         Set array center coordinates in mercator system.
 
@@ -349,13 +261,13 @@ class ArrayLayout:
         try:
             self._array_center.set_coordinates(
                 "mercator",
-                u.Quantity(center_dict.get("center_lat", np.nan * u.deg)),
-                u.Quantity(center_dict.get("center_lon", np.nan * u.deg)),
+                u.Quantity(_reference_position_dict.get("center_lat", np.nan * u.deg)),
+                u.Quantity(_reference_position_dict.get("center_lon", np.nan * u.deg)),
             )
         except TypeError:
             pass
 
-    def _set_array_center_utm(self, center_dict):
+    def _set_array_center_utm(self, _reference_position_dict):
         """
         Set array center coordinates in UTM system.
         Convert array center position to WGS84 system
@@ -364,11 +276,11 @@ class ArrayLayout:
 
         """
         try:
-            self._epsg = center_dict.get("EPSG", None)
+            self._epsg = _reference_position_dict.get("EPSG", None)
             self._array_center.set_coordinates(
                 "utm",
-                u.Quantity(center_dict.get("center_easting", np.nan * u.m)),
-                u.Quantity(center_dict.get("center_northing", np.nan * u.m)),
+                u.Quantity(_reference_position_dict.get("center_easting", np.nan * u.m)),
+                u.Quantity(_reference_position_dict.get("center_northing", np.nan * u.m)),
             )
             self._array_center.convert_all(
                 crs_local=None,
@@ -401,20 +313,20 @@ class ArrayLayout:
         self._logger.debug(
             f"pos_z: {pos_z}, altitude: {altitude}, "
             f"tel_name: {tel_name}, axis_height: {self._get_telescope_axis_height(tel_name)}, "
-            f"obs_level: {self._corsika_telescope['corsika_observation_level']}"
+            f"obs_level: {self._corsika_parameter_dict['corsika_observation_level']}"
         )
 
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
-                self._corsika_telescope["corsika_observation_level"],
+                self._corsika_parameter_dict["corsika_observation_level"],
                 self._get_telescope_axis_height(tel_name),
             )
 
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
-                self._corsika_telescope["corsika_observation_level"],
+                self._corsika_parameter_dict["corsika_observation_level"],
                 self._get_telescope_axis_height(tel_name),
             )
         return np.nan
@@ -441,7 +353,7 @@ class ArrayLayout:
         """
 
         try:
-            return self._corsika_telescope["telescope_axis_height"][
+            return self._corsika_parameter_dict["telescope_axis_height"][
                 names.get_telescope_type(tel_name)
             ]
         except KeyError:
@@ -601,11 +513,14 @@ class ArrayLayout:
 
             self._telescope_list.append(tel)
 
-    def initialize_array_layout_from_telescope_file(
+    def initialize_array_layout(
         self, telescope_list_file, telescope_list_metadata_file=None, validate=False
     ):
         """
         Initialize the Layout array from a telescope list file.
+        Initialize site and CORSIKA telescope parameters.
+        Read parameters from database (default) or from metadata file header of ecsv file
+        (if available).
 
         Parameters
         ----------
@@ -614,21 +529,29 @@ class ArrayLayout:
         telescope_list_metadata_file: str or Path
             Path to the telescope list metadata file.
         validate: bool
-            Validate the telescope list file.
+            Validate telescope list file against schema.
 
         Returns
         -------
         astropy.table.QTable
             Table with the telescope layout information.
         """
-        table = data_reader.read_table_from_file(
-            file_name=telescope_list_file,
-            validate=validate,
-            metadata_file=telescope_list_metadata_file,
-        )
-        self._initialize_corsika_telescope(table.meta)
+
+        self._logger.debug(f"Reading telescope list from {telescope_list_file}")
+        table = None
+        if telescope_list_file is not None:
+            table = data_reader.read_table_from_file(
+                file_name=telescope_list_file,
+                validate=validate,
+                metadata_file=telescope_list_metadata_file,
+            )
+            self._load_telescope_list(table)
+
+        if self.mongo_db_config:
+            self._initialize_parameters_from_db()
+        elif table is not None:
+            self._initialize_parameters_from_dict(table.meta)
         self._initialize_coordinate_systems(table.meta)
-        self._load_telescope_list(table)
 
         return table
 
@@ -695,7 +618,7 @@ class ArrayLayout:
                 _meta["center_alt"],
             ) = self._array_center.get_coordinates("utm")
         if export_corsika_meta:
-            _meta.update(self._corsika_telescope)
+            _meta.update(self._corsika_parameter_dict)
         _meta["EPSG"] = self._epsg
         _meta["array_name"] = self.name
 
@@ -789,7 +712,7 @@ class ArrayLayout:
         for tel in self._telescope_list:
             pos_x, pos_y, pos_z = tel.get_coordinates("ground")
             try:
-                sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
+                sphere_radius = self._corsika_parameter_dict["corsika_sphere_radius"][
                     names.get_telescope_type(tel.name)
                 ]
             except KeyError:
@@ -798,7 +721,7 @@ class ArrayLayout:
             try:
                 pos_z = tel.convert_telescope_altitude_to_corsika_system(
                     pos_z,
-                    self._corsika_telescope["corsika_observation_level"],
+                    self._corsika_parameter_dict["corsika_observation_level"],
                     self._get_telescope_axis_height(tel.name),
                 )
             except KeyError:
@@ -843,7 +766,9 @@ class ArrayLayout:
 
         for tel in self._telescope_list:
             if corsika_z:
-                _corsika_observation_level = self._corsika_telescope["corsika_observation_level"]
+                _corsika_observation_level = self._corsika_parameter_dict[
+                    "corsika_observation_level"
+                ]
                 _telescope_axis_height = self._get_telescope_axis_height(tel.name)
             else:
                 _corsika_observation_level = None
