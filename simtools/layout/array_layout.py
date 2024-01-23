@@ -578,7 +578,7 @@ class ArrayLayout:
         except KeyError:
             pass
         try:
-            tel.set_altitude(self._assign_unit_to_quantity(row["alt"], table["alt"].unit))
+            tel.set_altitude(self._assign_unit_to_quantity(row["altitude"], table["altitude"].unit))
         except KeyError:
             pass
 
