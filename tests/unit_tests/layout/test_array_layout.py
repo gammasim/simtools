@@ -253,7 +253,7 @@ def test_build_layout(
         # test that certain keywords appear in printout
         layout.print_telescope_list()
         captured_printout, _ = capfd.readouterr()
-        substrings_to_check = ["LST", "CORSIKA", "UTM", "Longitude"]
+        substrings_to_check = ["LST", "Ground", "UTM", "Longitude"]
         assert all(substring in captured_printout for substring in substrings_to_check)
 
         layout.print_telescope_list("ground", corsika_z=True)
@@ -629,10 +629,14 @@ def test_getitem(telescope_north_test_file):
 
 
 def test_load_telescope_list(
-    telescope_north_test_file, telescope_north_utm_test_file, telescope_north_mercator_test_file
+    telescope_north_test_file,
+    telescope_north_utm_test_file,
+    telescope_north_mercator_test_file,
+    db_config,
+    io_handler,
 ):
     _ground_table = QTable.read(telescope_north_test_file, format="ascii.ecsv")
-    _ground_layout = ArrayLayout()
+    _ground_layout = ArrayLayout(mongo_db_config=db_config, site="North")
     _ground_layout._load_telescope_list(_ground_table)
     assert len(_ground_layout._telescope_list) == 13
     assert _ground_layout._telescope_list[0].crs["ground"]["xx"]["value"] == pytest.approx(
@@ -643,7 +647,7 @@ def test_load_telescope_list(
     )
 
     _utm_table = QTable.read(telescope_north_utm_test_file, format="ascii.ecsv")
-    _utm_layout = ArrayLayout()
+    _utm_layout = ArrayLayout(mongo_db_config=db_config, site="North")
     _utm_layout._load_telescope_list(_utm_table)
     # utm list includes additional calibration devices
     assert len(_utm_layout._telescope_list) == 25
@@ -655,7 +659,7 @@ def test_load_telescope_list(
     )
 
     _mercator_table = QTable.read(telescope_north_mercator_test_file, format="ascii.ecsv")
-    _mercator_layout = ArrayLayout()
+    _mercator_layout = ArrayLayout(mongo_db_config=db_config, site="North")
     _mercator_layout._load_telescope_list(_mercator_table)
     assert len(_mercator_layout._telescope_list) == 13
     assert _mercator_layout._telescope_list[0].crs["mercator"]["xx"]["value"] == pytest.approx(

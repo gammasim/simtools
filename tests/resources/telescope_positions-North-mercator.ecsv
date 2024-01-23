@@ -7,8 +7,17 @@
 # - {name: latitude, unit: deg, datatype: float64}
 # - {name: longitude, unit: deg, datatype: float64}
 # - {name: altitude, unit: m, datatype: float64}
-# meta:
-#   CTA:
+# meta: !!omap
+# - {data_type: position_file}
+# - {description: CTAO Northern Array Element Coordinates}
+# - {center_northing: 3185067.275 m}
+# - {center_easting: 217608.975 m}
+# - {center_alt: 2177.0 m}
+# - {corsika_obs_level: 2156 m}
+# - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
+# - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
+# - {EPSG: 32628}
+# - CTA:
 #     ACTIVITY:
 #       END: '2024-01-17T08:18:14'
 #       ID: 2f5a2ee4-32c9-4302-bc71-9ea418f9e385
@@ -52,36 +61,6 @@
 #       ID: 2f5a2ee4-32c9-4302-bc71-9ea418f9e385
 #       VALID: {END: null, START: null}
 #     REFERENCE: {VERSION: 1.0.0}
-#   EPSG: 32628
-#   __serialized_columns__:
-#     altitude:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: &id002 !astropy.units.Unit {unit: m}
-#       value: !astropy.table.SerializedColumn {name: altitude}
-#     latitude:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: &id001 !astropy.units.Unit {unit: deg}
-#       value: !astropy.table.SerializedColumn {name: latitude}
-#     longitude:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: *id001
-#       value: !astropy.table.SerializedColumn {name: longitude}
-#   array_name: null
-#   center_alt: !astropy.units.Quantity
-#     unit: *id002
-#     value: 2177.0
-#   center_easting: !astropy.units.Quantity
-#     unit: *id002
-#     value: 217608.975
-#   center_lat: !astropy.units.Quantity
-#     unit: *id001
-#     value: 28.762166014809267
-#   center_lon: !astropy.units.Quantity
-#     unit: *id001
-#     value: -17.892032777402406
-#   center_northing: !astropy.units.Quantity
-#     unit: *id002
-#     value: 3185067.275
 # schema: astropy-2.0
 asset_code sequence_number geo_code latitude longitude altitude
 LST 01 2B5 28.76152646788508 -17.891496913272913 2185.0
