@@ -1,9 +1,9 @@
 {
-    "Value": 2157.0,
+    "Value": 2162.0,
     "units": "m",
-    "Type": "numpy.float64",
-    "File": false,
-    "Metadata": {
+    "type": "numpy.float64",
+    "file": false,
+    "metadata": {
         "CTA": {
             "REFERENCE": {
                 "VERSION": "1.0.0"
@@ -14,43 +14,42 @@
                 "EMAIL": null
             },
             "PRODUCT": {
-                "DESCRIPTION": "Altitude above sea level of site centre.",
-                "CREATION_TIME": null,
+                "DESCRIPTION": "Reference point altitude as used in prod6",
+                "CREATION_TIME": "2024-01-11T08:16:11",
                 "ID": null,
                 "DATA": {
-                    "CATEGORY": "CAL",
-                    "ASSOCIATION": "Subarray",
+                    "CATEGORY": null,
+                    "ASSOCIATION": "Site",
                     "LEVEL": "R1",
                     "TYPE": "Service",
                     "MODEL": {
-                        "NAME": "altitude",
+                        "NAME": "reference_point_altitude",
                         "VERSION": "0.1.0",
-                        "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/altitude.schema.yml"
+                        "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/reference_point_altitude.schema.yml"
                     }
                 },
                 "FORMAT": "json",
                 "VALID": {
                     "START": null,
                     "END": null
-                },
-                "FILENAME": null
+                }
             },
             "INSTRUMENT": {
-                "SITE": "CTAO-South",
-                "CLASS": null,
-                "TYPE": null,
+                "SITE": "CTA-South",
+                "CLASS": "Site",
+                "TYPE": "Observatory",
                 "SUBTYPE": null,
                 "ID": null,
                 "DESCRIPTION": null
             },
             "PROCESS": {
-                "TYPE": null,
-                "SUBTYPE": null,
+                "TYPE": "simulation",
+                "SUBTYPE": "simulation model parameter",
                 "ID": null
             },
             "ACTIVITY": {
-                "NAME": null,
-                "TYPE": null,
+                "NAME": "manual entry",
+                "TYPE": "user",
                 "ID": null,
                 "SOFTWARE": {
                     "NAME": null,
@@ -60,6 +59,11 @@
                 "END": null
             },
             "CONTEXT": {
+                "NOTES": [
+                    {
+                       "TEXT": "(this is just a test that notes are read out)"
+                    }
+                ],
                 "DOCUMENT": [
                     {
                         "TYPE": "CTAO-DOC",
