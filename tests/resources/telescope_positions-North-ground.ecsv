@@ -51,7 +51,7 @@
 #       ID: 4488a138-1384-439f-af0d-9f9a3e639481
 #       VALID: {END: null, START: null}
 #     REFERENCE: {VERSION: 1.0.0}
-#   EPSG: 32628
+#   epsg_code: 32628
 #   __serialized_columns__:
 #     position_x:
 #       __class__: astropy.units.quantity.Quantity
@@ -66,7 +66,7 @@
 #       unit: *id001
 #       value: !astropy.table.SerializedColumn {name: position_z}
 #   array_name: null
-#   center_alt: !astropy.units.Quantity
+#   center_altitude: !astropy.units.Quantity
 #     unit: *id001
 #     value: 2177.0
 #   center_easting: !astropy.units.Quantity

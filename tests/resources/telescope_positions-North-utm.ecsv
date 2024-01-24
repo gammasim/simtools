@@ -12,11 +12,11 @@
 # - {description: CTAO Northern Array Element Coordinates}
 # - {center_northing: 3185067.275 m}
 # - {center_easting: 217608.975 m}
-# - {center_alt: 2177.0 m}
+# - {center_altitude: 2177.0 m}
 # - {corsika_observation_level: 2156 m}
 # - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
 # - telescope_axis_height: {LST: 16 m, MST: 9 m, SST: 3.25 m}
-# - {EPSG: 32628}
+# - {epsg_code: 32628}
 # - {comments: 'following CTA-SPE-PSC-000000-0001 1c
 #
 #     Subset of positions defined in reference repository
