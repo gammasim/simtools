@@ -157,6 +157,12 @@ class DatabaseHandler:
                 _version_validated,
                 only_applicable,
             )
+            _pars = db_from_repo_handler.update_model_parameters_from_repo(
+                parameters=_pars,
+                site=_site_validated,
+                telescope_model_name=_tel_model_name_validated,
+                model_version=_version_validated,
+            )
             return _pars
 
         _version_validated = names.validate_model_version_name(model_version)
@@ -1104,7 +1110,7 @@ class DatabaseHandler:
             query["Site"] = site
             logger_info = f"site {site}"
         else:
-            raise ValueError("You need to specifiy if to update a telescope or a site.")
+            raise ValueError("You need to specify if to update a telescope or a site.")
 
         par_entry = collection.find_one(query)
         if par_entry is None:
