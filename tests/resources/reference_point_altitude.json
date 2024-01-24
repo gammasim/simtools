@@ -18,8 +18,8 @@
                 "CREATION_TIME": "2024-01-11T08:16:11",
                 "ID": null,
                 "DATA": {
-                    "CATEGORY": "CAL",
-                    "ASSOCIATION": "Subarray",
+                    "CATEGORY": null,
+                    "ASSOCIATION": "Site",
                     "LEVEL": "R1",
                     "TYPE": "Service",
                     "MODEL": {
@@ -32,8 +32,7 @@
                 "VALID": {
                     "START": null,
                     "END": null
-                },
-                "FILENAME": "reference_point_altitude.json"
+                }
             },
             "INSTRUMENT": {
                 "SITE": "CTA-South",
@@ -60,6 +59,11 @@
                 "END": null
             },
             "CONTEXT": {
+                "NOTES": [
+                    {
+                       "TEXT": "(this is just a test that notes are read out)"
+                    }
+                ],
                 "DOCUMENT": [
                     {
                         "TYPE": "CTAO-DOC",

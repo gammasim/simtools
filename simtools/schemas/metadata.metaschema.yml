@@ -462,6 +462,39 @@ definitions:
         type: object
         additionalProperties: false
         properties:
+          NOTES:
+            title: Context notes.
+            description: |-
+              Notes that provide additional context for this data product.
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                TITLE:
+                  description: |-
+                    Title of note.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                TEXT:
+                  description: |-
+                    Note text.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                CREATION_TIME:
+                  description: |-
+                    Creation time of document.
+                  anyOf:
+                    - type: string
+                      format: date-time
+                    - type: "null"
+                  default: null
+              required:
+                - TEXT
           DOCUMENT:
             title: Context documents.
             description: |-
