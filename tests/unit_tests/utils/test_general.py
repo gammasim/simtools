@@ -521,7 +521,7 @@ def test_is_url():
 
 
 def test_collect_data_dict_from_json():
-    file = "tests/resources/altitude.json"
+    file = "tests/resources/reference_point_altitude.json"
     data = gen.collect_data_from_file_or_dict(file, None)
     assert len(data) == 5
     assert data["units"] == "m"
@@ -534,7 +534,7 @@ def test_collect_data_from_http():
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
-    file = "tests/resources/altitude.json"
+    file = "tests/resources/reference_point_altitude.json"
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
