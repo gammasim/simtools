@@ -150,6 +150,7 @@ telescope_parameters = {
     },
     "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
+    "telescope_axis_height": {"name": "telescope_axis_height", "simtel": False},
 }
 
 
