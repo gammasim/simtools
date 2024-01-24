@@ -56,10 +56,10 @@ class SiteModel(ModelParameter):
         """
 
         return {
-            "center_lat": self.get_parameter_value_with_unit("reference_point_latitude"),
-            "center_lon": self.get_parameter_value_with_unit("reference_point_longitude"),
-            "center_alt": self.get_parameter_value_with_unit("reference_point_altitude"),
-            "EPSG": self.get_parameter_value("epsg_code"),
+            "center_altitude": self.get_parameter_value_with_unit("reference_point_altitude"),
+            "center_northing": self.get_parameter_value_with_unit("reference_point_utm_north"),
+            "center_easting": self.get_parameter_value_with_unit("reference_point_utm_east"),
+            "epsg_code": self.get_parameter_value("epsg_code"),
         }
 
     def get_corsika_site_parameters(self):
