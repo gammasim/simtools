@@ -534,8 +534,7 @@ def test_collect_data_from_http():
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
-    # TODO - this will fail after merge to main
-    file = "tests/resources/altitude.json"
+    file = "tests/resources/reference_point_altitude.json"
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
