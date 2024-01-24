@@ -529,7 +529,7 @@ def test_collect_data_dict_from_json():
 
 def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
-    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    url = "https://raw.githubusercontent.com/gammasim/simtools/reference-point-altitude/"
 
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
