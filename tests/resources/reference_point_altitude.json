@@ -59,6 +59,11 @@
                 "END": null
             },
             "CONTEXT": {
+                "NOTES": [
+                    {
+                       "TEXT": "(this is just a test that notes are read out)"
+                    }
+                ],
                 "DOCUMENT": [
                     {
                         "TYPE": "CTAO-DOC",
