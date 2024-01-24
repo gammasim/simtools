@@ -47,7 +47,8 @@ def test_read_table_from_file_and_validate(telescope_north_test_file):
 
 def test_read_value_from_file(tmp_test_directory):
     assert isinstance(
-        data_reader.read_value_from_file("tests/resources/altitude.json"), u.quantity.Quantity
+        data_reader.read_value_from_file("tests/resources/reference_point_altitude.json"),
+        u.quantity.Quantity,
     )
 
     with pytest.raises(FileNotFoundError):
@@ -90,7 +91,9 @@ def test_read_value_from_file(tmp_test_directory):
 def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
     # schema file from metadata in file
     with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file("tests/resources/altitude.json", validate=True)
+        data_reader.read_value_from_file(
+            "tests/resources/reference_point_altitude.json", validate=True
+        )
         assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
@@ -100,7 +103,7 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
     )
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
-            "tests/resources/altitude.json",
+            "tests/resources/reference_point_altitude.json",
             schema_file=schema_file,
             validate=True,
         )

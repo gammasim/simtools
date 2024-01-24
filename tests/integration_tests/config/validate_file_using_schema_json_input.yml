@@ -4,4 +4,4 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SCHEMA: >
       https://raw.githubusercontent.com/gammasim/workflows/main/schemas/altitude.schema.yml
-    FILE_NAME: tests/resources/altitude.json
+    FILE_NAME: tests/resources/reference_point_altitude.json

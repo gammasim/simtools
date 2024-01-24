@@ -2,4 +2,4 @@ CTA_SIMPIPE:
   APPLICATION: simtools-validate-file-using-schema
   TEST_NAME: json_input_no_schema
   CONFIGURATION:
-    FILE_NAME: tests/resources/altitude.json
+    FILE_NAME: tests/resources/reference_point_altitude.json
