@@ -125,10 +125,12 @@ site_parameters = {
     "reference_point_altitude": {"name": "altitude", "simtel": True},
     "reference_point_longitude": {"name": "ref_long", "simtel": False},
     "reference_point_latitude": {"name": "ref_lat", "simtel": False},
+    "reference_point_utm_north": {"name": "reference_point_utm_north", "simtel": False},
+    "reference_point_utm_east": {"name": "reference_point_utm_east", "simtel": False},
     # Note naming inconsistency between old and new model
     # altitude was the corsika observation level in the old model
     "corsika_observation_level": {"name": "altitude", "simtel": True},
-    "epsg_code": {"name": "EPSG", "simtel": False},
+    "epsg_code": {"name": "epsg_code", "simtel": False},
     "magnetic_field": {"name": "magnetic_field", "simtel": False},
     "atmospheric_profile": {"name": "atmospheric_profile", "simtel": False},
     "atmospheric_transmission": {"name": "atmospheric_transmission", "simtel": True},
