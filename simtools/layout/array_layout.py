@@ -70,9 +70,6 @@ class ArrayLayout:
         self._reference_position_dict = {}
         self._array_center = None
 
-        # TOD check - why not reference position?
-        self._epsg = None
-
         self.site_model = SiteModel(
             site=self.site,
             model_version=model_version,
@@ -182,8 +179,9 @@ class ArrayLayout:
         # TEMPORARY TODO set explicitly to nan to make sure things are breaking.
         except InvalidModelParameter:
             self._logger.debug("Error setting parameters from DB")
-
-    #            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
+        #            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
+        self._logger.debug(f"CORSIKA parameters: {self._corsika_parameter_dict}")
+        self._logger.debug(f"Reference point: {self._reference_position_dict}")
 
     def _initialize_parameters_from_dict(self, parameter_dict):
         """
@@ -212,16 +210,19 @@ class ArrayLayout:
             except (TypeError, KeyError):
                 pass
 
-    def _initialize_coordinate_systems(self, _reference_position_dict=None):
+        for key in ["center_northing", "center_easting", "center_altitude"]:
+            try:
+                self._reference_position_dict[key] = u.Quantity(parameter_dict[key])
+            except (TypeError, KeyError):
+                pass
+        self._reference_position_dict["epsg_code"] = parameter_dict("epsg_code", None)
+        self._reference_position_dict["array_name"] = parameter_dict("array_name", None)
+
+    def _initialize_coordinate_systems(self):
         """
         Initialize array center and coordinate systems.
         By definition, the array center is at (0,0) in
         the ground coordinate system.
-
-        Parameters
-        ----------
-        _reference_position_dict: dict
-            dictionary with coordinates of array center.
 
         Raises
         ------
@@ -230,44 +231,26 @@ class ArrayLayout:
 
         """
 
-        _reference_position_dict = (
-            {} if _reference_position_dict is None else _reference_position_dict
-        )
-
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
-        # TODO - the z-position 0 is wrong
-        self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m, 0.0 * u.m)
-        self._set_array_center_mercator(_reference_position_dict)
-        self._set_array_center_utm(_reference_position_dict)
+        self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m)
+        self._set_array_center_utm()
         self._array_center.set_altitude(
-            u.Quantity(_reference_position_dict.get("center_alt", np.nan * u.m))
+            u.Quantity(self._reference_position_dict.get("center_altitude", np.nan * u.m))
         )
-        _name = _reference_position_dict.get("array_name")
+        _name = self._reference_position_dict.get("array_name")
         self.name = _name if _name is not None else self.name
 
+        self._logger.debug(f"Initialized array center at UTM {self._reference_position_dict}")
         self._array_center.convert_all(
             crs_local=self.geo_coordinates.crs_local(self._array_center),
             crs_wgs84=self.geo_coordinates.crs_wgs84(),
-            crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+            crs_utm=self.geo_coordinates.crs_utm(
+                self._reference_position_dict.get("epsg_code", None)
+            ),
         )
 
-    def _set_array_center_mercator(self, _reference_position_dict):
-        """
-        Set array center coordinates in mercator system.
-
-        """
-
-        try:
-            self._array_center.set_coordinates(
-                "mercator",
-                u.Quantity(_reference_position_dict.get("center_lat", np.nan * u.deg)),
-                u.Quantity(_reference_position_dict.get("center_lon", np.nan * u.deg)),
-            )
-        except TypeError:
-            pass
-
-    def _set_array_center_utm(self, _reference_position_dict):
+    def _set_array_center_utm(self):
         """
         Set array center coordinates in UTM system.
         Convert array center position to WGS84 system
@@ -276,16 +259,17 @@ class ArrayLayout:
 
         """
         try:
-            self._epsg = _reference_position_dict.get("EPSG", None)
             self._array_center.set_coordinates(
                 "utm",
-                u.Quantity(_reference_position_dict.get("center_easting", np.nan * u.m)),
-                u.Quantity(_reference_position_dict.get("center_northing", np.nan * u.m)),
+                u.Quantity(self._reference_position_dict.get("center_easting", np.nan * u.m)),
+                u.Quantity(self._reference_position_dict.get("center_northing", np.nan * u.m)),
             )
             self._array_center.convert_all(
                 crs_local=None,
                 crs_wgs84=self.geo_coordinates.crs_wgs84(),
-                crs_utm=self.geo_coordinates.crs_utm(self._epsg),
+                crs_utm=self.geo_coordinates.crs_utm(
+                    self._reference_position_dict.get("epsg_code", None)
+                ),
             )
         except TypeError:
             pass
@@ -551,7 +535,7 @@ class ArrayLayout:
             self._initialize_parameters_from_db()
         elif table is not None:
             self._initialize_parameters_from_dict(table.meta)
-        self._initialize_coordinate_systems(table.meta)
+        self._initialize_coordinate_systems()
 
         return table
 
@@ -587,7 +571,7 @@ class ArrayLayout:
     def _get_export_metadata(self, export_corsika_meta=False):
         """
         File metadata for export of array element list to file. Included array center definition,\
-        CORSIKA telescope parameters, and EPSG center
+        CORSIKA telescope parameters, and EPSG code.
 
         Parameters
         ----------
@@ -602,24 +586,19 @@ class ArrayLayout:
         """
 
         _meta = {
-            "center_lon": None,
-            "center_lat": None,
             "center_northing": None,
             "center_easting": None,
-            "center_alt": None,
+            "center_altitude": None,
         }
         if self._array_center:
-            _meta["center_lat"], _meta["center_lon"], _ = self._array_center.get_coordinates(
-                "mercator"
-            )
             (
                 _meta["center_easting"],
                 _meta["center_northing"],
-                _meta["center_alt"],
+                _meta["center_altitude"],
             ) = self._array_center.get_coordinates("utm")
         if export_corsika_meta:
             _meta.update(self._corsika_parameter_dict)
-        _meta["EPSG"] = self._epsg
+        _meta["epsg_code"] = self._reference_position_dict.get("epsg_code", None)
         _meta["array_name"] = self.name
 
         return _meta
@@ -805,7 +784,7 @@ class ArrayLayout:
 
         crs_wgs84 = self.geo_coordinates.crs_wgs84()
         crs_local = self.geo_coordinates.crs_local(self._array_center)
-        crs_utm = self.geo_coordinates.crs_utm(self._epsg)
+        crs_utm = self.geo_coordinates.crs_utm(self._reference_position_dict.get("epsg_code", None))
 
         for tel in self._telescope_list:
             tel.convert_all(
