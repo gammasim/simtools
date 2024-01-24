@@ -45,7 +45,7 @@ def test_get_data_model_schema_file_name():
     # from data model_name
     _collector.data_model_name = "array_coordinates"
     schema_file = _collector.get_data_model_schema_file_name()
-    url = "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
+    url = "https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/"
     url += "array_coordinates.schema.yml"
     assert schema_file == url
 
