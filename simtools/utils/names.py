@@ -475,6 +475,33 @@ def convert_telescope_model_name_to_yaml(name):
     return old_names[new_name]
 
 
+def ctao_array_element_id(site, telescope_class_name):
+    """
+    CTAO name convention for array element ID.
+    This returns e.g., "LSTN" for any LST telescope in the North site.
+    If a telescope number is given, it adds it as e.g., "LSTN-01".
+
+    Parameters
+    ----------
+    site: str
+        Observatory site (e.g., South or North)
+    telescope_class_name: str
+        Name of the telescope class (e.g. LST-1, LST-D234, MST-FlashCam-D, ...)
+
+    Returns
+    -------
+    str
+        Array element ID (CTAO style).
+
+    """
+
+    _class, _type = split_telescope_model_name(telescope_class_name)
+    _id = _class.upper() + site[0].upper()
+    if _type.isdigit():
+        _id += f"-{int(_type):02d}"
+    return _id
+
+
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
     """
     Instrument name following simtools naming convention
