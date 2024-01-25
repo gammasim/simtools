@@ -422,7 +422,7 @@ def test_get_descriptions(db):
 
 
 def test_get_all_available_telescopes(db):
-    available_telescopes = db.get_all_available_telescopes()
+    available_telescopes = db.get_all_available_telescopes(model_version="Prod5")
 
     expected_telescope_names = [
         "North-LST-1",
