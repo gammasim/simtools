@@ -38,10 +38,10 @@ class SimtelHistograms:
         self._logger = logging.getLogger(__name__)
         if not isinstance(histogram_files, list):
             histogram_files = [histogram_files]
+        self._combined_hists = None
         self._histogram_files = histogram_files
         self._is_test = test
         self._list_of_histograms = None
-        self._combined_hists = None
         self.__meta_dict = None
 
     @property
