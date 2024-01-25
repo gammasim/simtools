@@ -1446,7 +1446,7 @@ class DatabaseHandler:
     def get_all_available_telescopes(
         self,
         db_name=DB_CTA_SIMULATION_MODEL,
-        version="Released",
+        model_version="Released",
     ):
         """
         Get all available telescope names in the collection "telescopes" in the DB.
@@ -1455,7 +1455,7 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        version: str
+        model_version: str
             Which version to get the telescopes of (default: "Released").
 
         Returns
@@ -1467,10 +1467,13 @@ class DatabaseHandler:
 
         collection = DatabaseHandler.db_client[db_name]["telescopes"]
 
+        _model_version = self._convert_version_to_tagged(
+            names.validate_model_version_name(model_version),
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+        )
+
         query = {
-            "Version": self._convert_version_to_tagged(
-                version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-            ),
+            "Version": _model_version,
         }
 
         _all_available_telescopes = collection.find(query).distinct("Telescope")
