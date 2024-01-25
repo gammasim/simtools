@@ -419,3 +419,29 @@ def test_get_descriptions(db):
         == "File name for the quantum efficiency curve."
     )
     assert descriptions["camera_pixels"]["description"] == "Number of pixels per camera."
+
+
+def test_get_all_available_telescopes(db):
+    available_telescopes = db.get_all_available_telescopes(
+        db.DB_CTA_SIMULATION_MODEL,
+    )
+
+    print(available_telescopes)
+
+    expected_telescope_names = [
+        "North-LST-1",
+        "North-LST-D234",
+        "North-MST-FlashCam-D",
+        "North-MST-NectarCam-D",
+        "North-MST-Structure-D",
+        "South-LST-D",
+        "South-MST-FlashCam-D",
+        "South-MST-Structure-D",
+        "South-SCT-D",
+        "South-SST-1M-D",
+        "South-SST-ASTRI-D",
+        "South-SST-Camera-D",
+        "South-SST-GCT-D",
+        "South-SST-Structure-D",
+    ]
+    assert all(_t in available_telescopes for _t in expected_telescope_names)
