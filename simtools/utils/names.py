@@ -63,8 +63,8 @@ all_camera_names = {
 all_structure_names = {"Structure": ["Structure", "structure"]}
 
 all_site_names = {
-    "South": ["paranal", "south", "cta-south", "ctao-south"],
-    "North": ["lapalma", "north", "cta-north", "ctao-north"],
+    "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
+    "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
 }
 
 all_model_version_names = {
@@ -476,7 +476,7 @@ def convert_telescope_model_name_to_yaml(name):
     return old_names[new_name]
 
 
-def ctao_array_element_id(site, telescope_class_name):
+def ctao_array_element_id_from_telescope_model_name(site, telescope_model_name):
     """
     CTAO name convention for array element ID.
     This returns e.g., "LSTN" for any LST telescope in the North site.
@@ -496,11 +496,52 @@ def ctao_array_element_id(site, telescope_class_name):
 
     """
 
-    _class, _type = split_telescope_model_name(telescope_class_name)
+    _class, _type = split_telescope_model_name(telescope_model_name)
     _id = _class.upper() + site[0].upper()
     if _type.isdigit():
         _id += f"-{int(_type):02d}"
     return _id
+
+
+def telescope_model_name_from_ctao_array_element_id(
+    array_element_id, sub_system_name="structure", available_telescopes=None
+):
+    """
+    Telescope model name from CTAO array element ID.
+
+    Parameters
+    ----------
+    array_element_id: str
+        Array element ID (CTAO style).
+    available_telescopes: list
+        List of available telescopes.
+
+    Returns
+    -------
+    str
+        Telescope model name.
+    """
+
+    name_parts = array_element_id.split("-")
+    try:
+        _class = name_parts[0][0:3]
+        _site = validate_site_name(name_parts[0][4])
+    except IndexError:
+        _logger.debug("Invalid array element ID %s", array_element_id)
+        return None
+    try:
+        _id = int(name_parts[1])
+    except ValueError:
+        _id = "D"
+
+    print(available_telescopes)
+
+    return simtools_instrument_name(
+        site=_site,
+        telescope_class_name=_class,
+        sub_system_name=sub_system_name,
+        telescope_id_name=_id,
+    )
 
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
