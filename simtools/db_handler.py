@@ -1452,3 +1452,40 @@ class DatabaseHandler:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
 
         return _all_versions
+
+    def get_all_available_telescopes(
+        self,
+        db_name=DB_CTA_SIMULATION_MODEL,
+        model_version="Released",
+    ):
+        """
+        Get all available telescope names in the collection "telescopes" in the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            the name of the DB
+        model_version: str
+            Which version to get the telescopes of (default: "Released").
+
+        Returns
+        -------
+        all_available_telescopes: list
+            List of all telescope names found
+
+        """
+
+        collection = DatabaseHandler.db_client[db_name]["telescopes"]
+
+        _model_version = self._convert_version_to_tagged(
+            names.validate_model_version_name(model_version),
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+        )
+
+        query = {
+            "Version": _model_version,
+        }
+
+        _all_available_telescopes = collection.find(query).distinct("Telescope")
+
+        return _all_available_telescopes
