@@ -117,8 +117,8 @@ corsika_to_simtools_names = {
 }
 
 # simulation_model parameter naming to DB parameter naming mapping
-# list at least those parameters with name changes or which should
-# not be written to CORSIKA or sim_telarray configuration file
+# simtel: True if alternative "name" is used in simtools (e.g., ref_lat)
+#         and in the model database.
 site_parameters = {
     # Note inconsistency between old and new model
     # altitude was the corsika observation level in the old model
@@ -151,6 +151,7 @@ telescope_parameters = {
     "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
     "telescope_axis_height": {"name": "telescope_axis_height", "simtel": False},
+    "telescope_sphere_radius": {"name": "telescope_sphere_radius", "simtel": False},
 }
 
 
