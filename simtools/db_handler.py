@@ -1442,3 +1442,28 @@ class DatabaseHandler:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
 
         return _all_versions
+
+    def get_all_available_telescopes(
+        self,
+        db_name,
+    ):
+        """
+        Get all available telescope names in the collection "telescopes" in the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            the name of the DB
+
+        Returns
+        -------
+        all_available_telescopes: list
+            List of all telescope names found
+
+        """
+
+        collection = DatabaseHandler.db_client[db_name]["telescopes"]
+
+        _all_available_telescopes = collection.find({}).distinct("Telescope")
+
+        return _all_available_telescopes
