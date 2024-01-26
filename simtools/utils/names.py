@@ -514,7 +514,8 @@ def telescope_model_name_from_array_element_id(
 ):
     """
     Telescope model name from array element ID (CTAO convention).
-    (this is quite finetuned)
+    Does not include the site in the returned name (e.g., returns
+    South-MST-FlashCam-1 for MSTS-01; this method is quite finetuned).
 
     Parameters
     ----------
@@ -560,7 +561,7 @@ def telescope_model_name_from_array_element_id(
             sub_system_name=sub_system_name,
             telescope_id_name="D234" if _site == "North" and _class == "LST" else "D",
         )
-    return _simtools_name
+    return _simtools_name.split("-", 1)[1]
 
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
