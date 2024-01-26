@@ -9,9 +9,9 @@
     Command line arguments
     ----------------------
     inner (float, optional)
-        Inner radius of the angular cone in radians.
+        Inner radius of the angular cone in degrees.
     outer (float, required)
-        Outer radius of the angular cone in radians.
+        Outer radius of the angular cone in degrees.
     obs_time (float, required)
         Observation time in seconds.
     area (float, required)
@@ -25,7 +25,7 @@
     -------
     .. code-block:: console
 
-        simtools-calculate-proton-events --inner 0 --outer 0.1745 --obs_time 1 --area 12
+        simtools-calculate-proton-events --inner 0 --outer 1 --obs_time 1 --area 12
         --energy_min 0.008 --energy_max 10
 """
 
@@ -62,7 +62,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--inner",
-        help="Inner radius of the angular cone in radians.",
+        help="Inner radius of the angular cone in degrees.",
         type=float,
         required=False,
         default=0,
@@ -70,7 +70,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--outer",
-        help="Outer radius of the angular cone in radians.",
+        help="Outer radius of the angular cone in degrees.",
         type=float,
         required=True,
     )
@@ -115,8 +115,8 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
 
-    inner = config_parser["inner"] * u.rad
-    outer = config_parser["outer"] * u.rad
+    inner = config_parser["inner"] * u.deg
+    outer = config_parser["outer"] * u.deg
     obs_time = config_parser["obs_time"] * u.s
     area = config_parser["area"] * u.m**2
     energy = (config_parser["energy_min"], config_parser["energy_max"]) * u.TeV
