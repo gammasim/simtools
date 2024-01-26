@@ -10,6 +10,7 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.site_model import SiteModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 __all__ = ["InvalidTelescopeListFile", "ArrayLayout"]
@@ -59,6 +60,7 @@ class ArrayLayout:
         self._logger = logging.getLogger(__name__)
 
         self.mongo_db_config = mongo_db_config
+        self.model_version = model_version
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
@@ -69,12 +71,6 @@ class ArrayLayout:
         self._corsika_parameter_dict = {}
         self._reference_position_dict = {}
         self._array_center = None
-
-        self.site_model = SiteModel(
-            site=self.site,
-            model_version=model_version,
-            mongo_db_config=self.mongo_db_config,
-        )
 
         self.initialize_array_layout(
             telescope_list_file=telescope_list_file,
@@ -173,15 +169,30 @@ class ArrayLayout:
 
         """
         self._logger.debug("Initialize parameters from DB")
+
+        site_model = SiteModel(
+            site=self.site,
+            model_version=self.model_version,
+            mongo_db_config=self.mongo_db_config,
+        )
         try:
-            self._corsika_parameter_dict.update(self.site_model.get_corsika_site_parameters())
-            self._reference_position_dict = self.site_model.get_reference_point()
-        # TEMPORARY TODO set explicitly to nan to make sure things are breaking.
-        except InvalidModelParameter:
-            self._logger.debug("Error setting parameters from DB")
-        #            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
-        self._logger.debug(f"CORSIKA parameters: {self._corsika_parameter_dict}")
+            self._corsika_parameter_dict.update(site_model.get_corsika_site_parameters())
+            self._reference_position_dict = site_model.get_reference_point()
+        except InvalidModelParameter as exc:
+            self._logger.error("Error setting parameters from DB")
+            raise exc
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
+
+        for tel in self._telescope_list:
+            tel_model = TelescopeModel(
+                site=self.site,
+                telescope_model_name=tel.name,
+                model_version=self.model_version,
+                mongo_db_config=self.mongo_db_config,
+                label=self.label,
+            )
+            for para in ("telescope_axis_height", "telescope_sphere_radius"):
+                tel.set_auxiliary_parameter(para, tel_model.get_parameter_value_with_unit(para))
 
     def _initialize_parameters_from_dict(self, parameter_dict):
         """
@@ -274,7 +285,7 @@ class ArrayLayout:
         except TypeError:
             pass
 
-    def _altitude_from_corsika_z(self, pos_z=None, altitude=None, tel_name=None):
+    def _altitude_from_corsika_z(self, pos_z=None, altitude=None, telescope_axis_height=None):
         """
         Calculate altitude from CORSIKA z-coordinate (if pos_z is given) or CORSIKA z-coordinate \
         from altitude (if altitude is given).
@@ -285,8 +296,8 @@ class ArrayLayout:
             CORSIKA z-coordinate of telescope in equivalent units of meter.
         altitude: astropy.Quantity
             Telescope altitude in equivalent units of meter.
-        tel_name: str
-            Telescope Name.
+        tel_axis_height: astropy.Quantity
+            Telescope axis height in equivalent units of meter.
 
         Returns
         -------
@@ -296,7 +307,7 @@ class ArrayLayout:
         """
         self._logger.debug(
             f"pos_z: {pos_z}, altitude: {altitude}, "
-            f"tel_name: {tel_name}, axis_height: {self._get_telescope_axis_height(tel_name)}, "
+            f"axis_height: {telescope_axis_height}, "
             f"obs_level: {self._corsika_parameter_dict['corsika_observation_level']}"
         )
 
@@ -304,14 +315,14 @@ class ArrayLayout:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
                 self._corsika_parameter_dict["corsika_observation_level"],
-                self._get_telescope_axis_height(tel_name),
+                telescope_axis_height,
             )
 
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
                 self._corsika_parameter_dict["corsika_observation_level"],
-                self._get_telescope_axis_height(tel_name),
+                telescope_axis_height,
             )
         return np.nan
 
@@ -377,8 +388,11 @@ class ArrayLayout:
         except KeyError:
             pass
         try:
+            _site = ""
+            if self.site is not None and len(self.site) > 0:
+                _site = self.site[0]
             if tel.name is None:
-                tel.name = row["asset_code"] + "-" + row["sequence_number"]
+                tel.name = row["asset_code"] + _site + "-" + row["sequence_number"]
             tel.asset_code = row["asset_code"]
             tel.sequence_number = row["sequence_number"]
         except KeyError:
@@ -468,7 +482,8 @@ class ArrayLayout:
                     pos_z=self._assign_unit_to_quantity(
                         row["position_z"], table["position_z"].unit
                     ),
-                    tel_name=tel.name,
+                    # TODO TODO
+                    telescope_axis_height=0.0,
                 )
             )
         except KeyError:
@@ -565,7 +580,10 @@ class ArrayLayout:
         if altitude is not None:
             tel.set_altitude(altitude)
         elif tel_corsika_z is not None:
-            tel.set_altitude(self._altitude_from_corsika_z(pos_z=tel_corsika_z, tel_name=tel.name))
+            # TODO TODO
+            tel.set_altitude(
+                self._altitude_from_corsika_z(pos_z=tel_corsika_z, telescope_axis_height=0.0)
+            )
         self._telescope_list.append(tel)
 
     def _get_export_metadata(self, export_corsika_meta=False):
@@ -632,7 +650,9 @@ class ArrayLayout:
             geo_code.append(tel.geo_code)
             x, y, z = tel.get_coordinates(crs_name)
             if corsika_z:
-                z = self._altitude_from_corsika_z(altitude=z, tel_name=tel.name)
+                z = self._altitude_from_corsika_z(
+                    altitude=z, telescope_axis_height=tel.get_axis_height()
+                )
             pos_x.append(x)
             pos_y.append(y)
             pos_z.append(z)
