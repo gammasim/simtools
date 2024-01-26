@@ -33,9 +33,7 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-from ctao_cosmic_ray_spectra.spectral import (
-    irfdoc_proton_spectrum as ProtonDistribution,
-)
+from ctao_cosmic_ray_spectra.spectral import irfdoc_proton_spectrum
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -125,7 +123,7 @@ def main():
     logger.info(f"Observation time: {obs_time}, Observation area: {area}")
     logger.info(f"Energy range for integration: {energy}")
 
-    final = ProtonDistribution.derive_number_events(  # pylint: disable=E1101
+    final = irfdoc_proton_spectrum.derive_number_events(  # pylint: disable=E1101
         inner, outer, obs_time, area.to(u.cm**2), energy
     )
     # 12: E1101: Instance of 'PowerLaw' has no 'derive_number_events' member (no-member)
