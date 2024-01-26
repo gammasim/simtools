@@ -126,8 +126,19 @@ def _update_parameters_from_repo(
             simtools.constants.SIMULATION_MODEL_URL,
             array_element_id,
         )
+        # TODO - remove telescope ID from parameter name, as repository
+        # does not include telescope ID-dependent models
+        if not file_path.exists():
+            file_path = Path(
+                simtools.constants.SIMULATION_MODEL_URL,
+                array_element_id.split("-")[0],
+            )
     else:
         file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site)
+    if not file_path.exists():
+        logger.debug("No repository found, skipping site parameter update")
+        return parameters
+
     logger.debug("Reading parameters from %s", file_path)
 
     for key, value in parameter_to_query.items():
