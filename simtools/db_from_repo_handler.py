@@ -42,9 +42,9 @@ def update_model_parameters_from_repo(parameters, site, telescope_model_name, mo
     logger.info("Updating model parameters from repository")
     logger.info("Site: %s, telescope: %s", site, telescope_model_name)
 
-    _id = names.ctao_array_element_id(
+    _id = names.array_element_id_from_telescope_model_name(
         site=site,
-        telescope_class_name=telescope_model_name,
+        telescope_model_name=telescope_model_name,
     )
 
     return _update_parameters_from_repo(
