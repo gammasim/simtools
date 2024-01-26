@@ -123,10 +123,9 @@ def main():
     logger.info(f"Observation time: {obs_time}, Observation area: {area}")
     logger.info(f"Energy range for integration: {energy}")
 
-    final = irfdoc_proton_spectrum.derive_number_events(  # pylint: disable=E1101
+    final = irfdoc_proton_spectrum.derive_number_events(
         inner, outer, obs_time, area.to(u.cm**2), energy
     )
-    # 12: E1101: Instance of 'PowerLaw' has no 'derive_number_events' member (no-member)
 
     logger.info(
         "Number of cosmic-ray proton events within the specified conditions: " f"{final.round()}"
