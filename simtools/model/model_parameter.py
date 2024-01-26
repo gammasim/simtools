@@ -4,7 +4,7 @@ import logging
 
 import astropy.units as u
 
-from simtools import db_from_repo_handler, db_handler
+from simtools import db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
@@ -50,29 +50,21 @@ class ModelParameter:
         self._logger = logging.getLogger(__name__)
         self._extra_label = None
 
-        self.site = names.validate_site_name(site) if site is not None else None
-        self.name = (
-            names.validate_telescope_model_name(telescope_model_name)
-            if telescope_model_name is not None
-            else None
-        )
-        self.label = label
-        self.model_version = names.validate_model_version_name(model_version)
-
         self.io_handler = io_handler.IOHandler()
-        self.db = None
-        if db is not None:
-            self.db = db
-        elif mongo_db_config is not None:
+        self.db = db
+        if mongo_db_config is not None:
             self._logger.debug("Connecting to DB")
             self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
-        self._load_parameters_from_db()
-
+        self.site = names.validate_site_name(site) if site is not None else None
+        self.name = self._get_telescope_name(telescope_model_name)
+        self.label = label
+        self.model_version = names.validate_model_version_name(model_version)
         self._config_file_directory = None
         self._config_file_path = None
-        self._set_config_file_directory_and_name()
+
+        self._load_parameters_from_db()
 
     def has_parameter(self, par_name):
         """
@@ -92,7 +84,8 @@ class ModelParameter:
 
     def get_parameter(self, par_name):
         """
-        Get an existing parameter of the model.
+        Get an existing parameter of the model. Convert parameter name to
+        names used in the model database.
 
         Parameters
         ----------
@@ -108,13 +101,12 @@ class ModelParameter:
         InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
+        if par_name in names.telescope_parameters:
+            par_name = names.telescope_parameters[par_name]["name"]
+        elif par_name in names.site_parameters:
+            par_name = names.site_parameters[par_name]["name"]
         try:
             return self._parameters[par_name]
-        except KeyError:
-            pass
-        try:
-            _tmp_par_name = db_from_repo_handler.site_parameters[par_name]["name"]
-            return self._parameters[_tmp_par_name]
         except KeyError as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
@@ -247,10 +239,9 @@ class ModelParameter:
         if self.name is None:
             return
 
-        if self.label is not None:
-            self._config_file_directory = self.io_handler.get_output_directory(
-                label=self.label, sub_dir="model"
-            )
+        self._config_file_directory = self.io_handler.get_output_directory(
+            label=(self.label or self.name), sub_dir="model"
+        )
 
         # Setting file name and the location
         if self.site is not None and self.name is not None:
@@ -383,3 +374,26 @@ class ModelParameter:
             if par_info.get("name") == simtel_name:
                 return par_name
         return simtel_name
+
+    def _get_telescope_name(self, telescope_model_name):
+        """
+        Telescope model name in simtools style.
+        Allow input name in simtools style (e.g., MST-FlashCam-D)
+        or array-element style (e.g., MSTN-01)
+
+        """
+
+        _name = None
+        try:
+            _name = names.validate_telescope_model_name(telescope_model_name)
+        except AttributeError:
+            return None
+        except ValueError:
+            pass
+        if self.db:
+            _name = names.telescope_model_name_from_array_element_id(
+                array_element_id=telescope_model_name,
+                sub_system_name="structure",
+                available_telescopes=self.db.get_all_available_telescopes(),
+            )
+        return _name
