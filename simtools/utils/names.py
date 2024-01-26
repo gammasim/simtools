@@ -58,6 +58,7 @@ all_camera_names = {
     "NectarCam": ["nectarcam", "nectar-cam"],
     "SCT": ["sct"],
     "LST": ["lst"],
+    "Camera": ["Camera", "camera"],
 }
 
 all_structure_names = {"Structure": ["Structure", "structure"]}
@@ -213,8 +214,8 @@ def validate_telescope_id_name(name):
         If name is not valid.
     """
 
-    if name == "D" or name.isdigit():
-        return name
+    if name == "D" or name == "D234" or isinstance(name, int) or name.isdigit():
+        return str(name)
 
     msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
@@ -476,9 +477,9 @@ def convert_telescope_model_name_to_yaml(name):
     return old_names[new_name]
 
 
-def ctao_array_element_id_from_telescope_model_name(site, telescope_model_name):
+def array_element_id_from_telescope_model_name(site, telescope_model_name):
     """
-    CTAO name convention for array element ID.
+    Array element ID (CTAO convention) from telescope model name.
     This returns e.g., "LSTN" for any LST telescope in the North site.
     If a telescope number is given, it adds it as e.g., "LSTN-01".
 
@@ -498,21 +499,27 @@ def ctao_array_element_id_from_telescope_model_name(site, telescope_model_name):
 
     _class, _type = split_telescope_model_name(telescope_model_name)
     _id = _class.upper() + site[0].upper()
-    if _type.isdigit():
-        _id += f"-{int(_type):02d}"
+    try:
+        if _type.isdigit():
+            _id += f"-{int(_type):02d}"
+        elif _type.split("-")[1].isdigit():
+            _id += f"-{int(_type.split('-')[1]):02d}"
+    except IndexError:
+        pass
     return _id
 
 
-def telescope_model_name_from_ctao_array_element_id(
+def telescope_model_name_from_array_element_id(
     array_element_id, sub_system_name="structure", available_telescopes=None
 ):
     """
-    Telescope model name from CTAO array element ID.
+    Telescope model name from array element ID (CTAO convention).
+    (this is quite finetuned)
 
     Parameters
     ----------
     array_element_id: str
-        Array element ID (CTAO style).
+        Array element ID (CTAO convention).
     available_telescopes: list
         List of available telescopes.
 
@@ -525,23 +532,35 @@ def telescope_model_name_from_ctao_array_element_id(
     name_parts = array_element_id.split("-")
     try:
         _class = name_parts[0][0:3]
-        _site = validate_site_name(name_parts[0][4])
-    except IndexError:
-        _logger.debug("Invalid array element ID %s", array_element_id)
-        return None
+        _site = validate_site_name(name_parts[0][3])
+    except IndexError as exc:
+        _logger.error("Invalid array element ID %s", array_element_id)
+        raise exc
     try:
         _id = int(name_parts[1])
-    except ValueError:
+    except (ValueError, IndexError):
         _id = "D"
 
-    print(available_telescopes)
+    if _class in ("LST", "SCT"):
+        sub_system_name = None
+    elif _class == "MST" and sub_system_name.lower() == "camera":
+        sub_system_name = "NectarCam" if _site == "North" else "FlashCam"
 
-    return simtools_instrument_name(
+    _simtools_name = simtools_instrument_name(
         site=_site,
         telescope_class_name=_class,
         sub_system_name=sub_system_name,
         telescope_id_name=_id,
     )
+    if available_telescopes is not None and _simtools_name not in available_telescopes:
+        _logger.debug("Telescope %s not available", _simtools_name)
+        _simtools_name = simtools_instrument_name(
+            site=_site,
+            telescope_class_name=_class,
+            sub_system_name=sub_system_name,
+            telescope_id_name="D234" if _site == "North" and _class == "LST" else "D",
+        )
+    return _simtools_name
 
 
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
@@ -554,8 +573,8 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
         South or North.
     telescope_class_name: str
         LST, MST, ...
-    sub_system_name: str
-        FlashCam, NectarCam
+    sub_system_name: str or None
+        FlashCam, NectarCam, Structure
     telescope_id_name: str
         telescope ID (e.g., D, numerical value)
 
@@ -569,8 +588,7 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
         validate_site_name(site)
         + "-"
         + validate_name(telescope_class_name, all_telescope_class_names)
-        + "-"
-        + validate_sub_system_name(sub_system_name)
+        + ("" if sub_system_name is None else "-" + validate_sub_system_name(sub_system_name))
         + "-"
         + validate_telescope_id_name(telescope_id_name)
     )
