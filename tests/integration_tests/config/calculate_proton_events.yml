@@ -3,8 +3,8 @@ CTA_SIMPIPE:
   TEST_NAME: proton_events
   CONFIGURATION:
     INNER: 0
-    OUTER: 1
+    OUTER: 5
     OBS_TIME: 1
-    AREA: 12
+    AREA: 144
     ENERGY_MIN: 0.008
     ENERGY_MAX: 10

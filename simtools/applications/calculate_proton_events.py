@@ -25,7 +25,7 @@
     -------
     .. code-block:: console
 
-        simtools-calculate-proton-events --inner 0 --outer 1 --obs_time 1 --area 12
+        simtools-calculate-proton-events --inner 0 --outer 5 --obs_time 1 --area 144
         --energy_min 0.008 --energy_max 10
 """
 
