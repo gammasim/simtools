@@ -530,7 +530,6 @@ class TelescopePosition:
             Telescope axis height.
 
         """
-        print("AAAA", self.crs["auxiliary"])
         return self.crs["auxiliary"]["telescope_axis_height"]["value"] * u.Unit(
             self.crs["auxiliary"]["telescope_axis_height"]["unit"]
         )
