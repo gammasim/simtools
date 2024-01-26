@@ -72,6 +72,7 @@ dependencies = [
 "repository" = "https://github.com/gammasim/simtools"
 [project.scripts]
 simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
+simtools-calculate-proton-events = "simtools.applications.calculate_proton_events:main"
 simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
 simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
