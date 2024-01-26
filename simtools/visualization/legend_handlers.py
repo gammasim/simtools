@@ -2,8 +2,8 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
-from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations.io_handler import IOHandler
+# from simtools.corsika.corsika_config import CorsikaConfig
+# from simtools.io_operations.io_handler import IOHandler
 from simtools.utils import names
 from simtools.utils.names import hess, lst, magic, mst, sct, sst, veritas
 
@@ -38,11 +38,13 @@ class TelescopeHandler(object):
     """
 
     def __init__(self):
-        io_handler = IOHandler()
-        corsika_parameters_file = io_handler.get_input_data_file(
-            "parameters", "corsika_parameters.yml"
-        )
-        corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
+        # TODO TODO - read from DB?
+        # io_handler = IOHandler()
+        # corsika_parameters_file = io_handler.get_input_data_file(
+        #    "parameters", "corsika_parameters.yml"
+        # )
+        # corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
+        # corsika_info["corsika_sphere_radius"]
 
         self.radius_dict = {}
         self.colors_dict = {
@@ -54,8 +56,8 @@ class TelescopeHandler(object):
             magic: "grey",
             veritas: "grey",
         }
-        for key, value in corsika_info["corsika_sphere_radius"].items():
-            self.radius_dict[key] = value["value"]
+        # for key, value in corsika_info["corsika_sphere_radius"].items():
+        #    self.radius_dict[key] = value["value"]
 
 
 class PixelObject(object):
