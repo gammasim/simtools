@@ -130,7 +130,7 @@ def main():
     )
     # 12: E1101: Instance of 'PowerLaw' has no 'derive_number_events' member (no-member)
 
-    logger.info(f"Number of proton events within the specified cone: {final}")
+    logger.info(f"Number of cosmic-ray proton events within the specified conditions: {final}")
 
 
 if __name__ == "__main__":
