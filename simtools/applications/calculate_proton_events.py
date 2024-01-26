@@ -3,8 +3,8 @@
 """
     Summary
     -------
-    This application calculates the number of events for a proton distribution within a given
-    angular cone and writes the result to the console.
+    This application calculates the number of events for the cosmic-ray proton distribution within
+    a given angular cone, observation time, area, energy range, and prints out the results.
 
     Command line arguments
     ----------------------
@@ -25,8 +25,8 @@
     -------
     .. code-block:: console
 
-        calculate_proton_events --inner 0 --outer 0.1745 --obs_time 1 --area 12 --energy_min 0.008
-        --energy_max 10
+        simtools-calculate-proton-events --inner 0 --outer 0.1745 --obs_time 1 --area 12
+        --energy_min 0.008 --energy_max 10
 """
 
 import logging
@@ -126,8 +126,8 @@ def main():
     logger.info(f"Energy range for integration: {energy}")
 
     final = ProtonDistribution.derive_number_events(  # pylint: disable=E1101
-        inner, outer, obs_time, area, energy  # pylint: disable=E1101
-    )  # pylint: disable=E1101
+        inner, outer, obs_time, area, energy
+    )
     # 12: E1101: Instance of 'PowerLaw' has no 'derive_number_events' member (no-member)
 
     logger.info(f"Number of proton events within the specified cone: {final}")
