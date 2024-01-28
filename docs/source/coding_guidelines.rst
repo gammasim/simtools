@@ -129,7 +129,7 @@ Validating names
 
 Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
-are found in  :ref:`utils.names <utilsnames>`. The function validate_name receives the input string
+are found in  :ref:`utils.names <utilsnames>`. The function _validate_name receives the input string
 and a name dictionary,
 that is usually called all_something_names. This dictionary contain the possible names (as keys) and
 lists
@@ -139,7 +139,7 @@ is returned.
 
 The name dictionaries are also defined in util.names. One should also define specific functions
 named
-validate_something_names that call the validate_name with the proper name dictionary. This is only
+validate_something_names that call the _validate_name with the proper name dictionary. This is only
 meant to
 provide a clear interface.
 
