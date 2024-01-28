@@ -19,11 +19,9 @@ __all__ = [
     "simtel_telescope_config_file_name",
     "simtools_instrument_name",
     "split_telescope_model_name",
-    "validate_camera_name",
     "validate_array_layout_name",
     "validate_model_version_name",
     "validate_name",
-    "validate_simtel_mode_name",
     "validate_site_name",
     "validate_sub_system_name",
     "validate_telescope_id_name",
@@ -49,7 +47,7 @@ all_telescope_class_names = {
     veritas: ["veritas"],
 }
 
-all_camera_names = {
+all_subsystem_names = {
     "SST": ["sst"],
     "ASTRI": ["astri"],
     "GCT": ["gct", "gct-s"],
@@ -58,11 +56,14 @@ all_camera_names = {
     "NectarCam": ["nectarcam", "nectar-cam"],
     "SCT": ["sct"],
     "LST": ["lst"],
+    "Camera": ["Camera", "camera"],
+    "Structure": ["Structure", "structure"],
 }
 
-all_structure_names = {"Structure": ["Structure", "structure"]}
-
-all_site_names = {"South": ["paranal", "south"], "North": ["lapalma", "north"]}
+all_site_names = {
+    "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
+    "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
+}
 
 all_model_version_names = {
     "2015-07-21": [""],
@@ -87,16 +88,6 @@ all_model_version_names = {
     "Latest": [],
 }
 
-all_simtel_mode_names = {
-    "RayTracing": ["raytracing", "ray-tracing"],
-    "RayTracingSingleMirror": [
-        "raytracing-singlemirror",
-        "ray-tracing-singlemirror",
-        "ray-tracing-single-mirror",
-    ],
-    "Trigger": ["trigger"],
-}
-
 all_array_layout_names = {
     "4LST": ["4-lst", "4lst"],
     "1LST": ["1-lst", "1lst"],
@@ -108,8 +99,42 @@ all_array_layout_names = {
     "TestLayout": ["test-layout"],
 }
 
-corsika_to_simtools_names = {
-    "OBSLEV": "corsika_obs_level",
+# simulation_model parameter naming to DB parameter naming mapping
+# simtel: True if alternative "name" is used in simtools (e.g., ref_lat)
+#         and in the model database.
+site_parameters = {
+    # Note inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "reference_point_altitude": {"name": "altitude", "simtel": True},
+    "reference_point_longitude": {"name": "ref_long", "simtel": False},
+    "reference_point_latitude": {"name": "ref_lat", "simtel": False},
+    "reference_point_utm_north": {"name": "reference_point_utm_north", "simtel": False},
+    "reference_point_utm_east": {"name": "reference_point_utm_east", "simtel": False},
+    # Note naming inconsistency between old and new model
+    # altitude was the corsika observation level in the old model
+    "corsika_observation_level": {"name": "altitude", "simtel": True},
+    "epsg_code": {"name": "epsg_code", "simtel": False},
+    "magnetic_field": {"name": "magnetic_field", "simtel": False},
+    "atmospheric_profile": {"name": "atmospheric_profile", "simtel": False},
+    "atmospheric_transmission": {"name": "atmospheric_transmission", "simtel": True},
+    "array_coordinates": {"name": "array_coordinates", "simtel": False},
+}
+
+telescope_parameters = {
+    "pixel_shape": {"name": "pixel_shape", "simtel": False},
+    "pixel_diameter": {"name": "pixel_diameter", "simtel": False},
+    "lightguide_efficiency_angle_file": {
+        "name": "lightguide_efficiency_angle_file",
+        "simtel": False,
+    },
+    "lightguide_efficiency_wavelength_file": {
+        "name": "lightguide_efficiency_wavelength_file",
+        "simtel": False,
+    },
+    "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
+    "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
+    "telescope_axis_height": {"name": "telescope_axis_height", "simtel": False},
+    "telescope_sphere_radius": {"name": "telescope_sphere_radius", "simtel": False},
 }
 
 
@@ -127,24 +152,7 @@ def validate_sub_system_name(name):
     str
         Validated name.
     """
-    return validate_name(name, {**all_camera_names, **all_structure_names})
-
-
-def validate_camera_name(name):
-    """
-    Validate a camera name.
-
-    Parameters
-    ----------
-    name: str
-        Camera name
-
-    Returns
-    -------
-    str
-        Validated name.
-    """
-    return validate_name(name, all_camera_names)
+    return validate_name(name, all_subsystem_names)
 
 
 def validate_telescope_id_name(name):
@@ -171,8 +179,8 @@ def validate_telescope_id_name(name):
         If name is not valid.
     """
 
-    if name == "D" or name.isdigit():
-        return name
+    if name == "D" or name == "D234" or isinstance(name, int) or name.isdigit():
+        return str(name)
 
     msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
@@ -194,23 +202,6 @@ def validate_model_version_name(name):
         Validated name.
     """
     return validate_name(name, all_model_version_names)
-
-
-def validate_simtel_mode_name(name):
-    """
-    Validate a sim_telarray mode name.
-
-    Parameters
-    ----------
-    name: str
-        sim_telarray mode name.
-
-    Returns
-    -------
-    str
-        Validated name.
-    """
-    return validate_name(name, all_simtel_mode_names)
 
 
 def validate_site_name(name):
@@ -434,6 +425,93 @@ def convert_telescope_model_name_to_yaml(name):
     return old_names[new_name]
 
 
+def array_element_id_from_telescope_model_name(site, telescope_model_name):
+    """
+    Array element ID (CTAO convention) from telescope model name.
+    This returns e.g., "LSTN" for any LST telescope in the North site.
+    If a telescope number is given, it adds it as e.g., "LSTN-01".
+
+    Parameters
+    ----------
+    site: str
+        Observatory site (e.g., South or North)
+    telescope_class_name: str
+        Name of the telescope class (e.g. LST-1, LST-D234, MST-FlashCam-D, ...)
+
+    Returns
+    -------
+    str
+        Array element ID (CTAO style).
+
+    """
+
+    _class, _type = split_telescope_model_name(telescope_model_name)
+    _id = _class.upper() + site[0].upper()
+    try:
+        if _type.isdigit():
+            _id += f"-{int(_type):02d}"
+        elif _type.split("-")[1].isdigit():
+            _id += f"-{int(_type.split('-')[1]):02d}"
+    except IndexError:
+        pass
+    return _id
+
+
+def telescope_model_name_from_array_element_id(
+    array_element_id, sub_system_name="structure", available_telescopes=None
+):
+    """
+    Telescope model name from array element ID (CTAO convention).
+    Does not include the site in the returned name (e.g., returns
+    South-MST-FlashCam-1 for MSTS-01; this method is quite finetuned).
+
+    Parameters
+    ----------
+    array_element_id: str
+        Array element ID (CTAO convention).
+    available_telescopes: list
+        List of available telescopes.
+
+    Returns
+    -------
+    str
+        Telescope model name.
+    """
+
+    name_parts = array_element_id.split("-")
+    try:
+        _class = name_parts[0][0:3]
+        _site = validate_site_name(name_parts[0][3])
+    except IndexError as exc:
+        _logger.error("Invalid array element ID %s", array_element_id)
+        raise exc
+    try:
+        _id = int(name_parts[1])
+    except (ValueError, IndexError):
+        _id = "D"
+
+    if _class in ("LST", "SCT"):
+        sub_system_name = None
+    elif _class == "MST" and sub_system_name.lower() == "camera":
+        sub_system_name = "NectarCam" if _site == "North" else "FlashCam"
+
+    _simtools_name = simtools_instrument_name(
+        site=_site,
+        telescope_class_name=_class,
+        sub_system_name=sub_system_name,
+        telescope_id_name=_id,
+    )
+    if available_telescopes is not None and _simtools_name not in available_telescopes:
+        _logger.debug("Telescope %s not available", _simtools_name)
+        _simtools_name = simtools_instrument_name(
+            site=_site,
+            telescope_class_name=_class,
+            sub_system_name=sub_system_name,
+            telescope_id_name="D234" if _site == "North" and _class == "LST" else "D",
+        )
+    return _simtools_name.split("-", 1)[1]
+
+
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
     """
     Instrument name following simtools naming convention
@@ -444,8 +522,8 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
         South or North.
     telescope_class_name: str
         LST, MST, ...
-    sub_system_name: str
-        FlashCam, NectarCam
+    sub_system_name: str or None
+        FlashCam, NectarCam, Structure
     telescope_id_name: str
         telescope ID (e.g., D, numerical value)
 
@@ -459,8 +537,7 @@ def simtools_instrument_name(site, telescope_class_name, sub_system_name, telesc
         validate_site_name(site)
         + "-"
         + validate_name(telescope_class_name, all_telescope_class_names)
-        + "-"
-        + validate_sub_system_name(sub_system_name)
+        + ("" if sub_system_name is None else "-" + validate_sub_system_name(sub_system_name))
         + "-"
         + validate_telescope_id_name(telescope_id_name)
     )
@@ -497,7 +574,7 @@ def simtel_telescope_config_file_name(
     return name
 
 
-def simtel_array_config_file_name(array_name, site, version, label):
+def simtel_array_config_file_name(array_name, site, model_version, label):
     """
     sim_telarray config file name for an array.
 
@@ -507,7 +584,7 @@ def simtel_array_config_file_name(array_name, site, version, label):
         Prod5, ...
     site: str
         South or North.
-    version: str
+    model_version: str
         Version of the model.
     label: str
         Instance label.
@@ -517,7 +594,7 @@ def simtel_array_config_file_name(array_name, site, version, label):
     str
         File name.
     """
-    name = f"CTA-{array_name}-{site}-{version}"
+    name = f"CTA-{array_name}-{site}-{model_version}"
     name += f"_{label}" if label is not None else ""
     name += ".cfg"
     return name
@@ -799,47 +876,27 @@ def get_telescope_type(telescope_name):
     """
 
     _tel_class, _ = split_telescope_model_name(telescope_name)
-    try:
-        for _class in all_telescope_class_names:
-            if len(_class) == 3 and _tel_class[0:3] == _class:
-                return _class
-            if _tel_class == _class:
-                return _class
-    except IndexError:
-        pass
-
+    for _class in all_telescope_class_names:
+        if len(_class) == 3 and _tel_class[0:3] == _class:
+            return _class
+        if _tel_class == _class:
+            return _class
     return ""
-
-
-def translate_corsika_to_simtools(corsika_par):
-    """
-    Translate the name of a CORSIKA parameter to the name used in simtools.
-
-    Parameters
-    ----------
-    corsika_par: str
-        Name of the corsika parameter to be translated.
-
-    """
-
-    try:
-        return corsika_to_simtools_names[corsika_par]
-    except KeyError:
-        msg = f"Translation not found. We will proceed with the original parameter name:\
-            {corsika_par}."
-        _logger.debug(msg)
-        return corsika_par
 
 
 def translate_simtools_to_corsika(simtools_par):
     """
     Translate the name of a simtools parameter to the name used in CORSIKA.
 
+    TODO - this will go with the new simulation model
+
     Parameters
     ----------
     simtools_par: str
         Name of the simtools parameter to be translated.
     """
+
+    corsika_to_simtools_names = {"OBSLEV": "corsika_obs_level"}
 
     simtools_to_corsika_names = {
         new_key: new_value for new_value, new_key in corsika_to_simtools_names.items()
