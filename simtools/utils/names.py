@@ -4,6 +4,7 @@ import re
 _logger = logging.getLogger(__name__)
 
 __all__ = [
+    "array_element_id_from_telescope_model_name",
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
     "camera_efficiency_simtel_file_name",
@@ -15,10 +16,14 @@ __all__ = [
     "ray_tracing_file_name",
     "ray_tracing_plot_file_name",
     "ray_tracing_results_file_name",
+    "sanitize_name",
     "simtel_array_config_file_name",
+    "simtel_single_mirror_list_file_name",
     "simtel_telescope_config_file_name",
     "simtools_instrument_name",
     "split_telescope_model_name",
+    "telescope_model_name_from_array_element_id",
+    "translate_simtools_to_corsika",
     "validate_array_layout_name",
     "validate_model_version_name",
     "validate_name",
