@@ -259,18 +259,18 @@ def test_sanitize_name():
         names.sanitize_name("")
 
 
-def test_get_telescope_type():
-    assert names.get_telescope_type("LSTN-01") == "LST"
-    assert names.get_telescope_type("MSTN-02") == "MST"
-    assert names.get_telescope_type("SSTS-27") == "SST"
-    assert names.get_telescope_type("SCTS-27") == "SCT"
-    assert names.get_telescope_type("MAGIC-2") == "MAGIC"
-    assert names.get_telescope_type("VERITAS-4") == "VERITAS"
-    assert names.get_telescope_type("LST-") == "LST"
-    assert names.get_telescope_type("MST-1") == "MST"
+def test_get_telescope_class():
+    assert names.get_telescope_class("LSTN-01") == "LST"
+    assert names.get_telescope_class("MSTN-02") == "MST"
+    assert names.get_telescope_class("SSTS-27") == "SST"
+    assert names.get_telescope_class("SCTS-27") == "SCT"
+    assert names.get_telescope_class("MAGIC-2") == "MAGIC"
+    assert names.get_telescope_class("VERITAS-4") == "VERITAS"
+    assert names.get_telescope_class("LST-") == "LST"
+    assert names.get_telescope_class("MST-1") == "MST"
     for _name in ["", "01", "Not_a_telescope"]:
         with pytest.raises(ValueError):
-            names.get_telescope_type(_name)
+            names.get_telescope_class(_name)
 
 
 def test_camera_efficiency_names():

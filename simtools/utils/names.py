@@ -10,7 +10,7 @@ __all__ = [
     "camera_efficiency_simtel_file_name",
     "convert_telescope_model_name_to_yaml",
     "get_site_from_telescope_name",
-    "get_telescope_type",
+    "get_telescope_class",
     "layout_telescope_list_file_name",
     "ray_tracing_file_name",
     "ray_tracing_plot_file_name",
@@ -214,7 +214,7 @@ def validate_telescope_id_name(name):
         If name is not valid.
     """
 
-    if isinstance(name, int) or name.upper() == "D" or name.upper() == "D234" or name.isdigit():
+    if isinstance(name, int) or name.upper() in ("D", "D234", "TEST") or name.isdigit():
         return str(name).upper()
 
     msg = f"Invalid telescope ID name {name}"
@@ -921,9 +921,9 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, az
     return name
 
 
-def get_telescope_type(telescope_name):
+def get_telescope_class(telescope_name):
     """
-    Guess telescope type from name, e.g. "LST", "MST", ...
+    Guess telescope class from name, e.g. "LST", "MST", ...
 
     Parameters
     ----------
