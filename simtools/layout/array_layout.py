@@ -416,12 +416,16 @@ class ArrayLayout:
 
         try:
             return self._corsika_telescope["corsika_sphere_center"][
-                names.get_telescope_type(tel_name)
+                names.get_telescope_class(tel_name)
             ]
         except KeyError:
             self._logger.warning(
                 "Missing definition of CORSIKA sphere center for telescope "
-                f"{tel_name} of type {names.get_telescope_type(tel_name)}"
+                f"{tel_name} of type {names.get_telescope_class(tel_name)}"
+            )
+        except ValueError:
+            self._logger.warning(
+                "Missing definition of CORSIKA sphere center for telescope {tel_name}"
             )
 
         return 0.0 * u.m
@@ -451,7 +455,11 @@ class ArrayLayout:
         try:
             tel.name = row["telescope_name"]
             if "asset_code" not in row:
-                tel.asset_code = names.get_telescope_type(tel.name)
+                try:
+                    tel.asset_code = names.get_telescope_class(tel.name)
+                # asset code is not a valid telescope name; possibly a calibration device
+                except ValueError:
+                    tel.asset_code = tel.name.split("-")[0]
         except KeyError:
             pass
         try:
@@ -764,7 +772,7 @@ class ArrayLayout:
             pos_x, pos_y, pos_z = tel.get_coordinates("ground")
             try:
                 sphere_radius = self._corsika_telescope["corsika_sphere_radius"][
-                    names.get_telescope_type(tel.name)
+                    names.get_telescope_class(tel.name)
                 ]
             except KeyError:
                 self._logger.error("Missing definition of CORSIKA sphere radius")
@@ -882,7 +890,7 @@ class ArrayLayout:
         telescope_table["radius"] = [
             u.Quantity(
                 telescope_table.meta["corsika_sphere_radius"][
-                    names.get_telescope_type(tel_name_now)
+                    names.get_telescope_class(tel_name_now)
                 ]
             )
             .to("m")

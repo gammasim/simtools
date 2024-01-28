@@ -7,7 +7,6 @@ from simtools.utils import names
 
 __all__ = [
     "compute_telescope_transmission",
-    "get_telescope_class",
     "get_camera_name",
     "is_two_mirror_telescope",
     "split_simtel_parameter",
@@ -79,7 +78,7 @@ def get_camera_name(telescope_model_name):
 
     _logger = logging.getLogger(__name__)
     camera_name = ""
-    tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
+    tel_class, tel_type, _ = names.split_telescope_model_name(telescope_model_name)
     if tel_class == "LST":
         camera_name = "LST"
     elif tel_class == "MST":
@@ -108,25 +107,6 @@ def get_camera_name(telescope_model_name):
     return camera_name
 
 
-def get_telescope_class(telescope_model_name):
-    """
-    Get telescope class from telescope name.
-
-    Parameters
-    ----------
-    telescope_model_name: str
-        Telescope model name (ex. LST-1).
-
-    Returns
-    -------
-    str
-        Telescope class (SST, MST, ...).
-    """
-
-    tel_class, _ = names.split_telescope_model_name(telescope_model_name)
-    return tel_class
-
-
 def is_two_mirror_telescope(telescope_model_name):
     """
     Check if the telescope is a two mirror design.
@@ -141,7 +121,7 @@ def is_two_mirror_telescope(telescope_model_name):
     bool
         True if the telescope is a two mirror one.
     """
-    tel_class, tel_type = names.split_telescope_model_name(telescope_model_name)
+    tel_class, tel_type, _ = names.split_telescope_model_name(telescope_model_name)
     if tel_class == "SST":
         # Only 1M is False
         return "1M" not in tel_type

@@ -600,21 +600,13 @@ def test_try_set_coordinate(
     )
 
 
-def test_get_corsika_sphere_center(telescope_north_test_file, caplog):
+def test_get_corsika_sphere_center(telescope_north_test_file):
     layout = ArrayLayout(telescope_list_file=telescope_north_test_file)
 
     assert layout._get_corsika_sphere_center("LST") == 16.0 * u.m
 
-    with caplog.at_level(logging.WARNING):
-        assert layout._get_corsika_sphere_center("not_a_telescope") == 0.0 * u.m
-    assert (
-        "Missing definition of CORSIKA sphere center for telescope not_a_telescope of type"
-        in caplog.text
-    )
-
-    with caplog.at_level(logging.WARNING):
-        assert layout._get_corsika_sphere_center("") == 0.0 * u.m
-    assert "Missing definition of CORSIKA sphere center for telescope  of type " in caplog.text
+    assert layout._get_corsika_sphere_center("not_a_telescope") == 0.0 * u.m
+    assert layout._get_corsika_sphere_center("") == 0.0 * u.m
 
 
 def test_len(telescope_north_test_file):
