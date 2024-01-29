@@ -19,7 +19,7 @@ __all__ = [
     "simtel_array_config_file_name",
     "simtel_single_mirror_list_file_name",
     "simtel_telescope_config_file_name",
-    "simtools_instrument_name",
+    "get_telescope_name_db",
     "split_telescope_model_name",
     "telescope_model_name_from_array_element_id",
     "translate_simtools_to_corsika",
@@ -115,45 +115,6 @@ all_array_element_id_names = {
     "msts": ["MSTS", "msts"],
     "ssts": ["SSTS", "ssts"],
     "scts": ["SCTS", "scts"],
-}
-
-# simulation_model parameter naming to DB parameter naming mapping
-# simtel: True if alternative "db_name" is used in simtools (e.g., ref_lat)
-#         and in the model database.
-# (this can be extended in future to include CORSIKA/sim_telarray and simtools names)
-site_parameters = {
-    # Note inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
-    "reference_point_altitude": {"db_name": "altitude", "simtel": True},
-    "reference_point_longitude": {"db_name": "ref_long", "simtel": False},
-    "reference_point_latitude": {"db_name": "ref_lat", "simtel": False},
-    "reference_point_utm_north": {"db_name": "reference_point_utm_north", "simtel": False},
-    "reference_point_utm_east": {"db_name": "reference_point_utm_east", "simtel": False},
-    # Note naming inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
-    "corsika_observation_level": {"db_name": "altitude", "simtel": True},
-    "epsg_code": {"db_name": "epsg_code", "simtel": False},
-    "magnetic_field": {"db_name": "magnetic_field", "simtel": False},
-    "atmospheric_profile": {"db_name": "atmospheric_profile", "simtel": False},
-    "atmospheric_transmission": {"db_name": "atmospheric_transmission", "simtel": True},
-    "array_coordinates": {"db_name": "array_coordinates", "simtel": False},
-}
-
-telescope_parameters = {
-    "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
-    "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
-    "lightguide_efficiency_angle_file": {
-        "db_name": "lightguide_efficiency_angle_file",
-        "simtel": False,
-    },
-    "lightguide_efficiency_wavelength_file": {
-        "db_name": "lightguide_efficiency_wavelength_file",
-        "simtel": False,
-    },
-    "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
-    "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
-    "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
-    "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
 }
 
 
@@ -430,9 +391,9 @@ def get_site_from_telescope_name(name):
     str
         Site name (South or North).
     """
-    # e.g, MSTN or MSTN-01
+    # e.g, MSTN or MSTN-01 (tested by get_telescope_class)
     try:
-        _is_valid_name(name, all_array_element_id_names)
+        get_telescope_class(name)
         return validate_site_name(name[3])
     except ValueError:
         pass
@@ -444,8 +405,6 @@ def validate_telescope_name_db(name):
     """
     Validate a telescope DB name.
     Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.
-
-    TODO - inconsistent naming with def simtools_instrument_name
 
     Parameters
     ----------
@@ -567,7 +526,7 @@ def telescope_model_name_from_array_element_id(
     elif _class == "MST" and sub_system_name.lower() == "camera":
         sub_system_name = "NectarCam" if _site == "North" else "FlashCam"
 
-    _simtools_name = simtools_instrument_name(
+    _simtools_name = get_telescope_name_db(
         site=_site,
         telescope_class_name=_class,
         sub_system_name=sub_system_name,
@@ -575,7 +534,7 @@ def telescope_model_name_from_array_element_id(
     )
     if available_telescopes is not None and _simtools_name not in available_telescopes:
         _logger.debug("Telescope %s not available", _simtools_name)
-        _simtools_name = simtools_instrument_name(
+        _simtools_name = get_telescope_name_db(
             site=_site,
             telescope_class_name=_class,
             sub_system_name=sub_system_name,
@@ -584,12 +543,10 @@ def telescope_model_name_from_array_element_id(
     return _simtools_name.split("-", 1)[1]
 
 
-def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
+def get_telescope_name_db(site, telescope_class_name, sub_system_name, telescope_id_name):
     """
     Instrument name following simtools naming convention
     Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.
-
-    TODO - inconsistent naming with validate_telescope_name_db
 
     Parameters
     ----------
