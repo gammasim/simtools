@@ -120,6 +120,7 @@ all_array_element_id_names = {
 # simulation_model parameter naming to DB parameter naming mapping
 # simtel: True if alternative "db_name" is used in simtools (e.g., ref_lat)
 #         and in the model database.
+# (this can be extended in future to include CORSIKA/sim_telarray and simtools names)
 site_parameters = {
     # Note inconsistency between old and new model
     # altitude was the corsika observation level in the old model
@@ -346,7 +347,7 @@ def validate_telescope_model_name(name):
         Validated name.
     """
 
-    # e.g, MSTN or MSN-01
+    # e.g, MSTN or MSTN-01
     try:
         return _validate_name(name, all_array_element_id_names)
     except ValueError:
@@ -429,12 +430,22 @@ def get_site_from_telescope_name(name):
     str
         Site name (South or North).
     """
+    # e.g, MSTN or MSTN-01
+    try:
+        _is_valid_name(name, all_array_element_id_names)
+        return validate_site_name(name[3])
+    except ValueError:
+        pass
+    # e.g., South-MST-FlashCam
     return validate_site_name(name.split("-")[0])
 
 
 def validate_telescope_name_db(name):
     """
     Validate a telescope DB name.
+    Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.
+
+    TODO - inconsistent naming with def simtools_instrument_name
 
     Parameters
     ----------
@@ -576,6 +587,9 @@ def telescope_model_name_from_array_element_id(
 def simtools_instrument_name(site, telescope_class_name, sub_system_name, telescope_id_name):
     """
     Instrument name following simtools naming convention
+    Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.
+
+    TODO - inconsistent naming with validate_telescope_name_db
 
     Parameters
     ----------
