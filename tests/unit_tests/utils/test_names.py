@@ -155,6 +155,8 @@ def test_get_site_from_telescope_name():
     assert "South" == names.get_site_from_telescope_name("South-MST-FlashCam-D")
     with pytest.raises(ValueError):
         names.get_site_from_telescope_name("NorthWest-LST-1")
+    assert "North" == names.get_site_from_telescope_name("MSTN-05")
+    assert "South" == names.get_site_from_telescope_name("MSTS-05")
 
 
 def test_validate_name(caplog):
