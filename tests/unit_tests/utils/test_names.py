@@ -137,12 +137,8 @@ def test_validate_telescope_name():
         logging.getLogger().info(f"New name {new_name}")
         assert value == new_name
 
-        _class, _type, _id = names.split_telescope_model_name(value)
+        _class, _, _id = names.split_telescope_model_name(value)
         assert names._is_valid_name(_class, names.all_telescope_class_names)
-        # TODO not sure about _type
-        # LST-1 returns "1"
-        # MST-FlashCam-D returns "FlashCam-D"
-        # "sst-1m" return "1M"
         if len(_id) > 0:
             assert names.validate_telescope_id_name(_id)
 
@@ -155,6 +151,7 @@ def test_get_site_from_telescope_name():
     assert "South" == names.get_site_from_telescope_name("South-MST-FlashCam-D")
     with pytest.raises(ValueError):
         names.get_site_from_telescope_name("NorthWest-LST-1")
+    assert "North" == names.get_site_from_telescope_name("MSTN")
     assert "North" == names.get_site_from_telescope_name("MSTN-05")
     assert "South" == names.get_site_from_telescope_name("MSTS-05")
 
@@ -173,7 +170,7 @@ def test_validate_name(caplog):
         names._validate_name("Aar", all_site_names)
 
 
-def test__is_valid_name():
+def test_is_valid_name():
     all_site_names = {
         "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
         "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
@@ -194,7 +191,6 @@ def test_validate_telescope_name_db():
         "north-mst-nectarcam-d": "North-MST-NectarCam-D",
         "north-lst-1": "North-LST-1",
     }
-
     for key, value in telescopes.items():
         logging.getLogger().info(f"Validating {key}")
         new_name = names.validate_telescope_name_db(key)
@@ -207,7 +203,6 @@ def test_validate_telescope_name_db():
         "no-rth-mst-nectarcam-d": "No-rth-MST-NectarCam-D",
         "north-ls-1": "North-LS-1",
     }
-
     for key, value in telescopes.items():
         logging.getLogger().info(f"Validating {key}")
         with pytest.raises(ValueError):
@@ -232,14 +227,12 @@ def test_validate_model_version_name():
         names.validate_model_version_name("p0")
 
 
-def test_simtools_instrument_name():
-    assert names.simtools_instrument_name("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
-    assert (
-        names.simtools_instrument_name("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"
-    )
+def test_get_telescope_name_db():
+    assert names.get_telescope_name_db("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
+    assert names.get_telescope_name_db("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"
 
     with pytest.raises(ValueError):
-        names.simtools_instrument_name("West", "MST", "FlashCam", "D")
+        names.get_telescope_name_db("West", "MST", "FlashCam", "D")
 
 
 # TODO - this will go with the new naming convention
@@ -480,7 +473,6 @@ def test_simtel_single_mirror_list_file_name():
 
 
 def test_layout_telescope_list_file_name():
-    # TODO - discuss if usage of "-" and "_" is consistent
     assert (
         names.layout_telescope_list_file_name(
             name="Alpha",
