@@ -47,8 +47,7 @@ repos:
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
-  # TODO: Uncomment when ctao_cosmic_ray_spectra package is released
-  #- repo: https://github.com/tox-dev/pyproject-fmt
-  #  rev: "1.0.0"
-  #  hooks:
-  #    - id: pyproject-fmt
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "1.0.0"
+    hooks:
+      - id: pyproject-fmt
