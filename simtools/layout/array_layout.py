@@ -425,7 +425,7 @@ class ArrayLayout:
             )
         except ValueError:
             self._logger.warning(
-                "Missing definition of CORSIKA sphere center for telescope {tel_name}"
+                f"Missing definition of CORSIKA sphere center for telescope {tel_name}"
             )
 
         return 0.0 * u.m
