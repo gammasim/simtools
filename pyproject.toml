@@ -32,7 +32,8 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dynamic = [
-  "version",
+  "version", ["ctao_cosmic_ray_spectra",
+        {git = "https://github.com/VictorBarbosaMartins/ctao_cosmic_ray_spectra.git"}]
 ]
 dependencies = [
   "astropy",
