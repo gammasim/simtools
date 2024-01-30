@@ -563,7 +563,7 @@ def get_telescope_patch(name, x, y, radius):
         Instance of mpatches.Circle.
     """
     tel_obj = leg_h.TelescopeHandler()
-    valid_name = names.get_telescope_type(name)
+    valid_name = names.get_telescope_class(name)
     fill_flag = False
 
     x = x.to(u.m)
@@ -647,7 +647,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
         for tel_type in tel_counters:
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
-        i_tel_name = names.get_telescope_type(telescopes[i_tel]["telescope_name"])
+        i_tel_name = names.get_telescope_class(telescopes[i_tel]["telescope_name"])
         patches.append(
             get_telescope_patch(
                 i_tel_name,

@@ -14,7 +14,6 @@ from pymongo.errors import BulkWriteError
 import simtools.utils.general as gen
 from simtools import db_from_repo_handler
 from simtools.io_operations import io_handler
-from simtools.model.model_utils import get_telescope_class
 from simtools.utils import names
 
 __all__ = ["DatabaseHandler"]
@@ -294,7 +293,7 @@ class DatabaseHandler:
 
         """
 
-        _tel_class = get_telescope_class(telescope_model_name)
+        _tel_class = names.get_telescope_class(telescope_model_name)
         _tel_name_converted = names.convert_telescope_model_name_to_yaml(telescope_model_name)
 
         if _tel_class == "MST":
@@ -353,7 +352,7 @@ class DatabaseHandler:
 
         _site_validated = names.validate_site_name(site)
         _tel_name_db = self._get_telescope_model_name_for_db(_site_validated, telescope_model_name)
-        _tel_class = get_telescope_class(telescope_model_name)
+        _tel_class = names.get_telescope_class(telescope_model_name)
 
         self._logger.debug(f"Tel_name_db: {_tel_name_db}")
         self._logger.debug(f"Tel_class: {_tel_class}")
