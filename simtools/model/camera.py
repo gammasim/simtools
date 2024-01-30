@@ -11,11 +11,8 @@ from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import distance
 
 import simtools.visualization.legend_handlers as leg_h
-from simtools.model.model_utils import (
-    get_camera_name,
-    get_telescope_class,
-    is_two_mirror_telescope,
-)
+from simtools.model.model_utils import is_two_mirror_telescope
+from simtools.utils import names
 from simtools.utils.geometry import rotate
 
 __all__ = ["Camera"]
@@ -51,7 +48,7 @@ class Camera:
         self._logger = logging.getLogger(__name__)
 
         self._telescope_model_name = telescope_model_name
-        self._camera_name = get_camera_name(self._telescope_model_name)
+        _, self._camera_name, _ = names.split_telescope_model_name(telescope_model_name)
         self._camera_config_file = camera_config_file
         self._focal_length = focal_length
         if self._focal_length <= 0:
@@ -743,7 +740,7 @@ class Camera:
 
             if self._pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
                 font_size = 4
-                if get_telescope_class(self._telescope_model_name) == "SCT":
+                if names.get_telescope_class(self._telescope_model_name) == "SCT":
                     font_size = 2
                 plt.text(
                     xy_pix_pos[0],
