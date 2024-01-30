@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+gf92fbcc</title>
+    <title>Index &#8212; simtools v0.1.dev1+g93c1d6d</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=36824910"></script>
+    <script src="_static/documentation_options.js?v=8b9a43ba"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="#" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf92fbcc</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g93c1d6d</p>
 
 
 
@@ -139,6 +139,8 @@
         <li><a href="ray_tracing.html#ray_tracing.RayTracing.analyze">(ray_tracing.RayTracing method)</a>
 </li>
       </ul></li>
+      <li><a href="utils.html#utils.names.array_element_id_from_telescope_model_name">array_element_id_from_telescope_model_name() (in module utils.names)</a>
+</li>
       <li><a href="array_layout.html#layout.array_layout.ArrayLayout">ArrayLayout (class in layout.array_layout)</a>
 </li>
       <li><a href="mc_model.html#model.array_model.ArrayModel">ArrayModel (class in model.array_model)</a>
@@ -237,7 +239,7 @@
 </li>
       <li><a href="array_layout.html#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">convert_telescope_altitude_to_corsika_system() (layout.telescope_position.TelescopePosition static method)</a>
 </li>
-      <li><a href="utils.html#utils.names.convert_telescope_model_name_to_yaml">convert_telescope_model_name_to_yaml() (in module utils.names)</a>
+      <li><a href="utils.html#utils.names.convert_telescope_model_name_to_yaml_name">convert_telescope_model_name_to_yaml_name() (in module utils.names)</a>
 </li>
       <li><a href="db_handler.html#db_handler.DatabaseHandler.copy_documents">copy_documents() (db_handler.DatabaseHandler method)</a>
 </li>
@@ -451,8 +453,6 @@
 </li>
       <li><a href="mc_model.html#model.camera.Camera.get_camera_fill_factor">get_camera_fill_factor() (model.camera.Camera method)</a>
 </li>
-      <li><a href="mc_model.html#model.model_utils.get_camera_name">get_camera_name() (in module model.model_utils)</a>
-</li>
       <li><a href="visualization.html#visualization.visualize.get_colors">get_colors() (in module visualization.visualize)</a>
 </li>
       <li><a href="mc_model.html#model.array_model.ArrayModel.get_config_directory">get_config_directory() (model.array_model.ArrayModel method)</a>
@@ -520,10 +520,10 @@
       </ul></li>
       <li><a href="io_operations.html#io_operations.io_handler.IOHandler.get_input_data_file">get_input_data_file() (io_operations.io_handler.IOHandler method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="corsika.html#corsika.corsika_config.CorsikaConfig.get_input_file">get_input_file() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
 </li>
       <li><a href="mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">get_lightguide_efficiency_wavelength_file_name() (model.camera.Camera method)</a>
@@ -599,13 +599,13 @@
 </li>
       <li><a href="ray_tracing.html#ray_tracing.RayTracing.get_std_dev">get_std_dev() (ray_tracing.RayTracing method)</a>
 </li>
-      <li><a href="mc_model.html#model.model_utils.get_telescope_class">get_telescope_class() (in module model.model_utils)</a>
+      <li><a href="utils.html#utils.names.get_telescope_class">get_telescope_class() (in module utils.names)</a>
+</li>
+      <li><a href="utils.html#utils.names.get_telescope_name_db">get_telescope_name_db() (in module utils.names)</a>
 </li>
       <li><a href="visualization.html#visualization.visualize.get_telescope_patch">get_telescope_patch() (in module visualization.visualize)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.get_telescope_transmission_parameters">get_telescope_transmission_parameters() (model.telescope_model.TelescopeModel method)</a>
-</li>
-      <li><a href="utils.html#utils.names.get_telescope_type">get_telescope_type() (in module utils.names)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_config.CorsikaConfig.get_user_parameter">get_user_parameter() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
@@ -716,8 +716,6 @@
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.is_file_2d">is_file_2d() (model.telescope_model.TelescopeModel method)</a>
 </li>
       <li><a href="mc_model.html#model.model_utils.is_two_mirror_telescope">is_two_mirror_telescope() (in module model.model_utils)</a>
-</li>
-      <li><a href="utils.html#utils.names.is_valid_name">is_valid_name() (in module utils.names)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1156,6 +1154,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#utils.names.sanitize_name">sanitize_name() (in module utils.names)</a>
+</li>
       <li><a href="visualization.html#visualization.legend_handlers.SCTHandler">SCTHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="visualization.html#visualization.legend_handlers.SCTObject">SCTObject (class in visualization.legend_handlers)</a>
@@ -1237,6 +1237,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#utils.names.simtel_single_mirror_list_file_name">simtel_single_mirror_list_file_name() (in module utils.names)</a>
+</li>
       <li><a href="utils.html#utils.names.simtel_telescope_config_file_name">simtel_telescope_config_file_name() (in module utils.names)</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">SimtelConfigWriter (class in simtel.simtel_config_writer)</a>
@@ -1252,8 +1254,6 @@
       <li><a href="sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray">SimtelRunnerArray (class in simtel.simtel_runner_array)</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing">SimtelRunnerRayTracing (class in simtel.simtel_runner_ray_tracing)</a>
-</li>
-      <li><a href="utils.html#utils.names.simtools_instrument_name">simtools_instrument_name() (in module utils.names)</a>
 </li>
       <li><a href="camera_efficiency.html#camera_efficiency.CameraEfficiency.simulate">simulate() (camera_efficiency.CameraEfficiency method)</a>
 
@@ -1316,6 +1316,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">telescope() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
+      <li><a href="utils.html#utils.names.telescope_model_name_from_array_element_id">telescope_model_name_from_array_element_id() (in module utils.names)</a>
+</li>
       <li><a href="visualization.html#visualization.legend_handlers.TelescopeHandler">TelescopeHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel">TelescopeModel (class in model.telescope_model)</a>
@@ -1325,6 +1327,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="job_execution.html#job_execution.job_manager.JobManager.test_submission_system">test_submission_system() (job_execution.job_manager.JobManager method)</a>
+</li>
+      <li><a href="utils.html#utils.names.translate_simtools_to_corsika">translate_simtools_to_corsika() (in module utils.names)</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.trigger_rate_per_histogram">trigger_rate_per_histogram() (simtel.simtel_histograms.SimtelHistograms method)</a>
 </li>
@@ -1391,8 +1395,6 @@
         <li><a href="applications.html#module-validate_camera_fov">module</a>
 </li>
       </ul></li>
-      <li><a href="utils.html#utils.names.validate_camera_name">validate_camera_name() (in module utils.names)</a>
-</li>
       <li><a href="utils.html#utils.general.validate_config_data">validate_config_data() (in module utils.general)</a>
 </li>
       <li><a href="data_model.html#data_model.validate_data.DataValidator.validate_data_file">validate_data_file() (data_model.validate_data.DataValidator method)</a>
@@ -1408,8 +1410,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="utils.html#utils.names.validate_name">validate_name() (in module utils.names)</a>
-</li>
       <li>
     validate_optics
 
@@ -1418,8 +1418,6 @@
 </li>
       </ul></li>
       <li><a href="data_model.html#data_model.metadata_model.validate_schema">validate_schema() (in module data_model.metadata_model)</a>
-</li>
-      <li><a href="utils.html#utils.names.validate_simtel_mode_name">validate_simtel_mode_name() (in module utils.names)</a>
 </li>
       <li><a href="utils.html#utils.names.validate_site_name">validate_site_name() (in module utils.names)</a>
 </li>

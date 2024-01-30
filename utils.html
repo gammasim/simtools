@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gf92fbcc</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g93c1d6d</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=36824910"></script>
+    <script src="_static/documentation_options.js?v=8b9a43ba"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -32,7 +32,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gf92fbcc</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g93c1d6d</p>
 
 
 
@@ -402,6 +402,30 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 <section id="module-utils.names">
 <span id="names"></span><span id="utilsnames"></span><h2>names<a class="headerlink" href="#module-utils.names" title="Link to this heading">¶</a></h2>
 <dl class="py function">
+<dt class="sig sig-object py" id="utils.names.array_element_id_from_telescope_model_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">array_element_id_from_telescope_model_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#array_element_id_from_telescope_model_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.array_element_id_from_telescope_model_name" title="Link to this definition">¶</a></dt>
+<dd><p>Array element ID (CTAO convention) from telescope model name.
+This returns e.g., “LSTN” for any LST telescope in the North site.
+If a telescope number is given, it adds it as e.g., “LSTN-01”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>Observatory site (e.g., South or North)</p>
+</dd>
+<dt><strong>telescope_class_name: str</strong></dt><dd><p>Name of the telescope class (e.g. LST-1, LST-D234, MST-FlashCam-D, …)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Array element ID (CTAO style).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="utils.names.camera_efficiency_log_file_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">camera_efficiency_log_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#camera_efficiency_log_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.camera_efficiency_log_file_name" title="Link to this definition">¶</a></dt>
 <dd><p>Camera efficiency log file name.</p>
@@ -486,8 +510,8 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.convert_telescope_model_name_to_yaml">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">convert_telescope_model_name_to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#convert_telescope_model_name_to_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.convert_telescope_model_name_to_yaml" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="utils.names.convert_telescope_model_name_to_yaml_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">convert_telescope_model_name_to_yaml_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#convert_telescope_model_name_to_yaml_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.convert_telescope_model_name_to_yaml_name" title="Link to this definition">¶</a></dt>
 <dd><p>Get telescope name following the old convention (yaml files) from the current telescope name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -532,9 +556,9 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.get_telescope_type">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_telescope_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#get_telescope_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_telescope_type" title="Link to this definition">¶</a></dt>
-<dd><p>Guess telescope type from name, e.g. “LST”, “MST”, …</p>
+<dt class="sig sig-object py" id="utils.names.get_telescope_class">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_telescope_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#get_telescope_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_telescope_class" title="Link to this definition">¶</a></dt>
+<dd><p>Guess telescope class from name, e.g. “LST”, “MST”, …</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -552,21 +576,26 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.is_valid_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">is_valid_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#is_valid_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.is_valid_name" title="Link to this definition">¶</a></dt>
-<dd><p>Check if name is valid.</p>
+<dt class="sig sig-object py" id="utils.names.get_telescope_name_db">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_telescope_name_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_class_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_system_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_id_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#get_telescope_name_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_telescope_name_db" title="Link to this definition">¶</a></dt>
+<dd><p>Instrument name following simtools naming convention
+Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name:  str</strong></dt><dd><p>Name to validated.</p>
+<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
 </dd>
-<dt><strong>all_names: dict</strong></dt><dd><p>Dictionary with valid names.</p>
+<dt><strong>telescope_class_name: str</strong></dt><dd><p>LST, MST, …</p>
+</dd>
+<dt><strong>sub_system_name: str or None</strong></dt><dd><p>FlashCam, NectarCam, Structure</p>
+</dd>
+<dt><strong>telescope_id_name: str</strong></dt><dd><p>telescope ID (e.g., D, numerical value)</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>bool</dt><dd><p>True if name is valid. Otherwise, false.</p>
+<dt>instrument: name: str</dt><dd><p>Instrument name.</p>
 </dd>
 </dl>
 </dd>
@@ -688,8 +717,40 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="utils.names.sanitize_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">sanitize_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#sanitize_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.sanitize_name" title="Link to this definition">¶</a></dt>
+<dd><p>Sanitize name to be a valid Python identifier.</p>
+<ul class="simple">
+<li><p>Replaces spaces with underscores</p></li>
+<li><p>Converts to lowercase</p></li>
+<li><p>Removes characters that are not alphanumerics or underscores</p></li>
+<li><p>If the name starts with a number, prepend an underscore</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name: str</strong></dt><dd><p>name to be sanitized.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str:</dt><dd><p>Sanitized name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError:</dt><dd><p>if the string <code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code> can not be sanitized.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="utils.names.simtel_array_config_file_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtel_array_config_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#simtel_array_config_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtel_array_config_file_name" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtel_array_config_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#simtel_array_config_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtel_array_config_file_name" title="Link to this definition">¶</a></dt>
 <dd><p>sim_telarray config file name for an array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -698,7 +759,35 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd>
 <dt><strong>site: str</strong></dt><dd><p>South or North.</p>
 </dd>
-<dt><strong>version: str</strong></dt><dd><p>Version of the model.</p>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>File name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.names.simtel_single_mirror_list_file_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtel_single_mirror_list_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#simtel_single_mirror_list_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtel_single_mirror_list_file_name" title="Link to this definition">¶</a></dt>
+<dd><p>sim_telarray mirror list file with a single mirror.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
+</dd>
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>North-LST-1, South-MST-FlashCam, …</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>mirror_number: int</strong></dt><dd><p>Mirror number.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
@@ -742,35 +831,11 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.simtools_instrument_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtools_instrument_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_class_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_system_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_id_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#simtools_instrument_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtools_instrument_name" title="Link to this definition">¶</a></dt>
-<dd><p>Instrument name following simtools naming convention</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
-</dd>
-<dt><strong>telescope_class_name: str</strong></dt><dd><p>LST, MST, …</p>
-</dd>
-<dt><strong>sub_system_name: str</strong></dt><dd><p>FlashCam, NectarCam</p>
-</dd>
-<dt><strong>telescope_id_name: str</strong></dt><dd><p>telescope ID (e.g., D, numerical value)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>instrument: name: str</dt><dd><p>Instrument name.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="utils.names.split_telescope_model_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">split_telescope_model_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#split_telescope_model_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.split_telescope_model_name" title="Link to this definition">¶</a></dt>
-<dd><p>Split a telescope name into class and type.</p>
+<dd><p>Split a telescope name into class, type, telescope id.
+Allow various inputs, e.g., MST-FlashCam-01, MST-FlashCam,
+MSTN-01, MSTN, MST-1</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -780,7 +845,46 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str, str</dt><dd><p>class (LST, MST, SST …) and type (any complement).</p>
+<dt>str, str, str</dt><dd><p>class (LST, MST, SST …), type (any complement), telescope id</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.names.telescope_model_name_from_array_element_id">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">telescope_model_name_from_array_element_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_system_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'structure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">available_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#telescope_model_name_from_array_element_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.telescope_model_name_from_array_element_id" title="Link to this definition">¶</a></dt>
+<dd><p>Telescope model name from array element ID (CTAO convention).
+Does not include the site in the returned name (e.g., returns
+South-MST-FlashCam-1 for MSTS-01; this method is quite finetuned).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array_element_id: str</strong></dt><dd><p>Array element ID (CTAO convention).</p>
+</dd>
+<dt><strong>available_telescopes: list</strong></dt><dd><p>List of available telescopes.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Telescope model name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.names.translate_simtools_to_corsika">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">translate_simtools_to_corsika</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtools_par</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#translate_simtools_to_corsika"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.translate_simtools_to_corsika" title="Link to this definition">¶</a></dt>
+<dd><p>Translate the name of a simtools parameter to the name used in CORSIKA.</p>
+<p>TODO - this will go with the new simulation model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simtools_par: str</strong></dt><dd><p>Name of the simtools parameter to be translated.</p>
 </dd>
 </dl>
 </dd>
@@ -808,26 +912,6 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_camera_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_camera_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_camera_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_camera_name" title="Link to this definition">¶</a></dt>
-<dd><p>Validate a camera name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Camera name</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Validated name.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_model_version_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_model_version_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_model_version_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_model_version_name" title="Link to this definition">¶</a></dt>
 <dd><p>Validate a model version name.</p>
@@ -835,52 +919,6 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>Model version name.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Validated name.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_name" title="Link to this definition">¶</a></dt>
-<dd><p>Validate a name given the all_names options. For each key in all_names, a list of options is     given. If name is in this list, the key name is returned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Name to validate.</p>
-</dd>
-<dt><strong>all_names: dict</strong></dt><dd><p>Dictionary with valid names.</p>
-</dd>
-<dt><strong>Returns</strong></dt><dd></dd>
-<dt><strong>——-</strong></dt><dd></dd>
-<dt><strong>str</strong></dt><dd><p>Validated name.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ValueError</dt><dd><p>If name is not valid.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_simtel_mode_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_simtel_mode_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_simtel_mode_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_simtel_mode_name" title="Link to this definition">¶</a></dt>
-<dd><p>Validate a sim_telarray mode name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>sim_telarray mode name.</p>
 </dd>
 </dl>
 </dd>
@@ -939,11 +977,11 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 <dd><p>Validate a telescope ID name</p>
 <p>Valid names e.g.,
 - D
-- telescope ID</p>
+- telescope ID (e.g., 1, 5, 15)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Telescope ID name.</p>
+<dt><strong>name: str or int</strong></dt><dd><p>Telescope ID name.</p>
 </dd>
 </dl>
 </dd>
@@ -985,7 +1023,8 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_telescope_name_db">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_telescope_name_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_telescope_name_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_telescope_name_db" title="Link to this definition">¶</a></dt>
-<dd><p>Validate a telescope DB name.</p>
+<dd><p>Validate a telescope DB name.
+Examples are North-LST-1, North-MST-NectarCam-D, or South-SST-Structure-D.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
