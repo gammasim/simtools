@@ -8,7 +8,7 @@ __all__ = [
     "camera_efficiency_log_file_name",
     "camera_efficiency_results_file_name",
     "camera_efficiency_simtel_file_name",
-    "convert_telescope_model_name_to_yaml",
+    "convert_telescope_model_name_to_yaml_name",
     "get_site_from_telescope_name",
     "get_telescope_class",
     "layout_telescope_list_file_name",
@@ -459,7 +459,7 @@ def validate_telescope_name_db(name):
     return f"{validate_site_name(site)}-{validate_telescope_model_name(tel_model_name)}"
 
 
-def convert_telescope_model_name_to_yaml(name):
+def convert_telescope_model_name_to_yaml_name(name):
     """
     Get telescope name following the old convention (yaml files) from the current telescope name.
 
