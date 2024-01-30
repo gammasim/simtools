@@ -294,7 +294,7 @@ class DatabaseHandler:
         """
 
         _tel_class = names.get_telescope_class(telescope_model_name)
-        _tel_name_converted = names.convert_telescope_model_name_to_yaml(telescope_model_name)
+        _tel_name_converted = names.convert_telescope_model_name_to_yaml_name(telescope_model_name)
 
         if _tel_class == "MST":
             # MST-FlashCam or MST-NectarCam
