@@ -196,7 +196,7 @@ def validate_telescope_id_name(name):
 
     Valid names e.g.,
     - D
-    - telescope ID (1, 5, 15)
+    - telescope ID (e.g., 1, 5, 15)
 
     Parameters
     ----------
