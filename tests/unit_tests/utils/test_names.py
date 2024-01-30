@@ -209,13 +209,15 @@ def test_validate_telescope_name_db():
             names.validate_telescope_name_db(key)
 
 
-def test_convert_telescope_model_name_to_yaml():
-    assert names.convert_telescope_model_name_to_yaml("LST-1") == "LST"
-    assert names.convert_telescope_model_name_to_yaml("LST-D234") == "LST"
-    assert names.convert_telescope_model_name_to_yaml("MST-FlashCam-D") == "MST-FlashCam"
-    assert names.convert_telescope_model_name_to_yaml("SCT-D") == "SCT"
+def test_convert_telescope_model_name_to_yaml_name():
+    assert names.convert_telescope_model_name_to_yaml_name("LST-1") == "LST"
+    assert names.convert_telescope_model_name_to_yaml_name("LST-D234") == "LST"
+    assert names.convert_telescope_model_name_to_yaml_name("MST-FlashCam-D") == "MST-FlashCam"
+    assert names.convert_telescope_model_name_to_yaml_name("SCT-D") == "SCT"
     with pytest.raises(ValueError):
-        names.convert_telescope_model_name_to_yaml("South-SCT-D")
+        names.convert_telescope_model_name_to_yaml_name("South-SCT-D")
+    with pytest.raises(ValueError):
+        names.convert_telescope_model_name_to_yaml_name("LST-NectarCam-D")
 
 
 def test_validate_model_version_name():
