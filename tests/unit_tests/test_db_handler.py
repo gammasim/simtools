@@ -255,7 +255,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-Test",
+        telescope_model_name_db="North-LST-TEST",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -281,7 +281,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         db_name=db.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="North-LST-1",
         version_to_copy="Released",
-        new_tel_name="North-LST-Test",
+        new_tel_name="North-LST-TEST",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -295,7 +295,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="North-LST-TEST",
         version="Released",
         parameter="camera_pixels",
         field="Applicable",
@@ -304,7 +304,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-Test",
+        telescope_model_name_db="North-LST-TEST",
         model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
