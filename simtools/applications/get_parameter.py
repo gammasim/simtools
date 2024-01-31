@@ -81,7 +81,6 @@ def main():
         )
     else:
         pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])
-
     if args_dict["parameter"] not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     print()
