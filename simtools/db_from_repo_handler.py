@@ -7,14 +7,15 @@ Read simulation model values from files in git repository.
 import logging
 from pathlib import Path
 
-import simtools.constants
 import simtools.utils.general as gen
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
 
 
-def update_model_parameters_from_repo(parameters, site, telescope_model_name, model_version):
+def update_model_parameters_from_repo(
+    parameters, site, telescope_model_name, model_version, db_simulation_model_url
+):
     """
     Update model parameters with values from a repository.
     Existing entries will be updated, new entries will be added.
@@ -31,6 +32,8 @@ def update_model_parameters_from_repo(parameters, site, telescope_model_name, mo
         Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
     model_version: str
         Model version to use.
+    db_simulation_model_url: str
+        URL to the simulation model repository.
 
     Returns
     -------
@@ -53,10 +56,11 @@ def update_model_parameters_from_repo(parameters, site, telescope_model_name, mo
         array_element_id=_id,
         model_version=model_version,
         parameter_to_query=names.telescope_parameters,
+        db_simulation_model_url=db_simulation_model_url,
     )
 
 
-def update_site_parameters_from_repo(parameters, site, model_version):
+def update_site_parameters_from_repo(parameters, site, model_version, db_simulation_model_url):
     """
     Update site parameters with values from a repository.
     Existing entries will be updated, new entries will be added.
@@ -71,6 +75,8 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         Observatory site (e.g., South or North)
     model_version: str
         Model version to use.
+    db_simulation_model_url: str
+        URL to the simulation model repository.
 
     Returns
     -------
@@ -85,11 +91,12 @@ def update_site_parameters_from_repo(parameters, site, model_version):
         array_element_id=None,
         model_version=model_version,
         parameter_to_query=names.site_parameters,
+        db_simulation_model_url=db_simulation_model_url,
     )
 
 
 def _update_parameters_from_repo(
-    parameters, site, array_element_id, model_version, parameter_to_query
+    parameters, site, array_element_id, model_version, parameter_to_query, db_simulation_model_url
 ):
     """
     Update parameters with values from a repository.
@@ -109,6 +116,8 @@ def _update_parameters_from_repo(
         Model version to use.
     parameter_to_query: dict
         Dictionary with parameter names and labels to be queried.
+    db_simulation_model_url: str
+        URL to the simulation model repository.
 
     Returns
     -------
@@ -117,24 +126,24 @@ def _update_parameters_from_repo(
 
     """
 
-    if simtools.constants.SIMULATION_MODEL_URL is None:
+    if db_simulation_model_url is None:
         logger.debug("No repository specified, skipping site parameter update")
         return parameters
 
     if array_element_id is not None:
         file_path = Path(
-            simtools.constants.SIMULATION_MODEL_URL,
+            db_simulation_model_url,
             array_element_id,
         )
         # TODO - remove telescope ID from parameter name, as repository
         # does not include telescope ID-dependent models
         if not file_path.exists():
             file_path = Path(
-                simtools.constants.SIMULATION_MODEL_URL,
+                db_simulation_model_url,
                 array_element_id.split("-")[0],
             )
     else:
-        file_path = Path(simtools.constants.SIMULATION_MODEL_URL, "Site", site)
+        file_path = Path(db_simulation_model_url, "Site", site)
     if not file_path.exists():
         logger.debug("No repository found, skipping site parameter update")
         return parameters
