@@ -298,6 +298,30 @@ def _validate_and_convert_value(par_name, par_info, value_in):
     return _validate_and_convert_value_with_units(value, value_keys, par_name, par_info)
 
 
+def join_url_or_path(url_or_path, *args):
+    """
+    Join URL or path with additional subdirectories and file.
+    This is the equivalent to Path.join(), with extended functionality
+    working also for URLs.
+
+    Parameters
+    ----------
+    url_or_path: str or Path
+        URL or path to be extended.
+    args: list
+        Additional arguments to be added to the URL or path.
+
+    Returns
+    -------
+    str or Path
+        Extended URL or path.
+
+    """
+    if "://" in str(url_or_path):
+        return "/".join([url_or_path.rstrip("/"), *args])
+    return Path(url_or_path).joinpath(*args)
+
+
 def is_url(url):
     """
     Check if a string is a valid URL.
@@ -356,14 +380,14 @@ def collect_data_from_http(url):
                 msg = f"File extension of {url} not supported (should be json or yaml)"
                 _logger.error(msg)
                 raise TypeError(msg)
-    except TypeError:
+    except TypeError as exc:
         msg = "Invalid url {url}"
         _logger.error(msg)
-        raise
-    except urllib.error.HTTPError:
+        raise InvalidConfigData(msg) from exc
+    except urllib.error.HTTPError as exc:
         msg = f"Failed to download yaml file from {url}"
         _logger.error(msg)
-        raise
+        raise InvalidConfigData(msg) from exc
 
     _logger.debug(f"Downloaded yaml file from {url}")
     return data

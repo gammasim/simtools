@@ -67,7 +67,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     assert len(_dict) > 0
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
-    with pytest.raises(urllib.error.HTTPError):
+    with pytest.raises(gen.InvalidConfigData):
         gen.collect_data_from_http(_url + _file)
 
 
