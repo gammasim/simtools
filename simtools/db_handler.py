@@ -530,9 +530,9 @@ class DatabaseHandler:
                 only_applicable,
             )
             _pars = db_from_repo_handler.update_site_parameters_from_repo(
-                _pars,
-                site,
-                model_version,
+                parameters=_pars,
+                site=site,
+                model_version=model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
             return _pars
