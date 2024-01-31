@@ -467,7 +467,13 @@ class Configurator:
         """
 
         _db_dict = {}
-        _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
+        _db_para = (
+            "db_api_user",
+            "db_api_pw",
+            "db_api_port",
+            "db_server",
+            "db_simulation_model_url",
+        )
         try:
             for _para in _db_para:
                 _db_dict[_para] = self.config[_para]
