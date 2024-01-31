@@ -22,7 +22,6 @@ __all__ = [
     "get_telescope_name_db",
     "split_telescope_model_name",
     "telescope_model_name_from_array_element_id",
-    "translate_simtools_to_corsika",
     "validate_array_layout_name",
     "validate_model_version_name",
     "validate_site_name",
@@ -519,7 +518,7 @@ def array_element_id_from_telescope_model_name(site, telescope_model_name):
 
     """
 
-    _class, _type, _tel_id = split_telescope_model_name(telescope_model_name)
+    _class, _, _tel_id = split_telescope_model_name(telescope_model_name)
     _id = _class.upper() + site[0].upper()
     if _tel_id.isdigit():
         _id += f"-{int(_tel_id):02d}"
@@ -930,9 +929,10 @@ def camera_efficiency_log_file_name(site, telescope_model_name, zenith_angle, az
     return name
 
 
-def get_telescope_class(telescope_name):
+def get_telescope_class(telescope_name, site=None):
     """
     Guess telescope class from name, e.g. "LST", "MST", ...
+    If site is given, return e.g., "LSTN" or "LSTS".
 
     Parameters
     ----------
@@ -946,33 +946,7 @@ def get_telescope_class(telescope_name):
     """
 
     _tel_class, _, _ = split_telescope_model_name(telescope_name)
-    return _tel_class
-
-
-def translate_simtools_to_corsika(simtools_par):
-    """
-    Translate the name of a simtools parameter to the name used in CORSIKA.
-
-    TODO - this will go with the new simulation model
-
-    Parameters
-    ----------
-    simtools_par: str
-        Name of the simtools parameter to be translated.
-    """
-
-    corsika_to_simtools_names = {"OBSLEV": "corsika_obs_level"}
-
-    simtools_to_corsika_names = {
-        new_key: new_value for new_value, new_key in corsika_to_simtools_names.items()
-    }
-    try:
-        return simtools_to_corsika_names[simtools_par]
-    except KeyError:
-        msg = f"Translation not found. We will proceed with the original parameter name:\
-            {simtools_par}."
-        _logger.debug(msg)
-        return simtools_par
+    return _tel_class + (site[0].upper() if site is not None else "")
 
 
 def sanitize_name(name):
