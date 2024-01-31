@@ -237,14 +237,6 @@ def test_get_telescope_name_db():
         names.get_telescope_name_db("West", "MST", "FlashCam", "D")
 
 
-# TODO - this will go with the new naming convention
-def test_translate_simtools_to_corsika():
-    corsika_pars = ["OBSLEV", "corsika_sphere_radius", "corsika_sphere_center"]
-    simtools_pars = ["corsika_obs_level", "corsika_sphere_radius", "corsika_sphere_center"]
-    for step, simtools_par in enumerate(simtools_pars):
-        assert names.translate_simtools_to_corsika(simtools_par) == corsika_pars[step]
-
-
 def test_sanitize_name():
     assert names.sanitize_name("y_edges unit") == "y_edges_unit"
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
@@ -268,6 +260,12 @@ def test_get_telescope_class():
     for _name in ["", "01", "Not_a_telescope"]:
         with pytest.raises(ValueError):
             names.get_telescope_class(_name)
+    assert names.get_telescope_class("LSTN-01", "North") == "LSTN"
+    assert (
+        names.get_telescope_class("LSTN-01", names.get_site_from_telescope_name("LSTN-01"))
+        == "LSTN"
+    )
+    assert names.get_telescope_class("SSTS-01", "South") == "SSTS"
 
 
 def test_camera_efficiency_names():

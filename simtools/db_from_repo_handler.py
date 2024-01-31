@@ -64,6 +64,7 @@ def update_site_parameters_from_repo(parameters, site, model_version, db_simulat
     """
     Update site parameters with values from a repository.
     Existing entries will be updated, new entries will be added.
+
     TODO - model version is ignored at this point (expect that repository
     URL is set to the correct version)
 
@@ -101,6 +102,10 @@ def _update_parameters_from_repo(
     """
     Update parameters with values from a repository.
     Existing entries will be updated, new entries will be added.
+    The database collections are identified by:
+    - array_element_id not None: telescope parameters
+    - site not None and array_element_id None: site parameters
+
     TODO - model version is ignored at this point (expect that repository
     URL is set to the correct version)
 
@@ -130,22 +135,28 @@ def _update_parameters_from_repo(
         logger.debug("No repository specified, skipping site parameter update")
         return parameters
 
+    # telescope model
     if array_element_id is not None:
         file_path = Path(
             db_simulation_model_url,
             array_element_id,
         )
-        # TODO - remove telescope ID from parameter name, as repository
-        # does not include telescope ID-dependent models
+        # no ID-dependent model (meaning none for e.g., MSTN-03, but for MSTN)
         if not file_path.exists():
             file_path = Path(
                 db_simulation_model_url,
-                array_element_id.split("-")[0],
+                names.get_telescope_class(
+                    array_element_id,
+                    site=names.get_site_from_telescope_name(array_element_id),
+                ),
             )
+    # site model
     else:
         file_path = Path(db_simulation_model_url, "Site", site)
     if not file_path.exists():
-        logger.debug("No repository found, skipping site parameter update")
+        logger.debug(
+            f"No repository found, skipping site parameter update (searched in {file_path})"
+        )
         return parameters
 
     logger.debug("Reading parameters from %s", file_path)
