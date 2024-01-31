@@ -60,6 +60,7 @@ PRIMARIES:
     number: 5626
     names: ['FE']
 
+# TODO - these values should go into the simulation model
 SITE_PARAMETERS:
   South:
     ATMOSPHERE: [26, 'Y']
@@ -100,49 +101,3 @@ IACT_TUNING_PARAMETERS:
     ['IO_BUFFER', '800MB'],
     ['MAX_BUNCHES', '1000000']
   ]
-
-telescope_axis_height:
-  LST:
-    value: 16
-    unit: "m"
-  MST:
-    value: 9
-    unit: "m"
-  SCT:
-    value: 6.1
-    unit: "m"
-  SST:
-    value: 3.25
-    unit: "m"
-  HESS:
-    value: 7.5 # Invented value for CT1-4, copied from radius
-    unit: "m"
-  MAGIC:
-    value: 10.0 # Invented value for MAGIC, copied from radius
-    unit: "m"
-  VERITAS:
-    value: 9 # Invented value for VERITAS, copied from MST
-    unit: "m"
-
-corsika_sphere_radius:
-  LST:
-    value: 12.5
-    unit: "m"
-  MST:
-    value: 9.15
-    unit: "m"
-  SCT:
-    value: 7.15
-    unit: "m"
-  SST:
-    value: 3.
-    unit: "m"
-  HESS:
-    value: 7.5 # Value for CT1-4
-    unit: "m"
-  MAGIC:
-    value: 10.0 # Value used in Prod6
-    unit: "m"
-  VERITAS:
-    value: 9.15 # Invented value (same diameter as the MST, so copy the same value)
-    unit: "m"
