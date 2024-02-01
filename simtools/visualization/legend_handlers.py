@@ -4,8 +4,6 @@ import numpy as np
 
 # from simtools.corsika.corsika_config import CorsikaConfig
 # from simtools.io_operations.io_handler import IOHandler
-from simtools.utils import names
-from simtools.utils.names import hess, lst, magic, mst, sct, sst, veritas
 
 __all__ = [
     "EdgePixelObject",
@@ -29,6 +27,15 @@ __all__ = [
     "SquarePixelHandler",
     "TelescopeHandler",
 ]
+
+# TODO - temporary fixed list of telescope names
+lst = "LST"
+mst = "MST"
+sct = "SCT"
+sst = "SST"
+hess = "HESS"
+magic = "MAGIC"
+veritas = "VERITAS"
 
 
 class TelescopeHandler(object):
@@ -440,7 +447,7 @@ all_telescope_handlers = {
 }
 legend_handler_map = {}
 try:
-    for tel_type in names.all_telescope_class_names:
+    for tel_type in all_telescope_objects.keys():
         legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
 except KeyError:
     pass
