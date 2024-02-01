@@ -81,19 +81,20 @@ def main():
     histogram_files = config_parser["hist_file_names"]
     livetime = config_parser["livetime"] * u.s
 
-    # Create an instance of SimtelHistograms
     if isinstance(histogram_files, str):
         histogram_files = [histogram_files]
 
     histograms = SimtelHistograms(histogram_files)
 
-    logger.info(f"Calculating trigger rate for livetime: {livetime}")
+    logger.info(f"Calculating event rate and trigger rate for livetime: {livetime}")
 
     # Calculate trigger rate
     trigger_rates = histograms.trigger_rate_per_histogram(livetime)
+    event_rates = histograms.number_of_events / livetime
 
-    # Print or save the trigger rates
+    # Print the trigger rates
     for i, trigger_rate in enumerate(trigger_rates):
+        logger.info(f"Event rate for histogram {i + 1}: {event_rates.value:.4e} Hz")
         logger.info(f"Trigger rate for histogram {i + 1}: {trigger_rate.value:.4e} Hz")
 
     logger.info("Application completed.")
