@@ -4,7 +4,7 @@ import logging
 
 import astropy.units as u
 
-from simtools import db_handler
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
