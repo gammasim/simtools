@@ -155,27 +155,28 @@ class ArrayModel:
 
         # Building telescope models
         self._telescope_model = []  # List of telescope models
-        _all_telescope_model_names = []  # List of telescope names without repetition
+        _all_telescope_names = []  # List of telescope names without repetition
         _all_pars_to_change = {}
         for tel in self.layout:
-            tel_size = names.get_telescope_class(tel.name)
+            # TODO - not sure if this is correct
+            tel_size = names.get_telescope_type_from_telescope_name(tel.name)
 
             # Collecting telescope name and pars to change from array_config_data
-            tel_model_name, pars_to_change = self._get_single_telescope_info_from_array_config(
+            tel_name, pars_to_change = self._get_single_telescope_info_from_array_config(
                 tel.name, tel_size
             )
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
-            self._logger.debug(f"tel_model_name: {tel_model_name}")
+            self._logger.debug(f"tel_name: {tel_name}")
 
             # Building the basic models - no pars to change yet
-            if tel_model_name not in _all_telescope_model_names:
+            if tel_name not in _all_telescope_names:
                 # First time a telescope name is built
-                _all_telescope_model_names.append(tel_model_name)
+                _all_telescope_names.append(tel_name)
                 tel_model = TelescopeModel(
                     site=self.site,
-                    telescope_model_name=tel_model_name,
+                    telescope_name=tel_name,
                     model_version=self.model_version,
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
@@ -184,7 +185,7 @@ class ArrayModel:
                 # Telescope name already exists.
                 # Finding the TelescopeModel and copying it.
                 for tel_now in self._telescope_model:
-                    if tel_now.name != tel_model_name:
+                    if tel_now.name != tel_name:
                         continue
                     self._logger.debug(f"Copying tel model {tel_now.name} already loaded from DB")
                     tel_model = copy(tel_now)
@@ -221,7 +222,7 @@ class ArrayModel:
         Parameters
         ----------
         tel_name: str
-            Name of the telescope at the layout level (LST-01, MST-05, ...).
+            Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).
         tel_size: str
             LST, MST or SST.
         """

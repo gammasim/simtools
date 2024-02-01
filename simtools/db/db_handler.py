@@ -149,7 +149,7 @@ class DatabaseHandler:
             )
             _version_validated = names.validate_model_version_name(model_version)
             return db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=_pars,
+                parameters=dict.fromkeys(_pars, None),
                 site=_site_validated,
                 telescope_name=_tel_model_name_validated,
                 model_version=_version_validated,
@@ -411,7 +411,7 @@ class DatabaseHandler:
             )
             _version_validated = names.validate_model_version_name(model_version)
             return db_from_repo_handler.update_site_parameters_from_repo(
-                parameters=_pars,
+                parameters=dict.fromkeys(_pars, None),
                 site=site,
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
