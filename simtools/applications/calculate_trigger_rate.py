@@ -16,57 +16,70 @@ Example
 -------
 .. code-block:: console
 
-    calculate-trigger-rate --histogram_files /path/to/histogram.h5 --livetime 3600
+    calculate-trigger-rate --hist_file_names tests/resources/run201_proton_za20deg_azm0deg_North_
+    TestLayout_test-prod.simtel.zst --livetime 100
 """
 
-import argparse
 import logging
+from pathlib import Path
 
 import astropy.units as u
 
+import simtools.utils.general as gen
+from simtools.configuration import configurator
 from simtools.simtel.simtel_histograms import SimtelHistograms
-from simtools.utils.general import get_log_level_from_user
 
 
-def _parse():
+def _parse(label, description):
     """
-    Parse command line configuration.
+    Parse command line configuration
+
+    Parameters
+    ----------
+    label: str
+        Label describing the application.
+    description: str
+        Description of the application.
 
     Returns
     -------
-    argparse.Namespace
-        Parsed command line arguments.
+    CommandLineParser
+        Command line parser object
 
     """
-    parser = argparse.ArgumentParser(
-        description="Calculate the trigger rate from a histogram or a list of histograms."
-    )
+    config = configurator.Configurator(label=label, description=description)
 
-    parser.add_argument(
-        "--histogram_files",
-        help="Path to the histogram file or a list of histogram files.",
+    config.parser.add_argument(
+        "--hist_file_names",
+        help="Name of the histogram files to be calculate the trigger rate from  or the text file "
+        "containing the list of histogram files.",
+        nargs="+",
         required=True,
+        type=str,
     )
 
-    parser.add_argument(
+    config.parser.add_argument(
         "--livetime",
         help="Livetime used in the simulation that produced the histograms in seconds.",
         type=float,
         required=True,
     )
+    config_parser, _ = config.initialize(db_config=False, paths=True)
 
-    return parser.parse_args()
+    return config_parser
 
 
 def main():
-    args = _parse()
+    label = Path(__file__).stem
+    description = "Calculates the event rate based on simtel array histograms."
+    config_parser = _parse(label, description)
+
     logger = logging.getLogger()
-    logger.setLevel(get_log_level_from_user(logging.INFO))
-
-    histogram_files = args.histogram_files
-    livetime = args.livetime * u.s
-
+    logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
+
+    histogram_files = config_parser["hist_file_names"]
+    livetime = config_parser["livetime"] * u.s
 
     # Create an instance of SimtelHistograms
     if isinstance(histogram_files, str):
@@ -81,7 +94,7 @@ def main():
 
     # Print or save the trigger rates
     for i, trigger_rate in enumerate(trigger_rates):
-        logger.info(f"Trigger rate for histogram {i + 1}: {trigger_rate:.4e} Hz")
+        logger.info(f"Trigger rate for histogram {i + 1}: {trigger_rate.value:.4e} Hz")
 
     logger.info("Application completed.")
 
