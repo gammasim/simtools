@@ -142,6 +142,18 @@ class DatabaseHandler:
         _site_validated = names.validate_site_name(site)
         _tel_model_name_validated = names.validate_telescope_model_name(telescope_model_name)
 
+        # priority simulation model repository to database
+        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+            _pars = None  # TODO list of parameters
+            _version_validated = names.validate_model_version_name(model_version)
+            return db_from_repo_handler.update_model_parameters_from_repo(
+                parameters=_pars,
+                site=_site_validated,
+                telescope_model_name=_tel_model_name_validated,
+                model_version=_version_validated,
+                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
+            )
+
         if self.mongo_db_config:
             # Only MongoDB supports tagged version
             _model_version = self._convert_version_to_tagged(
@@ -149,21 +161,13 @@ class DatabaseHandler:
             )
             _version_validated = names.validate_model_version_name(_model_version)
 
-            _pars = self._get_model_parameters_mongo_db(
+            return self._get_model_parameters_mongo_db(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site_validated,
                 _tel_model_name_validated,
                 _version_validated,
                 only_applicable,
             )
-            _pars = db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=_pars,
-                site=_site_validated,
-                telescope_model_name=_tel_model_name_validated,
-                model_version=_version_validated,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-            return _pars
 
         _version_validated = names.validate_model_version_name(model_version)
 
@@ -522,20 +526,23 @@ class DatabaseHandler:
         _site = names.validate_site_name(site)
         _model_version = names.validate_model_version_name(model_version)
 
+        # priority simulation model repository to database
+        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+            _pars = None  # TODO list of parameters
+            _version_validated = names.validate_model_version_name(model_version)
+            return db_from_repo_handler.update_site_parameters_from_repo(
+                parameters=_pars,
+                site=site,
+                model_version=_version_validated,
+                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
+            )
         if self.mongo_db_config:
-            _pars = self._get_site_parameters_mongo_db(
+            return self._get_site_parameters_mongo_db(
                 DatabaseHandler.DB_CTA_SIMULATION_MODEL,
                 _site,
                 _model_version,
                 only_applicable,
             )
-            _pars = db_from_repo_handler.update_site_parameters_from_repo(
-                parameters=_pars,
-                site=site,
-                model_version=model_version,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-            return _pars
 
         return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
 
