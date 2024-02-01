@@ -122,6 +122,8 @@ def test_validate_telescope_name():
         "mst-nectarcam-d": "MST-NectarCam-D",
         "mst-NectarCam-5": "MST-NectarCam-5",
         "MST-Structure-1": "MST-Structure-1",
+        "MST-FlashCam-1": "MST-FlashCam-1",
+        "MST-FlashCam-10": "MST-FlashCam-10",
         "sct-d": "SCT-D",
         "sst-1m": "SST-1M",
         "sst-astri-d": "SST-ASTRI-D",
@@ -129,6 +131,19 @@ def test_validate_telescope_name():
         "sst-gct-d": "SST-GCT-D",
         "sst-d": "SST-D",
         "mst": "MST",
+        "LSTN": "LST-D234",
+        "LSTN-01": "LST-1",
+        "LSTN-02": "LST-2",
+        "LSTS": "LST",
+        "LSTS-01": "LST-1",
+        "LSTS-02": "LST-2",
+        "MSTN": "MST-NectarCam",
+        "MSTN-01": "MST-NectarCam-1",
+        "MSTS": "MST-FlashCam",
+        "MSTS-01": "MST-FlashCam-1",
+        "MSTS-10": "MST-FlashCam-10",
+        "SSTS": "SST",
+        "SSTS-22": "SST-22",
     }
 
     for key, value in telescopes.items():
@@ -144,6 +159,38 @@ def test_validate_telescope_name():
 
     with pytest.raises(ValueError):
         names.split_telescope_model_name("North-MST-FlashCam-D")
+
+
+def test_old_lst_naming_convention():
+    LST = {
+        "LST-1": "-1",
+        "LST-D234": "-D234",
+        "LSTN-2": "-D234",
+        "LSTS-2": "-2",
+        "LSTS": "",
+        "MSTS": "",
+        "MSTS-05": "",
+        "MSTN": "",
+        "MSTN-05": "",
+    }
+
+    for key, value in LST.items():
+        _, _, tel_id = names.split_telescope_model_name(key)
+        assert names._old_lst_naming_convention(key, tel_id) == value
+
+
+def test_validate_array_element_id():
+    telescopes = {
+        "LSTN": "LSTN",
+        "LSTN-01": "LSTN-01",
+        "MSTN": "MSTN",
+        "MSTN-01": "MSTN-01",
+        "MSTS": "MSTS",
+        "MSTS-01": "MSTS-01",
+    }
+
+    for key, value in telescopes.items():
+        assert names.validate_array_element_id(key) == value
 
 
 def test_get_site_from_telescope_name():
