@@ -370,12 +370,15 @@ def collect_data_from_http(url):
     """
 
     try:
-        with tempfile.NamedTemporaryFile() as tmp_file:
+        with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
             if url.endswith("yml") or url.endswith("yaml"):
                 data = yaml.load(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
+            elif url.endswith("list"):
+                lines = tmp_file.readlines()
+                data = [line.strip() for line in lines]
             else:
                 msg = f"File extension of {url} not supported (should be json or yaml)"
                 _logger.error(msg)
@@ -395,21 +398,21 @@ def collect_data_from_http(url):
 
 def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict or as a yaml/json file.
+    Collect input data from file or dictionary.
 
     Parameters
     ----------
     file_name: str
-        Name of the yaml/json file.
+        Name of the yaml/json/ascii file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
-        If True, an error won't be raised in case both yaml and dict are None.
+        If True, an error won't be raised in case both file_name and dict are None.
 
     Returns
     -------
-    data: dict
-        Data as dict.
+    data: dict or list
+        Data as dict or list.
     """
 
     if file_name is not None:
@@ -417,12 +420,15 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
             _logger.warning("Both in_dict and file_name were given - file_name will be used")
         if is_url(str(file_name)):
             data = collect_data_from_http(file_name)
-        elif Path(file_name).suffix.lower() == ".json":
-            with open(file_name, encoding="utf-8") as file:
-                data = json.load(file)
         else:
             with open(file_name, encoding="utf-8") as file:
-                data = yaml.load(file)
+                if Path(file_name).suffix.lower() == ".json":
+                    data = json.load(file)
+                elif Path(file_name).suffix.lower() == ".list":
+                    lines = file.readlines()
+                    data = [line.strip() for line in lines]
+                else:
+                    data = yaml.load(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
