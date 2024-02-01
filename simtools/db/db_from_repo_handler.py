@@ -135,21 +135,23 @@ def _update_parameters_from_repo(
 
     if parameter_collection in ["telescope", "calibration"]:
         _file_path = gen.join_url_or_path(
-            db_simulation_model_url,
+            db_simulation_model_url, db_simulation_model, telescope_name
         )
         # use design telescope model in case there is no model defined for this telescope ID
-        _design_model = names.get_telescope_type_from_telescope_name(telescope_name) + "-DESIGN"
+        _design_model = names.get_telescope_type_from_telescope_name(telescope_name) + "-design"
         if _design_model == telescope_name:
             _design_model = None
     elif parameter_collection == "site":
-        _file_path = gen.join_url_or_path(db_simulation_model_url, "Site", site)
+        _file_path = gen.join_url_or_path(
+            db_simulation_model_url, db_simulation_model, "Site", site
+        )
         _design_model = None
     else:
         logger.error(f"Unknown parameter collection {parameter_collection}")
         raise ValueError
 
     for key in parameter_to_query.keys():
-        _parameter_file = gen.join_url_or_path(_file_path, db_simulation_model, f"{key}.json")
+        _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
             parameters[key] = gen.collect_data_from_file_or_dict(
                 file_name=_parameter_file, in_dict=None

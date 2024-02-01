@@ -26,7 +26,7 @@ class TelescopeModel(ModelParameter):
     ----------
     site: str
         Site name (e.g., South or North).
-    telescope_model_name: str
+    telescope_name: str
         Telescope name (ex. LST-1, ...).
     mongo_db_config: dict
         MongoDB configuration.
@@ -39,7 +39,7 @@ class TelescopeModel(ModelParameter):
     def __init__(
         self,
         site,
-        telescope_model_name,
+        telescope_name,
         mongo_db_config=None,
         model_version="Released",
         db=None,
@@ -53,7 +53,7 @@ class TelescopeModel(ModelParameter):
         ModelParameter.__init__(
             self,
             site=site,
-            telescope_model_name=telescope_model_name,
+            telescope_name=telescope_name,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
             db=db,
@@ -109,7 +109,7 @@ class TelescopeModel(ModelParameter):
         return self._derived
 
     @classmethod
-    def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
+    def from_config_file(cls, config_file_name, site, telescope_name, label=None):
         """
         Create a TelescopeModel from a sim_telarray config file.
 
@@ -125,8 +125,8 @@ class TelescopeModel(ModelParameter):
             Path to the input config file.
         site: str
             South or North.
-        telescope_model_name: str
-            Telescope model name for the base set of parameters (ex. LST-1, ...).
+        telescope_name: str
+            Telescope model for the base set of parameters (ex. LSTN-01, ...).
         label: str
             Instance label. Important for output file naming.
 
@@ -138,7 +138,7 @@ class TelescopeModel(ModelParameter):
         parameters = {}
         tel = cls(
             site=site,
-            telescope_model_name=telescope_model_name,
+            telescope_name=telescope_name,
             mongo_db_config=None,
             label=label,
         )
@@ -525,7 +525,7 @@ class TelescopeModel(ModelParameter):
             camera_config_file_path = gen.find_file(camera_config_file, self.io_handler.model_path)
 
         self._camera = Camera(
-            telescope_model_name=self.name,
+            telescope_name=self.name,
             camera_config_file=camera_config_file_path,
             focal_length=focal_length,
         )
@@ -538,7 +538,7 @@ class TelescopeModel(ModelParameter):
         if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
-                telescope_model_name=self.name,
+                telescope_name=self.name,
                 model_version=self.model_version,
                 label=self.label,
             )

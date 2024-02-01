@@ -18,15 +18,14 @@ class InvalidModelParameter(Exception):
 class ModelParameter:
     """
     Base class for model parameters.
-    Provides methods to read parameters from DB and manipulate parameters
-    (changing, adding, removing, etc).
+    Provides methods to read and manipulate parameters from DB.
 
     Parameters
     ----------
     site: str
         Site name (e.g., South or North).
-    telescope_model_name: str
-        Telescope model name (e.g., LST-1).
+    telescope_name: str
+        Telescope name (e.g., LSTN-01).
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
@@ -41,7 +40,7 @@ class ModelParameter:
     def __init__(
         self,
         site=None,
-        telescope_model_name=None,
+        telescope_name=None,
         mongo_db_config=None,
         model_version="Released",
         db=None,
@@ -58,7 +57,9 @@ class ModelParameter:
 
         self._parameters = {}
         self.site = names.validate_site_name(site) if site is not None else None
-        self.name = self._get_telescope_name(telescope_model_name)
+        self.name = (
+            names.validate_telescope_name(telescope_name) if telescope_name is not None else None
+        )
         self.label = label
         self.model_version = names.validate_model_version_name(model_version)
         self._config_file_directory = None
@@ -84,8 +85,7 @@ class ModelParameter:
 
     def get_parameter(self, par_name):
         """
-        Get an existing parameter of the model. Allow parameter name to be
-        names used in the model database or simulation model names.
+        Get an existing parameter of the model.
 
         Parameters
         ----------
@@ -101,10 +101,6 @@ class ModelParameter:
         InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
-        if par_name in names.telescope_parameters:
-            par_name = names.telescope_parameters[par_name]["db_name"]
-        elif par_name in names.site_parameters:
-            par_name = names.site_parameters[par_name]["db_name"]
         try:
             return self._parameters[par_name]
         except KeyError as e:
@@ -374,26 +370,3 @@ class ModelParameter:
             if par_info.get("name") == simtel_name:
                 return par_name
         return simtel_name
-
-    def _get_telescope_name(self, telescope_model_name):
-        """
-        Telescope model name in simtools style.
-        Allow input name in simtools style (e.g., MST-FlashCam-D)
-        or array-element style (e.g., MSTN-01)
-
-        """
-
-        _name = None
-        try:
-            _name = names.validate_telescope_model_name(telescope_model_name)
-        except AttributeError:
-            return None
-        except ValueError:
-            pass
-        if self.db:
-            _name = names.telescope_model_name_from_array_element_id(
-                array_element_id=telescope_model_name,
-                sub_system_name="structure",
-                available_telescopes=self.db.get_all_available_telescopes(),
-            )
-        return _name

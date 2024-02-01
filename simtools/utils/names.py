@@ -109,6 +109,7 @@ array_layout_names = {
 }
 
 # simulation_model parameter naming to DB parameter naming mapping
+# TODO - probably not necessary after updates to the database
 # simtel: True if alternative "name" is used in simtools (e.g., ref_lat)
 #         and in the model database.
 site_parameters = {
