@@ -139,16 +139,19 @@ class DatabaseHandler:
         """
 
         _site_validated = names.validate_site_name(site)
-        _tel_model_name_validated = names.validate_telescope_model_name(telescope_model_name)
+        _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
 
         # priority simulation model repository to database
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = None  # TODO list of parameters
+            _pars = db_from_repo_handler.get_list_of_model_parameters(
+                model_type="telescope_model",
+                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
+            )
             _version_validated = names.validate_model_version_name(model_version)
             return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site_validated,
-                telescope_model_name=_tel_model_name_validated,
+                telescope_name=_tel_model_name_validated,
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
@@ -265,22 +268,9 @@ class DatabaseHandler:
 
         _site_validated = names.validate_site_name(site)
         _tel_name_db = self._get_telescope_model_name_for_db(_site_validated, telescope_model_name)
-        _tel_class = names.get_telescope_class(telescope_model_name)
 
         self._logger.debug(f"Tel_name_db: {_tel_name_db}")
-        self._logger.debug(f"Tel_class: {_tel_class}")
-
-        if _tel_class == "MST":
-            # MST-FlashCam or MST-NectarCam
-            _which_tel_labels = [f"{_site_validated}-MST-Structure-D", _tel_name_db]
-        elif _tel_class == "SST":
-            # SST = SST-Camera + SST-Structure
-            _which_tel_labels = [
-                f"{_site_validated}-SST-Camera-D",
-                f"{_site_validated}-SST-Structure-D",
-            ]
-        else:
-            _which_tel_labels = [_tel_name_db]
+        _which_tel_labels = [_tel_name_db]
 
         # Selecting version and applicable (if on)
         _pars = {}
@@ -289,6 +279,8 @@ class DatabaseHandler:
 
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
+
+            # TODO this should go?
             _select_only_applicable = only_applicable or (
                 _tel
                 in [
@@ -413,7 +405,10 @@ class DatabaseHandler:
 
         # priority simulation model repository to database
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = None  # TODO list of parameters
+            _pars = db_from_repo_handler.get_list_of_model_parameters(
+                model_type="site_model",
+                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
+            )
             _version_validated = names.validate_model_version_name(model_version)
             return db_from_repo_handler.update_site_parameters_from_repo(
                 parameters=_pars,
@@ -589,7 +584,7 @@ class DatabaseHandler:
         """
 
         _site_validated = names.validate_site_name(site)
-        _tel_model_name_validated = names.validate_telescope_model_name(telescope_model_name)
+        _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
         _tel_name_db = self._get_telescope_model_name_for_db(
             _site_validated, _tel_model_name_validated
         )
@@ -1124,7 +1119,7 @@ class DatabaseHandler:
 
         db_entry = {}
         if "telescopes" in collection_name:
-            db_entry["Telescope"] = names.validate_telescope_name_db(telescope)
+            db_entry["Telescope"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
             db_entry["Site"] = names.validate_site_name(site)
         else:
@@ -1292,7 +1287,7 @@ class DatabaseHandler:
 
         _site_validated = names.validate_site_name(site)
         if collection_name == "telescopes":
-            _tel_model_name_validated = names.validate_telescope_model_name(telescope_model_name)
+            _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
             _tel_name_db = self._get_telescope_model_name_for_db(
                 _site_validated, _tel_model_name_validated
             )

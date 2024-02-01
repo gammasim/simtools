@@ -137,7 +137,7 @@ def db_config():
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server", "db_simulation_model_url")
     for _para in _db_para:
         if _para not in mongo_db_config:
             mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")

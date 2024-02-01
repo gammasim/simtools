@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def update_model_parameters_from_repo(
-    parameters, site, telescope_model_name, model_version, db_simulation_model_url
+    parameters, site, telescope_name, model_version, db_simulation_model_url
 ):
     """
     Update model parameters with values from a repository.
@@ -25,8 +25,8 @@ def update_model_parameters_from_repo(
         Dictionary with parameters to be updated.
     site: str
         Observatory site (e.g., South or North)
-    telescope_model_name: str
-        Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
+    telescope_name: str
+        Telescope name (e.g., MSTN-01, MSTN-DESIGN)
     model_version: str
         Model version to use.
     db_simulation_model_url: str
@@ -39,18 +39,16 @@ def update_model_parameters_from_repo(
 
     """
 
-    logger.info("Updating model parameters from repository")
-
-    _array_element_id = names.array_element_id_from_telescope_model_name(
-        site=site,
-        telescope_model_name=telescope_model_name,
+    logger.info(
+        "Updating model parameters from repository for site: %s, telescope: %s",
+        site,
+        telescope_name,
     )
-    logger.info("Site: %s, telescope: %s (%s)", site, telescope_model_name, _array_element_id)
 
     return _update_parameters_from_repo(
         parameters=parameters,
         site=site,
-        array_element_id=_array_element_id,
+        telescope_name=telescope_name,
         model_version=model_version,
         parameter_to_query=names.telescope_parameters,
         parameter_collection="telescope",
@@ -84,7 +82,7 @@ def update_site_parameters_from_repo(parameters, site, model_version, db_simulat
     return _update_parameters_from_repo(
         parameters=parameters,
         site=site,
-        array_element_id=None,
+        telescope_name=None,
         model_version=model_version,
         parameter_to_query=names.site_parameters,
         parameter_collection="site",
@@ -95,11 +93,12 @@ def update_site_parameters_from_repo(parameters, site, model_version, db_simulat
 def _update_parameters_from_repo(
     parameters,
     site,
-    array_element_id,
+    telescope_name,
     model_version,
     parameter_to_query,
     parameter_collection,
     db_simulation_model_url,
+    db_simulation_model="verified_model",
 ):
     """
     Update parameters with values from a repository.
@@ -111,8 +110,8 @@ def _update_parameters_from_repo(
         Dictionary with parameters to be updated.
     site: str
         Observatory site (e.g., South or North)
-    array_element_id: str
-        Array element ID (e.g., LSTN, or LSTN-01)
+    telescope_name: str
+        Telescope name (e.g., MSTN-01, MSTN-DESIGN)
     model_version: str
         Model version to use.
     parameter_to_query: dict
@@ -135,35 +134,33 @@ def _update_parameters_from_repo(
     logger.warning(f"Ignoring model version {model_version} in parameter updates (TODO)")
 
     if parameter_collection in ["telescope", "calibration"]:
-        _file_path = gen.join_url_or_path(db_simulation_model_url, array_element_id)
-        # ID-independent array element name (meaning e.g., MSTN instead of MSTN-03)
-        # (required below if there is only one telescope model defined for the class)
-        _array_element_without_id = names.get_telescope_class(
-            array_element_id, site=names.get_site_from_telescope_name(array_element_id)
+        _file_path = gen.join_url_or_path(
+            db_simulation_model_url,
         )
-        if _array_element_without_id == array_element_id:
-            _array_element_without_id = None
+        # use design telescope model in case there is no model defined for this telescope ID
+        _design_model = names.get_telescope_type_from_telescope_name(telescope_name) + "-DESIGN"
+        if _design_model == telescope_name:
+            _design_model = None
     elif parameter_collection == "site":
         _file_path = gen.join_url_or_path(db_simulation_model_url, "Site", site)
-        _array_element_without_id = None
+        _design_model = None
     else:
         logger.error(f"Unknown parameter collection {parameter_collection}")
         raise ValueError
 
     for key in parameter_to_query.keys():
-        _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
+        _parameter_file = gen.join_url_or_path(_file_path, db_simulation_model, f"{key}.json")
         try:
             parameters[key] = gen.collect_data_from_file_or_dict(
                 file_name=_parameter_file, in_dict=None
             )
             logger.debug(f"Parameter {key} updated from repository file {_parameter_file}")
         except (FileNotFoundError, gen.InvalidConfigData):
-            # try ID-independent model using _array_element_without_id
-            # (meaning e.g., MSTN instead of MSTN-03)
+            # use design telescope model in case there is no model defined for this telescope ID
             # accept errors, as not all parameters are defined in the repository
             try:
                 _parameter_file = gen.join_url_or_path(
-                    db_simulation_model_url, _array_element_without_id, f"{key}.json"
+                    db_simulation_model_url, db_simulation_model, _design_model, f"{key}.json"
                 )
                 parameters[key] = gen.collect_data_from_file_or_dict(
                     file_name=_parameter_file, in_dict=None
@@ -173,3 +170,31 @@ def _update_parameters_from_repo(
                 pass
 
     return parameters
+
+
+def get_list_of_model_parameters(model_type, db_simulation_model_url):
+    """
+    Get list of telescope model parameters from repository.
+
+    Parameters
+    ----------
+    model_type: str
+        Simulation model type (e.g., telescope, site)
+    db_simulation_model_url: str
+        URL to the simulation model repository.
+
+    Returns
+    -------
+    list
+        List of telescope model parameters.
+
+    """
+
+    _pars = gen.collect_data_from_file_or_dict(
+        file_name=gen.join_url_or_path(
+            db_simulation_model_url, "parameter_lists", f"{model_type}.list"
+        ),
+        in_dict=None,
+    )
+
+    return _pars
