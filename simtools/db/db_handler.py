@@ -12,7 +12,7 @@ from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
 import simtools.utils.general as gen
-from simtools import db_from_repo_handler
+from simtools.db import db_from_repo_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
