@@ -5,6 +5,7 @@ import numpy as np
 from astropy import units as u
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
+from eventio.iact.objects import InputCard
 from eventio.search_utils import yield_toplevel_of_type
 
 from simtools import version
@@ -79,13 +80,41 @@ class SimtelHistograms:
             self._list_of_histograms = []
             for file in self._histogram_files:
                 with EventIOFile(file) as f:
-                    for o in yield_toplevel_of_type(f, Histograms):
-                        hists = o.parse()
+                    for obj in yield_toplevel_of_type(f, Histograms):
+                        hists = obj.parse()
                         self._list_of_histograms.append(hists)
-                        if o.header.only_subobjects:
-                            for subobj in o:
-                                print("   ", subobj)
         return self._list_of_histograms
+
+    @property
+    def number_of_events(self):
+        """
+        Returns the number of simulated particles.
+        It already includes the multiplicity of each simulated event
+
+        Returns
+        -------
+        int:
+            Number of events simulated particles.
+        """
+        for file in self._histogram_files:
+            with EventIOFile(file) as f:
+                for obj in f:
+                    if isinstance(obj, InputCard):
+                        info = obj.parse()
+                        # Convert bytearray to string and split lines
+                        data_str = info.decode("utf-8")
+                        result_dict = {}
+                        lines = data_str.strip().split("\n")
+                        for line in lines:
+                            if "CSCAT" in line:
+                                splitted = line.split()
+                                key = splitted[0]
+                                value = float(splitted[1])
+                                result_dict[key] = float(value)
+                            elif "NSHOW" in line:
+                                key, value = line.split()
+                                result_dict[key] = float(value)
+        return result_dict["NSHOW"] * result_dict["CSCAT"]
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -188,20 +217,14 @@ class SimtelHistograms:
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
             event_rate_histogram = copy.copy(events_histogram[i_file])
-            area_dict = np.pi * (
-                (events_histogram[i_file]["upper_x"]) ** 2
-                - (events_histogram[i_file]["lower_x"]) ** 2
-            )
+            area_dict = np.pi * ((event_rate_histogram["upper_x"]) ** 2)
 
             event_rate_histogram["data"] = (
                 np.zeros_like(trigged_events_histogram[i_file]["data"]) / livetime.unit
             )
             bins_with_events = events_histogram[i_file]["data"] != 0
             event_rate_histogram["data"][bins_with_events] = (
-                trigged_events_histogram[i_file]["data"][bins_with_events]
-                / events_histogram[i_file]["data"][bins_with_events]
-                * area_dict
-                / livetime
+                trigged_events_histogram[i_file]["data"][bins_with_events] * area_dict / livetime
             )
 
             # Keeping only the necessary information for proceeding with integration
