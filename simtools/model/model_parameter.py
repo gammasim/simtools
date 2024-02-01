@@ -84,8 +84,8 @@ class ModelParameter:
 
     def get_parameter(self, par_name):
         """
-        Get an existing parameter of the model. Convert parameter name to
-        names used in the model database.
+        Get an existing parameter of the model. Allow parameter name to be
+        names used in the model database or simulation model names.
 
         Parameters
         ----------
@@ -102,9 +102,9 @@ class ModelParameter:
             If par_name does not match any parameter in this model.
         """
         if par_name in names.telescope_parameters:
-            par_name = names.telescope_parameters[par_name]["name"]
+            par_name = names.telescope_parameters[par_name]["db_name"]
         elif par_name in names.site_parameters:
-            par_name = names.site_parameters[par_name]["name"]
+            par_name = names.site_parameters[par_name]["db_name"]
         try:
             return self._parameters[par_name]
         except KeyError as e:

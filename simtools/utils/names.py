@@ -87,6 +87,7 @@ all_model_version_names = {
     "2019-12-30": [""],
     "2020-02-26": [""],
     "2020-06-28": ["prod5"],
+    "2024-02-01": [""],
     "prod4-prototype": [""],
     "default": [],
     "Released": [],
@@ -110,36 +111,36 @@ all_array_layout_names = {
 site_parameters = {
     # Note inconsistency between old and new model
     # altitude was the corsika observation level in the old model
-    "reference_point_altitude": {"name": "altitude", "simtel": True},
-    "reference_point_longitude": {"name": "ref_long", "simtel": False},
-    "reference_point_latitude": {"name": "ref_lat", "simtel": False},
-    "reference_point_utm_north": {"name": "reference_point_utm_north", "simtel": False},
-    "reference_point_utm_east": {"name": "reference_point_utm_east", "simtel": False},
+    "reference_point_altitude": {"db_name": "altitude", "simtel": True},
+    "reference_point_longitude": {"db_name": "ref_long", "simtel": False},
+    "reference_point_latitude": {"db_name": "ref_lat", "simtel": False},
+    "reference_point_utm_north": {"db_name": "reference_point_utm_north", "simtel": False},
+    "reference_point_utm_east": {"db_name": "reference_point_utm_east", "simtel": False},
     # Note naming inconsistency between old and new model
     # altitude was the corsika observation level in the old model
-    "corsika_observation_level": {"name": "altitude", "simtel": True},
-    "epsg_code": {"name": "epsg_code", "simtel": False},
-    "magnetic_field": {"name": "magnetic_field", "simtel": False},
-    "atmospheric_profile": {"name": "atmospheric_profile", "simtel": False},
-    "atmospheric_transmission": {"name": "atmospheric_transmission", "simtel": True},
-    "array_coordinates": {"name": "array_coordinates", "simtel": False},
+    "corsika_observation_level": {"db_name": "altitude", "simtel": True},
+    "epsg_code": {"db_name": "epsg_code", "simtel": False},
+    "magnetic_field": {"db_name": "magnetic_field", "simtel": False},
+    "atmospheric_profile": {"db_name": "atmospheric_profile", "simtel": False},
+    "atmospheric_transmission": {"db_name": "atmospheric_transmission", "simtel": True},
+    "array_coordinates": {"db_name": "array_coordinates", "simtel": False},
 }
 
 telescope_parameters = {
-    "pixel_shape": {"name": "pixel_shape", "simtel": False},
-    "pixel_diameter": {"name": "pixel_diameter", "simtel": False},
+    "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
+    "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
     "lightguide_efficiency_angle_file": {
-        "name": "lightguide_efficiency_angle_file",
+        "db_name": "lightguide_efficiency_angle_file",
         "simtel": False,
     },
     "lightguide_efficiency_wavelength_file": {
-        "name": "lightguide_efficiency_wavelength_file",
+        "db_name": "lightguide_efficiency_wavelength_file",
         "simtel": False,
     },
-    "mirror_panel_shape": {"name": "mirror_panel_shape", "simtel": False},
-    "mirror_panel_diameter": {"name": "mirror_panel_diameter", "simtel": False},
-    "telescope_axis_height": {"name": "telescope_axis_height", "simtel": False},
-    "telescope_sphere_radius": {"name": "telescope_sphere_radius", "simtel": False},
+    "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
+    "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
+    "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
+    "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
 }
 
 # array elements as defined by CTAO
@@ -345,20 +346,65 @@ def validate_telescope_model_name(name):
         Validated name.
     """
 
-    # e.g, MSTN or MSTN-01
-    try:
-        return _validate_name(name, all_array_element_id_names)
-    except ValueError:
-        pass
-
-    # e.g., MST-FlashCam or MST-FlashCam-01
+    # e.g., MST-FlashCam or MST-FlashCam-10
     tel_class, tel_type, tel_id = split_telescope_model_name(name)
     _telescope_name = tel_class
     if tel_class != tel_type and len(tel_type) > 0:
         _telescope_name += "-" + tel_type
-    if len(tel_id) > 0:
-        _telescope_name += "-" + tel_id
+    # D234 naming convention for LSTs North
+    _telescope_name += _old_lst_naming_convention(name, tel_id)
     return _telescope_name
+
+
+def _old_lst_naming_convention(name, tel_id):
+    """
+    (Temporary) fix for old LST naming convention in database.
+    For North: LST-1 is LST-1, LST2-3 is LST-D234, LST is LST-D234
+
+    Parameters
+    ----------
+    name: str
+        Telescope model name.
+
+    Returns
+    -------
+    str
+        LST naming convention.
+
+    """
+    _tel_class = get_telescope_class(name)
+    if _tel_class != "LST":
+        return "-" + str(tel_id).lstrip("0") if len(tel_id) > 0 else ""
+    try:
+        if get_site_from_telescope_name(name) == "South":
+            return "-" + str(tel_id).lstrip("0") if len(tel_id) > 0 else ""
+    except ValueError:
+        pass
+    if tel_id.isdigit() and int(tel_id) > 1:
+        return "-D234"
+    return "-" + str(tel_id).lstrip("0")
+
+
+def validate_array_element_id(name):
+    """
+    Validate a array element ID (CTAO convention).
+    e.g, MSTN or MSTN-01
+
+    Parameters
+    ----------
+    name: str
+        Array element ID.
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+
+    _tel_class, _, _tel_id = split_telescope_model_name(name)
+    _tel_class += get_site_from_telescope_name(name)[0].upper()
+
+    return _tel_class if len(_tel_id) == 0 else _tel_class + "-" + _tel_id
 
 
 def split_telescope_model_name(name):
