@@ -6,7 +6,6 @@ from threading import Lock
 
 import gridfs
 import pymongo
-import yaml
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
@@ -120,7 +119,7 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or yaml DB for a specific telescope.
+        Get parameters from either MongoDB or simulation model repository for a specific telescope.
 
         Parameters
         ----------
@@ -154,24 +153,15 @@ class DatabaseHandler:
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
 
-        if self.mongo_db_config:
-            # Only MongoDB supports tagged version
-            _model_version = self._convert_version_to_tagged(
-                model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-            )
-            _version_validated = names.validate_model_version_name(_model_version)
+        # Only MongoDB supports tagged version
+        _model_version = self._convert_version_to_tagged(
+            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+        _version_validated = names.validate_model_version_name(_model_version)
 
-            return self._get_model_parameters_mongo_db(
-                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-                _site_validated,
-                _tel_model_name_validated,
-                _version_validated,
-                only_applicable,
-            )
-
-        _version_validated = names.validate_model_version_name(model_version)
-
-        return self._get_model_parameters_yaml(
+        return self._get_model_parameters_mongo_db(
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+            _site_validated,
             _tel_model_name_validated,
             _version_validated,
             only_applicable,
@@ -209,7 +199,7 @@ class DatabaseHandler:
 
     def export_model_files(self, parameters, dest):
         """
-        Export all the files in a model from the DB (Mongo or yaml) and write them to disk.
+        Export all the files in a model from the DB and write them to disk.
 
         Parameters
         ----------
@@ -225,7 +215,10 @@ class DatabaseHandler:
 
         """
 
-        if self.mongo_db_config:
+        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+            self._logger.debug("Exporting model files from simulation model repository")
+            self._logger.warning("Not implemented yet - TODO")
+        elif self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not (info.get("file") or info.get("File")):
@@ -239,96 +232,11 @@ class DatabaseHandler:
                 self._write_file_from_mongo_to_disk(
                     DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
                 )
-        else:
-            self._logger.debug("Exporting model files from local model file directories")
-            for value in parameters.values():
-                if not self._is_file(value):
-                    continue
-                self._write_model_file_yaml(value, dest, no_file_ok=True)
 
     @staticmethod
     def _is_file(value):
         """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
-
-    def _write_model_file_yaml(self, file_name, dest_dir, no_file_ok=False):
-        """
-        Find the file_name in the model files location and write a copy
-        at the dest_dir directory.
-
-        Parameters
-        ----------
-        file_name: str or Path
-            File name to be found and copied.
-        dest_dir: str or Path
-            Path of the directory where the file will be written.
-
-        """
-
-        dest_file = Path(dest_dir).joinpath(file_name)
-        try:
-            file = gen.find_file(file_name, self.io_handler.model_path)
-        except FileNotFoundError:
-            if no_file_ok:
-                self._logger.debug(f"File {file_name} not found but no_file_ok")
-                return
-
-            raise
-
-        dest_file.write_text(file.read_text(encoding="utf-8"), encoding="utf-8")
-
-    def _get_model_parameters_yaml(
-        self, telescope_model_name, model_version, only_applicable=False
-    ):
-        """
-        Get parameters from DB for one specific type.
-
-        Parameters
-        ----------
-        telescope_model_name: str
-            Telescope model name (e.g MST-FlashCam-D ...).
-        model_version: str
-            Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-
-        _tel_class = names.get_telescope_class(telescope_model_name)
-        _tel_name_converted = names.convert_telescope_model_name_to_yaml_name(telescope_model_name)
-
-        if _tel_class == "MST":
-            # MST-FlashCam or MST-NectarCam
-            _which_tel_labels = [_tel_name_converted, "MST-optics"]
-        elif _tel_class == "SST":
-            # SST = SST-Camera + SST-Structure
-            _which_tel_labels = ["SST-Camera", "SST-Structure"]
-        else:
-            _which_tel_labels = [_tel_name_converted]
-
-        # Selecting version and applicable (if on)
-        _pars = {}
-        for _tel in _which_tel_labels:
-            _all_pars = self._get_all_model_parameters_yaml(_tel)
-
-            # If _tel is a structure, only the applicable parameters will be collected, always.
-            # The default ones will be covered by the camera parameters.
-            _select_only_applicable = only_applicable or (_tel in ["MST-optics", "SST-Structure"])
-
-            for par_name_in, par_info in _all_pars.items():
-                if not par_info["Applicable"] and _select_only_applicable:
-                    continue
-
-                if model_version not in par_info:
-                    continue
-
-                _pars[par_name_in] = par_info[model_version]
-
-        return _pars
 
     def _get_model_parameters_mongo_db(
         self, db_name, site, telescope_model_name, model_version, only_applicable=False
@@ -477,29 +385,6 @@ class DatabaseHandler:
 
         return _parameters
 
-    def _get_all_model_parameters_yaml(self, telescope_name_yaml):
-        """
-        Get all parameters from yaml DB for one specific type.
-        No selection is applied.
-
-        Parameters
-        ----------
-        telescope_name_yaml: str
-            Telescope name as required by the yaml files.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-
-        _file_name_db = f"parValues-{telescope_name_yaml}.yml"
-        _yaml_file = gen.find_file(_file_name_db, self.io_handler.model_path)
-        self._logger.debug(f"Reading DB file {_yaml_file}")
-        with open(_yaml_file, "r", encoding="utf-8") as stream:
-            _all_pars = yaml.safe_load(stream)
-        return _all_pars
-
     def get_site_parameters(
         self,
         site,
@@ -507,7 +392,7 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or yaml DB for a specific site.
+        Get parameters from either MongoDB or simulation model repository for a specific site.
 
         Parameters
         ----------
@@ -536,52 +421,13 @@ class DatabaseHandler:
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
-        if self.mongo_db_config:
-            return self._get_site_parameters_mongo_db(
-                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-                _site,
-                _model_version,
-                only_applicable,
-            )
 
-        return self._get_site_parameters_yaml(_site, _model_version, only_applicable)
-
-    def _get_site_parameters_yaml(self, site, model_version, only_applicable=False):
-        """
-        Get parameters from DB for a specific type.
-
-        Parameters
-        ----------
-        site: str
-            North or South.
-        model_version: str
-            Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-
-        site_yaml = "lapalma" if site == "North" else "paranal"
-
-        yaml_file = gen.find_file("parValues-Sites.yml", self.io_handler.model_path)
-        self._logger.info(f"Reading DB file {yaml_file}")
-        with open(yaml_file, "r", encoding="utf-8") as stream:
-            _all_pars_versions = yaml.safe_load(stream)
-
-        _pars = {}
-        for par_name, par_info in _all_pars_versions.items():
-            if not par_info["Applicable"] and only_applicable:
-                continue
-            if site_yaml in par_name:
-                par_name_in = "_".join(par_name.split("_")[1:])
-
-                _pars[par_name_in] = par_info[model_version]
-
-        return _pars
+        return self._get_site_parameters_mongo_db(
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+            _site,
+            _model_version,
+            only_applicable,
+        )
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
         """

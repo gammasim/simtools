@@ -10,8 +10,8 @@ from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_operations.io_handler
-from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
 from simtools.model.telescope_model import TelescopeModel
 
