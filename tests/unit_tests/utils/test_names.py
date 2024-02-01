@@ -27,17 +27,43 @@ all_telescope_names = [
 ]
 
 
-def test_validate_sub_system_name():
-    for key, value in names.all_subsystem_names.items():
-        for test_name in value:
-            assert key == names.validate_sub_system_name(test_name)
-    with pytest.raises(ValueError):
-        names.validate_sub_system_name("Not a camera")
+def test_validate_name():
+    with_lists = {
+        "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
+        "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
+    }
+
+    for key, value in with_lists.items():
+        for _site in value:
+            assert key == names._validate_name(_site, with_lists)
+
+    with pytest.raises(ValueError, match=r"Invalid name Aar"):
+        names._validate_name("Aar", with_lists)
+
+    with_lists_in_dicts = {
+        "LSTN": ["LSTN", "lstn"],
+        "MSTS": ["MSTN", "mstn"],
+    }
+    for key, value in with_lists_in_dicts.items():
+        for _tel in value:
+            assert key == names._validate_name(_tel, with_lists_in_dicts)
 
 
 def test_validate_telescope_id_name(caplog):
-    for _id in [1, "1", "01", "D", "D234"]:
-        assert names.validate_telescope_id_name(_id) == str(_id)
+    _test_ids = {
+        "1": "01",
+        "01": "01",
+        "5": "05",
+        "55": "55",
+        "Design": "DESIGN",
+        "DESIGN": "DESIGN",
+        "TEST": "TEST",
+    }
+    for key, value in _test_ids.items():
+        assert value == names.validate_telescope_id_name(key)
+
+    assert "01" == names.validate_telescope_id_name(1)
+    assert "11" == names.validate_telescope_id_name(11)
 
     for _id in ["no_id", "D2345"]:
         with caplog.at_level(logging.ERROR):
@@ -47,7 +73,7 @@ def test_validate_telescope_id_name(caplog):
 
 
 def test_validate_site_name():
-    for key, value in names.all_site_names.items():
+    for key, value in names.site_names.items():
         for test_name in value:
             assert key == names.validate_site_name(test_name)
     with pytest.raises(ValueError):
@@ -55,216 +81,38 @@ def test_validate_site_name():
 
 
 def test_validate_array_layout_name():
-    for key, value in names.all_array_layout_names.items():
+    for key, value in names.array_layout_names.items():
         for test_name in value:
             assert key == names.validate_array_layout_name(test_name)
     with pytest.raises(ValueError):
         names.validate_array_layout_name("Not a layout")
 
 
-def test_split_telescope_model_name():
-    _class, _type, _id = names.split_telescope_model_name("MST-NectarCam-5")
-    assert _class == "MST"
-    assert _type == "NectarCam"
-    assert _id == "5"
-
-    _class, _type, _id = names.split_telescope_model_name("MST-NectarCam")
-    assert _class == "MST"
-    assert _type == "NectarCam"
-    assert _id == ""
-
-    _class, _type, _id = names.split_telescope_model_name("LST")
-    assert _class == "LST"
-    assert _type == "LST"
-    assert _id == ""
-
-    _class, _type, _id = names.split_telescope_model_name("LST-D234")
-    assert _class == "LST"
-    assert _type == "LST"
-    assert _id == "D234"
-
-    _class, _type, _id = names.split_telescope_model_name("MSTN")
-    assert _class == "MST"
-    assert _type == "NectarCam"
-    assert _id == ""
-
-    _class, _type, _id = names.split_telescope_model_name("MSTN-01")
-    assert _class == "MST"
-    assert _type == "NectarCam"
-    assert _id == "01"
-
-    _class, _type, _id = names.split_telescope_model_name("MSTS")
-    assert _class == "MST"
-    assert _type == "FlashCam"
-    assert _id == ""
-
-    _class, _type, _id = names.split_telescope_model_name("MSTS-01")
-    assert _class == "MST"
-    assert _type == "FlashCam"
-    assert _id == "01"
-
-    _class, _type, _id = names.split_telescope_model_name("LSTS-01")
-    assert _class == "LST"
-    assert _type == "LST"
-    assert _id == "01"
-
-    _class, _type, _id = names.split_telescope_model_name("MST-1")
-    assert _class == "MST"
-    assert _type == ""
-    assert _id == "1"
-
-
 def test_validate_telescope_name():
     telescopes = {
-        "lst-1": "LST-1",
-        "lst-D234": "LST-D234",
-        "mst-flashcam-d": "MST-FlashCam-D",
-        "mst-nectarcam-d": "MST-NectarCam-D",
-        "mst-NectarCam-5": "MST-NectarCam-5",
-        "MST-Structure-1": "MST-Structure-1",
-        "MST-FlashCam-1": "MST-FlashCam-1",
-        "MST-FlashCam-10": "MST-FlashCam-10",
-        "sct-d": "SCT-D",
-        "sst-1m": "SST-1M",
-        "sst-astri-d": "SST-ASTRI-D",
-        "SST-GCT-d": "SST-GCT-D",
-        "sst-gct-d": "SST-GCT-D",
-        "sst-d": "SST-D",
-        "mst": "MST",
-        "LSTN": "LST-D234",
-        "LSTN-01": "LST-1",
-        "LSTN-02": "LST-2",
-        "LSTS": "LST",
-        "LSTS-01": "LST-1",
-        "LSTS-02": "LST-2",
-        "MSTN": "MST-NectarCam",
-        "MSTN-01": "MST-NectarCam-1",
-        "MSTS": "MST-FlashCam",
-        "MSTS-01": "MST-FlashCam-1",
-        "MSTS-10": "MST-FlashCam-10",
-        "SSTS": "SST",
-        "SSTS-22": "SST-22",
+        "LSTN-Design": "LSTN-DESIGN",
+        "LSTN-01": "LSTN-01",
+        "SSTS-01": "SSTS-01",
     }
 
     for key, value in telescopes.items():
         logging.getLogger().info(f"Validating {key}")
-        new_name = names.validate_telescope_model_name(key)
+        new_name = names.validate_telescope_name(key)
         logging.getLogger().info(f"New name {new_name}")
         assert value == new_name
 
-        _class, _, _id = names.split_telescope_model_name(value)
-        assert names._is_valid_name(_class, names.all_telescope_class_names)
-        if len(_id) > 0:
-            assert names.validate_telescope_id_name(_id)
-
     with pytest.raises(ValueError):
-        names.split_telescope_model_name("North-MST-FlashCam-D")
-
-
-def test_old_lst_naming_convention():
-    LST = {
-        "LST-1": "-1",
-        "LST-D234": "-D234",
-        "LSTN-2": "-D234",
-        "LSTS-2": "-2",
-        "LSTS": "",
-        "MSTS": "",
-        "MSTS-05": "",
-        "MSTN": "",
-        "MSTN-05": "",
-    }
-
-    for key, value in LST.items():
-        _, _, tel_id = names.split_telescope_model_name(key)
-        assert names._old_lst_naming_convention(key, tel_id) == value
-
-
-def test_validate_array_element_id():
-    telescopes = {
-        "LSTN": "LSTN",
-        "LSTN-01": "LSTN-01",
-        "MSTN": "MSTN",
-        "MSTN-01": "MSTN-01",
-        "MSTS": "MSTS",
-        "MSTS-01": "MSTS-01",
-    }
-
-    for key, value in telescopes.items():
-        assert names.validate_array_element_id(key) == value
+        names.validate_telescope_name("South-MST-FlashCam-D")
+    with pytest.raises(ValueError):
+        names.validate_telescope_name("LSTN")
 
 
 def test_get_site_from_telescope_name():
-    assert "North" == names.get_site_from_telescope_name("North-LST-1")
-    assert "South" == names.get_site_from_telescope_name("South-MST-FlashCam-D")
-    with pytest.raises(ValueError):
-        names.get_site_from_telescope_name("NorthWest-LST-1")
     assert "North" == names.get_site_from_telescope_name("MSTN")
     assert "North" == names.get_site_from_telescope_name("MSTN-05")
     assert "South" == names.get_site_from_telescope_name("MSTS-05")
-
-
-def test_validate_name(caplog):
-    all_site_names = {
-        "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
-        "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
-    }
-
-    for key, value in all_site_names.items():
-        for _site in value:
-            assert key == names._validate_name(_site, all_site_names)
-
-    with pytest.raises(ValueError, match=r"Invalid name Aar"):
-        names._validate_name("Aar", all_site_names)
-
-
-def test_is_valid_name():
-    all_site_names = {
-        "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
-        "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
-    }
-
-    for _, value in all_site_names.items():
-        for _site in value:
-            assert names._is_valid_name(_site, all_site_names)
-
-    assert not names._is_valid_name("Aar", all_site_names)
-    assert not names._is_valid_name("Aar", {})
-    assert not names._is_valid_name(5, all_site_names)
-
-
-def test_validate_telescope_name_db():
-    telescopes = {
-        "south-sst-d": "South-SST-D",
-        "north-mst-nectarcam-d": "North-MST-NectarCam-D",
-        "north-lst-1": "North-LST-1",
-    }
-    for key, value in telescopes.items():
-        logging.getLogger().info(f"Validating {key}")
-        new_name = names.validate_telescope_name_db(key)
-        logging.getLogger().info(f"New name {new_name}")
-
-        assert value == new_name
-
-    telescopes = {
-        "ssss-sst-d": "SSSS-SST-D",
-        "no-rth-mst-nectarcam-d": "No-rth-MST-NectarCam-D",
-        "north-ls-1": "North-LS-1",
-    }
-    for key, value in telescopes.items():
-        logging.getLogger().info(f"Validating {key}")
-        with pytest.raises(ValueError):
-            names.validate_telescope_name_db(key)
-
-
-def test_convert_telescope_model_name_to_yaml_name():
-    assert names.convert_telescope_model_name_to_yaml_name("LST-1") == "LST"
-    assert names.convert_telescope_model_name_to_yaml_name("LST-D234") == "LST"
-    assert names.convert_telescope_model_name_to_yaml_name("MST-FlashCam-D") == "MST-FlashCam"
-    assert names.convert_telescope_model_name_to_yaml_name("SCT-D") == "SCT"
     with pytest.raises(ValueError):
-        names.convert_telescope_model_name_to_yaml_name("South-SCT-D")
-    with pytest.raises(ValueError):
-        names.convert_telescope_model_name_to_yaml_name("LST-NectarCam-D")
+        names.get_site_from_telescope_name("LSTW")
 
 
 def test_validate_model_version_name():
@@ -274,14 +122,6 @@ def test_validate_model_version_name():
 
     with pytest.raises(ValueError):
         names.validate_model_version_name("p0")
-
-
-def test_get_telescope_name_db():
-    assert names.get_telescope_name_db("South", "MST", "FlashCam", "D") == "South-MST-FlashCam-D"
-    assert names.get_telescope_name_db("North", "MST", "NectarCam", "7") == "North-MST-NectarCam-7"
-
-    with pytest.raises(ValueError):
-        names.get_telescope_name_db("West", "MST", "FlashCam", "D")
 
 
 def test_sanitize_name():
@@ -295,24 +135,16 @@ def test_sanitize_name():
         names.sanitize_name("")
 
 
-def test_get_telescope_class():
-    assert names.get_telescope_class("LSTN-01") == "LST"
-    assert names.get_telescope_class("MSTN-02") == "MST"
-    assert names.get_telescope_class("SSTS-27") == "SST"
-    assert names.get_telescope_class("SCTS-27") == "SCT"
-    assert names.get_telescope_class("MAGIC-2") == "MAGIC"
-    assert names.get_telescope_class("VERITAS-4") == "VERITAS"
-    assert names.get_telescope_class("LST-") == "LST"
-    assert names.get_telescope_class("MST-1") == "MST"
-    for _name in ["", "01", "Not_a_telescope"]:
+def test_get_telescope_type_from_telescope_name():
+    assert names.get_telescope_type_from_telescope_name("LSTN-01") == "LSTN"
+    assert names.get_telescope_type_from_telescope_name("MSTN-02") == "MSTN"
+    assert names.get_telescope_type_from_telescope_name("SSTS-27") == "SSTS"
+    assert names.get_telescope_type_from_telescope_name("SCTS-27") == "SCTS"
+    assert names.get_telescope_type_from_telescope_name("MAGIC-2") == "MAGIC"
+    assert names.get_telescope_type_from_telescope_name("VERITAS-4") == "VERITAS"
+    for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
         with pytest.raises(ValueError):
-            names.get_telescope_class(_name)
-    assert names.get_telescope_class("LSTN-01", "North") == "LSTN"
-    assert (
-        names.get_telescope_class("LSTN-01", names.get_site_from_telescope_name("LSTN-01"))
-        == "LSTN"
-    )
-    assert names.get_telescope_class("SSTS-01", "South") == "SSTS"
+            names.get_telescope_type_from_telescope_name(_name)
 
 
 def test_camera_efficiency_names():
@@ -379,85 +211,6 @@ def test_camera_efficiency_names():
         )
         == "camera-efficiency-table-South-LST-1-za020deg_azm180deg.ecsv"
     )
-
-
-def test_telescope_model_name_from_array_element_id(caplog):
-    tests_naming = {
-        "LSTN-01": {"sub_system": "structure", "tel": "LST-1"},
-        "LSTN-02": {"sub_system": "structure", "tel": "LST-D234"},
-        "LSTN-03": {"sub_system": "structure", "tel": "LST-D234"},
-        "LSTN-04": {"sub_system": "structure", "tel": "LST-D234"},
-        "MSTN-04": {"sub_system": "camera", "tel": "MST-NectarCam-D"},
-        "MSTN-03": {"sub_system": "structure", "tel": "MST-Structure-D"},
-        "LSTS-01": {"sub_system": "structure", "tel": "LST-D"},
-        "LSTS-04": {"sub_system": "structure", "tel": "LST-D"},
-        "LSTS-03": {"sub_system": "camera", "tel": "LST-D"},
-        "MSTS-25": {"sub_system": "camera", "tel": "MST-FlashCam-D"},
-        "MSTS-03": {"sub_system": "structure", "tel": "MST-Structure-D"},
-        "SCTS-02": {"sub_system": "structure", "tel": "SCT-D"},
-        "SCTS-01": {"sub_system": "camera", "tel": "SCT-D"},
-        "SSTS-32": {"sub_system": "structure", "tel": "SST-Structure-D"},
-        "SSTS-34": {"sub_system": "camera", "tel": "SST-Camera-D"},
-        "LSTS": {"sub_system": "camera", "tel": "LST-D"},
-        "MSTS": {"sub_system": "structure", "tel": "MST-Structure-D"},
-        "MSTN": {"sub_system": "camera", "tel": "MST-NectarCam-D"},
-    }
-
-    for key, value in tests_naming.items():
-        assert (
-            names.telescope_model_name_from_array_element_id(
-                array_element_id=key,
-                sub_system_name=value["sub_system"],
-                available_telescopes=all_telescope_names,
-            )
-            == value["tel"]
-        )
-
-    with caplog.at_level(logging.DEBUG):
-        with pytest.raises(IndexError):
-            names.telescope_model_name_from_array_element_id(
-                array_element_id="LS",
-                sub_system_name="camera",
-                available_telescopes=all_telescope_names,
-            )
-        assert "Invalid array element ID LS" in caplog.text
-
-
-def test_array_element_id_from_telescope_model_name():
-    available_telescopes_north = {
-        "LST-1": "LSTN-01",
-        "LST-D234": "LSTN",
-        "MST-NectarCam-D": "MSTN",
-        "MST-NectarCam-14": "MSTN-14",
-        "MST-Structure-D": "MSTN",
-        "MST-Structure-3": "MSTN-03",
-    }
-    for key, value in available_telescopes_north.items():
-        assert (
-            names.array_element_id_from_telescope_model_name(site="North", telescope_model_name=key)
-            == value
-        )
-
-    available_telescopes_south = {
-        "LST-D": "LSTS",
-        "LST-3": "LSTS-03",
-        "MST-FlashCam-D": "MSTS",
-        "MST-FlashCam-12": "MSTS-12",
-        "MST-Structure-D": "MSTS",
-        "MST-Structure-9": "MSTS-09",
-        "SCT-D": "SCTS",
-        "SCT-11": "SCTS-11",
-        "SST-Camera-D": "SSTS",
-        "SST-Camera-04": "SSTS-04",
-        "SST-Camera-72": "SSTS-72",
-        "SST-Structure-D": "SSTS",
-        "SST-Structure-12": "SSTS-12",
-    }
-    for key, value in available_telescopes_south.items():
-        assert (
-            names.array_element_id_from_telescope_model_name(site="South", telescope_model_name=key)
-            == value
-        )
 
 
 def test_simtel_telescope_config_file_name():
