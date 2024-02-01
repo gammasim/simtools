@@ -9,7 +9,8 @@ RUN microdnf update -y && microdnf install -y \
     python3.11-devel && \
     microdnf clean all
 
-RUN git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1
+RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
+    git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1
 RUN cd /workdir/ && \
     python3.11 -m venv env && \
     source env/bin/activate && \
