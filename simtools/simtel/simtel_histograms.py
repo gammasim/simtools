@@ -82,6 +82,9 @@ class SimtelHistograms:
                     for o in yield_toplevel_of_type(f, Histograms):
                         hists = o.parse()
                         self._list_of_histograms.append(hists)
+                        if o.header.only_subobjects:
+                            for subobj in o:
+                                print("   ", subobj)
         return self._list_of_histograms
 
     def _check_consistency(self, first_hist_file, second_hist_file):
