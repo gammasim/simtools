@@ -4,7 +4,6 @@ CTA_SIMPIPE:
   CONFIGURATION:
     INPUT: tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: ground
-    USE_CORSIKA_TELESCOPE_HEIGHT: true
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
     SELECT_ASSETS: ['LST', 'MST']
