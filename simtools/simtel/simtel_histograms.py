@@ -214,18 +214,49 @@ class SimtelHistograms:
                     trigged_events_histogram[i_file] = hist
 
         list_of_trigger_rate_hists = []
+
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            event_rate_histogram = copy.copy(events_histogram[i_file])
-            area_dict = np.pi * ((event_rate_histogram["upper_x"]) ** 2)
+            radius_axis = np.linspace(
+                events_histogram[i_file]["lower_x"],
+                events_histogram[i_file]["upper_x"],
+                events_histogram[i_file]["n_bins_x"] + 1,
+                endpoint=True,
+            )
+            energy_axis = np.logspace(
+                events_histogram[i_file]["lower_y"],
+                events_histogram[i_file]["upper_y"],
+                events_histogram[i_file]["n_bins_y"] + 1,
+                endpoint=True,
+            )
 
-            event_rate_histogram["data"] = (
-                np.zeros_like(trigged_events_histogram[i_file]["data"]) / livetime.unit
+            event_ratio_histogram = copy.copy(events_histogram[i_file])
+
+            event_ratio_histogram["data"] = np.zeros_like(trigged_events_histogram[i_file]["data"])
+            bins_with_events = trigged_events_histogram[i_file]["data"] != 0
+
+            # Radial distribution of triggered events per E divided by the radial distribution
+            # of simulated events per E (gives a radial distribution of trigger probability per E
+            event_ratio_histogram["data"][bins_with_events] = (
+                trigged_events_histogram[i_file]["data"][bins_with_events]
+                / events_histogram[i_file]["data"][bins_with_events]
             )
-            bins_with_events = events_histogram[i_file]["data"] != 0
-            event_rate_histogram["data"][bins_with_events] = (
-                trigged_events_histogram[i_file]["data"][bins_with_events] * area_dict / livetime
-            )
+
+            # TODO: apply any correction factor here (energy and area distribution)
+
+            # Radial distribution of trigger probability per E integrated in area at each radius
+            # (gives a trigger probability per E)
+            integrated_event_ratio_per_energy = np.zeros_like(energy_axis[:-1])
+            areas = np.pi * np.diff(radius_axis**2)
+            for i_energy, _ in enumerate(energy_axis[:-1]):
+                integrated_event_ratio_per_energy[i_energy] = np.sum(
+                    event_ratio_histogram["data"][bins_with_events][i_energy] * areas
+                )
+
+            # Trigger probability per E integrated in E
+            # (gives a trigger probability)
+            normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
+            print(normalization)
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -238,13 +269,13 @@ class SimtelHistograms:
                 "n_bins_x",
                 "n_bins_y",
             ]
-            event_rate_histogram = {
-                key: event_rate_histogram[key]
+            event_ratio_histogram = {
+                key: event_ratio_histogram[key]
                 for key in keys_to_keep
-                if key in event_rate_histogram
+                if key in event_ratio_histogram
             }
 
-            list_of_trigger_rate_hists.append(event_rate_histogram)
+            list_of_trigger_rate_hists.append(event_ratio_histogram)
         return list_of_trigger_rate_hists
 
     def _integrate_trigger_rate_histograms(self, hists):
@@ -263,6 +294,7 @@ class SimtelHistograms:
             radius_axis = np.linspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
             integrated_hist = np.zeros_like(radius_axis)
             for i_radius, _ in enumerate(radius_axis):
+                # FIXME: fix these units and integrations
                 integrated_hist[i_radius] = np.sum(
                     hist["data"][:-1, i_radius].value * np.diff(energy_axis)
                 )
