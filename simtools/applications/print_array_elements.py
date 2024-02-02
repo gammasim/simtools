@@ -15,7 +15,8 @@
 
     1. UTM system
     2. ground system (similar to sim_telarray system with x-axis pointing toward \
-        geographic north and y-axis pointing towards the west)
+        geographic north and y-axis pointing towards the west); altitude relative \
+        to the CORSIKA observation level.
     3. Mercator system
 
     Command line arguments
@@ -27,8 +28,6 @@
     export (str)
         Export array element list to file in requested coordinate system; \
             possible are ground, utm, mercator
-    use_corsika_telescope_height (bool)
-        Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)
     select_assets (str)
         Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
@@ -40,18 +39,10 @@
     .. code-block:: console
 
         simtools-print-array-elements \\
-            --input tests/resources/telescope_positions-South-4MST.ecsv \\
-            --compact ground
+            --input tests/resources/telescope_positions-North-utm.ecsv \\
+            --export ground
 
-    Expected final print-out message:
-
-    .. code-block:: console
-
-        telescope_name pos_x pos_y altitude
-        MST-01      -0.02      -0.00    2162.00
-        MST-02       1.43     151.02    2163.00
-        MST-03      -1.47    -151.02    2169.00
-        MST-04     150.72      73.57    2159.00
+    Expected output is a ecsv file in the directory printed to the screen.
 
     The following example converts a list of telescope positions in UTM coordinates \
     and writes the output to a file in ground (sim_telarray) coordinates. Also selects \
@@ -61,8 +52,8 @@
 
         simtools-print-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
-            --export ground --use_corsika_telescope_height \\
-            --select_assets LSTN, MSTN, SSTN
+            --export ground \\
+            --select_assets LSTN
 
     Expected output is a ecsv file in the directory printed to the screen.
 
@@ -132,13 +123,6 @@ def _parse(label=None, description=None):
         ],
     )
     config.parser.add_argument(
-        "--use_corsika_telescope_height",
-        help="Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)",
-        required=False,
-        default=False,
-        action="store_true",
-    )
-    config.parser.add_argument(
         "--select_assets",
         help="select a subset of assets (e.g., MSTN, LSTN)",
         required=False,
@@ -184,14 +168,12 @@ def main():
             metadata=metadata.top_level_meta,
             product_data=layout.export_telescope_list_table(
                 crs_name=args_dict["export"],
-                corsika_z=args_dict["use_corsika_telescope_height"],
             ),
             validate_schema_file=metadata.get_data_model_schema_file_name(),
         )
     else:
         layout.print_telescope_list(
             compact_printing=args_dict["compact"],
-            corsika_z=args_dict["use_corsika_telescope_height"],
         )
 
 

@@ -68,7 +68,7 @@ class ArrayLayout:
         self.geo_coordinates = GeoCoordinates()
 
         self._telescope_list = []
-        self._corsika_parameter_dict = {}
+        self._corsika_observation_level = None
         self._reference_position_dict = {}
         self._array_center = None
 
@@ -131,44 +131,15 @@ class ArrayLayout:
         """
         return self._telescope_list[i]
 
-    def _initialize_sphere_parameters(self, sphere_dict):
-        """
-        Set CORSIKA sphere parameters from dictionary. Type of input varies and depend on data \
-        source for these parameters.
-
-        Example for sphere_dict: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
-
-        Parameters
-        ----------
-        sphere_dict: dict
-            dictionary with sphere parameters
-
-        Returns
-        -------
-        dict
-            dictionary with sphere parameters.
-
-        """
-
-        _sphere_dict_cleaned = {}
-        try:
-            for key, value in sphere_dict.items():
-                if isinstance(value, (str, u.Quantity)):
-                    _sphere_dict_cleaned[key] = u.Quantity(value)
-                else:
-                    _sphere_dict_cleaned[key] = value["value"] * u.Unit(value["unit"])
-        except (TypeError, KeyError) as exc:
-            self._logger.error(f"Error setting CORSIKA sphere parameters from {sphere_dict}")
-            raise exc
-
-        return _sphere_dict_cleaned
-
     def _initialize_parameters_from_db(self):
         """
         Initialize parameters required for transformations using the database.
 
         """
         self._logger.debug("Initialize parameters from DB")
+        if self.mongo_db_config is None:
+            self._logger.error("No database configuration provided")
+            raise ValueError
 
         site_model = SiteModel(
             site=self.site,
@@ -176,7 +147,9 @@ class ArrayLayout:
             mongo_db_config=self.mongo_db_config,
         )
         try:
-            self._corsika_parameter_dict.update(site_model.get_corsika_site_parameters())
+            self._corsika_observation_level = site_model.get_corsika_site_parameters().get(
+                "corsika_observation_level", None
+            )
             self._reference_position_dict = site_model.get_reference_point()
         except InvalidModelParameter as exc:
             self._logger.error("Error setting parameters from DB")
@@ -193,41 +166,6 @@ class ArrayLayout:
             )
             for para in ("telescope_axis_height", "telescope_sphere_radius"):
                 tel.set_auxiliary_parameter(para, tel_model.get_parameter_value_with_unit(para))
-
-    def _initialize_parameters_from_dict(self, parameter_dict):
-        """
-        Initialize parameters required for transformations from a dict.
-        (e.g., as provided in the metadata header of some telescope list file)
-
-        Parameters
-        ----------
-        parameter_dict dict
-            dictionary with parameters
-
-        """
-
-        try:
-            self._corsika_parameter_dict["corsika_observation_level"] = u.Quantity(
-                parameter_dict["corsika_observation_level"]
-            )
-        except (TypeError, KeyError):
-            self._corsika_parameter_dict["corsika_observation_level"] = np.nan * u.m
-
-        for key in ["telescope_axis_height", "corsika_sphere_radius"]:
-            try:
-                self._corsika_parameter_dict[key] = self._initialize_sphere_parameters(
-                    parameter_dict[key]
-                )
-            except (TypeError, KeyError):
-                pass
-
-        for key in ["center_northing", "center_easting", "center_altitude"]:
-            try:
-                self._reference_position_dict[key] = u.Quantity(parameter_dict[key])
-            except (TypeError, KeyError):
-                pass
-        self._reference_position_dict["epsg_code"] = parameter_dict("epsg_code", None)
-        self._reference_position_dict["array_name"] = parameter_dict("array_name", None)
 
     def _initialize_coordinate_systems(self):
         """
@@ -308,60 +246,23 @@ class ArrayLayout:
         self._logger.debug(
             f"pos_z: {pos_z}, altitude: {altitude}, "
             f"axis_height: {telescope_axis_height}, "
-            f"obs_level: {self._corsika_parameter_dict['corsika_observation_level']}"
+            f"obs_level: {self._corsika_observation_level}"
         )
 
         if pos_z is not None and altitude is None:
             return TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
-                self._corsika_parameter_dict["corsika_observation_level"],
+                self._corsika_observation_level,
                 telescope_axis_height,
             )
 
         if altitude is not None and pos_z is None:
             return TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
-                self._corsika_parameter_dict["corsika_observation_level"],
+                self._corsika_observation_level,
                 telescope_axis_height,
             )
         return np.nan
-
-    def _get_telescope_axis_height(self, tel_name):
-        """
-        Return CORSIKA sphere center value for given telescope.
-
-        Parameters
-        ----------
-        tel_name: str
-            Telescope Name.
-
-        Returns
-        -------
-        astropy.Quantity
-            Telescope sphere center value (0.0*u.m if sphere center is not defined).
-
-        Raises
-        ------
-        KeyError
-            if Missing definition of CORSIKA sphere center for this telescope type.
-
-        """
-
-        try:
-            return self._corsika_parameter_dict["telescope_axis_height"][
-                names.get_telescope_type_from_telescope_name(tel_name)
-            ]
-        except KeyError:
-            self._logger.warning(
-                "Missing definition of CORSIKA sphere center for telescope "
-                f"{tel_name} of type {names.get_telescope_type_from_telescope_name(tel_name)}"
-            )
-        except ValueError:
-            self._logger.warning(
-                f"Missing definition of CORSIKA sphere center for telescope {tel_name}"
-            )
-
-        return 0.0 * u.m
 
     def _load_telescope_names(self, row):
         """
@@ -554,10 +455,7 @@ class ArrayLayout:
             )
             self._load_telescope_list(table)
 
-        if self.mongo_db_config:
-            self._initialize_parameters_from_db()
-        elif table is not None:
-            self._initialize_parameters_from_dict(table.meta)
+        self._initialize_parameters_from_db()
         self._initialize_coordinate_systems()
 
         return table
@@ -594,15 +492,10 @@ class ArrayLayout:
             )
         self._telescope_list.append(tel)
 
-    def _get_export_metadata(self, export_corsika_meta=False):
+    def _get_export_metadata(self):
         """
         File metadata for export of array element list to file. Included array center definition,\
         CORSIKA telescope parameters, and EPSG code.
-
-        Parameters
-        ----------
-        export_corsika_meta: bool
-            write CORSIKA metadata.
 
         Returns
         -------
@@ -611,25 +504,19 @@ class ArrayLayout:
 
         """
 
-        _meta = {
-            "center_northing": None,
-            "center_easting": None,
-            "center_altitude": None,
-        }
+        _meta = {}
         if self._array_center:
             (
                 _meta["center_easting"],
                 _meta["center_northing"],
                 _meta["center_altitude"],
             ) = self._array_center.get_coordinates("utm")
-        if export_corsika_meta:
-            _meta.update(self._corsika_parameter_dict)
         _meta["epsg_code"] = self._reference_position_dict.get("epsg_code", None)
         _meta["array_name"] = self.name
 
         return _meta
 
-    def export_telescope_list_table(self, crs_name, corsika_z=False):
+    def export_telescope_list_table(self, crs_name):
         """
         Export array elements positions to astropy table.
 
@@ -647,20 +534,21 @@ class ArrayLayout:
 
         """
 
-        table = QTable(meta=self._get_export_metadata(crs_name == "ground"))
+        table = QTable(meta=self._get_export_metadata())
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
-        pos_x, pos_y, pos_z = [], [], []
+        pos_x, pos_y, pos_z, pos_t = [], [], [], []
         for tel in self._telescope_list:
             tel_names.append(tel.name)
             asset_code.append(tel.asset_code)
             sequence_number.append(tel.sequence_number)
             geo_code.append(tel.geo_code)
             x, y, z = tel.get_coordinates(crs_name)
-            if corsika_z:
+            if crs_name == "ground":
                 z = self._altitude_from_corsika_z(
                     altitude=z, telescope_axis_height=tel.get_axis_height()
                 )
+                pos_t.append(tel.get_axis_height())
             pos_x.append(x)
             pos_y.append(y)
             pos_z.append(z)
@@ -680,10 +568,9 @@ class ArrayLayout:
             )
             table[_name_x] = pos_x
             table[_name_y] = pos_y
-            if corsika_z:
-                table["position_z"] = pos_z
-            else:
-                table[_name_z] = pos_z
+            table[_name_z] = pos_z
+            if len(pos_t) > 0:
+                table["telescope_axis_height"] = pos_t
         except IndexError:
             pass
 
@@ -718,27 +605,15 @@ class ArrayLayout:
         corsika_list = ""
         for tel in self._telescope_list:
             pos_x, pos_y, pos_z = tel.get_coordinates("ground")
-            try:
-                sphere_radius = self._corsika_parameter_dict["corsika_sphere_radius"][
-                    names.get_telescope_type_from_telescope_name(tel.name)
-                ]
-            except KeyError:
-                self._logger.error("Missing definition of CORSIKA sphere radius")
-                raise
-            try:
-                pos_z = tel.convert_telescope_altitude_to_corsika_system(
-                    pos_z,
-                    self._corsika_parameter_dict["corsika_observation_level"],
-                    self._get_telescope_axis_height(tel.name),
-                )
-            except KeyError:
-                self._logger.error("Missing definition of CORSIKA sphere center / obs_level")
-                raise
-
+            pos_z = tel.convert_telescope_altitude_to_corsika_system(
+                pos_z,
+                self._corsika_observation_level,
+                tel.get_axis_height(),
+            )
             corsika_list += "TELESCOPE"
             for pos in [pos_x, pos_y, pos_z]:
                 corsika_list += f"\t {pos.value:.3f}E2"
-            corsika_list += f"\t {sphere_radius.value:.3f}E2"
+            corsika_list += f"\t {tel.get_sphere_radius().value:.3f}E2"
             corsika_list += f"\t # {tel.name}\n"
 
         return corsika_list
@@ -756,39 +631,28 @@ class ArrayLayout:
         for tel in self._telescope_list:
             print(tel)
 
-    def _print_compact(self, compact_printing, corsika_z=False):
+    def _print_compact(self, compact_printing):
         """
         Compact printing of list of telescopes.
-
 
         Parameters
         ----------
         compact_printing: str
             Compact printout for a single coordinate system. Coordinates in all systems are \
             printed, if compact_printing is None.
-        corsika_z: bool
-            Print telescope height in CORSIKA coordinates (for CORSIKA system)
 
         """
 
         for tel in self._telescope_list:
-            if corsika_z:
-                _corsika_observation_level = self._corsika_parameter_dict[
-                    "corsika_observation_level"
-                ]
-                _telescope_axis_height = self._get_telescope_axis_height(tel.name)
-            else:
-                _corsika_observation_level = None
-                _telescope_axis_height = None
-
             tel.print_compact_format(
                 crs_name=compact_printing,
                 print_header=(tel == self._telescope_list[0]),
-                corsika_observation_level=_corsika_observation_level,
-                telescope_axis_height=_telescope_axis_height,
+                corsika_observation_level=self._corsika_observation_level
+                if compact_printing == "ground"
+                else None,
             )
 
-    def print_telescope_list(self, compact_printing="", corsika_z=False):
+    def print_telescope_list(self, compact_printing=""):
         """
         Print list of telescopes in latest released layout.
 
@@ -796,14 +660,12 @@ class ArrayLayout:
         ----------
         compact_printing: str
             Compact printout for a single coordinate system.
-        corsika_z: bool
-            Print telescope height in CORSIKA coordinates (for CORSIKA system).
         """
 
         if len(compact_printing) == 0:
             self._print_all()
         else:
-            self._print_compact(compact_printing, corsika_z)
+            self._print_compact(compact_printing)
 
     def convert_coordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""
@@ -825,6 +687,8 @@ class ArrayLayout:
     def include_radius_into_telescope_table(telescope_table):
         """
         Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
+
+        TODO - not sure what this method does
 
         Parameters
         ----------

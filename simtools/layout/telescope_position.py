@@ -115,16 +115,16 @@ class TelescopePosition:
                     f"{self.name} {self.crs[crs_name]['xx']['value']:10.2f} "
                     f"{self.crs[crs_name]['yy']['value']:10.2f} {_zz:10.2f}"
                 )
-            headerstr = (
+            header_str = (
                 f"telescope_name {self.crs[crs_name]['xx']['name']} "
                 f"{self.crs[crs_name]['yy']['name']} {_zz_header}"
             )
 
             if self.geo_code is not None:
                 telstr += f"  {self.geo_code}"
-                headerstr += "  geo_code"
+                header_str += "  geo_code"
             if print_header:
-                print(headerstr)
+                print(header_str)
             print(telstr)
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
@@ -534,6 +534,20 @@ class TelescopePosition:
             self.crs["auxiliary"]["telescope_axis_height"]["unit"]
         )
 
+    def get_sphere_radius(self):
+        """
+        Get telescope sphere radius.
+
+        Returns
+        -------
+        astropy.units.m
+            Telescope sphere radius
+
+        """
+        return self.crs["auxiliary"]["telescope_sphere_radius"]["value"] * u.Unit(
+            self.crs["auxiliary"]["telescope_sphere_radius"]["unit"]
+        )
+
     def set_auxiliary_parameter(self, parameter_name, quantity):
         """
         Set auxiliary parameter.
@@ -568,7 +582,7 @@ class TelescopePosition:
                 "crs": None,
                 "xx": {"name": "position_x", "value": np.nan, "unit": u.Unit("m")},
                 "yy": {"name": "position_y", "value": np.nan, "unit": u.Unit("m")},
-                "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
+                "zz": {"name": "position_z", "value": np.nan, "unit": u.Unit("m")},
             },
             "mercator": {
                 "crs": None,
