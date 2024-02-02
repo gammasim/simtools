@@ -51,53 +51,6 @@
 #       ID: 4488a138-1384-439f-af0d-9f9a3e639481
 #       VALID: {END: null, START: null}
 #     REFERENCE: {VERSION: 1.0.0}
-#   epsg_code: 32628
-#   __serialized_columns__:
-#     position_x:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: &id001 !astropy.units.Unit {unit: m}
-#       value: !astropy.table.SerializedColumn {name: position_x}
-#     position_y:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: *id001
-#       value: !astropy.table.SerializedColumn {name: position_y}
-#     position_z:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: *id001
-#       value: !astropy.table.SerializedColumn {name: position_z}
-#   array_name: null
-#   center_altitude: !astropy.units.Quantity
-#     unit: *id001
-#     value: 2177.0
-#   center_easting: !astropy.units.Quantity
-#     unit: *id001
-#     value: 217608.975
-#   center_northing: !astropy.units.Quantity
-#     unit: *id001
-#     value: 3185067.275
-#   corsika_observation_level: !astropy.units.Quantity
-#     unit: *id001
-#     value: 2156.0
-#   telescope_axis_height:
-#     LST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 16.0
-#     MST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 9.0
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.25
-#   corsika_sphere_radius:
-#     LST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 12.5
-#     MST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 9.15
-#     SST: !astropy.units.Quantity
-#       unit: *id001
-#       value: 3.0
 # schema: astropy-2.0
 telescope_name position_x position_y position_z geo_code
 LST-01     -70.91     -52.35      45.00  2B5

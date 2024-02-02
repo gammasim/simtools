@@ -7,17 +7,8 @@
 # - {name: latitude, unit: deg, datatype: float64}
 # - {name: longitude, unit: deg, datatype: float64}
 # - {name: altitude, unit: m, datatype: float64}
-# meta: !!omap
-# - {data_type: position_file}
-# - {description: CTAO Northern Array Element Coordinates}
-# - {center_northing: 3185067.275 m}
-# - {center_easting: 217608.975 m}
-# - {center_altitude: 2177.0 m}
-# - {corsika_obs_level: 2156 m}
-# - corsika_sphere_radius: {LST: 12.5 m, MST: 9.15 m, SST: 3 m}
-# - corsika_sphere_center: {LST: 16 m, MST: 9 m, SST: 3.25 m}
-# - {epsg_code: 32628}
-# - CTA:
+# meta:
+#   CTA:
 #     ACTIVITY:
 #       END: '2024-01-17T08:18:14'
 #       ID: 2f5a2ee4-32c9-4302-bc71-9ea418f9e385
