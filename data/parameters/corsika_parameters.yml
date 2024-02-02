@@ -60,19 +60,6 @@ PRIMARIES:
     number: 5626
     names: ['FE']
 
-# TODO - these values should go into the simulation model
-SITE_PARAMETERS:
-  South:
-    ATMOSPHERE: [26, 'Y']
-    MAGNET: [20.925, -9.119]
-    # ARRANG: [-3.433]
-    ARRANG: [0]
-  North:
-    ATMOSPHERE: [36, 'Y']
-    MAGNET: [30.576, 23.571]
-    # ARRANG: [-5.3195]
-    ARRANG: [0]
-
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
   FIXCHI: [0.]
