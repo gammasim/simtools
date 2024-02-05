@@ -37,7 +37,7 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
 def test_reading_db_lst(db):
     logger.info("----Testing reading LST-----")
     assert 1 == 1
-    pars = db.get_model_parameters("north", "lst-1", "Released")
+    pars = db.get_model_parameters("north", "lstn-01", "Released")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["Value"] == 1
         assert pars["camera_pixels"]["Value"] == 1855
@@ -48,7 +48,7 @@ def test_reading_db_lst(db):
 
 def test_reading_db_mst_nc(db):
     logger.info("----Testing reading MST-NectarCam-----")
-    pars = db.get_model_parameters("north", "mst-NectarCam-D", "Released")
+    pars = db.get_model_parameters("north", "mstn-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1855
     else:
@@ -57,7 +57,7 @@ def test_reading_db_mst_nc(db):
 
 def test_reading_db_mst_fc(db):
     logger.info("----Testing reading MST-FlashCam-----")
-    pars = db.get_model_parameters("north", "mst-FlashCam-D", "Released")
+    pars = db.get_model_parameters("south", "msts-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 1764
     else:
@@ -66,7 +66,7 @@ def test_reading_db_mst_fc(db):
 
 def test_reading_db_sst(db):
     logger.info("----Testing reading SST-----")
-    pars = db.get_model_parameters("south", "sst-D", "Released")
+    pars = db.get_model_parameters("south", "ssts-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["Value"] == 2048
     else:
@@ -81,7 +81,7 @@ def test_get_reference_data(db):
 
 def test_get_derived_values(db):
     logger.info("----Testing reading derived values-----")
-    pars = db.get_derived_values("north", "lst-1", "Prod5")
+    pars = db.get_derived_values("north", "lstn-01", "Prod5")
     assert (
         pars["ray_tracing"]["Value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
     )
@@ -346,7 +346,7 @@ def test_reading_db_sites(db):
 
 def test_separating_get_and_write(db, io_handler):
     logger.info("----Testing getting parameters and exporting model files-----")
-    pars = db.get_model_parameters("north", "lst-1", "Released")
+    pars = db.get_model_parameters("north", "lstn-01", "Released")
 
     file_list = list()
     for par_now in pars.values():
@@ -402,7 +402,7 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
 def test_get_all_versions(db):
     all_versions = db.get_all_versions(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        telescope_model_name="LST-1",
+        telescope_model_name="LSTN-01",
         site="North",
         parameter="camera_config_file",
         collection_name="telescopes",
