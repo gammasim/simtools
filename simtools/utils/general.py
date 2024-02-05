@@ -388,11 +388,11 @@ def collect_data_from_http(url):
         _logger.error(msg)
         raise InvalidConfigData(msg) from exc
     except urllib.error.HTTPError as exc:
-        msg = f"Failed to download yaml file from {url}"
+        msg = f"Failed to download file from {url}"
         _logger.error(msg)
         raise InvalidConfigData(msg) from exc
 
-    _logger.debug(f"Downloaded yaml file from {url}")
+    _logger.debug(f"Downloaded file from {url}")
     return data
 
 
@@ -931,8 +931,6 @@ def get_value_as_quantity(value, unit):
         Quantity of value 'quantity' and unit 'unit'.
     """
     if isinstance(value, u.Quantity):
-        if isinstance(value.unit, type(unit)):
-            return value
         try:
             value = value.to(unit)
             return value
