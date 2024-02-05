@@ -85,12 +85,13 @@ def main():
         histogram_files = [histogram_files]
 
     histograms = SimtelHistograms(histogram_files)
+    print(histograms.config)
 
     logger.info(f"Calculating event rate and trigger rate for livetime: {livetime}")
 
     # Calculate trigger rate
     trigger_rates = histograms.trigger_rate_per_histogram(livetime)
-    event_rates = histograms.number_of_events / livetime
+    event_rates = histograms.config / livetime
 
     # Print the trigger rates
     for i, trigger_rate in enumerate(trigger_rates):

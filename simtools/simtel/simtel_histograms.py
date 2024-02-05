@@ -5,8 +5,8 @@ import numpy as np
 from astropy import units as u
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
-from eventio.iact.objects import InputCard
 from eventio.search_utils import yield_toplevel_of_type
+from eventio.simtel import MCRunHeader
 
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
@@ -86,42 +86,35 @@ class SimtelHistograms:
         return self._list_of_histograms
 
     @property
-    def number_of_events(self):
+    def config(self):
         """
-        Returns the number of simulated particles.
-        It already includes the multiplicity of each simulated event
+        Returns information about the input parameters for the simulation.
 
         Returns
         -------
-        int:
-            Number of events simulated particles.
+        dict:
+            dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         for file in self._histogram_files:
             with EventIOFile(file) as f:
                 for obj in f:
-                    if isinstance(obj, InputCard):
+                    if isinstance(obj, MCRunHeader):
                         info = obj.parse()
-                        # Convert bytearray to string and split lines
-                        data_str = info.decode("utf-8")
-                        result_dict = {}
-                        lines = data_str.strip().split("\n")
-                        for line in lines:
-                            print(line)
-                            if "CSCAT" in line:
-                                splitted = line.split()
-                                key = splitted[0]
-                                value = [float(splitted[i + 1]) for i in len(splitted) - 1]
-                                result_dict[key] = float(value)
-                            elif "NSHOW" in line:
-                                key, value = line.split()
-                                result_dict[key] = float(value)
-                            elif "VIEWCONE" in line:
-                                key, value = line.split()
-                                result_dict[key] = float(value)
-                            elif "ESLOPE" in line:
-                                key, value = line.split()
-                                result_dict[key] = float(value)
-        return result_dict
+        return info
+
+    @property
+    def total_num_simulated_events(self):
+        """
+        Returns the total number of simulated events.
+        It already accounts for the NSHOW and NUSE found used in the configuration to produce
+        the histograms.
+
+        Returns
+        -------
+        int:
+            total number of simulated events.
+        """
+        return self.config["n_showers"] * self.config["n_use"]
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -265,6 +258,7 @@ class SimtelHistograms:
             # (gives a trigger probability, i.e. a normalization)
             normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
             print(normalization)
+            print(self.total_num_simulated_events)
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
