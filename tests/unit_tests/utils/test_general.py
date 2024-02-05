@@ -718,3 +718,12 @@ def test_get_value_unit_type() -> None:
 
     # Test with string representation of Quantity.
     assert gen.get_value_unit_type("1 m") == (pytest.approx(1), "m", "float")
+
+
+def test_assign_unit_to_quantity():
+    assert gen.get_value_as_quantity(10, u.m) == 10 * u.m
+
+    assert gen.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
+
+    with pytest.raises(u.UnitConversionError):
+        gen.get_value_as_quantity(1000 * u.TeV, u.m)

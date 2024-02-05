@@ -286,6 +286,29 @@ def validate_telescope_name(name):
     )
 
 
+def get_telescope_name_from_type_site_id(telescope_type, site, telescope_id):
+    """
+    Get telescope name from type, site and ID.
+
+    Parameters
+    ----------
+    telescope_type: str
+        Telescope type.
+    site: str
+        Site name.
+    telescope_id: str
+        Telescope ID.
+
+    Returns
+    -------
+    str
+        Telescope name.
+    """
+    _short_site = validate_site_name(site)[0]
+    _val_id = validate_telescope_id_name(telescope_id)
+    return f"{telescope_type}{_short_site}-{_val_id}"
+
+
 def get_telescope_type_from_telescope_name(name):
     """
     Get telescope type from name, e.g. "LSTN", "MSTN".
