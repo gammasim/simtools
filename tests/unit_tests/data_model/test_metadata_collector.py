@@ -75,6 +75,21 @@ def test_fill_contact_meta(args_dict_site):
     assert contact_dict["name"] == getpass.getuser()
 
 
+def test_get_site(args_dict_site):
+    _collector_1 = metadata_collector.MetadataCollector(
+        args_dict=args_dict_site,
+    )
+    assert _collector_1.get_site() is None
+    assert _collector_1.get_site(from_input_meta=True) is None
+
+    _collector_2 = metadata_collector.MetadataCollector(
+        args_dict=args_dict_site,
+        metadata_file_name="tests/resources/telescope_positions-North-utm.meta.yml",
+    )
+    assert _collector_2.get_site(from_input_meta=True) == "North"
+    assert _collector_2.get_site(from_input_meta=False) is None
+
+
 def test_fill_associated_elements_from_args(args_dict_site):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.top_level_meta = gen.change_dict_keys_case(
@@ -85,11 +100,12 @@ def test_fill_associated_elements_from_args(args_dict_site):
     )
 
     assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["site"] == "South"
-    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["class"] == "MST"
     assert (
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["type"] == "NectarCam"
+        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["class"]
+        == "telescope"
     )
-    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == "D"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["type"] == "MSTS"
+    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == ""
 
     metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0].pop("site")
 
@@ -130,6 +146,13 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with pytest.raises(gen.InvalidConfigData):
         metadata_1._read_input_metadata_from_file()
         assert "More than one metadata entry" in caplog.text
+
+    metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
+    assert len(metadata_1._read_input_metadata_from_file()) > 0
+
+    metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
+    with pytest.raises(FileNotFoundError):
+        metadata_1._read_input_metadata_from_file()
 
 
 def test_fill_context_from_input_meta(args_dict_site):

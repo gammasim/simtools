@@ -49,7 +49,7 @@ def io_handler(tmp_test_directory):
 def mock_settings_env_vars(tmp_test_directory):
     """
     Removes all environment variable from the test system.
-    Explicitely sets those needed.
+    Explicitly sets those needed.
     """
     with mock.patch.dict(
         os.environ,
@@ -109,7 +109,7 @@ def args_dict_site(tmp_test_directory, simtel_path):
             "--site",
             "South",
             "--telescope",
-            "MST-NectarCam-D",
+            "MSTS-07",
             "--label",
             "integration_test",
         )
