@@ -4,7 +4,6 @@ import gzip
 import logging
 import os
 import time
-import urllib.error
 from copy import copy
 from pathlib import Path
 
@@ -24,7 +23,7 @@ from simtools.utils.general import (
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
+def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(
@@ -51,6 +50,11 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
     with pytest.raises(InvalidConfigData):
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
         assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
+
+    with open(tmp_test_directory / "test_file.list", "w", encoding="utf-8") as output:
+        output.write("test_line_1\n test_line_2\n")
+    _lines = gen.collect_data_from_file_or_dict(tmp_test_directory / "test_file.list", None)
+    assert len(_lines) == 2
 
 
 def test_collect_dict_from_url(io_handler) -> None:
@@ -539,12 +543,20 @@ def test_collect_data_from_http():
     assert isinstance(data, dict)
 
     file = "tests/resources/simtel_histograms_file_list.txt"
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidConfigData):
         data = gen.collect_data_from_http(url + file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
-    with pytest.raises(urllib.error.HTTPError):
+    with pytest.raises(InvalidConfigData):
         data = gen.collect_data_from_http(url + file)
+
+
+def test_join_url_or_path():
+    assert gen.join_url_or_path("http://www.desy.de", "test") == "http://www.desy.de/test"
+    assert (
+        gen.join_url_or_path("http://www.desy.de", "test", "test") == "http://www.desy.de/test/test"
+    )
+    assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
 
 
 def test_change_dict_keys_case(caplog) -> None:
