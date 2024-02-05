@@ -166,7 +166,7 @@ def _update_parameters_from_repo(
                     file_name=_parameter_file, in_dict=None
                 )
             except (FileNotFoundError, TypeError, gen.InvalidConfigData):
-                pass
+                logger.error(f"Parameter {key} not found in repository")
 
     return parameters
 
