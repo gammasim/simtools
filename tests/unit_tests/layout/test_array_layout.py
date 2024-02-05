@@ -466,17 +466,6 @@ def test_initialize_corsika_telescope_from_dict(
     array_layout_south_instance._initialize_corsika_telescope_from_dict(manual_corsika_dict_south)
 
 
-def test_assign_unit_to_quantity(array_layout_north_instance):
-    quantity = array_layout_north_instance._assign_unit_to_quantity(10, u.m)
-    assert quantity == 10 * u.m
-
-    quantity = array_layout_north_instance._assign_unit_to_quantity(1000 * u.cm, u.m)
-    assert quantity == 10 * u.m
-
-    with pytest.raises(u.UnitConversionError):
-        array_layout_north_instance._assign_unit_to_quantity(1000 * u.TeV, u.m)
-
-
 def test_try_set_altitude(
     array_layout_north_instance,
     telescope_north_test_file,

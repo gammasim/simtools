@@ -13,16 +13,17 @@ class InvalidCoordSystem(Exception):
 
 class TelescopePosition:
     """
-    Store and perform coordinate transformations for an array element position.
+    Store a telescope position and perform coordinate transformations.
 
     The definition of x_coord and y_coord in this class depend on the \
     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)). \
-    Altitude describes always the element height above sea level.
+    Altitude describes always the element height above sea level, position_z
+    the height above a reference altitude (e.g., CORSIKA observation level).
 
     Parameters
     ----------
     name: str
-        Name of the telescope (e.g LST-01, SST-05, ...).
+        Name of the telescope (e.g LSTN-01, SSTS-05, ...).
 
     """
 
@@ -44,28 +45,28 @@ class TelescopePosition:
         String representation of TelescopePosition.
 
         """
-        telstr = self.name
+        tel_str = self.name
         if self.has_coordinates("ground"):
-            telstr += (
+            tel_str += (
                 f"\t Ground x(->North): {self.crs['ground']['xx']['value']:0.2f} "
                 f"y(->West): {self.crs['ground']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
-            telstr += (
+            tel_str += (
                 f"\t UTM East: {self.crs['utm']['xx']['value']:0.2f} "
                 f"UTM North: {self.crs['utm']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("mercator"):
-            telstr += (
+            tel_str += (
                 f"\t Longitude: {self.crs['mercator']['xx']['value']:0.5f} "
                 f"Latitude: {self.crs['mercator']['yy']['value']:0.5f}"
             )
         for _crs_name, _crs_now in self.crs.items():
             if self.is_coordinate_system(_crs_name) and self.has_altitude(_crs_name):
-                telstr += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
+                tel_str += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
                 break
 
-        return telstr
+        return tel_str
 
     def print_compact_format(
         self,
@@ -106,12 +107,12 @@ class TelescopePosition:
                 _zz_header = "position_z"
 
             if crs_name == "mercator":
-                telstr = (
+                tel_str = (
                     f"{self.name} {self.crs[crs_name]['xx']['value']:10.8f} "
                     f"{self.crs[crs_name]['yy']['value']:10.8f} {_zz:10.2f}"
                 )
             else:
-                telstr = (
+                tel_str = (
                     f"{self.name} {self.crs[crs_name]['xx']['value']:10.2f} "
                     f"{self.crs[crs_name]['yy']['value']:10.2f} {_zz:10.2f}"
                 )
@@ -121,11 +122,11 @@ class TelescopePosition:
             )
 
             if self.geo_code is not None:
-                telstr += f"  {self.geo_code}"
+                tel_str += f"  {self.geo_code}"
                 header_str += "  geo_code"
             if print_header:
                 print(header_str)
-            print(telstr)
+            print(tel_str)
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e

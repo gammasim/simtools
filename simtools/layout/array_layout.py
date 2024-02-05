@@ -4,6 +4,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
+import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
@@ -131,9 +132,9 @@ class ArrayLayout:
         """
         return self._telescope_list[i]
 
-    def _initialize_parameters_from_db(self):
+    def _initialize_site_parameters_from_db(self):
         """
-        Initialize parameters required for transformations using the database.
+        Initialize site parameters required for transformations using the database.
 
         """
         self._logger.debug("Initialize parameters from DB")
@@ -155,17 +156,6 @@ class ArrayLayout:
             self._logger.error("Error setting parameters from DB")
             raise exc
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
-
-        for tel in self._telescope_list:
-            tel_model = TelescopeModel(
-                site=self.site,
-                telescope_name=tel.name,
-                model_version=self.model_version,
-                mongo_db_config=self.mongo_db_config,
-                label=self.label,
-            )
-            for para in ("telescope_axis_height", "telescope_sphere_radius"):
-                tel.set_auxiliary_parameter(para, tel_model.get_parameter_value_with_unit(para))
 
     def _initialize_coordinate_systems(self):
         """
@@ -317,33 +307,6 @@ class ArrayLayout:
 
         return tel
 
-    def _assign_unit_to_quantity(self, value, unit):
-        """
-        Assign unit to quantity.
-
-        Parameters
-        ----------
-        value:
-            value to get a unit. It can be a float, int, or a Quantity (convertible to 'unit').
-        unit: astropy.units.Unit
-            Unit to apply to 'quantity'.
-
-        Returns
-        -------
-        astropy.units.Quantity
-            Quantity of value 'quantity' and unit 'unit'.
-        """
-        if isinstance(value, u.Quantity):
-            if isinstance(value.unit, type(unit)):
-                return value
-            try:
-                value = value.to(unit)
-                return value
-            except u.UnitConversionError:
-                self._logger.error(f"Cannot convert {value.unit} to {unit}.")
-                raise
-        return value * unit
-
     def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
         """Function auxiliary to self._load_telescope_list. It sets the coordinates.
 
@@ -365,8 +328,8 @@ class ArrayLayout:
         try:
             tel.set_coordinates(
                 crs_name,
-                self._assign_unit_to_quantity(row[key1], table[key1].unit),
-                self._assign_unit_to_quantity(row[key2], table[key2].unit),
+                gen.get_value_as_quantity(row[key1], table[key1].unit),
+                gen.get_value_as_quantity(row[key2], table[key2].unit),
             )
         except KeyError:
             pass
@@ -388,47 +351,23 @@ class ArrayLayout:
         try:
             tel.set_altitude(
                 self._altitude_from_corsika_z(
-                    pos_z=self._assign_unit_to_quantity(
-                        row["position_z"], table["position_z"].unit
-                    ),
-                    # TODO TODO
-                    telescope_axis_height=0.0,
+                    pos_z=gen.get_value_as_quantity(row["position_z"], table["position_z"].unit),
+                    telescope_axis_height=tel.get_axis_height(),
                 )
             )
         except KeyError:
             pass
         try:
-            tel.set_altitude(self._assign_unit_to_quantity(row["altitude"], table["altitude"].unit))
+            tel.set_altitude(gen.get_value_as_quantity(row["altitude"], table["altitude"].unit))
         except KeyError:
             pass
-
-    def _load_telescope_list(self, table):
-        """
-        Load list of telescope from an astropy table (support both QTable and Table)
-
-        Parameters
-        ----------
-        table: astropy.table.Table or astropy.table.QTable
-            data table with array element coordinates
-
-        """
-        for row in table:
-            tel = self._load_telescope_names(row)
-            self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
-            self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
-            self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")
-            self._try_set_altitude(row, tel, table)
-
-            self._telescope_list.append(tel)
 
     def initialize_array_layout(
         self, telescope_list_file, telescope_list_metadata_file=None, validate=False
     ):
         """
-        Initialize the Layout array from a telescope list file.
-        Initialize site and CORSIKA telescope parameters.
-        Read parameters from database (default) or from metadata file header of ecsv file
-        (if available).
+        Initialize the Layout array including site and telescope parameters.
+        Read array lit if telescope_list_file is given.
 
         Parameters
         ----------
@@ -445,20 +384,55 @@ class ArrayLayout:
             Table with the telescope layout information.
         """
 
+        self._logger.debug("Initializing array layout site center")
+        self._initialize_site_parameters_from_db()
+        self._initialize_coordinate_systems()
+
+        if telescope_list_file is None:
+            return None
+
         self._logger.debug(f"Reading telescope list from {telescope_list_file}")
-        table = None
-        if telescope_list_file is not None:
-            table = data_reader.read_table_from_file(
+        table = (
+            data_reader.read_table_from_file(
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
             )
-            self._load_telescope_list(table)
+            if telescope_list_file is not None
+            else None
+        )
 
-        self._initialize_parameters_from_db()
-        self._initialize_coordinate_systems()
+        for row in table:
+            tel = self._load_telescope_names(row)
+            self._set_telescope_auxiliary_parameters(tel)
+            self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
+            self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
+            self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")
+            self._try_set_altitude(row, tel, table)
+            self._telescope_list.append(tel)
 
         return table
+
+    def _set_telescope_auxiliary_parameters(self, telescope):
+        """
+        Set auxiliary CORSIKA parameters for a given telescope.
+
+        Parameters
+        ----------
+        telescope: TelescopePosition
+            Instance of TelescopePosition.
+
+        """
+
+        tel_model = TelescopeModel(
+            site=self.site,
+            telescope_name=telescope.name,
+            model_version=self.model_version,
+            mongo_db_config=self.mongo_db_config,
+            label=self.label,
+        )
+        for para in ("telescope_axis_height", "telescope_sphere_radius"):
+            telescope.set_auxiliary_parameter(para, tel_model.get_parameter_value_with_unit(para))
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
@@ -482,13 +456,15 @@ class ArrayLayout:
         """
 
         tel = TelescopePosition(name=telescope_name)
+        self._set_telescope_auxiliary_parameters(tel)
         tel.set_coordinates(crs_name, xx, yy)
         if altitude is not None:
             tel.set_altitude(altitude)
         elif tel_corsika_z is not None:
-            # TODO TODO
             tel.set_altitude(
-                self._altitude_from_corsika_z(pos_z=tel_corsika_z, telescope_axis_height=0.0)
+                self._altitude_from_corsika_z(
+                    pos_z=tel_corsika_z, telescope_axis_height=tel.get_axis_height()
+                )
             )
         self._telescope_list.append(tel)
 
@@ -618,54 +594,25 @@ class ArrayLayout:
 
         return corsika_list
 
-    def _print_all(self):
-        """ "
-        Print all columns for all coordinate systems.
-
+    def print_telescope_list(self, crs_name):
         """
-
-        print(f"ArrayLayout: {self.name}")
-        print("ArrayCenter")
-        print(self._array_center)
-        print("Telescopes")
-        for tel in self._telescope_list:
-            print(tel)
-
-    def _print_compact(self, compact_printing):
-        """
-        Compact printing of list of telescopes.
+        Print list of telescopes.
 
         Parameters
         ----------
-        compact_printing: str
-            Compact printout for a single coordinate system. Coordinates in all systems are \
-            printed, if compact_printing is None.
+        crs_name: str
+            Name of coordinate system to be used for export.
 
         """
 
         for tel in self._telescope_list:
             tel.print_compact_format(
-                crs_name=compact_printing,
+                crs_name=crs_name,
                 print_header=(tel == self._telescope_list[0]),
                 corsika_observation_level=self._corsika_observation_level
-                if compact_printing == "ground"
+                if crs_name == "ground"
                 else None,
             )
-
-    def print_telescope_list(self, compact_printing=""):
-        """
-        Print list of telescopes in latest released layout.
-
-        Parameters
-        ----------
-        compact_printing: str
-            Compact printout for a single coordinate system.
-        """
-
-        if len(compact_printing) == 0:
-            self._print_all()
-        else:
-            self._print_compact(compact_printing)
 
     def convert_coordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""

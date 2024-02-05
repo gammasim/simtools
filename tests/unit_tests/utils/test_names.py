@@ -107,6 +107,12 @@ def test_validate_telescope_name():
         names.validate_telescope_name("LSTN")
 
 
+def test_get_telescope_name_from_type_site_id():
+    assert "LSTN-01" == names.get_telescope_name_from_type_site_id("LST", "North", "01")
+    assert "LSTN-01" == names.get_telescope_name_from_type_site_id("LST", "North", "1")
+    assert "LSTS-01" == names.get_telescope_name_from_type_site_id("LST", "South", "01")
+
+
 def test_get_site_from_telescope_name():
     assert "North" == names.get_site_from_telescope_name("MSTN")
     assert "North" == names.get_site_from_telescope_name("MSTN-05")

@@ -912,3 +912,31 @@ def get_value_unit_type(value):
         base_type = extract_type_of_value(base_value)
 
     return base_value, base_unit, base_type
+
+
+def get_value_as_quantity(value, unit):
+    """
+    Get a value as a Quantity with a given unit. If value is a Quantity, convert to unit.
+
+    Parameters
+    ----------
+    value:
+        value to get a unit. It can be a float, int, or a Quantity (convertible to 'unit').
+    unit: astropy.units.Unit
+        Unit to apply to 'quantity'.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Quantity of value 'quantity' and unit 'unit'.
+    """
+    if isinstance(value, u.Quantity):
+        if isinstance(value.unit, type(unit)):
+            return value
+        try:
+            value = value.to(unit)
+            return value
+        except u.UnitConversionError:
+            _logger.error(f"Cannot convert {value.unit} to {unit}.")
+            raise
+    return value * unit

@@ -23,8 +23,8 @@
     ----------------------
     input (str)
         File name with list of array element positions
-    compact (str)
-        Compact output in requested coordinate system; possible are corsika,utm,mercator
+    print (str)
+        Print requested coordinate system; possible are ground, utm, mercator
     export (str)
         Export array element list to file in requested coordinate system; \
             possible are ground, utm, mercator
@@ -40,9 +40,9 @@
 
         simtools-print-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
-            --export ground
+            --print ground
 
-    Expected output is a ecsv file in the directory printed to the screen.
+    The converted list of telescope positions in ground coordinates is printed to the screen.
 
     The following example converts a list of telescope positions in UTM coordinates \
     and writes the output to a file in ground (sim_telarray) coordinates. Also selects \
@@ -101,8 +101,8 @@ def _parse(label=None, description=None):
         required=False,
     )
     config.parser.add_argument(
-        "--compact",
-        help="compact output (in requested coordinate system)",
+        "--print",
+        help="print list of positions in requested coordinate system",
         required=False,
         default="",
         choices=[
@@ -173,7 +173,7 @@ def main():
         )
     else:
         layout.print_telescope_list(
-            compact_printing=args_dict["compact"],
+            crs_name=args_dict["print"],
         )
 
 
