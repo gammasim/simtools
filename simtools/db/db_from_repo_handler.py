@@ -22,11 +22,13 @@ def update_model_parameters_from_repo(
     Parameters
     ----------
     parameters: dict
-        Dictionary with parameters to be updated.
+        Existing dictionary with parameters to be updated.
     site: str
         Observatory site (e.g., South or North)
     telescope_name: str
         Telescope name (e.g., MSTN-01, MSTN-DESIGN)
+    parameter_collection: str
+        Collection of parameters to be queried (e.g., telescope or site)
     model_version: str
         Model version to use.
     db_simulation_model_url: str
@@ -50,7 +52,6 @@ def update_model_parameters_from_repo(
         site=site,
         telescope_name=telescope_name,
         model_version=model_version,
-        parameter_to_query=names.telescope_parameters,
         parameter_collection="telescope",
         db_simulation_model_url=db_simulation_model_url,
     )
@@ -84,7 +85,6 @@ def update_site_parameters_from_repo(parameters, site, model_version, db_simulat
         site=site,
         telescope_name=None,
         model_version=model_version,
-        parameter_to_query=names.site_parameters,
         parameter_collection="site",
         db_simulation_model_url=db_simulation_model_url,
     )
@@ -95,7 +95,6 @@ def _update_parameters_from_repo(
     site,
     telescope_name,
     model_version,
-    parameter_to_query,
     parameter_collection,
     db_simulation_model_url,
     db_simulation_model="verified_model",
@@ -150,13 +149,12 @@ def _update_parameters_from_repo(
         logger.error(f"Unknown parameter collection {parameter_collection}")
         raise ValueError
 
-    for key in parameter_to_query.keys():
+    for key in parameters.keys():
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
             parameters[key] = gen.collect_data_from_file_or_dict(
                 file_name=_parameter_file, in_dict=None
             )
-            logger.debug(f"Parameter {key} updated from repository file {_parameter_file}")
         except (FileNotFoundError, gen.InvalidConfigData):
             # use design telescope model in case there is no model defined for this telescope ID
             # accept errors, as not all parameters are defined in the repository
@@ -167,7 +165,6 @@ def _update_parameters_from_repo(
                 parameters[key] = gen.collect_data_from_file_or_dict(
                     file_name=_parameter_file, in_dict=None
                 )
-                logger.debug(f"Parameter {key} updated from repository file {_parameter_file}")
             except (FileNotFoundError, TypeError, gen.InvalidConfigData):
                 pass
 

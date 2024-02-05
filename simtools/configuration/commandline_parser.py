@@ -317,7 +317,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        names.validate_telescope_model_name(str(value))
+        names.validate_telescope_name(str(value))
         return str(value)
 
     @staticmethod
