@@ -34,7 +34,7 @@
 #       - {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
 #       DOCUMENT:
 #       - {CREATION_TIME: null, ID: null, TITLE: null, TYPE: null, URL: null}
-#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: CTA-North, SUBTYPE: null, TYPE: null}
 #     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
 #     PRODUCT:
 #       CREATION_TIME: '2023-12-21T12:55:11'
@@ -53,16 +53,16 @@
 #     REFERENCE: {VERSION: 1.0.0}
 # schema: astropy-2.0
 telescope_name position_x position_y position_z geo_code
-LST-01     -70.91     -52.35      45.00  2B5
-LST-02     -35.28      65.92      32.50  2B4
-LST-03      75.31      50.21      28.20  1B0
-LST-04      30.88     -63.78      32.80  1B1
-MST-01    -211.62       5.43      48.50  4B3
-MST-02    -153.29     168.86      28.70  4B1
-MST-03      26.86     208.54      11.40  2B2
-MST-04     175.66      72.85       9.50  3B0
-MST-05     131.67    -194.83      31.00  3B5
-MST-06     -83.94    -194.98      45.00  2B6
-MST-07    -215.81    -167.68      65.00  4B6
-MST-10      20.20    -352.85      62.00  1B4
-MST-15       4.64      -0.71      29.50  0A1
+LSTN-01     -70.91     -52.35      45.00  2B5
+LSTN-02     -35.28      65.92      32.50  2B4
+LSTN-03      75.31      50.21      28.20  1B0
+LSTN-04      30.88     -63.78      32.80  1B1
+MSTN-01    -211.62       5.43      48.50  4B3
+MSTN-02    -153.29     168.86      28.70  4B1
+MSTN-03      26.86     208.54      11.40  2B2
+MSTN-04     175.66      72.85       9.50  3B0
+MSTN-05     131.67    -194.83      31.00  3B5
+MSTN-06     -83.94    -194.98      45.00  2B6
+MSTN-07    -215.81    -167.68      65.00  4B6
+MSTN-10      20.20    -352.85      62.00  1B4
+MSTN-15       4.64      -0.71      29.50  0A1
