@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from astropy import units as u
+from ctao_cosmic_ray_spectra.spectral import PowerLaw, irfdoc_proton_spectrum
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
@@ -44,6 +45,7 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self._combined_hists = None
         self.__meta_dict = None
+        self._config = None
 
     @property
     def number_of_histograms(self):
@@ -95,12 +97,13 @@ class SimtelHistograms:
         dict:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
-        for file in self._histogram_files:
-            with EventIOFile(file) as f:
-                for obj in f:
-                    if isinstance(obj, MCRunHeader):
-                        info = obj.parse()
-        return info
+        if self._config is None:
+            for file in self._histogram_files:
+                with EventIOFile(file) as f:
+                    for obj in f:
+                        if isinstance(obj, MCRunHeader):
+                            self._config = obj.parse()
+        return self._config
 
     @property
     def total_num_simulated_events(self):
@@ -257,8 +260,37 @@ class SimtelHistograms:
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
             normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
-            print(normalization)
-            print(self.total_num_simulated_events)
+
+            view_cone = self.config["viewcone"] * u.deg
+            energy_range = (self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV)
+            total_area = np.pi * ((events_histogram[i_file]["upper_x"] * u.m).to(u.cm)) ** 2
+
+            if self.config["diffuse"] == 1:
+                norm_unit = 1 / (u.m**2 * u.s * u.sr)
+            else:
+                norm_unit = 1 / (u.m**2 * u.s)
+
+            non_norm_simulated_power_law_function = PowerLaw(
+                normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
+            )
+            non_norm_simulated_events = non_norm_simulated_power_law_function.derive_events_rate(
+                inner=view_cone[0],
+                outer=view_cone[1],
+                area=total_area,
+                energy=energy_range,
+            )
+            print(non_norm_simulated_events)
+
+            factor = self.total_num_simulated_events / non_norm_simulated_events
+            norm_simulated_power_law_function = PowerLaw(
+                normalization=factor * norm_unit,
+                index=self.config["spectral_index"],
+                e_ref=1 * u.TeV,
+            )
+
+            final = irfdoc_proton_spectrum.derive_number_events(
+                view_cone[0], view_cone[1], obs_time, total_area, energy
+            )
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
