@@ -168,10 +168,10 @@ def db_no_config_file():
 def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
-        telescope_model_name="LST-1",
+        telescope_name="LSTN-01",
         model_version="Prod5",
         mongo_db_config=db_config,
-        label="validate_camera_efficiency",
+        label="test-telescope-model-lst",
     )
     return telescope_model_LST
 
@@ -179,8 +179,8 @@ def telescope_model_lst(db_config, io_handler):
 @pytest.fixture
 def telescope_model_mst(db_config, io_handler):
     tel = TelescopeModel(
-        site="north",
-        telescope_model_name="mst-FlashCam-D",
+        site="South",
+        telescope_name="MSTS-design",
         model_version="Prod5",
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
@@ -193,7 +193,7 @@ def telescope_model_mst(db_config, io_handler):
 def telescope_model_sst(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SST-D",
+        telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
@@ -209,58 +209,6 @@ def array_layout_north_instance(io_handler, db_config):
 @pytest.fixture
 def array_layout_south_instance(io_handler, db_config):
     return ArrayLayout(site="South", mongo_db_config=db_config, name="test_layout")
-
-
-@pytest.fixture
-def manual_corsika_dict_north():
-    return {
-        "corsika_sphere_radius": {
-            "LST": 12.5 * u.m,
-            "MST": 9.15 * u.m,
-            "SCT": 7.15 * u.m,
-            "SST": 3 * u.m,
-            "HESS": 7.5 * u.m,  # Value for CT1-4
-            "MAGIC": 10 * u.m,  # Value used in Prod6
-            "VERITAS": 9.15
-            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
-        },
-        "telescope_axis_height": {
-            "LST": 16 * u.m,
-            "MST": 9 * u.m,
-            "SCT": 6.1 * u.m,
-            "SST": 3.25 * u.m,
-            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
-            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
-            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
-        },
-        "corsika_observation_level": 2158 * u.m,
-    }
-
-
-@pytest.fixture
-def manual_corsika_dict_south():
-    return {
-        "corsika_sphere_radius": {
-            "LST": 12.5 * u.m,
-            "MST": 9.15 * u.m,
-            "SCT": 7.15 * u.m,
-            "SST": 3 * u.m,
-            "HESS": 7.5 * u.m,  # Value for CT1-4
-            "MAGIC": 10 * u.m,  # Value used in Prod6
-            "VERITAS": 9.15
-            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
-        },
-        "telescope_axis_height": {
-            "LST": 16 * u.m,
-            "MST": 9 * u.m,
-            "SCT": 6.1 * u.m,
-            "SST": 3.25 * u.m,
-            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
-            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
-            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
-        },
-        "corsika_observation_level": 2147 * u.m,
-    }
 
 
 @pytest.fixture
@@ -329,9 +277,9 @@ def simulator_config_data(tmp_test_directory):
             "run_range": [6, 10],
         },
         "array": {
-            "model_version": "Prod5",
-            "default": {"LST": "D234", "MST": "NectarCam-D"},
-            "LST-01": "1",
+            "model_version": "Prod6",
+            "default": {"LSTN": "design", "MSTN": "design"},
+            "LSTN-01": "01",
         },
     }
 

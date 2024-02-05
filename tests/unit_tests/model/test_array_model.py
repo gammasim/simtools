@@ -14,13 +14,11 @@ def test_input_validation(db_config, io_handler):
         "site": "North",
         "layout_name": "test-layout",
         "model_version": "Prod5",
-        "default": {"LST": "1", "MST": "FlashCam-D"},
-        "MST-05": "NectarCam-D",
+        "default": {"LSTN": "1", "MSTN": "Design"},
+        "MSTN-05": "05",
     }
     am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
-
     am.print_telescope_list()
-
     assert am.number_of_telescopes == 13
 
 
@@ -29,10 +27,10 @@ def test_exporting_config_files(db_config, io_handler):
         "site": "North",
         "layout_name": "test-layout",
         "model_version": "Prod5",
-        "default": {"LST": "1", "MST": "FlashCam-D"},
-        "MST-05": {
-            "name": "NectarCam-D",
-            "camera_config_name": "NectarCam-test",
+        "default": {"LSTN": "01", "MSTN": "design"},
+        "LST-04": {
+            "name": "design",
+            "camera_config_name": "LST-test",
         },
     }
     am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)

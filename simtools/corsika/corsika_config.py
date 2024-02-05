@@ -99,6 +99,7 @@ class CorsikaConfig:
 
         # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(layout_name)
+        self._logger.debug(f"Bulding ArrayLayout {self.layout_name}")
         self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=mongo_db_config,
             array_layout_name=f"{self.site}-{self.layout_name}",
