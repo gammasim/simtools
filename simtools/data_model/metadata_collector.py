@@ -215,12 +215,12 @@ class MetadataCollector:
 
         try:
             if "site" in self.args_dict:
-                _association["site"] = self.args_dict["site"]
+                _association["site"] = names.validate_site_name(self.args_dict["site"])
             if "telescope" in self.args_dict:
-                _split_telescope_name = self.args_dict["telescope"].split("-")
-                _association["class"] = _split_telescope_name[0]
-                _association["type"] = _split_telescope_name[1]
-                _association["subtype"] = _split_telescope_name[2]
+                _telescope_name = names.validate_telescope_name(self.args_dict["telescope"])
+                _association["class"] = "telescope"
+                _association["type"] = names.get_telescope_type_from_telescope_name(_telescope_name)
+                _association["subtype"] = ""
         except (TypeError, KeyError):
             self._logger.error("Error reading association metadata from args")
             raise
@@ -284,14 +284,11 @@ class MetadataCollector:
 
         """
 
-        try:
-            metadata_file_name = (
-                self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
-                if metadata_file_name is None
-                else metadata_file_name
-            )
-        except TypeError:
-            pass
+        metadata_file_name = (
+            self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
+            if metadata_file_name is None
+            else metadata_file_name
+        )
 
         if metadata_file_name is None:
             self._logger.debug("No input metadata file defined.")
