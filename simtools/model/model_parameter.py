@@ -48,7 +48,6 @@ class ModelParameter:
     ):
         self._logger = logging.getLogger(__name__)
         self._extra_label = None
-
         self.io_handler = io_handler.IOHandler()
         self.db = db
         if mongo_db_config is not None:
@@ -66,22 +65,6 @@ class ModelParameter:
         self._config_file_path = None
 
         self._load_parameters_from_db()
-
-    def has_parameter(self, par_name):
-        """
-        Verify if the parameter is in the model.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        bool
-            True if parameter is in the model.
-        """
-        return par_name in self._parameters
 
     def get_parameter(self, par_name):
         """
@@ -130,7 +113,6 @@ class ModelParameter:
             If par_name does not match any parameter in this model.
         """
         parameter_dict = parameter_dict if parameter_dict else self.get_parameter(par_name)
-        # TODO check for None in parameter_dict and par_name
         try:
             return parameter_dict.get("value") or parameter_dict.get("Value")
         except KeyError as exc:
@@ -302,6 +284,8 @@ class ModelParameter:
         """
         Get simtel parameters as name and value pairs. Do not include parameters
         labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
+
+        TODO - not sure if this is ok
 
         Parameters
         ----------
