@@ -557,11 +557,12 @@ class TelescopeModel(ModelParameter):
         bool:
             True if the file is a 2D map type, False otherwise.
         """
-        if not self.has_parameter(par):
+        try:
+            file_name = self.get_parameter_value(par)
+        except KeyError:
             logging.error(f"Parameter {par} does not exist")
             return False
 
-        file_name = self.get_parameter_value(par)
         file = self.get_config_directory().joinpath(file_name)
         with open(file, "r", encoding="utf-8") as f:
             is_2d = "@RPOL@" in f.read()
@@ -569,9 +570,9 @@ class TelescopeModel(ModelParameter):
 
     def read_two_dim_wavelength_angle(self, file_name):
         """
-        Read a two dimensional distribution of wavelngth and angle (z-axis can be anything). Return\
-        a dictionary with three arrays, wavelength, angles, z (can be transmission, reflectivity,\
-        etc.)
+        Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
+        Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
+         reflectivity, etc.)
 
         Parameters
         ----------

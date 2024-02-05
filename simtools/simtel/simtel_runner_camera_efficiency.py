@@ -88,13 +88,17 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
         # Processing mirror class
         mirror_class = 1
-        if self._telescope_model.has_parameter("mirror_class"):
+        try:
             mirror_class = self._telescope_model.get_parameter_value("mirror_class")
+        except KeyError:
+            pass
 
         # Processing camera transmission
         camera_transmission = 1
-        if self._telescope_model.has_parameter("camera_transmission"):
+        try:
             camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
+        except KeyError:
+            pass
 
         # Processing camera filter
         # A special case is testeff does not support 2D distributions
