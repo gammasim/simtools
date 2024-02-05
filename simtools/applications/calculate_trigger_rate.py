@@ -16,8 +16,8 @@ Example
 -------
 .. code-block:: console
 
-    calculate-trigger-rate --hist_file_names tests/resources/run201_proton_za20deg_azm0deg_North_
-    TestLayout_test-prod.simtel.zst --livetime 100
+    simtools-calculate-trigger-rate --hist_file_names tests/resources/run201_proton_za20deg_azm0deg
+    _North_TestLayout_test-prod.simtel.zst --livetime 100
 """
 
 import logging

@@ -106,15 +106,22 @@ class SimtelHistograms:
                         result_dict = {}
                         lines = data_str.strip().split("\n")
                         for line in lines:
+                            print(line)
                             if "CSCAT" in line:
                                 splitted = line.split()
                                 key = splitted[0]
-                                value = float(splitted[1])
+                                value = [float(splitted[i + 1]) for i in len(splitted) - 1]
                                 result_dict[key] = float(value)
                             elif "NSHOW" in line:
                                 key, value = line.split()
                                 result_dict[key] = float(value)
-        return result_dict["NSHOW"] * result_dict["CSCAT"]
+                            elif "VIEWCONE" in line:
+                                key, value = line.split()
+                                result_dict[key] = float(value)
+                            elif "ESLOPE" in line:
+                                key, value = line.split()
+                                result_dict[key] = float(value)
+        return result_dict
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -248,13 +255,14 @@ class SimtelHistograms:
             # (gives a trigger probability per E)
             integrated_event_ratio_per_energy = np.zeros_like(energy_axis[:-1])
             areas = np.pi * np.diff(radius_axis**2)
+
             for i_energy, _ in enumerate(energy_axis[:-1]):
                 integrated_event_ratio_per_energy[i_energy] = np.sum(
                     event_ratio_histogram["data"][bins_with_events][i_energy] * areas
                 )
 
             # Trigger probability per E integrated in E
-            # (gives a trigger probability)
+            # (gives a trigger probability, i.e. a normalization)
             normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
             print(normalization)
 
@@ -278,30 +286,6 @@ class SimtelHistograms:
             list_of_trigger_rate_hists.append(event_ratio_histogram)
         return list_of_trigger_rate_hists
 
-    def _integrate_trigger_rate_histograms(self, hists):
-        """
-        Integrates in energy the trigger rate histogram based on the histogram bin edges.
-
-        Parameters
-        ----------
-        hists: list
-            List with the final trigger rate for each histogram.
-        """
-
-        list_of_integrated_hists = []
-        for _, hist in enumerate(hists):
-            energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
-            radius_axis = np.linspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
-            integrated_hist = np.zeros_like(radius_axis)
-            for i_radius, _ in enumerate(radius_axis):
-                # FIXME: fix these units and integrations
-                integrated_hist[i_radius] = np.sum(
-                    hist["data"][:-1, i_radius].value * np.diff(energy_axis)
-                )
-
-            list_of_integrated_hists.append(np.sum(integrated_hist) * hist["data"][0, 0].unit)
-        return list_of_integrated_hists
-
     def trigger_rate_per_histogram(self, livetime):
         """
         Estimates the trigger rate for each histogram passed.
@@ -311,9 +295,8 @@ class SimtelHistograms:
         livetime: astropy.Quantity
             Time used in the simulation that produced the histograms.
         """
-        hists = self._derive_trigger_rate_histograms(livetime=livetime)
-        trigger_rates = self._integrate_trigger_rate_histograms(hists)
-        return trigger_rates
+        list_of_trigger_rate_hists = self._derive_trigger_rate_histograms(livetime=livetime)
+        return list_of_trigger_rate_hists
 
     def plot_one_histogram(self, i_hist, ax):
         """
