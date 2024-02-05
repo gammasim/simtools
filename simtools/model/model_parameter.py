@@ -313,14 +313,14 @@ class ModelParameter:
             # or site.telescope_parameters; use it as a filter list
             try:
                 _par_name = (
-                    _parameter_names[key]["name"] if _parameter_names[key]["simtel"] else None
+                    _parameter_names[key]["db_name"] if _parameter_names[key]["simtel"] else None
                 )
             except KeyError:
                 _par_name = key
             # check for new and old parameter names
             for _, _simtools_name_config in _parameter_names.items():
                 if (
-                    key == _simtools_name_config["name"]
+                    key == _simtools_name_config["db_name"]
                     and _simtools_name_config["simtel"] is False
                 ):
                     _par_name = None
@@ -351,6 +351,6 @@ class ModelParameter:
         _parameter_names.update(names.site_parameters)
 
         for par_name, par_info in _parameter_names.items():
-            if par_info.get("name") == simtel_name:
+            if par_info.get("db_name") == simtel_name:
                 return par_name
         return simtel_name
