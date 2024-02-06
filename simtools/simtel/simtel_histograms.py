@@ -204,22 +204,13 @@ class SimtelHistograms:
         list:
             List with the trigger rate histograms for each file.
         """
-        # TODO: split this function and work on the application, check systematic (other file)
-        events_histogram = {}
-        trigged_events_histogram = {}
-        # Save the appropriate histograms to a dictionary
-        for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            for hist in hists_one_file:
-                if hist["id"] == 1:
-                    events_histogram[i_file] = hist
-
-                elif hist["id"] == 2:
-                    trigged_events_histogram[i_file] = hist
+        # TODO: continue splitting this function
+        events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
         list_of_trigger_rate_hists = []
 
         # Calculate the event rate histograms
-        for i_file, hists_one_file in enumerate(self.list_of_histograms):
+        for i_file, _ in enumerate(self.list_of_histograms):
             radius_axis = np.linspace(
                 events_histogram[i_file]["lower_x"],
                 events_histogram[i_file]["upper_x"],
@@ -235,13 +226,15 @@ class SimtelHistograms:
 
             event_ratio_histogram = copy.copy(events_histogram[i_file])
 
-            event_ratio_histogram["data"] = np.zeros_like(trigged_events_histogram[i_file]["data"])
+            event_ratio_histogram["data"] = np.zeros_like(
+                triggered_events_histogram[i_file]["data"]
+            )
 
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
 
             event_ratio_histogram["data"] = (
-                trigged_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
+                triggered_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
             )
             event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
 
@@ -255,18 +248,13 @@ class SimtelHistograms:
                     event_ratio_histogram["data"][i_energy] * areas
                 )
 
-            # Define the particle distribution
-            correction_factor = self.get_correction_factor()
-            particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
-            particle_distribution_function.normalization /= correction_factor
-
+            particle_distribution_function = self.get_particle_distribution_function()
             if re_weight:
                 particle_distribution = particle_distribution_function(energy_axis * u.TeV)
             else:
                 particle_distribution = self.get_simulation_spectral_distribution()(
                     energy_axis * u.TeV
                 )
-
             normalized_pdf = particle_distribution / np.sum(particle_distribution)
 
             # Trigger probability per E integrated in E according to the given energy distribution
@@ -401,6 +389,23 @@ class SimtelHistograms:
         time_economy_factor = cr_energy_integrated / simulation_energy_integrated
         return time_economy_factor
 
+    def get_particle_distribution_function(self):
+        """
+        Get the particle distribution function, depending on whether one wants to re-weight to the
+        expected cosmic-ray spectral distribution or not.
+
+        Returns
+        -------
+        ctao_cosmic_ray_spectra.spectral.PowerLaw
+            The function describing the spectral distribution.
+        """
+        # Define the particle distribution
+        correction_factor = self.get_correction_factor()
+        particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
+        particle_distribution_function.normalization /= correction_factor
+
+        return particle_distribution_function
+
     def get_simulation_spectral_distribution(self):
         """
         Get the simulation particle energy distribution according to its configuration.
@@ -433,6 +438,30 @@ class SimtelHistograms:
             e_ref=1 * u.TeV,
         )
         return norm_simulated_power_law_function
+
+    def fill_event_histogram_dicts(self):
+        """
+        Fill two dictionaries with data from the total simulated event and the triggered event
+        histogram.
+
+        Returns
+        -------
+        dict:
+            Dictionary with the information about the histograms with simulated events.
+        dict:
+            Dictionary with the information about the histograms with triggered events.
+        """
+        events_histogram = {}
+        trigged_events_histogram = {}
+        # Save the appropriate histograms to a dictionary
+        for i_file, hists_one_file in enumerate(self.list_of_histograms):
+            for hist in hists_one_file:
+                if hist["id"] == 1:
+                    events_histogram[i_file] = hist
+
+                elif hist["id"] == 2:
+                    trigged_events_histogram[i_file] = hist
+        return events_histogram, trigged_events_histogram
 
     def plot_one_histogram(self, i_hist, ax):
         """
