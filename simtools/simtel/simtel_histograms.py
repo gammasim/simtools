@@ -116,6 +116,7 @@ class SimtelHistograms:
         int:
             total number of simulated events.
         """
+        print(self.config["n_showers"], self.config["n_use"], self.config["n_showers"] * self.config["n_use"])
         return self.config["n_showers"] * self.config["n_use"]
 
     def _check_consistency(self, first_hist_file, second_hist_file):
@@ -261,18 +262,20 @@ class SimtelHistograms:
             hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
 
             view_cone = self.config["viewcone"] * u.deg
+            logging.info(f"View cone: {view_cone.value} deg")
 
             energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
+            logging.info(f"Energy range: {energy_range}")
 
-            #total_area = np.pi * (((events_histogram[i_file]["upper_x"] * u.m -
-                                    #events_histogram[i_file]["lower_x"] * u.m)).to(u.cm)) ** 2
-            #print(total_area)
             total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
                                    * u.m).to(u.cm)) ** 2
-            print(total_area)
+            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
+            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
+            logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
 
             obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
-            #TODO: correct the number (too high)
+            logging.info(f"Estimated observation time: {obs_time.value} s")
+
             if self.config["diffuse"] == 1:
                 norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
             else:
@@ -350,7 +353,6 @@ class SimtelHistograms:
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
             view_cone[0], view_cone[1], 1*u.s, total_area, energy_range[0],energy_range[1]
         )
-        print("HERE", first_estimate, self.total_num_simulated_events,  self.total_num_simulated_events/first_estimate)
         return self.total_num_simulated_events/first_estimate
 
 
