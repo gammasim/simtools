@@ -35,19 +35,25 @@ class ArrayLayout:
         MongoDB configuration.
     site: str
         Site name or location (e.g., North/South or LaPalma/Paranal)
+    model_version: str
+        Version of the model (e.g., prod6).
     label: str
         Instance label.
     name: str
         Name of the layout.
     telescope_list_file: str or Path
         Path to the telescope list file.
+    telescope_list_metadata_file: str or Path
+        Path to telescope list metadata (if not part of telescope_list_file)
+    validate: bool
+        Validate input file list.
     """
 
     def __init__(
         self,
-        mongo_db_config=None,
+        mongo_db_config,
+        site,
         model_version="Released",
-        site=None,
         label=None,
         name=None,
         telescope_list_file=None,
@@ -404,7 +410,8 @@ class ArrayLayout:
 
         for row in table:
             tel = self._load_telescope_names(row)
-            self._set_telescope_auxiliary_parameters(tel)
+            if names.get_class_from_telescope_name(tel.name) == "telescope":
+                self._set_telescope_auxiliary_parameters(tel)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")
@@ -571,11 +578,6 @@ class ArrayLayout:
         -------
         str
             Piece of text to be added to the CORSIKA input file.
-
-        Raises
-        ------
-        KeyError
-            if Missing definition of CORSIKA sphere radius or obs_level.
         """
 
         corsika_list = ""
