@@ -269,10 +269,11 @@ class SimtelHistograms:
             correction_factor = self.get_correction_factor()
             particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
             particle_distribution_function.normalization /= correction_factor
+
             if re_weight:
-                particle_distribution = particle_distribution_function(energy_axis)
+                particle_distribution = particle_distribution_function(energy_axis * u.TeV)
             else:
-                particle_distribution = self.get_simulation_spectral_distribution()(energy_axis)
+                particle_distribution = self.get_simulation_spectral_distribution()(energy_axis * u.TeV)
 
             normalized_pdf = particle_distribution/np.sum(particle_distribution)
 
