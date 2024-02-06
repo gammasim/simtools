@@ -225,9 +225,7 @@ class SimtelHistograms:
 
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            obs_time = self.estimate_observation_time(
-                self.view_cone, self.energy_range, self.total_area
-            )
+            obs_time = self.estimate_observation_time()
             logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
 
             radius_axis = np.linspace(
@@ -266,24 +264,20 @@ class SimtelHistograms:
                     event_ratio_histogram["data"][i_energy] * areas
                 )
 
-            # Get the weighted distribution to correct from assumed spectrum to expected spectrum
-            correction_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
+            # Define the particle distribution
+            particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
                                                                             re_weight=True)
 
             # Trigger probability per E integrated in E according to the given energy distribution
             # (gives a trigger probability, i.e. a normalization)
             trigger_probability = np.sum(
                 integrated_event_ratio_per_energy
-                * correction_spectral_distribution[:-1]/np.sum(correction_spectral_distribution[:-1])
+                * particle_spectral_distribution[:-1]/np.sum(particle_spectral_distribution[:-1])
                 * np.diff(energy_axis)
             )
 
-            # Get the expected cosmic-ray spectrum
-            cosmic_ray_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
-                                           re_weight=False)
-            print(trigger_probability)
             logging.debug(f"System trigger probability: {trigger_probability}.")
-            event_relative_rate = trigger_probability * cosmic_ray_spectral_distribution
+            event_relative_rate = trigger_probability * particle_spectral_distribution
             print("even_rate", event_relative_rate)
 
             # Keeping only the necessary information for proceeding with integration
@@ -324,7 +318,7 @@ class SimtelHistograms:
         logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
         logging.info(f"Total area: {(self.total_area.to(u.m ** 2)).value} m2")
 
-    def estimate_observation_time(self, view_cone, energy_range, total_area):
+    def estimate_observation_time(self):
         """
         Estimates the observation time comprised by the number of events in the simulation.
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
@@ -359,7 +353,6 @@ class SimtelHistograms:
         Get the particle energy distribution.
         If re_weight is True, calculate the expected cosmic-ray particle distribution and correct
         the original distribution to account for differences in comparison to the cosmic-ray dist.
-        If re_weight is False, it returns the expected cosmic-ray distribution for the given range.
 
         Parameters
         ----------
@@ -373,13 +366,24 @@ class SimtelHistograms:
         numpy.array
             The differential flux of the energy distribution.
         """
-
+        # Expected integrated CR flux
+        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
+                                                                       self.energy_range[1])
         simulation_energy_distribution = self.get_simulation_spectral_distribution()
+        # Simulated integrated flux (differs from above due to optimization of computational time)
+        simulation_energy_integrated = simulation_energy_distribution.\
+            integrate_energy(self.energy_range[0], self.energy_range[1])
+        # Estimate a normalization factor, which also means the fraction of computational time
+        # spared by using a different distribution. `time_economy_factor` expected to be > 1.
+        time_economy_factor = cr_energy_integrated/simulation_energy_integrated
+
         if re_weight:
-            # This corrects the distribution to the expected
-            return irfdoc_proton_spectrum(energy_axis) / simulation_energy_distribution(energy_axis)
+            # This corrects the distribution to the expected one but maintains the normalization
+            # such that the integrated number of events fits the total number of simulated events
+            # (`self.total_num_simulated_events`)
+            return cr_energy_integrated(energy_axis) / time_economy_factor
         else:
-            return irfdoc_proton_spectrum(energy_axis)
+            return simulation_energy_distribution(energy_axis)
 
     def get_simulation_spectral_distribution(self):
         """
