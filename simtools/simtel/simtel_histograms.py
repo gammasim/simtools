@@ -264,11 +264,15 @@ class SimtelHistograms:
 
             energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
 
-            total_area = np.pi * (((events_histogram[i_file]["upper_x"] * u.m -
-                                    events_histogram[i_file]["lower_x"] * u.m)).to(u.cm)) ** 2
+            #total_area = np.pi * (((events_histogram[i_file]["upper_x"] * u.m -
+                                    #events_histogram[i_file]["lower_x"] * u.m)).to(u.cm)) ** 2
+            #print(total_area)
+            total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
+                                   * u.m).to(u.cm)) ** 2
+            print(total_area)
 
             obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
-
+            #TODO: correct the number (too high)
             if self.config["diffuse"] == 1:
                 norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
             else:
