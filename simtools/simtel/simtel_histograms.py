@@ -262,7 +262,7 @@ class SimtelHistograms:
             hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
 
             view_cone = self.config["viewcone"] * u.deg
-            print(self.config["E_range"][0])
+
             energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
             total_area = np.pi * ((events_histogram[i_file]["upper_x"] * u.m).to(u.cm)) ** 2
 
@@ -284,7 +284,7 @@ class SimtelHistograms:
                 )
             )
 
-            factor = self.total_num_simulated_events / non_norm_simulated_events_rate
+            factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
             norm_simulated_power_law_function = PowerLaw(
                 normalization=factor * norm_unit,
                 index=self.config["spectral_index"],
