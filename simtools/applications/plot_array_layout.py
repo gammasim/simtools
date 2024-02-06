@@ -112,14 +112,14 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize()
+    return config.initialize(db_config=True, site_model=True)
 
 
 def main():
     label = Path(__file__).stem
     description = "Plots layout array."
     usage = "python applications/plot_array_layout.py --array_layout_name test_layout"
-    args_dict, _ = _parse(label, description, usage)
+    args_dict, db_config = _parse(label, description, usage)
     io_handler_instance = io_handler.IOHandler()
 
     if args_dict["rotate_angle"] is None:
@@ -158,9 +158,16 @@ def main():
                 plot_file_name = args_dict["figure_name"]
 
             telescope_table = data_reader.read_table_from_file(one_file)
-            telescopes_dict = ArrayLayout.include_radius_into_telescope_table(telescope_table)
+            array_layout = ArrayLayout(
+                mongo_db_config=db_config,
+                site=args_dict["site"],
+                telescope_list_file=telescope_table,
+            )
+            # export_telescope_list_table
             fig_out = plot_array(
-                telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
+                array_layout.export_telescope_list_table("ground"),
+                rotate_angle=one_angle,
+                show_tel_label=args_dict["show_tel_label"],
             )
             output_dir = io_handler_instance.get_output_directory(
                 label, sub_dir="application-plots"

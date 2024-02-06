@@ -9,7 +9,6 @@ from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
-from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
@@ -153,14 +152,10 @@ class ArrayLayout:
             model_version=self.model_version,
             mongo_db_config=self.mongo_db_config,
         )
-        try:
-            self._corsika_observation_level = site_model.get_corsika_site_parameters().get(
-                "corsika_observation_level", None
-            )
-            self._reference_position_dict = site_model.get_reference_point()
-        except InvalidModelParameter as exc:
-            self._logger.error("Error setting parameters from DB")
-            raise exc
+        self._corsika_observation_level = site_model.get_corsika_site_parameters().get(
+            "corsika_observation_level", None
+        )
+        self._reference_position_dict = site_model.get_reference_point()
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
 
     def _initialize_coordinate_systems(self):
@@ -203,21 +198,18 @@ class ArrayLayout:
         for the definition of the ground coordinate system)
 
         """
-        try:
-            self._array_center.set_coordinates(
-                "utm",
-                u.Quantity(self._reference_position_dict.get("center_easting", np.nan * u.m)),
-                u.Quantity(self._reference_position_dict.get("center_northing", np.nan * u.m)),
-            )
-            self._array_center.convert_all(
-                crs_local=None,
-                crs_wgs84=self.geo_coordinates.crs_wgs84(),
-                crs_utm=self.geo_coordinates.crs_utm(
-                    self._reference_position_dict.get("epsg_code", None)
-                ),
-            )
-        except TypeError:
-            pass
+        self._array_center.set_coordinates(
+            "utm",
+            u.Quantity(self._reference_position_dict.get("center_easting", np.nan * u.m)),
+            u.Quantity(self._reference_position_dict.get("center_northing", np.nan * u.m)),
+        )
+        self._array_center.convert_all(
+            crs_local=None,
+            crs_wgs84=self.geo_coordinates.crs_wgs84(),
+            crs_utm=self.geo_coordinates.crs_utm(
+                self._reference_position_dict.get("epsg_code", None)
+            ),
+        )
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, telescope_axis_height=None):
         """
@@ -633,37 +625,6 @@ class ArrayLayout:
                 crs_wgs84=crs_wgs84,
                 crs_utm=crs_utm,
             )
-
-    @staticmethod
-    def include_radius_into_telescope_table(telescope_table):
-        """
-        Include the radius of the telescopes types into the astropy.table.QTable telescopes_table
-
-        TODO - not sure what this method does
-
-        Parameters
-        ----------
-        telescope_table: astropy.QTable
-            Astropy QTable with telescope information.
-
-        Returns
-        -------
-        astropy.QTable
-            Astropy QTable with telescope information updated with the radius.
-        """
-
-        telescope_table["radius"] = [
-            u.Quantity(
-                telescope_table.meta["corsika_sphere_radius"][
-                    names.get_telescope_type_from_telescope_name(tel_name_now)
-                ]
-            )
-            .to("m")
-            .value
-            for tel_name_now in telescope_table["telescope_name"]
-        ]
-        telescope_table["radius"] = telescope_table["radius"].quantity * u.m
-        return telescope_table
 
     def select_assets(self, asset_list=None):
         """

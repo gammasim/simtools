@@ -62,6 +62,9 @@ def test_array_layout_empty(db_config):
     layout = ArrayLayout(mongo_db_config=db_config, site="South")
     assert layout.get_number_of_telescopes() == 0
 
+    with pytest.raises(ValueError):
+        ArrayLayout(mongo_db_config=None, site="South")
+
 
 def test_from_array_layout_name(io_handler, db_config):
     layout = ArrayLayout.from_array_layout_name(
@@ -318,27 +321,6 @@ def test_altitude_from_corsika_z(
 
     test_one_site(array_layout_north_four_LST_instance, 2185.0, 45.0)
     test_one_site(array_layout_south_four_LST_instance, 2176.0, 45.0)
-
-
-def test_include_radius_into_telescope_table(telescope_north_test_file, telescope_south_test_file):
-    values_from_file_north = [20.29, -352.48, 62.00, 9.15]
-    values_from_file_south = [-149.32, 76.45, 28.00]
-
-    def test_one_site(test_file, values_from_file, mst_10_name):
-        telescope_table = data_reader.read_table_from_file(test_file, validate=False)
-        telescope_table_with_radius = ArrayLayout.include_radius_into_telescope_table(
-            telescope_table
-        )
-        keys = ["position_x", "position_y", "position_z", "radius"]
-        mst_10_index = telescope_table_with_radius["telescope_name"] == mst_10_name
-        for key, value_manual in zip(keys, values_from_file):
-            assert (
-                pytest.approx(telescope_table_with_radius[mst_10_index][key].value[0], 1e-2)
-                == value_manual
-            )
-
-    test_one_site(telescope_north_test_file, values_from_file_north, "MSTN-10")
-    test_one_site(telescope_south_test_file, values_from_file_south, "MSTN-10")
 
 
 def test_try_set_altitude(
