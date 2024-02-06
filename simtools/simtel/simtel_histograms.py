@@ -270,16 +270,17 @@ class SimtelHistograms:
             particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
                                                                             re_weight=False)
 
-            # Trigger probability per E integrated in E
+            # Trigger probability per E integrated in E according to the given energy distribution
             # (gives a trigger probability, i.e. a normalization)
-            hist_normalization = np.sum(
+            trigger_probability = np.sum(
                 integrated_event_ratio_per_energy
-                * particle_spectral_distribution/np.sum(particle_spectral_distribution)
+                * particle_spectral_distribution[:-1]/np.sum(particle_spectral_distribution[:-1])
                 * np.diff(energy_axis)
             )
-            print(hist_normalization)
-            event_relative_rate = hist_normalization / obs_time
-            print("even_rate", event_relative_rate)
+
+            logging.debug(f"System trigger probability: {trigger_probability}.")
+            #event_relative_rate = trigger_probability * particle_spectral_distribution
+            #print("even_rate", event_relative_rate)
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
