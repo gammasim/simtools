@@ -46,6 +46,7 @@ class SimtelHistograms:
         self.__meta_dict = None
         self._config = None
         self._initialize_lists()
+        self._initialized_array = False
 
     @property
     def number_of_histograms(self):
@@ -292,19 +293,21 @@ class SimtelHistograms:
         """
         Initialize the array variables, necessary for integrations of the histograms.
         """
-        self.view_cone = self.config["viewcone"] * u.deg
-        logging.info(f"View cone: {self.view_cone.value} deg")
+        if self._initialized_array is False:
+            self.view_cone = self.config["viewcone"] * u.deg
+            logging.info(f"View cone: {self.view_cone.value} deg")
 
-        self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-        logging.info(f"Energy range: {self.energy_range}")
+            self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
+            logging.info(f"Energy range: {self.energy_range}")
 
-        self.total_area = (
-            np.pi
-            * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm)) ** 2
-        )
-        logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
-        logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
-        logging.info(f"Total area: {(self.total_area.to(u.m ** 2)).value} m2")
+            self.total_area = (
+                np.pi
+                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm)) ** 2
+            )
+            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
+            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
+            logging.info(f"Total area: {(self.total_area.to(u.m ** 2)).value} m2")
+            self._initialized_array = True
 
     def estimate_observation_time(self):
         """
@@ -326,6 +329,7 @@ class SimtelHistograms:
         float: astropy.Quantity[time]
             Estimated observation time based on the total number of particles simulated.
         """
+        self.initialize_array_variables()
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
             self.view_cone[0],
             self.view_cone[1],
