@@ -234,7 +234,7 @@ class SimtelHistograms:
             logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
 
             obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
-            logging.info(f"Estimated observation time: {obs_time.value} s")
+            logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
 
             radius_axis = np.linspace(
                 events_histogram[i_file]["lower_x"],
@@ -252,14 +252,14 @@ class SimtelHistograms:
             event_ratio_histogram = copy.copy(events_histogram[i_file])
 
             event_ratio_histogram["data"] = np.zeros_like(trigged_events_histogram[i_file]["data"])
-            bins_with_events = trigged_events_histogram[i_file]["data"] != 0
 
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
-            event_ratio_histogram["data"][bins_with_events] = (
-                trigged_events_histogram[i_file]["data"][bins_with_events]
-                / events_histogram[i_file]["data"][bins_with_events]
+            event_ratio_histogram["data"] = ( # pylint: disable=zero-divide
+                trigged_events_histogram[i_file]["data"]
+                / events_histogram[i_file]["data"]
             )
+            event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
 
             # TODO: apply any correction factor here (energy and area distribution)
 
@@ -270,12 +270,15 @@ class SimtelHistograms:
 
             for i_energy, _ in enumerate(energy_axis[:-1]):
                 integrated_event_ratio_per_energy[i_energy] = np.sum(
-                    event_ratio_histogram["data"][bins_with_events][i_energy] * areas
+                    event_ratio_histogram["data"][i_energy] * areas
                 )
 
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
             hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
+            print(hist_normalization)
+            system_trigger_rate = hist_normalization / obs_time
+            print("system_trigger_rate", system_trigger_rate)
 
             if self.config["diffuse"] == 1:
                 norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
@@ -354,7 +357,7 @@ class SimtelHistograms:
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
             view_cone[0], view_cone[1], 1*u.s, total_area, energy_range[0],energy_range[1]
         )
-        return self.total_num_simulated_events/first_estimate
+        return self.total_num_simulated_events/first_estimate * u.s
 
 
 
