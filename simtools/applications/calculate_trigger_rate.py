@@ -91,7 +91,7 @@ def main():
     # Calculate trigger rate
     obs_time = histograms.estimate_observation_time()
     trigger_rates = histograms.trigger_rate_per_histogram(re_weight=True)
-    event_rates = histograms.config / obs_time
+    event_rates = histograms.total_num_simulated_events / obs_time
 
     # Print the trigger rates
     for i, trigger_rate in enumerate(trigger_rates):
