@@ -80,9 +80,9 @@ class SimtelHistograms:
         self.list_of_histograms = []
         self.list_of_files = []
         for file in self._histogram_files:
-            file = EventIOFile(file)
-            self.list_of_files.append(file)
-            for obj in yield_toplevel_of_type(file, Histograms):
+            read_file = EventIOFile(file)
+            self.list_of_files.append(read_file)
+            for obj in yield_toplevel_of_type(read_file, Histograms):
                 hists = obj.parse()
                 self.list_of_histograms.append(hists)
 
