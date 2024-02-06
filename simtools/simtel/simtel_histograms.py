@@ -256,11 +256,6 @@ class SimtelHistograms:
             )
             event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
 
-            # Define the particle distribution (usually based on assumed spectral distribution
-            particle_spectral_distribution = self.get_particle_distribution(energy_axis)
-
-            # TODO: apply any correction factor here (energy and area distribution)
-
             # Radial distribution of trigger probability per E integrated in area at each radius
             # (gives a trigger probability per E)
             integrated_event_ratio_per_energy = np.zeros_like(energy_axis[:-1])
@@ -270,6 +265,10 @@ class SimtelHistograms:
                 integrated_event_ratio_per_energy[i_energy] = np.sum(
                     event_ratio_histogram["data"][i_energy] * areas
                 )
+
+            # Define the particle distribution (usually based on assumed spectral distribution
+            particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
+                                                                            re_weight=False)
 
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
@@ -368,19 +367,22 @@ class SimtelHistograms:
         numpy.array
             The differential flux of the energy distribution.
         """
+        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
+                                                                       self.energy_range[1])
+        simulation_energy_integrated = self.get_simulation_spectral_distribution()
+        simulation_energy_integrated = simulation_energy_integrated.\
+            integrate_energy(self.energy_range[0], self.energy_range[1])
 
-        cr_spectral_distribution = irfdoc_proton_spectrum(energy_axis)
-        simulation_spectral_distribution = self.get_simulation_spectral_distribution(energy_axis)
-        print("cr_spectral_distribution", cr_spectral_distribution)
-        print("simulation_spectral_distribution", simulation_spectral_distribution)
+        time_economy_factor = cr_energy_integrated/simulation_energy_integrated
 
-    def get_simulation_spectral_distribution(self, energy_axis):
+        if re_weight:
+            return cr_energy_integrated(energy_axis) / time_economy_factor
+        else:
+            return simulation_energy_integrated(energy_axis)
+
+    def get_simulation_spectral_distribution(self):
         """
         Get the simulation particle energy distribution according to its configuration.
-
-        Parameters
-        ----------
-        energy_axis: numpy.array
 
         Returns
         -------
@@ -388,9 +390,9 @@ class SimtelHistograms:
             The differential flux of the energy distribution.
         """
         if self.config["diffuse"] == 1:
-            norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
+            norm_unit = 1 / (u.cm**2 * u.s * u.sr * u.TeV)
         else:
-            norm_unit = 1 / (u.m**2 * u.s * u.TeV)
+            norm_unit = 1 / (u.cm**2 * u.s * u.TeV)
 
         non_norm_simulated_power_law_function = PowerLaw(
             normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
@@ -409,7 +411,7 @@ class SimtelHistograms:
             index=self.config["spectral_index"],
             e_ref=1 * u.TeV,
         )
-        return norm_simulated_power_law_function(energy_axis)
+        return norm_simulated_power_law_function
 
     def trigger_rate_per_histogram(self, livetime):
         """
