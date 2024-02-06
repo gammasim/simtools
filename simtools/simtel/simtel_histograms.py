@@ -220,6 +220,22 @@ class SimtelHistograms:
 
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
+
+            view_cone = self.config["viewcone"] * u.deg
+            logging.info(f"View cone: {view_cone.value} deg")
+
+            energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
+            logging.info(f"Energy range: {energy_range}")
+
+            total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
+                                   * u.m).to(u.cm)) ** 2
+            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
+            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
+            logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
+
+            obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
+            logging.info(f"Estimated observation time: {obs_time.value} s")
+
             radius_axis = np.linspace(
                 events_histogram[i_file]["lower_x"],
                 events_histogram[i_file]["upper_x"],
@@ -260,21 +276,6 @@ class SimtelHistograms:
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
             hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
-
-            view_cone = self.config["viewcone"] * u.deg
-            logging.info(f"View cone: {view_cone.value} deg")
-
-            energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-            logging.info(f"Energy range: {energy_range}")
-
-            total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
-                                   * u.m).to(u.cm)) ** 2
-            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
-            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
-            logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
-
-            obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
-            logging.info(f"Estimated observation time: {obs_time.value} s")
 
             if self.config["diffuse"] == 1:
                 norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
