@@ -102,7 +102,6 @@ class SimtelHistograms:
                     for obj in f:
                         if isinstance(obj, MCRunHeader):
                             self._config = obj.parse()
-                            print(self._config)
         return self._config
 
     @property
@@ -264,12 +263,17 @@ class SimtelHistograms:
             view_cone = self.config["viewcone"] * u.deg
 
             energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-            total_area = np.pi * ((events_histogram[i_file]["upper_x"] * u.m).to(u.cm)) ** 2
+
+            total_area = np.pi * (((events_histogram[i_file]["upper_x"] * u.m -
+                                    events_histogram[i_file]["lower_x"] * u.m)).to(u.cm)) ** 2
+
+            obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
 
             if self.config["diffuse"] == 1:
-                norm_unit = 1 / (u.m**2 * u.s * u.sr)
+                norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
             else:
-                norm_unit = 1 / (u.m**2 * u.s)
+                norm_unit = 1 / (u.m**2 * u.s * u.TeV)
+
 
             non_norm_simulated_power_law_function = PowerLaw(
                 normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
@@ -291,10 +295,13 @@ class SimtelHistograms:
                 e_ref=1 * u.TeV,
             )
             print(norm_simulated_power_law_function)
-
-            final = irfdoc_proton_spectrum.derive_number_events(
-                view_cone[0], view_cone[1], obs_time, total_area, energy
-            )
+            print(self.total_num_simulated_events, norm_simulated_power_law_function.derive_events_rate(
+                    inner=view_cone[0],
+                    outer=view_cone[1],
+                    area=total_area,
+                    energy_min=energy_range[0],
+                    energy_max=energy_range[1],
+                ))
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -316,13 +323,41 @@ class SimtelHistograms:
             list_of_trigger_rate_hists.append(event_ratio_histogram)
         return list_of_trigger_rate_hists
 
+    def estimate_observation_time(self, view_cone, energy_range, total_area):
+        """
+        Estimates the observation time comprised by the number of events in the simulation.
+        It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
+        and other information from the simulation configuration `self.config`.
+
+        Parameters
+        ----------
+        view_cone: list of astropy.Quantity[deg]
+            The view cone used in the simulation.
+        energy_range: list of astropy.Quantity[energy]
+            The energy range [Emin, Emax] used in the simulation.
+        total_area: astropy.Quantity[area]
+            Total ground area used in the simulation (CSCAT).
+
+        Returns
+        -------
+        float: astropy.Quantity[time]
+            Estimated observation time based on the total number of particles simulated.
+        """
+        first_estimate = irfdoc_proton_spectrum.derive_number_events(
+            view_cone[0], view_cone[1], 1*u.s, total_area, energy_range[0],energy_range[1]
+        )
+        print("HERE", first_estimate, self.total_num_simulated_events,  self.total_num_simulated_events/first_estimate)
+        return self.total_num_simulated_events/first_estimate
+
+
+
     def trigger_rate_per_histogram(self, livetime):
         """
         Estimates the trigger rate for each histogram passed.
 
         Parameters
         ----------
-        livetime: astropy.Quantity
+        livetime: astropy.Quantity[time]
             Time used in the simulation that produced the histograms.
         """
         list_of_trigger_rate_hists = self._derive_trigger_rate_histograms(livetime=livetime)

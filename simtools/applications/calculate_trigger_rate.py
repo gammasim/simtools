@@ -85,7 +85,6 @@ def main():
         histogram_files = [histogram_files]
 
     histograms = SimtelHistograms(histogram_files)
-    print(histograms.config)
 
     logger.info(f"Calculating event rate and trigger rate for livetime: {livetime}")
 
