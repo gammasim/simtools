@@ -46,7 +46,9 @@ class SimtelHistograms:
         self.__meta_dict = None
         self._config = None
         self._initialize_lists()
-        self._initialized_array = False
+        self._view_cone = None
+        self._total_area = None
+        self._energy_range = None
 
     @property
     def number_of_histograms(self):
@@ -202,7 +204,7 @@ class SimtelHistograms:
         list:
             List with the trigger rate histograms for each file.
         """
-        self.initialize_array_variables()
+        # TODO: split this function and work on the application, check systematic (other file)
         events_histogram = {}
         trigged_events_histogram = {}
         # Save the appropriate histograms to a dictionary
@@ -238,7 +240,7 @@ class SimtelHistograms:
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
 
-            event_ratio_histogram["data"] = (  # pylint: disable=zero-divide
+            event_ratio_histogram["data"] = (
                 trigged_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
             )
             event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
@@ -289,25 +291,57 @@ class SimtelHistograms:
             list_of_trigger_rate_hists.append(system_trigger_rate)
         return list_of_trigger_rate_hists
 
-    def initialize_array_variables(self):
+    @property
+    @u.quantity_input(energy=u.deg)
+    def view_cone(self):
         """
-        Initialize the array variables, necessary for integrations of the histograms.
+        View cone used in the simulation.
+
+        Returns
+        -------
+        list:
+            view cone used in the simulation [min, max]
         """
-        if self._initialized_array is False:
-            self.view_cone = self.config["viewcone"] * u.deg
-            logging.info(f"View cone: {self.view_cone.value} deg")
+        if self._view_cone is None:
+            self._view_cone = self.config["viewcone"] * u.deg
+        return self._view_cone
 
-            self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-            logging.info(f"Energy range: {self.energy_range}")
+    @property
+    @u.quantity_input(energy=u.cm**2)
+    def total_area(self):
+        """
+        Total area covered by the simulated events (original CORSIKA CSCAT).
 
-            self.total_area = (
+        Returns
+        -------
+        astropy.Quantity[area]:
+            Total area covered on the ground covered by the simulation.
+        """
+        if self._total_area is None:
+            self._total_area = (
                 np.pi
-                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm)) ** 2
+                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm))
+                ** 2
             )
-            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
-            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
-            logging.info(f"Total area: {(self.total_area.to(u.m ** 2)).value} m2")
-            self._initialized_array = True
+        return self._total_area
+
+    @property
+    @u.quantity_input(energy=u.TeV)
+    def energy_range(self):
+        """
+        Energy range used in the simulation.
+
+        Returns
+        -------
+        list:
+            Energy range used in the simulation [min, max]
+        """
+        if self._energy_range is None:
+            self._energy_range = [
+                self.config["E_range"][0] * u.TeV,
+                self.config["E_range"][1] * u.TeV,
+            ]
+        return self._energy_range
 
     def estimate_observation_time(self):
         """
@@ -329,7 +363,6 @@ class SimtelHistograms:
         float: astropy.Quantity[time]
             Estimated observation time based on the total number of particles simulated.
         """
-        self.initialize_array_variables()
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
             self.view_cone[0],
             self.view_cone[1],
