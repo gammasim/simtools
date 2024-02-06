@@ -80,11 +80,11 @@ class SimtelHistograms:
         self.list_of_histograms = []
         self.list_of_files = []
         for file in self._histogram_files:
-            read_file = EventIOFile(file)
-            self.list_of_files.append(read_file)
-            for obj in yield_toplevel_of_type(read_file, Histograms):
-                hists = obj.parse()
-                self.list_of_histograms.append(hists)
+            self.list_of_files.append(EventIOFile(file))
+            with EventIOFile(file) as f:
+                for obj in yield_toplevel_of_type(f, Histograms):
+                    hists = obj.parse()
+                    self.list_of_histograms.append(hists)
 
     @property
     def config(self):
@@ -97,10 +97,12 @@ class SimtelHistograms:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            for file in self.list_of_files:
-                for obj in file:
-                    if isinstance(obj, MCRunHeader):
-                        self._config = obj.parse()
+            for readfile in self.list_of_files:
+                with readfile as f:
+                    for obj in f:
+                        if isinstance(obj, MCRunHeader):
+                            self._config = obj.parse()
+                            print(self._config)
         return self._config
 
     @property
