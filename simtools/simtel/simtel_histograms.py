@@ -221,19 +221,19 @@ class SimtelHistograms:
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
 
-            view_cone = self.config["viewcone"] * u.deg
-            logging.info(f"View cone: {view_cone.value} deg")
+            self.view_cone = self.config["viewcone"] * u.deg
+            logging.info(f"View cone: {self.view_cone.value} deg")
 
-            energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-            logging.info(f"Energy range: {energy_range}")
+            self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
+            logging.info(f"Energy range: {self.energy_range}")
 
-            total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
+            self.total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
                                    * u.m).to(u.cm)) ** 2
             logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
             logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
             logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
 
-            obs_time = self.estimate_observation_time(view_cone, energy_range, total_area)
+            obs_time = self.estimate_observation_time(self.view_cone, self.energy_range, self.total_area)
             logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
 
             radius_axis = np.linspace(
@@ -261,12 +261,15 @@ class SimtelHistograms:
             )
             event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
 
+            # Define the particle distribution (usually based on assumed spectral distribution
+            particle_spectral_distribution = self.get_particle_distribution(energy_axis)
+
             # TODO: apply any correction factor here (energy and area distribution)
 
             # Radial distribution of trigger probability per E integrated in area at each radius
             # (gives a trigger probability per E)
             integrated_event_ratio_per_energy = np.zeros_like(energy_axis[:-1])
-            areas = np.pi * np.diff(radius_axis**2)
+            areas = radius_axis[:-1] * np.diff(radius_axis)
 
             for i_energy, _ in enumerate(energy_axis[:-1]):
                 integrated_event_ratio_per_energy[i_energy] = np.sum(
@@ -275,44 +278,12 @@ class SimtelHistograms:
 
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
-            hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
+            hist_normalization = np.sum(integrated_event_ratio_per_energy * particle_spectral_distribution * np.diff(energy_axis))
             print(hist_normalization)
-            system_trigger_rate = hist_normalization / obs_time
-            print("system_trigger_rate", system_trigger_rate)
-
-            if self.config["diffuse"] == 1:
-                norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
-            else:
-                norm_unit = 1 / (u.m**2 * u.s * u.TeV)
+            event_relative_rate = hist_normalization / obs_time
+            print("even_rate", event_relative_rate)
 
 
-            non_norm_simulated_power_law_function = PowerLaw(
-                normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
-            )
-            non_norm_simulated_events_rate = (
-                non_norm_simulated_power_law_function.derive_events_rate(
-                    inner=view_cone[0],
-                    outer=view_cone[1],
-                    area=total_area,
-                    energy_min=energy_range[0],
-                    energy_max=energy_range[1],
-                )
-            )
-
-            factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
-            norm_simulated_power_law_function = PowerLaw(
-                normalization=factor * norm_unit,
-                index=self.config["spectral_index"],
-                e_ref=1 * u.TeV,
-            )
-            print(norm_simulated_power_law_function)
-            print(self.total_num_simulated_events, norm_simulated_power_law_function.derive_events_rate(
-                    inner=view_cone[0],
-                    outer=view_cone[1],
-                    area=total_area,
-                    energy_min=energy_range[0],
-                    energy_max=energy_range[1],
-                ))
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -355,11 +326,72 @@ class SimtelHistograms:
             Estimated observation time based on the total number of particles simulated.
         """
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
-            view_cone[0], view_cone[1], 1*u.s, total_area, energy_range[0],energy_range[1]
+            self.view_cone[0], self.view_cone[1], 1*u.s, self.total_area, self.energy_range[0],self.energy_range[1]
         )
         return self.total_num_simulated_events/first_estimate * u.s
 
+    def get_particle_distribution(self, energy_axis, re_weight=False):
+        """
+        Get the particle energy distribution.
+        If re_weight is True, calculate the expected cosmic-ray particle distribution and correct
+        the original distribution to account for differences in comparison to the cosmic-ray dist.
 
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            the array with the energy range of interest.
+        re_weight: bool
+            if True, it re-weight the distribution to account for the expected cosmic-ray flux.
+
+        Returns
+        -------
+        numpy.array
+            The differential flux of the energy distribution.
+        """
+
+        cr_spectral_distribution = irfdoc_proton_spectrum(energy_axis)
+        simulation_spectral_distribution = self.get_simulation_spectral_distribution(energy_axis)
+        print("cr_spectral_distribution", cr_spectral_distribution)
+        print("simulation_spectral_distribution", simulation_spectral_distribution)
+
+    def get_simulation_spectral_distribution(self, energy_axis):
+        """
+        Get the simulation particle energy distribution according to its configuration.
+
+        Parameters
+        ----------
+        energy_axis: numpy.array
+
+        Returns
+        -------
+        numpy.array
+            The differential flux of the energy distribution.
+        """
+        if self.config["diffuse"] == 1:
+            norm_unit = 1 / (u.m ** 2 * u.s * u.sr * u.TeV)
+        else:
+            norm_unit = 1 / (u.m ** 2 * u.s * u.TeV)
+
+        non_norm_simulated_power_law_function = PowerLaw(
+            normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
+        )
+        non_norm_simulated_events_rate = (
+            non_norm_simulated_power_law_function.derive_events_rate(
+                inner=self.view_cone[0],
+                outer=self.view_cone[1],
+                area=self.total_area,
+                energy_min=self.energy_range[0],
+                energy_max=self.energy_range[1],
+            )
+        )
+
+        factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
+        norm_simulated_power_law_function = PowerLaw(
+            normalization=factor * norm_unit,
+            index=self.config["spectral_index"],
+            e_ref=1 * u.TeV,
+        )
+        return norm_simulated_power_law_function(energy_axis)
 
     def trigger_rate_per_histogram(self, livetime):
         """
