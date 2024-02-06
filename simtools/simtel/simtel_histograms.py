@@ -42,10 +42,10 @@ class SimtelHistograms:
             histogram_files = [histogram_files]
         self._histogram_files = histogram_files
         self._is_test = test
-        self._list_of_histograms = None
         self._combined_hists = None
         self.__meta_dict = None
         self._config = None
+        self._initialize_lists()
 
     @property
     def number_of_histograms(self):
@@ -68,24 +68,23 @@ class SimtelHistograms:
         """
         return self.combined_hists[i_hist]["title"]
 
-    @property
-    def list_of_histograms(self):
+    def _initialize_lists(self):
         """
-        Returns a list with the histograms for each file.
+        Initializes lists of histograms and files.
 
         Returns
         -------
         list:
             List of histograms.
         """
-        if self._list_of_histograms is None:
-            self._list_of_histograms = []
-            for file in self._histogram_files:
-                with EventIOFile(file) as f:
-                    for obj in yield_toplevel_of_type(f, Histograms):
-                        hists = obj.parse()
-                        self._list_of_histograms.append(hists)
-        return self._list_of_histograms
+        self.list_of_histograms = []
+        self.list_of_files = []
+        for file in self._histogram_files:
+            file = EventIOFile(file)
+            self.list_of_files.append(file)
+            for obj in yield_toplevel_of_type(file, Histograms):
+                hists = obj.parse()
+                self.list_of_histograms.append(hists)
 
     @property
     def config(self):
@@ -98,11 +97,10 @@ class SimtelHistograms:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            for file in self._histogram_files:
-                with EventIOFile(file) as f:
-                    for obj in f:
-                        if isinstance(obj, MCRunHeader):
-                            self._config = obj.parse()
+            for file in self.list_of_files:
+                for obj in file:
+                    if isinstance(obj, MCRunHeader):
+                        self._config = obj.parse()
         return self._config
 
     @property
@@ -259,10 +257,11 @@ class SimtelHistograms:
 
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
-            normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
+            hist_normalization = np.sum(integrated_event_ratio_per_energy * np.diff(energy_axis))
 
             view_cone = self.config["viewcone"] * u.deg
-            energy_range = (self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV)
+            print(self.config["E_range"][0])
+            energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
             total_area = np.pi * ((events_histogram[i_file]["upper_x"] * u.m).to(u.cm)) ** 2
 
             if self.config["diffuse"] == 1:
@@ -273,20 +272,23 @@ class SimtelHistograms:
             non_norm_simulated_power_law_function = PowerLaw(
                 normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
             )
-            non_norm_simulated_events = non_norm_simulated_power_law_function.derive_events_rate(
-                inner=view_cone[0],
-                outer=view_cone[1],
-                area=total_area,
-                energy=energy_range,
+            non_norm_simulated_events_rate = (
+                non_norm_simulated_power_law_function.derive_events_rate(
+                    inner=view_cone[0],
+                    outer=view_cone[1],
+                    area=total_area,
+                    energy_min=energy_range[0],
+                    energy_max=energy_range[1],
+                )
             )
-            print(non_norm_simulated_events)
 
-            factor = self.total_num_simulated_events / non_norm_simulated_events
+            factor = self.total_num_simulated_events / non_norm_simulated_events_rate
             norm_simulated_power_law_function = PowerLaw(
                 normalization=factor * norm_unit,
                 index=self.config["spectral_index"],
                 e_ref=1 * u.TeV,
             )
+            print(norm_simulated_power_law_function)
 
             final = irfdoc_proton_spectrum.derive_number_events(
                 view_cone[0], view_cone[1], obs_time, total_area, energy
