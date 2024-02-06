@@ -227,8 +227,6 @@ class SimtelHistograms:
 
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            obs_time = self.estimate_observation_time()
-
             radius_axis = np.linspace(
                 events_histogram[i_file]["lower_x"],
                 events_histogram[i_file]["upper_x"],
@@ -248,7 +246,6 @@ class SimtelHistograms:
 
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
-
 
             event_ratio_histogram["data"] = (  # pylint: disable=zero-divide
                 trigged_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
@@ -273,28 +270,30 @@ class SimtelHistograms:
             if re_weight:
                 particle_distribution = particle_distribution_function(energy_axis * u.TeV)
             else:
-                particle_distribution = self.get_simulation_spectral_distribution()(energy_axis * u.TeV)
+                particle_distribution = self.get_simulation_spectral_distribution()(
+                    energy_axis * u.TeV
+                )
 
-            normalized_pdf = particle_distribution/np.sum(particle_distribution)
+            normalized_pdf = particle_distribution / np.sum(particle_distribution)
 
             # Trigger probability per E integrated in E according to the given energy distribution
             # (gives a trigger probability, i.e. a normalization)
             trigger_probability = np.sum(
-                integrated_event_ratio_per_energy
-                * normalized_pdf[:-1]
-                * np.diff(energy_axis)
+                integrated_event_ratio_per_energy * normalized_pdf[:-1] * np.diff(energy_axis)
             )
 
             logging.debug(f"System trigger probability: {trigger_probability}.")
-            system_trigger_rate = trigger_probability * particle_distribution_function.\
-                derive_events_rate(
-                inner=self.view_cone[0],
-                outer=self.view_cone[1],
-                area=self.total_area,
-                energy_min=self.energy_range[0],
-                energy_max=self.energy_range[1]
+            system_trigger_rate = (
+                trigger_probability
+                * particle_distribution_function.derive_events_rate(
+                    inner=self.view_cone[0],
+                    outer=self.view_cone[1],
+                    area=self.total_area,
+                    energy_min=self.energy_range[0],
+                    energy_max=self.energy_range[1],
+                )
             )
-            print("system_trigger_rate", system_trigger_rate)
+            logging.info(f"{system_trigger_rate.to(1/u.s).value} Hz")
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -379,15 +378,17 @@ class SimtelHistograms:
         """
         logging.debug("Getting particle distribution.")
         # Expected integrated CR flux
-        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
-                                                                       self.energy_range[1])
+        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(
+            self.energy_range[0], self.energy_range[1]
+        )
         simulation_energy_distribution = self.get_simulation_spectral_distribution()
         # Simulated integrated flux (differs from above due to optimization of computational time)
-        simulation_energy_integrated = simulation_energy_distribution.\
-            integrate_energy(self.energy_range[0], self.energy_range[1])
+        simulation_energy_integrated = simulation_energy_distribution.integrate_energy(
+            self.energy_range[0], self.energy_range[1]
+        )
         # Estimate a normalization factor, which also means the fraction of computational time
         # spared by using a different distribution. `time_economy_factor` expected to be > 1.
-        time_economy_factor = cr_energy_integrated/simulation_energy_integrated
+        time_economy_factor = cr_energy_integrated / simulation_energy_integrated
         return time_economy_factor
 
     def get_simulation_spectral_distribution(self):
