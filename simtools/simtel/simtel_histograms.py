@@ -266,7 +266,7 @@ class SimtelHistograms:
                     event_ratio_histogram["data"][i_energy] * areas
                 )
 
-            # Define the particle distribution (usually based on assumed spectral distribution
+            # Define the particle distribution
             particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
                                                                             re_weight=False)
 
@@ -274,7 +274,7 @@ class SimtelHistograms:
             # (gives a trigger probability, i.e. a normalization)
             hist_normalization = np.sum(
                 integrated_event_ratio_per_energy
-                * particle_spectral_distribution
+                * particle_spectral_distribution/np.sum(particle_spectral_distribution)
                 * np.diff(energy_axis)
             )
             print(hist_normalization)
@@ -369,8 +369,8 @@ class SimtelHistograms:
         """
         cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
                                                                        self.energy_range[1])
-        simulation_energy_integrated = self.get_simulation_spectral_distribution()
-        simulation_energy_integrated = simulation_energy_integrated.\
+        simulation_energy_distribution = self.get_simulation_spectral_distribution()
+        simulation_energy_integrated = simulation_energy_distribution.\
             integrate_energy(self.energy_range[0], self.energy_range[1])
 
         time_economy_factor = cr_energy_integrated/simulation_energy_integrated
@@ -378,7 +378,7 @@ class SimtelHistograms:
         if re_weight:
             return cr_energy_integrated(energy_axis) / time_economy_factor
         else:
-            return simulation_energy_integrated(energy_axis)
+            return simulation_energy_distribution(energy_axis)
 
     def get_simulation_spectral_distribution(self):
         """
