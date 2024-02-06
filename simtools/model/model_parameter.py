@@ -69,6 +69,9 @@ class ModelParameter:
         self._config_file_path = None
 
         self._load_parameters_from_db()
+        # TODO need to understand where this should go
+        # only needed when we actually want to write out
+        # self._set_config_file_directory_and_name()
 
         self.simtel_config_writer = None
         self._added_parameter_files = None
@@ -288,7 +291,6 @@ class ModelParameter:
 
         if self.name is not None:
             self._logger.debug(f"Reading telescope parameters from DB ({self.name} telescope)")
-            self._set_config_file_directory_and_name()
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, only_applicable=True
             )
