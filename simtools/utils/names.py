@@ -26,46 +26,36 @@ __all__ = [
 
 # Telescopes and other array elements
 array_element_names = {
-    "LSTN": {
-        "site": "North",
-        "observatory": "CTAO",
-    },
-    "MSTN": {
-        "site": "North",
-        "observatory": "CTAO",
-    },
-    "LSTS": {
-        "site": "South",
-        "observatory": "CTAO",
-    },
-    "MSTS": {
-        "site": "South",
-        "observatory": "CTAO",
-    },
-    "SSTS": {
-        "site": "South",
-        "observatory": "CTAO",
-    },
-    "SCTS": {
-        "site": "South",
-        "observatory": "CTAO",
-    },
-    "ILLN": {
-        "site": "North",
-        "observatory": "CTAO",
-    },
-    "MAGIC": {
-        "site": "North",
-        "observatory": "MAGIC",
-    },
-    "VERITAS": {
-        "site": "North",
-        "observatory": "VERITAS",
-    },
-    "HESS": {
-        "site": "South",
-        "observatory": "HESS",
-    },
+    # CTAO telescopes
+    "LSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
+    "MSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
+    "LSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
+    "MSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
+    "SSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
+    "SCTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
+    # calibration devices
+    "ILLN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "RLDN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "STPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "MSPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "CEIN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "WSTN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "ASCN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "DUSN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "LISN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
+    "ILLS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "RLDS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "STPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "MSPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "CEIS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "WSTS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "ASCS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "DUSS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "LISS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    # other telescopes
+    "MAGIC": {"site": "North", "observatory": "MAGIC", "class": "telescope"},
+    "VERITAS": {"site": "North", "observatory": "VERITAS", "class": "telescope"},
+    "HESS": {"site": "South", "observatory": "HESS", "class": "telescope"},
 }
 
 site_names = {
@@ -341,6 +331,24 @@ def get_site_from_telescope_name(name):
         Site name (South or North).
     """
     return array_element_names[get_telescope_type_from_telescope_name(name)]["site"]
+
+
+def get_class_from_telescope_name(name):
+    """
+    Get class (e.g., telescope, calibration) of array element from name
+
+    Parameters
+    ----------
+    name: str
+        Telescope name.
+
+    Returns
+    -------
+    str
+        Class name.
+    """
+
+    return array_element_names[get_telescope_type_from_telescope_name(name)]["class"]
 
 
 def simtel_telescope_config_file_name(
