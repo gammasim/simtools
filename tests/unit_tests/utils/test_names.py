@@ -121,6 +121,13 @@ def test_get_site_from_telescope_name():
         names.get_site_from_telescope_name("LSTW")
 
 
+def test_get_class_from_telescope_name():
+    assert "telescope" == names.get_class_from_telescope_name("LSTN-01")
+    assert "calibration" == names.get_class_from_telescope_name("ILLS-01")
+    with pytest.raises(ValueError):
+        names.get_site_from_telescope_name("SATW")
+
+
 def test_validate_model_version_name():
     model_version = names.validate_model_version_name("p4")
 

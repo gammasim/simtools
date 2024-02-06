@@ -35,19 +35,25 @@ class ArrayLayout:
         MongoDB configuration.
     site: str
         Site name or location (e.g., North/South or LaPalma/Paranal)
+    model_version: str
+        Version of the model (e.g., prod6).
     label: str
         Instance label.
     name: str
         Name of the layout.
     telescope_list_file: str or Path
         Path to the telescope list file.
+    telescope_list_metadata_file: str or Path
+        Path to telescope list metadata (if not part of telescope_list_file)
+    validate: bool
+        Validate input file list.
     """
 
     def __init__(
         self,
-        mongo_db_config=None,
+        mongo_db_config,
+        site,
         model_version="Released",
-        site=None,
         label=None,
         name=None,
         telescope_list_file=None,
@@ -415,7 +421,7 @@ class ArrayLayout:
 
     def _set_telescope_auxiliary_parameters(self, telescope):
         """
-        Set auxiliary CORSIKA parameters for a given telescope.
+        Set auxiliary CORSIKA parameters for a telescope.
 
         Parameters
         ----------
@@ -424,15 +430,18 @@ class ArrayLayout:
 
         """
 
-        tel_model = TelescopeModel(
-            site=self.site,
-            telescope_name=telescope.name,
-            model_version=self.model_version,
-            mongo_db_config=self.mongo_db_config,
-            label=self.label,
-        )
-        for para in ("telescope_axis_height", "telescope_sphere_radius"):
-            telescope.set_auxiliary_parameter(para, tel_model.get_parameter_value_with_unit(para))
+        if names.get_class_from_telescope_name(telescope.name) == "telescope":
+            tel_model = TelescopeModel(
+                site=self.site,
+                telescope_name=telescope.name,
+                model_version=self.model_version,
+                mongo_db_config=self.mongo_db_config,
+                label=self.label,
+            )
+            for para in ("telescope_axis_height", "telescope_sphere_radius"):
+                telescope.set_auxiliary_parameter(
+                    para, tel_model.get_parameter_value_with_unit(para)
+                )
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
@@ -571,11 +580,6 @@ class ArrayLayout:
         -------
         str
             Piece of text to be added to the CORSIKA input file.
-
-        Raises
-        ------
-        KeyError
-            if Missing definition of CORSIKA sphere radius or obs_level.
         """
 
         corsika_list = ""
