@@ -360,6 +360,8 @@ class TelescopePosition:
         InvalidCoordSystem
             If coordinate system is not known.
         """
+        if not self.is_coordinate_system(crs_name):
+            return False
         try:
             if not self.crs[crs_name]["crs"] and crs_check:
                 return False
@@ -401,6 +403,9 @@ class TelescopePosition:
             for _crs_name in self.crs:
                 if self.has_altitude(_crs_name):
                     return True
+            return False
+
+        if not self.is_coordinate_system(crs_name):
             return False
 
         try:
