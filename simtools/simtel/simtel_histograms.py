@@ -186,7 +186,7 @@ class SimtelHistograms:
         """
         self._combined_hists = new_combined_hists
 
-    def _derive_trigger_rate_histograms(self, livetime):
+    def _derive_trigger_rate_histograms(self, livetime, re_weight=True):
         """
         Calculates the trigger rate histograms, i.e., the ratio in which the events
         are triggered in each bin of impact distance and log energy for each histogram file for
@@ -199,6 +199,8 @@ class SimtelHistograms:
         ----------
         livetime: astropy.Quantity
             Time used in the simulation that produced the histograms. E.g., 1*u.h.
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
 
         Returns
         -------
@@ -226,7 +228,6 @@ class SimtelHistograms:
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
             obs_time = self.estimate_observation_time()
-            logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
 
             radius_axis = np.linspace(
                 events_histogram[i_file]["lower_x"],
@@ -247,8 +248,8 @@ class SimtelHistograms:
 
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
-            print(trigged_events_histogram[i_file]["data"])
-            print(events_histogram[i_file]["data"])
+
+
             event_ratio_histogram["data"] = (  # pylint: disable=zero-divide
                 trigged_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
             )
@@ -265,20 +266,34 @@ class SimtelHistograms:
                 )
 
             # Define the particle distribution
-            particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
-                                                                            re_weight=True)
+            correction_factor = self.get_correction_factor()
+            particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
+            particle_distribution_function.normalization /= correction_factor
+            if re_weight:
+                particle_distribution = particle_distribution_function(energy_axis)
+            else:
+                particle_distribution = self.get_simulation_spectral_distribution()(energy_axis)
+
+            normalized_pdf = particle_distribution/np.sum(particle_distribution)
 
             # Trigger probability per E integrated in E according to the given energy distribution
             # (gives a trigger probability, i.e. a normalization)
             trigger_probability = np.sum(
                 integrated_event_ratio_per_energy
-                * particle_spectral_distribution[:-1]/np.sum(particle_spectral_distribution[:-1])
+                * normalized_pdf[:-1]
                 * np.diff(energy_axis)
             )
 
             logging.debug(f"System trigger probability: {trigger_probability}.")
-            event_relative_rate = trigger_probability * particle_spectral_distribution
-            print("even_rate", event_relative_rate)
+            system_trigger_rate = trigger_probability * particle_distribution_function.\
+                derive_events_rate(
+                inner=self.view_cone[0],
+                outer=self.view_cone[1],
+                area=self.total_area,
+                energy_min=self.energy_range[0],
+                energy_max=self.energy_range[1]
+            )
+            print("system_trigger_rate", system_trigger_rate)
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -346,26 +361,22 @@ class SimtelHistograms:
             self.energy_range[0],
             self.energy_range[1],
         )
-        return self.total_num_simulated_events / first_estimate * u.s
+        obs_time = self.total_num_simulated_events / first_estimate * u.s
+        logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
+        return obs_time
 
-    def get_particle_distribution(self, energy_axis, re_weight=False):
+    def get_correction_factor(self):
         """
-        Get the particle energy distribution.
-        If re_weight is True, calculate the expected cosmic-ray particle distribution and correct
-        the original distribution to account for differences in comparison to the cosmic-ray dist.
-
-        Parameters
-        ----------
-        energy_axis: numpy.array
-            the array with the energy range of interest.
-        re_weight: bool
-            if True, it re-weight the distribution to account for the expected cosmic-ray flux.
+        Get the correction factor for the energy distribution to account for differences in the
+        expected cosmic-ray spectral distribution and the cosmic-ray distritibution assumed for
+        the simulation.
 
         Returns
         -------
-        numpy.array
-            The differential flux of the energy distribution.
+        float
+            The correction factor.
         """
+        logging.debug("Getting particle distribution.")
         # Expected integrated CR flux
         cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
                                                                        self.energy_range[1])
@@ -376,14 +387,7 @@ class SimtelHistograms:
         # Estimate a normalization factor, which also means the fraction of computational time
         # spared by using a different distribution. `time_economy_factor` expected to be > 1.
         time_economy_factor = cr_energy_integrated/simulation_energy_integrated
-
-        if re_weight:
-            # This corrects the distribution to the expected one but maintains the normalization
-            # such that the integrated number of events fits the total number of simulated events
-            # (`self.total_num_simulated_events`)
-            return cr_energy_integrated(energy_axis) / time_economy_factor
-        else:
-            return simulation_energy_distribution(energy_axis)
+        return time_economy_factor
 
     def get_simulation_spectral_distribution(self):
         """
