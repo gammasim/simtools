@@ -186,19 +186,13 @@ class SimtelHistograms:
         """
         self._combined_hists = new_combined_hists
 
-    def _derive_trigger_rate_histograms(self, livetime, re_weight=True):
+    def trigger_rate_per_histogram(self, re_weight=True):
         """
-        Calculates the trigger rate histograms, i.e., the ratio in which the events
-        are triggered in each bin of impact distance and log energy for each histogram file for
-        the livetime defined by `livetime`.
-        The livetime gives the amount of time used in a small production to produce the histograms
-        used. It is assumed that the livetime is the same for all the histogram files used and that
-        the radius (x-axis in the histograms) is given in meters.
+        Calculates the trigger rate histograms, i.e., the rate in which the events
+        are triggered.
 
         Parameters
         ----------
-        livetime: astropy.Quantity
-            Time used in the simulation that produced the histograms. E.g., 1*u.h.
         re_weight: bool
             if True, re-weights the particle spectral distribution to correct to the expected one.
 
@@ -208,10 +202,6 @@ class SimtelHistograms:
             List with the trigger rate histograms for each file.
         """
         self.initialize_array_variables()
-        if isinstance(livetime, u.Quantity):
-            livetime = livetime.to(u.s)
-        else:
-            livetime = livetime * u.s
         events_histogram = {}
         trigged_events_histogram = {}
         # Save the appropriate histograms to a dictionary
@@ -295,24 +285,7 @@ class SimtelHistograms:
             )
             logging.info(f"{system_trigger_rate.to(1/u.s).value} Hz")
 
-            # Keeping only the necessary information for proceeding with integration
-            keys_to_keep = [
-                "data",
-                "lower_x",
-                "lower_y",
-                "upper_x",
-                "upper_y",
-                "entries",
-                "n_bins_x",
-                "n_bins_y",
-            ]
-            event_ratio_histogram = {
-                key: event_ratio_histogram[key]
-                for key in keys_to_keep
-                if key in event_ratio_histogram
-            }
-
-            list_of_trigger_rate_hists.append(event_ratio_histogram)
+            list_of_trigger_rate_hists.append(system_trigger_rate)
         return list_of_trigger_rate_hists
 
     def initialize_array_variables(self):
@@ -423,18 +396,6 @@ class SimtelHistograms:
             e_ref=1 * u.TeV,
         )
         return norm_simulated_power_law_function
-
-    def trigger_rate_per_histogram(self, livetime):
-        """
-        Estimates the trigger rate for each histogram passed.
-
-        Parameters
-        ----------
-        livetime: astropy.Quantity[time]
-            Time used in the simulation that produced the histograms.
-        """
-        list_of_trigger_rate_hists = self._derive_trigger_rate_histograms(livetime=livetime)
-        return list_of_trigger_rate_hists
 
     def plot_one_histogram(self, i_hist, ax):
         """
