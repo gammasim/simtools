@@ -266,21 +266,25 @@ class SimtelHistograms:
                     event_ratio_histogram["data"][i_energy] * areas
                 )
 
-            # Define the particle distribution
-            particle_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
-                                                                            re_weight=False)
+            # Get the weighted distribution to correct from assumed spectrum to expected spectrum
+            correction_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
+                                                                            re_weight=True)
 
             # Trigger probability per E integrated in E according to the given energy distribution
             # (gives a trigger probability, i.e. a normalization)
             trigger_probability = np.sum(
                 integrated_event_ratio_per_energy
-                * particle_spectral_distribution[:-1]/np.sum(particle_spectral_distribution[:-1])
+                * correction_spectral_distribution[:-1]/np.sum(correction_spectral_distribution[:-1])
                 * np.diff(energy_axis)
             )
 
+            # Get the expected cosmic-ray spectrum
+            cosmic_ray_spectral_distribution = self.get_particle_distribution(energy_axis * u.TeV,
+                                           re_weight=False)
+            print(trigger_probability)
             logging.debug(f"System trigger probability: {trigger_probability}.")
-            #event_relative_rate = trigger_probability * particle_spectral_distribution
-            #print("even_rate", event_relative_rate)
+            event_relative_rate = trigger_probability * cosmic_ray_spectral_distribution
+            print("even_rate", event_relative_rate)
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -355,6 +359,7 @@ class SimtelHistograms:
         Get the particle energy distribution.
         If re_weight is True, calculate the expected cosmic-ray particle distribution and correct
         the original distribution to account for differences in comparison to the cosmic-ray dist.
+        If re_weight is False, it returns the expected cosmic-ray distribution for the given range.
 
         Parameters
         ----------
@@ -368,18 +373,13 @@ class SimtelHistograms:
         numpy.array
             The differential flux of the energy distribution.
         """
-        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(self.energy_range[0],
-                                                                       self.energy_range[1])
+
         simulation_energy_distribution = self.get_simulation_spectral_distribution()
-        simulation_energy_integrated = simulation_energy_distribution.\
-            integrate_energy(self.energy_range[0], self.energy_range[1])
-
-        time_economy_factor = cr_energy_integrated/simulation_energy_integrated
-
         if re_weight:
-            return cr_energy_integrated(energy_axis) / time_economy_factor
+            # This corrects the distribution to the expected
+            return irfdoc_proton_spectrum(energy_axis) / simulation_energy_distribution(energy_axis)
         else:
-            return simulation_energy_distribution(energy_axis)
+            return irfdoc_proton_spectrum(energy_axis)
 
     def get_simulation_spectral_distribution(self):
         """
