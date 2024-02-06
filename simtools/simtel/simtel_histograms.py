@@ -116,7 +116,11 @@ class SimtelHistograms:
         int:
             total number of simulated events.
         """
-        print(self.config["n_showers"], self.config["n_use"], self.config["n_showers"] * self.config["n_use"])
+        print(
+            self.config["n_showers"],
+            self.config["n_use"],
+            self.config["n_showers"] * self.config["n_use"],
+        )
         return self.config["n_showers"] * self.config["n_use"]
 
     def _check_consistency(self, first_hist_file, second_hist_file):
@@ -201,6 +205,7 @@ class SimtelHistograms:
         list:
             List with the trigger rate histograms for each file.
         """
+        self.initialize_array_variables()
         if isinstance(livetime, u.Quantity):
             livetime = livetime.to(u.s)
         else:
@@ -220,20 +225,9 @@ class SimtelHistograms:
 
         # Calculate the event rate histograms
         for i_file, hists_one_file in enumerate(self.list_of_histograms):
-
-            self.view_cone = self.config["viewcone"] * u.deg
-            logging.info(f"View cone: {self.view_cone.value} deg")
-
-            self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
-            logging.info(f"Energy range: {self.energy_range}")
-
-            self.total_area = np.pi * (((self.config["core_range"][1] - self.config["core_range"][0])
-                                   * u.m).to(u.cm)) ** 2
-            logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
-            logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
-            logging.info(f"Total area: {(total_area.to(u.m**2)).value} m2")
-
-            obs_time = self.estimate_observation_time(self.view_cone, self.energy_range, self.total_area)
+            obs_time = self.estimate_observation_time(
+                self.view_cone, self.energy_range, self.total_area
+            )
             logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
 
             radius_axis = np.linspace(
@@ -255,9 +249,10 @@ class SimtelHistograms:
 
             # Radial distribution of triggered events per E divided by the radial distribution
             # of simulated events per E (gives a radial distribution of trigger probability per E
-            event_ratio_histogram["data"] = ( # pylint: disable=zero-divide
-                trigged_events_histogram[i_file]["data"]
-                / events_histogram[i_file]["data"]
+            print(trigged_events_histogram[i_file]["data"])
+            print(events_histogram[i_file]["data"])
+            event_ratio_histogram["data"] = (  # pylint: disable=zero-divide
+                trigged_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
             )
             event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
 
@@ -278,12 +273,14 @@ class SimtelHistograms:
 
             # Trigger probability per E integrated in E
             # (gives a trigger probability, i.e. a normalization)
-            hist_normalization = np.sum(integrated_event_ratio_per_energy * particle_spectral_distribution * np.diff(energy_axis))
+            hist_normalization = np.sum(
+                integrated_event_ratio_per_energy
+                * particle_spectral_distribution
+                * np.diff(energy_axis)
+            )
             print(hist_normalization)
             event_relative_rate = hist_normalization / obs_time
             print("even_rate", event_relative_rate)
-
-
 
             # Keeping only the necessary information for proceeding with integration
             keys_to_keep = [
@@ -304,6 +301,24 @@ class SimtelHistograms:
 
             list_of_trigger_rate_hists.append(event_ratio_histogram)
         return list_of_trigger_rate_hists
+
+    def initialize_array_variables(self):
+        """
+        Initialize the array variables, necessary for integrations of the histograms.
+        """
+        self.view_cone = self.config["viewcone"] * u.deg
+        logging.info(f"View cone: {self.view_cone.value} deg")
+
+        self.energy_range = [self.config["E_range"][0] * u.TeV, self.config["E_range"][1] * u.TeV]
+        logging.info(f"Energy range: {self.energy_range}")
+
+        self.total_area = (
+            np.pi
+            * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm)) ** 2
+        )
+        logging.debug(f"Min. core range: {self.config['core_range'][0]} m")
+        logging.debug(f"Max. core range: {self.config['core_range'][1]} m")
+        logging.info(f"Total area: {(self.total_area.to(u.m ** 2)).value} m2")
 
     def estimate_observation_time(self, view_cone, energy_range, total_area):
         """
@@ -326,9 +341,14 @@ class SimtelHistograms:
             Estimated observation time based on the total number of particles simulated.
         """
         first_estimate = irfdoc_proton_spectrum.derive_number_events(
-            self.view_cone[0], self.view_cone[1], 1*u.s, self.total_area, self.energy_range[0],self.energy_range[1]
+            self.view_cone[0],
+            self.view_cone[1],
+            1 * u.s,
+            self.total_area,
+            self.energy_range[0],
+            self.energy_range[1],
         )
-        return self.total_num_simulated_events/first_estimate * u.s
+        return self.total_num_simulated_events / first_estimate * u.s
 
     def get_particle_distribution(self, energy_axis, re_weight=False):
         """
@@ -368,21 +388,19 @@ class SimtelHistograms:
             The differential flux of the energy distribution.
         """
         if self.config["diffuse"] == 1:
-            norm_unit = 1 / (u.m ** 2 * u.s * u.sr * u.TeV)
+            norm_unit = 1 / (u.m**2 * u.s * u.sr * u.TeV)
         else:
-            norm_unit = 1 / (u.m ** 2 * u.s * u.TeV)
+            norm_unit = 1 / (u.m**2 * u.s * u.TeV)
 
         non_norm_simulated_power_law_function = PowerLaw(
             normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
         )
-        non_norm_simulated_events_rate = (
-            non_norm_simulated_power_law_function.derive_events_rate(
-                inner=self.view_cone[0],
-                outer=self.view_cone[1],
-                area=self.total_area,
-                energy_min=self.energy_range[0],
-                energy_max=self.energy_range[1],
-            )
+        non_norm_simulated_events_rate = non_norm_simulated_power_law_function.derive_events_rate(
+            inner=self.view_cone[0],
+            outer=self.view_cone[1],
+            area=self.total_area,
+            energy_min=self.energy_range[0],
+            energy_max=self.energy_range[1],
         )
 
         factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
