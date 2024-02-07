@@ -191,7 +191,7 @@ class SimtelHistograms:
 
     def trigger_rate_per_histogram(self, re_weight=True):
         """
-        Calculates the trigger rate histograms, i.e., the number of triggered events per second.
+        Calculate the trigger rate histograms, i.e., the number of triggered events per second.
 
         Parameters
         ----------
@@ -203,80 +203,202 @@ class SimtelHistograms:
         list:
             List with the trigger rate histograms for each file.
         """
-        # TODO: continue splitting this function
+
         events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
         list_of_trigger_rate_hists = []
 
-        # Calculate the event rate histograms
+        # Calculate the trigger rate histograms
         for i_file, _ in enumerate(self.list_of_histograms):
-            radius_axis = np.linspace(
-                events_histogram[i_file]["lower_x"],
-                events_histogram[i_file]["upper_x"],
-                events_histogram[i_file]["n_bins_x"] + 1,
-                endpoint=True,
-            )
-            energy_axis = np.logspace(
-                events_histogram[i_file]["lower_y"],
-                events_histogram[i_file]["upper_y"],
-                events_histogram[i_file]["n_bins_y"] + 1,
-                endpoint=True,
+            # Produce triggered/simulated event histogram
+            triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
+                events_histogram[i_file], triggered_events_histogram[i_file]
             )
 
-            event_ratio_histogram = copy.copy(events_histogram[i_file])
-
-            event_ratio_histogram["data"] = np.zeros_like(
-                triggered_events_histogram[i_file]["data"]
-            )
-
-            # Radial distribution of triggered events per E divided by the radial distribution
-            # of simulated events per E (gives a radial distribution of trigger probability per E
-
-            event_ratio_histogram["data"] = (
-                triggered_events_histogram[i_file]["data"] / events_histogram[i_file]["data"]
-            )
-            event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
-
+            radius_axis, energy_axis = self._initialize_histogram_axes(events_histogram[i_file])
             # Radial distribution of trigger probability per E integrated in area at each radius
             # (gives a trigger probability per E)
-            integrated_event_ratio_per_energy = np.zeros_like(energy_axis[:-1])
-            areas = radius_axis[:-1] * np.diff(radius_axis)
-
-            for i_energy, _ in enumerate(energy_axis[:-1]):
-                integrated_event_ratio_per_energy[i_energy] = np.sum(
-                    event_ratio_histogram["data"][i_energy] * areas
-                )
-
-            particle_distribution_function = self.get_particle_distribution_function()
-            if re_weight:
-                particle_distribution = particle_distribution_function(energy_axis * u.TeV)
-            else:
-                particle_distribution = self.get_simulation_spectral_distribution()(
-                    energy_axis * u.TeV
-                )
-            normalized_pdf = particle_distribution / np.sum(particle_distribution)
-
-            # Trigger probability per E integrated in E according to the given energy distribution
-            # (gives a trigger probability, i.e. a normalization)
-            trigger_probability = np.sum(
-                integrated_event_ratio_per_energy * normalized_pdf[:-1] * np.diff(energy_axis)
+            triggered_to_sim_fraction_per_energy = self._integrate_hist_in_area(
+                radius_axis, triggered_to_sim_fraction_hist
             )
 
-            logging.debug(f"System trigger probability: {trigger_probability}.")
-            system_trigger_rate = (
-                trigger_probability
-                * particle_distribution_function.derive_events_rate(
-                    inner=self.view_cone[0],
-                    outer=self.view_cone[1],
-                    area=self.total_area,
-                    energy_min=self.energy_range[0],
-                    energy_max=self.energy_range[1],
-                )
+            trigger_probability = self._integrate_array_in_energy(
+                energy_axis, triggered_to_sim_fraction_per_energy, re_weight=re_weight
             )
-            logging.info(f"{system_trigger_rate.to(1/u.s).value} Hz")
+            system_trigger_rate = self._calculate_system_trigger_rate(
+                trigger_probability, self.get_particle_distribution_function(re_weight=re_weight)
+            )
 
             list_of_trigger_rate_hists.append(system_trigger_rate)
         return list_of_trigger_rate_hists
+
+    def _initialize_histogram_axes(self, events_histogram):
+        """
+        Initialize the two axes of a histogram.
+
+        Parameters
+        ----------
+        events_histogram:
+            A single histogram from where to extract axis information.
+
+        Returns
+        -------
+        radius_axis: numpy.array
+            The array with the impact distance.
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        """
+        radius_axis = np.linspace(
+            events_histogram["lower_x"],
+            events_histogram["upper_x"],
+            events_histogram["n_bins_x"] + 1,
+            endpoint=True,
+        )
+        energy_axis = np.logspace(
+            events_histogram["lower_y"],
+            events_histogram["upper_y"],
+            events_histogram["n_bins_y"] + 1,
+            endpoint=True,
+        )
+        return radius_axis, energy_axis
+
+    def _produce_triggered_to_sim_fraction_hist(self, events_histogram, triggered_events_histogram):
+        """
+        Produce a new histogram with the fraction of triggered events over the simulated events.
+
+        Parameters
+        ----------
+        events_histogram:
+            A histogram for the simulated events.
+        triggered_events_histogram:
+            A histogram for the triggered events.
+
+        Returns
+        -------
+        event_ratio_histogram:
+            The new histogram with the fraction of triggered over simulated events.
+        """
+        event_ratio_histogram = copy.copy(events_histogram)
+
+        event_ratio_histogram["data"] = np.zeros_like(triggered_events_histogram["data"])
+
+        # Radial distribution of triggered events per E divided by the radial distribution
+        # of simulated events per E (gives a radial distribution of trigger probability per E
+
+        event_ratio_histogram["data"] = (
+            triggered_events_histogram["data"] / events_histogram["data"]
+        )
+        event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
+        return event_ratio_histogram
+
+    def _integrate_hist_in_area(self, radius_axis, events_histogram):
+        """
+        Integrate the histogram in area and keep the energy dependence.
+        In a sequence of integrations, one has to integrate in area first, and then in energy.
+
+        Parameters
+        ----------
+        radius_axis: numpy.array
+            The array with the impact distance.
+        events_histogram:
+            A histogram for the simulated events.
+
+        Returns
+        -------
+        integrated_event_ratio_per_energy: numpy.array (1-D)
+            The area-integrated, energy-dependent array.
+
+        """
+        energy_axis_size = np.size(events_histogram, axis=0)
+        integrated_event_ratio_per_energy = np.zeros(energy_axis_size - 1)
+        areas = radius_axis[:-1] * np.diff(radius_axis)
+
+        for i_energy in range(energy_axis_size - 1):
+            integrated_event_ratio_per_energy[i_energy] = np.sum(
+                events_histogram["data"][i_energy] * areas
+            )
+        return integrated_event_ratio_per_energy
+
+    def get_particle_distribution(self, energy_axis, re_weight=True):
+        """
+        Get the particle distribution for the specified energy_axis.
+
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        particle_distribution: numpy.array
+            The array with the particle distribution as function of energy.
+        """
+
+        particle_distribution_function = self.get_particle_distribution_function(
+            re_weight=re_weight
+        )
+        return particle_distribution_function(energy_axis * u.TeV)
+
+    def _integrate_array_in_energy(self, energy_axis, events_array, re_weight=True):
+        """
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        events_array: numpy.array
+            Array with the area-integrated trigger to simulated event ratio distribution as
+            function of energy.
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        float:
+            energy-integrated event ratio distribution, i.e., the system trigger probability.
+        """
+        # Get the particle distribution for the specified energy axis and re_weight flag
+        particle_distribution = self.get_particle_distribution(energy_axis, re_weight=re_weight)
+
+        normalized_pdf = particle_distribution / np.sum(particle_distribution)
+
+        # Trigger probability per E integrated in E according to the given energy distribution
+        # (gives a trigger probability, i.e. a normalization)
+        trigger_probability = np.sum(events_array * normalized_pdf[:-1] * np.diff(energy_axis))
+        logging.debug(f"System trigger probability: {trigger_probability}.")
+        return trigger_probability
+
+    def _calculate_system_trigger_rate(self, trigger_probability, particle_distribution_function):
+        """
+        Calculate the system trigger rate based on the system trigger probability and the particle
+        distribution function.
+
+        Parameters
+        ----------
+        trigger_probability: float
+            The system trigger probability.
+        particle_distribution_function:
+            The function from ctao_cosmic_ray_spectra that describes the particle energy
+            distribution.
+
+        Returns
+        -------
+        float:
+            The system trigger ratio.
+        """
+        system_trigger_rate = (
+            trigger_probability
+            * particle_distribution_function.derive_events_rate(
+                inner=self.view_cone[0],
+                outer=self.view_cone[1],
+                area=self.total_area,
+                energy_min=self.energy_range[0],
+                energy_max=self.energy_range[1],
+            )
+        )
+        logging.info(f"{system_trigger_rate.to(1 / u.s).value} Hz")
+        return system_trigger_rate
 
     @property
     @u.quantity_input(energy=u.deg)
@@ -388,10 +510,15 @@ class SimtelHistograms:
         time_economy_factor = cr_energy_integrated / simulation_energy_integrated
         return time_economy_factor
 
-    def get_particle_distribution_function(self):
+    def get_particle_distribution_function(self, re_weight=True):
         """
         Get the particle distribution function, depending on whether one wants to re-weight to the
         expected cosmic-ray spectral distribution or not.
+
+        Parameters
+        ----------
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
 
         Returns
         -------
@@ -399,8 +526,11 @@ class SimtelHistograms:
             The function describing the spectral distribution.
         """
         # Define the particle distribution
-        correction_factor = self.get_correction_factor()
         particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
+        if re_weight:
+            correction_factor = self.get_correction_factor()
+        else:
+            correction_factor = 1
         particle_distribution_function.normalization /= correction_factor
 
         return particle_distribution_function
