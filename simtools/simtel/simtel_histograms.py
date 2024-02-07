@@ -119,12 +119,13 @@ class SimtelHistograms:
         int:
             total number of simulated events.
         """
-        print(
-            self.config["n_showers"],
-            self.config["n_use"],
-            self.config["n_showers"] * self.config["n_use"],
+        logging.debug(f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}")
+        logging.debug(
+            f"Number of times each simulated shower is used (CORSIKA NUSE): {self.config['n_use']}"
         )
-        return self.config["n_showers"] * self.config["n_use"]
+        total_simulated_showers = self.config["n_showers"] * self.config["n_use"]
+        logging.debug(f"Number of total simulated showers: {total_simulated_showers}")
+        return total_simulated_showers
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
