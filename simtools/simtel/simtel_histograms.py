@@ -191,8 +191,7 @@ class SimtelHistograms:
 
     def trigger_rate_per_histogram(self, re_weight=True):
         """
-        Calculates the trigger rate histograms, i.e., the rate in which the events
-        are triggered.
+        Calculates the trigger rate histograms, i.e., the number of triggered events per second.
 
         Parameters
         ----------
