@@ -9,8 +9,6 @@ Command line arguments
 ----------------------
 histogram_files (str or list):
     Path to the histogram file or a list of histogram files.
-livetime (float):
-    Livetime used in the simulation that produced the histograms in seconds.
 
 Example
 -------
@@ -22,8 +20,6 @@ Example
 
 import logging
 from pathlib import Path
-
-import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -58,12 +54,6 @@ def _parse(label, description):
         type=str,
     )
 
-    config.parser.add_argument(
-        "--livetime",
-        help="Livetime used in the simulation that produced the histograms in seconds.",
-        type=float,
-        required=True,
-    )
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
@@ -79,14 +69,13 @@ def main():
     logger.info("Starting the application.")
 
     histogram_files = config_parser["hist_file_names"]
-    livetime = config_parser["livetime"] * u.s
 
     if isinstance(histogram_files, str):
         histogram_files = [histogram_files]
 
     histograms = SimtelHistograms(histogram_files)
 
-    logger.info(f"Calculating event rate and trigger rate for livetime: {livetime}")
+    logger.info("Calculating event rate and trigger rate")
 
     # Calculate trigger rate
     obs_time = histograms.estimate_observation_time()
