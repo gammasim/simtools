@@ -319,6 +319,8 @@ def test_get_altitude():
 
 def test_print_compact_format(capsys):
     telescope = TelescopePosition(name="LSTS-01")
+    telescope.set_auxiliary_parameter("telescope_axis_height", 16.0 * u.m)
+    telescope.set_auxiliary_parameter("telescope_sphere_radius", 12.5 * u.m)
     telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
     expected_output = "LSTS-01 100.00 200.00 2100.00"
     telescope.print_compact_format(
@@ -329,7 +331,7 @@ def test_print_compact_format(capsys):
     # ignore differences in spaces
     assert "".join(expected_output.split()) == "".join(_output.split())
 
-    expected_output = "LSTS-01 100.00 200.00 115.00"
+    expected_output = "LSTS-01 100.00 200.00 116.00"
     telescope.print_compact_format(
         crs_name="ground",
         corsika_observation_level=2000.0 * u.m,
@@ -338,7 +340,7 @@ def test_print_compact_format(capsys):
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     expected_output = (
-        "telescope_name position_x position_y position_z\nLSTN-01 100.00 200.00 115.00"
+        "telescope_name position_x position_y position_z\nLSTS-01 100.00 200.00 116.00"
     )
     telescope.print_compact_format(
         crs_name="ground",
@@ -349,7 +351,7 @@ def test_print_compact_format(capsys):
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("mercator", xx=28.7621661, yy=-17.8920302, zz=2100.0)
-    expected_output = "LSTN-01 28.76216610 -17.89203020    2100.00"
+    expected_output = "LSTS-01 28.76216610 -17.89203020    2100.00"
     telescope.print_compact_format("mercator")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
@@ -359,14 +361,14 @@ def test_print_compact_format(capsys):
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
-    expected_output = "LSTN-01 217611.23 3185066.28    2100.00"
+    expected_output = "LSTS-01 217611.23 3185066.28    2100.00"
     telescope.print_compact_format("utm")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
     telescope.geo_code = "ABC"
-    expected_output = "LSTN-01 217611.23 3185066.28    2100.00  ABC"
+    expected_output = "LSTS-01 217611.23 3185066.28    2100.00  ABC"
     telescope.print_compact_format("utm")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
