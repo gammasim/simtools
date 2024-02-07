@@ -262,7 +262,8 @@ class SimtelHistograms:
         )
         return radius_axis, energy_axis
 
-    def _produce_triggered_to_sim_fraction_hist(self, events_histogram, triggered_events_histogram):
+    @staticmethod
+    def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
         """
         Produce a new histogram with the fraction of triggered events over the simulated events.
 
@@ -291,7 +292,8 @@ class SimtelHistograms:
         event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
         return event_ratio_histogram
 
-    def _integrate_hist_in_area(self, radius_axis, events_histogram):
+    @staticmethod
+    def _integrate_hist_in_area(radius_axis, events_histogram):
         """
         Integrate the histogram in area and keep the energy dependence.
         In a sequence of integrations, one has to integrate in area first, and then in energy.
