@@ -312,7 +312,7 @@ class SimtelHistograms:
 
         """
         energy_axis_size = np.size(events_histogram["data"], axis=0)
-        integrated_event_ratio_per_energy = np.zeros(energy_axis_size - 1)
+        integrated_event_ratio_per_energy = np.zeros(energy_axis_size)
         areas = radius_axis[:-1] * np.diff(radius_axis)
 
         for i_energy in range(energy_axis_size - 1):
