@@ -45,6 +45,8 @@ class SimtelHistograms:
         self._combined_hists = None
         self.__meta_dict = None
         self._config = None
+        self._total_num_triggered_events = None
+        self._total_num_simulated_events = None
         self._initialize_lists()
         self._view_cone = None
         self._total_area = None
@@ -119,13 +121,39 @@ class SimtelHistograms:
         int:
             total number of simulated events.
         """
-        logging.debug(f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}")
-        logging.debug(
-            f"Number of times each simulated shower is used (CORSIKA NUSE): {self.config['n_use']}"
-        )
-        total_simulated_showers = self.config["n_showers"] * self.config["n_use"]
-        logging.debug(f"Number of total simulated showers: {total_simulated_showers}")
-        return total_simulated_showers
+        if self._total_num_simulated_events is None:
+            logging.debug(
+                f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}"
+            )
+            logging.debug(
+                "Number of times each simulated shower is used (CORSIKA NUSE): "
+                f"{self.config['n_use']}"
+            )
+            self._total_num_simulated_events = self.config["n_showers"] * self.config["n_use"]
+            logging.debug(f"Number of total simulated showers: {self._total_num_simulated_events}")
+        return self._total_num_simulated_events
+
+    @property
+    def total_num_triggered_events(self):
+        """
+        Returns the total number of triggered events.
+        Please note that this value is not supposed to match the trigger rate x estimated
+        observation time, as the simulation is optimized for computational time and the energy
+        distribution assumed is not necessarily the CTAO reference cosmic-ray spectra.
+
+        Returns
+        -------
+        int:
+            total number of simulated events.
+        """
+
+        if self._total_num_triggered_events is None:
+            self._total_num_triggered_events = {}
+            _, triggered_hist = self.fill_event_histogram_dicts()
+            for i_file, _ in enumerate(self.list_of_histograms):
+                self._total_num_triggered_events = np.round(np.sum(triggered_hist[i_file]["data"]))
+            logging.debug(f"Number of triggered showers: {self._total_num_triggered_events}")
+        return self._total_num_triggered_events
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -400,7 +428,7 @@ class SimtelHistograms:
                 energy_max=self.energy_range[1],
             )
         )
-        logging.info(f"{system_trigger_rate.to(1 / u.s).value} Hz")
+        logging.debug(f"{system_trigger_rate.to(1 / u.s).value} Hz")
         return system_trigger_rate
 
     @property
@@ -484,7 +512,6 @@ class SimtelHistograms:
             self.energy_range[1],
         )
         obs_time = self.total_num_simulated_events / first_estimate * u.s
-        logging.info(f"Estimated observation time: {obs_time.to(u.s).value} s")
         return obs_time
 
     def get_correction_factor(self):
