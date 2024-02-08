@@ -286,11 +286,11 @@ class SimtelHistograms:
 
         # Radial distribution of triggered events per E divided by the radial distribution
         # of simulated events per E (gives a radial distribution of trigger probability per E
-
-        event_ratio_histogram["data"] = (
-            triggered_events_histogram["data"] / events_histogram["data"]
+        non_zero_indices = events_histogram["data"] != 0
+        event_ratio_histogram["data"][non_zero_indices] = (
+            triggered_events_histogram["data"][non_zero_indices]
+            / events_histogram["data"][non_zero_indices]
         )
-        event_ratio_histogram["data"][np.isnan(event_ratio_histogram["data"])] = 0
         return event_ratio_histogram
 
     @staticmethod
