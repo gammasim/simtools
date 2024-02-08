@@ -78,24 +78,7 @@ def main():
     histograms = SimtelHistograms(histogram_files)
 
     logger.info("Calculating simulated and triggered event rate")
-
-    for i in range(histograms.number_of_files):
-        histogram_instance = histograms.list_of_hist_instances[i]
-        obs_time = histogram_instance.estimate_observation_time()
-        event_rate = histogram_instance.total_num_simulated_events / obs_time
-        trigger_rate = histogram_instance.trigger_rate_per_histogram(re_weight=True)
-        logger.info(f"Histogram {i + 1}:")
-        logger.info(
-            f"Total number of simulated events: {histogram_instance.total_num_simulated_events} "
-            "events"
-        )
-        logger.info(
-            f"Total number of triggered events: {histogram_instance.total_num_triggered_events} "
-            "events"
-        )
-        logger.info(f"Estimated equivalent observation time: {obs_time.value} s")
-        logger.info(f"Simulated event rate: {event_rate.value:.4e} Hz")
-        logger.info(f"System trigger event rate: {trigger_rate.value:.4e} Hz")
+    histograms.calculate_event_rates()
 
 
 if __name__ == "__main__":
