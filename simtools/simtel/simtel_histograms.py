@@ -396,16 +396,13 @@ class SimtelHistogram:
         logging.debug("Getting particle distribution.")
 
         simulation_energy_distribution = self.get_simulation_spectral_distribution()
-        simulation_energy_integrated = []
         # Expected integrated CR flux
         cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(
             self.energy_range[0], self.energy_range[1]
         )
         # Simulated integrated flux (differs from above due to optimization of computational time)
-        simulation_energy_integrated.append(
-            simulation_energy_distribution.integrate_energy(
-                self.energy_range[0], self.energy_range[1]
-            )
+        simulation_energy_integrated = simulation_energy_distribution.integrate_energy(
+            self.energy_range[0], self.energy_range[1]
         )
         # Estimate a normalization factor, which also means the fraction of computational time
         # spared by using a different distribution. `time_economy_factor` expected to be > 1.
@@ -463,7 +460,6 @@ class SimtelHistogram:
         float:
             The system trigger ratio.
         """
-        all_system_trigger_rate = []
         system_trigger_rate = (
             trigger_probability
             * particle_distribution_function.derive_events_rate(
@@ -475,8 +471,7 @@ class SimtelHistogram:
             )
         )
         logging.debug(f"{system_trigger_rate.to(1 / u.s).value} Hz")
-        all_system_trigger_rate.append(system_trigger_rate)
-        return all_system_trigger_rate
+        return system_trigger_rate
 
     def estimate_observation_time(self):
         """
