@@ -518,11 +518,7 @@ class SimtelHistogram:
         astropy.Quantity[1/time]
             Uncertainty in the trigger rate estimate.
         """
-        return (
-            self.config["n_use"]
-            * np.sqrt(self.config["n_showers"])
-            / self.estimate_observation_time()
-        )
+        return np.sqrt(self.total_num_triggered_events) / self.estimate_observation_time()
 
     def trigger_rate_per_histogram(self, re_weight=True):
         """
@@ -632,7 +628,7 @@ class SimtelHistograms:
             triggered_event_rates.append(triggered_event_rate)
             logging.info(
                 f"System trigger event rate: {triggered_event_rate.value:.4e} \u00B1 "
-                f"{triggered_event_rate_uncertainty:.4e} Hz"
+                f"{triggered_event_rate_uncertainty.value:.4e} Hz"
             )
         return sim_event_rates, triggered_event_rates
 
