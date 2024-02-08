@@ -84,8 +84,16 @@ def main():
     trigger_rates = histograms.trigger_rate_per_histogram(re_weight=True)
 
     for i, trigger_rate in enumerate(trigger_rates):
-        logger.info(f"Simulated event rate for histogram {i + 1}: {event_rates.value:.4e} Hz")
-        logger.info(f"Triggered event rate for histogram {i + 1}: {trigger_rate.value:.4e} Hz")
+        logger.info(f"Histogram {i + 1}:")
+        logger.info(
+            f"Total number of simulated events: {histograms.total_num_simulated_events} events"
+        )
+        logger.info(
+            f"Total number of triggered events: {histograms.total_num_triggered_events} events"
+        )
+        logger.info(f"Estimated equivalent observation time: {obs_time.value} s")
+        logger.info(f"Simulated event rate: {event_rates.value:.4e} Hz")
+        logger.info(f"System trigger event rate: {trigger_rate.value:.4e} Hz")
 
 
 if __name__ == "__main__":
