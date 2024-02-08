@@ -13,7 +13,12 @@ from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
 from simtools.utils.names import sanitize_name
 
-__all__ = ["InconsistentHistogramFormat", "SimtelHistograms"]
+__all__ = [
+    "InconsistentHistogramFormat",
+    "HistogramIdNotFound",
+    "SimtelHistogram",
+    "SimtelHistograms",
+]
 
 
 class InconsistentHistogramFormat(Exception):
