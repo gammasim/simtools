@@ -38,13 +38,21 @@ class SimtelHistogram:
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
         self._histogram = None
+        self._histogram_file = None
+        self._initialize_histogram()
 
-    @property
-    def histogram(self):
-        """Define the histogram instance."""
-        # this file has to be parsed each time it is read
-        self._histogram = EventIOFile(self.histogram_file)
-        return self._histogram
+    def _initialize_histogram(self):
+        """
+        Initializes lists of histograms and files.
+
+        Returns
+        -------
+        list:
+            List of histograms.
+        """
+        with EventIOFile(self.histogram_file) as f:
+            for obj in yield_toplevel_of_type(f, Histograms):
+                self.histogram = obj.parse()
 
     @property
     def number_of_histogram_types(self):
@@ -78,11 +86,10 @@ class SimtelHistogram:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            with self.histogram as f:
+            with EventIOFile(self.histogram_file) as f:
                 for obj in f:
                     if isinstance(obj, MCRunHeader):
                         self._config = obj.parse()
-        print(self._config)
         return self._config
 
     @property
@@ -570,31 +577,49 @@ class SimtelHistograms:
         self._is_test = test
         self._combined_hists = None
         self.__meta_dict = None
-        self._initialize_lists()
 
-    def _initialize_lists(self):
+    def calculate_event_rates(self):
         """
-        Initializes lists of histograms and files.
+        Calculate the triggered and simulated event rate for the histograms in each file.
 
         Returns
         -------
-        list:
-            List of histograms.
+        sim_event_rates: list of astropy.Quantity[1/time]
+            The simulated event rates.
+        triggered_event_rates: list of astropy.Quantity[1/time]
+            The triggered event rates.
         """
-        self.list_of_histograms = []
-        self.list_of_hist_instances = []
-        for file in self.histogram_files:
-            simtel_histogram_instance = SimtelHistogram(file)
-            self.list_of_hist_instances.append(simtel_histogram_instance)
-            with simtel_histogram_instance.histogram as f:
-                for obj in yield_toplevel_of_type(f, Histograms):
-                    hists = obj.parse()
-                    self.list_of_histograms.append(hists)
+        triggered_event_rates = []
+        sim_event_rates = []
+        for i_file, file in enumerate(self.histogram_files):
+            simtel_hist_instance = SimtelHistogram(file)
+
+            logging.info(f"Histogram {i_file + 1}:")
+            logging.info(
+                "Total number of simulated events: "
+                f"{simtel_hist_instance.total_num_simulated_events} events"
+            )
+            logging.info(
+                "Total number of triggered events: "
+                f"{simtel_hist_instance.total_num_triggered_events} events"
+            )
+
+            obs_time = simtel_hist_instance.estimate_observation_time()
+            logging.info(f"Estimated equivalent observation time: {obs_time.value} s")
+
+            sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
+            sim_event_rates.append(sim_event_rate)
+            logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
+
+            triggered_event_rate = simtel_hist_instance.trigger_rate_per_histogram()
+            triggered_event_rates.append(triggered_event_rate)
+            logging.info(f"System trigger event rate: {triggered_event_rate.value:.4e} Hz")
+        return sim_event_rates, triggered_event_rates
 
     @property
     def number_of_files(self):
         """Returns number of histograms."""
-        return len(self.list_of_hist_instances)
+        return len(self.histogram_files)
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -631,7 +656,7 @@ class SimtelHistograms:
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
-            for i_hist, hists_one_file in enumerate(self.list_of_histograms):
+            for i_hist, hists_one_file in enumerate(self.histogram_files):
                 if i_hist == 0:
                     # First file
                     self._combined_hists = copy.copy(hists_one_file)
@@ -644,7 +669,7 @@ class SimtelHistograms:
                             this_combined_hist["data"], hist["data"]
                         )
 
-            self._logger.debug(f"End of reading {len(self.list_of_histograms)} files")
+            self._logger.debug(f"End of reading {len(self.histogram_files)} files")
         return self._combined_hists
 
     @combined_hists.setter
