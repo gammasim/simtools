@@ -61,7 +61,9 @@ def _parse(label, description):
 
 def main():
     label = Path(__file__).stem
-    description = "Calculates the event rate based on simtel array histograms."
+    description = (
+        "Calculates the simulated and triggered event rate based on simtel array histograms."
+    )
     config_parser = _parse(label, description)
 
     logger = logging.getLogger()
@@ -82,10 +84,8 @@ def main():
     trigger_rates = histograms.trigger_rate_per_histogram(re_weight=True)
 
     for i, trigger_rate in enumerate(trigger_rates):
-        logger.info(f"Event rate for histogram {i + 1}: {event_rates.value:.4e} Hz")
-        logger.info(f"Trigger rate for histogram {i + 1}: {trigger_rate.value:.4e} Hz")
-
-    logger.info("Application completed.")
+        logger.info(f"Simulated event rate for histogram {i + 1}: {event_rates.value:.4e} Hz")
+        logger.info(f"Triggered event rate for histogram {i + 1}: {trigger_rate.value:.4e} Hz")
 
 
 if __name__ == "__main__":
