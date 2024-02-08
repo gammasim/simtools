@@ -20,44 +20,38 @@ class InconsistentHistogramFormat(Exception):
     """Exception for bad histogram format."""
 
 
-class SimtelHistograms:
-    """
-    This class handle sim_telarray histograms. Histogram files are handled by using eventio library.
+class HistogramIdNotFound(Exception):
+    """Exception for histogram ID not found."""
 
-    Parameters
-    ----------
-    histogram_files: list
-        List of sim_telarray histogram files (str of Path).
-    test: bool
-        If True, only a fraction of the histograms will be processed, leading to a much shorter\
-         runtime.
+
+class SimtelHistogram:
+    """
+    This class handles a single histogram file.
     """
 
-    def __init__(self, histogram_files, test=False):
-        """
-        Initialize SimtelHistograms
-        """
-        self._logger = logging.getLogger(__name__)
-        if not isinstance(histogram_files, list):
-            histogram_files = [histogram_files]
-        self._histogram_files = histogram_files
-        self._is_test = test
-        self._combined_hists = None
-        self.__meta_dict = None
+    def __init__(self, histogram_file):
+        self.histogram_file = histogram_file
         self._config = None
-        self._total_num_triggered_events = None
-        self._total_num_simulated_events = None
-        self._initialize_lists()
         self._view_cone = None
         self._total_area = None
         self._energy_range = None
+        self._total_num_simulated_events = None
+        self._total_num_triggered_events = None
+        self._histogram = None
 
     @property
-    def number_of_histograms(self):
-        """Returns number of histograms."""
-        return len(self.combined_hists)
+    def histogram(self):
+        """Define the histogram instance."""
+        if self._histogram is None:
+            self._histogram = EventIOFile(self.histogram_file)
+        return self._histogram
 
-    def get_histogram_title(self, i_hist):
+    @property
+    def number_of_histogram_types(self):
+        """Returns number of histograms."""
+        return len(self.histogram)
+
+    def get_histogram_type_title(self):
         """
         Returns the title of the histogram with index i_hist.
 
@@ -71,25 +65,7 @@ class SimtelHistograms:
         str
             Histogram title.
         """
-        return self.combined_hists[i_hist]["title"]
-
-    def _initialize_lists(self):
-        """
-        Initializes lists of histograms and files.
-
-        Returns
-        -------
-        list:
-            List of histograms.
-        """
-        self.list_of_histograms = []
-        self.list_of_files = []
-        for file in self._histogram_files:
-            self.list_of_files.append(EventIOFile(file))
-            with EventIOFile(file) as f:
-                for obj in yield_toplevel_of_type(f, Histograms):
-                    hists = obj.parse()
-                    self.list_of_histograms.append(hists)
+        return self.histogram["title"]
 
     @property
     def config(self):
@@ -102,11 +78,10 @@ class SimtelHistograms:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            for readfile in self.list_of_files:
-                with readfile as f:
-                    for obj in f:
-                        if isinstance(obj, MCRunHeader):
-                            self._config = obj.parse()
+            with self.histogram_file as f:
+                for obj in f:
+                    if isinstance(obj, MCRunHeader):
+                        self._config = obj.parse()
         return self._config
 
     @property
@@ -122,6 +97,7 @@ class SimtelHistograms:
             total number of simulated events.
         """
         if self._total_num_simulated_events is None:
+            self._total_num_simulated_events = []
             logging.debug(
                 f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}"
             )
@@ -148,12 +124,481 @@ class SimtelHistograms:
         """
 
         if self._total_num_triggered_events is None:
-            self._total_num_triggered_events = {}
             _, triggered_hist = self.fill_event_histogram_dicts()
-            for i_file, _ in enumerate(self.list_of_histograms):
-                self._total_num_triggered_events = np.round(np.sum(triggered_hist[i_file]["data"]))
+            self._total_num_triggered_events = np.round(np.sum(triggered_hist["data"]))
             logging.debug(f"Number of triggered showers: {self._total_num_triggered_events}")
         return self._total_num_triggered_events
+
+    def fill_event_histogram_dicts(self):
+        """
+        Get data from the total simulated event and the triggered event histograms.
+
+        Returns
+        -------
+        dict:
+            Information about the histograms with simulated events.
+        dict:
+            Information about the histograms with triggered events.
+
+        Raises
+        ------
+        HistogramIdNotFound:
+            if histogram ids not found. Problem with the file.
+        """
+        # Save the appropriate histograms to dictionaries
+        found_one = False
+        found_two = False
+        for hist in self.histogram:
+            if hist["id"] == 1:
+                events_histogram = hist
+                found_one = True
+            elif hist["id"] == 2:
+                triggered_events_histogram = hist
+                found_two = True
+            if found_one * found_two:
+                break
+
+        if "triggered_events_histogram" in locals():
+            return events_histogram, triggered_events_histogram
+        msg = "Histograms ids not found. Please check your files."
+        logging.error(msg)
+        raise HistogramIdNotFound
+
+    @property
+    @u.quantity_input(energy=u.deg)
+    def view_cone(self):
+        """
+        View cone used in the simulation.
+
+        Returns
+        -------
+        list:
+            view cone used in the simulation [min, max]
+        """
+        if self._view_cone is None:
+            self._view_cone = self.config["viewcone"] * u.deg
+        return self._view_cone
+
+    @property
+    @u.quantity_input(energy=u.cm**2)
+    def total_area(self):
+        """
+        Total area covered by the simulated events (original CORSIKA CSCAT).
+
+        Returns
+        -------
+        astropy.Quantity[area]:
+            Total area covered on the ground covered by the simulation.
+        """
+        if self._total_area is None:
+            self._total_area = (
+                np.pi
+                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm))
+                ** 2
+            )
+        return self._total_area
+
+    @property
+    @u.quantity_input(energy=u.TeV)
+    def energy_range(self):
+        """
+        Energy range used in the simulation.
+
+        Returns
+        -------
+        list:
+            Energy range used in the simulation [min, max]
+        """
+        if self._energy_range is None:
+            self._energy_range = [
+                self.config["E_range"][0] * u.TeV,
+                self.config["E_range"][1] * u.TeV,
+            ]
+        return self._energy_range
+
+    @staticmethod
+    def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
+        """
+        Produce a new histogram with the fraction of triggered events over the simulated events.
+
+        Parameters
+        ----------
+        events_histogram:
+            A histogram for the simulated events.
+        triggered_events_histogram:
+            A histogram for the triggered events.
+
+        Returns
+        -------
+        event_ratio_histogram:
+            The new histogram with the fraction of triggered over simulated events.
+        """
+        event_ratio_histogram = copy.copy(events_histogram)
+
+        event_ratio_histogram["data"] = np.zeros_like(triggered_events_histogram["data"])
+
+        # Radial distribution of triggered events per E divided by the radial distribution
+        # of simulated events per E (gives a radial distribution of trigger probability per E
+        non_zero_indices = events_histogram["data"] != 0
+        event_ratio_histogram["data"][non_zero_indices] = (
+            triggered_events_histogram["data"][non_zero_indices]
+            / events_histogram["data"][non_zero_indices]
+        )
+        return event_ratio_histogram
+
+    def _initialize_histogram_axes(self, events_histogram):
+        """
+        Initialize the two axes of a histogram.
+
+        Parameters
+        ----------
+        events_histogram:
+            A single histogram from where to extract axis information.
+
+        Returns
+        -------
+        radius_axis: numpy.array
+            The array with the impact distance.
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        """
+        radius_axis = np.linspace(
+            events_histogram["lower_x"],
+            events_histogram["upper_x"],
+            events_histogram["n_bins_x"] + 1,
+            endpoint=True,
+        )
+        energy_axis = np.logspace(
+            events_histogram["lower_y"],
+            events_histogram["upper_y"],
+            events_histogram["n_bins_y"] + 1,
+            endpoint=True,
+        )
+        return radius_axis, energy_axis
+
+    @staticmethod
+    def _integrate_hist_in_area(radius_axis, events_histogram):
+        """
+        Integrate the histogram in area and keep the energy dependence.
+        In a sequence of integrations, one has to integrate in area first, and then in energy.
+
+        Parameters
+        ----------
+        radius_axis: numpy.array
+            The array with the impact distance.
+        events_histogram:
+            A histogram for the simulated events.
+
+        Returns
+        -------
+        integrated_event_ratio_per_energy: numpy.array (1-D)
+            The area-integrated, energy-dependent array.
+
+        """
+        energy_axis_size = np.size(events_histogram["data"], axis=0)
+        integrated_event_ratio_per_energy = np.zeros(energy_axis_size)
+        areas = radius_axis[:-1] * np.diff(radius_axis)
+
+        for i_energy in range(energy_axis_size - 1):
+            integrated_event_ratio_per_energy[i_energy] = np.sum(
+                events_histogram["data"][i_energy] * areas
+            )
+        return integrated_event_ratio_per_energy
+
+    def _integrate_array_in_energy(self, energy_axis, events_array, re_weight=True):
+        """
+        Integrate the event ratio distribution in energy.
+
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        events_array: numpy.array
+            Array with the area-integrated trigger to simulated event ratio distribution as
+            function of energy.
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        float:
+            energy-integrated event ratio distribution, i.e., the system trigger probability.
+        """
+        # Get the particle distribution for the specified energy axis and re_weight flag
+        particle_distribution = self.get_particle_distribution(energy_axis, re_weight=re_weight)
+
+        normalized_pdf = particle_distribution / np.sum(particle_distribution)
+
+        # Trigger probability per E integrated in E according to the given energy distribution
+        # (gives a trigger probability, i.e. a normalization)
+        trigger_probability = np.sum(events_array * normalized_pdf[:-1] * np.diff(energy_axis))
+        logging.debug(f"System trigger probability: {trigger_probability}.")
+        return trigger_probability
+
+    def get_particle_distribution(self, energy_axis, re_weight=True):
+        """
+        Get the particle distribution for the specified energy_axis.
+
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        particle_distribution: numpy.array
+            The array with the particle distribution as function of energy.
+        """
+
+        particle_distribution_function = self.get_particle_distribution_function(
+            re_weight=re_weight
+        )
+        return particle_distribution_function(energy_axis * u.TeV)
+
+    def get_particle_distribution_function(self, re_weight=True):
+        """
+        Get the particle distribution function, depending on whether one wants to re-weight to the
+        expected cosmic-ray spectral distribution or not.
+
+        Parameters
+        ----------
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        ctao_cosmic_ray_spectra.spectral.PowerLaw
+            The function describing the spectral distribution.
+        """
+        # Define the particle distribution
+        particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
+        if re_weight:
+            correction_factor = self.get_correction_factor()
+        else:
+            correction_factor = 1
+        particle_distribution_function.normalization /= correction_factor
+
+        return particle_distribution_function
+
+    def get_correction_factor(self):
+        """
+        Get the correction factor for the energy distribution to account for differences in the
+        expected cosmic-ray spectral distribution and the cosmic-ray distritibution assumed for
+        the simulation.
+
+        Returns
+        -------
+        float
+            The correction factor.
+        """
+        logging.debug("Getting particle distribution.")
+
+        simulation_energy_distribution = self.get_simulation_spectral_distribution()
+        simulation_energy_integrated = []
+        # Expected integrated CR flux
+        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(
+            self.energy_range[0], self.energy_range[1]
+        )
+        # Simulated integrated flux (differs from above due to optimization of computational time)
+        simulation_energy_integrated.append(
+            simulation_energy_distribution.integrate_energy(
+                self.energy_range[0], self.energy_range[1]
+            )
+        )
+        # Estimate a normalization factor, which also means the fraction of computational time
+        # spared by using a different distribution. `time_economy_factor` expected to be > 1.
+        time_economy_factor = cr_energy_integrated / simulation_energy_integrated
+        return time_economy_factor
+
+    def get_simulation_spectral_distribution(self):
+        """
+        Get the simulation particle energy distribution according to its configuration.
+
+        Returns
+        -------
+        numpy.array
+            The differential flux of the energy distribution.
+        """
+        if self.config["diffuse"] == 1:
+            norm_unit = 1 / (u.cm**2 * u.s * u.sr * u.TeV)
+        else:
+            norm_unit = 1 / (u.cm**2 * u.s * u.TeV)
+
+        non_norm_simulated_power_law_function = PowerLaw(
+            normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
+        )
+        non_norm_simulated_events_rate = non_norm_simulated_power_law_function.derive_events_rate(
+            inner=self.view_cone[0],
+            outer=self.view_cone[1],
+            area=self.total_area,
+            energy_min=self.energy_range[0],
+            energy_max=self.energy_range[1],
+        )
+
+        factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
+        norm_simulated_power_law_function = PowerLaw(
+            normalization=factor * norm_unit,
+            index=self.config["spectral_index"],
+            e_ref=1 * u.TeV,
+        )
+        return norm_simulated_power_law_function
+
+    def _calculate_system_trigger_rate(self, trigger_probability, particle_distribution_function):
+        """
+        Calculate the system trigger rate based on the system trigger probability and the particle
+        distribution function.
+
+        Parameters
+        ----------
+        trigger_probability: float
+            The system trigger probability.
+        particle_distribution_function:
+            The function from ctao_cosmic_ray_spectra that describes the particle energy
+            distribution.
+
+        Returns
+        -------
+        float:
+            The system trigger ratio.
+        """
+        all_system_trigger_rate = []
+        system_trigger_rate = (
+            trigger_probability
+            * particle_distribution_function.derive_events_rate(
+                inner=self.view_cone[0],
+                outer=self.view_cone[1],
+                area=self.total_area,
+                energy_min=self.energy_range[0],
+                energy_max=self.energy_range[1],
+            )
+        )
+        logging.debug(f"{system_trigger_rate.to(1 / u.s).value} Hz")
+        all_system_trigger_rate.append(system_trigger_rate)
+        return all_system_trigger_rate
+
+    def estimate_observation_time(self):
+        """
+        Estimates the observation time comprised by the number of events in the simulation.
+        It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
+        and other information from the simulation configuration `self.config`.
+
+        Parameters
+        ----------
+        view_cone: list of astropy.Quantity[deg]
+            The view cone used in the simulation.
+        energy_range: list of astropy.Quantity[energy]
+            The energy range [Emin, Emax] used in the simulation.
+        total_area: astropy.Quantity[area]
+            Total ground area used in the simulation (CSCAT).
+
+        Returns
+        -------
+        float: astropy.Quantity[time]
+            Estimated observation time based on the total number of particles simulated.
+        """
+        first_estimate = irfdoc_proton_spectrum.derive_number_events(
+            self.view_cone[0],
+            self.view_cone[1],
+            1 * u.s,
+            self.total_area,
+            self.energy_range[0],
+            self.energy_range[1],
+        )
+        obs_time = self.total_num_simulated_events / first_estimate * u.s
+        return obs_time
+
+    def trigger_rate_per_histogram(self, re_weight=True):
+        """
+        Calculate the trigger rate histograms, i.e., the number of triggered events per second.
+
+        Parameters
+        ----------
+        re_weight: bool
+            if True, re-weights the particle spectral distribution to correct to the expected one.
+
+        Returns
+        -------
+        list:
+            List with the trigger rate histograms for each file.
+        """
+
+        events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
+
+        # Produce triggered/simulated event histogram
+        triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
+            events_histogram, triggered_events_histogram
+        )
+
+        radius_axis, energy_axis = self._initialize_histogram_axes(events_histogram)
+        # Radial distribution of trigger probability per E integrated in area at each radius
+        # (gives a trigger probability per E)
+        triggered_to_sim_fraction_per_energy = self._integrate_hist_in_area(
+            radius_axis, triggered_to_sim_fraction_hist
+        )
+
+        trigger_probability = self._integrate_array_in_energy(
+            energy_axis, triggered_to_sim_fraction_per_energy, re_weight=re_weight
+        )
+        system_trigger_rate = self._calculate_system_trigger_rate(
+            trigger_probability,
+            self.get_particle_distribution_function(re_weight=re_weight),
+        )
+
+        return system_trigger_rate
+
+
+class SimtelHistograms:
+    """
+    This class handles sim_telarray histograms. Histogram files are handled by using eventio
+    library.
+
+    Parameters
+    ----------
+    histogram_files: list
+        List of sim_telarray histogram files (str of Path).
+    test: bool
+        If True, only a fraction of the histograms will be processed, leading to a much shorter\
+         runtime.
+    """
+
+    def __init__(self, histogram_files, test=False):
+        """
+        Initialize SimtelHistograms
+        """
+        self._logger = logging.getLogger(__name__)
+        if not isinstance(histogram_files, list):
+            histogram_files = [histogram_files]
+        self.histogram_files = histogram_files
+        self._is_test = test
+        self._combined_hists = None
+        self.__meta_dict = None
+        self._initialize_lists()
+
+    def _initialize_lists(self):
+        """
+        Initializes lists of histograms and files.
+
+        Returns
+        -------
+        list:
+            List of histograms.
+        """
+        self.list_of_histograms = []
+        self.list_of_files = []
+        for file in self.histogram_files:
+            simtel_histogram_instance = SimtelHistogram(file)
+            self.list_of_files.append(simtel_histogram_instance.histogram)
+            with simtel_histogram_instance.histogram as f:
+                for obj in yield_toplevel_of_type(f, Histograms):
+                    hists = obj.parse()
+                    self.list_of_histograms.append(hists)
+
+    @property
+    def number_of_files(self):
+        """Returns number of histograms."""
+        return len(self.list_of_files)
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -217,410 +662,6 @@ class SimtelHistograms:
             Combined histograms.
         """
         self._combined_hists = new_combined_hists
-
-    def trigger_rate_per_histogram(self, re_weight=True):
-        """
-        Calculate the trigger rate histograms, i.e., the number of triggered events per second.
-
-        Parameters
-        ----------
-        re_weight: bool
-            if True, re-weights the particle spectral distribution to correct to the expected one.
-
-        Returns
-        -------
-        list:
-            List with the trigger rate histograms for each file.
-        """
-
-        events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
-
-        list_of_trigger_rate_hists = []
-
-        # Calculate the trigger rate histograms
-        for i_file, _ in enumerate(self.list_of_histograms):
-            # Produce triggered/simulated event histogram
-            triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
-                events_histogram[i_file], triggered_events_histogram[i_file]
-            )
-
-            radius_axis, energy_axis = self._initialize_histogram_axes(events_histogram[i_file])
-            # Radial distribution of trigger probability per E integrated in area at each radius
-            # (gives a trigger probability per E)
-            triggered_to_sim_fraction_per_energy = self._integrate_hist_in_area(
-                radius_axis, triggered_to_sim_fraction_hist
-            )
-
-            trigger_probability = self._integrate_array_in_energy(
-                energy_axis, triggered_to_sim_fraction_per_energy, re_weight=re_weight
-            )
-            system_trigger_rate = self._calculate_system_trigger_rate(
-                trigger_probability, self.get_particle_distribution_function(re_weight=re_weight)
-            )
-
-            list_of_trigger_rate_hists.append(system_trigger_rate)
-        return list_of_trigger_rate_hists
-
-    def _initialize_histogram_axes(self, events_histogram):
-        """
-        Initialize the two axes of a histogram.
-
-        Parameters
-        ----------
-        events_histogram:
-            A single histogram from where to extract axis information.
-
-        Returns
-        -------
-        radius_axis: numpy.array
-            The array with the impact distance.
-        energy_axis: numpy.array
-            The array with the simulated particle energies.
-        """
-        radius_axis = np.linspace(
-            events_histogram["lower_x"],
-            events_histogram["upper_x"],
-            events_histogram["n_bins_x"] + 1,
-            endpoint=True,
-        )
-        energy_axis = np.logspace(
-            events_histogram["lower_y"],
-            events_histogram["upper_y"],
-            events_histogram["n_bins_y"] + 1,
-            endpoint=True,
-        )
-        return radius_axis, energy_axis
-
-    @staticmethod
-    def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
-        """
-        Produce a new histogram with the fraction of triggered events over the simulated events.
-
-        Parameters
-        ----------
-        events_histogram:
-            A histogram for the simulated events.
-        triggered_events_histogram:
-            A histogram for the triggered events.
-
-        Returns
-        -------
-        event_ratio_histogram:
-            The new histogram with the fraction of triggered over simulated events.
-        """
-        event_ratio_histogram = copy.copy(events_histogram)
-
-        event_ratio_histogram["data"] = np.zeros_like(triggered_events_histogram["data"])
-
-        # Radial distribution of triggered events per E divided by the radial distribution
-        # of simulated events per E (gives a radial distribution of trigger probability per E
-        non_zero_indices = events_histogram["data"] != 0
-        event_ratio_histogram["data"][non_zero_indices] = (
-            triggered_events_histogram["data"][non_zero_indices]
-            / events_histogram["data"][non_zero_indices]
-        )
-        return event_ratio_histogram
-
-    @staticmethod
-    def _integrate_hist_in_area(radius_axis, events_histogram):
-        """
-        Integrate the histogram in area and keep the energy dependence.
-        In a sequence of integrations, one has to integrate in area first, and then in energy.
-
-        Parameters
-        ----------
-        radius_axis: numpy.array
-            The array with the impact distance.
-        events_histogram:
-            A histogram for the simulated events.
-
-        Returns
-        -------
-        integrated_event_ratio_per_energy: numpy.array (1-D)
-            The area-integrated, energy-dependent array.
-
-        """
-        energy_axis_size = np.size(events_histogram["data"], axis=0)
-        integrated_event_ratio_per_energy = np.zeros(energy_axis_size)
-        areas = radius_axis[:-1] * np.diff(radius_axis)
-
-        for i_energy in range(energy_axis_size - 1):
-            integrated_event_ratio_per_energy[i_energy] = np.sum(
-                events_histogram["data"][i_energy] * areas
-            )
-        return integrated_event_ratio_per_energy
-
-    def get_particle_distribution(self, energy_axis, re_weight=True):
-        """
-        Get the particle distribution for the specified energy_axis.
-
-        Parameters
-        ----------
-        energy_axis: numpy.array
-            The array with the simulated particle energies.
-        re_weight: bool
-            if True, re-weights the particle spectral distribution to correct to the expected one.
-
-        Returns
-        -------
-        particle_distribution: numpy.array
-            The array with the particle distribution as function of energy.
-        """
-
-        particle_distribution_function = self.get_particle_distribution_function(
-            re_weight=re_weight
-        )
-        return particle_distribution_function(energy_axis * u.TeV)
-
-    def _integrate_array_in_energy(self, energy_axis, events_array, re_weight=True):
-        """
-        Parameters
-        ----------
-        energy_axis: numpy.array
-            The array with the simulated particle energies.
-        events_array: numpy.array
-            Array with the area-integrated trigger to simulated event ratio distribution as
-            function of energy.
-        re_weight: bool
-            if True, re-weights the particle spectral distribution to correct to the expected one.
-
-        Returns
-        -------
-        float:
-            energy-integrated event ratio distribution, i.e., the system trigger probability.
-        """
-        # Get the particle distribution for the specified energy axis and re_weight flag
-        particle_distribution = self.get_particle_distribution(energy_axis, re_weight=re_weight)
-
-        normalized_pdf = particle_distribution / np.sum(particle_distribution)
-
-        # Trigger probability per E integrated in E according to the given energy distribution
-        # (gives a trigger probability, i.e. a normalization)
-        trigger_probability = np.sum(events_array * normalized_pdf[:-1] * np.diff(energy_axis))
-        logging.debug(f"System trigger probability: {trigger_probability}.")
-        return trigger_probability
-
-    def _calculate_system_trigger_rate(self, trigger_probability, particle_distribution_function):
-        """
-        Calculate the system trigger rate based on the system trigger probability and the particle
-        distribution function.
-
-        Parameters
-        ----------
-        trigger_probability: float
-            The system trigger probability.
-        particle_distribution_function:
-            The function from ctao_cosmic_ray_spectra that describes the particle energy
-            distribution.
-
-        Returns
-        -------
-        float:
-            The system trigger ratio.
-        """
-        system_trigger_rate = (
-            trigger_probability
-            * particle_distribution_function.derive_events_rate(
-                inner=self.view_cone[0],
-                outer=self.view_cone[1],
-                area=self.total_area,
-                energy_min=self.energy_range[0],
-                energy_max=self.energy_range[1],
-            )
-        )
-        logging.debug(f"{system_trigger_rate.to(1 / u.s).value} Hz")
-        return system_trigger_rate
-
-    @property
-    @u.quantity_input(energy=u.deg)
-    def view_cone(self):
-        """
-        View cone used in the simulation.
-
-        Returns
-        -------
-        list:
-            view cone used in the simulation [min, max]
-        """
-        if self._view_cone is None:
-            self._view_cone = self.config["viewcone"] * u.deg
-        return self._view_cone
-
-    @property
-    @u.quantity_input(energy=u.cm**2)
-    def total_area(self):
-        """
-        Total area covered by the simulated events (original CORSIKA CSCAT).
-
-        Returns
-        -------
-        astropy.Quantity[area]:
-            Total area covered on the ground covered by the simulation.
-        """
-        if self._total_area is None:
-            self._total_area = (
-                np.pi
-                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm))
-                ** 2
-            )
-        return self._total_area
-
-    @property
-    @u.quantity_input(energy=u.TeV)
-    def energy_range(self):
-        """
-        Energy range used in the simulation.
-
-        Returns
-        -------
-        list:
-            Energy range used in the simulation [min, max]
-        """
-        if self._energy_range is None:
-            self._energy_range = [
-                self.config["E_range"][0] * u.TeV,
-                self.config["E_range"][1] * u.TeV,
-            ]
-        return self._energy_range
-
-    def estimate_observation_time(self):
-        """
-        Estimates the observation time comprised by the number of events in the simulation.
-        It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
-        and other information from the simulation configuration `self.config`.
-
-        Parameters
-        ----------
-        view_cone: list of astropy.Quantity[deg]
-            The view cone used in the simulation.
-        energy_range: list of astropy.Quantity[energy]
-            The energy range [Emin, Emax] used in the simulation.
-        total_area: astropy.Quantity[area]
-            Total ground area used in the simulation (CSCAT).
-
-        Returns
-        -------
-        float: astropy.Quantity[time]
-            Estimated observation time based on the total number of particles simulated.
-        """
-        first_estimate = irfdoc_proton_spectrum.derive_number_events(
-            self.view_cone[0],
-            self.view_cone[1],
-            1 * u.s,
-            self.total_area,
-            self.energy_range[0],
-            self.energy_range[1],
-        )
-        obs_time = self.total_num_simulated_events / first_estimate * u.s
-        return obs_time
-
-    def get_correction_factor(self):
-        """
-        Get the correction factor for the energy distribution to account for differences in the
-        expected cosmic-ray spectral distribution and the cosmic-ray distritibution assumed for
-        the simulation.
-
-        Returns
-        -------
-        float
-            The correction factor.
-        """
-        logging.debug("Getting particle distribution.")
-        # Expected integrated CR flux
-        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(
-            self.energy_range[0], self.energy_range[1]
-        )
-        simulation_energy_distribution = self.get_simulation_spectral_distribution()
-        # Simulated integrated flux (differs from above due to optimization of computational time)
-        simulation_energy_integrated = simulation_energy_distribution.integrate_energy(
-            self.energy_range[0], self.energy_range[1]
-        )
-        # Estimate a normalization factor, which also means the fraction of computational time
-        # spared by using a different distribution. `time_economy_factor` expected to be > 1.
-        time_economy_factor = cr_energy_integrated / simulation_energy_integrated
-        return time_economy_factor
-
-    def get_particle_distribution_function(self, re_weight=True):
-        """
-        Get the particle distribution function, depending on whether one wants to re-weight to the
-        expected cosmic-ray spectral distribution or not.
-
-        Parameters
-        ----------
-        re_weight: bool
-            if True, re-weights the particle spectral distribution to correct to the expected one.
-
-        Returns
-        -------
-        ctao_cosmic_ray_spectra.spectral.PowerLaw
-            The function describing the spectral distribution.
-        """
-        # Define the particle distribution
-        particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
-        if re_weight:
-            correction_factor = self.get_correction_factor()
-        else:
-            correction_factor = 1
-        particle_distribution_function.normalization /= correction_factor
-
-        return particle_distribution_function
-
-    def get_simulation_spectral_distribution(self):
-        """
-        Get the simulation particle energy distribution according to its configuration.
-
-        Returns
-        -------
-        numpy.array
-            The differential flux of the energy distribution.
-        """
-        if self.config["diffuse"] == 1:
-            norm_unit = 1 / (u.cm**2 * u.s * u.sr * u.TeV)
-        else:
-            norm_unit = 1 / (u.cm**2 * u.s * u.TeV)
-
-        non_norm_simulated_power_law_function = PowerLaw(
-            normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
-        )
-        non_norm_simulated_events_rate = non_norm_simulated_power_law_function.derive_events_rate(
-            inner=self.view_cone[0],
-            outer=self.view_cone[1],
-            area=self.total_area,
-            energy_min=self.energy_range[0],
-            energy_max=self.energy_range[1],
-        )
-
-        factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
-        norm_simulated_power_law_function = PowerLaw(
-            normalization=factor * norm_unit,
-            index=self.config["spectral_index"],
-            e_ref=1 * u.TeV,
-        )
-        return norm_simulated_power_law_function
-
-    def fill_event_histogram_dicts(self):
-        """
-        Fill two dictionaries with data from the total simulated event and the triggered event
-        histogram.
-
-        Returns
-        -------
-        dict:
-            Dictionary with the information about the histograms with simulated events.
-        dict:
-            Dictionary with the information about the histograms with triggered events.
-        """
-        events_histogram = {}
-        trigged_events_histogram = {}
-        # Save the appropriate histograms to a dictionary
-        for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            for hist in hists_one_file:
-                if hist["id"] == 1:
-                    events_histogram[i_file] = hist
-
-                elif hist["id"] == 2:
-                    trigged_events_histogram[i_file] = hist
-        return events_histogram, trigged_events_histogram
 
     def plot_one_histogram(self, i_hist, ax):
         """
