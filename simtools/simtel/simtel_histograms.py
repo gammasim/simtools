@@ -42,8 +42,8 @@ class SimtelHistogram:
     @property
     def histogram(self):
         """Define the histogram instance."""
-        if self._histogram is None:
-            self._histogram = EventIOFile(self.histogram_file)
+        # this file has to be parsed each time it is read
+        self._histogram = EventIOFile(self.histogram_file)
         return self._histogram
 
     @property
@@ -78,10 +78,11 @@ class SimtelHistogram:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            with self.histogram_file as f:
+            with self.histogram as f:
                 for obj in f:
                     if isinstance(obj, MCRunHeader):
                         self._config = obj.parse()
+        print(self._config)
         return self._config
 
     @property
@@ -581,10 +582,10 @@ class SimtelHistograms:
             List of histograms.
         """
         self.list_of_histograms = []
-        self.list_of_files = []
+        self.list_of_hist_instances = []
         for file in self.histogram_files:
             simtel_histogram_instance = SimtelHistogram(file)
-            self.list_of_files.append(simtel_histogram_instance.histogram)
+            self.list_of_hist_instances.append(simtel_histogram_instance)
             with simtel_histogram_instance.histogram as f:
                 for obj in yield_toplevel_of_type(f, Histograms):
                     hists = obj.parse()
@@ -593,7 +594,7 @@ class SimtelHistograms:
     @property
     def number_of_files(self):
         """Returns number of histograms."""
-        return len(self.list_of_files)
+        return len(self.list_of_hist_instances)
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
