@@ -492,15 +492,6 @@ class SimtelHistogram:
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
         and other information from the simulation configuration `self.config`.
 
-        Parameters
-        ----------
-        view_cone: list of astropy.Quantity[deg]
-            The view cone used in the simulation.
-        energy_range: list of astropy.Quantity[energy]
-            The energy range [Emin, Emax] used in the simulation.
-        total_area: astropy.Quantity[area]
-            Total ground area used in the simulation (CSCAT).
-
         Returns
         -------
         float: astropy.Quantity[time]
@@ -516,6 +507,22 @@ class SimtelHistogram:
         )
         obs_time = self.total_num_simulated_events / first_estimate * u.s
         return obs_time
+
+    def _estimate_trigger_rate_uncertainty(self):
+        """
+        Estimate the trigger rate uncertainty, based on the number of simulated events.
+        Poisson statistics are assumed.
+
+        Returns
+        -------
+        astropy.Quantity[1/time]
+            Uncertainty in the trigger rate estimate.
+        """
+        return (
+            self.config["n_use"]
+            * np.sqrt(self.config["n_showers"])
+            / self.estimate_observation_time()
+        )
 
     def trigger_rate_per_histogram(self, re_weight=True):
         """
@@ -554,7 +561,9 @@ class SimtelHistogram:
             self.get_particle_distribution_function(re_weight=re_weight),
         )
 
-        return system_trigger_rate
+        system_trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
+
+        return system_trigger_rate, system_trigger_rate_uncertainty
 
 
 class SimtelHistograms:
@@ -616,9 +625,15 @@ class SimtelHistograms:
             sim_event_rates.append(sim_event_rate)
             logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
 
-            triggered_event_rate = simtel_hist_instance.trigger_rate_per_histogram()
+            (
+                triggered_event_rate,
+                triggered_event_rate_uncertainty,
+            ) = simtel_hist_instance.trigger_rate_per_histogram()
             triggered_event_rates.append(triggered_event_rate)
-            logging.info(f"System trigger event rate: {triggered_event_rate.value:.4e} Hz")
+            logging.info(
+                f"System trigger event rate: {triggered_event_rate.value:.4e} \u00B1 "
+                f"{triggered_event_rate_uncertainty:.4e} Hz"
+            )
         return sim_event_rates, triggered_event_rates
 
     @property
