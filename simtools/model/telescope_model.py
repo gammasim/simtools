@@ -298,7 +298,7 @@ class TelescopeModel(ModelParameter):
             logging.error(f"Parameter {par} does not exist")
             return False
 
-        file = self.get_config_directory().joinpath(file_name)
+        file = self.config_file_directory.joinpath(file_name)
         with open(file, "r", encoding="utf-8") as f:
             is_2d = "@RPOL@" in f.read()
         return is_2d
@@ -320,7 +320,7 @@ class TelescopeModel(ModelParameter):
             dict of three arrays, wavelength, degrees, z.
         """
 
-        _file = self.get_config_directory().joinpath(file_name)
+        _file = self.config_file_directory.joinpath(file_name)
         line_to_start_from = 0
         with open(_file, "r", encoding="utf-8") as f:
             for i_line, line in enumerate(f):

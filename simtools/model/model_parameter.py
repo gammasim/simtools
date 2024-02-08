@@ -69,9 +69,6 @@ class ModelParameter:
         self._config_file_path = None
 
         self._load_parameters_from_db()
-        # TODO need to understand where this should go
-        # only needed when we actually want to write out
-        # self._set_config_file_directory_and_name()
 
         self.simtel_config_writer = None
         self._added_parameter_files = None
@@ -246,17 +243,6 @@ class ModelParameter:
         for par in self._parameters:
             print(f"{par} = {self.get_parameter_value(par)}")
 
-    def get_config_directory(self):
-        """
-        Get the path where all the configuration files for sim_telarray are written to.
-
-        Returns
-        -------
-        Path
-            Path where all the configuration files for sim_telarray are written to.
-        """
-        return self._config_file_directory
-
     def _set_config_file_directory_and_name(self):
         """
         Set and create the directory model parameter files are written to.
@@ -275,7 +261,7 @@ class ModelParameter:
             config_file_name = names.simtel_telescope_config_file_name(
                 self.site, self.name, self.model_version, self.label, self._extra_label
             )
-            self._config_file_path = self._config_file_directory.joinpath(config_file_name)
+            self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
         self._logger.debug(f"Config file path: {self._config_file_path}")
 
@@ -529,7 +515,7 @@ class ModelParameter:
         if self._added_parameter_files is None:
             self._added_parameter_files = []
         self._added_parameter_files.append(par_name)
-        shutil.copy(file_path, self._config_file_directory)
+        shutil.copy(file_path, self.config_file_directory)
 
     def export_model_files(self):
         """Exports the model files into the config file directory."""
@@ -540,7 +526,7 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(pars_from_db, self._config_file_directory)
+        self.db.export_model_files(pars_from_db, self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
     def export_config_file(self):
@@ -555,6 +541,16 @@ class ModelParameter:
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self._config_file_path, parameters=self.get_simtel_parameters()
         )
+
+    @property
+    def config_file_directory(self):
+        """
+        Directory for configure files. Configure, if necessary.
+
+        """
+        if self._config_file_directory is None:
+            self._set_config_file_directory_and_name()
+        return self._config_file_directory
 
     def get_config_file(self, no_export=False):
         """
