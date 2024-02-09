@@ -4,7 +4,7 @@ model_version: Prod5
 default:
     LST: '1'
     MST: FlashCam-D
-MST-05:
+MSTN-05:
     name: NectarCam-D
     fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
     discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat

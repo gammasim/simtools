@@ -18,4 +18,4 @@ array:
   default:
     LST: 'D234'
     MST: NectarCam-D
-  LST-01: '1'
+  LSTN-01: '1'
