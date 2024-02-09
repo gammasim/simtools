@@ -402,7 +402,8 @@ class ArrayLayout:
 
         for row in table:
             tel = self._load_telescope_names(row)
-            self._set_telescope_auxiliary_parameters(tel)
+            if names.get_class_from_telescope_name(tel.name) == "telescope":
+                self._set_telescope_auxiliary_parameters(tel)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")
