@@ -13,6 +13,24 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.fixture
+def lst_config_file():
+    """Return the path to test config file for LST-1"""
+    return "tests/resources/CTA-North-LST-1-Released_test-telescope-model.cfg"
+
+
+@pytest.fixture
+def telescope_model_from_config_file(io_handler, lst_config_file):
+    label = "test-telescope-model"
+    tel_model = TelescopeModel.from_config_file(
+        site="North",
+        telescope_name="LSTN-01",
+        label=label,
+        config_file_name=lst_config_file,
+    )
+    return tel_model
+
+
 def test_get_parameter(telescope_model_lst):
     tel_model = telescope_model_lst
     assert isinstance(tel_model.get_parameter("num_gains"), dict)
@@ -97,7 +115,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     cfg_file = tel_model.get_config_file()
     tel = TelescopeModel.from_config_file(
         site="south",
-        telescope_name="sst-d",
+        telescope_name="ssts-design",
         label="test-sst",
         config_file_name=cfg_file,
     )
