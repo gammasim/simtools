@@ -67,18 +67,23 @@ class SiteModel(ModelParameter):
         Get site-related CORSIKA parameters as dict.
         Parameters are returned with units wherever possible.
 
-        TODO: needs to be extended to include all site-related CORSIKA parameters
-
         Returns
         -------
         dict
             Site-related CORSIKA parameters as dict
         """
 
+        # TODO - should this be with CORSIKA names and parameter style?
+
         return {
             "corsika_observation_level": self.get_parameter_value_with_unit(
                 "corsika_observation_level"
             ),
+            "corsika_atmosphere_id": self.get_parameter_value("corsika_atmosphere_id"),
+            "geomag_horizontal": self.get_parameter_value_with_unit("geomag_horizontal"),
+            "geomag_vertical": self.get_parameter_value_with_unit("geomag_vertical"),
+            "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
+            "atmosphere_code": self.get_parameter_value_with_unit("atmosphere_code"),
         }
 
     def get_simtel_parameters(self, telescope_model=False, site_model=True):

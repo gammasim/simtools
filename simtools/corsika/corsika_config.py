@@ -9,6 +9,7 @@ from astropy.io.misc import yaml
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
 
@@ -104,6 +105,10 @@ class CorsikaConfig:
             mongo_db_config=mongo_db_config,
             array_layout_name=f"{self.site}-{self.layout_name}",
             label=self.label,
+        )
+
+        self.site_model = SiteModel(
+            site=self.site, mongo_db_config=mongo_db_config, label=self.label
         )
 
         # Load parameters
@@ -388,7 +393,7 @@ class CorsikaConfig:
 
             file.write("\n* [ SITE PARAMETERS ]\n")
             text_site_parameters = _get_text_single_line(
-                self._corsika_parameters["SITE_PARAMETERS"][self.site]
+                self.site_model.get_corsika_site_parameters()
             )
             file.write(text_site_parameters)
 
