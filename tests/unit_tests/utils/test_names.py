@@ -9,22 +9,31 @@ from simtools.utils import names
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-all_telescope_names = [
-    "North-LST-1",
-    "North-LST-D234",
-    "North-MST-FlashCam-D",
-    "North-MST-NectarCam-D",
-    "North-MST-Structure-D",
-    "South-LST-D",
-    "South-MST-FlashCam-D",
-    "South-MST-Structure-D",
-    "South-SCT-D",
-    "South-SST-1M-D",
-    "South-SST-ASTRI-D",
-    "South-SST-Camera-D",
-    "South-SST-GCT-D",
-    "South-SST-Structure-D",
-]
+def test_get_list_of_telescope_types():
+    assert names.get_list_of_telescope_types(array_element_class="telescope", site=None) == [
+        "LSTN",
+        "MSTN",
+        "LSTS",
+        "MSTS",
+        "SSTS",
+        "SCTS",
+    ]
+
+    assert names.get_list_of_telescope_types(array_element_class="telescope", site="North") == [
+        "LSTN",
+        "MSTN",
+    ]
+
+    assert names.get_list_of_telescope_types(array_element_class="telescope", site="South") == [
+        "LSTS",
+        "MSTS",
+        "SSTS",
+        "SCTS",
+    ]
+
+    assert "ILLN" in names.get_list_of_telescope_types(
+        array_element_class="calibration", site="North"
+    )
 
 
 def test_validate_name():

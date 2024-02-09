@@ -316,6 +316,31 @@ def get_telescope_type_from_telescope_name(name):
     return _validate_name(name.split("-")[0], array_element_names)
 
 
+def get_list_of_telescope_types(array_element_class="telescope", site=None, observatory="CTAO"):
+    """
+    Get list of telescope types.
+
+    Parameters
+    ----------
+    array_element_class: str
+        Array element class
+    site: str
+        Site name (e.g., South or North).
+
+    Returns
+    -------
+    list
+        List of telescope types.
+    """
+    return [
+        key
+        for key, value in array_element_names.items()
+        if value["class"] == array_element_class
+        and (site is None or value["site"] == site)
+        and value["observatory"] == observatory
+    ]
+
+
 def get_site_from_telescope_name(name):
     """
     Get site name from telescope name.

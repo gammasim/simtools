@@ -14,7 +14,6 @@ from matplotlib.collections import PatchCollection
 
 from simtools.utils import geometry as transf
 from simtools.utils import names
-from simtools.utils.names import mst, sct
 from simtools.visualization import legend_handlers as leg_h
 
 __all__ = [
@@ -563,22 +562,22 @@ def get_telescope_patch(name, x, y, radius):
         Instance of mpatches.Circle.
     """
     tel_obj = leg_h.TelescopeHandler()
-    valid_name = names.get_telescope_class(name)
+    valid_name = names.get_telescope_type_from_telescope_name(name)
     fill_flag = False
 
     x = x.to(u.m)
     y = y.to(u.m)
     radius = radius.to(u.m)
 
-    if valid_name == mst:
+    if valid_name.startswith("MST"):
         fill_flag = True
-    if valid_name == sct:
+    if valid_name == "SCTS":
         patch = mpatches.Rectangle(
             ((x - radius / 2).value, (y - radius / 2).value),
             width=radius.value,
             height=radius.value,
             fill=False,
-            color=tel_obj.colors_dict[sct],
+            color=tel_obj.colors_dict["SCTS"],
         )
     else:
         patch = mpatches.Circle(
@@ -625,7 +624,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     fig, ax = plt.subplots(1)
     legend_objects = []
     legend_labels = []
-    tel_counters = {one_telescope: 0 for one_telescope in names.all_telescope_class_names}
+    tel_counters = {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = transf.rotate(
             telescopes["position_x"], telescopes["position_y"], rotate_angle
@@ -647,7 +646,9 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
         for tel_type in tel_counters:
             if tel_type in tel_now["telescope_name"]:
                 tel_counters[tel_type] += 1
-        i_tel_name = names.get_telescope_class(telescopes[i_tel]["telescope_name"])
+        i_tel_name = names.get_telescope_type_from_telescope_name(
+            telescopes[i_tel]["telescope_name"]
+        )
         patches.append(
             get_telescope_patch(
                 i_tel_name,
@@ -666,7 +667,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
                 fontsize=fontsize,
             )
 
-    for _, one_telescope in enumerate(names.all_telescope_class_names):
+    for _, one_telescope in enumerate(names.get_list_of_telescope_types()):
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
             legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
