@@ -3,8 +3,7 @@ name: CI-linting
 
 on:
   pull_request:
-    #    types: [opened, synchronize]
-    types: [review_requested, ready_for_review]
+    types: [opened, synchronize]
   schedule:
     - cron: "0 0 * * *"
 
