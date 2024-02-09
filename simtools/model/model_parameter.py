@@ -539,7 +539,7 @@ class ModelParameter:
         # Using SimtelConfigWriter to write the config file.
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self._config_file_path, parameters=self.get_simtel_parameters()
+            config_file_path=self.config_file_path, parameters=self.get_simtel_parameters()
         )
 
     @property
@@ -551,6 +551,16 @@ class ModelParameter:
         if self._config_file_directory is None:
             self._set_config_file_directory_and_name()
         return self._config_file_directory
+
+    @property
+    def config_file_path(self):
+        """
+        Path of the config file. Configure, if necessary.
+
+        """
+        if self._config_file_path is None:
+            self._set_config_file_directory_and_name()
+        return self._config_file_path
 
     def get_config_file(self, no_export=False):
         """
@@ -569,7 +579,7 @@ class ModelParameter:
         """
         if not self._is_config_file_up_to_date and not no_export:
             self.export_config_file()
-        return self._config_file_path
+        return self.config_file_path
 
     def get_derived_directory(self):
         """

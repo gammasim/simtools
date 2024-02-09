@@ -5,28 +5,8 @@ import logging
 import numpy as np
 import pytest
 
-from simtools.model.telescope_model import TelescopeModel
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture
-def lst_config_file():
-    """Return the path to test config file for LST-1"""
-    return "tests/resources/CTA-North-LST-1-Released_test-telescope-model.cfg"
-
-
-@pytest.fixture
-def telescope_model_from_config_file(io_handler, lst_config_file):
-    label = "test-telescope-model"
-    tel_model = TelescopeModel.from_config_file(
-        site="North",
-        telescope_name="LSTN-01",
-        label=label,
-        config_file_name=lst_config_file,
-    )
-    return tel_model
 
 
 def test_load_reference_data(telescope_model_lst):
