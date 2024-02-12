@@ -62,28 +62,43 @@ class SiteModel(ModelParameter):
             "epsg_code": self.get_parameter_value("epsg_code"),
         }
 
-    def get_corsika_site_parameters(self):
+    def get_corsika_site_parameters(self, config_file_style=False):
         """
         Get site-related CORSIKA parameters as dict.
         Parameters are returned with units wherever possible.
+
+        Parameters
+        ----------
+        config_file_style bool
+            Return using style of corsika_parameters.yml file
 
         Returns
         -------
         dict
             Site-related CORSIKA parameters as dict
+
         """
 
-        # TODO - should this be with CORSIKA names and parameter style?
+        # backwards compatibility to `corsika_parameters.yml` (temporary)
+        if config_file_style:
+            _atmosphere_id = 26 if self.site == "North" else 36
+            return {
+                "OBSLEV": [self.get_parameter_value("corsika_observation_level")],
+                "ATMOSPHERE": [_atmosphere_id, "Y"],
+                "MAGNET": [
+                    self.get_parameter_value("geomag_horizontal"),
+                    self.get_parameter_value("geomag_vertical"),
+                ],
+                "ARRANG": [self.get_parameter_value("geomag_rotation")],
+            }
 
         return {
             "corsika_observation_level": self.get_parameter_value_with_unit(
                 "corsika_observation_level"
             ),
-            "corsika_atmosphere_id": self.get_parameter_value("corsika_atmosphere_id"),
             "geomag_horizontal": self.get_parameter_value_with_unit("geomag_horizontal"),
             "geomag_vertical": self.get_parameter_value_with_unit("geomag_vertical"),
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
-            "atmosphere_code": self.get_parameter_value_with_unit("atmosphere_code"),
         }
 
     def get_simtel_parameters(self, telescope_model=False, site_model=True):
