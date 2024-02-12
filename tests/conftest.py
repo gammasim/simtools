@@ -51,6 +51,8 @@ def mock_settings_env_vars(tmp_test_directory):
     Removes all environment variable from the test system.
     Explicitly sets those needed.
     """
+    _url = "https://raw.githubusercontent.com/gammasim/simulation_model/verified_model"
+
     with mock.patch.dict(
         os.environ,
         {
@@ -59,6 +61,7 @@ def mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
+            "SIMTOOLS_DB_SIMULATION_MODEL_URL": _url,
         },
         clear=True,
     ):
