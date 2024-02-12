@@ -515,7 +515,7 @@ class ArrayLayout:
         table = QTable(meta=self._get_export_metadata())
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
-        pos_x, pos_y, pos_z, pos_t = [], [], [], []
+        pos_x, pos_y, pos_z, pos_t, tel_r = [], [], [], [], []
         for tel in self._telescope_list:
             tel_names.append(tel.name)
             asset_code.append(tel.asset_code)
@@ -530,6 +530,7 @@ class ArrayLayout:
             pos_x.append(x)
             pos_y.append(y)
             pos_z.append(z)
+            tel_r.append(tel.get_sphere_radius())
 
         # prefer asset_code / sequence_number of telescope_name
         if all(v is not None for v in asset_code) and all(v is not None for v in sequence_number):
@@ -549,6 +550,8 @@ class ArrayLayout:
             table[_name_z] = pos_z
             if len(pos_t) > 0:
                 table["telescope_axis_height"] = pos_t
+            if len(tel_r) > 0:
+                table["sphere_radius"] = tel_r
         except IndexError:
             pass
 

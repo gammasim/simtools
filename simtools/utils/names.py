@@ -120,6 +120,7 @@ site_parameters = {
     "array_coordinates": {"db_name": "array_coordinates", "simtel": False},
 }
 
+# TODO list of parameters? Why?
 telescope_parameters = {
     "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
     "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
@@ -270,7 +271,11 @@ def validate_telescope_name(name):
     str
         Validated name.
     """
-    _tel_type, _tel_id = name.split("-")
+    try:
+        _tel_type, _tel_id = name.split("-")
+    except ValueError as exc:
+        msg = f"Invalid name {name}"
+        raise ValueError(msg) from exc
     return (
         _validate_name(_tel_type, array_element_names) + "-" + validate_telescope_id_name(_tel_id)
     )

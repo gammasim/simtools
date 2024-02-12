@@ -39,8 +39,8 @@ def test_reading_db_lst(db):
     assert 1 == 1
     pars = db.get_model_parameters("north", "lstn-01", "Released")
     if db.mongo_db_config:
-        assert pars["parabolic_dish"]["Value"] == 1
-        assert pars["camera_pixels"]["Value"] == 1855
+        assert pars["parabolic_dish"]["value"] == 1
+        assert pars["camera_pixels"]["value"] == 1855
     else:
         assert pars["parabolic_dish"] == 1
         assert pars["camera_pixels"] == 1855
@@ -50,7 +50,7 @@ def test_reading_db_mst_nc(db):
     logger.info("----Testing reading MST-NectarCam-----")
     pars = db.get_model_parameters("north", "mstn-design", "Released")
     if db.mongo_db_config:
-        assert pars["camera_pixels"]["Value"] == 1855
+        assert pars["camera_pixels"]["value"] == 1855
     else:
         assert pars["camera_pixels"] == 1855
 
@@ -59,7 +59,7 @@ def test_reading_db_mst_fc(db):
     logger.info("----Testing reading MST-FlashCam-----")
     pars = db.get_model_parameters("south", "msts-design", "Released")
     if db.mongo_db_config:
-        assert pars["camera_pixels"]["Value"] == 1764
+        assert pars["camera_pixels"]["value"] == 1764
     else:
         assert pars["camera_pixels"] == 1764
 
@@ -68,7 +68,7 @@ def test_reading_db_sst(db):
     logger.info("----Testing reading SST-----")
     pars = db.get_model_parameters("south", "ssts-design", "Released")
     if db.mongo_db_config:
-        assert pars["camera_pixels"]["Value"] == 2048
+        assert pars["camera_pixels"]["value"] == 2048
     else:
         assert pars["camera_pixels"] == 2048
 
@@ -76,14 +76,14 @@ def test_reading_db_sst(db):
 def test_get_reference_data(db):
     logger.info("----Testing reading reference data-----")
     pars = db.get_reference_data("south", "Prod5")
-    assert pars["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+    assert pars["nsb_reference_value"]["value"] == pytest.approx(0.24)
 
 
 def test_get_derived_values(db):
     logger.info("----Testing reading derived values-----")
     pars = db.get_derived_values("north", "lstn-01", "Prod5")
     assert (
-        pars["ray_tracing"]["Value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+        pars["ray_tracing"]["value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
     )
 
 
@@ -113,7 +113,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["camera_pixels"]["Value"] == 1855
+    assert pars["camera_pixels"]["value"] == 1855
 
     logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
     query = {"Telescope": "North-LST-Test"}
@@ -161,7 +161,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["camera_config_version"]["Value"] == 42
+    assert pars["camera_config_version"]["value"] == 42
 
 
 def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
@@ -199,7 +199,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["camera_config_version"]["Value"] == 999
+    assert pars["camera_config_version"]["value"] == 999
 
 
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
@@ -261,16 +261,16 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["new_test_parameter_str"]["Value"] == "hello"
+    assert pars["new_test_parameter_str"]["value"] == "hello"
     assert pars["new_test_parameter_str"]["Type"] == "str"
-    assert pars["new_test_parameter_int"]["Value"] == 999
+    assert pars["new_test_parameter_int"]["value"] == 999
     assert pars["new_test_parameter_int"]["Type"] == "int"
-    assert pars["new_test_parameter_float"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_float"]["value"] == pytest.approx(999.9)
     assert pars["new_test_parameter_float"]["Type"] == "float"
-    assert pars["new_test_parameter_quantity"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_quantity"]["value"] == pytest.approx(999.9)
     assert pars["new_test_parameter_quantity"]["Type"] == "float"
     assert pars["new_test_parameter_quantity"]["units"] == "m"
-    assert pars["new_test_parameter_quantity_str"]["Value"] == pytest.approx(999.9)
+    assert pars["new_test_parameter_quantity_str"]["value"] == pytest.approx(999.9)
     assert pars["new_test_parameter_quantity_str"]["Type"] == "float"
     assert pars["new_test_parameter_quantity_str"]["units"] == "cm"
 
@@ -319,12 +319,12 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("Value") or pars[
+            _obs_level = pars["corsika_observation_level"].get("value") or pars[
                 "corsika_observation_level"
             ].get("value")
             assert _obs_level == pytest.approx(2156.0)
         else:
-            _obs_level = pars["altitude"]["Value"] or pars["altitude"]["value"]
+            _obs_level = pars["altitude"]["value"] or pars["altitude"]["value"]
             assert _obs_level == pytest.approx(2158.0)
     else:
         assert pars["altitude"] == 2156
@@ -334,11 +334,11 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("Value") or pars[
+            _obs_level = pars["corsika_observation_level"].get("value") or pars[
                 "corsika_observation_level"
             ].get("value")
         else:
-            _obs_level = pars["altitude"].get("Value") or pars["altitude"].get("value")
+            _obs_level = pars["altitude"].get("value") or pars["altitude"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
@@ -350,8 +350,8 @@ def test_separating_get_and_write(db, io_handler):
 
     file_list = list()
     for par_now in pars.values():
-        if par_now["File"]:
-            file_list.append(par_now["Value"])
+        if par_now["file"]:
+            file_list.append(par_now["value"])
     db.export_model_files(
         pars,
         io_handler.get_output_directory(sub_dir="model", dir_type="test"),
