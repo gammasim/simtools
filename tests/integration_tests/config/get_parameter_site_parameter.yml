@@ -3,4 +3,4 @@ CTA_SIMPIPE:
   TEST_NAME: site_parameter
   CONFIGURATION:
     SITE: North
-    PARAMETER: altitude
+    PARAMETER: reference_point_altitude
