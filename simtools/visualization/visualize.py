@@ -654,13 +654,13 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
                 i_tel_name,
                 pos_x_rotated[i_tel],
                 pos_y_rotated[i_tel],
-                scale * telescopes[i_tel]["radius"],
+                scale * telescopes[i_tel]["sphere_radius"],
             )
         )
         if show_tel_label:
             ax.text(
                 pos_x_rotated[i_tel].value,
-                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["radius"].value,
+                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["sphere_radius"].value,
                 telescopes[i_tel]["telescope_name"],
                 horizontalalignment="center",
                 verticalalignment="bottom",

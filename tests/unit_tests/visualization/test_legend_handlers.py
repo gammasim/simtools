@@ -42,6 +42,7 @@ def test_handlers(io_handler):
     tel_handler = leg_h.TelescopeHandler()
     colors = ["darkorange", "dodgerblue", "black", "darkgreen", "grey", "grey", "grey"]
     radius_dict = [12.5, 9.15, 7.15, 3, 7.5, 10, 9.15]
-    for step, tel_type in enumerate(names.all_telescope_class_names):
+    # TODO - this needs to be fixed with the new telescope naming
+    for step, tel_type in enumerate(names.array_element_names):
         assert tel_handler.radius_dict[tel_type] == pytest.approx(radius_dict[step], 1.0e-3)
         assert tel_handler.colors_dict[tel_type] == colors[step]
