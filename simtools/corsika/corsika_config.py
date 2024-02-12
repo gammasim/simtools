@@ -393,7 +393,7 @@ class CorsikaConfig:
 
             file.write("\n* [ SITE PARAMETERS ]\n")
             text_site_parameters = _get_text_single_line(
-                self.site_model.get_corsika_site_parameters()
+                self.site_model.get_corsika_site_parameters(config_file_style=True)
             )
             file.write(text_site_parameters)
 
