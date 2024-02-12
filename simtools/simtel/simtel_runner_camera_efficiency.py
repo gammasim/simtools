@@ -224,7 +224,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         """
 
         validated_nsb_spectrum_file = (
-            self._telescope_model.get_config_directory() / Path(nsb_spectrum_file).name
+            self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
         with open(nsb_spectrum_file, "r", encoding="utf-8") as file:
             lines = file.readlines()
