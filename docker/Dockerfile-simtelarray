@@ -16,7 +16,7 @@ RUN mkdir sim_telarray
 COPY corsika7.7_simtelarray.tar.gz sim_telarray
 RUN cd sim_telarray && \
     tar -xvf corsika7.7_simtelarray.tar.gz && \
-    ./build_all prod5 qgs2 gsl
+    ./build_all prod6-sc qgs2 gsl
 
 RUN find sim_telarray/ -name "*.tar.gz" -exec rm -f {} \;
 
