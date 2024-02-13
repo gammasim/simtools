@@ -22,7 +22,6 @@ def _parse(label):
             "Simulate the light emission by an artificial light source for calibration purposes."
         ),
     )
-
     config.parser.add_argument(
         "--ls_distance",
         help="Light source distance in m",
@@ -39,6 +38,12 @@ def _parse(label):
         "--plot",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
+    )
+    config.parser.add_argument(
+        "--light_source_type",
+        help="Select calibration light source type: laser (1), other (2)",
+        type=int,
+        default=1,
     )
     return config.initialize(db_config=True, telescope_model=True, require_command_line=False)
 
@@ -63,7 +68,7 @@ def default_le_configs(le_application):
             "beam_width": {
                 "len": 1,
                 "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
+                "default": 0.1 * u.deg,
                 "names": ["rms"],
             },
             "pulse_shape": {
@@ -75,21 +80,28 @@ def default_le_configs(le_application):
             "pulse_width": {
                 "len": 1,
                 "unit": u.Unit("deg"),
-                "default": 5 * u.ns,
+                "default": 3 * u.ns,
                 "names": ["rms"],
             },
         }
     return default_config
 
 
+def select_application(args_dict):
+    if args_dict["light_source_type"] == 1:
+        le_application = "xyzls"
+
+    return le_application
+
+
 def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
-    # TODO: generalize the following
-    args_dict["telescope"] = "LST-1"
+    # TODO: following is passed as command-line parameters when running the app
+    # args_dict["telescope"] = "LST-1"
+    args_dict["telescope"] = "MST-NectarCam-D"
     args_dict["site"] = "north"
-    le_application = "xyzls"
-
+    le_application = select_application(args_dict)
     default_le_config = default_le_configs(le_application)
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -115,11 +127,7 @@ def main():
     )
     # command = le._make_light_emission_script()
     # command = le._make_simtel_script(output_dir)
-    run_script = le.prepare_script()
-
-    # currently to make this work we need to copy the atmospheric profile:
-    # cp ./sim_telarray/cfg/common/atmprof1.dat ./
-    # or need to change how this file is searched for
+    run_script = le.prepare_script(plot=True)
 
     subprocess.run(run_script, shell=False, check=False)
 
