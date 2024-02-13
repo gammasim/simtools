@@ -105,61 +105,6 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return cls(**args, config_data=config_data)
 
-    def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
-        print("default config", self.default_le_config["beam_shape"])
-        # ./xyzls -a Gauss:3 -p Gauss:0.1 -n 1e5,1e6,1e7
-        command = f" rm {self.le_application}.simtel.gz\n"
-        command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
-        command += f"/{self.le_application}"
-        command += f" -a {self.default_le_config['beam_shape']['default']}:"
-        command += f"{self.default_le_config['beam_width']['default'].value}"
-        command += f" -p {self.default_le_config['pulse_shape']['default']}:"
-        command += f"{self.default_le_config['pulse_width']['default'].value}"
-        command += " -n 1e6,1e7"
-        command += "\n"
-        print(command)
-        return command
-
-    def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
-        """Return the command to run simtel_array."""
-
-        # LightEmission
-        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray/"))
-        command += f" -c {self._telescope_model.get_config_file()}"
-        command += " -DNUM_TELESCOPES=1"
-        command += " -I../cfg/CTA"
-        command += "iobuf_maximum=1000000000"
-        command += super()._config_option(
-            "altitude", self._telescope_model.get_parameter_value("altitude"), weak_option=True
-        )
-        command += super()._config_option("maximum_telescopes", "1", weak_option=True)
-        command += super()._config_option("trigger_telescopes", "1", weak_option=True)
-        command += super()._config_option(
-            "atmospheric_transmission",
-            self._telescope_model.get_parameter_value("atmospheric_transmission"),
-            weak_option=True,
-        )
-        # from light_emission_default config
-        command += super()._config_option(
-            "telescope_theta",
-            self.config.zenith_angle + self.config.off_axis_angle,
-            weak_option=True,
-        )
-        command += super()._config_option("telescope_phi", "0")
-        command += super()._config_option("power_law", "2.68")
-        command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
-        command += super()._config_option("input_file", f"{self.le_application}.iact.gz")
-        command += super()._config_option("output_file", f"{self.le_application}.simtel.gz\n")
-        command += f"mv {self.le_application}.iact.gz {self.output_dir}\n"
-        command += f"mv {self.le_application}.simtel.gz {self.output_dir}"
-
-        return command
-
-    def _make_plot_script(self, **kwargs):  # pylint: disable=unused-argument
-        command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta_nr"))
-        command += f" -p {self.le_application}.ps {self.le_application}.simtel.gz"
-        return command
-
     @staticmethod
     def light_emission_default_configuration():
         """
@@ -176,7 +121,7 @@ class SimulatorLightEmission(SimtelRunner):
             "zenith_angle": {
                 "len": 1,
                 "unit": u.Unit("deg"),
-                "default": 20.0 * u.deg,
+                "default": 0.0 * u.deg,
                 "names": ["zenith", "theta"],
             },
             "azimuth_angle": {
@@ -205,14 +150,78 @@ class SimulatorLightEmission(SimtelRunner):
             },
         }
 
-    def prepare_script(self, test=False, plot_result=False, extra_commands=None):
+    def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
+        # ./xyzls -a Gauss:3 -p Gauss:0.1 -n 1e5,1e6,1e7
+        command = f" rm {self.output_dir}/{self.le_application}.simtel.gz\n"
+        command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
+        command += f"/{self.le_application}"
+        command += f" -a {self.default_le_config['beam_shape']['default']}:"
+        command += f"{self.default_le_config['beam_width']['default'].value}"
+        command += f" -p {self.default_le_config['pulse_shape']['default']}:"
+        command += f"{self.default_le_config['pulse_width']['default'].value}"
+        command += " -n 1e7"
+        # command += f" -A {self._simtel_source_path.joinpath('sim_telarray/
+        # cfg/common/atmprof1.dat')}"
+        command += f" -A {self.output_dir}/model/"
+        command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
+        command += f" -o {self.output_dir}/{self.le_application}.iact.gz"
+        command += "\n"
+        print(command)
+        return command
+
+    def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
+        """Return the command to run simtel_array."""
+
+        # LightEmission
+        command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
+        command += f" -c {self._simtel_source_path.joinpath('sim_telarray/cfg/CTA')}/"
+        command += "CTA-PROD6-MST-NectarCam.cfg"
+        # command += f"{self._telescope_model.get_config_file()}" # general selection
+        command += " -DNUM_TELESCOPES=1"
+        command += " -I../cfg/CTA"
+        command += "iobuf_maximum=1000000000"
+        command += super()._config_option(
+            "altitude", self._telescope_model.get_parameter_value("altitude")
+        )
+        command += super()._config_option("maximum_telescopes", "1")
+        command += super()._config_option("trigger_telescopes", "1")
+        command += super()._config_option(
+            "atmospheric_transmission",
+            self._telescope_model.get_parameter_value("atmospheric_transmission"),
+        )
+        # from light_emission_default config
+        # command += super()._config_option(
+        #    "telescope_theta",
+        #    self.config.zenith_angle + self.config.off_axis_angle,
+        # )
+        command += super()._config_option("telescope_phi", "0")
+        command += super()._config_option("power_law", "2.68")
+        command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
+        command += super()._config_option(
+            "input_file", f"{self.output_dir}/{self.le_application}.iact.gz"
+        )
+        command += super()._config_option(
+            "output_file", f"{self.output_dir}/{self.le_application}.simtel.gz\n"
+        )
+
+        return command
+
+    def _make_plot_script(self, **kwargs):  # pylint: disable=unused-argument
+        command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta_nr"))
+        command += f" -p {self.output_dir}/{self.le_application}.ps"
+        command += f" {self.output_dir}/{self.le_application}.simtel.gz\n"
+        # command += f"ps2pdf {self.output_dir}/{self.le_application}.ps
+        #  {self.output_dir}/{self.le_application}.pdf"
+        return command
+
+    def prepare_script(self, test=False, plot=False, extra_commands=None):
         """
         Builds and returns the full path of the bash run script
         containing the light-emission command.
 
         Parameters
         ----------
-        plot_result: bool
+        plot: bool
             If output should be plotted.
 
         extra_commands: str
@@ -247,7 +256,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             file.write(f"{command_le}\n\n")
             file.write(f"{command_simtel}\n\n")
-            if plot_result:
+            if plot:
                 file.write(f"{command_plot}\n\n")
 
             #  TODO: Add functionality to run several telescope configs at once
