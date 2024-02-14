@@ -137,7 +137,7 @@ def test_export_histograms(simtel_array_histograms_instance, io_handler):
 
     assert file_with_path.exists()
 
-    # Read hdf5 file
+    # Read simtel file
     list_of_tables = read_hdf5(file_with_path)
     assert len(list_of_tables) == 10
     for table in list_of_tables:
