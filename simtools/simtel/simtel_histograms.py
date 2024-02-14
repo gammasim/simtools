@@ -64,7 +64,7 @@ class SimtelHistogram:
         """Returns number of histograms."""
         return len(self.histogram)
 
-    def get_histogram_type_title(self):
+    def get_histogram_type_title(self, i_hist):
         """
         Returns the title of the histogram with index i_hist.
 
@@ -78,7 +78,7 @@ class SimtelHistogram:
         str
             Histogram title.
         """
-        return self.histogram["title"]
+        return self.histogram[i_hist]["title"]
 
     @property
     def config(self):
@@ -586,6 +586,7 @@ class SimtelHistograms:
         self.histogram_files = histogram_files
         self._is_test = test
         self._combined_hists = None
+        self._list_of_histograms = None
         self.__meta_dict = None
 
     def calculate_event_rates(self):
@@ -666,13 +667,32 @@ class SimtelHistograms:
                 raise InconsistentHistogramFormat(msg)
 
     @property
+    def list_of_histograms(self):
+        """
+        Returns a list with the histograms for each file.
+
+        Returns
+        -------
+        list:
+            List of histograms.
+        """
+        if self._list_of_histograms is None:
+            self._list_of_histograms = []
+            for file in self.histogram_files:
+                with EventIOFile(file) as f:
+                    for o in yield_toplevel_of_type(f, Histograms):
+                        hists = o.parse()
+                        self._list_of_histograms.append(hists)
+        return self._list_of_histograms
+
+    @property
     def combined_hists(self):
         """Add the values of the same type of histogram from the various lists into a single
         histogram list."""
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
-            for i_hist, hists_one_file in enumerate(self.histogram_files):
+            for i_hist, hists_one_file in enumerate(self.list_of_histograms):
                 if i_hist == 0:
                     # First file
                     self._combined_hists = copy.copy(hists_one_file)
