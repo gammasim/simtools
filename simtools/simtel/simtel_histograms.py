@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 from astropy import units as u
-from ctao_cosmic_ray_spectra.spectral import PowerLaw, irfdoc_proton_spectrum
+from ctao_cr_spectra.spectral import PowerLaw, irfdoc_proton_spectrum
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
@@ -382,7 +382,7 @@ class SimtelHistogram:
 
         Returns
         -------
-        ctao_cosmic_ray_spectra.spectral.PowerLaw
+        ctao_cr_spectra.spectral.PowerLaw
             The function describing the spectral distribution.
         """
         # Define the particle distribution
@@ -398,7 +398,7 @@ class SimtelHistogram:
     def get_correction_factor(self):
         """
         Get the correction factor for the energy distribution to account for differences in the
-        expected cosmic-ray spectral distribution and the cosmic-ray distritibution assumed for
+        expected cosmic-ray spectral distribution and the cosmic-ray distribution assumed for
         the simulation.
 
         Returns
@@ -465,7 +465,7 @@ class SimtelHistogram:
         trigger_probability: float
             The system trigger probability.
         particle_distribution_function:
-            The function from ctao_cosmic_ray_spectra that describes the particle energy
+            The function from ctao_cr_spectra that describes the particle energy
             distribution.
 
         Returns
