@@ -142,9 +142,9 @@ telescope_parameters = {
 def validate_telescope_id_name(name):
     """
     Validate telescope ID. Allowed IDs are
-    - DESIGN (for design telescopes or testing)
+    - design (for design telescopes or testing)
     - telescope ID (e.g., 1, 5, 15)
-    - TEST (for testing)
+    - test (for testing)
 
     Parameters
     ----------
@@ -164,8 +164,8 @@ def validate_telescope_id_name(name):
 
     if isinstance(name, int) or name.isdigit():
         return f"{int(name):02d}"
-    if name.upper() in ("DESIGN", "TEST"):
-        return str(name).upper()
+    if name.lower() in ("design", "test"):
+        return str(name).lower()
 
     msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
@@ -259,7 +259,7 @@ def _validate_name(name, all_names):
 
 def validate_telescope_name(name):
     """
-    Validate telescope name (e.g., MSTN-Design, MSTN-01).
+    Validate telescope name (e.g., MSTN-design, MSTN-01).
 
     Parameters
     ----------
