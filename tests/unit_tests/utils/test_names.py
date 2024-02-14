@@ -64,9 +64,9 @@ def test_validate_telescope_id_name(caplog):
         "01": "01",
         "5": "05",
         "55": "55",
-        "Design": "DESIGN",
-        "DESIGN": "DESIGN",
-        "TEST": "TEST",
+        "Design": "design",
+        "DESIGN": "design",
+        "TEST": "test",
     }
     for key, value in _test_ids.items():
         assert value == names.validate_telescope_id_name(key)
@@ -99,7 +99,8 @@ def test_validate_array_layout_name():
 
 def test_validate_telescope_name():
     telescopes = {
-        "LSTN-Design": "LSTN-DESIGN",
+        "LSTN-Design": "LSTN-design",
+        "LSTN-TEST": "LSTN-test",
         "LSTN-01": "LSTN-01",
         "SSTS-01": "SSTS-01",
     }
