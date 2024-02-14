@@ -169,31 +169,3 @@ def _update_parameters_from_repo(
                 logger.error(f"Parameter {key} not found in repository")
 
     return parameters
-
-
-def get_list_of_model_parameters(model_type, db_simulation_model_url):
-    """
-    Get list of telescope model parameters from repository.
-
-    Parameters
-    ----------
-    model_type: str
-        Simulation model type (e.g., telescope, site)
-    db_simulation_model_url: str
-        URL to the simulation model repository.
-
-    Returns
-    -------
-    list
-        List of telescope model parameters.
-
-    """
-
-    _pars = gen.collect_data_from_file_or_dict(
-        file_name=gen.join_url_or_path(
-            db_simulation_model_url, "parameter_lists", f"{model_type}.list"
-        ),
-        in_dict=None,
-    )
-
-    return _pars
