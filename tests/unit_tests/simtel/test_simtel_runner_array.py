@@ -20,7 +20,7 @@ def array_config_data():
         "site": "North",
         "layout_name": "1LST",
         "model_version": "Prod5",
-        "default": {"LST": "1"},
+        "default": {"LSTN": "1"},
     }
 
 
