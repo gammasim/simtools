@@ -46,7 +46,7 @@ class CameraEfficiency:
         test=False,
     ):
         """
-        Initiliaze the CameraEfficiency class.
+        Initialize the CameraEfficiency class.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ class CameraEfficiency:
             sub_dir="camera-efficiency",
             dir_type="test" if self.test else "simtools",
         )
-
         self._results = None
         self._has_results = False
 

@@ -45,8 +45,8 @@ class DatabaseHandler:
     DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
-    DB_REFERENCE_DATA = "CTA-Reference-Data"
-    DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
+    DB_REFERENCE_DATA = "Staging-CTA-Reference-Data"
+    DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
@@ -1190,7 +1190,6 @@ class DatabaseHandler:
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
 
-        # TODO - check with OG with "Value" is good
         return tags["Tags"][version]["Value"]
 
     def insert_file_to_db(self, file_name, db_name=DB_CTA_SIMULATION_MODEL, **kwargs):
