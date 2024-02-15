@@ -15,7 +15,10 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture
 def camera_efficiency_lst(telescope_model_lst, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
-        telescope_model=telescope_model_lst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_lst,
+        label="validate_camera_efficiency",
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_lst
 
@@ -23,7 +26,10 @@ def camera_efficiency_lst(telescope_model_lst, simtel_path):
 @pytest.fixture
 def camera_efficiency_sst(telescope_model_sst, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
-        telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_sst,
+        label="validate_camera_efficiency",
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_sst
 
@@ -31,7 +37,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path):
 @pytest.fixture
 def results_file(db, io_handler):
     test_file_name = (
-        "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
+        "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency.ecsv"
     )
     output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
@@ -69,15 +75,15 @@ def test_validate_telescope_model(simtel_path):
 def test_load_files(camera_efficiency_lst):
     assert (
         camera_efficiency_lst._file_results.name
-        == "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
+        == "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_test-telescope-model-lst.ecsv"
     )
     assert (
         camera_efficiency_lst._file_simtel.name
-        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.dat"
+        == "camera-efficiency-North-LSTN-01-za020deg_azm000deg_test-telescope-model-lst.dat"
     )
     assert (
         camera_efficiency_lst._file_log.name
-        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.log"
+        == "camera-efficiency-North-LSTN-01-za020deg_azm000deg_test-telescope-model-lst.log"
     )
 
 

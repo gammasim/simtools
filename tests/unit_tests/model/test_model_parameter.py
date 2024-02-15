@@ -36,7 +36,7 @@ def test_get_parameter(telescope_model_lst):
     assert isinstance(tel_model.get_parameter("num_gains"), dict)
     assert isinstance(tel_model.get_parameter("num_gains")["value"], int)
     assert isinstance(tel_model.get_parameter("telescope_axis_height")["value"], float)
-    assert tel_model.get_parameter("telescope_axis_height")["units"] == "m"
+    assert tel_model.get_parameter("telescope_axis_height")["unit"] == "m"
 
     with pytest.raises(InvalidModelParameter):
         tel_model.get_parameter("not_a_parameter")
@@ -76,20 +76,20 @@ def test_change_parameter(telescope_model_lst):
     tel_model = telescope_model_lst
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
-    logger.info("Testing chaging camera_pixels to a different integer")
+    logger.info("Testing changing camera_pixels to a different integer")
     new_camera_pixels = 9999
     tel_model.change_parameter("camera_pixels", new_camera_pixels)
 
     assert new_camera_pixels == tel_model.get_parameter_value("camera_pixels")
 
-    logger.info("Testing chaging camera_pixels to a float")
+    logger.info("Testing changing camera_pixels to a float")
     new_camera_pixels = 9999.9
     tel_model.change_parameter("camera_pixels", new_camera_pixels)
 
     assert int(new_camera_pixels) == tel_model.get_parameter_value("camera_pixels")
 
     with pytest.raises(ValueError):
-        logger.info("Testing chaging camera_pixels to a nonsense string")
+        logger.info("Testing changing camera_pixels to a nonsense string")
         new_camera_pixels = "bla_bla"
         tel_model.change_parameter("camera_pixels", new_camera_pixels)
 
@@ -97,9 +97,9 @@ def test_change_parameter(telescope_model_lst):
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
     flen_info = tel_model.get_parameter("focal_length")
-    logger.info(f"Focal Length = {flen_info['Value']}, type = {flen_info['Type']}")
+    logger.info(f"Focal Length = {flen_info['value']}, type = {flen_info['type']}")
 
-    assert isinstance(flen_info["Value"], float)
+    assert isinstance(flen_info["value"], float)
 
 
 def test_cfg_file(telescope_model_from_config_file, lst_config_file):
