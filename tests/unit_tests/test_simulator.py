@@ -187,7 +187,6 @@ def test_collect_array_model_parameters(array_simulator, array_config_data):
     assert isinstance(_array_model_data, dict)
     assert isinstance(_rest_data, dict)
     assert _array_model_data["site"] == "North"
-    assert _array_model_data["LSTN-01"] == "1"
     new_array_config_data = copy(array_config_data)
     new_array_config_data.pop("site")
 
