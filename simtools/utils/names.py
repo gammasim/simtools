@@ -342,7 +342,7 @@ def get_list_of_telescope_types(array_element_class="telescope", site=None, obse
         for key, value in array_element_names.items()
         if value["class"] == array_element_class
         and (site is None or value["site"] == site)
-        and value["observatory"] == observatory
+        and (observatory is None or value["observatory"] == observatory)
     ]
 
 

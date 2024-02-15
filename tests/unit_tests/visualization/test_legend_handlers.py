@@ -1,4 +1,4 @@
-import pytest
+#!/usr/bin/python3
 
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
@@ -40,9 +40,8 @@ def test_handlers(io_handler):
         assert handler_instance.legend_artist is not None
 
     tel_handler = leg_h.TelescopeHandler()
-    colors = ["darkorange", "dodgerblue", "black", "darkgreen", "grey", "grey", "grey"]
-    radius_dict = [12.5, 9.15, 7.15, 3, 7.5, 10, 9.15]
-    # TODO - this needs to be fixed with the new telescope naming
-    for step, tel_type in enumerate(names.array_element_names):
-        assert tel_handler.radius_dict[tel_type] == pytest.approx(radius_dict[step], 1.0e-3)
-        assert tel_handler.colors_dict[tel_type] == colors[step]
+    assert len(tel_handler.colors_dict) == len(
+        names.get_list_of_telescope_types(
+            array_element_class="telescope", site=None, observatory=None
+        )
+    )

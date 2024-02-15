@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 import simtools.utils.general as gen
+from simtools.utils import names
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -99,23 +100,23 @@ def test_add_unit():
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
 
-def test_get_telescope_patch(manual_corsika_dict_north, manual_corsika_dict_south, io_handler):
-    def test_one_site(corsika_dict, x, y):
-        for tel_type in np.array(list(corsika_dict["corsika_sphere_radius"].keys())):
-            radius = corsika_dict["corsika_sphere_radius"][tel_type].value
-            patch = visualize.get_telescope_patch(tel_type, x, y, radius * u.m)
+def test_get_telescope_patch(io_handler):
+    def test_one_site(x, y):
+        _test_radius = 15.0
+        for tel_type in names.get_list_of_telescope_types():
+            patch = visualize.get_telescope_patch(tel_type, x, y, _test_radius * u.m)
             if mpatches.Circle == type(patch):
-                assert patch.radius == corsika_dict["corsika_sphere_radius"][tel_type].value
+                assert patch.radius == _test_radius
             else:
                 assert isinstance(patch, mpatches.Rectangle)
 
-    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.m)
-    test_one_site(manual_corsika_dict_south, 0 * u.m, 0 * u.m)
+    test_one_site(0 * u.m, 0 * u.m)
+    test_one_site(0 * u.m, 0 * u.m)
     # Test passing other units
-    test_one_site(manual_corsika_dict_north, 0 * u.m, 0 * u.km)
-    test_one_site(manual_corsika_dict_south, 0 * u.cm, 0 * u.km)
+    test_one_site(0 * u.m, 0 * u.km)
+    test_one_site(0 * u.cm, 0 * u.km)
     with pytest.raises(TypeError):
-        test_one_site(manual_corsika_dict_south, 0, 0)
+        test_one_site(0, 0)
 
 
 def test_plot_array(
