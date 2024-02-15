@@ -64,7 +64,7 @@ def main():
                 )
                 pars = db.read_mongo_db(
                     db_name=db.DB_CTA_SIMULATION_MODEL,
-                    telescope_model_name_db=telescope_now,
+                    telescope_model_name=telescope_now,
                     model_version=version_now,
                     run_location="./",
                     collection_name="telescopes",
