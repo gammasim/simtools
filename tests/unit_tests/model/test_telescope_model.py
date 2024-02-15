@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 def test_load_reference_data(telescope_model_lst):
     tel_model = telescope_model_lst
 
-    assert tel_model.reference_data["nsb_reference_value"]["Value"] == pytest.approx(0.24)
+    assert tel_model.reference_data["nsb_reference_value"]["value"] == pytest.approx(0.24)
 
 
 def test_get_on_axis_eff_optical_area(telescope_model_lst):
@@ -28,7 +28,7 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst):
     tel_model.export_config_file()
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
-    assert tel_model.get_config_directory().joinpath(two_dim_file).exists()
+    assert tel_model.config_file_directory.joinpath(two_dim_file).exists()
     two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
     assert len(two_dim_dist["Wavelength"]) > 0
     assert len(two_dim_dist["Angle"]) > 0

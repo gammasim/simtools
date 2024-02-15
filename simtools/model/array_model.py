@@ -167,8 +167,6 @@ class ArrayModel:
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
-            self._logger.debug(f"tel_name: {tel_name}")
-
             # Building the basic models - no pars to change yet
             if tel_name not in _all_telescope_names:
                 # First time a telescope name is built
@@ -186,7 +184,6 @@ class ArrayModel:
                 for tel_now in self._telescope_model:
                     if tel_now.name != tel_name:
                         continue
-                    self._logger.debug(f"Copying tel model {tel_now.name} already loaded from DB")
                     tel_model = copy(tel_now)
                     break
 

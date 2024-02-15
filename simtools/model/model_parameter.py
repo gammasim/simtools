@@ -593,7 +593,7 @@ class ModelParameter:
         Path
             Path where all the files with derived values are written to.
         """
-        return self._config_file_directory.parents[0].joinpath("derived")
+        return self.config_file_directory.parents[0].joinpath("derived")
 
     def _load_simtel_config_writer(self):
         """
