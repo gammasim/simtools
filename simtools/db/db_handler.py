@@ -39,8 +39,11 @@ class DatabaseHandler:
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
     """
 
-    DB_TABULATED_DATA = "CTA-Simulation-Model"
-    DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
+    #    DB_TABULATED_DATA = "CTA-Simulation-Model"
+    #    DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
+    # DB collection with updates field names
+    DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
+    DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     DB_REFERENCE_DATA = "CTA-Reference-Data"
     DB_DERIVED_VALUES = "CTA-Simulation-Model-Derived-Values"
@@ -65,6 +68,7 @@ class DatabaseHandler:
         self.mongo_db_config = mongo_db_config
         self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
+        self._available_telescopes = None
 
         self._set_up_connection()
 
@@ -105,12 +109,6 @@ class DatabaseHandler:
 
         return _db_client
 
-    @staticmethod
-    def _get_telescope_model_name_for_db(site, telescope_model_name):
-        """
-        Make telescope name as the DB needs from site and telescope_model_name."""
-        return site + "-" + telescope_model_name
-
     def get_model_parameters(
         self,
         site,
@@ -141,34 +139,30 @@ class DatabaseHandler:
         _site_validated = names.validate_site_name(site)
         _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
 
-        # priority simulation model repository to database
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = db_from_repo_handler.get_list_of_model_parameters(
-                model_type="telescope_model",
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-            _version_validated = names.validate_model_version_name(model_version)
-            return db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=dict.fromkeys(_pars, None),
-                site=_site_validated,
-                telescope_name=_tel_model_name_validated,
-                model_version=_version_validated,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-
-        # Only MongoDB supports tagged version
         _model_version = self._convert_version_to_tagged(
             model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
         )
         _version_validated = names.validate_model_version_name(_model_version)
 
-        return self._get_model_parameters_mongo_db(
+        _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _site_validated,
             _tel_model_name_validated,
             _version_validated,
             only_applicable,
         )
+
+        # update using simulation model repository
+        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+            return db_from_repo_handler.update_model_parameters_from_repo(
+                parameters=_pars,
+                site=_site_validated,
+                telescope_name=_tel_model_name_validated,
+                model_version=_version_validated,
+                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
+            )
+
+        return _pars
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -218,23 +212,23 @@ class DatabaseHandler:
 
         """
 
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            self._logger.debug("Exporting model files from simulation model repository")
-            self._logger.warning("Not implemented yet - TODO")
-        elif self.mongo_db_config:
+        if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
-                if not (info.get("file") or info.get("File")):
+                if not info.get("file"):
                     continue
-                if Path(dest).joinpath(info["Value"]).exists():
-                    self._logger.debug(f"File {info['Value']} already exists in {dest}")
+                if Path(dest).joinpath(info["value"]).exists():
+                    self._logger.debug(f"File {info['value']} already exists in {dest}")
                     continue
                 file = self._get_file_mongo_db(
-                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["Value"]
+                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["value"]
                 )
                 self._write_file_from_mongo_to_disk(
                     DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
                 )
+        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+            self._logger.debug("Exporting model files from simulation model repository")
+            self._logger.warning("Not implemented yet - TODO")
 
     @staticmethod
     def _is_file(value):
@@ -267,20 +261,18 @@ class DatabaseHandler:
         """
 
         _site_validated = names.validate_site_name(site)
-        _tel_name_db = self._get_telescope_model_name_for_db(_site_validated, telescope_model_name)
 
-        self._logger.debug(f"Tel_name_db: {_tel_name_db}")
-        _which_tel_labels = [_tel_name_db]
+        self._logger.debug(f"Tel_name_db: {telescope_model_name}")
+        _which_tel_labels = [self.get_telescope_db_name(telescope_model_name)]
 
         # Selecting version and applicable (if on)
         _pars = {}
         for _tel in _which_tel_labels:
             self._logger.debug(f"Getting {_tel} parameters from MongoDB")
 
+            # TODO - understand the logic of the following lines
             # If tel is a structure, only applicable pars will be collected, always.
             # The default ones will be covered by the camera pars.
-
-            # TODO this should go?
             _select_only_applicable = only_applicable or (
                 _tel
                 in [
@@ -305,7 +297,7 @@ class DatabaseHandler:
     def read_mongo_db(
         self,
         db_name,
-        telescope_model_name_db,
+        telescope_model_name,
         model_version,
         run_location,
         collection_name="telescopes",
@@ -320,8 +312,8 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        telescope_model_name_db: str
-            Name of the telescope model (e.g. MST-FlashCam-D ...)
+        telescope_model_name: str
+            Name of the telescope model (e.g. MSTN-design ...)
         model_version: str
             Version of the model.
         run_location: Path or str
@@ -352,26 +344,26 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": telescope_model_name_db,
-            "Version": _model_version,
+            "instrument": telescope_model_name,
+            "version": _model_version,
         }
 
         self._logger.debug(f"Trying the following query: {query}")
         if only_applicable:
-            query["Applicable"] = True
+            query["applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
         for post in collection.find(query):
-            par_now = post["Parameter"]
+            par_now = post["parameter"]
             _parameters[par_now] = post
-            _parameters[par_now].pop("Parameter", None)
-            _parameters[par_now].pop("Telescope", None)
+            _parameters[par_now].pop("parameter", None)
+            _parameters[par_now].pop("instrument", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-            if _parameters[par_now]["File"] and write_files:
-                file = self._get_file_mongo_db(db_name, _parameters[par_now]["Value"])
+            if _parameters[par_now]["file"] and write_files:
+                file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
 
                 self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
@@ -401,28 +393,22 @@ class DatabaseHandler:
 
         """
         _site = names.validate_site_name(site)
-        _model_version = names.validate_model_version_name(model_version)
-
-        # priority simulation model repository to database
+        _version_validated = names.validate_model_version_name(model_version)
+        _pars = self._get_site_parameters_mongo_db(
+            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+            _site,
+            _version_validated,
+            only_applicable,
+        )
+        # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = db_from_repo_handler.get_list_of_model_parameters(
-                model_type="site_model",
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-            _version_validated = names.validate_model_version_name(model_version)
             return db_from_repo_handler.update_site_parameters_from_repo(
-                parameters=dict.fromkeys(_pars, None),
+                parameters=_pars,
                 site=site,
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
-
-        return self._get_site_parameters_mongo_db(
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-            _site,
-            _model_version,
-            only_applicable,
-        )
+        return _pars
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
         """
@@ -459,21 +445,21 @@ class DatabaseHandler:
         )
 
         query = {
-            "Site": _site_validated,
-            "Version": _model_version,
+            "site": _site_validated,
+            "version": _model_version,
         }
         if only_applicable:
-            query["Applicable"] = True
+            query["applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
         for post in collection.find(query):
-            par_now = post["Parameter"]
+            par_now = post["parameter"]
             _parameters[par_now] = post
-            _parameters[par_now].pop("Parameter", None)
-            _parameters[par_now].pop("Site", None)
+            _parameters[par_now].pop("parameter", None)
+            _parameters[par_now].pop("site", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
@@ -484,6 +470,8 @@ class DatabaseHandler:
     ):
         """
         Get parameter descriptions from MongoDB
+
+        TODO - check with OG: Parameter is capitalized in the DB
 
         Parameters
         ----------
@@ -562,7 +550,13 @@ class DatabaseHandler:
             _parameters[par_now].pop("Site", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
-        return _parameters
+        # TODO - temporary fix to lower case the keys
+        #        (requires a fix in DatabaseHandler.DB_REFERENCE_DATA)
+        _tmp_parameters = {}
+        for par, par_value in _parameters.items():
+            _tmp_parameters[par] = {key.lower(): value for key, value in par_value.items()}
+
+        return _tmp_parameters
 
     def get_derived_values(self, site, telescope_model_name, model_version):
         """
@@ -583,21 +577,19 @@ class DatabaseHandler:
 
         """
 
-        _site_validated = names.validate_site_name(site)
         _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
-        _tel_name_db = self._get_telescope_model_name_for_db(
-            _site_validated, _tel_model_name_validated
-        )
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
         )
 
-        self._logger.debug(f"Getting derived values for {_tel_name_db} from the DB")
+        self._logger.debug(
+            f"Getting derived values for {_tel_model_name_validated}, {site} from the DB"
+        )
 
         _pars = self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
-            _tel_name_db,
+            _tel_model_name_validated,
             _model_version,
             run_location=None,
             collection_name="derived_values",
@@ -714,11 +706,11 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": tel_to_copy,
-            "Version": _version_to_copy,
+            "instrument": tel_to_copy,
+            "version": _version_to_copy,
         }
         for post in collection.find(query):
-            post["Telescope"] = new_tel_name
+            post["instrument"] = new_tel_name
             post.pop("_id", None)
             db_entries.append(post)
 
@@ -744,13 +736,13 @@ class DatabaseHandler:
         query: dict
             A dictionary with a query to search for documents to copy.
             For example, the query below would copy all entries of prod4 version
-            from telescope North-LST-1 to "db_to_copy_to".
+            from telescope LSTN-01 to "db_to_copy_to".
 
             .. code-block:: python
 
                 query = {
-                    "Telescope": "North-LST-1",
-                    "Version": "prod4",
+                    "instrument": "LSTN-01",
+                    "version": "prod6",
                 }
         db_to_copy_to: str
             The name of the DB to copy to.
@@ -792,23 +784,23 @@ class DatabaseHandler:
             the name of the collection to copy from
         query: dict
             A dictionary listing the fields/values to delete.
-            For example, the query below would delete the entire prod5 version
-            from telescope North-LST-1.
+            For example, the query below would delete the entire prod6 version
+            from telescope LSTN-01.
 
             .. code-block:: python
 
                 query = {
-                    "Telescope": "North-LST-1",
-                    "Version": "prod5",
+                    "instrument": "LSTN-01",
+                    "version": "prod6",
                 }
 
         """
 
         _collection = DatabaseHandler.db_client[db_name][collection]
 
-        if "Version" in query:
-            query["Version"] = self._convert_version_to_tagged(
-                query["Version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        if "version" in query:
+            query["version"] = self._convert_version_to_tagged(
+                query["version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
             )
 
         self._logger.info(f"Deleting {_collection.count_documents(query)} entries from {db_name}")
@@ -861,13 +853,13 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": telescope,
-            "Version": _model_version,
-            "Parameter": parameter,
+            "instrument": telescope,
+            "version": _model_version,
+            "parameter": parameter,
         }
 
         par_entry = collection.find_one(query)
-        old_value = par_entry["Value"]
+        old_value = par_entry["value"]
 
         self._logger.info(
             f"For telescope {telescope}, version {_model_version}\n"
@@ -888,7 +880,7 @@ class DatabaseHandler:
         else:
             file = False
 
-        query_update = {"$set": {"Value": new_value, "File": file}}
+        query_update = {"$set": {"value": new_value, "file": file}}
 
         collection.update_one(query, query_update)
         for file_now in files_to_add_to_db:
@@ -940,9 +932,9 @@ class DatabaseHandler:
 
         """
 
-        allowed_fields = ["Applicable", "units", "Type", "items", "minimum", "maximum"]
+        allowed_fields = ["applicable", "unit", "type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
-            raise ValueError(f"The field to change must be one of {', '.join(allowed_fields)}")
+            raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
@@ -951,14 +943,15 @@ class DatabaseHandler:
         )
 
         query = {
-            "Version": _model_version,
-            "Parameter": parameter,
+            "version": _model_version,
+            "parameter": parameter,
         }
         if telescope is not None:
-            query["Telescope"] = telescope
-            logger_info = f"telescope {telescope}"
+            query["instrument"] = telescope
+            logger_info = f"instrument {telescope}"
+        # TODO - check why tested for South / North
         elif site is not None and site in ["North", "South"]:
-            query["Site"] = site
+            query["site"] = site
             logger_info = f"site {site}"
         else:
             raise ValueError("You need to specify if to update a telescope or a site.")
@@ -1040,18 +1033,18 @@ class DatabaseHandler:
         )
 
         query = {
-            "Telescope": telescope,
-            "Parameter": parameter,
+            "instrument": telescope,
+            "parameter": parameter,
         }
 
         par_entry = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
-        par_entry["Value"] = new_value
-        par_entry["Version"] = _new_version
+        par_entry["value"] = new_value
+        par_entry["version"] = _new_version
         par_entry.pop("_id", None)
 
         files_to_add_to_db = set()
         if self._is_file(new_value):
-            par_entry["File"] = True
+            par_entry["file"] = True
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
@@ -1060,7 +1053,7 @@ class DatabaseHandler:
             file_path = Path(file_prefix).joinpath(new_value)
             files_to_add_to_db.add(f"{file_path}")
         else:
-            par_entry["File"] = False
+            par_entry["file"] = False
 
         self._logger.info(f"Will add the following entry to DB:\n{par_entry}")
 
@@ -1119,25 +1112,25 @@ class DatabaseHandler:
 
         db_entry = {}
         if "telescopes" in collection_name:
-            db_entry["Telescope"] = names.validate_telescope_name(telescope)
+            db_entry["instrument"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
-            db_entry["Site"] = names.validate_site_name(site)
+            db_entry["site"] = names.validate_site_name(site)
         else:
             raise ValueError("Can only add new parameters to the sites or telescopes collections")
 
-        db_entry["Version"] = version
-        db_entry["Parameter"] = parameter
+        db_entry["version"] = version
+        db_entry["parameter"] = parameter
 
         _base_value, _base_unit, _base_type = gen.get_value_unit_type(value)
-        db_entry["Value"] = _base_value
+        db_entry["value"] = _base_value
         if _base_unit is not None:
-            db_entry["units"] = _base_unit
-        db_entry["Type"] = kwargs["Type"] if "Type" in kwargs else _base_type
+            db_entry["unit"] = _base_unit
+        db_entry["type"] = kwargs["type"] if "type" in kwargs else _base_type
 
         files_to_add_to_db = set()
-        db_entry["File"] = False
+        db_entry["file"] = False
         if self._is_file(value):
-            db_entry["File"] = True
+            db_entry["file"] = True
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
@@ -1146,7 +1139,7 @@ class DatabaseHandler:
             file_path = Path(file_prefix).joinpath(value)
             files_to_add_to_db.add(f"{file_path}")
 
-        kwargs.pop("Type", None)
+        kwargs.pop("type", None)
         db_entry.update(kwargs)
 
         self._logger.info(f"Will add the following entry to DB:\n{db_entry}")
@@ -1197,6 +1190,7 @@ class DatabaseHandler:
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
 
+        # TODO - check with OG with "Value" is good
         return tags["Tags"][version]["Value"]
 
     def insert_file_to_db(self, file_name, db_name=DB_CTA_SIMULATION_MODEL, **kwargs):
@@ -1282,22 +1276,19 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
         query = {
-            "Parameter": parameter,
+            "parameter": parameter,
         }
 
         _site_validated = names.validate_site_name(site)
         if collection_name == "telescopes":
             _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
-            _tel_name_db = self._get_telescope_model_name_for_db(
-                _site_validated, _tel_model_name_validated
-            )
-            query["Telescope"] = _tel_name_db
+            query["instrument"] = _tel_model_name_validated
         elif collection_name == "sites":
-            query["Site"] = _site_validated
+            query["site"] = _site_validated
         else:
             raise ValueError("Can only get versions of the telescopes and sites collections.")
 
-        _all_versions = [post["Version"] for post in collection.find(query)]
+        _all_versions = [post["version"] for post in collection.find(query)]
 
         if len(_all_versions) == 0:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
@@ -1334,9 +1325,42 @@ class DatabaseHandler:
         )
 
         query = {
-            "Version": _model_version,
+            "version": _model_version,
         }
 
-        _all_available_telescopes = collection.find(query).distinct("Telescope")
+        _all_available_telescopes = collection.find(query).distinct("instrument")
 
         return _all_available_telescopes
+
+    def get_telescope_db_name(self, telescope_name):
+        """
+        Translate telescope name to the name used in the DB. This is required,
+        as not all telescopes are defined in the database yet. In these cases,
+        use the "design" telescope.
+
+        Returns:
+        -------
+        str
+            Telescope model name as used in the DB.
+
+        Raises:
+        -------
+        ValueError
+            If the telescope name is not found in the database.
+
+        """
+
+        if self._available_telescopes is None:
+            self._available_telescopes = self.get_all_available_telescopes()
+
+        _telescope_name_validated = names.validate_telescope_name(telescope_name)
+        if _telescope_name_validated in self._available_telescopes:
+            return _telescope_name_validated
+        _design_name = (
+            f"{names.get_telescope_type_from_telescope_name(_telescope_name_validated)}-design"
+        )
+        if _design_name in self._available_telescopes:
+            return _design_name
+
+        self._logger.error("Telescope %s not found in the database.", telescope_name)
+        raise ValueError
