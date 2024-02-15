@@ -282,7 +282,7 @@ def simulator_config_data(tmp_test_directory):
         "array": {
             "model_version": "Prod5",
             "default": {"LSTN": "design", "MSTN": "design"},
-            "LSTN-01": "01",
+            #            "LSTN-01": "01",
         },
     }
 
