@@ -37,7 +37,7 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
 def test_reading_db_lst(db):
     logger.info("----Testing reading LST-----")
     assert 1 == 1
-    pars = db.get_model_parameters("north", "lstn-01", "Released")
+    pars = db.get_model_parameters("North", "LSTN-01", "Released")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["value"] == 1
         assert pars["camera_pixels"]["value"] == 1855
@@ -48,7 +48,7 @@ def test_reading_db_lst(db):
 
 def test_reading_db_mst_nc(db):
     logger.info("----Testing reading MST-NectarCam-----")
-    pars = db.get_model_parameters("north", "mstn-design", "Released")
+    pars = db.get_model_parameters("North", "MSTN-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 1855
     else:
@@ -57,7 +57,7 @@ def test_reading_db_mst_nc(db):
 
 def test_reading_db_mst_fc(db):
     logger.info("----Testing reading MST-FlashCam-----")
-    pars = db.get_model_parameters("south", "msts-design", "Released")
+    pars = db.get_model_parameters("South", "MSTS-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 1764
     else:
@@ -66,7 +66,7 @@ def test_reading_db_mst_fc(db):
 
 def test_reading_db_sst(db):
     logger.info("----Testing reading SST-----")
-    pars = db.get_model_parameters("south", "ssts-design", "Released")
+    pars = db.get_model_parameters("South", "SSTS-design", "Released")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 2048
     else:
@@ -75,25 +75,30 @@ def test_reading_db_sst(db):
 
 def test_get_reference_data(db):
     logger.info("----Testing reading reference data-----")
-    pars = db.get_reference_data("south", "Prod5")
+    pars = db.get_reference_data("South", "Prod5")
     assert pars["nsb_reference_value"]["value"] == pytest.approx(0.24)
 
 
 def test_get_derived_values(db):
     logger.info("----Testing reading derived values-----")
-    pars = db.get_derived_values("north", "lstn-01", "Prod5")
-    assert (
-        pars["ray_tracing"]["value"] == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
-    )
+    try:
+        pars = db.get_derived_values("North", "LSTN-01", "Prod5")
+        assert (
+            pars["ray_tracing"]["value"]
+            == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+        )
+    except ValueError:
+        logger.error("Derived DB not updated for new telescope names. Expect failure")
+        raise AssertionError
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing copying a whole telescope-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="North-LST-1",
+        tel_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="North-LST-Test",
+        new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -107,7 +112,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-Test",
+        telescope_model_name="LSTN-test",
         model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -116,7 +121,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
     assert pars["camera_pixels"]["value"] == 1855
 
     logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
-    query = {"Telescope": "North-LST-Test"}
+    query = {"instrument": "LSTN-test"}
     db.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
     query = {"Entry": "Simulation-Model-Tags"}
     db.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
@@ -126,7 +131,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
     with pytest.raises(ValueError):
         db.read_mongo_db(
             db_name=f"sandbox_{random_id}",
-            telescope_model_name_db="North-LST-Test",
+            telescope_model_name="LSTN-test",
             model_version="Released",
             run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             collection_name="telescopes_" + random_id,
@@ -138,16 +143,16 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new version of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="North-LST-1",
+        tel_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="North-LST-Test",
+        new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         parameter="camera_config_version",
         new_version="test",
         new_value=42,
@@ -155,7 +160,7 @@ def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-Test",
+        telescope_model_name="LSTN-test",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -168,16 +173,16 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing updating a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="North-LST-1",
+        tel_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="North-LST-Test",
+        new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         parameter="camera_config_version",
         new_version="test",
         new_value=42,
@@ -185,7 +190,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     db.update_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="camera_config_version",
         new_value=999,
@@ -193,7 +198,7 @@ def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-Test",
+        telescope_model_name="LSTN-test",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -206,16 +211,16 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="North-LST-1",
+        tel_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="North-LST-Test",
+        new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="new_test_parameter_str",
         value="hello",
@@ -223,7 +228,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="new_test_parameter_int",
         value=999,
@@ -231,7 +236,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="new_test_parameter_float",
         value=999.9,
@@ -239,7 +244,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="new_test_parameter_quantity",
         value=999.9 * u.m,
@@ -247,7 +252,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-Test",
+        telescope="LSTN-test",
         version="test",
         parameter="new_test_parameter_quantity_str",
         value="999.9 cm",
@@ -255,33 +260,33 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-TEST",
+        telescope_model_name="LSTN-test",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
     assert pars["new_test_parameter_str"]["value"] == "hello"
-    assert pars["new_test_parameter_str"]["Type"] == "str"
+    assert pars["new_test_parameter_str"]["type"] == "str"
     assert pars["new_test_parameter_int"]["value"] == 999
-    assert pars["new_test_parameter_int"]["Type"] == "int"
+    assert pars["new_test_parameter_int"]["type"] == "int"
     assert pars["new_test_parameter_float"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_float"]["Type"] == "float"
+    assert pars["new_test_parameter_float"]["type"] == "float"
     assert pars["new_test_parameter_quantity"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_quantity"]["Type"] == "float"
-    assert pars["new_test_parameter_quantity"]["units"] == "m"
+    assert pars["new_test_parameter_quantity"]["type"] == "float"
+    assert pars["new_test_parameter_quantity"]["unit"] == "m"
     assert pars["new_test_parameter_quantity_str"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_quantity_str"]["Type"] == "float"
-    assert pars["new_test_parameter_quantity_str"]["units"] == "cm"
+    assert pars["new_test_parameter_quantity_str"]["type"] == "float"
+    assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
 
 
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="North-LST-1",
+        tel_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="North-LST-TEST",
+        new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -295,22 +300,22 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
-        telescope="North-LST-TEST",
+        telescope="LSTN-test",
         version="Released",
         parameter="camera_pixels",
-        field="Applicable",
+        field="applicable",
         new_value=False,
         collection_name="telescopes_" + random_id,
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name_db="North-LST-TEST",
+        telescope_model_name="LSTN-test",
         model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
     )
-    assert pars["camera_pixels"]["Applicable"] is False
+    assert pars["camera_pixels"]["applicable"] is False
 
 
 def test_reading_db_sites(db):
@@ -346,7 +351,7 @@ def test_reading_db_sites(db):
 
 def test_separating_get_and_write(db, io_handler):
     logger.info("----Testing getting parameters and exporting model files-----")
-    pars = db.get_model_parameters("north", "lstn-01", "Released")
+    pars = db.get_model_parameters("North", "LSTN-01", "Released")
 
     file_list = list()
     for par_now in pars.values():
@@ -440,19 +445,23 @@ def test_get_all_available_telescopes(db):
     available_telescopes = db.get_all_available_telescopes(model_version="Prod5")
 
     expected_telescope_names = [
-        "North-LST-1",
-        "North-LST-D234",
-        "North-MST-FlashCam-D",
-        "North-MST-NectarCam-D",
-        "North-MST-Structure-D",
-        "South-LST-D",
-        "South-MST-FlashCam-D",
-        "South-MST-Structure-D",
-        "South-SCT-D",
-        "South-SST-1M-D",
-        "South-SST-ASTRI-D",
-        "South-SST-Camera-D",
-        "South-SST-GCT-D",
-        "South-SST-Structure-D",
+        "LSTN-01",
+        "LSTN-design",
+        "LSTS-design",
+        "MSTN-design",
+        "MSTS-design",
+        "SCTS-design",
+        "SSTS-design",
     ]
     assert all(_t in available_telescopes for _t in expected_telescope_names)
+
+
+def test_get_telescope_db_name(db):
+    assert db.get_telescope_db_name("LSTN-01") == "LSTN-01"
+    assert db.get_telescope_db_name("LSTN-02") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTN-design") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTS-design") == "LSTS-design"
+    assert db.get_telescope_db_name("SSTS-01") == "SSTS-design"
+    assert db.get_telescope_db_name("SSTS-design") == "SSTS-design"
+    with pytest.raises(ValueError):
+        db.get_telescope_db_name("SSTN-05")
