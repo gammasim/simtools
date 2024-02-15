@@ -137,6 +137,7 @@ def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
         assert "Invalid TelescopeModel" in caplog.text
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_ray_tracing_read_results(ray_tracing_lst):
     ray_tracing_lst.analyze(force=False)
 
@@ -166,6 +167,7 @@ def test_export_results(simtel_path, telescope_model_lst, caplog):
     assert "Cannot export results because it does not exist" in caplog.text
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_ray_tracing_plot(ray_tracing_lst, caplog):
     """
     Test the plot method of the RayTracing class with an invalid key and a valid key
@@ -210,6 +212,7 @@ def test_ray_tracing_invalid_key(ray_tracing_lst, caplog):
         assert "Invalid key" in caplog.text
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_ray_tracing_get_std_dev(ray_tracing_lst):
     """Test the get_std_dev method of the RayTracing class"""
 

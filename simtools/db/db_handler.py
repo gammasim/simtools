@@ -533,30 +533,24 @@ class DatabaseHandler:
         )
 
         query = {
-            "Site": _site_validated,
-            "Version": _model_version,
+            "site": _site_validated,
+            "version": _model_version,
         }
         if only_applicable:
-            query["Applicable"] = True
+            query["applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
         for post in collection.find(query):
-            par_now = post["Parameter"]
+            par_now = post["parameter"]
             _parameters[par_now] = post
-            _parameters[par_now].pop("Parameter", None)
-            _parameters[par_now].pop("Site", None)
+            _parameters[par_now].pop("parameter", None)
+            _parameters[par_now].pop("site", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
-        # TODO - temporary fix to lower case the keys
-        #        (requires a fix in DatabaseHandler.DB_REFERENCE_DATA)
-        _tmp_parameters = {}
-        for par, par_value in _parameters.items():
-            _tmp_parameters[par] = {key.lower(): value for key, value in par_value.items()}
-
-        return _tmp_parameters
+        return _parameters
 
     def get_derived_values(self, site, telescope_model_name, model_version):
         """
