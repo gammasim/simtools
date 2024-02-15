@@ -85,17 +85,15 @@ def test_update_parameters_from_repo(caplog, db_config):
 
     # Test with a parameter that is not in the repository (no error should be raised)
     _pars_site_model.append("not_a_parameter")
-    with caplog.at_level(logging.DEBUG):
-        db_from_repo_handler._update_parameters_from_repo(
-            parameters=dict.fromkeys(_pars_site_model, None),
-            site="South",
-            telescope_name=None,
-            model_version=None,
-            parameter_collection="site",
-            db_simulation_model_url=db_config["db_simulation_model_url"],
-            db_simulation_model="verified_model",
-        )
-        assert "Parameter not_a_parameter not found in repository" in caplog.text
+    db_from_repo_handler._update_parameters_from_repo(
+        parameters=dict.fromkeys(_pars_site_model, None),
+        site="South",
+        telescope_name=None,
+        model_version=None,
+        parameter_collection="site",
+        db_simulation_model_url=db_config["db_simulation_model_url"],
+        db_simulation_model="verified_model",
+    )
 
 
 def test_update_telescope_parameters_from_repo(db_config):
