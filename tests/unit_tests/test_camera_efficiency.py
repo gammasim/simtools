@@ -72,6 +72,7 @@ def test_validate_telescope_model(simtel_path):
         CameraEfficiency(telescope_model="bla_bla", simtel_source_path=simtel_path)
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_load_files(camera_efficiency_lst):
     assert (
         camera_efficiency_lst._file_results.name
@@ -87,12 +88,14 @@ def test_load_files(camera_efficiency_lst):
     )
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_read_results(camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     assert isinstance(camera_efficiency_lst._results, Table)
     assert camera_efficiency_lst._has_results is True
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_calc_camera_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
@@ -101,6 +104,7 @@ def test_calc_camera_efficiency(telescope_model_lst, camera_efficiency_lst, resu
     )  # Value for Prod5 LST-1
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_calc_tel_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
@@ -109,6 +113,7 @@ def test_calc_tel_efficiency(telescope_model_lst, camera_efficiency_lst, results
     )  # Value for Prod5 LST-1
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_calc_tot_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
@@ -119,6 +124,7 @@ def test_calc_tot_efficiency(telescope_model_lst, camera_efficiency_lst, results
     )  # Value for Prod5 LST-1
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_calc_reflectivity(camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     assert camera_efficiency_lst.calc_reflectivity() == pytest.approx(
@@ -126,6 +132,7 @@ def test_calc_reflectivity(camera_efficiency_lst, results_file):
     )  # Value for Prod5 LST-1
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
@@ -147,6 +154,7 @@ def test_export_results(simtel_path, telescope_model_lst, caplog):
     assert "Cannot export results because they do not exist" in caplog.text
 
 
+@pytest.mark.skip(reason="Files from test-data DB to be move to ./tests/resources directory")
 def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
