@@ -158,12 +158,11 @@ class ArrayModel:
         _all_telescope_names = []  # List of telescope names without repetition
         _all_pars_to_change = {}
         for tel in self.layout:
-            # TODO - not sure if this is correct
-            tel_size = names.get_telescope_type_from_telescope_name(tel.name)
+            tel_type = names.get_telescope_type_from_telescope_name(tel.name)
 
             # Collecting telescope name and pars to change from array_config_data
             tel_name, pars_to_change = self._get_single_telescope_info_from_array_config(
-                tel.name, tel_size
+                tel.name, tel_type
             )
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
@@ -212,9 +211,9 @@ class ArrayModel:
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
                 tel_model.set_extra_label(tel_data.name)
 
-    def _get_single_telescope_info_from_array_config(self, tel_name, tel_size):
+    def _get_single_telescope_info_from_array_config(self, tel_name, tel_type):
         """
-        array_config_data contains the default telescope models for each telescope size and the \
+        array_config_data contains the default telescope models for each telescope type and the \
         list of specific telescopes. For each case, the data can be given only as a name or as a \
         dict with 'name' and parameters to change. This function has to identify these two cases\
         and collect the telescope name and the dict with the parameters to change.
@@ -223,8 +222,8 @@ class ArrayModel:
         ----------
         tel_name: str
             Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).
-        tel_size: str
-            LST, MST or SST.
+        tel_type: str
+            telescope type, e.g., LSTN, MSTS or SSTS.
         """
 
         def _process_single_telescope(data):
@@ -241,7 +240,7 @@ class ArrayModel:
                     msg = "ArrayConfig has no name for a telescope"
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
-                tel_name = tel_size + "-" + data["name"]
+                tel_name = tel_type + "-" + data["name"]
                 pars_to_change = {k: v for (k, v) in data.items() if k != "name"}
                 self._logger.debug(
                     "Grabbing tel data as dict - "
@@ -251,7 +250,7 @@ class ArrayModel:
                 return tel_name, pars_to_change
             if isinstance(data, str):
                 # Case 1: data is string (only name)
-                tel_name = tel_size + "-" + data
+                tel_name = tel_type + "-" + data
                 return tel_name, {}
 
             # Case 2: data has a wrong type
@@ -266,7 +265,7 @@ class ArrayModel:
         # Checking if default option exists in array_config_data
         not_contains_default_key = (
             "default" not in self._array_config_data.keys()
-            or tel_size not in self._array_config_data["default"].keys()
+            or tel_type not in self._array_config_data["default"].keys()
         )
 
         if not_contains_default_key:
@@ -278,7 +277,7 @@ class ArrayModel:
             raise InvalidArrayConfigData(msg)
 
         # Grabbing the default option
-        return _process_single_telescope(self._array_config_data["default"][tel_size])
+        return _process_single_telescope(self._array_config_data["default"][tel_type])
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
