@@ -20,7 +20,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        db: 
+        db:
           - CTA-Reference-Data
           - CTA-Simulation-Model
           - CTA-Simulation-Model-Derived-Values
@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Dump MongoDB databases
-        run: | 
+        run: |
           mongodump \
            --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}"\
            --ssl --tlsInsecure \
