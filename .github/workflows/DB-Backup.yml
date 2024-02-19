@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mongo:latest
+      ports:
+        - 27017:27017
     strategy:
       max-parallel: 1
       matrix:
@@ -33,6 +35,7 @@ jobs:
 
     steps:
       - name: Dump MongoDB databases
+        shell: bash -l {0}
         run: |
           mongodump \
            --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}"\
@@ -45,20 +48,23 @@ jobs:
            --archive="mongodump-${{ matrix.db }}"
 
       - name: Checksums
+        shell: bash -l {0}
         run: |
           md5sum mongodump-${{ matrix.db }} > mongodump-${{ matrix.db }}.md5
 
       - name: Get current date
+        shell: bash -l {0}
         id: date
-        run: echo "::set-output name=date::$(date -u +'%Y%m%dT%H%MZ')"
+        run: echo "date=$(date -u +'%Y%m%dT%H%MZ')" >> $GITHUB_ENV
 
       - name: Upload backup to Sync & Share
+        shell: bash -l {0}
         run: |
           apt-get update
           apt-get install -y curl
           curl -T mongodump-${{ matrix.db }} \
            -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
-           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ steps.date.outputs.date }}"
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}"
           curl -T mongodump-${{ matrix.db }}.md5 \
            -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
-           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ steps.date.outputs.date }}.md5sum"
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}.md5sum"
