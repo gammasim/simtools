@@ -14,17 +14,16 @@
 import logging
 
 import simtools.utils.general as gen
-from simtools.db import db_handler
 from simtools.configuration import configurator
+from simtools.db import db_handler
 
 
 def main():
-    config = configurator.Configurator(
-        description=("Add a new parameter to the DB.")
-    )
+    config = configurator.Configurator(description=("Add a new parameter to the DB."))
     config.parser.add_argument("--file_name", help="file to be added", required=True)
     config.parser.add_argument(
-        "--db_collection", help="DB collection file will be added", required=True)
+        "--db_collection", help="DB collection file will be added", required=True
+    )
     args_dict, db_config = config.initialize(db_config=True)
 
     logger = logging.getLogger()
@@ -35,8 +34,7 @@ def main():
     if args_dict["db_collection"] not in ("telescopes", "sites"):
         raise ValueError(f"DB collection {args_dict['db_collection']} not recognized")
 
-    par_dict = gen.collect_data_from_file_or_dict(
-        file_name=args_dict["file_name"], in_dict=None)
+    par_dict = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
 
     logger.info(f"Adding the following parameters to the DB: {par_dict['parameter']}")
 
