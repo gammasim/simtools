@@ -1,12 +1,5 @@
 ---
 name: Simulation model DB Backup
-env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_API_AUTHENTICATION_DATABASE: ${{ secrets.DB_API_AUTHENTICATION_DATABASE }}
-  SIMTOOLS_DB_BACKUP_TOKEN: ${{ secrets.DB_BACKUP_TOKEN }}
 
 on:
   schedule:
@@ -22,26 +15,35 @@ jobs:
     container:
       image: mongo:latest
       options: --user 0
+      env:
+        SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+        SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
+        SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
+        SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+        SIMTOOLS_DB_API_AUTHENTICATION_DATABASE: ${{ secrets.DB_API_AUTHENTICATION_DATABASE }}
+        SIMTOOLS_DB_BACKUP_TOKEN: ${{ secrets.DB_BACKUP_TOKEN }}
+
     strategy:
       max-parallel: 1
       matrix:
         db:
           - CTA-Reference-Data
-          - CTA-Simulation-Model
-          - CTA-Simulation-Model-Derived-Values
-          - CTA-Simulation-Model-Descriptions
-          - Staging-CTA-Reference-Data
-          - Staging-CTA-Simulation-Model
-          - Staging-CTA-Simulation-Model-Derived-Values
+#          - CTA-Simulation-Model
+#          - CTA-Simulation-Model-Derived-Values
+#          - CTA-Simulation-Model-Descriptions
+#          - Staging-CTA-Reference-Data
+#          - Staging-CTA-Simulation-Model
+#          - Staging-CTA-Simulation-Model-Derived-Values
 
     steps:
+
       - name: Dump MongoDB databases
         shell: bash -l {0}
         run: |
           mongodump \
            --uri="mongodb://${{ env.SIMTOOLS_DB_SERVER }}:${{ env.SIMTOOLS_DB_API_PORT }}"\
            --ssl --tlsInsecure \
-           --username=${{ env.SIMTOOLS_DB_USER }} \
+           --username=${{ env.SIMTOOLS_DB_API_USER }} \
            --password=${{ env.SIMTOOLS_DB_API_PW }} \
            --authenticationDatabase=${{ env.SIMTOOLS_DB_API_AUTHENTICATION_DATABASE }}\
            --db=${{ matrix.db }} \
