@@ -1,0 +1,62 @@
+name: Simulation model DB Backup
+env:
+  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
+  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_BACKUP_TOKEN: ${{ secrets.DB_BACKUP_TOKEN }}
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Run every night at 2 am
+  workflow_dispatch:     # Manual trigger
+
+jobs:
+  backup:
+    name: Backup Simulation Model DB
+    runs-on: ubuntu-latest
+    container:
+      image: mongo:latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        db: 
+          - CTA-Reference-Data
+          - CTA-Simulation-Model
+          - CTA-Simulation-Model-Derived-Values
+          - CTA-Simulation-Model-Descriptions
+          - Staging-CTA-Reference-Data
+          - Staging-CTA-Simulation-Model
+          - Staging-CTA-Simulation-Model-Derived-Values
+
+    steps:
+      - name: Dump MongoDB databases
+        run: | 
+          mongodump \
+           --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}"\
+           --ssl --tlsInsecure \
+           --username=$SIMTOOLS_DB_USER \
+           --password='KqK6cLku5U7S5SQT' \
+           --authenticationDatabase=$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE \
+           --db=${{ matrix.db }} \
+           --gzip \
+           --archive="mongodump-${{ matrix.db }}"
+
+      - name: Checksums
+        run: |
+          md5sum mongodump-${{ matrix.db }} > mongodump-${{ matrix.db }}.md5
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date -u +'%Y%m%dT%H%MZ')"
+
+      - name: Upload backup to Sync & Share
+        run: |
+          apt-get update
+          apt-get install -y curl
+          curl -T mongodump-${{ matrix.db }} \
+           -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ steps.date.outputs.date }}"
+          curl -T mongodump-${{ matrix.db }}.md5 \
+           -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ steps.date.outputs.date }}.md5sum"
