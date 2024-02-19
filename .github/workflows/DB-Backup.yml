@@ -4,6 +4,7 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_API_AUTHENTICATION_DATABASE: ${{ secrets.DB_API_AUTHENTICATION_DATABASE }}
   SIMTOOLS_DB_BACKUP_TOKEN: ${{ secrets.DB_BACKUP_TOKEN }}
 
 on:
@@ -38,11 +39,11 @@ jobs:
         shell: bash -l {0}
         run: |
           mongodump \
-           --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}"\
+           --uri="mongodb://${{ env.SIMTOOLS_DB_SERVER }}:${{ env.SIMTOOLS_DB_API_PORT }}"\
            --ssl --tlsInsecure \
-           --username=$SIMTOOLS_DB_USER \
-           --password='KqK6cLku5U7S5SQT' \
-           --authenticationDatabase=$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE \
+           --username=${{ env.SIMTOOLS_DB_USER }} \
+           --password=${{ env.SIMTOOLS_DB_API_PW }} \
+           --authenticationDatabase=${{ env.SIMTOOLS_DB_API_AUTHENTICATION_DATABASE }}\
            --db=${{ matrix.db }} \
            --gzip \
            --archive="mongodump-${{ matrix.db }}"
