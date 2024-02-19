@@ -21,12 +21,12 @@ jobs:
       matrix:
         db:
           - CTA-Reference-Data
-#          - CTA-Simulation-Model
-#          - CTA-Simulation-Model-Derived-Values
-#          - CTA-Simulation-Model-Descriptions
-#          - Staging-CTA-Reference-Data
-#          - Staging-CTA-Simulation-Model
-#          - Staging-CTA-Simulation-Model-Derived-Values
+          - CTA-Simulation-Model
+          - CTA-Simulation-Model-Derived-Values
+          - CTA-Simulation-Model-Descriptions
+          - Staging-CTA-Reference-Data
+          - Staging-CTA-Simulation-Model
+          - Staging-CTA-Simulation-Model-Derived-Values
 
     steps:
 
