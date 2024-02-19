@@ -38,20 +38,26 @@ def main():
 
     logger.info(f"Adding the following parameters to the DB: {par_dict['parameter']}")
 
-    db.add_new_parameter(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
-        telescope=par_dict["instrument"],
-        parameter=par_dict["parameter"],
-        version=par_dict["version"],
-        value=par_dict["value"],
-        site=par_dict["site"],
-        type=par_dict["type"],
-        collection_name=args_dict["db_collection"],
-        applicable=par_dict["applicable"],
-        file=par_dict["file"],
-        unit=par_dict["unit"] if "unit" in par_dict and par_dict["unit"] is not None else None,
-        file_prefix="./",
-    )
+    value_and_version = {
+        "prod6": par_dict["value"],
+        "default": 0,
+    }
+
+    for version, value in value_and_version.items():
+        db.add_new_parameter(
+            db_name=db.DB_CTA_SIMULATION_MODEL,
+            telescope=par_dict["instrument"],
+            parameter=par_dict["parameter"],
+            version=version,
+            value=value,
+            site=par_dict["site"],
+            type=par_dict["type"],
+            collection_name=args_dict["db_collection"],
+            applicable=par_dict["applicable"],
+            file=par_dict["file"],
+            unit=par_dict["unit"] if "unit" in par_dict and par_dict["unit"] is not None else None,
+            file_prefix="./",
+        )
 
 
 if __name__ == "__main__":
