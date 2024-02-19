@@ -1,3 +1,4 @@
+---
 name: Simulation model DB Backup
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
@@ -20,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mongo:latest
+      options: --user 0
     strategy:
       max-parallel: 1
       matrix:
