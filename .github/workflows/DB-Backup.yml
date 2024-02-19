@@ -15,13 +15,6 @@ jobs:
     container:
       image: mongo:latest
       options: --user 0
-      env:
-        SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-        SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-        SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-        SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-        SIMTOOLS_DB_API_AUTHENTICATION_DATABASE: ${{ secrets.DB_API_AUTHENTICATION_DATABASE }}
-        SIMTOOLS_DB_BACKUP_TOKEN: ${{ secrets.DB_BACKUP_TOKEN }}
 
     strategy:
       max-parallel: 1
@@ -41,11 +34,11 @@ jobs:
         shell: bash -l {0}
         run: |
           mongodump \
-           --uri="mongodb://${{ env.SIMTOOLS_DB_SERVER }}:${{ env.SIMTOOLS_DB_API_PORT }}"\
+           --uri="mongodb://${{ secrets.DB_SERVER }}:${{ secrets.DB_API_PORT }}"\
            --ssl --tlsInsecure \
-           --username=${{ env.SIMTOOLS_DB_API_USER }} \
-           --password=${{ env.SIMTOOLS_DB_API_PW }} \
-           --authenticationDatabase=${{ env.SIMTOOLS_DB_API_AUTHENTICATION_DATABASE }}\
+           --username=${{ secrets.DB_API_USER }} \
+           --password=${{ secrets.DB_API_PW }} \
+           --authenticationDatabase=${{ secrets.DB_API_AUTHENTICATION_DATABASE }}\
            --db=${{ matrix.db }} \
            --gzip \
            --archive="mongodump-${{ matrix.db }}"
@@ -66,8 +59,8 @@ jobs:
           apt-get update
           apt-get install -y curl
           curl -T mongodump-${{ matrix.db }} \
-           -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
+           -u ${{ secrets.DB_BACKUP_TOKEN }}::"" -H "X-Requested-With: XMLHttpRequest" \
            "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}"
           curl -T mongodump-${{ matrix.db }}.md5 \
-           -u "$SIMTOOLS_DB_BACKUP_TOKEN":"" -H "X-Requested-With: XMLHttpRequest" \
+           -u ${{ secrets.DB_BACKUP_TOKEN }}:"" -H "X-Requested-With: XMLHttpRequest" \
            "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}.md5sum"
