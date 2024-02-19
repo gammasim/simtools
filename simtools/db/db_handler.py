@@ -1108,12 +1108,14 @@ class DatabaseHandler:
         if "telescopes" in collection_name:
             db_entry["instrument"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
-            db_entry["site"] = names.validate_site_name(site)
+            db_entry["instrument"] = names.validate_site_name(site)
         else:
             raise ValueError("Can only add new parameters to the sites or telescopes collections")
 
         db_entry["version"] = version
         db_entry["parameter"] = parameter
+        if site is not None:
+            db_entry["site"] = names.validate_site_name(site)
 
         _base_value, _base_unit, _base_type = gen.get_value_unit_type(value)
         db_entry["value"] = _base_value
@@ -1137,6 +1139,9 @@ class DatabaseHandler:
         db_entry.update(kwargs)
 
         self._logger.info(f"Will add the following entry to DB:\n{db_entry}")
+
+        # TMP - don't write to DB yet
+        return
 
         collection.insert_one(db_entry)
         for file_to_insert_now in files_to_add_to_db:
