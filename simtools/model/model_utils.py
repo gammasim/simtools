@@ -74,7 +74,7 @@ def is_two_mirror_telescope(telescope_name):
         True if the telescope is a two mirror one.
     """
 
-    tel_type, _ = names.get_telescope_type_from_telescope_name(telescope_name)
+    tel_type = names.get_telescope_type_from_telescope_name(telescope_name)
     if "SST" in tel_type or "SCT" in tel_type:
         return True
     return False

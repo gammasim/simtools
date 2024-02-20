@@ -9,9 +9,9 @@ default:
     zenith: 20 deg
     phi: 0 deg
     default:
-      LST: 'D234'
-      MST: FlashCam-D
-    LSTN-01: '1'
+      LSTN: 'design'
+      MSTN: 'design'
+    LSTN-01: '01'
   showers:
     eslope: -2
     zenith: 20 deg
