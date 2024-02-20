@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from simtools.model.model_parameter import InvalidModelParameter
 from simtools.simtel.simtel_runner import SimtelRunner
 
 __all__ = ["SimtelRunnerCameraEfficiency"]
@@ -90,7 +91,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         mirror_class = 1
         try:
             mirror_class = self._telescope_model.get_parameter_value("mirror_class")
-        except KeyError:
+        except InvalidModelParameter:
             pass
 
         # Processing camera transmission

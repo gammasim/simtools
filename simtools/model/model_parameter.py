@@ -128,9 +128,10 @@ class ModelParameter:
         InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
+
         parameter_dict = parameter_dict if parameter_dict else self.get_parameter(par_name)
         try:
-            return parameter_dict.get("value") or parameter_dict.get("Value")
+            return parameter_dict.get("value")
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} does not have a value")
             raise exc
@@ -279,7 +280,10 @@ class ModelParameter:
             return
 
         if self.name is not None:
-            self._logger.debug(f"Reading telescope parameters from DB ({self.name} telescope)")
+            self._logger.debug(
+                f"Reading telescope parameters from DB "
+                f"({self.name}, {self.model_version}, {self.site})"
+            )
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, only_applicable=True
             )
