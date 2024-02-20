@@ -98,14 +98,13 @@ array_layout_names = {
     "TestLayout": ["test-layout"],
 }
 
-# simulation_model parameter naming to DB parameter naming mapping
-# TODO - probably not necessary after updates to the database
-# simtel: True if alternative "name" is used in simtools (e.g., ref_lat)
-#         and in the model database.
+# List of site parameters which are not part of the simtel configuration
+# or which have different naming in the database and simtel configuration.
+# simtel: True if this is a simtel parameter (allows to give alternative "name")
 site_parameters = {
     # Note inconsistency between old and new model
     # altitude was the corsika observation level in the old model
-    "reference_point_altitude": {"db_name": "altitude", "simtel": True},
+    "reference_point_altitude": {"db_name": "altitude", "simtel": False},
     "reference_point_longitude": {"db_name": "ref_long", "simtel": False},
     "reference_point_latitude": {"db_name": "ref_lat", "simtel": False},
     "reference_point_utm_north": {"db_name": "reference_point_utm_north", "simtel": False},
@@ -114,14 +113,23 @@ site_parameters = {
     # altitude was the corsika observation level in the old model
     "corsika_observation_level": {"db_name": "altitude", "simtel": True},
     "epsg_code": {"db_name": "epsg_code", "simtel": False},
-    "magnetic_field": {"db_name": "magnetic_field", "simtel": False},
-    "atmospheric_profile": {"db_name": "atmospheric_profile", "simtel": False},
-    "atmospheric_transmission": {"db_name": "atmospheric_transmission", "simtel": True},
+    "geomag_horizontal": {"db_name": "geomag_horizontal", "simtel": False},
+    "geomag_vertical": {"db_name": "geomag_vertical", "simtel": False},
+    "geomag_rotation": {"db_name": "geomag_rotation", "simtel": False},
     "array_coordinates": {"db_name": "array_coordinates", "simtel": False},
+    "atmospheric_profile": {"db_name": "atmospheric_profile", "simtel": False},
+    # TODO Duplication of old names; requires renaming in DB
+    "magnetic_field": {"db_name": "magnetic_field", "simtel": False},
+    "EPSG": {"db_name": "EPSG", "simtel": False},
+    "ref_long": {"db_name": "ref_long", "simtel": False},
+    "ref_lat": {"db_name": "ref_lat", "simtel": False},
 }
 
-# TODO list of parameters? Why?
+# List of telescope parameters which are not part of the simtel configuration
+# or which have a different name in the simtel configuration.
 telescope_parameters = {
+    "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
+    "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
     "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
     "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
     "lightguide_efficiency_angle_file": {
@@ -134,8 +142,6 @@ telescope_parameters = {
     },
     "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
-    "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
-    "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
 }
 
 
@@ -379,6 +385,65 @@ def get_class_from_telescope_name(name):
     """
 
     return array_element_names[get_telescope_type_from_telescope_name(name)]["class"]
+
+
+def get_simtel_name_from_parameter_name(par_name, telescope_model=True, site_model=True):
+    """
+    Get the simtel parameter name from the model parameter name.
+    Assumes that both names are equal if not defined otherwise in names.py
+
+    Parameters
+    ----------
+    par_name: str
+        Model parameter name.
+    telescope_model: bool
+        If True, telescope model parameters are included.
+    site_model: bool
+        If True, site model parameters are included.
+
+    Returns
+    -------
+    str
+        Simtel parameter name.
+    """
+
+    _parameter_names = {}
+    if telescope_model:
+        _parameter_names.update(telescope_parameters)
+    if site_model:
+        _parameter_names.update(site_parameters)
+
+    try:
+        return (
+            _parameter_names[par_name]["db_name"] if _parameter_names[par_name]["simtel"] else None
+        )
+    except KeyError:
+        pass
+    return par_name
+
+
+def get_parameter_name_from_simtel_name(simtel_name):
+    """
+    Get the model parameter name from the simtel parameter name.
+    Assumes that both names are equal if not defined otherwise in names.py.
+
+    Parameters
+    ----------
+    simtel_name: str
+        Simtel parameter name.
+
+    Returns
+    -------
+    str
+        Model parameter name.
+    """
+
+    _parameter_names = {**telescope_parameters, **site_parameters}
+
+    for par_name, par_info in _parameter_names.items():
+        if par_info.get("db_name") == simtel_name and par_info.get("simtel"):
+            return par_name
+    return simtel_name
 
 
 def simtel_telescope_config_file_name(

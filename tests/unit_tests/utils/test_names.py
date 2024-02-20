@@ -457,3 +457,23 @@ def test_camera_efficiency_log_file_name():
         )
         == "camera-efficiency-South-LST-1-za020deg_azm180deg.log"
     )
+
+
+def test_get_simtel_name_from_parameter_name():
+    assert names.get_simtel_name_from_parameter_name("focal_length") == "focal_length"
+    assert names.get_simtel_name_from_parameter_name("corsika_observation_level") == "altitude"
+    assert names.get_simtel_name_from_parameter_name("telescope_axis_height") is None
+
+    assert (
+        names.get_simtel_name_from_parameter_name("corsika_observation_level", site_model=False)
+        == "corsika_observation_level"
+    )
+    assert (
+        names.get_simtel_name_from_parameter_name("telescope_axis_height", telescope_model=False)
+        == "telescope_axis_height"
+    )
+
+
+def test_get_parameter_name_from_simtel_name():
+    assert names.get_parameter_name_from_simtel_name("focal_length") == "focal_length"
+    assert names.get_parameter_name_from_simtel_name("altitude") == "corsika_observation_level"
