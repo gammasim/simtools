@@ -88,7 +88,7 @@ def test_guess_run_from_file(array_simulator):
 
     assert array_simulator._guess_run_from_file("abc-ran12345_bla_ble") == 1
 
-    # TODO add test for 'Error creating output directory'
+    # add test for 'Error creating output directory'
     # (not sure how to test a failed mkdir)
 
 
