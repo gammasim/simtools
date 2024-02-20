@@ -45,9 +45,9 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.utils import names
 from simtools.visualization.visualize import plot_array
 
 
@@ -115,6 +115,27 @@ def _parse(label, description, usage):
     return config.initialize(db_config=True, site_model=True)
 
 
+def _get_site_from_telescope_list_name(telescope_list_file):
+    """
+    Get the site name from the telescope list file name.
+
+    Parameters
+    ----------
+    telescope_list_file: str
+        Telescope list file name.
+
+    Returns
+    -------
+    str
+        Site name.
+
+    """
+    for _site in names.site_names:
+        if _site in str(telescope_list_file):
+            return _site
+    return None
+
+
 def main():
     label = Path(__file__).stem
     description = "Plots layout array."
@@ -147,6 +168,11 @@ def main():
 
     for one_file in telescope_file:
         logger.debug(f"Processing: {one_file}.")
+        site = (
+            _get_site_from_telescope_list_name(one_file)
+            if args_dict["site"] is None
+            else args_dict["site"]
+        )
         for one_angle in rotate_angles:
             logger.debug(f"Processing: {one_angle}.")
             if args_dict["figure_name"] is None:
@@ -157,11 +183,10 @@ def main():
             else:
                 plot_file_name = args_dict["figure_name"]
 
-            telescope_table = data_reader.read_table_from_file(one_file)
             array_layout = ArrayLayout(
                 mongo_db_config=db_config,
-                site=args_dict["site"],
-                telescope_list_file=telescope_table,
+                site=site,
+                telescope_list_file=one_file,
             )
             # export_telescope_list_table
             fig_out = plot_array(
