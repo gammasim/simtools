@@ -552,6 +552,11 @@ class ArrayLayout:
         except IndexError:
             pass
 
+        if "telescope_name" in table.colnames:
+            table.sort("telescope_name")
+        if "asset_code" in table.colnames:
+            table.sort(["asset_code", "sequence_number"])
+
         return table
 
     def get_number_of_telescopes(self):
