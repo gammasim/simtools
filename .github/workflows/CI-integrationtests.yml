@@ -8,6 +8,7 @@ env:
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
+  SIMTOOLS_DB_SIMULATION_MODEL_URL: "./simulation_model"
 
 on:
   pull_request:
@@ -42,4 +43,6 @@ jobs:
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
           export PYTHONPATH=$PYTHONPATH:.
+          # TEMPORARY: clone the simulation model to get the simulation_model
+          git clone https://github.com/gammasim/simulation_model.git
           pytest --color=yes --durations=10 --no-cov tests/integration_tests/
