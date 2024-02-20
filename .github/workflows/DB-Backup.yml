@@ -5,8 +5,6 @@ on:
   schedule:
     - cron: '0 2 * * *'  # Run every night at 2 am
   workflow_dispatch:     # Manual trigger
-  pull_request:
-    types: [opened, synchronize]
 
 jobs:
   backup:
