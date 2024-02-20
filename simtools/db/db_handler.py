@@ -1279,13 +1279,13 @@ class DatabaseHandler:
         as not all telescopes are defined in the database yet. In these cases,
         use the "design" telescope.
 
-        Returns:
+        Returns
         -------
         str
             Telescope model name as used in the DB.
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the telescope name is not found in the database.
 

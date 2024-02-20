@@ -1,6 +1,6 @@
 {
     "value": 2162.0,
-    "units": "m",
+    "unit": "m",
     "type": "numpy.float64",
     "file": false,
     "metadata": {

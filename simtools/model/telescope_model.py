@@ -307,7 +307,7 @@ class TelescopeModel(ModelParameter):
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
         Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
-         reflectivity, etc.)
+        reflectivity, etc.)
 
         Parameters
         ----------

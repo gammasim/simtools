@@ -5,8 +5,7 @@ name: CI-docs
 on:
   pull_request:
     branches: [main]
-      #    types: [opened, closed, synchronize]
-    types: [review_requested, ready_for_review]
+    types: [opened, closed, synchronize]
 
 jobs:
 
