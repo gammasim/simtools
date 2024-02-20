@@ -104,8 +104,8 @@
     .. code-block:: console
 
         simtools-derive-mirror-rnda \\
-            --site North \\
-            --telescope MST-FlashCam-D \\
+            --site South \\
+            --telescope MSTS-design \\
             --containment_fraction 0.8 \\
             --mirror_list MLTdata-preproduction.ecsv \\
             --psf_measurement MLTdata-preproduction.ecsv \\

@@ -2,6 +2,8 @@
 
 import logging
 
+from simtools.utils import names
+
 __all__ = ["SimtelConfigWriter"]
 
 
@@ -62,7 +64,11 @@ class SimtelConfigWriter:
             file.write("#endif\n\n")
 
             for par, value in parameters.items():
-                file.write(f"{par} = {value}\n")
+                _simtel_name = names.get_simtel_name_from_parameter_name(
+                    par, telescope_model=True, site_model=False
+                )
+                if _simtel_name is not None:
+                    file.write(f"{_simtel_name} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
         """
@@ -189,5 +195,9 @@ class SimtelConfigWriter:
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
-            file.write(f"{par} = {value}\n")
+            _simtel_name = names.get_simtel_name_from_parameter_name(
+                par, telescope_model=False, site_model=True
+            )
+            if _simtel_name is not None:
+                file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")
