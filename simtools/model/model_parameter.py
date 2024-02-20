@@ -69,9 +69,6 @@ class ModelParameter:
         self._config_file_path = None
 
         self._load_parameters_from_db()
-        # TODO need to understand where this should go
-        # only needed when we actually want to write out
-        # self._set_config_file_directory_and_name()
 
         self.simtel_config_writer = None
         self._added_parameter_files = None
@@ -351,8 +348,6 @@ class ModelParameter:
         """
         Add a new parameters to the model. This function does not modify the DB, it affects only \
         the current instance.
-
-        TODO - check why no units are set (plus site, etc)
 
         Parameters
         ----------
