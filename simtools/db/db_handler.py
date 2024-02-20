@@ -146,7 +146,6 @@ class DatabaseHandler:
 
         _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-            _site_validated,
             _tel_model_name_validated,
             _version_validated,
             only_applicable,
@@ -227,8 +226,9 @@ class DatabaseHandler:
                     DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
                 )
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            self._logger.debug("Exporting model files from simulation model repository")
-            self._logger.warning("Not implemented yet - TODO")
+            self._logger.warning(
+                "Exporting model files from simulation model repository not yet implemented"
+            )
 
     @staticmethod
     def _is_file(value):
@@ -236,7 +236,7 @@ class DatabaseHandler:
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _get_model_parameters_mongo_db(
-        self, db_name, site, telescope_model_name, model_version, only_applicable=False
+        self, db_name, telescope_model_name, model_version, only_applicable=False
     ):
         """
         Get parameters from MongoDB for a specific telescope.
@@ -245,8 +245,6 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        site: str
-            South or North.
         telescope_model_name: str
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         model_version: str
@@ -260,26 +258,12 @@ class DatabaseHandler:
 
         """
 
-        _site_validated = names.validate_site_name(site)
-
         self._logger.debug(f"Tel_name_db: {telescope_model_name}")
         _which_tel_labels = [self.get_telescope_db_name(telescope_model_name)]
 
-        # Selecting version and applicable (if on)
         _pars = {}
         for _tel in _which_tel_labels:
             self._logger.debug(f"Getting {_tel} parameters from MongoDB")
-
-            # TODO - understand the logic of the following lines
-            # If tel is a structure, only applicable pars will be collected, always.
-            # The default ones will be covered by the camera pars.
-            _select_only_applicable = only_applicable or (
-                _tel
-                in [
-                    f"{_site_validated}-MST-Structure-D",
-                    f"{_site_validated}-SST-Structure-D",
-                ]
-            )
 
             _pars.update(
                 self.read_mongo_db(
@@ -288,7 +272,7 @@ class DatabaseHandler:
                     model_version,
                     run_location=None,
                     write_files=False,
-                    only_applicable=_select_only_applicable,
+                    only_applicable=only_applicable,
                 )
             )
 
@@ -460,41 +444,6 @@ class DatabaseHandler:
             _parameters[par_now] = post
             _parameters[par_now].pop("parameter", None)
             _parameters[par_now].pop("site", None)
-            _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-
-        return _parameters
-
-    @staticmethod
-    def get_descriptions(
-        db_name=DB_CTA_SIMULATION_MODEL_DESCRIPTIONS, collection_name="telescopes"
-    ):
-        """
-        Get parameter descriptions from MongoDB
-
-        TODO - check with OG: Parameter is capitalized in the DB
-
-        Parameters
-        ----------
-        db_name: str
-            The name of the DB.
-        collection_name: str
-            The name of the collection to read from.
-
-        Returns
-        -------
-        dict containing the parameters with their descriptions
-
-        """
-
-        collection = DatabaseHandler.db_client[db_name][collection_name]
-
-        _parameters = {}
-
-        empty_query = {}
-        for post in collection.find(empty_query):
-            par_now = post["Parameter"]
-            _parameters[par_now] = post
-            _parameters[par_now].pop("Parameter", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
@@ -943,8 +892,7 @@ class DatabaseHandler:
         if telescope is not None:
             query["instrument"] = telescope
             logger_info = f"instrument {telescope}"
-        # TODO - check why tested for South / North
-        elif site is not None and site in ["North", "South"]:
+        elif site is not None and site in names.site_names:
             query["site"] = site
             logger_info = f"site {site}"
         else:

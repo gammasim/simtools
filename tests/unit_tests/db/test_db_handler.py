@@ -431,16 +431,6 @@ def test_get_all_versions(db):
     )
 
 
-def test_get_descriptions(db):
-    descriptions = db.get_descriptions()
-
-    assert (
-        descriptions["quantum_efficiency"]["description"]
-        == "File name for the quantum efficiency curve."
-    )
-    assert descriptions["camera_pixels"]["description"] == "Number of pixels per camera."
-
-
 def test_get_all_available_telescopes(db):
     available_telescopes = db.get_all_available_telescopes(model_version="Prod5")
 
