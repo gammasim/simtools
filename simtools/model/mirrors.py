@@ -19,6 +19,8 @@ class Mirrors:
     ----------
     mirror_list_file: str
         mirror list in sim_telarray or ecsv format (with panel focal length only).
+    parameters: dict
+        Dictionary of parameters from the database.
     """
 
     def __init__(self, mirror_list_file, parameters=None):
@@ -77,8 +79,8 @@ class Mirrors:
             self._logger.debug("Mirror mirror_panel_diameter not in mirror file")
             try:
                 self.mirror_diameter = u.Quantity(
-                    self.parameters["mirror_panel_diameter"]["Value"],
-                    self.parameters["mirror_panel_diameter"]["units"],
+                    self.parameters["mirror_panel_diameter"]["value"],
+                    self.parameters["mirror_panel_diameter"]["unit"],
                 )
                 self._logger.debug("Take mirror_panel_diameter from parameters")
             except TypeError as error:
@@ -95,8 +97,8 @@ class Mirrors:
                 try:
                     self.mirror_table["focal_length"] = self.number_of_mirrors * [
                         u.Quantity(
-                            self.parameters["mirror_focal_length"]["Value"],
-                            self.parameters["mirror_focal_length"]["units"],
+                            self.parameters["mirror_focal_length"]["value"],
+                            self.parameters["mirror_focal_length"]["unit"],
                         )
                     ]
                     self._logger.debug("Take mirror_focal_length from parameters")
@@ -111,7 +113,7 @@ class Mirrors:
         except KeyError:
             self._logger.debug("Mirror shape_type not in mirror file")
             try:
-                self.shape_type = self.parameters["mirror_panel_shape"]["Value"]
+                self.shape_type = self.parameters["mirror_panel_shape"]["value"]
                 self._logger.debug("Take shape_type from parameters")
             except TypeError as error:
                 msg = "Mirror shape_type not contained in DB"
