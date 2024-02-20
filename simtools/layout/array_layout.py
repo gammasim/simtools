@@ -285,11 +285,8 @@ class ArrayLayout:
         except KeyError:
             pass
         try:
-            _site = ""
-            if self.site is not None and len(self.site) > 0:
-                _site = self.site[0]
             if tel.name is None:
-                tel.name = row["asset_code"] + _site + "-" + row["sequence_number"]
+                tel.name = row["asset_code"] + "-" + row["sequence_number"]
             tel.asset_code = row["asset_code"]
             tel.sequence_number = row["sequence_number"]
         except KeyError:
@@ -637,7 +634,7 @@ class ArrayLayout:
         Parameters
         ----------
         asset_list: list
-            List of assets to be selected.
+            List of assets to be selected (telescope names or types)
 
         Raises
         ------
@@ -649,9 +646,17 @@ class ArrayLayout:
         _n_telescopes = len(self._telescope_list)
         try:
             if len(asset_list) > 0:
-                self._telescope_list = [
+                _telescope_list_from_name = [
                     tel for tel in self._telescope_list if tel.asset_code in asset_list
                 ]
+                _telescope_list_from_type = [
+                    tel
+                    for tel in self._telescope_list
+                    if names.get_telescope_type_from_telescope_name(tel.asset_code) in asset_list
+                ]
+                self._telescope_list = list(
+                    set(_telescope_list_from_name + _telescope_list_from_type)
+                )
             self._logger.info(
                 f"Selected {len(self._telescope_list)} telescopes"
                 f" (from originally {_n_telescopes})"
