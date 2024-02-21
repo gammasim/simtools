@@ -211,7 +211,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_api_authentication_database"] = "admin"
     args_dict[
         "db_simulation_model_url"
-    ] = "https://raw.githubusercontent.com/gammasim/simulation_model/verified_model"
+    ] = "https://raw.githubusercontent.com/gammasim/simulation_model/main"
 
     assert configurator.config == args_dict
 

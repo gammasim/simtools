@@ -451,7 +451,7 @@ class CameraEfficiency:
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
-            * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
+            * self._telescope_model.reference_data["nsb_reference_value"]["value"]
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions

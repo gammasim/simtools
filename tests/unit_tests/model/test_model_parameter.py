@@ -121,7 +121,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     )
     tel.export_config_file()
     logger.info(f"Config file (sst): {tel.get_config_file()}")
-    # TODO: testing that file can be written and that it is  different,
+    # TODO: testing that file can be written and that it is different,
     #       but not the file has the
     #       correct contents
     assert False is filecmp.cmp(lst_config_file, tel.get_config_file())

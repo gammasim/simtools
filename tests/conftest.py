@@ -51,7 +51,7 @@ def mock_settings_env_vars(tmp_test_directory):
     Removes all environment variable from the test system.
     Explicitly sets those needed.
     """
-    _url = "https://raw.githubusercontent.com/gammasim/simulation_model/verified_model"
+    _url = "https://raw.githubusercontent.com/gammasim/simulation_model/main"
 
     with mock.patch.dict(
         os.environ,

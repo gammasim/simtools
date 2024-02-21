@@ -84,7 +84,7 @@ def test_read_mirror_list_from_ecsv_missing_mirror_diameter(
         Mirrors(mirror_list_file)
     with caplog.at_level(logging.DEBUG):
         Mirrors(
-            mirror_list_file, parameters={"mirror_panel_diameter": {"Value": 150, "units": "cm"}}
+            mirror_list_file, parameters={"mirror_panel_diameter": {"value": 150, "unit": "cm"}}
         )
     assert "Take mirror_panel_diameter from parameters" in caplog.text
 
@@ -100,9 +100,7 @@ def test_read_mirror_list_from_ecsv_missing_focal_length(
     with pytest.raises(TypeError):
         Mirrors(mirror_list_file)
     with caplog.at_level(logging.DEBUG):
-        Mirrors(
-            mirror_list_file, parameters={"mirror_focal_length": {"Value": 2000, "units": "cm"}}
-        )
+        Mirrors(mirror_list_file, parameters={"mirror_focal_length": {"value": 2000, "unit": "cm"}})
     assert "Take mirror_focal_length from parameters" in caplog.text
 
 
@@ -117,7 +115,7 @@ def test_read_mirror_list_from_ecsv_missing_shape_type(
     with pytest.raises(TypeError):
         Mirrors(mirror_list_file)
     with caplog.at_level(logging.DEBUG):
-        Mirrors(mirror_list_file, parameters={"mirror_panel_shape": {"Value": 3}})
+        Mirrors(mirror_list_file, parameters={"mirror_panel_shape": {"value": 3}})
     assert "Take shape_type from parameters" in caplog.text
 
 
