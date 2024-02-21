@@ -102,7 +102,7 @@ jobs:
           YAML_CONFIG_FILE: yaml_config.yaml
           YAML_ERROR_ON_WARNING: false
           # isort
-          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_ISORT: true
           PYTHON_ISORT_CONFIG_FILE: pyproject.toml
           # flake8
           VALIDATE_PYTHON_FLAKE8: true
