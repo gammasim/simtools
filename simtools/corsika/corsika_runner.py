@@ -63,7 +63,7 @@ class CorsikaRunner:
     label: str
         Instance label.
     keep_seeds: bool
-        Use seeds based on run number and primary particle.  If False, use sim_telarray seeds.
+        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     simtel_source_path: str or Path
         Location of source of the sim_telarray/CORSIKA package.
     corsika_config_data: dict
@@ -85,6 +85,7 @@ class CorsikaRunner:
         corsika_parameters_file=None,
         corsika_config_data=None,
         corsika_config_file=None,
+        array_model=None,
         use_multipipe=False,
     ):
         """
@@ -97,6 +98,7 @@ class CorsikaRunner:
         self.label = label
         self.site = names.validate_site_name(site)
         self.layout_name = names.validate_array_layout_name(layout_name)
+        self.array_model = array_model
 
         self._keep_seeds = keep_seeds
 
@@ -150,6 +152,7 @@ class CorsikaRunner:
                 site=self.site,
                 label=self.label,
                 layout_name=self.layout_name,
+                layout=None if self.array_model is None else self.array_model.layout,
                 corsika_config_data=self._corsika_config_data,
                 simtel_source_path=self._simtel_source_path,
                 corsika_parameters_file=self._corsika_parameters_file,

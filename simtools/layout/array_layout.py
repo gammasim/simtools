@@ -6,6 +6,7 @@ from astropy.table import QTable
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -58,6 +59,7 @@ class ArrayLayout:
         telescope_list_file=None,
         telescope_list_metadata_file=None,
         validate=False,
+        array_layout_name=None,
     ):
         """
         Initialize ArrayLayout.
@@ -66,6 +68,11 @@ class ArrayLayout:
         self._logger = logging.getLogger(__name__)
 
         self.mongo_db_config = mongo_db_config
+        self.db = (
+            db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
+            if mongo_db_config is not None
+            else None
+        )
         self.model_version = model_version
         self.label = label
         self.name = name
@@ -77,6 +84,12 @@ class ArrayLayout:
         self._corsika_observation_level = None
         self._reference_position_dict = {}
         self._array_center = None
+        self._auxiliary_parameters = {}
+
+        if telescope_list_file is None and array_layout_name is not None:
+            telescope_list_file = self.io_handler.get_input_data_file(
+                "layout", f"telescope_positions-{array_layout_name}.ecsv"
+            )
 
         self.initialize_array_layout(
             telescope_list_file=telescope_list_file,
@@ -115,12 +128,8 @@ class ArrayLayout:
             mongo_db_config=mongo_db_config,
             name=valid_array_layout_name,
             label=label,
+            array_layout_name=valid_array_layout_name,
         )
-
-        telescope_list_file = layout.io_handler.get_input_data_file(
-            "layout", f"telescope_positions-{valid_array_layout_name}.ecsv"
-        )
-        layout.initialize_array_layout(telescope_list_file=telescope_list_file)
 
         return layout
 
@@ -379,7 +388,7 @@ class ArrayLayout:
             Table with the telescope layout information.
         """
 
-        self._logger.debug("Initializing array layout site center")
+        self._logger.debug("Initializing array (site and telescope parameters)")
         self._initialize_site_parameters_from_db()
         self._initialize_coordinate_systems()
 
@@ -421,17 +430,27 @@ class ArrayLayout:
         """
 
         if names.get_class_from_telescope_name(telescope.name) == "telescope":
-            tel_model = TelescopeModel(
-                site=self.site,
-                telescope_name=telescope.name,
-                model_version=self.model_version,
-                mongo_db_config=self.mongo_db_config,
-                label=self.label,
+            _telescope_model_name = self.db.get_telescope_db_name(telescope.name)
+            self._logger.info(
+                f"Reading auxiliary telescope parameters for {telescope.name}"
+                f" (telescope model {_telescope_model_name})"
             )
-            for para in ("telescope_axis_height", "telescope_sphere_radius"):
-                telescope.set_auxiliary_parameter(
-                    para, tel_model.get_parameter_value_with_unit(para)
+            if _telescope_model_name not in self._auxiliary_parameters:
+                tel_model = TelescopeModel(
+                    site=self.site,
+                    telescope_name=_telescope_model_name,
+                    model_version=self.model_version,
+                    mongo_db_config=self.mongo_db_config,
+                    label=self.label,
                 )
+                self._auxiliary_parameters[_telescope_model_name] = {}
+                for para in ("telescope_axis_height", "telescope_sphere_radius"):
+                    self._auxiliary_parameters[_telescope_model_name][
+                        para
+                    ] = tel_model.get_parameter_value_with_unit(para)
+
+            for key, value in self._auxiliary_parameters[_telescope_model_name].items():
+                telescope.set_auxiliary_parameter(key, value)
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """

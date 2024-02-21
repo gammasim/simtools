@@ -1,0 +1,64 @@
+---
+name: Simulation model DB Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Run every night at 2 am
+  workflow_dispatch:     # Manual trigger
+
+jobs:
+  backup:
+    name: Backup Simulation Model DB
+    runs-on: ubuntu-latest
+    container:
+      image: mongo:latest
+      options: --user 0
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        db:
+          - CTA-Reference-Data
+          - CTA-Simulation-Model
+          - CTA-Simulation-Model-Derived-Values
+          - CTA-Simulation-Model-Descriptions
+          - Staging-CTA-Reference-Data
+          - Staging-CTA-Simulation-Model
+          - Staging-CTA-Simulation-Model-Derived-Values
+
+    steps:
+
+      - name: Dump MongoDB databases
+        shell: bash -l {0}
+        run: |
+          mongodump \
+           --uri="mongodb://${{ secrets.DB_SERVER }}:${{ secrets.DB_API_PORT }}"\
+           --ssl --tlsInsecure \
+           --username=${{ secrets.DB_API_USER }} \
+           --password=${{ secrets.DB_API_PW }} \
+           --authenticationDatabase=${{ secrets.DB_API_AUTHENTICATION_DATABASE }}\
+           --db=${{ matrix.db }} \
+           --gzip \
+           --archive="mongodump-${{ matrix.db }}"
+
+      - name: Checksums
+        shell: bash -l {0}
+        run: |
+          md5sum mongodump-${{ matrix.db }} > mongodump-${{ matrix.db }}.md5
+
+      - name: Get current date
+        shell: bash -l {0}
+        id: date
+        run: echo "date=$(date -u +'%Y%m%dT%H%MZ')" >> $GITHUB_ENV
+
+      - name: Upload backup to Sync & Share
+        shell: bash -l {0}
+        run: |
+          apt-get update
+          apt-get install -y curl
+          curl -T mongodump-${{ matrix.db }} \
+           -u ${{ secrets.DB_BACKUP_TOKEN }}::"" -H "X-Requested-With: XMLHttpRequest" \
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}"
+          curl -T mongodump-${{ matrix.db }}.md5 \
+           -u ${{ secrets.DB_BACKUP_TOKEN }}:"" -H "X-Requested-With: XMLHttpRequest" \
+           "https://syncandshare.desy.de/public.php/webdav/mongodump-${{ matrix.db }}-${{ env.date }}.md5sum"

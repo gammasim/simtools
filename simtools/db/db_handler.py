@@ -66,7 +66,6 @@ class DatabaseHandler:
         self._logger.debug("Initialize DatabaseHandler")
 
         self.mongo_db_config = mongo_db_config
-        self._logger.debug(f"DB configuration: {self.mongo_db_config}")
         self.io_handler = io_handler.IOHandler()
         self._available_telescopes = None
 
