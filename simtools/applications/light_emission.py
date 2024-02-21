@@ -68,7 +68,7 @@ def default_le_configs(le_application):
             "beam_width": {
                 "len": 1,
                 "unit": u.Unit("deg"),
-                "default": 0.1 * u.deg,
+                "default": 0.5 * u.deg,
                 "names": ["rms"],
             },
             "pulse_shape": {
@@ -80,8 +80,32 @@ def default_le_configs(le_application):
             "pulse_width": {
                 "len": 1,
                 "unit": u.Unit("deg"),
-                "default": 3 * u.ns,
+                "default": 5 * u.ns,
                 "names": ["rms"],
+            },
+            "x_pos": {
+                "len": 1,
+                "unit": u.Unit("cm"),
+                "default": 0 * u.cm,
+                "names": ["x_position"],
+            },
+            "y_pos": {
+                "len": 1,
+                "unit": u.Unit("cm"),
+                "default": 0 * u.m,
+                "names": ["y_position"],
+            },
+            "z_pos": {
+                "len": 1,
+                "unit": u.Unit("cm"),
+                "default": 400 * 100 * u.cm,
+                "names": ["z_position"],
+            },
+            "direction": {
+                "len": 3,
+                "unit": u.dimensionless_unscaled,
+                "default": [0, 0.0, -1],
+                "names": ["direction", "cx,cy,cz"],
             },
         }
     return default_config
@@ -98,8 +122,8 @@ def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     # TODO: following is passed as command-line parameters when running the app
-    # args_dict["telescope"] = "LST-1"
-    args_dict["telescope"] = "MST-NectarCam-D"
+    args_dict["telescope"] = "LST-1"
+    # args_dict["telescope"] = "MST-NectarCam-D"
     args_dict["site"] = "north"
     le_application = select_application(args_dict)
     default_le_config = default_le_configs(le_application)
@@ -117,6 +141,8 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+    telescope_model.remove_parameters("array_triggers")
+
     le = SimulatorLightEmission.from_kwargs(
         telescope_model=telescope_model,
         default_le_config=default_le_config,
@@ -130,6 +156,7 @@ def main():
     run_script = le.prepare_script(plot=True)
 
     subprocess.run(run_script, shell=False, check=False)
+    le.plot_simtel()
 
 
 if __name__ == "__main__":
