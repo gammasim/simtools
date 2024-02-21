@@ -2,6 +2,11 @@ import logging
 import os
 
 import astropy.units as u
+import eventio as eio
+import matplotlib.colors
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
@@ -155,11 +160,16 @@ class SimulatorLightEmission(SimtelRunner):
         command = f" rm {self.output_dir}/{self.le_application}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application}"
-        command += f" -a {self.default_le_config['beam_shape']['default']}:"
-        command += f"{self.default_le_config['beam_width']['default'].value}"
-        command += f" -p {self.default_le_config['pulse_shape']['default']}:"
-        command += f"{self.default_le_config['pulse_width']['default'].value}"
-        command += " -n 1e7"
+        # command += f" -a {self.default_le_config['beam_shape']['default']}:"
+        # command += f"{self.default_le_config['beam_width']['default'].value}"
+        # command += f" -p {self.default_le_config['pulse_shape']['default']}:"
+        # command += f"{self.default_le_config['pulse_width']['default'].value}"
+        command += " -n 1e10"
+        command += f" -x {self.default_le_config['x_pos']['default'].value}"
+        command += f" -y {self.default_le_config['y_pos']['default'].value}"
+        command += f" -z {self.default_le_config['z_pos']['default'].value}"
+        command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
+
         # command += f" -A {self._simtel_source_path.joinpath('sim_telarray/
         # cfg/common/atmprof1.dat')}"
         command += f" -A {self.output_dir}/model/"
@@ -174,9 +184,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
-        command += f" -c {self._simtel_source_path.joinpath('sim_telarray/cfg/CTA')}/"
-        command += "CTA-PROD6-MST-NectarCam.cfg"
-        # command += f"{self._telescope_model.get_config_file()}" # general selection
+        command += f" -c {self._telescope_model.get_config_file()}"
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
@@ -207,12 +215,81 @@ class SimulatorLightEmission(SimtelRunner):
         return command
 
     def _make_plot_script(self, **kwargs):  # pylint: disable=unused-argument
-        command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta_nr"))
+        command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta"))
+        command += " --min-tel 1 --min-trg-tel 1"
+        command += " -q --integration-scheme 4 --integration-window 7,3 -r 5"
+        command += " --plot-with-sum-only"
+        command += " --plot-with-pixel-pe"
+        # command += f" --plot-with-title 'tel {self._telescope_model.name}"
+        # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
+
         command += f" -p {self.output_dir}/{self.le_application}.ps"
         command += f" {self.output_dir}/{self.le_application}.simtel.gz\n"
         # command += f"ps2pdf {self.output_dir}/{self.le_application}.ps
         #  {self.output_dir}/{self.le_application}.pdf"
         return command
+
+    def plot_simtel(self):
+        def camera_rotation(pixel_x, pixel_y, cam_rot):
+            pixel_x_derot = pixel_x * np.cos(cam_rot) - pixel_y * np.sin(cam_rot)
+            pixel_y_derot = pixel_x * np.sin(cam_rot) + pixel_y * np.cos(cam_rot)
+
+            return pixel_x_derot, pixel_y_derot
+
+        simtel_file = eio.SimTelFile(f"{self.output_dir}/{self.le_application}.simtel.gz")
+        for array_event in simtel_file:
+            array_event_s = array_event
+            photo_electrons = array_event["photoelectrons"]
+            # photoelectron_sums = array_event["photoelectron_sums"]
+
+        pixel_x = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_x"]
+        pixel_y = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_y"]
+        cam_rot = simtel_file.telescope_descriptions[1]["camera_settings"]["cam_rot"]
+        n_pixels = simtel_file.telescope_descriptions[1]["camera_settings"]["n_pixels"]
+
+        n_pe = photo_electrons[0]["photoelectrons"]
+
+        pixels_clean = array_event_s["telescope_events"][1]["pixel_lists"][1]["pixels"]
+        tel_name = simtel_file.telescope_meta[1][b"CAMERA_CONFIG_NAME"].decode("utf-8")
+
+        pixel_x_derot, pixel_y_derot = camera_rotation(pixel_x, pixel_y, cam_rot)
+
+        palette = ["#1B1A1D", "#69809F", "#B3C4D5", "#F45B3B", "#ff0000"]
+        cmap = LinearSegmentedColormap.from_list("camera", palette, N=200)
+        cmap.set_bad("#4f4f4f")
+        norm = matplotlib.colors.LogNorm(vmin=0.1, vmax=200)
+
+        fig, ax = plt.subplots(1, dpi=300)
+        ax.scatter(
+            pixel_y_derot,
+            pixel_x_derot,
+            color=cmap(norm(n_pe)),
+            marker=(6, 0, -np.rad2deg(cam_rot)),
+            edgecolor="grey",
+            linewidths=0.5,
+        )
+
+        ax.text(-1, 1.45, f"(from .. of {photo_electrons[0]['n_pe']} true p.e.)", size="xx-small")
+        plt.title(f"Simulation of {tel_name}", pad=35)
+
+        ax.text(
+            -1,
+            1.35,
+            f"Number of pixels after cleaning {pixels_clean}",
+            horizontalalignment="left",
+            size="xx-small",
+        )
+        ax.text(
+            -1,
+            1.25,
+            f"$N_{{\\mathrm{{pixels}}}}=$ {n_pixels}",
+            horizontalalignment="left",
+            size="xx-small",
+        )
+
+        ax.set_axis_off()
+        ax.set_aspect("equal")
+        fig.savefig(f"{self.output_dir}/{self.le_application}_test.pdf")
 
     def prepare_script(self, test=False, plot=False, extra_commands=None):
         """
