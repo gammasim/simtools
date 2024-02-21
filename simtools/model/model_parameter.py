@@ -69,9 +69,6 @@ class ModelParameter:
         self._config_file_path = None
 
         self._load_parameters_from_db()
-        # TODO need to understand where this should go
-        # only needed when we actually want to write out
-        # self._set_config_file_directory_and_name()
 
         self.simtel_config_writer = None
         self._added_parameter_files = None
@@ -128,9 +125,10 @@ class ModelParameter:
         InvalidModelParameter
             If par_name does not match any parameter in this model.
         """
+
         parameter_dict = parameter_dict if parameter_dict else self.get_parameter(par_name)
         try:
-            return parameter_dict.get("value") or parameter_dict.get("Value")
+            return parameter_dict.get("value")
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} does not have a value")
             raise exc
@@ -279,7 +277,10 @@ class ModelParameter:
             return
 
         if self.name is not None:
-            self._logger.debug(f"Reading telescope parameters from DB ({self.name} telescope)")
+            self._logger.debug(
+                f"Reading telescope parameters from DB "
+                f"({self.name}, {self.model_version}, {self.site})"
+            )
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, only_applicable=True
             )
@@ -322,8 +323,6 @@ class ModelParameter:
         Get simtel parameters as name and value pairs. Do not include parameters
         labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
 
-        TODO - not sure if this is ok
-
         Parameters
         ----------
         telescope_model: bool
@@ -338,66 +337,17 @@ class ModelParameter:
 
         """
 
-        _parameter_names = {}
-        if telescope_model:
-            _parameter_names.update(names.telescope_parameters)
-        if site_model:
-            _parameter_names.update(names.site_parameters)
-
         _simtel_parameter_value = {}
         for key in self._parameters:
-            # not all parameters are listed in names.site_parameters
-            # or site.telescope_parameters; use it as a filter list
-            try:
-                _par_name = (
-                    _parameter_names[key]["db_name"] if _parameter_names[key]["simtel"] else None
-                )
-            except KeyError:
-                _par_name = key
-            # check for new and old parameter names
-            for _, _simtools_name_config in _parameter_names.items():
-                if (
-                    key == _simtools_name_config["db_name"]
-                    and _simtools_name_config["simtel"] is False
-                ):
-                    _par_name = None
+            _par_name = names.get_simtel_name_from_parameter_name(key, telescope_model, site_model)
             if _par_name is not None:
-                _simtel_parameter_value[_par_name] = self._parameters[key].get(
-                    "value"
-                ) or self._parameters[key].get("Value")
+                _simtel_parameter_value[_par_name] = self._parameters[key].get("value")
         return _simtel_parameter_value
-
-    def get_parameter_name_from_simtel_name(self, simtel_name):
-        """
-        Get the model parameter name from the simtel parameter name.
-        Assumes that both names are equal if not defined otherwise in names.py.
-
-        Parameters
-        ----------
-        simtel_name: str
-            Simtel parameter name.
-
-        Returns
-        -------
-        str
-            Model parameter name.
-        """
-
-        _parameter_names = {}
-        _parameter_names.update(names.telescope_parameters)
-        _parameter_names.update(names.site_parameters)
-
-        for par_name, par_info in _parameter_names.items():
-            if par_info.get("db_name") == simtel_name:
-                return par_name
-        return simtel_name
 
     def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
         """
         Add a new parameters to the model. This function does not modify the DB, it affects only \
         the current instance.
-
-        TODO - check why no units are set (plus site, etc)
 
         Parameters
         ----------

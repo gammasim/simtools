@@ -153,7 +153,7 @@ def _update_parameters_from_repo(
     if db_simulation_model_url is None:
         logger.debug(f"No repository specified, skipping {parameter_collection} parameter updates")
         return parameters
-    logger.warning(f"Ignoring model version {model_version} in parameter updates (TODO)")
+    logger.warning(f"Ignoring model version {model_version} in parameter updates from repository.")
 
     if parameter_collection in ["telescope", "calibration"]:
         _file_path = gen.join_url_or_path(

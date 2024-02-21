@@ -163,7 +163,7 @@ class TelescopeModel(ModelParameter):
                     parameters[par] = value
 
         for par_name, value in parameters.items():
-            tel.add_parameter(tel.get_parameter_name_from_simtel_name(par_name), value)
+            tel.add_parameter(names.get_parameter_name_from_simtel_name(par_name), value)
 
         tel._is_exported_model_files_up_to_date = True
         return tel
@@ -307,7 +307,7 @@ class TelescopeModel(ModelParameter):
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
         Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
-         reflectivity, etc.)
+        reflectivity, etc.)
 
         Parameters
         ----------

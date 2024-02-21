@@ -35,7 +35,7 @@ class SiteModel(ModelParameter):
         Initialize SiteModel
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SiteModel")
+        self._logger.debug("Init SiteModel for site %s", site)
         ModelParameter.__init__(
             self,
             site=site,

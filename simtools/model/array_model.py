@@ -158,12 +158,8 @@ class ArrayModel:
         _all_telescope_names = []  # List of telescope names without repetition
         _all_pars_to_change = {}
         for tel in self.layout:
-            tel_type = names.get_telescope_type_from_telescope_name(tel.name)
-
             # Collecting telescope name and pars to change from array_config_data
-            tel_name, pars_to_change = self._get_single_telescope_info_from_array_config(
-                tel.name, tel_type
-            )
+            tel_name, pars_to_change = self._get_single_telescope_info_from_array_config(tel.name)
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
@@ -208,7 +204,7 @@ class ArrayModel:
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
                 tel_model.set_extra_label(tel_data.name)
 
-    def _get_single_telescope_info_from_array_config(self, tel_name, tel_type):
+    def _get_single_telescope_info_from_array_config(self, tel_name):
         """
         array_config_data contains the default telescope models for each telescope type and the \
         list of specific telescopes. For each case, the data can be given only as a name or as a \
@@ -219,9 +215,9 @@ class ArrayModel:
         ----------
         tel_name: str
             Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).
-        tel_type: str
-            telescope type, e.g., LSTN, MSTS or SSTS.
         """
+
+        tel_type = names.get_telescope_type_from_telescope_name(tel_name)
 
         def _process_single_telescope(data):
             """
