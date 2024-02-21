@@ -63,7 +63,7 @@ class CorsikaRunner:
     label: str
         Instance label.
     keep_seeds: bool
-        Use seeds based on run number and primary particle.  If False, use sim_telarray seeds.
+        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     simtel_source_path: str or Path
         Location of source of the sim_telarray/CORSIKA package.
     corsika_config_data: dict
