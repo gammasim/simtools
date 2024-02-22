@@ -6,6 +6,10 @@ import eventio as eio
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from ctapipe.calib import CameraCalibrator
+from ctapipe.image import tailcuts_clean
+from ctapipe.io import EventSource
+from ctapipe.visualization import CameraDisplay
 from matplotlib.colors import LinearSegmentedColormap
 
 import simtools.utils.general as gen
@@ -219,7 +223,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4 --integration-window 7,3 -r 5"
         command += " --plot-with-sum-only"
-        command += " --plot-with-pixel-pe"
+        command += " --plot-with-pixel-amp --plot-with-pixel-id"
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
 
@@ -290,6 +294,36 @@ class SimulatorLightEmission(SimtelRunner):
         ax.set_axis_off()
         ax.set_aspect("equal")
         fig.savefig(f"{self.output_dir}/{self.le_application}_test.pdf")
+
+    def plot_simtel_ctapipe(self):
+        filename = f"{self.output_dir}/{self.le_application}.simtel.gz"
+        source = EventSource(filename, max_events=1)
+        event = None
+        for event in source:
+            print(event.index.event_id)
+        tel_id = sorted(event.r1.tel.keys())[0]
+        calib = CameraCalibrator(subarray=source.subarray)
+
+        calib(event)
+        geometry = source.subarray.tel[1].camera.geometry
+
+        image = event.dl1.tel[tel_id].image
+        cleaned = image.copy()
+        return_cleaned = 0
+        if return_cleaned:
+            mask = tailcuts_clean(
+                geometry, image, picture_thresh=7, boundary_thresh=5, min_number_picture_neighbors=0
+            )
+            cleaned[~mask] = 0
+
+        fig, ax = plt.subplots(1, 1, dpi=300)
+        title = f"CT{1}, run {event.index.obs_id} event {event.index.event_id}"
+        disp = CameraDisplay(geometry, image=cleaned, norm="symlog", title=title, ax=ax)
+        disp.cmap = "RdBu_r"
+        disp.add_colorbar()
+        disp.set_limits_percent(100)
+        ax.set_axis_off()
+        fig.savefig(f"{self.output_dir}/{self.le_application}_test_ctapipe.pdf")
 
     def prepare_script(self, test=False, plot=False, extra_commands=None):
         """
