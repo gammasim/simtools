@@ -156,7 +156,7 @@ def main():
     run_script = le.prepare_script(plot=True)
 
     subprocess.run(run_script, shell=False, check=False)
-    le.plot_simtel()
+    le.plot_simtel_ctapipe()
 
 
 if __name__ == "__main__":

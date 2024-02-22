@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-light-emissino
+  APPLICATION: simtools-light-emission
   TEST_NAME: run
   CONFIGURATION:
     SITE: North
