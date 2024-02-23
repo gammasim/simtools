@@ -295,7 +295,7 @@ class SimulatorLightEmission(SimtelRunner):
         ax.set_aspect("equal")
         fig.savefig(f"{self.output_dir}/{self.le_application}_test.pdf")
 
-    def plot_simtel_ctapipe(self):
+    def plot_simtel_ctapipe(self, return_cleaned=0):
         filename = f"{self.output_dir}/{self.le_application}.simtel.gz"
         source = EventSource(filename, max_events=1)
         event = None
@@ -309,7 +309,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         image = event.dl1.tel[tel_id].image
         cleaned = image.copy()
-        return_cleaned = 0
+
         if return_cleaned:
             mask = tailcuts_clean(
                 geometry, image, picture_thresh=7, boundary_thresh=5, min_number_picture_neighbors=0
@@ -318,12 +318,22 @@ class SimulatorLightEmission(SimtelRunner):
 
         fig, ax = plt.subplots(1, 1, dpi=300)
         title = f"CT{1}, run {event.index.obs_id} event {event.index.event_id}"
-        disp = CameraDisplay(geometry, image=cleaned, norm="symlog", title=title, ax=ax)
+        disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
         disp.cmap = "RdBu_r"
         disp.add_colorbar()
         disp.set_limits_percent(100)
+        ax.set_title(title, pad=20)
+        ax.annotate(
+            f"distance: {self.default_le_config['z_pos']['default'].to(u.m)}",
+            (0, 0),
+            (0.0, 1),
+            xycoords="axes fraction",
+            va="top",
+        )
         ax.set_axis_off()
-        fig.savefig(f"{self.output_dir}/{self.le_application}_test_ctapipe.pdf")
+        return fig
+
+        # fig.savefig(f"{self.output_dir}/{self.le_application}_test_ctapipe.pdf")
 
     def prepare_script(self, test=False, plot=False, extra_commands=None):
         """
