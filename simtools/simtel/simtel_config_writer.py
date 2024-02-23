@@ -18,8 +18,8 @@ class SimtelConfigWriter:
         South or North.
     model_version: str
         Version of the model (ex. prod5).
-    telescope_name: str
-        Telescope name.
+    telescope_model_name: str
+        Telescope model name.
     layout_name: str
         Layout name.
     label: str
@@ -28,7 +28,9 @@ class SimtelConfigWriter:
 
     TAB = " " * 3
 
-    def __init__(self, site, model_version, layout_name=None, telescope_name=None, label=None):
+    def __init__(
+        self, site, model_version, layout_name=None, telescope_model_name=None, label=None
+    ):
         """
         Initialize SimtelConfigWriter.
         """
@@ -39,7 +41,7 @@ class SimtelConfigWriter:
         self._model_version = model_version
         self._label = label
         self._layout_name = layout_name
-        self._telescope_model_name = telescope_name
+        self._telescope_model_name = telescope_model_name
 
     def write_telescope_config_file(self, config_file_path, parameters):
         """

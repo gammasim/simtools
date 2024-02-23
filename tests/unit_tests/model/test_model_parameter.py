@@ -24,7 +24,7 @@ def telescope_model_from_config_file(io_handler, lst_config_file):
     label = "test-telescope-model"
     tel_model = TelescopeModel.from_config_file(
         site="North",
-        telescope_name="LSTN-01",
+        telescope_model_name="LSTN-01",
         label=label,
         config_file_name=lst_config_file,
     )
@@ -115,7 +115,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     cfg_file = tel_model.get_config_file()
     tel = TelescopeModel.from_config_file(
         site="south",
-        telescope_name="ssts-design",
+        telescope_model_name="ssts-design",
         label="test-sst",
         config_file_name=cfg_file,
     )
@@ -139,7 +139,7 @@ def test_updating_export_model_files(db_config, io_handler):
     # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
-        telescope_name="LSTN-01",
+        telescope_model_name="LSTN-01",
         model_version="prod4",
         label="test-telescope-model-2",
         mongo_db_config=db_config,
