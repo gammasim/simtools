@@ -99,7 +99,7 @@ def default_le_configs(le_application):
             "z_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
-                "default": [i * 100 for i in [400, 800, 1200]] * u.cm,
+                "default": [i * 100 for i in [100, 200, 300, 400, 800, 1200]] * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -123,9 +123,9 @@ def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     # TODO: following is passed as command-line parameters when running the app
-    args_dict["telescope"] = "LST-1"
+    # args_dict["telescope"] = "LST-1"
     # args_dict["telescope"] = "MST-NectarCam-D"
-    args_dict["site"] = "north"
+    # args_dict["site"] = "north"
     le_application = select_application(args_dict)
     default_le_config = default_le_configs(le_application)
     logger = logging.getLogger()
@@ -163,7 +163,7 @@ def main():
         subprocess.run(run_script, shell=False, check=False)
         fig = le.plot_simtel_ctapipe()
         figures.append(fig)
-    save_figs_to_pdf(figures, f"{le.output_dir}/{le.le_application}_test_ctapipe.pdf")
+    save_figs_to_pdf(figures, f"{le.output_dir}/{args_dict['telescope']}_{le.le_application}.pdf")
 
 
 if __name__ == "__main__":
