@@ -438,7 +438,7 @@ class ArrayLayout:
             if _telescope_model_name not in self._auxiliary_parameters:
                 tel_model = TelescopeModel(
                     site=self.site,
-                    telescope_name=_telescope_model_name,
+                    telescope_model_name=_telescope_model_name,
                     model_version=self.model_version,
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,

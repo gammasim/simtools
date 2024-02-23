@@ -28,8 +28,8 @@ class ModelParameter:
     ----------
     site: str
         Site name (e.g., South or North).
-    telescope_name: str
-        Telescope name (e.g., LSTN-01).
+    telescope_model_name: str
+        Telescope model name (e.g., LSTN-01, LSTN-design).
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
@@ -44,7 +44,7 @@ class ModelParameter:
     def __init__(
         self,
         site=None,
-        telescope_name=None,
+        telescope_model_name=None,
         mongo_db_config=None,
         model_version="Released",
         db=None,
@@ -61,7 +61,9 @@ class ModelParameter:
         self._derived = None
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
-            names.validate_telescope_name(telescope_name) if telescope_name is not None else None
+            names.validate_telescope_name(telescope_model_name)
+            if telescope_model_name is not None
+            else None
         )
         self.label = label
         self.model_version = names.validate_model_version_name(model_version)
@@ -553,7 +555,7 @@ class ModelParameter:
         if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
-                telescope_name=self.name,
+                telescope_model_name=self.name,
                 model_version=self.model_version,
                 label=self.label,
             )

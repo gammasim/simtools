@@ -25,7 +25,7 @@ class Camera:
 
     Parameters
     ----------
-    telescope_name: string
+    telescope_model_name: string
         As provided by the telescope model method TelescopeModel (e.g., LSTN-01)
     camera_config_file: string
         The sim_telarray file name.
@@ -39,7 +39,7 @@ class Camera:
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
-    def __init__(self, telescope_name, camera_config_file, focal_length):
+    def __init__(self, telescope_model_name, camera_config_file, focal_length):
         """
         Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,
         calculating FoV and plotting the camera.
@@ -47,7 +47,7 @@ class Camera:
 
         self._logger = logging.getLogger(__name__)
 
-        self._telescope_name = telescope_name
+        self._telescope_model_name = telescope_model_name
         self._camera_config_file = camera_config_file
         self._focal_length = focal_length
         if self._focal_length <= 0:
@@ -553,7 +553,7 @@ class Camera:
 
         invert_yaxis = False
         x_left = 0.7  # Position of the left most axis
-        if not is_two_mirror_telescope(self._telescope_name):
+        if not is_two_mirror_telescope(self._telescope_model_name):
             invert_yaxis = True
             x_left = 0.8
 
@@ -694,12 +694,12 @@ class Camera:
             Figure with the pixel layout.
         """
 
-        self._logger.info(f"Plotting the {self._telescope_name} camera")
+        self._logger.info(f"Plotting the {self._telescope_model_name} camera")
 
         fig, ax = plt.subplots()
         plt.gcf().set_size_inches(8, 8)
 
-        if not is_two_mirror_telescope(self._telescope_name):
+        if not is_two_mirror_telescope(self._telescope_model_name):
             if not camera_in_sky_coor:
                 self._pixels["y"] = [(-1) * y_val for y_val in self._pixels["y"]]
 
@@ -739,7 +739,9 @@ class Camera:
 
             if self._pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
                 font_size = 4
-                if "SCT" in names.get_telescope_type_from_telescope_name(self._telescope_name):
+                if "SCT" in names.get_telescope_type_from_telescope_name(
+                    self._telescope_model_name
+                ):
                     font_size = 2
                 plt.text(
                     xy_pix_pos[0],
@@ -798,7 +800,7 @@ class Camera:
         plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
         plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
         ax.set_title(
-            f"Pixels layout in {self._telescope_name:s} camera",
+            f"Pixels layout in {self._telescope_model_name:s} camera",
             fontsize=15,
             y=1.02,
         )
@@ -806,9 +808,9 @@ class Camera:
 
         self._plot_axes_def(plt, self._pixels["rotate_angle"])
         description = "For an observer facing the camera"
-        if camera_in_sky_coor and not is_two_mirror_telescope(self._telescope_name):
+        if camera_in_sky_coor and not is_two_mirror_telescope(self._telescope_model_name):
             description = "For an observer behind the camera looking through"
-        if is_two_mirror_telescope(self._telescope_name):
+        if is_two_mirror_telescope(self._telescope_model_name):
             description = "For an observer looking from secondary to camera"
         ax.text(
             0.02,

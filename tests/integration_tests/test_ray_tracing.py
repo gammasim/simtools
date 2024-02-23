@@ -26,7 +26,7 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler):
     }
     tel = TelescopeModel(
         site="south",
-        telescope_name=telescope_model_name,
+        telescope_model_name=telescope_model_name,
         model_version=version,
         label="test-sst",
         mongo_db_config=db_config,

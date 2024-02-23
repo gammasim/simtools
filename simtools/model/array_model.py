@@ -169,7 +169,7 @@ class ArrayModel:
                 _all_telescope_names.append(tel_name)
                 tel_model = TelescopeModel(
                     site=self.site,
-                    telescope_name=tel_name,
+                    telescope_model_name=tel_name,
                     model_version=self.model_version,
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
