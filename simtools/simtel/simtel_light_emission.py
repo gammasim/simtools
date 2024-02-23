@@ -317,20 +317,33 @@ class SimulatorLightEmission(SimtelRunner):
             cleaned[~mask] = 0
 
         fig, ax = plt.subplots(1, 1, dpi=300)
-        title = f"CT{1}, run {event.index.obs_id} event {event.index.event_id}"
+        title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
         disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
         disp.cmap = "RdBu_r"
-        disp.add_colorbar()
+        disp.add_colorbar(fraction=0.02, pad=-0.1)
         disp.set_limits_percent(100)
         ax.set_title(title, pad=20)
         ax.annotate(
+            f"tel type: {source.subarray.tel[1].type.name}\n"
+            f"camera: {source.subarray.tel[1].camera_name}\n"
             f"distance: {self.default_le_config['z_pos']['default'].to(u.m)}",
             (0, 0),
-            (0.0, 1),
+            (0.1, 1),
             xycoords="axes fraction",
             va="top",
+            size=7,
+        )
+        ax.annotate(
+            f"dl1 image,\ntotal $p.e._{{reco}}$: {np.round(np.sum(image))}\n",
+            (0, 0),
+            (0.75, 1),
+            xycoords="axes fraction",
+            va="top",
+            ha="left",
+            size=7,
         )
         ax.set_axis_off()
+        fig.tight_layout()
         return fig
 
         # fig.savefig(f"{self.output_dir}/{self.le_application}_test_ctapipe.pdf")
