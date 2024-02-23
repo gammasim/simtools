@@ -6,6 +6,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
@@ -98,7 +99,7 @@ def default_le_configs(le_application):
             "z_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
-                "default": 400 * 100 * u.cm,
+                "default": [i * 100 for i in [400, 800, 1200]] * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -143,20 +144,26 @@ def main():
     )
     telescope_model.remove_parameters("array_triggers")
 
-    le = SimulatorLightEmission.from_kwargs(
-        telescope_model=telescope_model,
-        default_le_config=default_le_config,
-        le_application=le_application,
-        output_dir=output_dir,
-        label=label,
-        simtel_source_path=args_dict["simtel_path"],
-    )
-    # command = le._make_light_emission_script()
-    # command = le._make_simtel_script(output_dir)
-    run_script = le.prepare_script(plot=True)
+    figures = []
+    for distance in default_le_config["z_pos"]["default"]:
+        le_config = default_le_config.copy()
+        le_config["z_pos"]["default"] = distance
+        le = SimulatorLightEmission.from_kwargs(
+            telescope_model=telescope_model,
+            default_le_config=le_config,
+            le_application=le_application,
+            output_dir=output_dir,
+            label=label,
+            simtel_source_path=args_dict["simtel_path"],
+        )
+        # command = le._make_light_emission_script()
+        # command = le._make_simtel_script(output_dir)
+        run_script = le.prepare_script(plot=True)
 
-    subprocess.run(run_script, shell=False, check=False)
-    le.plot_simtel_ctapipe()
+        subprocess.run(run_script, shell=False, check=False)
+        fig = le.plot_simtel_ctapipe()
+        figures.append(fig)
+    save_figs_to_pdf(figures, f"{le.output_dir}/{le.le_application}_test_ctapipe.pdf")
 
 
 if __name__ == "__main__":
