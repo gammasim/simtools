@@ -445,9 +445,9 @@ class ArrayLayout:
                 )
                 self._auxiliary_parameters[_telescope_model_name] = {}
                 for para in ("telescope_axis_height", "telescope_sphere_radius"):
-                    self._auxiliary_parameters[_telescope_model_name][
-                        para
-                    ] = tel_model.get_parameter_value_with_unit(para)
+                    self._auxiliary_parameters[_telescope_model_name][para] = (
+                        tel_model.get_parameter_value_with_unit(para)
+                    )
 
             for key, value in self._auxiliary_parameters[_telescope_model_name].items():
                 telescope.set_auxiliary_parameter(key, value)
@@ -630,9 +630,9 @@ class ArrayLayout:
             tel.print_compact_format(
                 crs_name=crs_name,
                 print_header=(tel == self._telescope_list[0]),
-                corsika_observation_level=self._corsika_observation_level
-                if crs_name == "ground"
-                else None,
+                corsika_observation_level=(
+                    self._corsika_observation_level if crs_name == "ground" else None
+                ),
             )
 
     def convert_coordinates(self):
