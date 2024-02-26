@@ -24,14 +24,18 @@ class SimulatorLightEmission(SimtelRunner):
     SimulatorLightEmission is the interface with sim_telarray to perform
     light emission package simulations.
 
-    Configurable parameters:
-        zenith_angle:
-            len: 1
-            unit: deg
-            default: 20 deg
 
     Parameters
     ----------
+    telescope_model:
+        TelescopeModel class to define site, telescope model etc.
+    default_le_config: dict
+        defines parameters for running the sim_telarray light emission application.
+    le_application: str
+        Name of the application. Default sim_telarray application running
+        the sim_telarray LightEmission package is xyzls.
+    output_dir: str or Path
+        Simtools light-emission output directory.
     simtel_source_path: str or Path
         Location of sim_telarray installation.
     config_data: dict
@@ -160,7 +164,6 @@ class SimulatorLightEmission(SimtelRunner):
         }
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
-        # ./xyzls -a Gauss:3 -p Gauss:0.1 -n 1e5,1e6,1e7
         command = f" rm {self.output_dir}/{self.le_application}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application}"
@@ -325,6 +328,7 @@ class SimulatorLightEmission(SimtelRunner):
         ax.set_title(title, pad=20)
         ax.annotate(
             f"tel type: {source.subarray.tel[1].type.name}\n"
+            f"optics: {source.subarray.tel[1].optics.name}\n"
             f"camera: {source.subarray.tel[1].camera_name}\n"
             f"distance: {self.default_le_config['z_pos']['default'].to(u.m)}",
             (0, 0),
@@ -345,8 +349,6 @@ class SimulatorLightEmission(SimtelRunner):
         ax.set_axis_off()
         fig.tight_layout()
         return fig
-
-        # fig.savefig(f"{self.output_dir}/{self.le_application}_test_ctapipe.pdf")
 
     def prepare_script(self, test=False, plot=False, extra_commands=None):
         """
@@ -392,8 +394,6 @@ class SimulatorLightEmission(SimtelRunner):
             file.write(f"{command_simtel}\n\n")
             if plot:
                 file.write(f"{command_plot}\n\n")
-
-            #  TODO: Add functionality to run several telescope configs at once
 
         if test:
             #  TODO: Add
