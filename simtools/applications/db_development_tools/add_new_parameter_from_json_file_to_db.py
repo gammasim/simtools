@@ -22,7 +22,7 @@ def main():
     config = configurator.Configurator(description=("Add a new parameter to the DB."))
     config.parser.add_argument("--file_name", help="file to be added", required=True)
     config.parser.add_argument(
-        "--db_collection", help="DB collection file will be added", required=True
+        "--db_collection", help="DB collection to which to add the file ", required=True
     )
     args_dict, db_config = config.initialize(db_config=True)
 
@@ -30,9 +30,6 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-
-    if args_dict["db_collection"] not in ("telescopes", "sites"):
-        raise ValueError(f"DB collection {args_dict['db_collection']} not recognized")
 
     par_dict = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
 
