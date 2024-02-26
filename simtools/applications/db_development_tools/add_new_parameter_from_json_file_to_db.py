@@ -19,7 +19,7 @@ from simtools.db import db_handler
 
 
 def main():
-    config = configurator.Configurator(description=("Add a new parameter to the DB."))
+    config = configurator.Configurator(description="Add a new parameter to the DB.")
     config.parser.add_argument("--file_name", help="file to be added", required=True)
     config.parser.add_argument(
         "--db_collection", help="DB collection to which to add the file ", required=True
