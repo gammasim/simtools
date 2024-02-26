@@ -99,7 +99,7 @@ def default_le_configs(le_application):
             "z_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
-                "default": [i * 100 for i in [100, 200, 300, 400, 800, 1200]] * u.cm,
+                "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -120,12 +120,14 @@ def select_application(args_dict):
 
 
 def main():
+    """
+    Run the application in the command line.
+    Example:
+    simtools-simulate-light-emission --telescope MST-NectarCam-D --site North
+    """
+
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
-    # TODO: following is passed as command-line parameters when running the app
-    # args_dict["telescope"] = "LST-1"
-    # args_dict["telescope"] = "MST-NectarCam-D"
-    # args_dict["site"] = "north"
     le_application = select_application(args_dict)
     default_le_config = default_le_configs(le_application)
     logger = logging.getLogger()
@@ -143,6 +145,8 @@ def main():
         label=label,
     )
     telescope_model.remove_parameters("array_triggers")
+    # set to 0 to have the optical axis of the MST aligned.
+    telescope_model.remove_parameters("axes_offsets")
 
     figures = []
     for distance in default_le_config["z_pos"]["default"]:
@@ -159,10 +163,16 @@ def main():
         # command = le._make_light_emission_script()
         # command = le._make_simtel_script(output_dir)
         run_script = le.prepare_script(plot=True)
-
         subprocess.run(run_script, shell=False, check=False)
-        fig = le.plot_simtel_ctapipe()
-        figures.append(fig)
+        # le.plot_simtel() #custom plots using eventio
+
+        try:
+            fig = le.plot_simtel_ctapipe()
+            figures.append(fig)
+        except AttributeError:
+            msg = f"telescope not triggered at distance of {distance.to(u.meter)}"
+            logger.warning(msg)
+
     save_figs_to_pdf(figures, f"{le.output_dir}/{args_dict['telescope']}_{le.le_application}.pdf")
 
 
