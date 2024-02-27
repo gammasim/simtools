@@ -126,7 +126,7 @@ site_parameters = {
 }
 
 # List of telescope parameters which are not part of the simtel configuration
-# or which have a different name in the simtel configuration.
+# or which has a different name in the simtel configuration.
 telescope_parameters = {
     "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
     "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
