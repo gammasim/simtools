@@ -79,7 +79,7 @@ class ModelParameter:
 
     def get_parameter(self, par_name):
         """
-        Get an existing parameter of the model.
+        Get an existing model parameter.
 
         Parameters
         ----------
