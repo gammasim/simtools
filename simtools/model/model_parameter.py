@@ -165,7 +165,7 @@ class ModelParameter:
 
     def get_parameter_type(self, par_name):
         """
-        Get the type of an existing parameter of the model.
+        Get the type of existing parameter of the model.
 
         Parameters
         ----------
