@@ -6,4 +6,7 @@ METADATA_JSON_SCHEMA = "schemas/metadata.metaschema.yml"
 DATA_JSON_SCHEMA = "schemas/data.metaschema.yml"
 
 # URL to the schema repository
-SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/workflows/main/schemas/"
+SCHEMA_URL = (
+    "https://gitlab.cta-observatory.org/cta-science/"
+    "simulations/simulation-model/model_parameters/-/raw/main/schema/"
+)
