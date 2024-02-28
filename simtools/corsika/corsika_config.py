@@ -254,12 +254,8 @@ class CorsikaConfig:
             List of values for the parameter.
         """
 
-        print("AA par_name", par_name)
-        print("AAA", par_info)
-        print("BBB", value_args_in)
         # Turning value_args into a list, if it is not.
         value_args = self._convert_to_quantities(value_args_in)
-        print("CCC", value_args)
 
         if len(value_args) == 1 and par_name in ["THETAP", "AZM"]:
             # Fixing single value zenith or azimuth angle.
@@ -288,7 +284,6 @@ class CorsikaConfig:
         # Checking units and converting them, if needed.
         value_args_with_units = []
         for arg, unit in zip(value_args, par_unit):
-            print("CHCHCH", arg, unit)
             if unit is None:
                 value_args_with_units.append(arg)
                 continue
