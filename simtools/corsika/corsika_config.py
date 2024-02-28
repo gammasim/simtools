@@ -4,7 +4,6 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
@@ -155,8 +154,9 @@ class CorsikaConfig:
 
         logger = logging.getLogger(__name__)
         logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
-        with open(corsika_parameters_file, "r", encoding="utf-8") as f:
-            corsika_parameters = yaml.load(f)
+        corsika_parameters = gen.collect_data_from_file_or_dict(
+            file_name=corsika_parameters_file, in_dict=None
+        )
         return corsika_parameters
 
     def set_user_parameters(self, corsika_config_data):
@@ -243,10 +243,23 @@ class CorsikaConfig:
         """
         Validate input user parameter and convert it to the right units, if needed.
         Returns the validated arguments in a list.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...).
+        par_info: dict
+            Dictionary with parameter data.
+        value_args_in: list
+            List of values for the parameter.
         """
 
+        print("AA par_name", par_name)
+        print("AAA", par_info)
+        print("BBB", value_args_in)
         # Turning value_args into a list, if it is not.
-        value_args = gen.copy_as_list(value_args_in)
+        value_args = self._convert_to_quantities(value_args_in)
+        print("CCC", value_args)
 
         if len(value_args) == 1 and par_name in ["THETAP", "AZM"]:
             # Fixing single value zenith or azimuth angle.
@@ -255,7 +268,7 @@ class CorsikaConfig:
         elif len(value_args) == 1 and par_name == "VIEWCONE":
             # Fixing single value viewcone.
             # VIEWCONE should be written as a 2 values range in the CORSIKA input file
-            value_args = [0 * par_info["unit"][0], value_args[0]]
+            value_args = [0.0 * u.Unit(par_info["unit"][0]), value_args[0]]
         elif par_name == "PRMPAR":
             value_args = self._convert_primary_input_and_store_primary_name(value_args)
         elif par_name == "ESLOPE":
@@ -275,6 +288,7 @@ class CorsikaConfig:
         # Checking units and converting them, if needed.
         value_args_with_units = []
         for arg, unit in zip(value_args, par_unit):
+            print("CHCHCH", arg, unit)
             if unit is None:
                 value_args_with_units.append(arg)
                 continue
@@ -550,3 +564,34 @@ class CorsikaConfig:
         if not self._is_file_updated:
             self.export_input_file(use_multipipe)
         return self.config_file_path
+
+    def _convert_to_quantities(self, value_args):
+        """
+        Convert a list of value, unit pairs into a list of astropy quantities.
+
+        Parameters
+        ----------
+        value_args: list
+            List of value/unit pairs.
+
+        Returns
+        -------
+        list
+            List of astropy quantities.
+        """
+
+        if isinstance(value_args, str):
+            return [value_args]
+        if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:
+            return [value_args["value"] * u.Unit(value_args["unit"])]
+        if isinstance(value_args, list):
+            _quantity_list = []
+            for value in value_args:
+                if isinstance(value, u.Quantity):
+                    _quantity_list.append(value)
+                elif isinstance(value, dict) and "value" in value and "unit" in value:
+                    _quantity_list.append(value["value"] * u.Unit(value["unit"]))
+                else:
+                    _quantity_list.append(value)
+            return _quantity_list
+        return [value_args]

@@ -16,26 +16,26 @@ USER_PARAMETERS:
   ERANGE:
     len: 2
     names: ['ENRANGE', 'ENERGYRANGE']
-    unit: [!astropy.units.Unit {unit: GeV}, !astropy.units.Unit {unit: GeV}]
+    unit: ['GeV', 'GeV']
   ESLOPE:
     len: 1
     names: ['ENSLOPE', 'ENERGYSLOPE']
   THETAP:
     len: 2
     names: ['THETA', 'ZENITH']
-    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
+    unit: ['deg', 'deg']
   AZM:
     len: 2
     names: ['PHI', 'AZIMUTH']
-    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
+    unit: ['deg', 'deg']
   VIEWCONE:
     len: 2
     names: ['CONE']
-    unit: [!astropy.units.Unit {unit: deg}, !astropy.units.Unit {unit: deg}]
+    unit: ['deg', 'deg']
   CSCAT:
     len: 3
     names: ['SCAT']
-    unit: [null, !astropy.units.Unit {unit: cm}, null]
+    unit: [null, 'cm', null]
 
 PRIMARIES:
   GAMMA:

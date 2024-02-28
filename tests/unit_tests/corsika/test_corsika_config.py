@@ -6,7 +6,6 @@ from copy import copy
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -168,18 +167,9 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
     assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(db, io_handler, db_config):
+def test_config_data_from_yaml_file(io_handler, db_config):
     logger.info("test_config_data_from_yaml_file")
-    test_file_name = "corsikaConfigTest.yml"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        file_name=test_file_name,
-    )
-
-    corsika_config_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
-    )
+    corsika_config_file = "tests/resources/corsikaConfigTest.yml"
     cc = CorsikaConfig(
         mongo_db_config=db_config,
         site="Paranal",
@@ -227,3 +217,21 @@ def test_get_file_name(corsika_config, io_handler):
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
+
+
+def test_convert_to_quantities(corsika_config):
+
+    assert corsika_config._convert_to_quantities("10 m") == [10 * u.m]
+    assert corsika_config._convert_to_quantities("simple_string") == ["simple_string"]
+    assert corsika_config._convert_to_quantities({"value": 10, "unit": "m"}) == [10 * u.m]
+    assert corsika_config._convert_to_quantities({"not_value": 10, "not_unit": "m"}) == [
+        {"not_value": 10, "not_unit": "m"}
+    ]
+    assert corsika_config._convert_to_quantities(["10 m", "20 m", "simple_string"]) == [
+        10 * u.m,
+        20 * u.m,
+        "simple_string",
+    ]
+    assert corsika_config._convert_to_quantities(
+        [{"value": 10, "unit": "m"}, "20 m", "simple_string"]
+    ) == [10 * u.m, 20 * u.m, "simple_string"]
