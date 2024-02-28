@@ -7,7 +7,6 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
@@ -133,10 +132,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     # Output directory to save files related directly to this app
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label)
-    print(default_le_config["z_pos"]["default"])
-    print(args_dict["distance_ls"])
+
     if args_dict["distance_ls"] is not None:
         default_le_config["z_pos"]["default"] = [
             100 * int(dist) for dist in args_dict["distance_ls"]
@@ -163,13 +159,12 @@ def main():
             telescope_model=telescope_model,
             default_le_config=le_config,
             le_application=le_application,
-            output_dir=output_dir,
             label=label,
             simtel_source_path=args_dict["simtel_path"],
         )
         # command = le._make_light_emission_script()
         # command = le._make_simtel_script(output_dir)
-        run_script = le.prepare_script(plot=True)
+        run_script = le.prepare_script(generate_postscript=True)
         subprocess.run(run_script, shell=False, check=False)
         # le.plot_simtel() #custom plots using eventio
 
@@ -180,7 +175,9 @@ def main():
             msg = f"telescope not triggered at distance of {distance.to(u.meter)}"
             logger.warning(msg)
 
-    save_figs_to_pdf(figures, f"{le.output_dir}/{args_dict['telescope']}_{le.le_application}.pdf")
+    save_figs_to_pdf(
+        figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application}.pdf"
+    )
 
 
 if __name__ == "__main__":

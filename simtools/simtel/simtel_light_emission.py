@@ -34,7 +34,7 @@ class SimulatorLightEmission(SimtelRunner):
     le_application: str
         Name of the application. Default sim_telarray application running
         the sim_telarray LightEmission package is xyzls.
-    output_dir: str or Path
+    output_directory: str or Path
         Simtools light-emission output directory.
     simtel_source_path: str or Path
         Location of sim_telarray installation.
@@ -51,7 +51,6 @@ class SimulatorLightEmission(SimtelRunner):
         telescope_model,
         default_le_config,
         le_application,
-        output_dir,
         label=None,
         simtel_source_path=None,
         config_data=None,
@@ -71,23 +70,26 @@ class SimulatorLightEmission(SimtelRunner):
         self.label = label if label is not None else self._telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
-        self._base_directory = self.io_handler.get_output_directory(self.label)
-        print("base directory: ", self._base_directory)
-        # Loading config_data, currently use default config
-        self.config = gen.validate_config_data(
-            gen.collect_data_from_file_or_dict(config_file, config_data),
-            self.light_emission_default_configuration(),
-        )
+        self.output_directory = self.io_handler.get_output_directory(self.label)
+        print("base directory: ", self.output_directory)
+        try:
+            self.config = gen.validate_config_data(
+                gen.collect_data_from_file_or_dict(config_file, config_data),
+                self.light_emission_default_configuration(),
+            )
+        except TypeError:
+            self.config = gen.validate_config_data(
+                {},
+                self.light_emission_default_configuration(),
+            )
 
         # LightEmission - default parameters
         self._rep_number = 0
         self.runs = 1
-        self.photons_per_run = 100000 if not test else 10000
+        self.photons_per_run = 1e10 if not test else 1e7
 
         self.le_application = le_application
         self.default_le_config = default_le_config
-        self.output_dir = output_dir
-        # self._load_required_files(force_simulate)
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -110,12 +112,13 @@ class SimulatorLightEmission(SimtelRunner):
                 "telescope_model",
                 "default_le_config",
                 "le_application",
-                "output_dir",
                 "label",
                 "simtel_source_path",
             ],
             **kwargs,
         )
+        print(config_data)
+
         return cls(**args, config_data=config_data)
 
     @staticmethod
@@ -164,26 +167,22 @@ class SimulatorLightEmission(SimtelRunner):
         }
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
-        command = f" rm {self.output_dir}/{self.le_application}.simtel.gz\n"
+        command = f" rm {self.output_directory}/{self.le_application}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application}"
         # command += f" -a {self.default_le_config['beam_shape']['default']}:"
         # command += f"{self.default_le_config['beam_width']['default'].value}"
         # command += f" -p {self.default_le_config['pulse_shape']['default']}:"
         # command += f"{self.default_le_config['pulse_width']['default'].value}"
-        command += " -n 1e10"
+        command += f" -n {self.photons_per_run}"
         command += f" -x {self.default_le_config['x_pos']['default'].value}"
         command += f" -y {self.default_le_config['y_pos']['default'].value}"
         command += f" -z {self.default_le_config['z_pos']['default'].value}"
         command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
-
-        # command += f" -A {self._simtel_source_path.joinpath('sim_telarray/
-        # cfg/common/atmprof1.dat')}"
-        command += f" -A {self.output_dir}/model/"
+        command += f" -A {self.output_directory}/model/"
         command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
-        command += f" -o {self.output_dir}/{self.le_application}.iact.gz"
+        command += f" -o {self.output_directory}/{self.le_application}.iact.gz"
         command += "\n"
-        print(command)
         return command
 
     def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
@@ -213,15 +212,18 @@ class SimulatorLightEmission(SimtelRunner):
         command += super()._config_option("power_law", "2.68")
         command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
         command += super()._config_option(
-            "input_file", f"{self.output_dir}/{self.le_application}.iact.gz"
+            "input_file", f"{self.output_directory}/{self.le_application}.iact.gz"
         )
         command += super()._config_option(
-            "output_file", f"{self.output_dir}/{self.le_application}.simtel.gz\n"
+            "output_file", f"{self.output_directory}/{self.le_application}.simtel.gz\n"
         )
 
         return command
 
-    def _make_plot_script(self, **kwargs):  # pylint: disable=unused-argument
+    def _create_postscript(self, **kwargs):  # pylint: disable=unused-argument
+        """
+        writes out post-script file using read_cta
+        """
         command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta"))
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4 --integration-window 7,3 -r 5"
@@ -230,24 +232,27 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
 
-        command += f" -p {self.output_dir}/{self.le_application}.ps"
-        command += f" {self.output_dir}/{self.le_application}.simtel.gz\n"
-        # command += f"ps2pdf {self.output_dir}/{self.le_application}.ps
-        #  {self.output_dir}/{self.le_application}.pdf"
+        command += f" -p {self.output_directory}/{self.le_application}.ps"
+        command += f" {self.output_directory}/{self.le_application}.simtel.gz\n"
+        # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
+        #  {self.output_directory}/{self.le_application}.pdf"
         return command
 
     def plot_simtel(self):
+        """
+        plot true p.e. in camera frame using eventio
+        """
+
         def camera_rotation(pixel_x, pixel_y, cam_rot):
             pixel_x_derot = pixel_x * np.cos(cam_rot) - pixel_y * np.sin(cam_rot)
             pixel_y_derot = pixel_x * np.sin(cam_rot) + pixel_y * np.cos(cam_rot)
 
             return pixel_x_derot, pixel_y_derot
 
-        simtel_file = eio.SimTelFile(f"{self.output_dir}/{self.le_application}.simtel.gz")
+        simtel_file = eio.SimTelFile(f"{self.output_directory}/{self.le_application}.simtel.gz")
         for array_event in simtel_file:
             array_event_s = array_event
             photo_electrons = array_event["photoelectrons"]
-            # photoelectron_sums = array_event["photoelectron_sums"]
 
         pixel_x = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_x"]
         pixel_y = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_y"]
@@ -296,10 +301,13 @@ class SimulatorLightEmission(SimtelRunner):
 
         ax.set_axis_off()
         ax.set_aspect("equal")
-        fig.savefig(f"{self.output_dir}/{self.le_application}_test.pdf")
+        fig.savefig(f"{self.output_directory}/{self.le_application}_test.pdf")
 
     def plot_simtel_ctapipe(self, return_cleaned=0):
-        filename = f"{self.output_dir}/{self.le_application}.simtel.gz"
+        """
+        reads in simtel file and plots reconstructed photo electrons via ctapipe
+        """
+        filename = f"{self.output_directory}/{self.le_application}.simtel.gz"
         source = EventSource(filename, max_events=1)
         event = None
         for event in source:
@@ -350,7 +358,7 @@ class SimulatorLightEmission(SimtelRunner):
         fig.tight_layout()
         return fig
 
-    def prepare_script(self, test=False, plot=False, extra_commands=None):
+    def prepare_script(self, test=False, generate_postscript=False):
         """
         Builds and returns the full path of the bash run script
         containing the light-emission command.
@@ -360,8 +368,8 @@ class SimulatorLightEmission(SimtelRunner):
         plot: bool
             If output should be plotted.
 
-        extra_commands: str
-            Additional commands for running simulations given in config.yml.
+        generate_postscript: bool
+            If postscript should be generated with read_cta.
 
         Returns
         -------
@@ -370,31 +378,26 @@ class SimulatorLightEmission(SimtelRunner):
         """
         self._logger.debug("Creating run bash script")
 
-        self._script_dir = self._base_directory.joinpath("scripts")
+        self._script_dir = self.output_directory.joinpath("scripts")
         self._script_dir.mkdir(parents=True, exist_ok=True)
         self._script_file = self._script_dir.joinpath(f"{self.le_application}-lightemission")
         self._logger.debug(f"Run bash script - {self._script_file}")
 
-        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
-
         command_le = self._make_light_emission_script()
         command_simtel = self._make_simtel_script()
-        command_plot = self._make_plot_script()
 
         with self._script_file.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
-            # if extra_commands is not None:
-            #    file.write("# Writing extras\n")
-            #    for line in extra_commands:
-            #        file.write(f"{line}\n")
-            #    file.write("# End of extras\n\n")
-
             file.write(f"{command_le}\n\n")
             file.write(f"{command_simtel}\n\n")
-            if plot:
-                file.write(f"{command_plot}\n\n")
 
+            if generate_postscript:
+                self._logger.debug("Write out postscript file")
+                command_plot = self._create_postscript()
+                file.write("# Generate postscript\n\n")
+                file.write(f"{command_plot}\n\n")
+                file.write("# End\n\n")
         if test:
             #  TODO: Add
             pass
