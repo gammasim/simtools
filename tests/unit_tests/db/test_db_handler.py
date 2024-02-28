@@ -279,6 +279,37 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["new_test_parameter_quantity_str"]["type"] == "float"
     assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
 
+    # site parameters
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        site="North",
+        version="test",
+        parameter="corsika_observation_level",
+        value="1800. m",
+        collection_name="sites_" + random_id,
+    )
+    pars = db.read_mongo_db(
+        db_name=f"sandbox_{random_id}",
+        telescope_model_name="North",
+        model_version="test",
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        collection_name="sites_" + random_id,
+        write_files=False,
+    )
+    assert pars["corsika_observation_level"]["value"] == pytest.approx(1800.0)
+    assert pars["corsika_observation_level"]["unit"] == "m"
+
+    # wrong collection
+    with pytest.raises(ValueError):
+        db.add_new_parameter(
+            db_name=f"sandbox_{random_id}",
+            site="North",
+            version="test",
+            parameter="corsika_observation_level",
+            value="1800. m",
+            collection_name="wrong_collection" + random_id,
+        )
+
 
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
