@@ -61,7 +61,8 @@ def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/test_parameters.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    # TODO TMP    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
     _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
@@ -533,7 +534,8 @@ def test_collect_data_dict_from_json():
 
 def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
-    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    # TODO main    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
 
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)

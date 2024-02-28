@@ -580,13 +580,16 @@ class CorsikaConfig:
         if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:
             return [value_args["value"] * u.Unit(value_args["unit"])]
         if isinstance(value_args, list):
-            _quantity_list = []
-            for value in value_args:
-                if isinstance(value, u.Quantity):
-                    _quantity_list.append(value)
-                elif isinstance(value, dict) and "value" in value and "unit" in value:
-                    _quantity_list.append(value["value"] * u.Unit(value["unit"]))
-                else:
-                    _quantity_list.append(value)
-            return _quantity_list
+            return [
+                (
+                    value
+                    if isinstance(value, u.Quantity)
+                    else (
+                        value["value"] * u.Unit(value["unit"])
+                        if isinstance(value, dict) and "value" in value and "unit" in value
+                        else value
+                    )
+                )
+                for value in value_args
+            ]
         return [value_args]
