@@ -24,12 +24,6 @@ def _parse(label):
         ),
     )
     config.parser.add_argument(
-        "--ls_distance",
-        help="Light source distance in m",
-        type=float,
-        default=1000,
-    )
-    config.parser.add_argument(
         "--off_axis_angle",
         help="Off axis angle for light source direction",
         type=float,
@@ -45,6 +39,11 @@ def _parse(label):
         help="Select calibration light source type: laser (1), other (2)",
         type=int,
         default=1,
+    )
+    config.parser.add_argument(
+        "--distance_ls",
+        help="Light source distance in m (Example --distance_ls 800 1200)",
+        nargs="+",
     )
     return config.initialize(db_config=True, telescope_model=True, require_command_line=False)
 
@@ -136,6 +135,13 @@ def main():
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label)
+    print(default_le_config["z_pos"]["default"])
+    print(args_dict["distance_ls"])
+    if args_dict["distance_ls"] is not None:
+        default_le_config["z_pos"]["default"] = [
+            100 * int(dist) for dist in args_dict["distance_ls"]
+        ] * u.cm
+        print(default_le_config["z_pos"]["default"])
 
     telescope_model = TelescopeModel(
         site=args_dict["site"],
@@ -144,6 +150,7 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+    # important for triggering with a single telescope
     telescope_model.remove_parameters("array_triggers")
     # set to 0 to have the optical axis of the MST aligned.
     telescope_model.remove_parameters("axes_offsets")
