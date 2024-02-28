@@ -51,7 +51,10 @@ def mock_settings_env_vars(tmp_test_directory):
     Removes all environment variable from the test system.
     Explicitly sets those needed.
     """
-    _url = "https://raw.githubusercontent.com/gammasim/simulation_model/main"
+    _url = (
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/model_parameters/-/raw/main"
+    )
 
     with mock.patch.dict(
         os.environ,
