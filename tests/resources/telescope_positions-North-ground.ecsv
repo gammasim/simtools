@@ -42,7 +42,8 @@
 #         ASSOCIATION: Site
 #         CATEGORY: SIM
 #         LEVEL: R1
-#         MODEL: {NAME: array_coordinates, TYPE: simpipe-schema, URL: 'https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates.schema.yml',
+#         MODEL: {NAME: array_coordinates, TYPE: simpipe-schema,
+#           URL: 'https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/array_coordinates.schema.yml',
 #           VERSION: 0.1.0}
 #         TYPE: Service
 #       DESCRIPTION: Telescope positions.
