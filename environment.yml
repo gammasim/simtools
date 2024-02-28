@@ -1,5 +1,5 @@
 # A conda environment with all useful package for simtools developers
-name: simtools-dev
+name: simtools-dev-ttest
 channels:
   - conda-forge
 dependencies:
@@ -19,6 +19,7 @@ dependencies:
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-profiling
   - pytest-xdist
   - python-dotenv
   - pyyaml
