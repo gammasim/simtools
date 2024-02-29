@@ -5,6 +5,7 @@ This should be the only module in simtools with knowledge on the
 implementation of the metadata model.
 
 """
+
 import datetime
 import getpass
 import logging

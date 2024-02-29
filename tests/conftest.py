@@ -301,9 +301,10 @@ def shower_config_data(simulator_config_data):
 def file_has_text():
     def wrapper(file, text):
         try:
-            with open(file, "rb", 0) as string_file, mmap.mmap(
-                string_file.fileno(), 0, access=mmap.ACCESS_READ
-            ) as text_file_input:
+            with (
+                open(file, "rb", 0) as string_file,
+                mmap.mmap(string_file.fileno(), 0, access=mmap.ACCESS_READ) as text_file_input,
+            ):
                 re_search_1 = re.compile(f"{text}".encode())
                 search_result_1 = re_search_1.search(text_file_input)
                 if search_result_1 is None:
