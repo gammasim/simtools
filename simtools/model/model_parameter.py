@@ -77,9 +77,9 @@ class ModelParameter:
         self._is_config_file_up_to_date = False
         self._is_exported_model_files_up_to_date = False
 
-    def get_parameter(self, par_name):
+    def get_parameter_dict(self, par_name):
         """
-        Get an existing model parameter.
+        Get dictionary for an existing model parameter.
 
         Parameters
         ----------
@@ -88,7 +88,8 @@ class ModelParameter:
 
         Returns
         -------
-        Value of the parameter
+        dict
+            Dictionary with complete DB entry for the given parameter.
 
         Raises
         ------
@@ -124,13 +125,13 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidModelParameter
+        KeyError
             If par_name does not match any parameter in this model.
         """
 
-        parameter_dict = parameter_dict if parameter_dict else self.get_parameter(par_name)
+        parameter_dict = parameter_dict if parameter_dict else self.get_parameter_dict(par_name)
         try:
-            return parameter_dict.get("value")
+            return parameter_dict["value"]
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} does not have a value")
             raise exc
@@ -150,12 +151,8 @@ class ModelParameter:
         Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \
         provided in the model, the value is returned without a unit.
 
-        Raises
-        ------
-        InvalidModelParameter
-            If par_name does not match any parameter in this model.
         """
-        _parameter = self.get_parameter(par_name)
+        _parameter = self.get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
             _units = _parameter.get("unit") or _parameter.get("units")
@@ -165,7 +162,8 @@ class ModelParameter:
 
     def get_parameter_type(self, par_name):
         """
-        Get the type of existing parameter of the model.
+        Get the type of existing parameter of the model
+        (value of 'type' field of DB entry)
 
         Parameters
         ----------
@@ -178,7 +176,7 @@ class ModelParameter:
             type of the parameter (None if no type is defined)
 
         """
-        parameter_dict = self.get_parameter(par_name)
+        parameter_dict = self.get_parameter_dict(par_name)
         try:
             return parameter_dict.get("type") or parameter_dict.get("Type")
         except KeyError:
@@ -187,7 +185,8 @@ class ModelParameter:
 
     def get_parameter_file_flag(self, par_name):
         """
-        Get value of parameter file flag.
+        Get value of parameter file flag of this database entry
+        (boolean 'file' field of DB entry).
 
         Parameters
         ----------
@@ -200,7 +199,7 @@ class ModelParameter:
             True if file flag is set.
 
         """
-        parameter_dict = self.get_parameter(par_name)
+        parameter_dict = self.get_parameter_dict(par_name)
         try:
             if parameter_dict.get("file") or parameter_dict.get("File"):
                 return True
@@ -215,7 +214,7 @@ class ModelParameter:
         """
         if self._derived is None:
             self._load_derived_values()
-            self.export_derived_files()
+            self._export_derived_files()
         return self._derived
 
     def _load_derived_values(self):
@@ -223,14 +222,14 @@ class ModelParameter:
         Load derived values from the DB
 
         """
-        self._logger.debug("Reading derived data from DB")
+        self._logger.debug("Reading derived values from DB")
         self._derived = self.db.get_derived_values(
             self.site,
             self.name,
             self.model_version,
         )
 
-    def export_derived_files(self):
+    def _export_derived_files(self):
         """Write to disk a file from the derived values DB."""
 
         for par_now in self.derived.values():
@@ -248,7 +247,7 @@ class ModelParameter:
 
     def _set_config_file_directory_and_name(self):
         """
-        Set and create the directory model parameter files are written to.
+        Set and create the directory and the name of the config file.
 
         """
 
@@ -385,7 +384,7 @@ class ModelParameter:
 
     def change_parameter(self, par_name, value):
         """
-        Change the value of an existing parameter to the model. This function does not modify the \
+        Change the value of an existing parameter. This function does not modify the \
         DB, it affects only the current instance.
 
         Parameters
@@ -443,10 +442,6 @@ class ModelParameter:
         **kwargs
             Parameters should be passed as parameter_name=value.
 
-        Raises
-        ------
-        InvalidModelParameter
-            If at least one of the parameters to be changed does not exist in this model.
         """
         for par, value in kwargs.items():
             if par in self._parameters:
@@ -520,7 +515,7 @@ class ModelParameter:
     def get_config_file(self, no_export=False):
         """
         Get the path of the config file for sim_telarray. The config file is produced if the file\
-        is not updated.
+        is not up to date.
 
         Parameters
         ----------
@@ -538,12 +533,12 @@ class ModelParameter:
 
     def get_derived_directory(self):
         """
-        Get the path where all the files with derived values for are written to.
+        Get the directory where all the files with derived values for are written to.
 
         Returns
         -------
         Path
-            Path where all the files with derived values are written to.
+            Directory where all the files with derived values are written to.
         """
         return self.config_file_directory.parents[0].joinpath("derived")
 

@@ -102,8 +102,6 @@ array_layout_names = {
 # or which have different naming in the database and simtel configuration.
 # simtel: True if this is a simtel parameter (allows to give alternative "name")
 site_parameters = {
-    # Note inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
     "reference_point_altitude": {"db_name": "altitude", "simtel": False},
     "reference_point_longitude": {"db_name": "ref_long", "simtel": False},
     "reference_point_latitude": {"db_name": "ref_lat", "simtel": False},
@@ -387,18 +385,21 @@ def get_class_from_telescope_name(name):
     return array_element_names[get_telescope_type_from_telescope_name(name)]["class"]
 
 
-def get_simtel_name_from_parameter_name(par_name, telescope_model=True, site_model=True):
+def get_simtel_name_from_parameter_name(
+    par_name, search_telescope_parameters=True, search_site_parameters=True
+):
     """
     Get the simtel parameter name from the model parameter name.
     Assumes that both names are equal if not defined otherwise in names.py
+    Returns the model parameter name if no simtel name is found.
 
     Parameters
     ----------
     par_name: str
         Model parameter name.
-    telescope_model: bool
+    search_telescope_parameters: bool
         If True, telescope model parameters are included.
-    site_model: bool
+    search_site_parameters: bool
         If True, site model parameters are included.
 
     Returns
@@ -408,9 +409,9 @@ def get_simtel_name_from_parameter_name(par_name, telescope_model=True, site_mod
     """
 
     _parameter_names = {}
-    if telescope_model:
+    if search_telescope_parameters:
         _parameter_names.update(telescope_parameters)
-    if site_model:
+    if search_site_parameters:
         _parameter_names.update(site_parameters)
 
     try:
