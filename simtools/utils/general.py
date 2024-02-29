@@ -918,7 +918,7 @@ def get_value_unit_type(value):
 
 def get_value_as_quantity(value, unit):
     """
-    Get a value as a Quantity with a given unit. If value is a Quantity, convert to unit.
+    Get a value as a Quantity with a given unit. If value is a Quantity, convert to the given unit.
 
     Parameters
     ----------
@@ -931,6 +931,11 @@ def get_value_as_quantity(value, unit):
     -------
     astropy.units.Quantity
         Quantity of value 'quantity' and unit 'unit'.
+
+    Raises
+    ------
+    u.UnitConversionError
+        If the value cannot be converted to the given unit.
     """
     if isinstance(value, u.Quantity):
         try:

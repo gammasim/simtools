@@ -79,7 +79,7 @@ class SiteModel(ModelParameter):
 
         """
 
-        # backwards compatibility to `corsika_parameters.yml` (temporary)
+        # backwards compatibility to `corsika_parameters.yml` (temporary TODO)
         if config_file_style:
             _atmosphere_id = 26 if self.site == "North" else 36
             return {
