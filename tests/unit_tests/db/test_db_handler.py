@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import uuid
 
@@ -34,9 +35,16 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
+def test_reading_db_lst_without_simulation_repo(db):
+
+    db_copy = copy.deepcopy(db)
+    db_copy.mongo_db_config["db_simulation_model_url"] = None
+    pars = db.get_model_parameters("North", "LSTN-01", "Released")
+    assert pars["parabolic_dish"]["value"] == 1
+
+
 def test_reading_db_lst(db):
     logger.info("----Testing reading LST-----")
-    assert 1 == 1
     pars = db.get_model_parameters("North", "LSTN-01", "Released")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["value"] == 1
@@ -324,12 +332,10 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value") or pars[
-                "corsika_observation_level"
-            ].get("value")
+            _obs_level = pars["corsika_observation_level"].get("value")
             assert _obs_level == pytest.approx(2156.0)
         else:
-            _obs_level = pars["altitude"]["value"] or pars["altitude"]["value"]
+            _obs_level = pars["altitude"]["value"]
             assert _obs_level == pytest.approx(2158.0)
     else:
         assert pars["altitude"] == 2156
@@ -339,11 +345,9 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value") or pars[
-                "corsika_observation_level"
-            ].get("value")
+            _obs_level = pars["corsika_observation_level"].get("value")
         else:
-            _obs_level = pars["altitude"].get("value") or pars["altitude"].get("value")
+            _obs_level = pars["altitude"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147

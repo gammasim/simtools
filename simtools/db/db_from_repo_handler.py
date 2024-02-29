@@ -148,6 +148,11 @@ def _update_parameters_from_repo(
     dict
         Updated dictionary with parameters.
 
+    Raises
+    ------
+    ValueError
+        If the parameter collection is not recognized.
+
     """
 
     if db_simulation_model_url is None:
@@ -172,7 +177,7 @@ def _update_parameters_from_repo(
         logger.error(f"Unknown parameter collection {parameter_collection}")
         raise ValueError
 
-    for key in parameters.keys():
+    for key in parameters:
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
             parameters[key] = gen.collect_data_from_file_or_dict(

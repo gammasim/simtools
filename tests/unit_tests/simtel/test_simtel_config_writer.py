@@ -17,7 +17,7 @@ def simtel_config_writer():
         site="North",
         model_version="Released",
         label="test-simtel-config-writer",
-        telescope_name="test_telecope",
+        telescope_model_name="test_telecope",
     )
     return simtel_config_writer
 

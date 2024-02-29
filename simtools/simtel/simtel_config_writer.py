@@ -18,8 +18,8 @@ class SimtelConfigWriter:
         South or North.
     model_version: str
         Version of the model (ex. prod5).
-    telescope_name: str
-        Telescope name.
+    telescope_model_name: str
+        Telescope model name.
     layout_name: str
         Layout name.
     label: str
@@ -28,7 +28,9 @@ class SimtelConfigWriter:
 
     TAB = " " * 3
 
-    def __init__(self, site, model_version, layout_name=None, telescope_name=None, label=None):
+    def __init__(
+        self, site, model_version, layout_name=None, telescope_model_name=None, label=None
+    ):
         """
         Initialize SimtelConfigWriter.
         """
@@ -39,7 +41,7 @@ class SimtelConfigWriter:
         self._model_version = model_version
         self._label = label
         self._layout_name = layout_name
-        self._telescope_model_name = telescope_name
+        self._telescope_model_name = telescope_model_name
 
     def write_telescope_config_file(self, config_file_path, parameters):
         """
@@ -65,7 +67,7 @@ class SimtelConfigWriter:
 
             for par, value in parameters.items():
                 _simtel_name = names.get_simtel_name_from_parameter_name(
-                    par, telescope_model=True, site_model=False
+                    par, search_telescope_parameters=True, search_site_parameters=False
                 )
                 if _simtel_name is not None:
                     file.write(f"{_simtel_name} = {value}\n")
@@ -196,7 +198,7 @@ class SimtelConfigWriter:
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
             _simtel_name = names.get_simtel_name_from_parameter_name(
-                par, telescope_model=False, site_model=True
+                par, search_telescope_parameters=False, search_site_parameters=True
             )
             if _simtel_name is not None:
                 file.write(f"{self.TAB}{_simtel_name} = {value}\n")
