@@ -820,9 +820,11 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
                     item.replace(substring, "") if isinstance(item, str) else item for item in value
                 ]
                 modified_items = [
-                    remove_substring_recursively_from_dict(item, substring)
-                    if isinstance(item, dict)
-                    else item
+                    (
+                        remove_substring_recursively_from_dict(item, substring)
+                        if isinstance(item, dict)
+                        else item
+                    )
                     for item in modified_items
                 ]
                 data_dict[key] = modified_items
