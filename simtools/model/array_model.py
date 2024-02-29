@@ -199,7 +199,7 @@ class ArrayModel:
                     continue
                 self._logger.debug(
                     f"Changing {len(_all_pars_to_change[tel_data.name])} pars of a "
-                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name],}, ..."
+                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name], }, ..."
                 )
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
                 tel_model.set_extra_label(tel_data.name)
