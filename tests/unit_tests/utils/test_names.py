@@ -465,11 +465,15 @@ def test_get_simtel_name_from_parameter_name():
     assert names.get_simtel_name_from_parameter_name("telescope_axis_height") is None
 
     assert (
-        names.get_simtel_name_from_parameter_name("corsika_observation_level", site_model=False)
+        names.get_simtel_name_from_parameter_name(
+            "corsika_observation_level", search_site_parameters=False
+        )
         == "corsika_observation_level"
     )
     assert (
-        names.get_simtel_name_from_parameter_name("telescope_axis_height", telescope_model=False)
+        names.get_simtel_name_from_parameter_name(
+            "telescope_axis_height", search_telescope_parameters=False
+        )
         == "telescope_axis_height"
     )
 

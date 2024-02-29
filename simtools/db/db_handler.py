@@ -1282,6 +1282,11 @@ class DatabaseHandler:
         as not all telescopes are defined in the database yet. In these cases,
         use the "design" telescope.
 
+        Parameters
+        ----------
+        telescope_name: str
+            Name of the telescope model (e.g. MSTN-01)
+
         Returns
         -------
         str

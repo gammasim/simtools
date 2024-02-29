@@ -174,7 +174,7 @@ def db_no_config_file():
 def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
-        telescope_name="LSTN-01",
+        telescope_model_name="LSTN-01",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
@@ -186,7 +186,7 @@ def telescope_model_lst(db_config, io_handler):
 def telescope_model_mst(db_config, io_handler):
     tel = TelescopeModel(
         site="South",
-        telescope_name="MSTS-design",
+        telescope_model_name="MSTS-design",
         model_version="Prod5",
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
@@ -199,7 +199,7 @@ def telescope_model_mst(db_config, io_handler):
 def telescope_model_sst(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_name="SSTS-design",
+        telescope_model_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
