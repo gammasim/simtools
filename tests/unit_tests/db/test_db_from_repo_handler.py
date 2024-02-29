@@ -28,30 +28,20 @@ def test_update_parameters_from_repo(caplog, db_config):
 
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
 
-    _pars_mstn01 = db_from_repo_handler._update_parameters_from_repo(
-        parameters=dict.fromkeys(_pars_telescope_model, None),
-        site="North",
-        telescope_name="MSTN-01",
-        model_version=None,
-        parameter_collection="telescope",
-        db_simulation_model_url=db_config["db_simulation_model_url"],
-        db_simulation_model="verified_model",
-    )
-    assert len(_pars_mstn01) > 0
-    assert "telescope_axis_height" in _pars_mstn01
-    for key in ["value", "unit", "site"]:
-        assert key in _pars_mstn01["telescope_axis_height"]
-
-    _pars_mstndesign = db_from_repo_handler._update_parameters_from_repo(
-        parameters=dict.fromkeys(_pars_telescope_model, None),
-        site="North",
-        telescope_name="MSTN-design",
-        model_version=None,
-        parameter_collection="telescope",
-        db_simulation_model_url=db_config["db_simulation_model_url"],
-        db_simulation_model="verified_model",
-    )
-    assert len(_pars_mstndesign) > 0
+    for _tel in ["MSTN-01", "MSTN-design"]:
+        _pars_mstn = db_from_repo_handler._update_parameters_from_repo(
+            parameters=dict.fromkeys(_pars_telescope_model, None),
+            site="North",
+            telescope_name=_tel,
+            model_version=None,
+            parameter_collection="telescope",
+            db_simulation_model_url=db_config["db_simulation_model_url"],
+            db_simulation_model="verified_model",
+        )
+        assert len(_pars_mstn) > 0
+        assert "telescope_axis_height" in _pars_mstn
+        for key in ["value", "unit", "site"]:
+            assert key in _pars_mstn["telescope_axis_height"]
 
     _pars_site_model = [
         "corsika_observation_level",
