@@ -19,7 +19,7 @@ class InvalidArrayConfigData(Exception):
 class ArrayModel:
     """
     ArrayModel is an abstract representation of the MC model at the array level. It contains the\
-    list of TelescopeModel's and a ArrayLayout.
+    list of TelescopeModels, SiteModel, and a ArrayLayout.
 
     Parameters
     ----------
