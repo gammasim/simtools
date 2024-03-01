@@ -159,8 +159,8 @@ def main():
             telescope_model=telescope_model,
             default_le_config=le_config,
             le_application=le_application,
-            label=label,
             simtel_source_path=args_dict["simtel_path"],
+            label=label,
         )
         # command = le._make_light_emission_script()
         # command = le._make_simtel_script(output_dir)
