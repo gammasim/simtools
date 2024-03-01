@@ -51,8 +51,8 @@ class SimulatorLightEmission(SimtelRunner):
         telescope_model,
         default_le_config,
         le_application,
+        simtel_source_path,
         label=None,
-        simtel_source_path=None,
         config_data=None,
         config_file=None,
         test=False,
@@ -64,8 +64,10 @@ class SimulatorLightEmission(SimtelRunner):
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerLightEmission")
-
+        print("AAAAAA simtel source path before: ", simtel_source_path)
         self._simtel_source_path = simtel_source_path
+        print("AAAAAA simtel source path after: ", self._simtel_source_path)
+
         self._telescope_model = telescope_model
         self.label = label if label is not None else self._telescope_model.label
 
@@ -112,8 +114,8 @@ class SimulatorLightEmission(SimtelRunner):
                 "telescope_model",
                 "default_le_config",
                 "le_application",
-                "label",
                 "simtel_source_path",
+                "label",
             ],
             **kwargs,
         )
