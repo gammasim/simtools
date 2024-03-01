@@ -178,6 +178,7 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog):
         assert "Invalid key" in caplog.text
 
     # Now test a valid key
+    caplog.set_level(logging.INFO)
     ray_tracing_lst.plot(key="d80_cm", save=True)
     assert "Saving fig in" in caplog.text
     plot_file_name = names.ray_tracing_plot_file_name(
