@@ -261,16 +261,13 @@ definitions:
     description: "specific type of instrument"
     enum:
       - Atmosphere
-      - FlashCam
-      - LSTCam
-      - LSTStructure
-      - MSTStructure
-      - NectarCam
+      - LSTN
+      - LSTS
+      - MSTN
+      - MSTS
+      - SSTS
+      - SCTS
       - Observatory
-      - SCTCam
-      - SCTStructure
-      - SSTCam
-      - SSTStructure
       - None
     title: InstrumentTypeElement
   SimulationSoftware:
