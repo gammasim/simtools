@@ -443,10 +443,6 @@ def test_validate_data_dict():
     data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
 
-    # parameter which consist a string
-    # TODO - can only be done when there is a corresponding schema in
-    # the model_parameters repository
-
     data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "unit": ["", "", ""]}
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()

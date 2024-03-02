@@ -98,7 +98,7 @@ jobs:
       - name: Unit tests
         shell: bash -l {0}
         run: |
-          # TEMPORARY: clone the simulation model repository
+          # Clone simulation model repo for faster file access
           git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
           pytest --durations=10 --color=yes
 
