@@ -917,12 +917,13 @@ def get_value_unit_type(value, unit_str=None):
         base_type = extract_type_of_value(base_value)
 
     if unit_str is not None:
-        if base_unit is not None:
-            try:
-                base_value = base_value * u.Unit(base_unit).to(u.Unit(unit_str))
-            except u.UnitConversionError:
-                _logger.error(f"Cannot convert {base_unit} to {unit_str}.")
-                raise
+        try:
+            base_value = base_value * u.Unit(base_unit).to(u.Unit(unit_str))
+        except u.UnitConversionError:
+            _logger.error(f"Cannot convert {base_unit} to {unit_str}.")
+            raise
+        except TypeError:
+            pass
         base_unit = unit_str
 
     return base_value, base_unit, base_type

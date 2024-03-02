@@ -104,10 +104,7 @@ class DataValidator:
             _quantities = []
             for value, unit in zip(self.data["value"], self.data["unit"]):
                 try:
-                    if len(unit) == 0:
-                        _quantities.append(value)
-                    else:
-                        _quantities.append(value * u.Unit(unit))
+                    _quantities.append(value if len(unit) == 0 else value * u.Unit(unit))
                 except ValueError:
                     _quantities.append(value)
             self.data_table = Table(rows=[_quantities])
