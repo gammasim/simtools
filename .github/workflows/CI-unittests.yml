@@ -100,7 +100,7 @@ jobs:
         run: |
           # Clone simulation model repo for faster file access
           git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
-          pytest --durations=10 --color=yes
+          pytest -s --durations=10 --color=yes
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v4
