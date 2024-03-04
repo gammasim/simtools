@@ -79,11 +79,10 @@ def _parse(label=None, description=None):
 
 
 def main():
-    label = Path(__file__).stem
 
     args_dict, _ = _parse(
-        label,
-        description=__doc__,
+        label=Path(__file__).stem,
+        description="Convert simulation model parameter from sim_telarray to simtools format",
     )
 
     logger = logging.getLogger()
@@ -95,8 +94,11 @@ def main():
         parameter_name=args_dict["parameter"],
         schema_url=f"{args_dict['db_simulation_model_url']}/schema",
     )
-    _parameter_dict = simtel_config_reader.get_validated_parameter_dict(args_dict["telescope"])
-    print("AAAA", _parameter_dict)
+    _parameter_dict, _json_dict = simtel_config_reader.get_validated_parameter_dict(
+        args_dict["telescope"]
+    )
+    print("PARAMETER", _parameter_dict)
+    print("DB JSON", _json_dict)
 
 
 if __name__ == "__main__":
