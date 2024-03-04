@@ -325,8 +325,6 @@ def test_check_data_type(caplog):
         )
     assert "Data column 'wavelength' has correct data type" in caplog.text
 
-    print("AAA", caplog.text)
-
     with caplog.at_level(logging.ERROR):
         with pytest.raises(TypeError):
             assert data_validator._check_data_type(
