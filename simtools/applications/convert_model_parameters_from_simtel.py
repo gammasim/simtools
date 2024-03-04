@@ -39,6 +39,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 
 def _parse(label=None, description=None):
@@ -87,6 +88,15 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    simtel_config_reader = SimtelConfigReader(
+        simtel_config_file=args_dict["simtel_cfg_file"],
+        simtel_telescope_name=args_dict["simtel_telescope_name"],
+        parameter_name=args_dict["parameter"],
+        schema_url=f"{args_dict['db_simulation_model_url']}/schema",
+    )
+    _parameter_dict = simtel_config_reader.get_validated_parameter_dict(args_dict["telescope"])
+    print("AAAA", _parameter_dict)
 
 
 if __name__ == "__main__":
