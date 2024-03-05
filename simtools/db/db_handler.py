@@ -519,7 +519,14 @@ class DatabaseHandler:
 
         """
 
-        _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
+        try:
+            _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
+        except AttributeError as exc:
+            self._logger.error(
+                "Telescope name required to return derived model parameters"
+                " (this error might point to a problem with the DB configuration)"
+            )
+            raise exc
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
