@@ -29,7 +29,6 @@ def corsika_config_data(tmp_test_directory):
 
 @pytest.fixture
 def corsika_runner(corsika_config_data, io_handler, db_config, simtel_path):
-    logger.debug(f"DB CONFIG in corsika runner: {db_config}")
     corsika_runner = CorsikaRunner(
         mongo_db_config=db_config,
         site="south",
