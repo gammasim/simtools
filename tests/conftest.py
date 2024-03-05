@@ -55,8 +55,6 @@ def mock_settings_env_vars(tmp_test_directory):
         "https://gitlab.cta-observatory.org/cta-science/simulations/"
         "simulation-model/model_parameters/-/raw/main"
     )
-    # TODO
-    _url = None
 
     with mock.patch.dict(
         os.environ,

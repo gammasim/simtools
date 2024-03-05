@@ -95,6 +95,10 @@ jobs:
         run: |
           flake8 --max-line-length 100 --per-file-ignores="_version.py:F401 E501" .
 
+      - name: environment
+        run: |
+          echo "DB_REPO " $SIMTOOLS_DB_SIMULATION_MODEL_URL
+
       - name: Unit tests
         shell: bash -l {0}
         run: |
