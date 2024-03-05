@@ -19,6 +19,7 @@ dependencies:
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-profiling
   - pytest-xdist
   - python-dotenv
   - pyyaml
