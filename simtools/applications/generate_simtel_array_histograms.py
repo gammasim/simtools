@@ -165,7 +165,7 @@ def main():
         if config_parser["test"]:
             number_of_histograms = 2
         else:
-            number_of_histograms = len(simtel_histograms.list_of_histograms)
+            number_of_histograms = len(simtel_histograms.combined_hists)
 
         for i_hist in range(number_of_histograms):
 
