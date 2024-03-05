@@ -76,6 +76,7 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
+        self.site_model = None
         self.io_handler = io_handler.IOHandler()
         self.geo_coordinates = GeoCoordinates()
 
@@ -154,15 +155,15 @@ class ArrayLayout:
             self._logger.error("No database configuration provided")
             raise ValueError
 
-        site_model = SiteModel(
+        self.site_model = SiteModel(
             site=self.site,
             model_version=self.model_version,
             mongo_db_config=self.mongo_db_config,
         )
-        self._corsika_observation_level = site_model.get_corsika_site_parameters().get(
+        self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
             "corsika_observation_level", None
         )
-        self._reference_position_dict = site_model.get_reference_point()
+        self._reference_position_dict = self.site_model.get_reference_point()
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
 
     def _initialize_coordinate_systems(self):
