@@ -149,6 +149,7 @@ def db_config():
             mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
     if mongo_db_config["db_api_port"] is not None:
         mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
+    logger.info(f"DB config: {mongo_db_config}")
     return mongo_db_config
 
 
