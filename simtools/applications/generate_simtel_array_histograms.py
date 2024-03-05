@@ -165,12 +165,11 @@ def main():
         if config_parser["test"]:
             number_of_histograms = 2
         else:
-            number_of_histograms = simtel_histograms.number_of_histograms
+            number_of_histograms = len(simtel_histograms.list_of_histograms)
 
         for i_hist in range(number_of_histograms):
-            title = simtel_histograms.get_histogram_title(i_hist)
 
-            logger.debug(f"Processing: {title}")
+            logger.debug(f"Processing: {i_hist + 1} histogram.")
 
             fig, ax = plt.subplots(1, 1, figsize=(6, 6))
             simtel_histograms.plot_one_histogram(i_hist, ax)
