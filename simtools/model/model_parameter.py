@@ -58,6 +58,7 @@ class ModelParameter:
             self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
+        self._reference_data = None
         self._derived = None
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
@@ -155,7 +156,7 @@ class ModelParameter:
         _parameter = self.get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
-            _units = _parameter.get("unit") or _parameter.get("units")
+            _units = _parameter.get("unit")
             return float(_value) * u.Unit(_units)
         except (KeyError, TypeError):
             return _value
@@ -178,7 +179,7 @@ class ModelParameter:
         """
         parameter_dict = self.get_parameter_dict(par_name)
         try:
-            return parameter_dict.get("type") or parameter_dict.get("Type")
+            return parameter_dict.get("type")
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a type")
         return None
@@ -201,7 +202,7 @@ class ModelParameter:
         """
         parameter_dict = self.get_parameter_dict(par_name)
         try:
-            if parameter_dict.get("file") or parameter_dict.get("File"):
+            if parameter_dict.get("file"):
                 return True
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
@@ -239,6 +240,47 @@ class ModelParameter:
                     dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
                     file_name=(par_now.get("value") or par_now.get("Value")),
                 )
+
+    @property
+    def reference_data(self):
+        """
+        Load the reference data information if the class instance hasn't done it yet.
+        """
+        if self._reference_data is None:
+            self._load_reference_data()
+        return self._reference_data
+
+    def _load_reference_data(self):
+        """Load the reference data for this telescope from the DB."""
+        self._logger.debug("Reading reference data from DB")
+        self._reference_data = self.db.get_reference_data(
+            self.site, self.model_version, only_applicable=True
+        )
+
+    def get_reference_data_value(self, par_name):
+        """
+        Get the value for a reference data parameter.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the reference data parameter.
+
+        Returns
+        -------
+        Value of the reference parameter.
+
+        Raises
+        ------
+        KeyError
+            If par_name does not match any reference parameter in this model.
+        """
+
+        try:
+            return self.reference_data[par_name]["value"]
+        except KeyError as exc:
+            self._logger.error(f"Reference parameter {par_name} does not have a value")
+            raise exc
 
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
