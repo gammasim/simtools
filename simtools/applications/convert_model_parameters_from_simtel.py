@@ -63,6 +63,9 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
+        "--schema", help="json schema file for model parameter validation", required=False
+    )
+    config.parser.add_argument(
         "--simtel_cfg_file",
         help="File name for simtel_array configuration",
         type=str,
@@ -74,31 +77,34 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
     )
-    config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
-    return config.initialize(db_config=True, telescope_model=True)
+    return config.initialize(output=True, telescope_model=True)
 
 
 def main():
 
     args_dict, _ = _parse(
         label=Path(__file__).stem,
-        description="Convert simulation model parameter from sim_telarray to simtools format",
+        description="Convert simulation model parameter from sim_telarray to simtools format.",
     )
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    schema_dict = gen.collect_data_from_file_or_dict(file_name=args_dict["schema"], in_dict=None)
+
     simtel_config_reader = SimtelConfigReader(
+        schema_dict=schema_dict,
         simtel_config_file=args_dict["simtel_cfg_file"],
         simtel_telescope_name=args_dict["simtel_telescope_name"],
-        parameter_name=args_dict["parameter"],
-        schema_url=f"{args_dict['db_simulation_model_url']}/schema",
     )
     _parameter_dict, _json_dict = simtel_config_reader.get_validated_parameter_dict(
         args_dict["telescope"]
     )
     print("PARAMETER", _parameter_dict)
     print("DB JSON", _json_dict)
+
+    if args_dict["output_file"]:
+        simtel_config_reader.export_parameter_dict_to_json(args_dict["output_file"], _json_dict)
 
 
 if __name__ == "__main__":

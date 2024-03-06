@@ -348,6 +348,7 @@ definitions:
       - int
       - string
       - uint
+      - file
     title: TableColumnType
   Unit:
     type: string
