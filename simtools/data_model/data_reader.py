@@ -123,8 +123,8 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
     _value = data.get("value")
     if _value is None:
         return None
-    _units = data.get("unit")
-    if _units and len(_units) > 0:
-        return _value * u.Unit(_units)
+    _unit = data.get("unit")
+    if _unit and len(_unit) > 0:
+        return _value * u.Unit(_unit)
 
     return _value
