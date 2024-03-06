@@ -77,7 +77,7 @@ def simtel_path():
     This fixture does not really set the sim_telarray path because it is used only
     in unit tests which do not run sim_telarray
     """
-    return ""
+    return Path("")
 
 
 @pytest.fixture
