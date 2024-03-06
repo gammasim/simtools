@@ -98,10 +98,12 @@ def main():
         simtel_telescope_name=args_dict["simtel_telescope_name"],
     )
     _parameter_dict, _json_dict = simtel_config_reader.get_validated_parameter_dict(
-        args_dict["telescope"]
+        telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
     )
     print("PARAMETER", _parameter_dict)
     print("DB JSON", _json_dict)
+
+    simtel_config_reader.compare_simtel_config_with_schema()
 
     if args_dict["output_file"]:
         simtel_config_reader.export_parameter_dict_to_json(args_dict["output_file"], _json_dict)
