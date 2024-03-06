@@ -97,11 +97,11 @@ def main():
         simtel_config_file=args_dict["simtel_cfg_file"],
         simtel_telescope_name=args_dict["simtel_telescope_name"],
     )
-    _parameter_dict, _json_dict = simtel_config_reader.get_validated_parameter_dict(
+    logger.info(f"PARAMETER: {simtel_config_reader.parameter_dict}")
+    _json_dict = simtel_config_reader.get_validated_parameter_dict(
         telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
     )
-    print("PARAMETER", _parameter_dict)
-    print("DB JSON", _json_dict)
+    logger.info("fDB JSON {_json_dict}")
 
     simtel_config_reader.compare_simtel_config_with_schema()
 
