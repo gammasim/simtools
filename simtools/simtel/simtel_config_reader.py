@@ -2,9 +2,12 @@
 
 import json
 import logging
+from importlib.resources import files
 
 import numpy as np
 
+import simtools.constants
+from simtools.data_model import metadata_model
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
@@ -96,12 +99,14 @@ class SimtelConfigReader:
             "version": model_version,
             "value": self.parameter_dict.get(self.simtel_telescope_name),
             "unit": self.schema_dict.get("unit"),
-            "type": self.parameter_dict.get("type"),
+            "type": (
+                "string" if self.parameter_dict.get("type") else self.parameter_dict.get("type")
+            ),
             "applicable": self._check_parameter_applicability(telescope_name),
             "file": self._parameter_is_a_file(),
         }
 
-        self._logger.warning("TODO - add json dict validation")
+        self._validate_parameter_dict(_json_dict)
 
         return self.parameter_dict, _json_dict
 
@@ -280,3 +285,23 @@ class SimtelConfigReader:
         except (KeyError, IndexError):
             pass
         return False
+
+    def _validate_parameter_dict(self, parameter_dict, model_schema_file=None):
+        """
+        Validate json dictionary against model parameter data schema.
+
+        Parameters
+        ----------
+        parameter_dict: dict
+            Dictionary to validate.
+        model_schema_file: str
+            Schema file used for validation.
+
+        """
+
+        if model_schema_file is None:
+            model_schema_file = files("simtools").joinpath(
+                simtools.constants.MODEL_PARAMETER_JSON_SCHEMA
+            )
+
+        metadata_model.validate_schema(parameter_dict, model_schema_file)
