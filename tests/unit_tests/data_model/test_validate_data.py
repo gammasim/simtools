@@ -420,10 +420,28 @@ def test_read_validation_schema(tmp_test_directory):
 
 # incomplete test
 def test_validate_data_dict():
+
+    # parameter with unit
     data_validator = validate_data.DataValidator(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
+        schema_file=(
+            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
+            "model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
+        )
     )
-    data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "units": ["", "", ""]}
+    data_validator.data = {"name": "reference_point_altitude", "value": [1000.0], "unit": ["km"]}
+    data_validator._validate_data_dict()
+
+    # parameter without unit
+    data_validator_2 = validate_data.DataValidator(
+        schema_file=(
+            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
+            "model_parameters/-/raw/main/schema/num_gains.schema.yml"
+        )
+    )
+    data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [""]}
+    data_validator_2._validate_data_dict()
+
+    data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "unit": ["", "", ""]}
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()
 
@@ -457,7 +475,7 @@ def get_reference_columns():
             "name": "wavelength",
             "description": "wavelength",
             "required": True,
-            "units": "nm",
+            "unit": "nm",
             "type": "double",
             "required_range": {"unit": "nm", "min": 300, "max": 700},
             "input_processing": ["remove_duplicates", "sort"],
@@ -466,7 +484,7 @@ def get_reference_columns():
             "name": "qe",
             "description": "average quantum or photon detection efficiency",
             "required": True,
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "type": "double",
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
         },
@@ -474,7 +492,7 @@ def get_reference_columns():
             "name": "position_x",
             "description": "x position",
             "required": False,
-            "units": "m",
+            "unit": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
             "input_processing": ["allow_nan"],
@@ -483,7 +501,7 @@ def get_reference_columns():
             "name": "position_y",
             "description": "y position",
             "required": False,
-            "units": "m",
+            "unit": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
             "input_processing": ["allow_nan"],
@@ -492,7 +510,7 @@ def get_reference_columns():
             "name": "abc",
             "description": "not required",
             "required": False,
-            "units": "kg",
+            "unit": "kg",
             "type": "double",
             "allowed_range": {"unit": "kg", "min": 0.0, "max": 100.0},
         },
