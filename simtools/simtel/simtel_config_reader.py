@@ -53,6 +53,8 @@ class SimtelConfigReader:
         Path of the file to read from.
     simtel_telescope_name: str
         Telescope name (sim_telarray convention)
+    return_arrays_as_strings: bool
+        If True, return arrays as comma separated strings.
     """
 
     def __init__(
@@ -60,6 +62,7 @@ class SimtelConfigReader:
         schema_dict,
         simtel_config_file,
         simtel_telescope_name,
+        return_arrays_as_strings=True,
     ):
         """
         Initialize SimtelConfigReader.
@@ -71,6 +74,7 @@ class SimtelConfigReader:
         self.parameter_name = schema_dict.get("name")
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
+        self.return_arrays_as_strings = return_arrays_as_strings
         self.parameter_dict = self._read_simtel_config_file(
             simtel_config_file, simtel_telescope_name
         )
@@ -83,6 +87,8 @@ class SimtelConfigReader:
         ----------
         telescope_name: str
             Telescope name (e.g., LSTN-01)
+        model_version: str
+            Model version string.
 
         Returns
         -------
@@ -101,7 +107,7 @@ class SimtelConfigReader:
             "unit": self._get_unit_from_schema(),
             "type": (
                 "string"
-                if self.parameter_dict.get("type") == "str"
+                if self.parameter_dict.get("type") == "str" or self.return_arrays_as_strings
                 else self.parameter_dict.get("type")
             ),
             "applicable": self._check_parameter_applicability(telescope_name),
@@ -110,7 +116,7 @@ class SimtelConfigReader:
 
         self._validate_parameter_dict(_json_dict)
 
-        return self.parameter_dict, _json_dict
+        return _json_dict
 
     def export_parameter_dict_to_json(self, file_name, dict_to_write):
         """
@@ -178,13 +184,11 @@ class SimtelConfigReader:
 
         """
 
-        self._logger.warning("TODO - determine if 'default' is needed.")
-
         columns = []
         try:
             with open(simtel_config_file, "r", encoding="utf-8") as file:
                 for line in file:
-                    if self.simtel_parameter_name in line:
+                    if self.simtel_parameter_name in line.upper():
                         columns.append(line.strip().split("\t"))
         except FileNotFoundError as exc:
             self._logger.error(f"File {simtel_config_file} not found.")
@@ -240,6 +244,8 @@ class SimtelConfigReader:
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
         if len(column) > 1:
+            if self.return_arrays_as_strings:
+                return " ".join(column), len(column)
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
 
