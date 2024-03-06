@@ -29,7 +29,7 @@ def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
     output_directory = ray_tracing_lst._output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv",
+        "tests/resources/ray-tracing-North-LSTN-01-d10.0-za20.0_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
