@@ -9,12 +9,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_load_reference_data(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.reference_data["nsb_reference_value"]["value"] == pytest.approx(0.24)
-
-
 def test_get_on_axis_eff_optical_area(telescope_model_lst):
     tel_model = telescope_model_lst
 

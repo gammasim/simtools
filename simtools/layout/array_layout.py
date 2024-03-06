@@ -86,7 +86,7 @@ class ArrayLayout:
         self._array_center = None
         self._auxiliary_parameters = {}
 
-        self.initialize_array_layout(
+        self._initialize_array_layout(
             telescope_list_file=telescope_list_file,
             telescope_list_metadata_file=telescope_list_metadata_file,
             validate=validate,
@@ -311,7 +311,7 @@ class ArrayLayout:
         return tel
 
     def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
-        """Function auxiliary to self.initialize_array_layout. It sets the coordinates.
+        """Function auxiliary to self._initialize_array_layout. It sets the coordinates.
 
         Parameters
         ----------
@@ -339,7 +339,7 @@ class ArrayLayout:
 
     def _try_set_altitude(self, row, tel, table):
         """
-        Function auxiliary to self.initialize_array_layout. It sets the altitude of the
+        Function auxiliary to self._initialize_array_layout. It sets the altitude of the
         TelescopePosition instance.
 
         Parameters
@@ -365,7 +365,7 @@ class ArrayLayout:
         except KeyError:
             pass
 
-    def initialize_array_layout(
+    def _initialize_array_layout(
         self, telescope_list_file, telescope_list_metadata_file=None, validate=False
     ):
         """
