@@ -58,7 +58,6 @@ class TelescopeModel(ModelParameter):
 
         self._single_mirror_list_file_paths = None
         self._mirrors = None
-        self._reference_data = None
         self._camera = None
 
     @property
@@ -78,15 +77,6 @@ class TelescopeModel(ModelParameter):
         if self._camera is None:
             self._load_camera()
         return self._camera
-
-    @property
-    def reference_data(self):
-        """
-        Load the reference data information if the class instance hasn't done it yet.
-        """
-        if self._reference_data is None:
-            self._load_reference_data()
-        return self._reference_data
 
     @classmethod
     def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
@@ -248,13 +238,6 @@ class TelescopeModel(ModelParameter):
                 "Using the one found in the model_path"
             )
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
-
-    def _load_reference_data(self):
-        """Load the reference data for this telescope from the DB."""
-        self._logger.debug("Reading reference data from DB")
-        self._reference_data = self.db.get_reference_data(
-            self.site, self.model_version, only_applicable=True
-        )
 
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
