@@ -156,7 +156,7 @@ class ModelParameter:
         _parameter = self.get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
-            _units = _parameter.get("unit") or _parameter.get("units")
+            _units = _parameter.get("unit")
             return float(_value) * u.Unit(_units)
         except (KeyError, TypeError):
             return _value
@@ -179,7 +179,7 @@ class ModelParameter:
         """
         parameter_dict = self.get_parameter_dict(par_name)
         try:
-            return parameter_dict.get("type") or parameter_dict.get("Type")
+            return parameter_dict.get("type")
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a type")
         return None
@@ -202,7 +202,7 @@ class ModelParameter:
         """
         parameter_dict = self.get_parameter_dict(par_name)
         try:
-            if parameter_dict.get("file") or parameter_dict.get("File"):
+            if parameter_dict.get("file"):
                 return True
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
