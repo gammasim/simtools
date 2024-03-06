@@ -4,7 +4,7 @@ title: Schema for mirror panel 2F measurements
 version: 0.1.0
 meta_schema: simpipe-schema
 # TMP TODO  meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/unit-vs-units/simtools/schemas/data.metaschema.yml
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/new-simulation-model/simtools/schemas/data.metaschema.yml
 meta_schema_version: 0.1.0
 name: mirror_2f_measurement
 description: |-
