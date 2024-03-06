@@ -98,9 +98,11 @@ class SimtelConfigReader:
             "site": names.get_site_from_telescope_name(telescope_name),
             "version": model_version,
             "value": self.parameter_dict.get(self.simtel_telescope_name),
-            "unit": self.schema_dict.get("unit"),
+            "unit": self._get_unit_from_schema(),
             "type": (
-                "string" if self.parameter_dict.get("type") else self.parameter_dict.get("type")
+                "string"
+                if self.parameter_dict.get("type") == "str"
+                else self.parameter_dict.get("type")
             ),
             "applicable": self._check_parameter_applicability(telescope_name),
             "file": self._parameter_is_a_file(),
@@ -132,6 +134,31 @@ class SimtelConfigReader:
                 sort_keys=False,
                 cls=JsonNumpyEncoder,
             )
+
+    def compare_simtel_config_with_schema(self):
+        """
+        Compare limits and defaults reported by simtel_array with schema
+        (for debugging purposes; simple printing).
+
+        """
+
+        print(
+            f"Comparing simtel_array configuration with schema for {self.parameter_name}"
+            f"(sim_telarray: {self.simtel_parameter_name})"
+        )
+
+        print("Limits:")
+        print(f"  from simtel: {self.parameter_dict.get('limits')}")
+        try:
+            print(f"  from schema: {self.schema_dict['data'][0]['allowed_range']})")
+        except (KeyError, IndexError):
+            print("  from schema: None")
+        print("Defaults:")
+        print(f"  from simtel: {self.parameter_dict.get('default')}")
+        try:
+            print(f"  from schema: {self.schema_dict['data'][0]['default']}")
+        except (KeyError, IndexError):
+            print("  from schema: None")
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -172,7 +199,7 @@ class SimtelConfigReader:
                 )
         # extract other fields
         for column in columns:
-            if column[0] in [simtel_telescope_name, "default"]:
+            if column[0] in [simtel_telescope_name, "default", "limits"]:
                 _para_dict[column[0]], _ = self._add_value_from_simtel_cfg(
                     column[2:], column[0], _para_dict.get("type")
                 )
@@ -207,10 +234,8 @@ class SimtelConfigReader:
             return column[0].lower(), int(column[1])
 
         # defaults are comma separated (all other fields are separated by spaces)
-        if key == "default" and len(column) == 1:
-            column = column[0].split(",")
-        else:
-            column = column[0].split(" ")
+        if len(column) == 1:
+            column = column[0].split(",") if key == "default" else column[0].split(" ")
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
@@ -285,6 +310,25 @@ class SimtelConfigReader:
         except (KeyError, IndexError):
             pass
         return False
+
+    def _get_unit_from_schema(self):
+        """
+        Return unit from schema dict.
+
+        Returns
+        -------
+        str
+            Parameter unit
+        """
+        try:
+            return (
+                self.schema_dict["data"][0]["unit"]
+                if self.schema_dict["data"][0]["unit"] != "dimensionless"
+                else None
+            )
+        except (KeyError, IndexError):
+            pass
+        return None
 
     def _validate_parameter_dict(self, parameter_dict, model_schema_file=None):
         """
