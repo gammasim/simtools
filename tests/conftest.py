@@ -51,7 +51,10 @@ def mock_settings_env_vars(tmp_test_directory):
     Removes all environment variable from the test system.
     Explicitly sets those needed.
     """
-    _url = "https://raw.githubusercontent.com/gammasim/simulation_model/main"
+    _url = (
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/model_parameters/-/raw/main"
+    )
 
     with mock.patch.dict(
         os.environ,
@@ -69,11 +72,12 @@ def mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtel_path(mock_settings_env_vars):
-    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
-    if simtel_path.exists():
-        return simtel_path
-    return ""
+def simtel_path():
+    """
+    This fixture does not really set the sim_telarray path because it is used only
+    in unit tests which do not run sim_telarray
+    """
+    return Path("")
 
 
 @pytest.fixture
@@ -120,7 +124,7 @@ def args_dict_site(tmp_test_directory, simtel_path):
 
 
 @pytest.fixture
-def configurator(tmp_test_directory, simtel_path):
+def configurator(tmp_test_directory, mock_settings_env_vars, simtel_path):
     config = Configurator()
     config.default_config(
         ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
