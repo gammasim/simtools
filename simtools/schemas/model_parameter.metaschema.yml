@@ -1,0 +1,77 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimtoolsModelParameters'
+title: SimPipe DB Model Parameter Metaschema
+description: YAML representation of db model parameter metaschema
+version: 0.1.0
+name: modelparameter.metaschema
+type: object
+additionalProperties: false
+
+
+definitions:
+  SimtoolsModelParameters:
+    description: ""
+    type: object
+    properties:
+      _id:
+        type: string
+        description: "DB unique identifier"
+      applicable:
+        type: boolean
+        description: "Model parameter to be used for this telescope and site"
+      entry_date:
+        type: string
+        description: "Value entry data"
+      file:
+        type: boolean
+        description: "This parameter is a file."
+      instrument:
+        type: string
+        description: "Associated instrument."
+      items:
+        type: string
+        description: "Parameter dimensions."
+      minimum:
+        type: string
+        description: "Minimum allowed value for this parameter (legacy entry)."
+      site:
+        type: string
+        description: "Associated CTAO site."
+        enum:
+          - North
+          - South
+      type:
+        type: string
+        description: "Data type"
+        enum:
+          - boolean
+          - double
+          - int
+          - string
+          - uint
+          - file
+      unit:
+        anyOf:
+          - type: string
+          - type: "null"
+        description: "Unit of the parameter."
+      value:
+        anyOf:
+          - type: number
+          - type: string
+        description: "Value of the parameter."
+      version:
+        anyOf:
+          - type: string
+          - type: "null"
+        description: "Model version."
+    required:
+      - applicable
+      - file
+      - instrument
+      - site
+      - type
+      - unit
+      - value
+      - version
