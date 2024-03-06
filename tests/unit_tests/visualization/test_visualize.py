@@ -126,7 +126,7 @@ def test_plot_array(
     array_layout_south_instance,
 ):
     def test_one_site(test_file, instance):
-        instance.initialize_array_layout(telescope_list_file=test_file)
+        instance._initialize_array_layout(telescope_list_file=test_file)
         fig_out = visualize.plot_array(
             instance.export_telescope_list_table("ground"), rotate_angle=0 * u.deg
         )
