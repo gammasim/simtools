@@ -24,6 +24,7 @@ def db_cleanup(db, random_id):
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
     db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["site_" + random_id].drop()
 
 
 @pytest.fixture()
