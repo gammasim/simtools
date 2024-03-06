@@ -72,10 +72,11 @@ def mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtel_path(tmp_test_directory):
-    _simtel_path = Path(str(tmp_test_directory) + "/simtel")
-    if _simtel_path.exists():
-        return _simtel_path
+def simtel_path():
+    """
+    This fixture does not really set the sim_telarray path because it is used only
+    in unit tests which do not run sim_telarray
+    """
     return ""
 
 
