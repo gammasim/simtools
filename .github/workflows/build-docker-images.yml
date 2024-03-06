@@ -87,12 +87,17 @@ jobs:
       - name: Test Docker image
         if: matrix.type == 'prod'
         run: >
+          # Clone simulation model repo for faster file access
+          git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
+          # run docker
           docker run --rm
           -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
           -e "SIMTOOLS_DB_API_PORT=${{ env.SIMTOOLS_DB_API_PORT }}"
           -e "SIMTOOLS_DB_API_USER=${{ env.SIMTOOLS_DB_API_USER }}"
           -e "SIMTOOLS_DB_API_PW=${{ env.SIMTOOLS_DB_API_PW }}"
-          -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}" -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
+          -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}"
+          -e "SIMTOOLS_DB_SIMULATION_MODEL_URL"="./model_parameters"
+          -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
           bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
         shell: /usr/bin/bash -e {0}
 
