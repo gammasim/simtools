@@ -899,9 +899,7 @@ def get_value_unit_type(value, unit_str=None):
         and string representation of the type of the value.
     """
 
-    base_value = value
     base_unit = None
-    base_type = ""
     if isinstance(value, (str, u.Quantity)):
         try:
             _quantity_value = u.Quantity(value)
