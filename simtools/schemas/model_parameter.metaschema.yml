@@ -58,6 +58,7 @@ definitions:
         description: "Unit of the parameter."
       value:
         anyOf:
+          - type: boolean
           - type: number
           - type: string
         description: "Value of the parameter."
