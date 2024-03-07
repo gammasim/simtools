@@ -229,11 +229,7 @@ class SimtelConfigReader:
 
         """
         if key == "type":
-            if column[0].lower() == "text":
-                return "str", 1
-            # TODO - cannot handle arrays of different types
-            # return np.dtype(column[0].lower()), int(column[1])
-            return column[0].lower(), int(column[1])
+            return self._get_type_from_simtel_cfg(column)
 
         # defaults are comma separated (all other fields are separated by spaces)
         if len(column) == 1:
@@ -246,6 +242,30 @@ class SimtelConfigReader:
                 return " ".join(column), len(column)
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
+
+    def _get_type_from_simtel_cfg(self, column):
+        """
+        Return type and dimension from simtel configuration column.
+
+        Parameters
+        ----------
+        column: list
+            List of strings to extract value from.
+
+        Returns
+        -------
+        str, int
+            Type and dimension.
+
+        """
+
+        if column[0].lower() == "text":
+            return "str", 1
+        if column[0].lower() == "ibool":
+            return "bool", int(column[1])
+        # TODO - cannot handle arrays of different types
+        # return np.dtype(column[0].lower()), int(column[1])
+        return column[0].lower(), int(column[1])
 
     def _get_simtel_parameter_name(self, parameter_name):
         """
