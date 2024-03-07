@@ -3,7 +3,7 @@
     Summary
     -------
     Convert simulation model parameter from sim_telarray format using the corresponding
-    schema files. Check value, type, and range and output (if successful) a json file
+    schema file. Check value, type, and range and output (if successful) a json file
     ready to be submitted to the model database.
 
     Command line arguments
@@ -27,7 +27,7 @@
 
     .. code-block:: console
 
-       simtools-convert-model-parameters-from-simtel -simtel_telescope_name CT1\
+       simtools-convert-model-parameter-from-simtel -simtel_telescope_name CT1\
           --telescope LSTN-01\
           --parameter num_gains\
           --simtel_cfg_file all_telescope_config_la_palma.cfg
