@@ -2,9 +2,11 @@
 
 import logging
 
+import jsonschema
+import numpy as np
 import pytest
 
-from simtools.simtel.simtel_config_reader import SimtelConfigReader
+from simtools.simtel.simtel_config_reader import JsonNumpyEncoder, SimtelConfigReader
 from simtools.utils import general as gen
 
 logger = logging.getLogger()
@@ -179,3 +181,116 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     assert _list[0] == pytest.approx(0.89)
     assert _list[2] == pytest.approx(0.0)
     assert (len(_list), _ndim) == (5, 5)
+
+    # telescope values
+    _config.return_arrays_as_strings = True
+    assert _config._add_value_from_simtel_cfg(["2"], "CT1", dtype="int") == (2, 1)
+    # default (comma separated, return array as string)
+    assert _config._add_value_from_simtel_cfg(["0.89 0 0 0 0"], "CT1", dtype="double") == (
+        "0.89 0 0 0 0",
+        5,
+    )
+
+    # no input / output
+    assert _config._add_value_from_simtel_cfg([], "CT1", dtype="double") == (None, None)
+
+
+def test_get_simtel_parameter_name(config_reader_num_gains):
+
+    _config = config_reader_num_gains
+    assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
+    assert _config._get_simtel_parameter_name("telescope_transmission") == "TELESCOPE_TRANSMISSION"
+    assert _config._get_simtel_parameter_name("NUM_GAINS") == "NUM_GAINS"
+
+
+def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
+
+    _config = SimtelConfigReader(
+        schema_dict=schema_num_gains,
+        simtel_config_file=simtel_config_file,
+        simtel_telescope_name="CT2",
+        return_arrays_as_strings=True,
+    )
+
+    assert _config._check_parameter_applicability("LSTN-01")
+
+    # illuminator does not have gains
+    assert not _config._check_parameter_applicability("ILLN-01")
+
+    # change schema dict
+    _config.schema_dict["instrument"]["type"].append("LSTN-55")
+    assert _config._check_parameter_applicability("LSTN-55")
+
+    # change schema dict
+    _config.schema_dict["instrument"].pop("type")
+    with pytest.raises(KeyError):
+        _config._check_parameter_applicability("LSTN-01")
+
+
+def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
+
+    _config = SimtelConfigReader(
+        schema_dict=schema_num_gains,
+        simtel_config_file=simtel_config_file,
+        simtel_telescope_name="CT2",
+        return_arrays_as_strings=True,
+    )
+
+    assert not _config._parameter_is_a_file()
+
+    _config.schema_dict["data"][0]["type"] = "file"
+    assert _config._parameter_is_a_file()
+
+    _config.schema_dict["data"][0].pop("type")
+    assert not _config._parameter_is_a_file()
+
+    _config.schema_dict["data"] = []
+    assert not _config._parameter_is_a_file()
+
+
+def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
+
+    _config = SimtelConfigReader(
+        schema_dict=schema_num_gains,
+        simtel_config_file=simtel_config_file,
+        simtel_telescope_name="CT2",
+        return_arrays_as_strings=True,
+    )
+
+    assert _config._get_unit_from_schema() is None
+
+    _config.schema_dict["data"][0]["unit"] = "m"
+    assert _config._get_unit_from_schema() == "m"
+
+    _config.schema_dict["data"][0]["unit"] = "dimensionless"
+    assert _config._get_unit_from_schema() is None
+
+    _config.schema_dict["data"][0].pop("unit")
+    assert _config._get_unit_from_schema() is None
+
+
+def test_validate_parameter_dict(config_reader_num_gains):
+
+    _config = config_reader_num_gains
+
+    _temp_dict = {
+        "type": "int",
+        "dimension": 1,
+        "limits": "1 2",
+        "default": 2,
+        "CT2": 2,
+    }
+
+    with pytest.raises(jsonschema.exceptions.ValidationError):
+        _config._validate_parameter_dict(_temp_dict)
+
+
+def test_jsonnumpy_encoder():
+
+    encoder = JsonNumpyEncoder()
+    assert isinstance(encoder.default(np.float64(3.14)), float)
+    assert isinstance(encoder.default(np.int64(3.14)), int)
+    assert isinstance(encoder.default(np.array([])), list)
+
+    with pytest.raises(TypeError):
+        encoder.default("abc")
