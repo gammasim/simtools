@@ -4,6 +4,7 @@ import json
 import logging
 from importlib.resources import files
 
+import jsonschema
 import numpy as np
 
 import simtools.constants
@@ -94,7 +95,7 @@ class SimtelConfigReader:
             Model parameter dictionary.
 
         """
-        self._logger.info(f"Validating parameter dictionary for {telescope_name}")
+        self._logger.info(f"Getting validated parameter dictionary for {telescope_name}")
 
         _json_dict = {
             "parameter": self.parameter_name,
@@ -105,14 +106,24 @@ class SimtelConfigReader:
             "unit": self._get_unit_from_schema(),
             "type": (
                 "string"
-                if self.parameter_dict.get("type") == "str" or self.return_arrays_as_strings
-                else self.parameter_dict.get("type")
+                if self.parameter_dict.get("type") == "str"
+                else (
+                    "boolean"
+                    if self.parameter_dict.get("type") == "bool"
+                    else self.parameter_dict.get("type")
+                )
             ),
             "applicable": self._check_parameter_applicability(telescope_name),
             "file": self._parameter_is_a_file(),
         }
 
-        self._validate_parameter_dict(_json_dict)
+        try:
+            self._validate_parameter_dict(_json_dict)
+        except jsonschema.exceptions.ValidationError as exc:
+            self._logger.error(
+                f"Parameter dictionary {_json_dict} for {telescope_name} is not valid."
+            )
+            raise exc
 
         return _json_dict
 
@@ -231,9 +242,10 @@ class SimtelConfigReader:
         if key == "type":
             return self._get_type_from_simtel_cfg(column)
 
-        # defaults are comma separated (all other fields are separated by spaces)
+        # lists are space or comma separated
         if len(column) == 1:
-            column = column[0].split(",") if key == "default" else column[0].split(" ")
+            column = column[0].split(",") if "," in column[0] else column[0].split(" ")
+            column = [item for item in column if item != "all:"]
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
@@ -263,6 +275,8 @@ class SimtelConfigReader:
             return "str", 1
         if column[0].lower() == "ibool":
             return "bool", int(column[1])
+        if int(column[1]) > 1 and self.return_arrays_as_strings:
+            return "str", 1
         # TODO - cannot handle arrays of different types
         # return np.dtype(column[0].lower()), int(column[1])
         return column[0].lower(), int(column[1])
@@ -371,5 +385,9 @@ class SimtelConfigReader:
             model_schema_file = files("simtools").joinpath(
                 simtools.constants.MODEL_PARAMETER_JSON_SCHEMA
             )
+
+        self._logger.info(
+            f"Validating parameter dictionary {parameter_dict} using {model_schema_file}"
+        )
 
         metadata_model.validate_schema(parameter_dict, model_schema_file)

@@ -176,6 +176,8 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
         "0.89 0 0 0 0",
         5,
     )
+    assert _config._add_value_from_simtel_cfg(["all: 5"], "default", dtype="int") == (5, 1)
+
     # default (comma separated, return array as list)
     _config.return_arrays_as_strings = False
     _list, _ndim = _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], "default", dtype="double")
