@@ -23,8 +23,6 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return float(o)
         if isinstance(o, np.integer):
             return int(o)
-        if isinstance(o, np.bool):
-            return bool(o)
         if isinstance(o, np.ndarray):
             return o.tolist()
         return super().default(o)
