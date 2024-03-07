@@ -3,7 +3,8 @@
 title: Schema for mirror panel 2F measurements
 version: 0.1.0
 meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
+# TMP TODO  meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/new-simulation-model/simtools/schemas/data.metaschema.yml
 meta_schema_version: 0.1.0
 name: mirror_2f_measurement
 description: |-
@@ -16,24 +17,24 @@ data:
         description: |-
           Mirror panel ID.
         required: true
-        units: dimensionless
+        unit: dimensionless
         type: string
       - name: mirror_curvature_radius
         description: |-
           Mirror panel curvature radius.
         required: true
-        units: cm
+        unit: cm
         type: float64
       - name: psf
         description: |-
           Spot size of mirror panel PSF at nominal distance.
         required: true
-        units: cm
+        unit: cm
         type: float64
       - name: psf_opt
         description: |-
           Spot size of mirror panel PSF
           (best value, not at nominal distance).
         required: false
-        units: cm
+        unit: cm
         type: float64

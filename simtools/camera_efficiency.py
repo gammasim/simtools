@@ -46,7 +46,7 @@ class CameraEfficiency:
         test=False,
     ):
         """
-        Initiliaze the CameraEfficiency class.
+        Initialize the CameraEfficiency class.
         """
 
         self._logger = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ class CameraEfficiency:
             sub_dir="camera-efficiency",
             dir_type="test" if self.test else "simtools",
         )
-
         self._results = None
         self._has_results = False
 
@@ -452,7 +451,7 @@ class CameraEfficiency:
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
-            * self._telescope_model.reference_data["nsb_reference_value"]["Value"]
+            * self._telescope_model.get_reference_data_value("nsb_reference_value")
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions

@@ -199,13 +199,13 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    raw_par = tel_model.get_parameter("mirror_reflection_random_angle")["Value"]
+    raw_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     split_par = split_simtel_parameter(raw_par)
     mrra_0 = split_par[0]
     mfr_0 = split_par[1]
     mrra2_0 = split_par[2]
 
-    raw_par = tel_model.get_parameter("mirror_align_random_horizontal")["Value"]
+    raw_par = tel_model.get_parameter_value("mirror_align_random_horizontal")
     mar_0 = split_simtel_parameter(raw_par)[0]
 
     logger.debug(

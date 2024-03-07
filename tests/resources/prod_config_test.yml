@@ -9,9 +9,9 @@ default:
     zenith: 20 deg
     phi: 0 deg
     default:
-      LST: 'D234'
-      MST: FlashCam-D
-    LST-01: '1'
+      LSTN: 'design'
+      MSTN: 'design'
+    LSTN-01: '01'
   showers:
     eslope: -2
     zenith: 20 deg
@@ -33,15 +33,15 @@ gamma:
     erange: [10 GeV, 80 GeV]
     cscat: [5, 1500.0 m, 0]
   array:
-    MST-05:
+    MSTN-05:
       name: NectarCam-D
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-    MST-06:
+    MSTN-06:
       name: NectarCam-D
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-    MST-07:
+    MSTN-07:
       name: NectarCam-D
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
