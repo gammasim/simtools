@@ -48,7 +48,5 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     file = io_handler.get_output_file(
         file_name="simtel-config-writer_telescope.txt", dir_type="test"
     )
-    simtel_config_writer.write_telescope_config_file(
-        config_file_path=file, parameters={"par": {"Value": 1}}
-    )
+    simtel_config_writer.write_telescope_config_file(config_file_path=file, parameters={"par": 1})
     assert file_has_text(file, "par = 1")

@@ -32,7 +32,7 @@ class SimtelRunnerArray(SimtelRunner):
     Parameters
     ----------
     array_model: str
-        Instance of TelescopeModel class.
+        Instance of ArrayModel class.
     label: str
         Instance label. Important for output file naming.
     simtel_source_path: str or Path

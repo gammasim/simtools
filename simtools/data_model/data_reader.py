@@ -120,10 +120,11 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
         metadata_model.validate_schema(data, schema_file)
         _logger.debug("Successful validation of yaml/json file")
 
-    if "Value" not in data or data["Value"] is None:
+    _value = data.get("value")
+    if _value is None:
         return None
+    _unit = data.get("unit")
+    if _unit and len(_unit) > 0:
+        return _value * u.Unit(_unit)
 
-    if "units" in data and len(data["units"]) > 0:
-        return data["Value"] * u.Unit(data["units"])
-
-    return data["Value"]
+    return _value

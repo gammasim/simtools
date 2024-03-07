@@ -81,7 +81,7 @@ class DataValidator:
         """
 
         try:
-            if Path(self.data_file_name).suffix in (".yml", ".yaml"):
+            if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data = gen.collect_data_from_file_or_dict(self.data_file_name, None)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
@@ -102,9 +102,9 @@ class DataValidator:
                 self.schema_file_name, self.data["name"]
             )
             _quantities = []
-            for value, unit in zip(self.data["value"], self.data["units"]):
+            for value, unit in zip(self.data["value"], self.data["unit"]):
                 try:
-                    _quantities.append(value * u.Unit(unit))
+                    _quantities.append(value if len(unit) == 0 else value * u.Unit(unit))
                 except ValueError:
                     _quantities.append(value)
             self.data_table = Table(rows=[_quantities])
@@ -288,7 +288,7 @@ class DataValidator:
 
         """
 
-        reference_unit = self._get_reference_data_column(column_name).get("units", None)
+        reference_unit = self._get_reference_data_column(column_name).get("unit", None)
         if reference_unit == "dimensionless" or reference_unit is None:
             return u.dimensionless_unscaled
 
