@@ -1,4 +1,5 @@
 {
+    "name": "reference_point_altitude",
     "value": 2162.0,
     "unit": "m",
     "type": "numpy.float64",
