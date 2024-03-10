@@ -28,8 +28,16 @@ def test_validate_and_transform(caplog):
     data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
     data_validator.schema_file_name = "tests/resources/MST_mirror_2f_measurements.schema.yml"
     with caplog.at_level(logging.INFO):
-        data_validator.validate_and_transform()
+        _table = data_validator.validate_and_transform()
+        assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
+
+    data_validator.data_file_name = "tests/resources/num_gains.json"
+    data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    with caplog.at_level(logging.INFO):
+        _dict = data_validator.validate_and_transform()
+        assert isinstance(_dict, dict)
+    assert "Validating data from:" in caplog.text
 
 
 def test_validate_data_file(caplog):
@@ -67,6 +75,15 @@ def test_validate_data_columns(tmp_test_directory, caplog):
     )
     data_validator_3.validate_data_file()
     data_validator_3._validate_data_table()
+    # test change of units
+    _value_in_org = data_validator_3.data_table["psf"].value[0]
+    data_validator_3._validate_data_columns()
+    for col in data_validator_3._reference_data_columns:
+        col["unit"] = "m" if col["unit"] == "cm" else col["unit"]
+    data_validator_3._validate_data_columns()
+    _value_in_m = data_validator_3.data_table["psf"].value[0]
+    assert data_validator_3.data_table["psf"].unit == "m"
+    assert _value_in_org == pytest.approx(_value_in_m * 100.0)
 
     _incomplete_schema = {"data": []}
     with open(tmp_test_directory / "incomplete_data_schema.schema.yml", "w") as _file:
@@ -428,10 +445,14 @@ def test_validate_data_dict():
             "model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
         )
     )
-    data_validator.data = {"name": "reference_point_altitude", "value": [1000.0], "unit": ["km"]}
+    data_validator.data_dict = {
+        "name": "reference_point_altitude",
+        "value": [1000.0],
+        "unit": ["km"],
+    }
     data_validator._validate_data_dict()
 
-    data_validator.data = {
+    data_validator.data_dict = {
         "parameter": "reference_point_altitude",
         "value": [1000.0],
         "unit": ["km"],
@@ -445,10 +466,14 @@ def test_validate_data_dict():
             "model_parameters/-/raw/main/schema/num_gains.schema.yml"
         )
     )
-    data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [""]}
+    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
 
-    data_validator.data = {"no_name": "test_data", "value": [1.0, 2.0, 3.0], "unit": ["", "", ""]}
+    data_validator.data_dict = {
+        "no_name": "test_data",
+        "value": [1.0, 2.0, 3.0],
+        "unit": ["", "", ""],
+    }
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()
 
