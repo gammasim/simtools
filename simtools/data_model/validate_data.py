@@ -18,8 +18,7 @@ class DataValidator:
     Validate data for type and units following a describing schema; converts or
     transform data if required.
 
-    Data can be of table or list format
-    (internally, all data is converted to astropy tables).
+    Data can be of table or dict format (internally, all data is converted to astropy tables).
 
     Parameters
     ----------
@@ -27,10 +26,14 @@ class DataValidator:
         Schema file describing input data and transformations.
     data_file: Path
         Input data file.
+    data_table: astropy.table
+        Input data table.
+    data_dict: dict
+        Input data dict.
 
     """
 
-    def __init__(self, schema_file=None, data_file=None, data_table=None):
+    def __init__(self, schema_file=None, data_file=None, data_table=None, data_dict=None):
         """
         Initialize validation class and read required reference data columns
 
@@ -41,7 +44,7 @@ class DataValidator:
         self.data_file_name = data_file
         self.schema_file_name = schema_file
         self._reference_data_columns = None
-        self.data = None
+        self.data_dict = data_dict
         self.data_table = data_table
 
     def validate_and_transform(self):
@@ -62,15 +65,14 @@ class DataValidator:
 
         if self.data_file_name:
             self.validate_data_file()
-        if isinstance(self.data, dict):
+        if isinstance(self.data_dict, dict):
             self._validate_data_dict()
-        elif isinstance(self.data_table, Table):
+            return self.data_dict
+        if isinstance(self.data_table, Table):
             self._validate_data_table()
-        else:
-            self._logger.error("No data or data table to validate")
-            raise TypeError
-
-        return self.data_table
+            return self.data_table
+        self._logger.error("No data or data table to validate")
+        raise TypeError
 
     def validate_data_file(self):
         """
@@ -82,7 +84,7 @@ class DataValidator:
 
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
-                self.data = gen.collect_data_from_file_or_dict(self.data_file_name, None)
+                self.data_dict = gen.collect_data_from_file_or_dict(self.data_file_name, None)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -93,13 +95,13 @@ class DataValidator:
     def _validate_data_dict(self):
         """
         Validate values. Creates first astropy table from data dict and then uses the same
-        methods as for tabled data. Handles different types of naming in data dict (name
-        or parameter).
+        methods as for tabled data. Handles different types of naming in data dicts (using
+        'name' or 'parameter' keys for name fields).
 
         """
 
         try:
-            _name = self.data.get("name") or self.data.get("parameter")
+            _name = self.data_dict.get("name") or self.data_dict.get("parameter")
             if _name is None:
                 raise KeyError
 
@@ -107,12 +109,14 @@ class DataValidator:
                 self.schema_file_name, _name
             )
             _quantities = []
+            # expect 'value' and 'unit' to be lists even for single values
             for key in ("value", "unit"):
-                self.data[key] = (
-                    self.data[key] if isinstance(self.data[key], list) else [self.data[key]]
+                self.data_dict[key] = (
+                    self.data_dict[key]
+                    if isinstance(self.data_dict[key], list)
+                    else [self.data_dict[key]]
                 )
-
-            for value, unit in zip(self.data["value"], self.data["unit"]):
+            for value, unit in zip(self.data_dict["value"], self.data_dict["unit"]):
                 try:
                     _quantities.append(value if len(unit) == 0 else value * u.Unit(unit))
                 # unit == None, gives TypeError
@@ -166,7 +170,7 @@ class DataValidator:
                 continue
             self._check_for_not_a_number(col, col_name)
             self._check_data_type(col, col_name)
-            col = self._check_and_convert_units(col, col_name)
+            self.data_table[col_name] = col.to(u.Unit(self._get_reference_unit(col_name)))
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
 
@@ -414,7 +418,7 @@ class DataValidator:
                 f"Data column '{col_name}' with reference unit "
                 f"'{reference_unit}' and data unit '{col.unit}'"
             )
-            return u.Quantity(col).to(reference_unit)
+            return col.to(reference_unit)
         except u.core.UnitConversionError:
             self._logger.error(
                 f"Invalid unit in data column '{col_name}'. "
