@@ -93,22 +93,33 @@ class DataValidator:
     def _validate_data_dict(self):
         """
         Validate values. Creates first astropy table from data dict and then uses the same
-        methods as for tabled data.
+        methods as for tabled data. Handles different types of naming in data dict (name
+        or parameter).
 
         """
 
         try:
+            _name = self.data.get("name") or self.data.get("parameter")
+            if _name is None:
+                raise KeyError
+
             self._reference_data_columns = self._read_validation_schema(
-                self.schema_file_name, self.data["name"]
+                self.schema_file_name, _name
             )
             _quantities = []
+            for key in ("value", "unit"):
+                self.data[key] = (
+                    self.data[key] if isinstance(self.data[key], list) else [self.data[key]]
+                )
+
             for value, unit in zip(self.data["value"], self.data["unit"]):
                 try:
                     _quantities.append(value if len(unit) == 0 else value * u.Unit(unit))
-                except ValueError:
+                # unit == None, gives TypeError
+                except (ValueError, TypeError):
                     _quantities.append(value)
             self.data_table = Table(rows=[_quantities])
-            self.data_table.meta["name"] = self.data["name"]
+            self.data_table.meta["name"] = _name
         except KeyError as exc:
             raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.") from exc
 

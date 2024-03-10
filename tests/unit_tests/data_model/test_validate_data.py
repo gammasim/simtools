@@ -431,6 +431,13 @@ def test_validate_data_dict():
     data_validator.data = {"name": "reference_point_altitude", "value": [1000.0], "unit": ["km"]}
     data_validator._validate_data_dict()
 
+    data_validator.data = {
+        "parameter": "reference_point_altitude",
+        "value": [1000.0],
+        "unit": ["km"],
+    }
+    data_validator._validate_data_dict()
+
     # parameter without unit
     data_validator_2 = validate_data.DataValidator(
         schema_file=(
@@ -441,9 +448,12 @@ def test_validate_data_dict():
     data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
 
-    data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "unit": ["", "", ""]}
+    data_validator.data = {"no_name": "test_data", "value": [1.0, 2.0, 3.0], "unit": ["", "", ""]}
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()
+
+    data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [None]}
+    data_validator_2._validate_data_dict()
 
 
 def get_reference_columns_name_colx():
