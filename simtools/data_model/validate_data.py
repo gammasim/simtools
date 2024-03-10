@@ -130,6 +130,11 @@ class DataValidator:
         if self._reference_data_columns is not None:
             self._validate_data_columns()
 
+        # back from list to single value/unit
+        if len(self.data_table) == 1 and len(self.data_table.columns) == 1:
+            self.data_dict["value"] = self.data_table.columns[0][0]
+            self.data_dict["unit"] = self.data_table.columns[0].unit
+
     def _validate_data_table(self):
         """
         Validate tabulated data.
