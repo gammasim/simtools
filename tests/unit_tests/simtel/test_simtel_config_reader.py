@@ -77,8 +77,8 @@ def test_simtel_config_reader_telescope_transmission(
     assert _config.simtel_parameter_name == "TELESCOPE_TRANSMISSION"
 
     assert _config.parameter_dict == {
-        "type": "double",
-        "dimension": 6,
+        "type": "str",
+        "dimension": 1,
         "default": "0.89 0 0 0 0",
         "CT2": "0.969 0 0 0 0 0",
     }
