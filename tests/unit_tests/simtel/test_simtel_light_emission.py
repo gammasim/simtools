@@ -185,13 +185,14 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
 
 def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
     # Mock necessary objects and functions
-    with patch("os.path.exists", return_value=True), patch(
-        "ctapipe.io.EventSource"
-    ) as mock_event_source, patch(
-        "ctapipe.visualization.CameraDisplay"
-    ) as mock_camera_display, patch(
-        "matplotlib.pyplot.subplots", return_value=(plt.figure(), plt.axes())
-    ) as mock_subplots:
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("ctapipe.io.EventSource") as mock_event_source,
+        patch("ctapipe.visualization.CameraDisplay") as mock_camera_display,
+        patch(
+            "matplotlib.pyplot.subplots", return_value=(plt.figure(), plt.axes())
+        ) as mock_subplots,
+    ):
         mock_event_source = MagicMock()
         mock_event_source_instance = mock_event_source.return_value
         mock_event_source_instance.subarray.tel[1].camera.geometry = MagicMock()
