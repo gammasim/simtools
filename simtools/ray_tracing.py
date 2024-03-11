@@ -408,16 +408,17 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL:
-            msg = "Invalid key to plot"
-            self._logger.error(msg)
-            raise KeyError(msg)
 
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
-        plot = visualize.plot_table(
-            self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
-        )
+        try:
+            plot = visualize.plot_table(
+                self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
+            )
+        except KeyError as exc:
+            msg = "Invalid key to plot"
+            self._logger.error(msg)
+            raise exc
 
         if save:
             plot_file_name = names.ray_tracing_plot_file_name(
