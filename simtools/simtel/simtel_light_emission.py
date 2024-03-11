@@ -357,7 +357,7 @@ class SimulatorLightEmission(SimtelRunner):
         fig.tight_layout()
         return fig
 
-    def prepare_script(self, test=False, generate_postscript=False):
+    def prepare_script(self, generate_postscript=False):
         """
         Builds and returns the full path of the bash run script
         containing the light-emission command.
@@ -397,9 +397,6 @@ class SimulatorLightEmission(SimtelRunner):
                 file.write("# Generate postscript\n\n")
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
-        if test:
-            #  TODO: Add
-            pass
 
         os.system(f"chmod ug+x {self._script_file}")
         return self._script_file
