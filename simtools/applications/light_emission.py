@@ -7,7 +7,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.telescope_model import InvalidParameter, TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
 
@@ -148,8 +148,12 @@ def main():
     )
     # important for triggering with a single telescope
     telescope_model.remove_parameters("array_triggers")
-    # set to 0 to have the optical axis of the MST aligned.
-    telescope_model.remove_parameters("axes_offsets")
+    try:
+        # set to 0 to have the optical axis of the MST aligned.
+        telescope_model.remove_parameters("axes_offsets")
+    except InvalidParameter:
+        msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
+        logger.warning(msg)
 
     figures = []
     for distance in default_le_config["z_pos"]["default"]:
@@ -171,7 +175,7 @@ def main():
         try:
             fig = le.plot_simtel_ctapipe()
             figures.append(fig)
-        except AttributeError:
+        except InvalidParameter:
             msg = f"telescope not triggered at distance of {distance.to(u.meter)}"
             logger.warning(msg)
 
