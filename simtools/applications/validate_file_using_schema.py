@@ -111,8 +111,7 @@ def validate_schema(args_dict, logger):
     except FileNotFoundError as exc:
         logger.error(f"Error reading schema file from {args_dict['file_name']}")
         raise exc
-    schema_file = _get_schema_file(args_dict, data)
-    metadata_model.validate_schema(data, schema_file)
+    metadata_model.validate_schema(data, _get_schema_file(args_dict, data))
     logger.info(f"Successful validation of schema file {args_dict['file_name']}")
 
 
