@@ -477,7 +477,7 @@ def test_validate_data_dict():
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()
 
-    data_validator_2.data = {"name": "num_gains", "value": [2], "unit": [None]}
+    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
     data_validator_2._validate_data_dict()
 
 
