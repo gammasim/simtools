@@ -69,14 +69,16 @@ def _parse(label, description):
     return config.initialize(paths=False)
 
 
-def _get_schema_file(args_dict):
+def _get_schema_file(args_dict, data_dict=None):
     """
-    Get schema file metadata or from command line argument.
+    Get schema file metadata, data dict, or from command line argument.
 
     Parameters
     ----------
     args_dict (dict)
         command line arguments
+    data_dict (dict)
+        dictionary with metaschema information
 
     Returns
     -------
@@ -86,6 +88,8 @@ def _get_schema_file(args_dict):
     """
 
     schema_file = args_dict.get("schema")
+    if schema_file is None and data_dict is not None:
+        schema_file = data_dict.get("meta_schema_url")
     if schema_file is None:
         metadata = metadata_collector.MetadataCollector(
             None, metadata_file_name=args_dict["file_name"]
@@ -107,7 +111,7 @@ def validate_schema(args_dict, logger):
     except FileNotFoundError as exc:
         logger.error(f"Error reading schema file from {args_dict['file_name']}")
         raise exc
-    schema_file = _get_schema_file(args_dict)
+    schema_file = _get_schema_file(args_dict, data)
     metadata_model.validate_schema(data, schema_file)
     logger.info(f"Successful validation of schema file {args_dict['file_name']}")
 

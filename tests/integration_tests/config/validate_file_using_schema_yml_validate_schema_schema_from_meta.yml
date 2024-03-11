@@ -4,3 +4,4 @@ CTA_SIMPIPE:
   CONFIGURATION:
     FILE_NAME: tests/resources/MST_mirror_2f_measurements.schema.yml
     DATA_TYPE: schema
+    LOG_LEVEL: DEBUG
