@@ -109,7 +109,7 @@ def test_get_validated_parameter_dict(config_reader_num_gains):
         "version": "Test",
         "value": 2,
         "unit": None,
-        "type": "string",
+        "type": "int",
         "applicable": True,
         "file": False,
     }
@@ -165,9 +165,12 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     # type
     assert _config._add_value_from_simtel_cfg(["Int", "1"], "type", None) == ("int", 1)
-    assert _config._add_value_from_simtel_cfg(["Double", "5"], "type", None) == ("double", 5)
+    assert _config._add_value_from_simtel_cfg(["Double", "5"], "type", None) == ("str", 1)
     assert _config._add_value_from_simtel_cfg(["Text", "55"], "type", None) == ("str", 1)
     assert _config._add_value_from_simtel_cfg(["IBool", "1"], "type", None) == ("bool", 1)
+    _config.return_arrays_as_strings = False
+    assert _config._add_value_from_simtel_cfg(["Double", "5"], "type", None) == ("double", 5)
+    _config.return_arrays_as_strings = True
 
     # default
     assert _config._add_value_from_simtel_cfg(["2"], "default", dtype="int") == (2, 1)
