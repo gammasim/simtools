@@ -64,16 +64,13 @@ class SimulatorLightEmission(SimtelRunner):
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerLightEmission")
-        print("AAAAAA simtel source path before: ", simtel_source_path)
         self._simtel_source_path = simtel_source_path
-        print("AAAAAA simtel source path after: ", self._simtel_source_path)
 
         self._telescope_model = telescope_model
         self.label = label if label is not None else self._telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
-        print("base directory: ", self.output_directory)
         try:
             self.config = gen.validate_config_data(
                 gen.collect_data_from_file_or_dict(config_file, config_data),

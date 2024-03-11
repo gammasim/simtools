@@ -183,27 +183,27 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
     assert command == expected_command
 
 
-def test_plot_simtel_ctapipe(mock_simulator):
+def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
     # Mock necessary objects and functions
-    mock_event_source = MagicMock()
-    mock_event_source_instance = mock_event_source.return_value
-    mock_event_source_instance.subarray.tel[1].camera.geometry = MagicMock()
-    mock_event_source_instance.r1.tel.keys.return_value = [1]  # Mocking tel keys
-
-    mock_event = MagicMock()
-    mock_event_instance = mock_event.return_value
-    mock_event_instance.dl1.tel.return_value.image = MagicMock()
-
-    mock_camera_display = MagicMock()
-    mock_camera_display_instance = mock_camera_display.return_value
-
     with patch("os.path.exists", return_value=True), patch(
-        "ctapipe.io.EventSource", mock_event_source
-    ), patch("ctapipe.calib.CameraCalibrator"), patch(
-        "ctapipe.visualization.CameraDisplay", mock_camera_display
-    ), patch(
-        "matplotlib.pyplot.subplots", return_value=(plt.figure(), MagicMock())
-    ):
+        "ctapipe.io.EventSource"
+    ) as mock_event_source, patch(
+        "ctapipe.visualization.CameraDisplay"
+    ) as mock_camera_display, patch(
+        "matplotlib.pyplot.subplots", return_value=(plt.figure(), plt.axes())
+    ) as mock_subplots:
+        mock_event_source = MagicMock()
+        mock_event_source_instance = mock_event_source.return_value
+        mock_event_source_instance.subarray.tel[1].camera.geometry = MagicMock()
+        mock_event_source_instance.r1.tel.keys.return_value = [1]  # Mocking tel keys
+
+        mock_event = MagicMock()
+        mock_event_instance = mock_event.return_value
+        mock_event_instance.dl1.tel.return_value.image = MagicMock()
+
+        mock_camera_display = MagicMock()
+        mock_camera_display_instance = mock_camera_display.return_value
+
         # Configure the mock behavior of EventSource
         mock_event_source_instance.return_value.__enter__.return_value.__iter__.return_value = [
             {
@@ -212,8 +212,9 @@ def test_plot_simtel_ctapipe(mock_simulator):
                 "dl1": {"tel": {1: {"image": MagicMock()}}},
             }
         ]
-        # TODO fix the patch
-        fig = mock_simulator.plot_simtel_ctapipe()
+        # supply file from resources
+        mock_simulator.output_directory = "tests/resources/"
+        fig = mock_simulator.plot_simtel_ctapipe(return_cleaned=0)
 
     assert isinstance(fig, plt.Figure)  # Check if fig is an instance of matplotlib figure
     assert mock_event_source.called_once_with(f"{mock_output_path}/xyzls.simtel.gz", max_events=1)
@@ -233,7 +234,7 @@ def test_plot_simtel_ctapipe(mock_simulator):
     assert mock_camera_display_instance.set_limits_percent.called_once_with(
         100
     )  # Check if set_limits_percent is called
-    assert plt.subplots.called_once_with(
+    assert mock_subplots.called_once_with(
         1, 1, dpi=300
     )  # Check if subplots is called with correct arguments
 
