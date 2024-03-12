@@ -139,9 +139,8 @@ def main():
             continue
         logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
 
-        schema_dict = gen.collect_data_from_file_or_dict(file_name=_schema_file, in_dict=None)
         simtel_config_reader = SimtelConfigReader(
-            schema_dict=schema_dict,
+            schema_file=_schema_file,
             simtel_config_file=args_dict["simtel_cfg_file"],
             simtel_telescope_name=args_dict["simtel_telescope_name"],
         )
