@@ -108,7 +108,7 @@ def main():
     _json_dict = simtel_config_reader.get_validated_parameter_dict(
         telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
     )
-    logger.info("fDB JSON {_json_dict}")
+    logger.info(f"DB JSON {_json_dict}")
 
     simtel_config_reader.compare_simtel_config_with_schema()
 

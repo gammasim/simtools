@@ -381,6 +381,7 @@ class SimtelConfigReader:
         data_validator = validate_data.DataValidator(
             schema_file=self.schema_file,
             data_dict=parameter_dict,
+            check_exact_data_type=False,
         )
         data_validator.validate_and_transform()
         return data_validator.data_dict

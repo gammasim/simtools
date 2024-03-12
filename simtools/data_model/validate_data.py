@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 from astropy import units as u
-from astropy.table import Table, unique
+from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
@@ -30,10 +30,19 @@ class DataValidator:
         Input data table.
     data_dict: dict
         Input data dict.
+    check_exact_data_type: bool
+        Check for exact data type (default: True).
 
     """
 
-    def __init__(self, schema_file=None, data_file=None, data_table=None, data_dict=None):
+    def __init__(
+        self,
+        schema_file=None,
+        data_file=None,
+        data_table=None,
+        data_dict=None,
+        check_exact_data_type=True,
+    ):
         """
         Initialize validation class and read required reference data columns
 
@@ -46,6 +55,7 @@ class DataValidator:
         self._reference_data_columns = None
         self.data_dict = data_dict
         self.data_table = data_table
+        self.check_exact_data_type = check_exact_data_type
 
     def validate_and_transform(self):
         """
@@ -94,46 +104,33 @@ class DataValidator:
 
     def _validate_data_dict(self):
         """
-        Validate values. Creates first astropy table from data dict and then uses the same
-        methods as for tabled data. Handles different types of naming in data dicts (using
-        'name' or 'parameter' keys for name fields).
+        Validate values in a dictionary. Handles different types of naming in data dicts
+        (using 'name' or 'parameter' keys for name fields).
 
         """
 
-        try:
-            _name = self.data_dict.get("name") or self.data_dict.get("parameter")
-            if _name is None:
-                raise KeyError
+        _name = self.data_dict.get("name") or self.data_dict.get("parameter")
+        if _name is None:
+            raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.")
 
-            self._reference_data_columns = self._read_validation_schema(
-                self.schema_file_name, _name
-            )
-            _quantities = []
-            # expect 'value' and 'unit' to be lists even for single values
-            for key in ("value", "unit"):
-                self.data_dict[key] = (
-                    self.data_dict[key]
-                    if isinstance(self.data_dict[key], list)
-                    else [self.data_dict[key]]
+        self._reference_data_columns = self._read_validation_schema(self.schema_file_name, _name)
+        self._check_for_not_a_number(self.data_dict["value"], _name)
+        self._check_data_type(np.array(self.data_dict["value"]).dtype, _name)
+        self.data_dict["value"], self.data_dict["unit"] = self._check_and_convert_units(
+            self.data_dict["value"], self.data_dict.get("unit"), _name
+        )
+        for range_type in ("allowed_range", "required_range"):
+            if isinstance(self.data_dict["value"], list):
+                self._check_range(
+                    _name,
+                    np.nanmin(self.data_dict["value"]),
+                    np.nanmax(self.data_dict["value"]),
+                    range_type,
                 )
-            for value, unit in zip(self.data_dict["value"], self.data_dict["unit"]):
-                try:
-                    _quantities.append(value if len(unit) == 0 else value * u.Unit(unit))
-                # unit == None, gives TypeError
-                except (ValueError, TypeError):
-                    _quantities.append(value)
-            self.data_table = Table(rows=[_quantities])
-            self.data_table.meta["name"] = _name
-        except KeyError as exc:
-            raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.") from exc
-
-        if self._reference_data_columns is not None:
-            self._validate_data_columns()
-
-        # back from list to single value/unit
-        if len(self.data_table) == 1 and len(self.data_table.columns) == 1:
-            self.data_dict["value"] = self.data_table.columns[0][0]
-            self.data_dict["unit"] = self.data_table.columns[0].unit
+            else:
+                self._check_range(
+                    _name, self.data_dict["value"], self.data_dict["value"], range_type
+                )
 
     def _validate_data_table(self):
         """
@@ -173,8 +170,8 @@ class DataValidator:
                 continue
             if not np.issubdtype(col.dtype, np.number):
                 continue
-            self._check_for_not_a_number(col, col_name)
-            self._check_data_type(col, col_name)
+            self._check_for_not_a_number(col.data, col_name)
+            self._check_data_type(col.dtype, col_name)
             self.data_table[col_name] = col.to(u.Unit(self._get_reference_unit(col_name)))
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
             self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
@@ -309,19 +306,19 @@ class DataValidator:
         """
 
         reference_unit = self._get_reference_data_column(column_name).get("unit", None)
-        if reference_unit == "dimensionless" or reference_unit is None:
+        if reference_unit in ("dimensionless", None, ""):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
 
-    def _check_data_type(self, col, column_name):
+    def _check_data_type(self, dtype, column_name):
         """
         Check column data type.
 
         Parameters
         ----------
-        col: astropy.column or Quantity
-            data column to be converted
+        dtype: numpy.dtype
+            data type
         column_name: str
             column name
 
@@ -334,23 +331,32 @@ class DataValidator:
 
         reference_dtype = self._get_reference_data_column(column_name).get("type", None)
 
-        if not np.issubdtype(col.dtype, reference_dtype):
-            self._logger.error(
-                f"Invalid data type in column '{column_name}'. "
-                f"Expected type '{reference_dtype}', found '{col.dtype}'"
-            )
-            raise TypeError
+        if self.check_exact_data_type:
+            if np.issubdtype(dtype, reference_dtype):
+                return None
+        # allow any sub-type of integer or float for success
+        else:
+            if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.integer):
+                return None
+            if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
+                return None
+            if np.issubdtype(dtype, reference_dtype):
+                return None
 
-        self._logger.debug(f"Data column '{column_name}' has correct data type")
+        self._logger.error(
+            f"Invalid data type in column '{column_name}'. "
+            f"Expected type '{reference_dtype}', found '{dtype}'"
+        )
+        raise TypeError
 
-    def _check_for_not_a_number(self, col, col_name):
+    def _check_for_not_a_number(self, data, col_name):
         """
         Check that column values are finite and not NaN.
 
         Parameters
         ----------
-        col: astropy.column or Quantity
-            data column to be converted
+        data: value or numpy.ndarray
+            data to be tested
         col_name: str
             column name
 
@@ -365,25 +371,29 @@ class DataValidator:
             if at least one column value is NaN or Inf.
 
         """
+        if isinstance(data, str):
+            return True
+        if not isinstance(data, np.ndarray):
+            data = np.array(data)
 
-        if np.isnan(col.data).any():
+        if np.isnan(data).any():
             self._logger.info(f"Column {col_name} contains NaN.")
-        if np.isinf(col.data).any():
+        if np.isinf(data).any():
             self._logger.info(f"Column {col_name} contains infinite value.")
 
         entry = self._get_reference_data_column(col_name)
         if "allow_nan" in entry.get("input_processing", {}):
-            return np.isnan(col.data).any() or np.isinf(col.data).any()
+            return np.isnan(data).any() or np.isinf(data).any()
 
-        if np.isnan(col.data).any() or np.isinf(col.data).any():
-            self._logger.error("NaN or Inf values found in data columns")
+        if np.isnan(data).any() or np.isinf(data).any():
+            self._logger.error("NaN or Inf values found in data")
             raise ValueError
 
         return False
 
-    def _check_and_convert_units(self, col, col_name):
+    def _check_and_convert_units(self, data, unit, col_name):
         """
-        Check that all columns have an allowed unit. Convert to reference unit (e.g., Angstrom to
+        Check that input data have an allowed unit. Convert to reference unit (e.g., Angstrom to
         nm).
 
         Note on dimensionless columns:
@@ -394,40 +404,58 @@ class DataValidator:
 
         Parameters
         ----------
-        col: astropy.column or Quantity
-            data column to be converted
+        data: astropy.column, Quantity, list, value
+            data to be converted
+        unit: str
+            unit of data column (read from column or Quantity if possible)
         col_name: str
             column name
 
         Returns
         -------
-        astropy.column
-            unit-converted data column
+        data: astropy.column, Quantity, list, value
+            unit-converted data
 
         Raises
         ------
         u.core.UnitConversionError
-            If column unit conversions fails
+            If unit conversions fails
 
         """
 
         self._logger.debug(f"Checking data column '{col_name}'")
 
+        reference_unit = self._get_reference_unit(col_name)
         try:
-            reference_unit = self._get_reference_unit(col_name)
-            if col.unit is None or col.unit == "dimensionless":
-                col.unit = u.dimensionless_unscaled
-                return col
+            unit = data.unit
+        except AttributeError:
+            pass
+        if unit is None or unit == "dimensionless" or unit == "":
+            return data, u.dimensionless_unscaled
 
-            self._logger.debug(
-                f"Data column '{col_name}' with reference unit "
-                f"'{reference_unit}' and data unit '{col.unit}'"
-            )
-            return col.to(reference_unit)
+        self._logger.debug(
+            f"Data column '{col_name}' with reference unit "
+            f"'{reference_unit}' and data unit '{unit}'"
+        )
+        try:
+            if isinstance(data, (u.Quantity, Column)):
+                data = data.to(reference_unit)
+                return data, reference_unit
+            if isinstance(data, (list, np.ndarray)):
+                return [
+                    (
+                        u.Unit(_to_unit).to(reference_unit) * d
+                        if _to_unit not in (None, "dimensionless", "")
+                        else d
+                    )
+                    for d, _to_unit in zip(data, unit)
+                ], reference_unit
+            # ensure that the data type is preserved (e.g., integers)
+            return (type(data)(u.Unit(unit).to(reference_unit) * data), reference_unit)
         except u.core.UnitConversionError:
             self._logger.error(
                 f"Invalid unit in data column '{col_name}'. "
-                f"Expected type '{reference_unit}', found '{col.unit}'"
+                f"Expected type '{reference_unit}', found '{unit}'"
             )
             raise
 
@@ -585,8 +613,14 @@ class DataValidator:
 
         """
 
+        self._logger.debug(
+            f"Getting reference data column {column_name} "
+            f"from schema {self._reference_data_columns}"
+        )
         _index = 0
-        if bool(re.match(r"^col\d$", column_name)):
+        if len(self._reference_data_columns) == 1:
+            _entry = self._reference_data_columns
+        elif bool(re.match(r"^col\d$", column_name)):
             _index = int(column_name[3:])
             _entry = self._reference_data_columns
         else:
