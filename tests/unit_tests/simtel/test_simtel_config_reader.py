@@ -154,46 +154,41 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file):
     assert "CT1000" not in _para_dict
 
 
-def test_add_value_from_simtel_cfg(config_reader_num_gains):
+def test_get_type_from_simtel_cfg(config_reader_num_gains):
 
     _config = config_reader_num_gains
 
     # type
-    assert _config._add_value_from_simtel_cfg(["Int", "1"], "type", None) == ("int", 1)
-    assert _config._add_value_from_simtel_cfg(["Double", "5"], "type", None) == ("str", 1)
-    assert _config._add_value_from_simtel_cfg(["Text", "55"], "type", None) == ("str", 1)
-    assert _config._add_value_from_simtel_cfg(["IBool", "1"], "type", None) == ("bool", 1)
+    assert _config._get_type_from_simtel_cfg(["Int", "1"]) == ("int", 1)
+    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("str", 1)
+    assert _config._get_type_from_simtel_cfg(["Text", "55"]) == ("str", 1)
+    assert _config._get_type_from_simtel_cfg(["IBool", "1"]) == ("bool", 1)
     _config.return_arrays_as_strings = False
-    assert _config._add_value_from_simtel_cfg(["Double", "5"], "type", None) == ("double", 5)
-    _config.return_arrays_as_strings = True
+    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("double", 5)
+
+
+def test_add_value_from_simtel_cfg(config_reader_num_gains):
+
+    _config = config_reader_num_gains
 
     # default
-    assert _config._add_value_from_simtel_cfg(["2"], "default", dtype="int") == (2, 1)
+    assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)
     # default (comma separated, return array as string)
-    assert _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], "default", dtype="double") == (
+    assert _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], dtype="double") == (
         "0.89 0 0 0 0",
         5,
     )
-    assert _config._add_value_from_simtel_cfg(["all: 5"], "default", dtype="int") == (5, 1)
+    assert _config._add_value_from_simtel_cfg(["all: 5"], dtype="int") == (5, 1)
 
-    # default (comma separated, return array as list)
+    # comma separated, return array as list
     _config.return_arrays_as_strings = False
-    _list, _ndim = _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], "default", dtype="double")
+    _list, _ndim = _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], dtype="double")
     assert _list[0] == pytest.approx(0.89)
     assert _list[2] == pytest.approx(0.0)
     assert (len(_list), _ndim) == (5, 5)
 
-    # telescope values
-    _config.return_arrays_as_strings = True
-    assert _config._add_value_from_simtel_cfg(["2"], "CT1", dtype="int") == (2, 1)
-    # default (comma separated, return array as string)
-    assert _config._add_value_from_simtel_cfg(["0.89 0 0 0 0"], "CT1", dtype="double") == (
-        "0.89 0 0 0 0",
-        5,
-    )
-
     # no input / output
-    assert _config._add_value_from_simtel_cfg([], "CT1", dtype="double") == (None, None)
+    assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
 
 
 def test_get_simtel_parameter_name(config_reader_num_gains):
