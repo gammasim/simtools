@@ -203,29 +203,27 @@ class SimtelConfigReader:
         # extract first column type (required for conversions and dimension)
         for column in columns:
             if column[0] == "type":
-                _para_dict["type"], _para_dict["dimension"] = self._add_value_from_simtel_cfg(
-                    column[2:], "type"
+                _para_dict["type"], _para_dict["dimension"] = self._get_type_from_simtel_cfg(
+                    column[2:]
                 )
         # extract other fields
         for column in columns:
             if column[0] in [simtel_telescope_name, "default", "limits"]:
                 _para_dict[column[0]], _ = self._add_value_from_simtel_cfg(
-                    column[2:], column[0], _para_dict.get("type")
+                    column[2:], _para_dict.get("type")
                 )
 
         return _para_dict
 
-    def _add_value_from_simtel_cfg(self, column, key, dtype=None):
+    def _add_value_from_simtel_cfg(self, column, dtype=None):
         """
-        Extract value(s) from simtel configuration file columns depending on key
+        Extract value(s) from simtel configuration file columns
         (this function needs to be fine tuned to those files).
 
         Parameters
         ----------
         column: list
             List of strings to extract value from.
-        key: str
-            Key (type) to extract value for (e.g., 'type', 'default')
         dtype: str
             Data type to convert value to.
 
@@ -235,9 +233,6 @@ class SimtelConfigReader:
             Values extracted from column. Of object is a list of array, return length of array.
 
         """
-        if key == "type":
-            return self._get_type_from_simtel_cfg(column)
-
         # lists are space or comma separated
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
