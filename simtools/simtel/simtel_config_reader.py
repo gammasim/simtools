@@ -2,13 +2,12 @@
 
 import json
 import logging
-from importlib.resources import files
 
-import jsonschema
+import astropy.units as u
 import numpy as np
 
-import simtools.constants
-from simtools.data_model import metadata_model
+import simtools.utils.general as gen
+from simtools.data_model import validate_data
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
@@ -26,6 +25,8 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return int(o)
         if isinstance(o, np.ndarray):
             return o.tolist()
+        if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit)):
+            return str(o) if o != u.dimensionless_unscaled else None
         return super().default(o)
 
 
@@ -58,7 +59,7 @@ class SimtelConfigReader:
 
     def __init__(
         self,
-        schema_dict,
+        schema_file,
         simtel_config_file,
         simtel_telescope_name,
         return_arrays_as_strings=True,
@@ -69,8 +70,11 @@ class SimtelConfigReader:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelConfigReader")
 
-        self.schema_dict = schema_dict
-        self.parameter_name = schema_dict.get("name")
+        self.schema_file = schema_file
+        self.schema_dict = gen.collect_data_from_file_or_dict(
+            file_name=self.schema_file, in_dict=None
+        )
+        self.parameter_name = self.schema_dict.get("name")
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
         self.return_arrays_as_strings = return_arrays_as_strings
@@ -116,16 +120,7 @@ class SimtelConfigReader:
             "applicable": self._check_parameter_applicability(telescope_name),
             "file": self._parameter_is_a_file(),
         }
-
-        try:
-            self._validate_parameter_dict(_json_dict)
-        except jsonschema.exceptions.ValidationError as exc:
-            self._logger.error(
-                f"Parameter dictionary {_json_dict} for {telescope_name} is not valid."
-            )
-            raise exc
-
-        return _json_dict
+        return self._validate_parameter_dict(_json_dict)
 
     def export_parameter_dict_to_json(self, file_name, dict_to_write):
         """
@@ -149,6 +144,7 @@ class SimtelConfigReader:
                 sort_keys=False,
                 cls=JsonNumpyEncoder,
             )
+            file.write("\n")
 
     def compare_simtel_config_with_schema(self):
         """
@@ -368,7 +364,7 @@ class SimtelConfigReader:
             pass
         return None
 
-    def _validate_parameter_dict(self, parameter_dict, model_schema_file=None):
+    def _validate_parameter_dict(self, parameter_dict):
         """
         Validate json dictionary against model parameter data schema.
 
@@ -376,18 +372,20 @@ class SimtelConfigReader:
         ----------
         parameter_dict: dict
             Dictionary to validate.
-        model_schema_file: str
-            Schema file used for validation.
+
+        Returns
+        -------
+        dict
+            Validated dictionary (possibly converted to reference units).
 
         """
 
-        if model_schema_file is None:
-            model_schema_file = files("simtools").joinpath(
-                simtools.constants.MODEL_PARAMETER_JSON_SCHEMA
-            )
-
         self._logger.info(
-            f"Validating parameter dictionary {parameter_dict} using {model_schema_file}"
+            f"Validating parameter dictionary {parameter_dict} using {self.schema_file}"
         )
-
-        metadata_model.validate_schema(parameter_dict, model_schema_file)
+        data_validator = validate_data.DataValidator(
+            schema_file=self.schema_file,
+            data_dict=parameter_dict,
+        )
+        data_validator.validate_and_transform()
+        return data_validator.data_dict

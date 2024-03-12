@@ -77,7 +77,13 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
     )
-    return config.initialize(output=True, telescope_model=True)
+    config.parser.add_argument(
+        "--output_file",
+        help="Output file (json format)",
+        type=str,
+        required=False,
+    )
+    return config.initialize(telescope_model=True)
 
 
 def main():
@@ -90,10 +96,8 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    schema_dict = gen.collect_data_from_file_or_dict(file_name=args_dict["schema"], in_dict=None)
-
     simtel_config_reader = SimtelConfigReader(
-        schema_dict=schema_dict,
+        schema_file=args_dict["schema"],
         simtel_config_file=args_dict["simtel_cfg_file"],
         simtel_telescope_name=args_dict["simtel_telescope_name"],
     )

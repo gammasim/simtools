@@ -2,12 +2,11 @@
 
 import logging
 
-import jsonschema
+import astropy.units as u
 import numpy as np
 import pytest
 
 from simtools.simtel.simtel_config_reader import JsonNumpyEncoder, SimtelConfigReader
-from simtools.utils import general as gen
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -20,22 +19,18 @@ def simtel_config_file():
 
 @pytest.fixture
 def schema_num_gains():
-    return gen.collect_data_from_file_or_dict(
-        file_name="tests/resources/num_gains.schema.yml", in_dict=None
-    )
+    return "tests/resources/num_gains.schema.yml"
 
 
 @pytest.fixture
 def schema_telescope_transmission():
-    return gen.collect_data_from_file_or_dict(
-        file_name="tests/resources/telescope_transmission.schema.yml", in_dict=None
-    )
+    return "tests/resources/telescope_transmission.schema.yml"
 
 
 @pytest.fixture
 def config_reader_num_gains(simtel_config_file, schema_num_gains):
     return SimtelConfigReader(
-        schema_dict=schema_num_gains,
+        schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
         return_arrays_as_strings=True,
@@ -45,7 +40,7 @@ def config_reader_num_gains(simtel_config_file, schema_num_gains):
 @pytest.fixture
 def config_reader_telescope_transmission(simtel_config_file, schema_telescope_transmission):
     return SimtelConfigReader(
-        schema_dict=schema_telescope_transmission,
+        schema_file=schema_telescope_transmission,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
         return_arrays_as_strings=True,
@@ -84,7 +79,7 @@ def test_simtel_config_reader_telescope_transmission(
     }
 
     _config_list = SimtelConfigReader(
-        schema_dict=schema_telescope_transmission,
+        schema_file=schema_telescope_transmission,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT8",
         return_arrays_as_strings=False,
@@ -108,7 +103,7 @@ def test_get_validated_parameter_dict(config_reader_num_gains):
         "site": "North",
         "version": "Test",
         "value": 2,
-        "unit": None,
+        "unit": u.Unit(""),
         "type": "int",
         "applicable": True,
         "file": False,
@@ -212,7 +207,7 @@ def test_get_simtel_parameter_name(config_reader_num_gains):
 def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
 
     _config = SimtelConfigReader(
-        schema_dict=schema_num_gains,
+        schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
         return_arrays_as_strings=True,
@@ -236,7 +231,7 @@ def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
 def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
 
     _config = SimtelConfigReader(
-        schema_dict=schema_num_gains,
+        schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
         return_arrays_as_strings=True,
@@ -257,7 +252,7 @@ def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
 def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
 
     _config = SimtelConfigReader(
-        schema_dict=schema_num_gains,
+        schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
         return_arrays_as_strings=True,
@@ -275,20 +270,27 @@ def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
     assert _config._get_unit_from_schema() is None
 
 
-def test_validate_parameter_dict(config_reader_num_gains):
+def test_validate_parameter_dict(config_reader_num_gains, caplog):
 
     _config = config_reader_num_gains
 
     _temp_dict = {
+        "parameter": "num_gains",
+        "instrument": "MSTN-01",
+        "site": "North",
+        "version": "Test",
+        "value": 2,
+        "unit": None,
         "type": "int",
-        "dimension": 1,
-        "limits": "1 2",
-        "default": 2,
-        "CT2": 2,
+        "applicable": True,
+        "file": False,
     }
-
-    with pytest.raises(jsonschema.exceptions.ValidationError):
-        _config._validate_parameter_dict(_temp_dict)
+    _config._validate_parameter_dict(_temp_dict)
+    _temp_dict["value"] = 25
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            _config._validate_parameter_dict(_temp_dict)
+        assert "out of range" in caplog.text
 
 
 def test_jsonnumpy_encoder():
@@ -297,6 +299,9 @@ def test_jsonnumpy_encoder():
     assert isinstance(encoder.default(np.float64(3.14)), float)
     assert isinstance(encoder.default(np.int64(3.14)), int)
     assert isinstance(encoder.default(np.array([])), list)
+    assert isinstance(encoder.default(u.Unit("m")), str)
+    assert encoder.default(u.Unit("")) is None
+    assert isinstance(encoder.default(u.Unit("m/s")), str)
 
     with pytest.raises(TypeError):
         encoder.default("abc")
