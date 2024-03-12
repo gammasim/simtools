@@ -52,7 +52,7 @@ class DataValidator:
 
         self.data_file_name = data_file
         self.schema_file_name = schema_file
-        self._reference_data_columns = None
+        self._data_description = None
         self.data_dict = data_dict
         self.data_table = data_table
         self.check_exact_data_type = check_exact_data_type
@@ -109,28 +109,32 @@ class DataValidator:
 
         """
 
-        _name = self.data_dict.get("name") or self.data_dict.get("parameter")
-        if _name is None:
+        if not (_name := self.data_dict.get("name") or self.data_dict.get("parameter")):
             raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.")
+        self._data_description = self._read_validation_schema(self.schema_file_name, _name)
 
-        self._reference_data_columns = self._read_validation_schema(self.schema_file_name, _name)
-        self._check_for_not_a_number(self.data_dict["value"], _name)
-        self._check_data_type(np.array(self.data_dict["value"]).dtype, _name)
-        self.data_dict["value"], self.data_dict["unit"] = self._check_and_convert_units(
-            self.data_dict["value"], self.data_dict.get("unit"), _name
+        value_as_list = (
+            self.data_dict.get("value")
+            if isinstance(self.data_dict["value"], list)
+            else [self.data_dict["value"]]
         )
-        for range_type in ("allowed_range", "required_range"):
-            if isinstance(self.data_dict["value"], list):
-                self._check_range(
-                    _name,
-                    np.nanmin(self.data_dict["value"]),
-                    np.nanmax(self.data_dict["value"]),
-                    range_type,
-                )
-            else:
-                self._check_range(
-                    _name, self.data_dict["value"], self.data_dict["value"], range_type
-                )
+        unit_as_list = (
+            self.data_dict.get("unit")
+            if isinstance(self.data_dict["unit"], list)
+            else [self.data_dict["unit"]]
+        )
+        # TODO ? check that both lists have same length?
+        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
+            self._check_for_not_a_number(value, index)
+            self._check_data_type(np.array(value).dtype, index)
+            value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
+                value, unit, index
+            )
+            for range_type in ("allowed_range", "required_range"):
+                self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
+
+        if len(value_as_list) == 1:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
 
     def _validate_data_table(self):
         """
@@ -139,14 +143,14 @@ class DataValidator:
         """
 
         try:
-            self._reference_data_columns = self._read_validation_schema(self.schema_file_name)[
-                0
-            ].get("table_columns", None)
+            self._data_description = self._read_validation_schema(self.schema_file_name)[0].get(
+                "table_columns", None
+            )
         except IndexError:
             self._logger.error(f"Error reading validation schema from {self.schema_file_name}")
             raise
 
-        if self._reference_data_columns is not None:
+        if self._data_description is not None:
             self._validate_data_columns()
             self._check_data_for_duplicates()
             self._sort_data()
@@ -166,7 +170,7 @@ class DataValidator:
 
         for col_name in self.data_table.colnames:
             col = self.data_table[col_name]
-            if not self._get_reference_data_column(col_name, status_test=True):
+            if not self._get_data_description(col_name, status_test=True):
                 continue
             if not np.issubdtype(col.dtype, np.number):
                 continue
@@ -187,7 +191,7 @@ class DataValidator:
 
         """
 
-        for entry in self._reference_data_columns:
+        for entry in self._data_description:
             if entry.get("required", False):
                 if entry["name"] in self.data_table.columns:
                     self._logger.debug(f"Found required data column {entry['name']}")
@@ -208,7 +212,7 @@ class DataValidator:
 
         _columns_by_which_to_sort = []
         _columns_by_which_to_reverse_sort = []
-        for entry in self._reference_data_columns:
+        for entry in self._data_description:
             if "input_processing" in entry:
                 if "sort" in entry["input_processing"]:
                     _columns_by_which_to_sort.append(entry["name"])
@@ -276,7 +280,7 @@ class DataValidator:
 
         _unique_required_column = []
 
-        for entry in self._reference_data_columns:
+        for entry in self._data_description:
             if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
                 self._logger.debug(f"Removing duplicates for column {entry['name']}")
                 _unique_required_column.append(entry["name"])
@@ -305,7 +309,7 @@ class DataValidator:
 
         """
 
-        reference_unit = self._get_reference_data_column(column_name).get("unit", None)
+        reference_unit = self._get_data_description(column_name).get("unit", None)
         if reference_unit in ("dimensionless", None, ""):
             return u.dimensionless_unscaled
 
@@ -329,7 +333,7 @@ class DataValidator:
 
         """
 
-        reference_dtype = self._get_reference_data_column(column_name).get("type", None)
+        reference_dtype = self._get_data_description(column_name).get("type", None)
 
         if self.check_exact_data_type:
             if np.issubdtype(dtype, reference_dtype):
@@ -381,7 +385,7 @@ class DataValidator:
         if np.isinf(data).any():
             self._logger.info(f"Column {col_name} contains infinite value.")
 
-        entry = self._get_reference_data_column(col_name)
+        entry = self._get_data_description(col_name)
         if "allow_nan" in entry.get("input_processing", {}):
             return np.isnan(data).any() or np.isinf(data).any()
 
@@ -494,7 +498,7 @@ class DataValidator:
             self._logger.error("Allowed range types are 'allowed_range', 'required_range'")
             raise
 
-        _entry = self._get_reference_data_column(col_name)
+        _entry = self._get_data_description(col_name)
         if range_type not in _entry:
             return None
 
@@ -586,9 +590,12 @@ class DataValidator:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise
 
-    def _get_reference_data_column(self, column_name, status_test=False):
+    def _get_data_description(self, column_name=None, status_test=False):
         """
-        Return entry in reference data for a given column name.
+        Return data description as provided by the schema file.
+        For tables (type: 'datatable'), return the description of
+        the column named 'column_name'. For other types, return
+        all data descriptions.
         For columns named 'colX' return the Xth column in the reference data.
 
         Parameters
@@ -605,7 +612,6 @@ class DataValidator:
         bool
             True if reference column exists (for status_test==True).
 
-
         Raises
         ------
         IndexError
@@ -614,17 +620,31 @@ class DataValidator:
         """
 
         self._logger.debug(
-            f"Getting reference data column {column_name} "
-            f"from schema {self._reference_data_columns}"
+            f"Getting reference data column {column_name} " f"from schema {self._data_description}"
         )
+        try:
+            return (
+                self._data_description[column_name]
+                if not status_test
+                else (
+                    self._data_description[column_name] is not None
+                    and len(self._data_description) > 0
+                )
+            )
+        except IndexError as exc:
+            self._logger.error(
+                f"Data column '{column_name}' not found in reference column definition"
+            )
+            raise exc
+        except TypeError:
+            pass  # column_name is not an integer
+
         _index = 0
-        if len(self._reference_data_columns) == 1:
-            _entry = self._reference_data_columns
-        elif bool(re.match(r"^col\d$", column_name)):
+        if bool(re.match(r"^col\d$", column_name)):
             _index = int(column_name[3:])
-            _entry = self._reference_data_columns
+            _entry = self._data_description
         else:
-            _entry = [item for item in self._reference_data_columns if item["name"] == column_name]
+            _entry = [item for item in self._data_description if item["name"] == column_name]
         if status_test:
             return len(_entry) > 0
         try:
