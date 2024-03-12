@@ -244,7 +244,9 @@ def test_check_and_convert_units():
     table_1["position_y"] = Column([5.0, 7], unit="km", dtype="float32")
 
     for col_name in table_1.colnames:
-        table_1[col_name] = data_validator._check_and_convert_units(table_1[col_name], col_name)
+        table_1[col_name], _ = data_validator._check_and_convert_units(
+            table_1[col_name], unit=None, col_name=col_name
+        )
 
     # check unit conversion for "position_x" (column type Quantity)
     assert table_1["position_x"].unit == u.m
@@ -259,14 +261,29 @@ def test_check_and_convert_units():
 
     with pytest.raises(IndexError):
         for col_name in table_2.colnames:
-            data_validator._check_and_convert_units(table_2[col_name], col_name)
+            data_validator._check_and_convert_units(table_2[col_name], unit=None, col_name=col_name)
 
     table_3 = Table()
     table_3["wavelength"] = Column([300.0, 350.0], unit="kg", dtype="float32")
 
     with pytest.raises(u.core.UnitConversionError):
         for col_name in table_3.colnames:
-            data_validator._check_and_convert_units(table_3[col_name], col_name)
+            data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
+
+    # convert numbers and quantities
+    assert data_validator._check_and_convert_units(300.0, unit="nm", col_name="wavelength") == (
+        300.0,
+        u.nm,
+    )
+    assert data_validator._check_and_convert_units(300.0, unit="mm", col_name="wavelength") == (
+        300000000.0,
+        u.nm,
+    )
+    data_validator._reference_data_columns[0]["type"] = "int"
+    assert data_validator._check_and_convert_units(300, unit="nm", col_name="wavelength") == (
+        300,
+        u.nm,
+    )
 
 
 def test_check_required_columns():
@@ -337,20 +354,19 @@ def test_check_data_type(caplog):
     data_validator._reference_data_columns = get_reference_columns()
 
     with caplog.at_level(logging.DEBUG):
-        data_validator._check_data_type(
-            Column([300.0, 350.0, 315.0], dtype="double", name="wavelength"), "wavelength"
-        )
-    assert "Data column 'wavelength' has correct data type" in caplog.text
+        assert data_validator._check_data_type(np.dtype("double"), "wavelength") is None
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(TypeError):
-            assert data_validator._check_data_type(
-                Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
-            )
+            assert data_validator._check_data_type(np.dtype("float32"), "wavelength")
     assert (
         "Invalid data type in column 'wavelength'. Expected type 'double', found 'float32'"
         in caplog.text
     )
+
+    # sub types only
+    data_validator.check_exact_data_type = False
+    assert data_validator._check_data_type(np.dtype("float32"), "wavelength") is None
 
 
 def test_check_for_not_a_number():
@@ -365,30 +381,22 @@ def test_check_for_not_a_number():
 
     # wavelength does not allow for nan
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "wavelength")
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([np.nan, 350.0, np.inf], "wavelength")
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([300.0, 350.0, np.inf], "wavelength")
 
     # position_x allows for nan
-    assert not (
-        data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
-        )
-    )
-    assert data_validator._check_for_not_a_number(
-        Column([np.nan, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
-    )
-    assert data_validator._check_for_not_a_number(
-        Column([333.0, np.inf, 315.0], dtype="float32", name="position_x"), "position_x"
-    )
+    assert not (data_validator._check_for_not_a_number([300.0, 350.0, 315.0], "position_x"))
+    assert data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "position_x")
+    assert data_validator._check_for_not_a_number([333.0, np.inf, 315.0], "position_x")
+
+    assert not data_validator._check_for_not_a_number(333.0, "wavelength")
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(np.inf, "wavelength")
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
 def test_read_validation_schema(tmp_test_directory):
@@ -447,15 +455,8 @@ def test_validate_data_dict():
     )
     data_validator.data_dict = {
         "name": "reference_point_altitude",
-        "value": [1000.0],
-        "unit": ["km"],
-    }
-    data_validator._validate_data_dict()
-
-    data_validator.data_dict = {
-        "parameter": "reference_point_altitude",
-        "value": [1000.0],
-        "unit": ["km"],
+        "value": 1000.0,
+        "unit": "km",
     }
     data_validator._validate_data_dict()
 
