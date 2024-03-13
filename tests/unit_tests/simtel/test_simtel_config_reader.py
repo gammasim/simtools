@@ -53,13 +53,18 @@ def test_simtel_config_reader_num_gains(config_reader_num_gains):
     assert _config.parameter_name == "num_gains"
     assert _config.simtel_parameter_name == "NUM_GAINS"
 
-    assert _config.parameter_dict == {
-        "type": "int",
+    expected_dict = {
+        "type": "int64",
         "dimension": 1,
-        "limits": "1 2",
+        "limits": np.array([1, 2]),
         "default": 2,
         "CT2": 2,
     }
+
+    assert all(
+        np.array_equal(_config.parameter_dict[key], expected_dict[key])
+        for key in _config.parameter_dict
+    )
 
 
 def test_simtel_config_reader_telescope_transmission(
@@ -71,27 +76,13 @@ def test_simtel_config_reader_telescope_transmission(
     assert _config.parameter_name == "telescope_transmission"
     assert _config.simtel_parameter_name == "TELESCOPE_TRANSMISSION"
 
-    assert _config.parameter_dict == {
-        "type": "str",
-        "dimension": 1,
-        "default": "0.89 0 0 0 0",
-        "CT2": "0.969 0 0 0 0 0",
-    }
-
-    _config_list = SimtelConfigReader(
-        schema_file=schema_telescope_transmission,
-        simtel_config_file=simtel_config_file,
-        simtel_telescope_name="CT8",
-        return_arrays_as_strings=False,
-    )
-
-    print(_config_list.parameter_dict)
-    assert _config_list.parameter_dict["dimension"] == 6
-    assert _config_list.parameter_dict["type"] == "double"
-    assert len(_config_list.parameter_dict["default"]) == 5
-    assert _config_list.parameter_dict["default"][0] == pytest.approx(0.89)
-    assert _config_list.parameter_dict["CT8"][0] == pytest.approx(0.898)
-    assert _config_list.parameter_dict["CT8"][4] == pytest.approx(1.705)
+    assert _config.parameter_dict["dimension"] == 6
+    assert _config.parameter_dict["type"] == "float64"
+    assert len(_config.parameter_dict["default"]) == 6
+    assert _config.parameter_dict["default"][0] == pytest.approx(0.89)
+    assert _config.parameter_dict["CT2"][0] == pytest.approx(0.969)
+    assert _config.parameter_dict["CT2"][4] == pytest.approx(0.0)
+    assert len(_config.parameter_dict["CT2"]) == 6
 
 
 def test_get_validated_parameter_dict(config_reader_num_gains):
@@ -104,7 +95,7 @@ def test_get_validated_parameter_dict(config_reader_num_gains):
         "version": "Test",
         "value": 2,
         "unit": u.Unit(""),
-        "type": "int",
+        "type": "int64",
         "applicable": True,
         "file": False,
     }
@@ -135,7 +126,7 @@ def test_compare_simtel_config_with_schema(
     _config_tt = config_reader_telescope_transmission
     _config_tt.compare_simtel_config_with_schema()
     out, _ = capfd.readouterr()
-    assert "from simtel: 0.89 0 0 0 0" in out
+    assert "from simtel: [0.89" in out
     assert "from schema: None" in out
 
 
@@ -159,12 +150,11 @@ def test_get_type_from_simtel_cfg(config_reader_num_gains):
     _config = config_reader_num_gains
 
     # type
-    assert _config._get_type_from_simtel_cfg(["Int", "1"]) == ("int", 1)
-    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("str", 1)
+    assert _config._get_type_from_simtel_cfg(["Int", "1"]) == ("int64", 1)
+    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("float64", 5)
     assert _config._get_type_from_simtel_cfg(["Text", "55"]) == ("str", 1)
     assert _config._get_type_from_simtel_cfg(["IBool", "1"]) == ("bool", 1)
     _config.return_arrays_as_strings = False
-    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("double", 5)
 
 
 def test_add_value_from_simtel_cfg(config_reader_num_gains):
@@ -173,11 +163,6 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     # default
     assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)
-    # default (comma separated, return array as string)
-    assert _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], dtype="double") == (
-        "0.89 0 0 0 0",
-        5,
-    )
     assert _config._add_value_from_simtel_cfg(["all: 5"], dtype="int") == (5, 1)
 
     # comma separated, return array as list

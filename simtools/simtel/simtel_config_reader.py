@@ -138,6 +138,7 @@ class SimtelConfigReader:
         try:
             dict_to_write["value"] = self._output_format_for_arrays(dict_to_write["value"])
             dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"])
+            dict_to_write["limits"] = self._output_format_for_arrays(dict_to_write["limits"])
         except KeyError:
             pass
 
@@ -252,13 +253,20 @@ class SimtelConfigReader:
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
             column = [item for item in column if item != "all:"]
+        self._logger.debug(
+            f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
+        )
         # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
         if ndim > 1 and len(column) < ndim:
             try:
                 column.append(default[len(column)])
             except TypeError as exc:
-                self._logger.error("Default values not set.")
-                raise exc
+                # extend array to required length using previous value
+                if len(column) > 0:
+                    column.extend([column[-1]] * (ndim - len(column)))
+                else:
+                    self._logger.error("No default value available for extension.")
+                    raise exc
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
@@ -416,7 +424,9 @@ class SimtelConfigReader:
             Converted data as string (if required)
 
         """
-        if data is None or len(data) == 1 or not self.return_arrays_as_strings:
+        if data is None or not isinstance(data, (list, np.ndarray)):
+            return data
+        if len(data) == 1 or not self.return_arrays_as_strings:
             return data
 
         return " ".join(str(item) for item in data)
