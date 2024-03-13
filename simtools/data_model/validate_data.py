@@ -115,15 +115,14 @@ class DataValidator:
 
         value_as_list = (
             self.data_dict.get("value")
-            if isinstance(self.data_dict["value"], list)
+            if isinstance(self.data_dict["value"], (list, np.ndarray))
             else [self.data_dict["value"]]
         )
         unit_as_list = (
             self.data_dict.get("unit")
-            if isinstance(self.data_dict["unit"], list)
+            if isinstance(self.data_dict["unit"], (list, np.ndarray))
             else [self.data_dict["unit"]]
         )
-        # TODO ? check that both lists have same length?
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             self._check_for_not_a_number(value, index)
             self._check_data_type(np.array(value).dtype, index)

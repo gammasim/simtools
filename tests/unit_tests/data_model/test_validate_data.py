@@ -470,6 +470,9 @@ def test_validate_data_dict():
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
 
+    data_validator_2.data_dict = {"name": "num_gains", "value": np.array([2]), "unit": [""]}
+    data_validator_2._validate_data_dict()
+
     data_validator.data_dict = {
         "no_name": "test_data",
         "value": [1.0, 2.0, 3.0],
