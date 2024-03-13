@@ -21,6 +21,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-profiling
+  - pytest-repeat
   - pytest-xdist
   - python-dotenv
   - pyyaml
