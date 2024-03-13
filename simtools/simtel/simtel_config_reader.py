@@ -25,7 +25,7 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return int(o)
         if isinstance(o, np.ndarray):
             return o.tolist()
-        if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit)):
+        if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit, u.core.Unit)):
             return str(o) if o != u.dimensionless_unscaled else None
         return super().default(o)
 
@@ -135,6 +135,12 @@ class SimtelConfigReader:
 
         """
 
+        try:
+            dict_to_write["value"] = self._output_format_for_arrays(dict_to_write["value"])
+            dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"])
+        except KeyError:
+            pass
+
         self._logger.info(f"Exporting parameter dictionary to {file_name}")
         with open(file_name, "w", encoding="utf-8") as file:
             json.dump(
@@ -189,36 +195,41 @@ class SimtelConfigReader:
 
         """
 
-        columns = []
+        matching_lines = {}
         try:
             with open(simtel_config_file, "r", encoding="utf-8") as file:
                 for line in file:
                     if self.simtel_parameter_name in line.upper():
-                        columns.append(line.strip().split("\t"))
+                        parts_of_lines = line.strip().split("\t")
+                        matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
         except FileNotFoundError as exc:
             self._logger.error(f"File {simtel_config_file} not found.")
             raise exc
 
         _para_dict = {}
-        # extract first column type (required for conversions and dimension)
-        for column in columns:
-            if column[0] == "type":
-                _para_dict["type"], _para_dict["dimension"] = self._get_type_from_simtel_cfg(
-                    column[2:]
+        # first: extract line type (required for conversions and dimension)
+        _para_dict["type"], _para_dict["dimension"] = self._get_type_from_simtel_cfg(
+            matching_lines["type"]
+        )
+        # then: extract other fields
+        # (order of keys matter; not all field are present for all parameters)
+        for key in ["default", simtel_telescope_name, "limits"]:
+            try:
+                _para_dict[key], _ = self._add_value_from_simtel_cfg(
+                    matching_lines[key],
+                    dtype=_para_dict.get("type"),
+                    ndim=_para_dict.get("dimension"),
+                    default=_para_dict.get("default"),
                 )
-        # extract other fields
-        for column in columns:
-            if column[0] in [simtel_telescope_name, "default", "limits"]:
-                _para_dict[column[0]], _ = self._add_value_from_simtel_cfg(
-                    column[2:], _para_dict.get("type")
-                )
+            except KeyError:
+                pass
 
         return _para_dict
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None):
+    def _add_value_from_simtel_cfg(self, column, dtype=None, ndim=1, default=None):
         """
-        Extract value(s) from simtel configuration file columns
-        (this function needs to be fine tuned to those files).
+        Extract value(s) from simtel configuration file columns.
+        This function is fine-tuned to the simtel configuration output.
 
         Parameters
         ----------
@@ -226,6 +237,10 @@ class SimtelConfigReader:
             List of strings to extract value from.
         dtype: str
             Data type to convert value to.
+        ndim: int
+            Length of array to be returned.
+        default: object
+            Default value to extend array to required length.
 
         Returns
         -------
@@ -233,16 +248,21 @@ class SimtelConfigReader:
             Values extracted from column. Of object is a list of array, return length of array.
 
         """
-        # lists are space or comma separated
+        # lists of values are space or comma separated
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
             column = [item for item in column if item != "all:"]
+        # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
+        if ndim > 1 and len(column) < ndim:
+            try:
+                column.append(default[len(column)])
+            except TypeError as exc:
+                self._logger.error("Default values not set.")
+                raise exc
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
         if len(column) > 1:
-            if self.return_arrays_as_strings:
-                return " ".join(column), len(column)
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
 
@@ -266,11 +286,7 @@ class SimtelConfigReader:
             return "str", 1
         if column[0].lower() == "ibool":
             return "bool", int(column[1])
-        if int(column[1]) > 1 and self.return_arrays_as_strings:
-            return "str", 1
-        # TODO - cannot handle arrays of different types
-        # return np.dtype(column[0].lower()), int(column[1])
-        return column[0].lower(), int(column[1])
+        return str(np.dtype(column[0].lower())), int(column[1])
 
     def _get_simtel_parameter_name(self, parameter_name):
         """
@@ -342,19 +358,18 @@ class SimtelConfigReader:
 
     def _get_unit_from_schema(self):
         """
-        Return unit from schema dict.
+        Return unit(s) from schema dict.
 
         Returns
         -------
-        str
-            Parameter unit
+        str or list
+            Parameter unit(s)
         """
         try:
-            return (
-                self.schema_dict["data"][0]["unit"]
-                if self.schema_dict["data"][0]["unit"] != "dimensionless"
-                else None
-            )
+            unit_list = []
+            for data in self.schema_dict["data"]:
+                unit_list.append(data["unit"] if data["unit"] != "dimensionless" else None)
+            return unit_list if len(unit_list) > 1 else unit_list[0]
         except (KeyError, IndexError):
             pass
         return None
@@ -385,3 +400,23 @@ class SimtelConfigReader:
         )
         data_validator.validate_and_transform()
         return data_validator.data_dict
+
+    def _output_format_for_arrays(self, data):
+        """
+        Convert arrays to strings if required.
+
+        Parameters
+        ----------
+        data: object
+            Object of data to convert (e.g., double or list)
+
+        Returns
+        -------
+        object or str:
+            Converted data as string (if required)
+
+        """
+        if data is None or len(data) == 1 or not self.return_arrays_as_strings:
+            return data
+
+        return " ".join(str(item) for item in data)
