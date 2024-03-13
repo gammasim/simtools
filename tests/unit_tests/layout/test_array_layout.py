@@ -74,7 +74,7 @@ def test_array_layout_empty(db_config):
     assert layout.get_number_of_telescopes() == 0
 
     with pytest.raises(ValueError):
-        ArrayLayout(mongo_db_config=None, site="South")
+        ArrayLayout(mongo_db_config=None, site=None)
 
 
 def test_from_array_layout_name(io_handler, db_config):
