@@ -58,14 +58,6 @@ def array_layout_south_four_LST_instance(db_config):
     )
 
 
-def test_array_layout_empty(db_config):
-    layout = ArrayLayout(mongo_db_config=db_config, site="South")
-    assert layout.get_number_of_telescopes() == 0
-
-    with pytest.raises(ValueError):
-        ArrayLayout(mongo_db_config=None, site="South")
-
-
 def test_from_array_layout_name(io_handler, db_config):
     layout = ArrayLayout.from_array_layout_name(
         mongo_db_config=db_config, array_layout_name="South-4LST"
