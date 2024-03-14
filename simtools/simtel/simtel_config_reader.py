@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 
 import astropy.units as u
 import numpy as np
@@ -207,7 +208,7 @@ class SimtelConfigReader:
             with open(simtel_config_file, "r", encoding="utf-8") as file:
                 for line in file:
                     try:
-                        parts_of_lines = line.strip().split("\t")
+                        parts_of_lines = re.split(r"\t| ", line)
                         if self.simtel_parameter_name == parts_of_lines[1].upper():
                             matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
                     except (TypeError, AttributeError):

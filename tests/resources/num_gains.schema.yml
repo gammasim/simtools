@@ -10,7 +10,7 @@ description: Number of different gains the input signal gets digitized.
 data:
   - type: int
     unit: dimensionless
-    default: 1
+    default: 2
     allowed_range:
       min: 1
       max: 2

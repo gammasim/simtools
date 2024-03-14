@@ -5,7 +5,7 @@
     "version": "2024-03-06",
     "value": 2,
     "unit": null,
-    "type": "int",
+    "type": "int64",
     "applicable": true,
     "file": false
 }

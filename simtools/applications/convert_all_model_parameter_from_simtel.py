@@ -33,6 +33,7 @@
 """
 
 import logging
+import re
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -128,7 +129,7 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
     with open(simtel_config_file, "r", encoding="utf-8") as file:
         for line in file:
             try:
-                parts_of_lines = line.strip().split("\t")
+                parts_of_lines = re.split(r"\t| ", line)
                 simtel_parameter_set.add(parts_of_lines[1].lower())
             except (TypeError, AttributeError):
                 pass
