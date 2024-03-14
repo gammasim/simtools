@@ -27,6 +27,8 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return o.tolist()
         if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit, u.core.Unit)):
             return str(o) if o != u.dimensionless_unscaled else None
+        if np.issubdtype(o, np.bool_):
+            return bool(o)
         return super().default(o)
 
 
@@ -47,8 +49,8 @@ class SimtelConfigReader:
 
     Parameters
     ----------
-    schema_dict: dict
-        Schema dictionary describing the model parameter.
+    schema_file: str
+        Schema file describing the model parameter.
     simtel_config_file: str or Path
         Path of the file to read from.
     simtel_telescope_name: str

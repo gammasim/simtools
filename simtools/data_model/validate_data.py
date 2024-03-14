@@ -340,7 +340,9 @@ class DataValidator:
                 return None
         # allow any sub-type of integer or float for success
         else:
-            if np.issubdtype(dtype, np.str_):
+            if np.issubdtype(dtype, np.str_) and reference_dtype in ("string", "str", "file"):
+                return None
+            if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
                 return None
             if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.integer):
                 return None
