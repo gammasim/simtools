@@ -196,16 +196,26 @@ class SimtelConfigReader:
 
         """
 
+        self._logger.debug(
+            f"Reading simtel config file {simtel_config_file} "
+            f"for parameter {self.parameter_name}"
+        )
         matching_lines = {}
         try:
             with open(simtel_config_file, "r", encoding="utf-8") as file:
                 for line in file:
-                    if self.simtel_parameter_name in line.upper():
+                    try:
                         parts_of_lines = line.strip().split("\t")
-                        matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
+                        if self.simtel_parameter_name == parts_of_lines[1].upper():
+                            matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
+                    except (TypeError, AttributeError):
+                        pass
         except FileNotFoundError as exc:
             self._logger.error(f"File {simtel_config_file} not found.")
             raise exc
+        if len(matching_lines) == 0:
+            self._logger.info(f"No entries found for parameter {self.simtel_parameter_name}")
+            return None
 
         _para_dict = {}
         # first: extract line type (required for conversions and dimension)
