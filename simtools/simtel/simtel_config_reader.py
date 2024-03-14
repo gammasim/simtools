@@ -269,7 +269,7 @@ class SimtelConfigReader:
         # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
         if ndim > 1 and len(column) < ndim:
             try:
-                column.append(default[len(column)])
+                column += default[len(column):]
             except TypeError as exc:
                 # extend array to required length using previous value
                 if len(column) > 0:
