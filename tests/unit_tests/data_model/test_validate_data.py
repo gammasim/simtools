@@ -230,6 +230,10 @@ def test_check_range(caplog):
             data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
     assert "Value for column 'qe' out of range" in caplog.text
 
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
+
 
 def test_check_and_convert_units():
     data_validator = validate_data.DataValidator()
@@ -285,6 +289,15 @@ def test_check_and_convert_units():
         u.nm,
     )
 
+    data_validator._data_description[0]["type"] = ["int", "int"]
+    assert data_validator._check_and_convert_units(
+        [300, 350], unit=["nm", "nm"], col_name="wavelength"
+    ) == ([300, 350], u.nm)
+    data_validator._data_description[0]["type"] = ["int", "int"]
+    assert data_validator._check_and_convert_units(
+        [300, 350], unit=["nm", None], col_name="wavelength"
+    ) == ([300, 350], u.nm)
+
 
 def test_check_required_columns():
     data_validator = validate_data.DataValidator()
@@ -332,6 +345,9 @@ def test_get_data_description():
 
     assert data_validator._get_data_description("col1") == {"name": "col1"}
 
+    with pytest.raises(IndexError):
+        data_validator._get_data_description(100)
+
 
 def test_get_reference_unit():
     data_validator = validate_data.DataValidator()
@@ -366,7 +382,27 @@ def test_check_data_type(caplog):
 
     # sub types only
     data_validator.check_exact_data_type = False
+
+    # floats
     assert data_validator._check_data_type(np.dtype("float32"), "wavelength") is None
+
+    # ints
+    data_validator._data_description[0]["type"] = "int"
+    assert data_validator._check_data_type(np.dtype("int64"), "wavelength") is None
+
+    # string types
+    data_validator._data_description[0]["type"] = "string"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "str"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "file"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+
+    # bool types
+    data_validator._data_description[0]["type"] = "bool"
+    assert data_validator._check_data_type(np.dtype("bool"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "boolean"
+    assert data_validator._check_data_type(np.dtype("bool"), "wavelength") is None
 
 
 def test_check_for_not_a_number():
@@ -378,6 +414,8 @@ def test_check_for_not_a_number():
             Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
         )
     )
+
+    assert data_validator._check_for_not_a_number("string", "wavelength")
 
     # wavelength does not allow for nan
     with pytest.raises(ValueError):
