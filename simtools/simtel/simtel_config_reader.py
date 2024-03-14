@@ -269,6 +269,7 @@ class SimtelConfigReader:
         # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
         if ndim > 1 and len(column) < ndim:
             try:
+                # skip formatting: black reformats and violates E203
                 column += default[len(column):]  # fmt: skip
             except TypeError as exc:
                 # extend array to required length using previous value
