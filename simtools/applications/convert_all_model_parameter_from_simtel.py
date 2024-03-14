@@ -2,8 +2,8 @@
 """
     Summary
     -------
-    Convert all simulation model parameter from sim_telarray format using the corresponding
-    schema files. Check value, type, and range and output (if successful) a json file
+    Convert all simulation model parameters from sim_telarray format using the corresponding
+    schema files. Check value, type, and range and output (if successful) json files
     ready to be submitted to the model database.
 
     Command line arguments
@@ -76,7 +76,7 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
     )
-    return config.initialize(output=True, telescope_model=True)
+    return config.initialize(telescope_model=True)
 
 
 def get_list_of_parameters_and_schema_files(schema_directory):
@@ -154,14 +154,13 @@ def main():
         _json_dict = simtel_config_reader.get_validated_parameter_dict(
             telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
         )
-        logger.info(f"DB JSON {_json_dict}")
+        logger.info(f"Validated parameter {_json_dict}")
 
         simtel_config_reader.compare_simtel_config_with_schema()
 
-
-#        if args_dict["output_file"]:
-#            simtel_config_reader.export_parameter_dict_to_json(
-#        args_dict["output_file"], _json_dict)
+        simtel_config_reader.export_parameter_dict_to_json(
+            Path(args_dict["output_path"]) / f"{_parameter}.json", _json_dict
+        )
 
 
 if __name__ == "__main__":
