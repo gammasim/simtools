@@ -114,20 +114,18 @@ def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gai
 
 
 def test_compare_simtel_config_with_schema(
-    config_reader_num_gains, config_reader_telescope_transmission, capfd
+    config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
 
     _config_ng = config_reader_num_gains
     _config_ng.compare_simtel_config_with_schema()
-    out, _ = capfd.readouterr()
-    assert "from simtel: 2" in out
-    assert "from schema: {'min': 1, 'max': 2})" in out
+    assert "from simtel: 2" in caplog.text
+    assert "from schema: {'min': 1, 'max': 2})" in caplog.text
 
     _config_tt = config_reader_telescope_transmission
     _config_tt.compare_simtel_config_with_schema()
-    out, _ = capfd.readouterr()
-    assert "from simtel: [0.89" in out
-    assert "from schema: None" in out
+    assert "from simtel: [0.89" in caplog.text
+    assert "from schema: None" in caplog.text
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file):
