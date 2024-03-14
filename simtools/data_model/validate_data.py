@@ -126,11 +126,12 @@ class DataValidator:
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             self._check_for_not_a_number(value, index)
             self._check_data_type(np.array(value).dtype, index)
-            value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
-                value, unit, index
-            )
-            for range_type in ("allowed_range", "required_range"):
-                self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
+            if self.data_dict.get("type") != "string":
+                value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
+                    value, unit, index
+                )
+                for range_type in ("allowed_range", "required_range"):
+                    self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
 
         if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
@@ -339,6 +340,8 @@ class DataValidator:
                 return None
         # allow any sub-type of integer or float for success
         else:
+            if np.issubdtype(dtype, np.str_):
+                return None
             if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.integer):
                 return None
             if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
