@@ -145,7 +145,10 @@ def main():
             simtel_telescope_name=args_dict["simtel_telescope_name"],
         )
         logger.info(f"Simtel parameter: {simtel_config_reader.parameter_dict}")
-        if len(simtel_config_reader.parameter_dict) == 0:
+        if (
+            simtel_config_reader.parameter_dict is None
+            or len(simtel_config_reader.parameter_dict) == 0
+        ):
             logger.error("Parameter not found in sim_telarray configuration file.")
             continue
         _json_dict = simtel_config_reader.get_validated_parameter_dict(
