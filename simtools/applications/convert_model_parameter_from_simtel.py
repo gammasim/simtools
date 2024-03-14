@@ -27,7 +27,8 @@
 
     .. code-block:: console
 
-       simtools-convert-model-parameter-from-simtel -simtel_telescope_name CT1\
+       simtools-convert-model-parameter-from-simtel \
+          --simtel_telescope_name CT1\
           --telescope LSTN-01\
           --parameter num_gains\
           --simtel_cfg_file all_telescope_config_la_palma.cfg
@@ -101,14 +102,14 @@ def main():
         simtel_config_file=args_dict["simtel_cfg_file"],
         simtel_telescope_name=args_dict["simtel_telescope_name"],
     )
-    logger.info(f"PARAMETER: {simtel_config_reader.parameter_dict}")
+    logger.info(f"Simtel parameter: {simtel_config_reader.parameter_dict}")
     if len(simtel_config_reader.parameter_dict) == 0:
         logger.error("Parameter not found in sim_telarray configuration file.")
         return
     _json_dict = simtel_config_reader.get_validated_parameter_dict(
         telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
     )
-    logger.info(f"DB JSON {_json_dict}")
+    logger.info(f"Validated parameter: {_json_dict}")
 
     simtel_config_reader.compare_simtel_config_with_schema()
 

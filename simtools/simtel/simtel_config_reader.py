@@ -99,7 +99,7 @@ class SimtelConfigReader:
             Model parameter dictionary.
 
         """
-        self._logger.info(f"Getting validated parameter dictionary for {telescope_name}")
+        self._logger.debug(f"Getting validated parameter dictionary for {telescope_name}")
 
         _json_dict = {
             "parameter": self.parameter_name,
@@ -160,23 +160,23 @@ class SimtelConfigReader:
 
         """
 
-        print(
-            f"Comparing simtel_array configuration with schema for {self.parameter_name}"
+        self._logger.info(
+            f"Comparing simtel_array configuration with schema for {self.parameter_name} "
             f"(sim_telarray: {self.simtel_parameter_name})"
         )
 
-        print("Limits:")
-        print(f"  from simtel: {self.parameter_dict.get('limits')}")
+        self._logger.info("Limits:")
+        self._logger.info(f"  from simtel: {self.parameter_dict.get('limits')}")
         try:
-            print(f"  from schema: {self.schema_dict['data'][0]['allowed_range']})")
+            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['allowed_range']})")
         except (KeyError, IndexError):
-            print("  from schema: None")
-        print("Defaults:")
-        print(f"  from simtel: {self.parameter_dict.get('default')}")
+            self._logger.info("  from schema: None")
+        self._logger.info("Defaults:")
+        self._logger.info(f"  from simtel: {self.parameter_dict.get('default')}")
         try:
-            print(f"  from schema: {self.schema_dict['data'][0]['default']}")
+            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['default']}")
         except (KeyError, IndexError):
-            print("  from schema: None")
+            self._logger.info("  from schema: None")
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -269,7 +269,7 @@ class SimtelConfigReader:
         # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
         if ndim > 1 and len(column) < ndim:
             try:
-                column += default[len(column):]
+                column += default[len(column):]  # fmt: skip
             except TypeError as exc:
                 # extend array to required length using previous value
                 if len(column) > 0:
@@ -408,7 +408,7 @@ class SimtelConfigReader:
 
         """
 
-        self._logger.info(
+        self._logger.debug(
             f"Validating parameter dictionary {parameter_dict} using {self.schema_file}"
         )
         data_validator = validate_data.DataValidator(
