@@ -348,8 +348,6 @@ class DataValidator:
                 return None
             if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
                 return None
-            if np.issubdtype(dtype, reference_dtype):
-                return None
 
         self._logger.error(
             f"Invalid data type in column '{column_name}'. "
@@ -513,8 +511,6 @@ class DataValidator:
                 range_type,
             ):
                 raise ValueError
-        except KeyError:
-            self._logger.error(f"Invalid range ('{range_type}') definition for column '{col_name}'")
         except ValueError:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "

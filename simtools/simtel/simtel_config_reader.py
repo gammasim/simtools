@@ -28,7 +28,7 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return o.tolist()
         if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit, u.core.Unit)):
             return str(o) if o != u.dimensionless_unscaled else None
-        if np.issubdtype(o, np.bool_):
+        if np.issubdtype(type(o), np.bool_):
             return bool(o)
         return super().default(o)
 
@@ -207,12 +207,10 @@ class SimtelConfigReader:
         try:
             with open(simtel_config_file, "r", encoding="utf-8") as file:
                 for line in file:
-                    try:
-                        parts_of_lines = re.split(r"\t| ", line)
-                        if self.simtel_parameter_name == parts_of_lines[1].upper():
-                            matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
-                    except (TypeError, AttributeError):
-                        pass
+                    # split line into parts (space, tabs, comma separated)
+                    parts_of_lines = re.split(r",\s*|\s+", line.strip())
+                    if self.simtel_parameter_name == parts_of_lines[1].upper():
+                        matching_lines[parts_of_lines[0]] = parts_of_lines[2:]
         except FileNotFoundError as exc:
             self._logger.error(f"File {simtel_config_file} not found.")
             raise exc
@@ -269,18 +267,16 @@ class SimtelConfigReader:
         self._logger.debug(
             f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
         )
+        # remove any ':all' entries
+        column = [item for item in column if item != "all:"]
         # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
         if ndim > 1 and len(column) < ndim:
             try:
                 # skip formatting: black reformats and violates E203
                 column += default[len(column):]  # fmt: skip
-            except TypeError as exc:
+            except TypeError:
                 # extend array to required length using previous value
-                if len(column) > 0:
-                    column.extend([column[-1]] * (ndim - len(column)))
-                else:
-                    self._logger.error("No default value available for extension.")
-                    raise exc
+                column.extend([column[-1]] * (ndim - len(column)))
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1

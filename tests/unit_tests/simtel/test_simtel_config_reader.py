@@ -128,7 +128,7 @@ def test_compare_simtel_config_with_schema(
     assert "from schema: None" in caplog.text
 
 
-def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file):
+def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
 
     _config_ng = config_reader_num_gains
 
@@ -141,6 +141,11 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file):
     # non existing telescope
     _para_dict = _config_ng._read_simtel_config_file(simtel_config_file, "CT1000")
     assert "CT1000" not in _para_dict
+
+    # non existing parameter
+    _config_ng.simtel_parameter_name = "this parameter does not exist"
+    assert _config_ng._read_simtel_config_file(simtel_config_file, "CT1") is None
+    assert "No entries found for parameter" in caplog.text
 
 
 def test_get_type_from_simtel_cfg(config_reader_num_gains):
@@ -271,6 +276,19 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
         assert "out of range" in caplog.text
 
 
+def test_output_format_for_arrays(config_reader_num_gains):
+
+    _config = config_reader_num_gains
+
+    assert _config._output_format_for_arrays(None) is None
+    assert _config._output_format_for_arrays("a") == "a"
+    assert _config._output_format_for_arrays(5) == 5
+    _config.return_arrays_as_strings = False
+    assert np.array_equal(_config._output_format_for_arrays(np.array([1, 2, 3])), [1, 2, 3])
+    _config.return_arrays_as_strings = True
+    assert _config._output_format_for_arrays(np.array([1, 2, 3])) == "1 2 3"
+
+
 def test_jsonnumpy_encoder():
 
     encoder = JsonNumpyEncoder()
@@ -280,6 +298,7 @@ def test_jsonnumpy_encoder():
     assert isinstance(encoder.default(u.Unit("m")), str)
     assert encoder.default(u.Unit("")) is None
     assert isinstance(encoder.default(u.Unit("m/s")), str)
+    assert isinstance(encoder.default(np.bool_(True)), bool)
 
     with pytest.raises(TypeError):
         encoder.default("abc")
