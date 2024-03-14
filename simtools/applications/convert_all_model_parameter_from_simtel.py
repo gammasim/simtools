@@ -4,7 +4,8 @@
     -------
     Convert all simulation model parameters from sim_telarray format using the corresponding
     schema files. Check value, type, and range and output (if successful) json files
-    ready to be submitted to the model database.
+    ready to be submitted to the model database. Prints out parameters which are not found
+    in simtel configuration file and parameters which are not found in simtools schema files.
 
     Command line arguments
     ----------------------
@@ -105,6 +106,36 @@ def get_list_of_parameters_and_schema_files(schema_directory):
     return parameters, schema_files
 
 
+def get_list_of_simtel_parameters(simtel_config_file, logger):
+    """
+    Return list of parameters found in simtel configuration file.
+
+    Parameters
+    ----------
+    simtel_config_file: str
+        File name for simtel_array configuration
+    logger: logging.Logger
+        Logger object
+
+    Returns
+    -------
+    list
+        List of parameters found in simtel configuration file.
+
+    """
+
+    simtel_parameter_set = set()
+    with open(simtel_config_file, "r", encoding="utf-8") as file:
+        for line in file:
+            try:
+                parts_of_lines = line.strip().split("\t")
+                simtel_parameter_set.add(parts_of_lines[1].lower())
+            except (TypeError, AttributeError):
+                pass
+    logger.info(f"Found {len(simtel_parameter_set)} parameters in simtel configuration file.")
+    return list(simtel_parameter_set)
+
+
 def main():
 
     args_dict, _ = _parse(
@@ -118,25 +149,11 @@ def main():
     _parameters, _schema_files = get_list_of_parameters_and_schema_files(
         args_dict["schema_directory"]
     )
+    _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)
 
-    # TODO - temporary list of parameters to ignore
-    _ignore_parameters_list = [
-        "altitude",
-        "array_coordinates",
-        "array_coordinates_UTM",
-        "mirror_panel_2f_measurements",
-        "disc_ac_coupled",  # unclear why validation fails
-        "dsum_pedsub",  # unclear why validation fails
-        "dsum_shaping_renormalize",  # unclear why validation fails
-        "fadc_ac_coupled",  # unclear why validation fails
-        "flatfielding",  # unclear why validation fails
-        "only_triggered_telescopes",  # unclear why validation fails
-        "parabolic_dish",  # unclear why validation fails
-    ]
+    _parameters_not_in_simtel = []
 
     for _parameter, _schema_file in zip(_parameters, _schema_files):
-        if _parameter in _ignore_parameters_list:
-            continue
         logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
 
         simtel_config_reader = SimtelConfigReader(
@@ -149,6 +166,7 @@ def main():
             simtel_config_reader.parameter_dict is None
             or len(simtel_config_reader.parameter_dict) == 0
         ):
+            _parameters_not_in_simtel.append(_parameter)
             logger.error("Parameter not found in sim_telarray configuration file.")
             continue
         _json_dict = simtel_config_reader.get_validated_parameter_dict(
@@ -160,6 +178,16 @@ def main():
 
         simtel_config_reader.export_parameter_dict_to_json(
             Path(args_dict["output_path"]) / f"{_parameter}.json", _json_dict
+        )
+
+        _simtel_parameters.remove(_parameter)
+
+    if len(_simtel_parameters) > 0:
+        logger.info(f"Simtel parameters not found in schema files: {_simtel_parameters}")
+    if len(_parameters_not_in_simtel) > 0:
+        logger.info(
+            f"Simtools parameters not found in simtel configuration file:"
+            f"{_parameters_not_in_simtel}"
         )
 
 
