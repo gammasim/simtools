@@ -38,8 +38,54 @@ short_description: |-
   Off-axis angle-dependent transmission, accounting for absorption and
   shadowing by masts.
 data:
-  - type: string
-    unit: dimensionless
+  - name: constant_p0
+    type: double
+    description: |
+      Constant transmission factor $p_0$.
+    required: true
+    units: dimensionless
+    default: 0.89
+    allowed_range:
+      min: 0.0
+      max: 1.0
+  - name: transmission_function
+    required: false
+    type: uint
+    description: |
+      Transmission function identifier.
+    default: 0
+    allowed_range:
+      min: 0
+      max: 1
+    units: dimensionless
+  - name: transmission_p2
+    description: |
+      Transmission factor $p_2$.
+    required: false
+    type: double
+    default: 0.0
+    units: dimensionless
+  - name: transmission_p3
+    description: |
+      Transmission factor $p_3$.
+    required: false
+    type: double
+    default: 0.0
+    units: dimensionless
+  - name: transmission_p4
+    description: |
+      Transmission factor $p_4$.
+    required: false
+    type: double
+    default: 0.0
+    units: dimensionless
+  - name: transmission_p5
+    description: |
+      Transmission factor $p_5.
+    required: false
+    type: double
+    default: 0.0
+    units: dimensionless
 instrument:
   class: Structure
   type:
