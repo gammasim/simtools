@@ -135,6 +135,53 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
             assert np.allclose(table1[col_name], table2[col_name], rtol=tolerance)
 
 
+def compare_json_files(file1, file2, tolerance=1.0e-5):
+    """
+    Compare two json files
+
+    Parameters
+    ----------
+    file1: str
+        First file to compare
+    file2: str
+        Second file to compare
+    tolerance: float
+        Tolerance for comparing numerical values.
+
+    """
+
+    data1 = gen.collect_data_from_file_or_dict(file1, in_dict=None)
+    data2 = gen.collect_data_from_file_or_dict(file2, in_dict=None)
+
+    assert data1 == data2
+
+
+def compare_files(file1, file2, tolerance=1.0e-5):
+    """
+    Compare two files.
+
+    Parameters
+    ----------
+    file1: str
+        First file to compare
+    file2: str
+        Second file to compare
+    tolerance: float
+        Tolerance for comparing numerical values.
+
+    """
+
+    if str(file1).endswith(".ecsv") and str(file2).endswith(".ecsv"):
+        compare_ecsv_files(file1, file2, tolerance)
+        return
+    if str(file1).endswith(".json") and str(file2).endswith(".json"):
+        compare_json_files(file1, file2, tolerance)
+        return
+
+    logger.error(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
+    assert False
+
+
 def assert_file_type(file_type, file_name):
     """
     Assert that the file is of the given type.
@@ -189,7 +236,7 @@ def validate_application_output(config):
     for integration_test in config["INTEGRATION_TESTS"]:
         logger.info(f"Testing application output: {integration_test}")
         if "REFERENCE_OUTPUT_FILE" in integration_test:
-            compare_ecsv_files(
+            compare_files(
                 integration_test["REFERENCE_OUTPUT_FILE"],
                 Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
                     config["CONFIGURATION"]["OUTPUT_FILE"]
