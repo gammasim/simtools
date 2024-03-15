@@ -40,6 +40,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io_operations.io_handler import IOHandler
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 
@@ -114,12 +115,11 @@ def main():
     simtel_config_reader.compare_simtel_config_with_schema()
 
     if args_dict["output_file"]:
-        output_path = (
-            Path(args_dict.get("output_path")).joinpath(args_dict["output_file"])
-            if args_dict.get("output_path")
-            else Path(args_dict["output_file"])
+        io_handler = IOHandler()
+        io_handler.set_paths(output_path=args_dict["output_path"], use_plain_output_path=True)
+        simtel_config_reader.export_parameter_dict_to_json(
+            io_handler.get_output_file(args_dict["output_file"]), _json_dict
         )
-        simtel_config_reader.export_parameter_dict_to_json(output_path, _json_dict)
 
 
 if __name__ == "__main__":
