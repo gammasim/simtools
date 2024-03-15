@@ -114,7 +114,12 @@ def main():
     simtel_config_reader.compare_simtel_config_with_schema()
 
     if args_dict["output_file"]:
-        simtel_config_reader.export_parameter_dict_to_json(args_dict["output_file"], _json_dict)
+        output_path = (
+            Path(args_dict.get("output_path")).joinpath(args_dict["output_file"])
+            if args_dict.get("output_path")
+            else Path(args_dict["output_file"])
+        )
+        simtel_config_reader.export_parameter_dict_to_json(output_path, _json_dict)
 
 
 if __name__ == "__main__":
