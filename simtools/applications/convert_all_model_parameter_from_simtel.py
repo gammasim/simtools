@@ -2,15 +2,15 @@
 """
     Summary
     -------
-    Convert all simulation model parameters from sim_telarray format using the corresponding
-    schema files. Check value, type, and range and output (if successful) json files
+    Convert all simulation model parameters exported from sim_telarray format using
+    schema files. Check value, type, and range, convert units, and write json files
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
     Command line arguments
     ----------------------
     simtel_cfg_file (str)
-        File name of sim_telarray configuration file with all simulation model parameters.
+        File name of sim_telarray configuration file containing all simulation model parameters.
 
     simtel_telescope_name (str)
         Name of the telescope in the sim_telarray configuration file.
@@ -84,12 +84,12 @@ def _parse(label=None, description=None):
 
 def get_list_of_parameters_and_schema_files(schema_directory):
     """
-    Return list of parameters and schema file found in schema file directory.
+    Return list of parameters and schema file located in schema file directory.
 
     Parameters
     ----------
     schema_directory: str
-        Directory with json schema files for model parameter validation
+        Directory with schema files for model parameter validation
 
     Returns
     -------
@@ -104,13 +104,13 @@ def get_list_of_parameters_and_schema_files(schema_directory):
     parameters = []
     for schema_file in schema_files:
         schema_dict = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
-        parameters.append(schema_dict["name"])
+        parameters.append(schema_dict.get("name"))
     return parameters, schema_files
 
 
 def get_list_of_simtel_parameters(simtel_config_file, logger):
     """
-    Return list of parameters found in simtel configuration file.
+    Return list of simtel parameters found in simtel configuration file.
 
     Parameters
     ----------
