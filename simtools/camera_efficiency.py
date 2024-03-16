@@ -74,6 +74,7 @@ class CameraEfficiency:
         _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_config_data_in, _parameters)
 
+        self._file = {}
         self._load_files()
 
     @classmethod
@@ -129,33 +130,22 @@ class CameraEfficiency:
 
     def _load_files(self):
         """Define the variables for the file names, including the results, simtel and log file."""
-        # Results file
-        file_name_results = names.camera_efficiency_results_file_name(
-            site=self._telescope_model.site,
-            telescope_model_name=self._telescope_model.name,
-            zenith_angle=self.config.zenith_angle,
-            azimuth_angle=self.config.azimuth_angle,
-            label=self.label,
-        )
-        self._file_results = self._base_directory.joinpath(file_name_results)
-        # sim_telarray output file
-        file_name_simtel = names.camera_efficiency_simtel_file_name(
-            site=self._telescope_model.site,
-            telescope_model_name=self._telescope_model.name,
-            zenith_angle=self.config.zenith_angle,
-            azimuth_angle=self.config.azimuth_angle,
-            label=self.label,
-        )
-        self._file_simtel = self._base_directory.joinpath(file_name_simtel)
-        # Log file
-        file_name_log = names.camera_efficiency_log_file_name(
-            site=self._telescope_model.site,
-            telescope_model_name=self._telescope_model.name,
-            zenith_angle=self.config.zenith_angle,
-            azimuth_angle=self.config.azimuth_angle,
-            label=self.label,
-        )
-        self._file_log = self._base_directory.joinpath(file_name_log)
+        for label, suffix in zip(
+            ["results", "simtel", "log"],
+            [".ecsv", ".dat", ".log"],
+        ):
+            file_name = names.generate_file_name(
+                file_type=(
+                    "camera-efficiency-table" if label == "results" else "camera-efficiency"
+                ),
+                suffix=suffix,
+                site=self._telescope_model.site,
+                telescope_model_name=self._telescope_model.name,
+                zenith_angle=self.config.zenith_angle,
+                azimuth_angle=self.config.azimuth_angle,
+                label=self.label,
+            )
+            self._file[label] = self._base_directory.joinpath(file_name)
 
     def simulate(self, force=False):
         """
@@ -172,8 +162,8 @@ class CameraEfficiency:
             simtel_source_path=self._simtel_source_path,
             telescope_model=self._telescope_model,
             zenith_angle=self.config.zenith_angle,
-            file_simtel=self._file_simtel,
-            file_log=self._file_log,
+            file_simtel=self._file["simtel"],
+            file_log=self._file["log"],
             label=self.label,
             nsb_spectrum=self.config.nsb_spectrum,
         )
@@ -193,7 +183,7 @@ class CameraEfficiency:
         """
         self._logger.info("Analyzing CameraEfficiency")
 
-        if self._file_results.exists() and not force:
+        if self._file["results"].exists() and not force:
             self._logger.info("Results file exists and force=False - skipping analyze")
             self._read_results()
             return
@@ -232,7 +222,7 @@ class CameraEfficiency:
 
         # Search for at least 5 consecutive numbers to see that we are in the table
         re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._file_simtel, "r", encoding="utf-8") as file:
+        with open(self._file["simtel"], "r", encoding="utf-8") as file:
             for line in file:
                 if re_table.match(line):
                     words = line.split()
@@ -310,12 +300,12 @@ class CameraEfficiency:
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info(f"Exporting testeff table to {self._file_results}")
+            self._logger.info(f"Exporting testeff table to {self._file['results']}")
             astropy.io.ascii.write(
-                self._results, self._file_results, format="basic", overwrite=True
+                self._results, self._file["results"], format="basic", overwrite=True
             )
             _results_summary_file = (
-                str(self._file_results).replace(".ecsv", ".txt").replace("-table-", "-summary-")
+                str(self._file["results"]).replace(".ecsv", ".txt").replace("-table-", "-summary-")
             )
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             with open(_results_summary_file, "w", encoding="utf-8") as file:
@@ -323,7 +313,7 @@ class CameraEfficiency:
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        table = astropy.io.ascii.read(self._file_results, format="basic")
+        table = astropy.io.ascii.read(self._file["results"], format="basic")
         self._results = table
         self._has_results = True
 

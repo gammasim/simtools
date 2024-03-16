@@ -79,7 +79,8 @@ def test_make_run_command(simtel_runner_ray_tracing):
     assert "model/CTA-South-SSTS-design-2020-06-28_test-telescope-model-sst.cfg" in command
     assert "altitude=2147.0 -C telescope_theta=20.0 -C star_photons=100000" in command
     assert (
-        "log-South-SSTS-design-d10.0-za20.0-off0.000_test-simtel-runner-ray-tracing.log" in command
+        "log-South-SSTS-design-d10.0km-za20.0deg-off0.000deg_test-simtel-runner-ray-tracing.log"
+        in command
     )
 
 

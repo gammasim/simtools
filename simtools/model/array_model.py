@@ -303,8 +303,11 @@ class ArrayModel:
         """
 
         # Setting file name and the location
-        config_file_name = names.simtel_array_config_file_name(
-            self.layout_name, self.site, self.model_version, self.label
+        config_file_name = names.simtel_config_file_name(
+            array_name=self.layout_name,
+            site=self.site,
+            model_version=self.model_version,
+            label=self.label,
         )
         self._config_file_path = self._config_file_directory.joinpath(config_file_name)
 

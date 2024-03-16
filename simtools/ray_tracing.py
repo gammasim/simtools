@@ -110,12 +110,14 @@ class RayTracing:
         self._has_results = False
 
         # Results file
-        file_name_results = names.ray_tracing_results_file_name(
-            self._telescope_model.site,
-            self._telescope_model.name,
-            self._source_distance,
-            self.config.zenith_angle,
-            self.label,
+        file_name_results = names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".ecsv",
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            source_distance=self._source_distance,
+            zenith_angle=self.config.zenith_angle,
+            label=self.label,
         )
         self._output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._file_results = self._output_directory.joinpath("results").joinpath(file_name_results)
@@ -195,15 +197,16 @@ class RayTracing:
                 )
                 simtel.run(test=test, force=force)
 
-                photons_file_name = names.ray_tracing_file_name(
-                    self._telescope_model.site,
-                    self._telescope_model.name,
-                    self._source_distance,
-                    self.config.zenith_angle,
-                    this_off_axis,
-                    this_mirror if self.config.single_mirror_mode else None,
-                    self.label,
-                    "photons",
+                photons_file_name = names.generate_file_name(
+                    file_type="photons",
+                    suffix=".lis",
+                    site=self._telescope_model.site,
+                    telescope_model_name=self._telescope_model.name,
+                    source_distance=self._source_distance,
+                    zenith_angle=self.config.zenith_angle,
+                    off_axis_angle=this_off_axis,
+                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
+                    label=self.label,
                 )
                 photons_file = self._output_directory.joinpath(photons_file_name)
 
@@ -269,15 +272,16 @@ class RayTracing:
                 if self.config.single_mirror_mode:
                     self._logger.debug(f"mirror_number={this_mirror}")
 
-                photons_file_name = names.ray_tracing_file_name(
-                    self._telescope_model.site,
-                    self._telescope_model.name,
-                    self._source_distance,
-                    self.config.zenith_angle,
-                    this_off_axis,
-                    this_mirror if self.config.single_mirror_mode else None,
-                    self.label,
-                    "photons",
+                photons_file_name = names.generate_file_name(
+                    file_type="photons",
+                    suffix=".lis",
+                    site=self._telescope_model.site,
+                    telescope_model_name=self._telescope_model.name,
+                    source_distance=self._source_distance,
+                    zenith_angle=self.config.zenith_angle,
+                    off_axis_angle=this_off_axis,
+                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
+                    label=self.label,
                 )
 
                 photons_file = self._output_directory.joinpath(photons_file_name + ".gz")
@@ -421,13 +425,15 @@ class RayTracing:
             raise exc
 
         if save:
-            plot_file_name = names.ray_tracing_plot_file_name(
-                key,
-                self._telescope_model.site,
-                self._telescope_model.name,
-                self._source_distance,
-                self.config.zenith_angle,
-                self.label,
+            plot_file_name = names.generate_file_name(
+                file_type="ray-tracing",
+                suffix=".pdf",
+                extra_label=key,
+                site=self._telescope_model.site,
+                telescope_model_name=self._telescope_model.name,
+                source_distance=self._source_distance,
+                zenith_angle=self.config.zenith_angle,
+                label=self.label,
             )
             self._output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self._output_directory.joinpath("figures").joinpath(plot_file_name)
