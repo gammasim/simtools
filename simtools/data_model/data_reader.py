@@ -117,12 +117,12 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
             schema_file = _collector.get_data_model_schema_file_name()
             _logger.debug(f"Using schema from meta_data_url: {schema_file}")
 
-        _logger.debug("Successful validation of yaml/json file")
         _validator = validate_data.DataValidator(
             schema_file=schema_file,
             data_dict=data,
         )
         data = _validator.validate_and_transform()
+        _logger.debug("Successful validation of yaml/json file")
 
     _value = data.get("value")
     if _value is None:

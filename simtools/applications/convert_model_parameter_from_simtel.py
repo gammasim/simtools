@@ -3,7 +3,7 @@
     Summary
     -------
     Convert simulation model parameter from sim_telarray format using the corresponding
-    schema file. Check value, type, and range and output (if successful) a json file
+    schema file. Check value, type, and range and write a json file
     ready to be submitted to the model database.
 
     Command line arguments
@@ -12,7 +12,7 @@
         Parameter name (as used in simtools)
 
     simtel_cfg_file (str)
-        File name of sim_telarray configuration file with all simulation model parameters.
+        File name of sim_telarray configuration file containing all simulation model parameters.
 
     simtel_telescope_name (str)
         Name of the telescope in the sim_telarray configuration file.
@@ -65,7 +65,7 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--schema", help="json schema file for model parameter validation", required=False
+        "--schema", help="Schema file for model parameter validation", required=False
     )
     config.parser.add_argument(
         "--simtel_cfg_file",

@@ -107,12 +107,18 @@ class DataValidator:
         Validate values in a dictionary. Handles different types of naming in data dicts
         (using 'name' or 'parameter' keys for name fields).
 
+        Raises
+        ------
+        KeyError
+            if data dict does not contain a 'name' or 'parameter' key.
+
         """
 
         if not (_name := self.data_dict.get("name") or self.data_dict.get("parameter")):
-            raise KeyError("Data dict does not contain a 'name', 'value', or 'value' key.")
+            raise KeyError("Data dict does not contain a 'name' or 'parameter' key.")
         self._data_description = self._read_validation_schema(self.schema_file_name, _name)
 
+        # validation assumes lists for values and units - convert to list if required
         value_as_list = (
             self.data_dict.get("value")
             if isinstance(self.data_dict["value"], (list, np.ndarray))

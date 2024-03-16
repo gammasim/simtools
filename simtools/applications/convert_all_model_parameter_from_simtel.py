@@ -64,7 +64,7 @@ def _parse(label=None, description=None):
 
     config.parser.add_argument(
         "--schema_directory",
-        help="Directory with json schema files for model parameter validation",
+        help="Directory with schema files for model parameter validation",
         required=False,
     )
     config.parser.add_argument(
@@ -84,7 +84,7 @@ def _parse(label=None, description=None):
 
 def get_list_of_parameters_and_schema_files(schema_directory):
     """
-    Return list of parameters and schema file located in schema file directory.
+    Return list of parameters and schema files located in schema file directory.
 
     Parameters
     ----------
@@ -129,11 +129,8 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
     simtel_parameter_set = set()
     with open(simtel_config_file, "r", encoding="utf-8") as file:
         for line in file:
-            try:
-                parts_of_lines = re.split(r",\s*|\s+", line.strip())
-                simtel_parameter_set.add(parts_of_lines[1].lower())
-            except (TypeError, AttributeError):
-                pass
+            parts_of_lines = re.split(r",\s*|\s+", line.strip())
+            simtel_parameter_set.add(parts_of_lines[1].lower())
     logger.info(f"Found {len(simtel_parameter_set)} parameters in simtel configuration file.")
     return list(simtel_parameter_set)
 
@@ -142,7 +139,7 @@ def main():
 
     args_dict, _ = _parse(
         label=Path(__file__).stem,
-        description="Convert simulation model parameter from sim_telarray to simtools format.",
+        description="Convert simulation model parameters from sim_telarray to simtools format.",
     )
 
     logger = logging.getLogger()
