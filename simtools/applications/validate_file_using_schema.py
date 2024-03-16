@@ -71,7 +71,7 @@ def _parse(label, description):
 
 def _get_schema_file(args_dict, data_dict=None):
     """
-    Get schema file metadata, data dict, or from command line argument.
+    Get schema file name from metadata, data dict, or from command line argument.
 
     Parameters
     ----------
@@ -117,7 +117,7 @@ def validate_schema(args_dict, logger):
 
 def validate_data_file(args_dict, logger):
     """
-    Validate a data file (e.g., ecsv, json, yaml format)
+    Validate a data file (e.g., in ecsv, json, yaml format)
 
     """
     data_validator = validate_data.DataValidator(

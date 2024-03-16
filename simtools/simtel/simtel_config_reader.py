@@ -16,7 +16,7 @@ __all__ = ["SimtelConfigReader"]
 
 class JsonNumpyEncoder(json.JSONEncoder):
     """
-    Convert numpy to python types as accepted by json.
+    Convert numpy to python types as accepted by json.dump.
     """
 
     def default(self, o):
@@ -35,9 +35,9 @@ class JsonNumpyEncoder(json.JSONEncoder):
 
 class SimtelConfigReader:
     """
-    SimtelConfigReader reads sim_telarray configuration files and converts them to the simtools
-    representation of a model parameter (json dict). The sim_telarray configuration can be
-    generated using e.g., the following simtel_array command:
+    SimtelConfigReader reads model parameters from configuration files and converts to the simtools
+    representation (json dict). The sim_telarray configuration can be generated using e.g., the
+    following simtel_array command:
 
     ... code-block:: console
 

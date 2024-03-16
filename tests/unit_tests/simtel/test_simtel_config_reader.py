@@ -126,6 +126,13 @@ def test_compare_simtel_config_with_schema(
     _config_tt.compare_simtel_config_with_schema()
     assert "from simtel: [0.89" in caplog.text
     assert "from schema: {'min': 0.0" in caplog.text
+    del _config_tt.schema_dict["data"][0]["allowed_range"]
+    _config_tt.compare_simtel_config_with_schema()
+    assert "from schema: None" in caplog.text
+
+    del _config_ng.schema_dict["data"][0]["default"]
+    _config_ng.compare_simtel_config_with_schema()
+    assert "from schema: None" in caplog.text
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
