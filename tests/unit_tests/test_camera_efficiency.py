@@ -39,7 +39,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path):
 def results_file(io_handler):
     test_file_name = (
         "tests/resources/"
-        "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency.ecsv"
+        "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
     output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
@@ -70,11 +70,11 @@ def test_validate_telescope_model(simtel_path):
 
 
 def test_load_files(camera_efficiency_lst):
-    _name = "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency"
-    assert camera_efficiency_lst._file_results.name == _name + ".ecsv"
-    _name = "camera-efficiency-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency"
-    assert camera_efficiency_lst._file_simtel.name == _name + ".dat"
-    assert camera_efficiency_lst._file_log.name == _name + ".log"
+    _name = "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
+    assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
+    _name = "camera-efficiency-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
+    assert camera_efficiency_lst._file["simtel"].name == _name + ".dat"
+    assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
 
 def test_read_results(camera_efficiency_lst, results_file):
