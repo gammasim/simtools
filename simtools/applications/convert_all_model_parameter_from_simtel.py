@@ -182,15 +182,20 @@ def main():
             io_handler.get_output_file(f"{_parameter}.json"), _json_dict
         )
 
-        _simtel_parameters.remove(_parameter)
+        if simtel_config_reader.simtel_parameter_name.lower() in _simtel_parameters:
+            _simtel_parameters.remove(simtel_config_reader.simtel_parameter_name.lower())
 
     if len(_simtel_parameters) > 0:
-        logger.info(f"Simtel parameters not found in schema files: {_simtel_parameters}")
+        logger.info(f"Simtel parameters not found in schema files ({len(_simtel_parameters)}):")
+        for para in _simtel_parameters:
+            logger.info(f"  {para}")
     if len(_parameters_not_in_simtel) > 0:
         logger.info(
-            f"Simtools parameters not found in simtel configuration file:"
-            f"{_parameters_not_in_simtel}"
+            f"Simtools parameters not found in simtel configuration file"
+            f"({len(_parameters_not_in_simtel)}):"
         )
+        for para in _parameters_not_in_simtel:
+            logger.info(f"  {para}")
 
 
 if __name__ == "__main__":
