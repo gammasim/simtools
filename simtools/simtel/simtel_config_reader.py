@@ -308,7 +308,8 @@ class SimtelConfigReader:
 
     def _get_simtel_parameter_name(self, parameter_name):
         """
-        Return parameter name as used in sim_telarray.
+        Return parameter name as used in sim_telarray. This is
+        documented in the schema file.
 
         Parameters
         ----------
@@ -322,7 +323,12 @@ class SimtelConfigReader:
 
         """
 
-        self._logger.warning("TODO - convert simtools to simtel parameter")
+        try:
+            for sim_soft in self.schema_dict["simulation_software"]:
+                if sim_soft["name"] == "sim_telarray":
+                    return sim_soft["internal_parameter_name"].upper()
+        except KeyError:
+            pass
 
         return parameter_name.upper()
 
