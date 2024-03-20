@@ -365,10 +365,10 @@ definitions:
       - cm
       - nm
       - uT
-      - adc_counts
+      - count
       - MHz
       - GHz
-      - adc_counts / mV
+      - count / mV
       - mV * ns
       - pct
       - uA
