@@ -42,7 +42,7 @@ jobs:
 
       - name: Set build arguments (correct branch)
         run: |
-          if [[ "${{ github.event_name }}" == 'pull_request' ]] || [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+          if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
             echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
