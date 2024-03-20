@@ -342,7 +342,7 @@ definitions:
     type: string
     enum:
       - boolean
-      - datatable
+      - data_table
       - double
       - float64
       - int
