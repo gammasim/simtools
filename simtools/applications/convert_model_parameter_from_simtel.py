@@ -23,15 +23,17 @@
     Example
     -------
 
-    Extract the num_gains parameter from the sim_telarray configuration file for LSTN-01.
+    Extract the num_gains parameter from a sim_telarray configuration file for LSTN-01
+    and write a json file in the same format as the model parameter database:
 
     .. code-block:: console
 
        simtools-convert-model-parameter-from-simtel \
           --simtel_telescope_name CT1\
           --telescope LSTN-01\
-          --parameter num_gains\
-          --simtel_cfg_file all_telescope_config_la_palma.cfg
+          --schema tests/resources/num_gains.schema.yml\
+          --simtel_cfg_file tests/resources/simtel_config_test_la_palma.cfg\
+          --output_file num_gains.json
 
 """
 
@@ -65,19 +67,19 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--schema", help="Schema file for model parameter validation", required=False
+        "--schema", help="Schema file for model parameter validation", required=True
     )
     config.parser.add_argument(
         "--simtel_cfg_file",
         help="File name for simtel_array configuration",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--simtel_telescope_name",
         help="Name of the telescope in the sim_telarray configuration file",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--output_file",

@@ -69,7 +69,7 @@ def _parse(label, description):
     return config.initialize(paths=False)
 
 
-def _get_schema_file(args_dict, data_dict=None):
+def _get_schema_file_name(args_dict, data_dict=None):
     """
     Get schema file name from metadata, data dict, or from command line argument.
 
@@ -111,7 +111,7 @@ def validate_schema(args_dict, logger):
     except FileNotFoundError as exc:
         logger.error(f"Error reading schema file from {args_dict['file_name']}")
         raise exc
-    metadata_model.validate_schema(data, _get_schema_file(args_dict, data))
+    metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
     logger.info(f"Successful validation of schema file {args_dict['file_name']}")
 
 
@@ -121,7 +121,7 @@ def validate_data_file(args_dict, logger):
 
     """
     data_validator = validate_data.DataValidator(
-        schema_file=_get_schema_file(args_dict),
+        schema_file=_get_schema_file_name(args_dict),
         data_file=args_dict["file_name"],
     )
     data_validator.validate_and_transform()
