@@ -280,6 +280,10 @@ definitions:
         type: string
         description: |-
           "version of simulation software this parameter is used"
+      internal_parameter_name:
+        type: string
+        description: |-
+          "Naming of parameter as used this simulation software"
     required:
       - name
     title: SimulationSoftware
