@@ -3,7 +3,7 @@
 title: Schema for telescope_transmission model parameter
 version: 0.1.0
 meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: telescope_transmission
 developer_note: |-
