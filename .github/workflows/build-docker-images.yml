@@ -47,6 +47,7 @@ jobs:
           else
             echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
+          echo "BUILD BRANCH ${{ env.BUILD_BRANCH }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
