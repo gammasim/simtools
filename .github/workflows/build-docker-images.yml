@@ -107,6 +107,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           platforms: linux/amd64,linux/arm64/v8
           push:
             ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
