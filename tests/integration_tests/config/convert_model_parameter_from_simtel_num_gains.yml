@@ -1,0 +1,14 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-convert-model-parameter-from-simtel
+  TEST_NAME: num_gains
+  CONFIGURATION:
+    SIMTEL_CFG_FILE: ./tests/resources/simtel_config_test_la_palma.cfg
+    SIMTEL_TELESCOPE_NAME: CT1
+    TELESCOPE: LSTN-01
+    MODEL_VERSION: "2024-03-06"
+    SCHEMA: ./tests/resources/num_gains.schema.yml
+    OUTPUT_PATH: simtools-tests
+    OUTPUT_FILE: num_gains.json
+  INTEGRATION_TESTS:
+    - REFERENCE_OUTPUT_FILE: |
+        ./tests/resources/num_gains.json

@@ -527,7 +527,7 @@ def test_is_url():
 def test_collect_data_dict_from_json():
     file = "tests/resources/reference_point_altitude.json"
     data = gen.collect_data_from_file_or_dict(file, None)
-    assert len(data) == 5
+    assert len(data) == 6
     assert data["unit"] == "m"
 
 

@@ -5,7 +5,7 @@ from astropy.io.registry.base import IORegistryError
 from astropy.table import QTable
 
 import simtools.utils.general as gen
-from simtools.data_model import metadata_model, validate_data
+from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 __all__ = ["read_table_from_file", "read_value_from_file"]
@@ -117,14 +117,15 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
             schema_file = _collector.get_data_model_schema_file_name()
             _logger.debug(f"Using schema from meta_data_url: {schema_file}")
 
-        metadata_model.validate_schema(data, schema_file)
+        _validator = validate_data.DataValidator(
+            schema_file=schema_file,
+            data_dict=data,
+        )
+        data = _validator.validate_and_transform()
         _logger.debug("Successful validation of yaml/json file")
 
     _value = data.get("value")
     if _value is None:
         return None
     _unit = data.get("unit")
-    if _unit and len(_unit) > 0:
-        return _value * u.Unit(_unit)
-
-    return _value
+    return _value if _unit is None else _value * u.Unit(_unit)
