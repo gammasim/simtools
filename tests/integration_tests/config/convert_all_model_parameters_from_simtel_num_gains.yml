@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-convert-all-model-parameter-from-simtel
+  APPLICATION: simtools-convert-all-model-parameters-from-simtel
   TEST_NAME: num_gains
   CONFIGURATION:
     SIMTEL_CFG_FILE: ./tests/resources/simtel_config_test_la_palma.cfg
