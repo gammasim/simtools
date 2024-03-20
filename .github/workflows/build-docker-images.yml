@@ -40,13 +40,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set build arguments
+      - name: Set build arguments (correct branch)
         run: |
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
             echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
+          echo "BUILD BRANCH ${{ env.BUILD_BRANCH }}"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -105,6 +107,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           platforms: linux/amd64,linux/arm64/v8
           push:
             ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
