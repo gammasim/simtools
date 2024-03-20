@@ -100,6 +100,9 @@ def test_get_derived_values(db):
         logger.error("Derived DB not updated for new telescope names. Expect failure")
         raise AssertionError
 
+    with pytest.raises(AttributeError):
+        pars = db.get_derived_values("North", None, "Prod5")
+
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing copying a whole telescope-----")

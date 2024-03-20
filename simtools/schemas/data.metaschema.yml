@@ -348,6 +348,7 @@ definitions:
       - int
       - string
       - uint
+      - file
     title: TableColumnType
   Unit:
     type: string
@@ -355,22 +356,22 @@ definitions:
       "Unit correspond to astropy unit names
       (wherever possible)"
     enum:
-      - dimensionless
-      - ns
-      - V
-      - mV
-      - deg
-      - m
       - cm
-      - nm
-      - uT
-      - adc_counts
-      - MHz
+      - count
+      - count / mV
+      - deg
+      - dimensionless
       - GHz
-      - adc_counts / mV
+      - m
+      - MHz
+      - mV
       - mV * ns
+      - nm
+      - ns
       - pct
       - uA
+      - uT
+      - V
     title: Unit
   SimulationSoftwareName:
     type: string
