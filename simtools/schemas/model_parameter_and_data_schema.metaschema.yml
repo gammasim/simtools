@@ -360,22 +360,22 @@ definitions:
       "Unit correspond to astropy unit names
       (wherever possible)"
     enum:
-      - dimensionless
-      - ns
-      - V
-      - mV
-      - deg
-      - m
       - cm
-      - nm
-      - uT
       - count
-      - MHz
-      - GHz
       - count / mV
+      - deg
+      - dimensionless
+      - GHz
+      - m
+      - MHz
+      - mV
       - mV * ns
+      - nm
+      - ns
       - pct
       - uA
+      - uT
+      - V
     title: Unit
   SimulationSoftwareName:
     type: string

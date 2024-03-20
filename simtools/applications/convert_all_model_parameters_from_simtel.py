@@ -21,14 +21,17 @@
     Example
     -------
 
-    Extract the num_gains parameter from the sim_telarray configuration file for LSTN-01.
+    Extract model parameters with schema files from simtel configuration file
+    (requires access to the model parameter repository)
 
     .. code-block:: console
 
        simtools-convert-all-model-parameters-from-simtel \
+          --schema_directory ../model_parameters/schema\
+          --simtel_cfg_file all_telescope_config_la_palma.cfg\
           --simtel_telescope_name CT1\
           --telescope LSTN-01\
-          --simtel_cfg_file all_telescope_config_la_palma.cfg
+          --model_version "2024-03-06"
 
 """
 
@@ -65,19 +68,19 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--schema_directory",
         help="Directory with schema files for model parameter validation",
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--simtel_cfg_file",
         help="File name for simtel_array configuration",
         type=str,
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--simtel_telescope_name",
         help="Name of the telescope in the sim_telarray configuration file",
         type=str,
-        required=False,
+        required=True,
     )
     return config.initialize(telescope_model=True)
 
@@ -115,7 +118,7 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
     Parameters
     ----------
     simtel_config_file: str
-        File name for simtel_array configuration
+        File name for sim_telarray configuration
     logger: logging.Logger
         Logger object
 
@@ -169,7 +172,7 @@ def main():
             or len(simtel_config_reader.parameter_dict) == 0
         ):
             _parameters_not_in_simtel.append(_parameter)
-            logger.error("Parameter not found in sim_telarray configuration file.")
+            logger.info("Parameter not found in sim_telarray configuration file.")
             continue
         _json_dict = simtel_config_reader.get_validated_parameter_dict(
             telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
