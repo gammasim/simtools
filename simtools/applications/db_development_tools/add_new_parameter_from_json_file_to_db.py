@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This application is used to add a new parameter to the sites collection in the DB
+    This application is used to add a new parameter to a collection in the DB
     using a json file as input.
 
     This application should not be used by anyone but expert users and not often.
