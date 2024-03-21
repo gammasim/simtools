@@ -98,8 +98,8 @@ definitions:
           Use `file` if the parameter describes a file name.
           Use `data_table` if the parameter describes a data table
           (requires TABLE_COLUMNS description)"
-      units:
-        $ref: '#/definitions/Units'
+      unit:
+        $ref: '#/definitions/Unit'
       allowed_range:
         $ref: '#/definitions/ValueRange'
       allowed_values:
@@ -142,14 +142,14 @@ definitions:
           - string
           - boolean
         description: "default value"
-      units:
-        $ref: '#/definitions/Units'
+      unit:
+        $ref: '#/definitions/Unit'
         description: |-
-          "parameter units
+          "parameter unit
           (using astropy names wherever possible)"
     required:
       - type
-      - units
+      - unit
     title: DataClass
   ValueRange:
     type: object
@@ -185,9 +185,9 @@ definitions:
       condition:
         type: string
         description: "condition to change this column to a required data column"
-      units:
+      unit:
         type: string
-        description: "column units"
+        description: "column unit"
       type:
         $ref: '#/definitions/TableColumnType'
         description: "column data type"
@@ -226,7 +226,7 @@ definitions:
       - description
       - name
       - type
-      - units
+      - unit
     title: TableColumn
   Instrument:
     type: object
@@ -261,16 +261,13 @@ definitions:
     description: "specific type of instrument"
     enum:
       - Atmosphere
-      - FlashCam
-      - LSTCam
-      - LSTStructure
-      - MSTStructure
-      - NectarCam
+      - LSTN
+      - LSTS
+      - MSTN
+      - MSTS
+      - SSTS
+      - SCTS
       - Observatory
-      - SCTCam
-      - SCTStructure
-      - SSTCam
-      - SSTStructure
       - None
     title: InstrumentTypeElement
   SimulationSoftware:
@@ -283,10 +280,6 @@ definitions:
         type: string
         description: |-
           "version of simulation software this parameter is used"
-      parameter_name:
-        type: string
-        description: |-
-          "name of simulation model parameter as used by this software"
     required:
       - name
     title: SimulationSoftware
@@ -355,30 +348,31 @@ definitions:
       - int
       - string
       - uint
+      - file
     title: TableColumnType
-  Units:
+  Unit:
     type: string
     description: |-
-      "Units correspond to astropy unit names
+      "Unit correspond to astropy unit names
       (wherever possible)"
     enum:
-      - dimensionless
-      - ns
-      - V
-      - mV
-      - deg
-      - m
       - cm
-      - nm
-      - uT
-      - adc_counts
-      - MHz
+      - count
+      - count / mV
+      - deg
+      - dimensionless
       - GHz
-      - adc_counts / mV
+      - m
+      - MHz
+      - mV
       - mV * ns
+      - nm
+      - ns
       - pct
       - uA
-    title: Units
+      - uT
+      - V
+    title: Unit
   SimulationSoftwareName:
     type: string
     description: |-

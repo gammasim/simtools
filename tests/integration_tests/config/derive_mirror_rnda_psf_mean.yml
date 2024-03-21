@@ -2,8 +2,8 @@ CTA_SIMPIPE:
   APPLICATION: simtools-derive-mirror-rnda
   TEST_NAME: psf_mean
   CONFIGURATION:
-    SITE: North
-    TELESCOPE: MST-FlashCam-D
+    SITE: South
+    TELESCOPE: MSTS-design
     CONTAINMENT_FRACTION: 0.8
     MIRROR_LIST: ./tests/resources/MLTdata-preproduction.ecsv
     PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4

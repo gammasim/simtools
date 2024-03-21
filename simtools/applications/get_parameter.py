@@ -54,8 +54,8 @@ import logging
 from pprint import pprint
 
 import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.configuration import configurator
+from simtools.db import db_handler
 
 
 def main():

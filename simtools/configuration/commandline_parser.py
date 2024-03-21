@@ -205,6 +205,13 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
             default="admin",
         )
+        _job_group.add_argument(
+            "--db_simulation_model_url",
+            help="simulation model repository URL",
+            type=str,
+            required=False,
+            default=None,
+        )
 
     def initialize_job_submission_arguments(self):
         """
@@ -310,7 +317,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         """
 
-        names.validate_telescope_model_name(str(value))
+        names.validate_telescope_name(str(value))
         return str(value)
 
     @staticmethod

@@ -1,6 +1,7 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-print-array-elements
-  TEST_NAME: print_compact
+  TEST_NAME: print_ground
   CONFIGURATION:
     INPUT: tests/resources/telescope_positions-North-ground.ecsv
-    COMPACT: ground
+    PRINT: ground
+    LOG_LEVEL: DEBUG

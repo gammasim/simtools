@@ -13,16 +13,17 @@ class InvalidCoordSystem(Exception):
 
 class TelescopePosition:
     """
-    Store and perform coordinate transformations for an array element position.
+    Store a telescope position and perform coordinate transformations.
 
     The definition of x_coord and y_coord in this class depend on the \
     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)). \
-    Altitude describes always the element height above sea level.
+    Altitude describes always the element height above sea level, position_z
+    the height above a reference altitude (e.g., CORSIKA observation level).
 
     Parameters
     ----------
     name: str
-        Name of the telescope (e.g LST-01, SST-05, ...).
+        Name of the telescope (e.g LSTN-01, SSTS-05, ...).
 
     """
 
@@ -37,38 +38,41 @@ class TelescopePosition:
         self.asset_code = None
         self.sequence_number = None
         self.geo_code = None
-        self.crs = self._default_coordinate_system_definition()
+        self.crs = self._default_coordinates()
 
     def __str__(self):
         """
         String representation of TelescopePosition.
 
         """
-        telstr = self.name
+        tel_str = self.name
         if self.has_coordinates("ground"):
-            telstr += (
+            tel_str += (
                 f"\t Ground x(->North): {self.crs['ground']['xx']['value']:0.2f} "
                 f"y(->West): {self.crs['ground']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("utm"):
-            telstr += (
+            tel_str += (
                 f"\t UTM East: {self.crs['utm']['xx']['value']:0.2f} "
                 f"UTM North: {self.crs['utm']['yy']['value']:0.2f}"
             )
         if self.has_coordinates("mercator"):
-            telstr += (
+            tel_str += (
                 f"\t Longitude: {self.crs['mercator']['xx']['value']:0.5f} "
                 f"Latitude: {self.crs['mercator']['yy']['value']:0.5f}"
             )
         for _crs_name, _crs_now in self.crs.items():
-            if self.has_altitude(_crs_name):
-                telstr += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
+            if self.is_coordinate_system(_crs_name) and self.has_altitude(_crs_name):
+                tel_str += f"\t Alt: {_crs_now['zz']['value']:0.2f}"
                 break
 
-        return telstr
+        return tel_str
 
     def print_compact_format(
-        self, crs_name, print_header=False, corsika_obs_level=None, corsika_sphere_center=None
+        self,
+        crs_name,
+        print_header=False,
+        corsika_observation_level=None,
     ):
         """
         Print array element coordinates in compact format.
@@ -79,10 +83,8 @@ class TelescopePosition:
             Name of coordinate system to be used for printing.
         print_header: bool
             Print table header.
-        corsika_obs_level: astropy.Quantity
+        corsika_observation_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
 
         Raises
         ------
@@ -93,41 +95,38 @@ class TelescopePosition:
         try:
             _zz = self.crs[crs_name]["zz"]["value"]
             _zz_header = self.crs[crs_name]["zz"]["name"]
-            if (
-                crs_name == "ground"
-                and corsika_obs_level is not None
-                and corsika_sphere_center is not None
-            ):
+            if crs_name == "ground" and corsika_observation_level is not None:
                 _zz = (
                     self.convert_telescope_altitude_to_corsika_system(
                         _zz * u.Unit(self.crs[crs_name]["zz"]["unit"]),
-                        corsika_obs_level,
-                        corsika_sphere_center,
+                        corsika_observation_level,
+                        self.crs["auxiliary"]["telescope_axis_height"]["value"]
+                        * u.Unit(self.crs["auxiliary"]["telescope_axis_height"]["unit"]),
                     )
                 ).value
                 _zz_header = "position_z"
 
             if crs_name == "mercator":
-                telstr = (
+                tel_str = (
                     f"{self.name} {self.crs[crs_name]['xx']['value']:10.8f} "
                     f"{self.crs[crs_name]['yy']['value']:10.8f} {_zz:10.2f}"
                 )
             else:
-                telstr = (
+                tel_str = (
                     f"{self.name} {self.crs[crs_name]['xx']['value']:10.2f} "
                     f"{self.crs[crs_name]['yy']['value']:10.2f} {_zz:10.2f}"
                 )
-            headerstr = (
+            header_str = (
                 f"telescope_name {self.crs[crs_name]['xx']['name']} "
                 f"{self.crs[crs_name]['yy']['name']} {_zz_header}"
             )
 
             if self.geo_code is not None:
-                telstr += f"  {self.geo_code}"
-                headerstr += "  geo_code"
+                tel_str += f"  {self.geo_code}"
+                header_str += "  geo_code"
             if print_header:
-                print(headerstr)
-            print(telstr)
+                print(header_str)
+            print(tel_str)
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystem from e
@@ -259,7 +258,10 @@ class TelescopePosition:
         """
 
         for _crs in self.crs.values():
-            _crs["zz"]["value"] = self._get_coordinate_value(tel_altitude, _crs["zz"]["unit"])
+            try:
+                _crs["zz"]["value"] = self._get_coordinate_value(tel_altitude, _crs["zz"]["unit"])
+            except KeyError:
+                pass
 
     def _convert(self, crs_from, crs_to, xx, yy):
         """
@@ -321,6 +323,33 @@ class TelescopePosition:
                 return _crs_name, _crs
         return None, None
 
+    def is_coordinate_system(self, crs_name):
+        """
+        Check if crs_name describes a coordinate system or auxiliary information.
+
+        Parameters
+        ----------
+        crs_name: str
+            Name of coordinate system.
+
+        Returns
+        -------
+        bool
+            True if coordinate system is defined.
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If coordinate system is not known.
+
+
+        """
+        try:
+            return "crs" in self.crs[crs_name]
+        except KeyError as e:
+            self._logger.error(f"Invalid coordinate system ({crs_name})")
+            raise InvalidCoordSystem from e
+
     def has_coordinates(self, crs_name, crs_check=False):
         """
         Check if coordinates are set for a given coordinate system.
@@ -342,6 +371,8 @@ class TelescopePosition:
         InvalidCoordSystem
             If coordinate system is not known.
         """
+        if not self.is_coordinate_system(crs_name):
+            return False
         try:
             if not self.crs[crs_name]["crs"] and crs_check:
                 return False
@@ -385,6 +416,9 @@ class TelescopePosition:
                     return True
             return False
 
+        if not self.is_coordinate_system(crs_name):
+            return False
+
         try:
             return (
                 self.crs[crs_name]["zz"]["value"] is not np.nan
@@ -418,9 +452,9 @@ class TelescopePosition:
             raise InvalidCoordSystem from e
 
     @staticmethod
-    @u.quantity_input(tel_altitude=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
+    @u.quantity_input(tel_altitude=u.m, corsika_observation_level=u.m, telescope_axis_height=u.m)
     def convert_telescope_altitude_to_corsika_system(
-        tel_altitude, corsika_obs_level, corsika_sphere_center
+        tel_altitude, corsika_observation_level, telescope_axis_height
     ):
         """
         Convert telescope altitude to CORSIKA system (pos_z).
@@ -431,8 +465,8 @@ class TelescopePosition:
             Telescope altitude in equivalent units of meter.
         corsika_ob_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
+        telescope_axis_height: astropy.Quantity
+            Height of telescope elevation axis above ground level in equivalent units of meter.
 
         Returns
         -------
@@ -440,12 +474,12 @@ class TelescopePosition:
             Z-position of a telescope in CORSIKA system.
         """
 
-        return (tel_altitude - corsika_obs_level + corsika_sphere_center).to(u.m)
+        return (tel_altitude - corsika_observation_level + telescope_axis_height).to(u.m)
 
     @staticmethod
-    @u.quantity_input(tel_corsika_z=u.m, corsika_obs_level=u.m, corsika_sphere_center=u.m)
+    @u.quantity_input(tel_corsika_z=u.m, corsika_observation_level=u.m, telescope_axis_height=u.m)
     def convert_telescope_altitude_from_corsika_system(
-        tel_corsika_z, corsika_obs_level=None, corsika_sphere_center=None
+        tel_corsika_z, corsika_observation_level=None, telescope_axis_height=None
     ):
         """
         Convert Corsika (pos_z) to altitude.
@@ -454,17 +488,17 @@ class TelescopePosition:
         ----------
         tel_corsika_z: astropy.Quantity
             Telescope z-position in CORSIKA system in equivalent units of meter.
-        corsika_ob_level: astropy.Quantity
+        corsika_observation_level: astropy.Quantity
             CORSIKA observation level in equivalent units of meter.
-        corsika_sphere_center: astropy.Quantity
-            CORSIKA sphere center in equivalent units of meter.
+        telescope_axis_height: astropy.Quantity
+            Height of telescope elevation axis above ground level in equivalent units of meter.
 
         Returns
         -------
         astropy.units.m
             Telescope altitude (above sea level)
         """
-        return tel_corsika_z + corsika_obs_level - corsika_sphere_center
+        return tel_corsika_z + corsika_observation_level - telescope_axis_height
 
     def convert_all(self, crs_local=None, crs_wgs84=None, crs_utm=None):
         """
@@ -490,7 +524,7 @@ class TelescopePosition:
             return
 
         for _crs_to_name, _crs_to in self.crs.items():
-            if _crs_to_name == _crs_from_name:
+            if _crs_to_name == _crs_from_name or not self.is_coordinate_system(_crs_to_name):
                 continue
             if not self.has_coordinates(_crs_to_name) and _crs_to["crs"] is not None:
                 _x, _y = self._convert(
@@ -503,11 +537,55 @@ class TelescopePosition:
                     _crs_to_name, _x, _y, _crs_from["zz"]["value"] * _crs_from["zz"]["unit"]
                 )
 
-    @staticmethod
-    def _default_coordinate_system_definition():
+    def get_axis_height(self):
         """
-        Definition of coordinate system including axes and default axes units. Follows convention\
-        from pyproj for x and y coordinates.
+        Get telescope axis height.
+
+        Returns
+        -------
+        astropy.quantity
+            Telescope axis height.
+
+        """
+        return self.crs["auxiliary"]["telescope_axis_height"]["value"] * u.Unit(
+            self.crs["auxiliary"]["telescope_axis_height"]["unit"]
+        )
+
+    def get_sphere_radius(self):
+        """
+        Get telescope sphere radius.
+
+        Returns
+        -------
+        astropy.quantity
+            Telescope sphere radius
+
+        """
+        return self.crs["auxiliary"]["telescope_sphere_radius"]["value"] * u.Unit(
+            self.crs["auxiliary"]["telescope_sphere_radius"]["unit"]
+        )
+
+    def set_auxiliary_parameter(self, parameter_name, quantity):
+        """
+        Set auxiliary parameter.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of parameter.
+        quantity: astropy.units.Quantity
+            Quantity of parameter.
+
+        """
+        self.crs["auxiliary"][parameter_name]["value"] = quantity.value
+        self.crs["auxiliary"][parameter_name]["unit"] = quantity.unit
+
+    @staticmethod
+    def _default_coordinates():
+        """
+        Coordinate definition for a telescope position. Includes all coordinate systems and
+        auxiliary information. Includes axes and default axes units. Naming convention follows
+        pyproj for x and y coordinates. Includes auxiliary telescope data required for CORSIKA.
 
         Returns
         -------
@@ -521,7 +599,7 @@ class TelescopePosition:
                 "crs": None,
                 "xx": {"name": "position_x", "value": np.nan, "unit": u.Unit("m")},
                 "yy": {"name": "position_y", "value": np.nan, "unit": u.Unit("m")},
-                "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
+                "zz": {"name": "position_z", "value": np.nan, "unit": u.Unit("m")},
             },
             "mercator": {
                 "crs": None,
@@ -534,5 +612,9 @@ class TelescopePosition:
                 "xx": {"name": "utm_east", "value": np.nan, "unit": u.Unit("m")},
                 "yy": {"name": "utm_north", "value": np.nan, "unit": u.Unit("m")},
                 "zz": {"name": "altitude", "value": np.nan, "unit": u.Unit("m")},
+            },
+            "auxiliary": {
+                "telescope_sphere_radius": {"value": np.nan, "unit": u.Unit("m")},
+                "telescope_axis_height": {"value": np.nan, "unit": u.Unit("m")},
             },
         }
