@@ -57,9 +57,18 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 simtools is under rapid development with continuous changes and additions planned.
 Please contact the developers before using it: simtools-developer@desy.de
 
+.. note::
+   simtools is currently under heavy development with continuous changes.
+   We are applying significant updates to the handling of model parameters
+   and to the model parameter database. Because of this, you need to have a
+   local copy of the `model_parameters <https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters>`_
+   repository in order to use simtools. Clone this and add to your .env file
+   the following entry: ``SIMTOOLS_DB_SIMULATION_MODEL_URL="../model_parameters/"``
+   (replace with the relative/absolute path for the location of the model_parameters repository).
 
-Quickstart
-==========
+
+Quick start
+===========
 
 .. warning::
 
