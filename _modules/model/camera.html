@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g8a6ee9f</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+g91d8c16</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=2f7f6115"></script>
+    <script src="../../_static/documentation_options.js?v=0d513613"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8a6ee9f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g91d8c16</p>
 
 
 
@@ -109,13 +109,13 @@
 <a class="viewcode-back" href="../../mc_model.html#model.camera.Camera">[docs]</a>
 <span class="k">class</span> <span class="nc">Camera</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Camera class, defining pixel layout including rotation, finding neighbour pixels, calculating\</span>
+<span class="sd">    Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating\</span>
 <span class="sd">    FoV and plotting the camera.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    telescope_model_name: string</span>
-<span class="sd">        As provided by the telescope model method TelescopeModel (ex South-LST-1).</span>
+<span class="sd">        As provided by the telescope model method TelescopeModel (e.g., LSTN-01)</span>
 <span class="sd">    camera_config_file: string</span>
 <span class="sd">        The sim_telarray file name.</span>
 <span class="sd">    focal_length: float</span>
@@ -123,21 +123,20 @@
 <span class="sd">        in the same unit as the pixel positions in the camera_config_file, usually cm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># Constants for finding neighbour pixels.</span>
+    <span class="c1"># Constants for finding neighbor pixels.</span>
     <span class="n">PMT_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">=</span> <span class="mf">1.1</span>
     <span class="n">SIPM_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">=</span> <span class="mf">1.4</span>
     <span class="n">SIPM_ROW_COLUMN_DIST_FACTOR</span> <span class="o">=</span> <span class="mf">0.2</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,</span>
+<span class="sd">        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,</span>
 <span class="sd">        calculating FoV and plotting the camera.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
-        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">split_telescope_model_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_camera_config_file</span> <span class="o">=</span> <span class="n">camera_config_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span> <span class="o">=</span> <span class="n">focal_length</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
@@ -864,7 +863,9 @@
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pixels_id_to_print</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">font_size</span> <span class="o">=</span> <span class="mi">4</span>
-                <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;SCT&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span>
+                <span class="p">):</span>
                     <span class="n">font_size</span> <span class="o">=</span> <span class="mi">2</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                     <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>

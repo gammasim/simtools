@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+g8a6ee9f</title>
+    <title>Layout &#8212; simtools v0.1.dev1+g91d8c16</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=2f7f6115"></script>
+    <script src="_static/documentation_options.js?v=0d513613"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -32,7 +32,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8a6ee9f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g91d8c16</p>
 
 
 
@@ -122,7 +122,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 <span id="array-layout"></span><span id="layoutarraymodule"></span><h2>array_layout<a class="headerlink" href="#module-layout.array_layout" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">ArrayLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_center_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_telescope_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">ArrayLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Released'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout" title="Link to this definition">¶</a></dt>
 <dd><p>Manage telescope positions at the array layout level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -131,15 +131,17 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 </dd>
 <dt><strong>site: str</strong></dt><dd><p>Site name or location (e.g., North/South or LaPalma/Paranal)</p>
 </dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model (e.g., prod6).</p>
+</dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
 <dt><strong>name: str</strong></dt><dd><p>Name of the layout.</p>
 </dd>
-<dt><strong>layout_center_data: dict</strong></dt><dd><p>Dict describing array center coordinates.</p>
-</dd>
-<dt><strong>corsika_telescope_data: dict</strong></dt><dd><p>Dict describing CORSIKA telescope parameters.</p>
-</dd>
 <dt><strong>telescope_list_file: str or Path</strong></dt><dd><p>Path to the telescope list file.</p>
+</dd>
+<dt><strong>telescope_list_metadata_file: str or Path</strong></dt><dd><p>Path to telescope list metadata (if not part of telescope_list_file)</p>
+</dd>
+<dt><strong>validate: bool</strong></dt><dd><p>Validate input file list.</p>
 </dd>
 </dl>
 </dd>
@@ -176,7 +178,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.export_telescope_list_table">
-<span class="sig-name descname"><span class="pre">export_telescope_list_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_telescope_list_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_telescope_list_table" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_telescope_list_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_telescope_list_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_telescope_list_table" title="Link to this definition">¶</a></dt>
 <dd><p>Export array elements positions to astropy table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -232,12 +234,6 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>KeyError</dt><dd><p>if Missing definition of CORSIKA sphere radius or obs_level.</p>
-</dd>
-</dl>
-</dd>
 </dl>
 </dd></dl>
 
@@ -256,59 +252,13 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.include_radius_into_telescope_table">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include_radius_into_telescope_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.include_radius_into_telescope_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.include_radius_into_telescope_table" title="Link to this definition">¶</a></dt>
-<dd><p>Include the radius of the telescopes types into the astropy.table.QTable telescopes_table</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_table: astropy.QTable</strong></dt><dd><p>Astropy QTable with telescope information.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>astropy.QTable</dt><dd><p>Astropy QTable with telescope information updated with the radius.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.initialize_array_layout_from_telescope_file">
-<span class="sig-name descname"><span class="pre">initialize_array_layout_from_telescope_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.initialize_array_layout_from_telescope_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.initialize_array_layout_from_telescope_file" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the Layout array from a telescope list file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_list_file: str or Path</strong></dt><dd><p>Path to the telescope list file.</p>
-</dd>
-<dt><strong>telescope_list_metadata_file: str or Path</strong></dt><dd><p>Path to the telescope list metadata file.</p>
-</dd>
-<dt><strong>validate: bool</strong></dt><dd><p>Validate the telescope list file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>astropy.table.QTable</dt><dd><p>Table with the telescope layout information.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.print_telescope_list">
-<span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compact_printing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.print_telescope_list" title="Link to this definition">¶</a></dt>
-<dd><p>Print list of telescopes in latest released layout.</p>
+<span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.print_telescope_list" title="Link to this definition">¶</a></dt>
+<dd><p>Print list of telescopes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>compact_printing: str</strong></dt><dd><p>Compact printout for a single coordinate system.</p>
-</dd>
-<dt><strong>corsika_z: bool</strong></dt><dd><p>Print telescope height in CORSIKA coordinates (for CORSIKA system).</p>
+<dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system to be used for export.</p>
 </dd>
 </dl>
 </dd>
@@ -322,7 +272,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>asset_list: list</strong></dt><dd><p>List of assets to be selected.</p>
+<dt><strong>asset_list: list</strong></dt><dd><p>List of assets to be selected (telescope names or types)</p>
 </dd>
 </dl>
 </dd>
@@ -355,12 +305,13 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">TelescopePosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition" title="Link to this definition">¶</a></dt>
-<dd><p>Store and perform coordinate transformations for an array element position.</p>
-<p>The definition of x_coord and y_coord in this class depend on the     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)).     Altitude describes always the element height above sea level.</p>
+<dd><p>Store a telescope position and perform coordinate transformations.</p>
+<p>The definition of x_coord and y_coord in this class depend on the     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)).     Altitude describes always the element height above sea level, position_z
+the height above a reference altitude (e.g., CORSIKA observation level).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Name of the telescope (e.g LST-01, SST-05, …).</p>
+<dt><strong>name: str</strong></dt><dd><p>Name of the telescope (e.g LSTN-01, SSTS-05, …).</p>
 </dd>
 </dl>
 </dd>
@@ -385,16 +336,16 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_obs_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_sphere_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">¶</a></dt>
 <dd><p>Convert Corsika (pos_z) to altitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>tel_corsika_z: astropy.Quantity</strong></dt><dd><p>Telescope z-position in CORSIKA system in equivalent units of meter.</p>
 </dd>
-<dt><strong>corsika_ob_level: astropy.Quantity</strong></dt><dd><p>CORSIKA observation level in equivalent units of meter.</p>
+<dt><strong>corsika_observation_level: astropy.Quantity</strong></dt><dd><p>CORSIKA observation level in equivalent units of meter.</p>
 </dd>
-<dt><strong>corsika_sphere_center: astropy.Quantity</strong></dt><dd><p>CORSIKA sphere center in equivalent units of meter.</p>
+<dt><strong>telescope_axis_height: astropy.Quantity</strong></dt><dd><p>Height of telescope elevation axis above ground level in equivalent units of meter.</p>
 </dd>
 </dl>
 </dd>
@@ -409,7 +360,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_obs_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_sphere_center</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">¶</a></dt>
 <dd><p>Convert telescope altitude to CORSIKA system (pos_z).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -418,7 +369,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 </dd>
 <dt><strong>corsika_ob_level: astropy.Quantity</strong></dt><dd><p>CORSIKA observation level in equivalent units of meter.</p>
 </dd>
-<dt><strong>corsika_sphere_center: astropy.Quantity</strong></dt><dd><p>CORSIKA sphere center in equivalent units of meter.</p>
+<dt><strong>telescope_axis_height: astropy.Quantity</strong></dt><dd><p>Height of telescope elevation axis above ground level in equivalent units of meter.</p>
 </dd>
 </dl>
 </dd>
@@ -447,6 +398,20 @@ Get altitude of an array element</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_axis_height">
+<span class="sig-name descname"><span class="pre">get_axis_height</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_axis_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_axis_height" title="Link to this definition">¶</a></dt>
+<dd><p>Get telescope axis height.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.quantity</dt><dd><p>Telescope axis height.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_coordinates">
 <span class="sig-name descname"><span class="pre">get_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_coordinates" title="Link to this definition">¶</a></dt>
 <dd><p>Get coordinates in a given coordinate system.</p>
@@ -467,6 +432,20 @@ Get altitude of an array element</p>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>InvalidCoordSystem</dt><dd><p>if coordinate system is not defined</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_sphere_radius">
+<span class="sig-name descname"><span class="pre">get_sphere_radius</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_sphere_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_sphere_radius" title="Link to this definition">¶</a></dt>
+<dd><p>Get telescope sphere radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.quantity</dt><dd><p>Telescope sphere radius</p>
 </dd>
 </dl>
 </dd>
@@ -528,8 +507,34 @@ Get altitude of an array element</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.is_coordinate_system">
+<span class="sig-name descname"><span class="pre">is_coordinate_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.is_coordinate_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.is_coordinate_system" title="Link to this definition">¶</a></dt>
+<dd><p>Check if crs_name describes a coordinate system or auxiliary information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if coordinate system is defined.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidCoordSystem</dt><dd><p>If coordinate system is not known.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.print_compact_format">
-<span class="sig-name descname"><span class="pre">print_compact_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_obs_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_sphere_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.print_compact_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.print_compact_format" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_compact_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.print_compact_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.print_compact_format" title="Link to this definition">¶</a></dt>
 <dd><p>Print array element coordinates in compact format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -538,9 +543,7 @@ Get altitude of an array element</p>
 </dd>
 <dt><strong>print_header: bool</strong></dt><dd><p>Print table header.</p>
 </dd>
-<dt><strong>corsika_obs_level: astropy.Quantity</strong></dt><dd><p>CORSIKA observation level in equivalent units of meter.</p>
-</dd>
-<dt><strong>corsika_sphere_center: astropy.Quantity</strong></dt><dd><p>CORSIKA sphere center in equivalent units of meter.</p>
+<dt><strong>corsika_observation_level: astropy.Quantity</strong></dt><dd><p>CORSIKA observation level in equivalent units of meter.</p>
 </dd>
 </dl>
 </dd>
@@ -561,6 +564,22 @@ Get altitude of an array element</p>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>tel_altitude: astropy.Quantity</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.set_auxiliary_parameter">
+<span class="sig-name descname"><span class="pre">set_auxiliary_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_auxiliary_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_auxiliary_parameter" title="Link to this definition">¶</a></dt>
+<dd><p>Set auxiliary parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter_name: str</strong></dt><dd><p>Name of parameter.</p>
+</dd>
+<dt><strong>quantity: astropy.units.Quantity</strong></dt><dd><p>Quantity of parameter.</p>
+</dd>
 </dl>
 </dd>
 </dl>

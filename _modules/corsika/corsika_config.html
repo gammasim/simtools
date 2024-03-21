@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g8a6ee9f</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g91d8c16</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=2f7f6115"></script>
+    <script src="../../_static/documentation_options.js?v=0d513613"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8a6ee9f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g91d8c16</p>
 
 
 
@@ -169,6 +169,7 @@
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">layout_name</span><span class="p">,</span>
+        <span class="n">layout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">corsika_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">corsika_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -194,11 +195,17 @@
 
         <span class="c1"># Grabbing layout name and building ArrayLayout</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_layout_name</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">ArrayLayout</span><span class="o">.</span><span class="n">from_array_layout_name</span><span class="p">(</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
-            <span class="n">array_layout_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building ArrayLayout </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ArrayLayout</span><span class="o">.</span><span class="n">from_array_layout_name</span><span class="p">(</span>
+                <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
+                <span class="n">array_layout_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">layout</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_model</span>
 
         <span class="c1"># Load parameters</span>
         <span class="k">if</span> <span class="n">corsika_parameters_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -496,7 +503,7 @@
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ SITE PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">text_site_parameters</span> <span class="o">=</span> <span class="n">_get_text_single_line</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters</span><span class="p">[</span><span class="s2">&quot;SITE_PARAMETERS&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_corsika_site_parameters</span><span class="p">(</span><span class="n">config_file_style</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_site_parameters</span><span class="p">)</span>
 

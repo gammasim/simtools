@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+g8a6ee9f</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g91d8c16</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=2f7f6115"></script>
+    <script src="_static/documentation_options.js?v=0d513613"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -32,7 +32,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8a6ee9f</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g91d8c16</p>
 
 
 
@@ -335,8 +335,8 @@ used to replace the default random_focal_length from the model.</p>
 <p>Derive mirror random reflection angle for a mid-sized telescope (MST),
 simulation production Prod5.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \</span>
-<span class="go">    --site North \</span>
-<span class="go">    --telescope MST-FlashCam-D \</span>
+<span class="go">    --site South \</span>
+<span class="go">    --telescope MSTS-design \</span>
 <span class="go">    --containment_fraction 0.8 \</span>
 <span class="go">    --mirror_list MLTdata-preproduction.ecsv \</span>
 <span class="go">    --psf_measurement MLTdata-preproduction.ecsv \</span>
@@ -743,7 +743,7 @@ are plotted and saved separately.</p>
 <p>Available coordinate systems are:</p>
 <ol class="arabic simple">
 <li><p>UTM system</p></li>
-<li><p>ground system (similar to sim_telarray system with x-axis pointing toward         geographic north and y-axis pointing towards the west)</p></li>
+<li><p>ground system (similar to sim_telarray system with x-axis pointing toward         geographic north and y-axis pointing towards the west); altitude relative         to the CORSIKA observation level.</p></li>
 <li><p>Mercator system</p></li>
 </ol>
 </section>
@@ -752,11 +752,9 @@ are plotted and saved separately.</p>
 <dl class="simple">
 <dt>input (str)</dt><dd><p>File name with list of array element positions</p>
 </dd>
-<dt>compact (str)</dt><dd><p>Compact output in requested coordinate system; possible are corsika,utm,mercator</p>
+<dt>print (str)</dt><dd><p>Print requested coordinate system; possible are ground, utm, mercator</p>
 </dd>
 <dt>export (str)</dt><dd><p>Export array element list to file in requested coordinate system;             possible are ground, utm, mercator</p>
-</dd>
-<dt>use_corsika_telescope_height (bool)</dt><dd><p>Use CORSIKA coordinates for telescope heights (requires CORSIKA observation level)</p>
 </dd>
 <dt>select_assets (str)</dt><dd><p>Select a subset of array elements / telescopes (e.g., MSTN, LSTN)</p>
 </dd>
@@ -766,23 +764,16 @@ are plotted and saved separately.</p>
 <h3>Example<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h3>
 <p>Print a list of array elements using a list of telescope positions in UTM coordinates.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-print-array-elements \</span>
-<span class="go">    --input tests/resources/telescope_positions-South-4MST.ecsv \</span>
-<span class="go">    --compact ground</span>
+<span class="go">    --input tests/resources/telescope_positions-North-utm.ecsv \</span>
+<span class="go">    --print ground</span>
 </pre></div>
 </div>
-<p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">telescope_name pos_x pos_y altitude</span>
-<span class="go">MST-01      -0.02      -0.00    2162.00</span>
-<span class="go">MST-02       1.43     151.02    2163.00</span>
-<span class="go">MST-03      -1.47    -151.02    2169.00</span>
-<span class="go">MST-04     150.72      73.57    2159.00</span>
-</pre></div>
-</div>
+<p>The converted list of telescope positions in ground coordinates is printed to the screen.</p>
 <p>The following example converts a list of telescope positions in UTM coordinates     and writes the output to a file in ground (sim_telarray) coordinates. Also selects     only a subset of the array elements (telescopes; ignore calibration devices):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-print-array-elements \</span>
 <span class="go">    --input tests/resources/telescope_positions-North-utm.ecsv \</span>
-<span class="go">    --export ground --use_corsika_telescope_height \</span>
-<span class="go">    --select_assets LSTN, MSTN, SSTN</span>
+<span class="go">    --export ground \</span>
+<span class="go">    --select_assets LSTN</span>
 </pre></div>
 </div>
 <p>Expected output is a ecsv file in the directory printed to the screen.</p>
@@ -798,15 +789,15 @@ are plotted and saved separately.</p>
 <p>‘site’: South or North</p>
 <p>‘layout_name’: name of a valid layout array.</p>
 <p>‘model_version’: name of a valid model version.</p>
-<p>‘default’: telescope model names to be assigned to each telescope size by default.     It must contain entries for ‘LST’ and ‘MST’ (and ‘SST’ in case of South site).</p>
-<p>As optional data, specific telescope models can be assigned to individual telescopes.     This is done by the entries with the name of the telescope (as used by the layout     definition, ex. LST-01, MST-05, SST-10).</p>
+<p>‘default’: telescope model names to be assigned to each telescope size by default. 
+As optional data, specific telescope models can be assigned to individual telescopes.     This is done by the entries with the name of the telescope (as used by the layout     definition, ex. LSTN-01, MSTN-05, SSTS-10).</p>
 <p>Each telescope model can be set in two ways.</p>
 <p>a) A single str with the name of telescope model.
-Ex. ‘MST-05’: ‘NectarCam-D’</p>
+Ex. ‘MSTN-05’: ‘NectarCam-D’</p>
 <p>b) A dict containing a ‘name’ key with the name of the telescope model and further keys     with model parameters to be changed from the original model.
 Ex.:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;MST-05&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;NectarCam-D&#39;</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;MSTN-05&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;design&#39;</span><span class="p">,</span>
         <span class="s1">&#39;fadc_pulse_shape&#39;</span><span class="p">:</span> <span class="s1">&#39;Pulse_template_nectarCam_17042020-noshift.dat&#39;</span><span class="p">,</span>
         <span class="s1">&#39;discriminator_pulse_shape&#39;</span><span class="p">:</span> <span class="s1">&#39;Pulse_template_nectarCam_17042020-noshift.dat&#39;</span>
     <span class="p">}</span>
@@ -1310,7 +1301,8 @@ The telescope zenith angle and the source distance can be set by command line ar
 <span id="validate-file-using-schema"></span><h2>validate_file_using_schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading">¶</a></h2>
 <section id="id61">
 <h3>Summary<a class="headerlink" href="#id61" title="Link to this heading">¶</a></h3>
-<p>Validate yaml, json, or ecsv file using a json schema file.</p>
+<p>Validate a file using a schema.
+Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</p>
 </section>
 <section id="id62">
 <h3>Command line arguments<a class="headerlink" href="#id62" title="Link to this heading">¶</a></h3>
@@ -1318,6 +1310,8 @@ The telescope zenith angle and the source distance can be set by command line ar
 <dt>file_name (str)</dt><dd><p>input file to be validated</p>
 </dd>
 <dt>schema (str)</dt><dd><p>schema file (jsonschema format) used for validation</p>
+</dd>
+<dt>data_type (str)</dt><dd><p>type of input data (allowed types: metadata, schema, data)</p>
 </dd>
 </dl>
 </section>
@@ -1330,10 +1324,30 @@ The telescope zenith angle and the source distance can be set by command line ar
 </section>
 <section id="id64">
 <h3>Example<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h3>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema          --file_name tests/resources/MLTdata-preproduction.meta.yml          --schema simtools/schemas/metadata.metaschema.yml</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema          --file_name tests/resources/MLTdata-preproduction.meta.yml          --schema simtools/schemas/metadata.metaschema.yml          --data_type metadata</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_file_using_schema.validate_data_file">
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_file" title="Link to this definition">¶</a></dt>
+<dd><p>Validate a data file (e.g., in ecsv, json, yaml format)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Validate metadata.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_file_using_schema.validate_schema">
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_schema" title="Link to this definition">¶</a></dt>
+<dd><p>Validate a schema file given in yaml or json format.
+Schema is either given as command line argument, read from the meta_schema_url or from
+the metadata section of the data dictionary.</p>
+</dd></dl>
+
 </section>
 </section>
 
