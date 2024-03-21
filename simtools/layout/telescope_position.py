@@ -332,6 +332,17 @@ class TelescopePosition:
         crs_name: str
             Name of coordinate system.
 
+        Returns
+        -------
+        bool
+            True if coordinate system is defined.
+
+        Raises
+        ------
+        InvalidCoordSystem
+            If coordinate system is not known.
+
+
         """
         try:
             return "crs" in self.crs[crs_name]
@@ -532,7 +543,7 @@ class TelescopePosition:
 
         Returns
         -------
-        astropy.units.m
+        astropy.quantity
             Telescope axis height.
 
         """
@@ -546,7 +557,7 @@ class TelescopePosition:
 
         Returns
         -------
-        astropy.units.m
+        astropy.quantity
             Telescope sphere radius
 
         """

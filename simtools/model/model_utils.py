@@ -59,14 +59,14 @@ def compute_telescope_transmission(pars, off_axis):
     return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
-def is_two_mirror_telescope(telescope_name):
+def is_two_mirror_telescope(telescope_model_name):
     """
     Check if the telescope is a two mirror design.
 
     Parameters
     ----------
-    telescope_name: str
-        Telescope name (ex. LSTN-01).
+    telescope_model_name: str
+        Telescope model name (ex. LSTN-01).
 
     Returns
     -------
@@ -74,7 +74,7 @@ def is_two_mirror_telescope(telescope_name):
         True if the telescope is a two mirror one.
     """
 
-    tel_type = names.get_telescope_type_from_telescope_name(telescope_name)
+    tel_type = names.get_telescope_type_from_telescope_name(telescope_model_name)
     if "SST" in tel_type or "SCT" in tel_type:
         return True
     return False

@@ -62,22 +62,11 @@ def test_plot_1d(db, io_handler):
     assert plot_file.exists()
 
 
-def test_plot_table(db, io_handler):
+def test_plot_table(io_handler):
     logger.debug("Testing plot_table")
 
     title = "Test plot table"
-
-    test_file_name = "Transmission_Spectrum_PlexiGlass.dat"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        file_name=test_file_name,
-    )
-    table_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-    )
-    table = astropy.io.ascii.read(table_file)
+    table = astropy.io.ascii.read("tests/resources/Transmission_Spectrum_PlexiGlass.dat")
 
     plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
@@ -126,7 +115,7 @@ def test_plot_array(
     array_layout_south_instance,
 ):
     def test_one_site(test_file, instance):
-        instance.initialize_array_layout(telescope_list_file=test_file)
+        instance._initialize_array_layout(telescope_list_file=test_file)
         fig_out = visualize.plot_array(
             instance.export_telescope_list_table("ground"), rotate_angle=0 * u.deg
         )

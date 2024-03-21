@@ -169,13 +169,12 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
 
 def test_config_data_from_yaml_file(io_handler, db_config):
     logger.info("test_config_data_from_yaml_file")
-    corsika_config_file = "tests/resources/corsikaConfigTest.yml"
     cc = CorsikaConfig(
         mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",
-        corsika_config_file=corsika_config_file,
+        corsika_config_file="tests/resources/corsikaConfigTest.yml",
     )
     cc.print_user_parameters()
 

@@ -8,7 +8,6 @@ import numpy as np
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
-from simtools.model.site_model import SiteModel
 from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
 
@@ -100,7 +99,7 @@ class CorsikaConfig:
 
         # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(layout_name)
-        self._logger.debug(f"Bulding ArrayLayout {self.layout_name}")
+        self._logger.debug(f"Building ArrayLayout {self.layout_name}")
         self.layout = (
             ArrayLayout.from_array_layout_name(
                 mongo_db_config=mongo_db_config,
@@ -110,10 +109,7 @@ class CorsikaConfig:
             if layout is None
             else layout
         )
-
-        self.site_model = SiteModel(
-            site=self.site, mongo_db_config=mongo_db_config, label=self.label
-        )
+        self.site_model = self.layout.site_model
 
         # Load parameters
         if corsika_parameters_file is None:

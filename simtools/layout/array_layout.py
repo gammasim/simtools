@@ -59,7 +59,6 @@ class ArrayLayout:
         telescope_list_file=None,
         telescope_list_metadata_file=None,
         validate=False,
-        array_layout_name=None,
     ):
         """
         Initialize ArrayLayout.
@@ -77,6 +76,7 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
+        self.site_model = None
         self.io_handler = io_handler.IOHandler()
         self.geo_coordinates = GeoCoordinates()
 
@@ -86,12 +86,7 @@ class ArrayLayout:
         self._array_center = None
         self._auxiliary_parameters = {}
 
-        if telescope_list_file is None and array_layout_name is not None:
-            telescope_list_file = self.io_handler.get_input_data_file(
-                "layout", f"telescope_positions-{array_layout_name}.ecsv"
-            )
-
-        self.initialize_array_layout(
+        self._initialize_array_layout(
             telescope_list_file=telescope_list_file,
             telescope_list_metadata_file=telescope_list_metadata_file,
             validate=validate,
@@ -123,12 +118,16 @@ class ArrayLayout:
         array_name = names.validate_array_layout_name(split_name[1])
         valid_array_layout_name = site_name + "-" + array_name
 
+        telescope_list_file = io_handler.IOHandler().get_input_data_file(
+            "layout", f"telescope_positions-{valid_array_layout_name}.ecsv"
+        )
+
         layout = cls(
             site=site_name,
             mongo_db_config=mongo_db_config,
             name=valid_array_layout_name,
             label=label,
-            array_layout_name=valid_array_layout_name,
+            telescope_list_file=telescope_list_file,
         )
 
         return layout
@@ -156,15 +155,15 @@ class ArrayLayout:
             self._logger.error("No database configuration provided")
             raise ValueError
 
-        site_model = SiteModel(
+        self.site_model = SiteModel(
             site=self.site,
             model_version=self.model_version,
             mongo_db_config=self.mongo_db_config,
         )
-        self._corsika_observation_level = site_model.get_corsika_site_parameters().get(
+        self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
             "corsika_observation_level", None
         )
-        self._reference_position_dict = site_model.get_reference_point()
+        self._reference_position_dict = self.site_model.get_reference_point()
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
 
     def _initialize_coordinate_systems(self):
@@ -312,7 +311,7 @@ class ArrayLayout:
         return tel
 
     def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
-        """Function auxiliary to self._load_telescope_list. It sets the coordinates.
+        """Function auxiliary to self._initialize_array_layout. It sets the coordinates.
 
         Parameters
         ----------
@@ -340,7 +339,7 @@ class ArrayLayout:
 
     def _try_set_altitude(self, row, tel, table):
         """
-        Function auxiliary to self._load_telescope_list. It sets the altitude of the
+        Function auxiliary to self._initialize_array_layout. It sets the altitude of the
         TelescopePosition instance.
 
         Parameters
@@ -366,12 +365,12 @@ class ArrayLayout:
         except KeyError:
             pass
 
-    def initialize_array_layout(
+    def _initialize_array_layout(
         self, telescope_list_file, telescope_list_metadata_file=None, validate=False
     ):
         """
         Initialize the Layout array including site and telescope parameters.
-        Read array lit if telescope_list_file is given.
+        Read array list if telescope_list_file is given.
 
         Parameters
         ----------
@@ -438,7 +437,7 @@ class ArrayLayout:
             if _telescope_model_name not in self._auxiliary_parameters:
                 tel_model = TelescopeModel(
                     site=self.site,
-                    telescope_name=_telescope_model_name,
+                    telescope_model_name=_telescope_model_name,
                     model_version=self.model_version,
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,

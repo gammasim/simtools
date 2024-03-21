@@ -29,6 +29,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dynamic = [
@@ -63,7 +64,9 @@ dependencies = [
 "tests" = [
   "pytest",
   "pytest-cov",
+  "pytest-profiling",
   "pytest-random-order",
+  "pytest-repeat",
   "pytest-xdist",
 ]
 [project.urls]
@@ -73,6 +76,8 @@ dependencies = [
 [project.scripts]
 simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
 simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
+simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
+simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"

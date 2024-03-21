@@ -1,4 +1,5 @@
 {
+    "name": "reference_point_altitude",
     "value": 2162.0,
     "unit": "m",
     "type": "numpy.float64",
@@ -25,7 +26,7 @@
                     "MODEL": {
                         "NAME": "reference_point_altitude",
                         "VERSION": "0.1.0",
-                        "URL": "https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/reference_point_altitude.schema.yml"
+                        "URL": "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
                     }
                 },
                 "FORMAT": "json",

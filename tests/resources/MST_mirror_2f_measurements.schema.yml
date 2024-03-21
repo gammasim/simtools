@@ -16,24 +16,24 @@ data:
         description: |-
           Mirror panel ID.
         required: true
-        units: dimensionless
+        unit: dimensionless
         type: string
       - name: mirror_curvature_radius
         description: |-
           Mirror panel curvature radius.
         required: true
-        units: cm
+        unit: cm
         type: float64
       - name: psf
         description: |-
           Spot size of mirror panel PSF at nominal distance.
         required: true
-        units: cm
+        unit: cm
         type: float64
       - name: psf_opt
         description: |-
           Spot size of mirror panel PSF
           (best value, not at nominal distance).
         required: false
-        units: cm
+        unit: cm
         type: float64

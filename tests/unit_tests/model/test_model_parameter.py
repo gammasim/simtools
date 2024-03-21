@@ -24,22 +24,31 @@ def telescope_model_from_config_file(io_handler, lst_config_file):
     label = "test-telescope-model"
     tel_model = TelescopeModel.from_config_file(
         site="North",
-        telescope_name="LSTN-01",
+        telescope_model_name="LSTN-01",
         label=label,
         config_file_name=lst_config_file,
     )
     return tel_model
 
 
-def test_get_parameter(telescope_model_lst):
+def test_get_parameter_dict(telescope_model_lst):
     tel_model = telescope_model_lst
-    assert isinstance(tel_model.get_parameter("num_gains"), dict)
-    assert isinstance(tel_model.get_parameter("num_gains")["value"], int)
-    assert isinstance(tel_model.get_parameter("telescope_axis_height")["value"], float)
-    assert tel_model.get_parameter("telescope_axis_height")["unit"] == "m"
+    assert isinstance(tel_model.get_parameter_dict("num_gains"), dict)
+    assert isinstance(tel_model.get_parameter_dict("num_gains")["value"], int)
+    assert isinstance(tel_model.get_parameter_dict("telescope_axis_height")["value"], float)
+    assert tel_model.get_parameter_dict("telescope_axis_height")["unit"] == "m"
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter("not_a_parameter")
+        tel_model.get_parameter_dict("not_a_parameter")
+
+
+def test_get_parameter_value(telescope_model_lst):
+    tel_model = telescope_model_lst
+    assert isinstance(tel_model.get_parameter_value("num_gains"), int)
+
+    _par_dict_value_missing = {"unit": "m", "type": "float"}
+    with pytest.raises(KeyError):
+        tel_model.get_parameter_value("num_gains", parameter_dict=_par_dict_value_missing)
 
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
@@ -69,7 +78,7 @@ def test_handling_parameters(telescope_model_lst):
     assert new_par == tel_model.get_parameter_value("new_parameter")
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter("bla_bla")
+        tel_model.get_parameter_dict("bla_bla")
 
 
 def test_change_parameter(telescope_model_lst):
@@ -96,7 +105,7 @@ def test_change_parameter(telescope_model_lst):
 
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
-    flen_info = tel_model.get_parameter("focal_length")
+    flen_info = tel_model.get_parameter_dict("focal_length")
     logger.info(f"Focal Length = {flen_info['value']}, type = {flen_info['type']}")
 
     assert isinstance(flen_info["value"], float)
@@ -115,7 +124,7 @@ def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     cfg_file = tel_model.get_config_file()
     tel = TelescopeModel.from_config_file(
         site="south",
-        telescope_name="ssts-design",
+        telescope_model_name="ssts-design",
         label="test-sst",
         config_file_name=cfg_file,
     )
@@ -139,7 +148,7 @@ def test_updating_export_model_files(db_config, io_handler):
     # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
-        telescope_name="LSTN-01",
+        telescope_model_name="LSTN-01",
         model_version="prod4",
         label="test-telescope-model-2",
         mongo_db_config=db_config,
@@ -190,3 +199,18 @@ def test_export_derived_files(telescope_model_lst):
         .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
         .exists()
     )
+
+
+def test_load_reference_data(telescope_model_lst):
+    tel_model = telescope_model_lst
+
+    assert tel_model.reference_data["nsb_reference_value"]["value"] == pytest.approx(0.24)
+
+
+def test_get_reference_data_value(telescope_model_lst):
+    tel_model = telescope_model_lst
+
+    assert tel_model.get_reference_data_value("nsb_reference_value") == pytest.approx(0.24)
+
+    with pytest.raises(KeyError):
+        tel_model.get_reference_data_value("bla_bla")

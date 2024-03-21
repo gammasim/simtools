@@ -923,9 +923,7 @@ def get_value_unit_type(value, unit_str=None):
         and string representation of the type of the value.
     """
 
-    base_value = value
     base_unit = None
-    base_type = ""
     if isinstance(value, (str, u.Quantity)):
         try:
             _quantity_value = u.Quantity(value)
@@ -941,12 +939,13 @@ def get_value_unit_type(value, unit_str=None):
         base_type = extract_type_of_value(base_value)
 
     if unit_str is not None:
-        if base_unit is not None:
-            try:
-                base_value = base_value * u.Unit(base_unit).to(u.Unit(unit_str))
-            except u.UnitConversionError:
-                _logger.error(f"Cannot convert {base_unit} to {unit_str}.")
-                raise
+        try:
+            base_value = base_value * u.Unit(base_unit).to(u.Unit(unit_str))
+        except u.UnitConversionError:
+            _logger.error(f"Cannot convert {base_unit} to {unit_str}.")
+            raise
+        except TypeError:
+            pass
         base_unit = unit_str
 
     return base_value, base_unit, base_type
@@ -954,7 +953,7 @@ def get_value_unit_type(value, unit_str=None):
 
 def get_value_as_quantity(value, unit):
     """
-    Get a value as a Quantity with a given unit. If value is a Quantity, convert to unit.
+    Get a value as a Quantity with a given unit. If value is a Quantity, convert to the given unit.
 
     Parameters
     ----------
@@ -967,6 +966,11 @@ def get_value_as_quantity(value, unit):
     -------
     astropy.units.Quantity
         Quantity of value 'quantity' and unit 'unit'.
+
+    Raises
+    ------
+    u.UnitConversionError
+        If the value cannot be converted to the given unit.
     """
     if isinstance(value, u.Quantity):
         try:
