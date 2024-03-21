@@ -7,9 +7,9 @@ primary:
   unit: null
 zenith_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
+  unit: 'deg'
   names: ['zenith', 'theta']
 azimuth_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
+  unit: 'deg'
   names: ['azimuth', 'phi']

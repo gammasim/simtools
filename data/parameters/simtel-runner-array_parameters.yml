@@ -7,15 +7,15 @@ primary:
   unit: null
 zenith_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
-  default: !astropy.units.Quantity
+  unit: 'deg'
+  default:
     value: 20
-    unit: !astropy.units.Unit {unit: deg}
+    unit: 'deg'
   names: ['zenith', 'theta']
 azimuth_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
-  default: !astropy.units.Quantity
+  unit: 'deg'
+  default:
     value: 0
-    unit: !astropy.units.Unit {unit: deg}
+    unit: 'deg'
   names: ['azimuth', 'phi']
