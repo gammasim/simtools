@@ -3,6 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: run
   CONFIGURATION:
     SITE: North
-    TELESCOPE: MST-NectarCam-D
+    TELESCOPE: MSTN-design
     MODEL_VERSION: prod5
     OUTPUT_PATH: simtools-tests

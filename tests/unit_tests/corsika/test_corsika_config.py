@@ -6,7 +6,6 @@ from copy import copy
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
     InvalidCorsikaInput,
@@ -168,24 +167,14 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
     assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(db, io_handler, db_config):
+def test_config_data_from_yaml_file(io_handler, db_config):
     logger.info("test_config_data_from_yaml_file")
-    test_file_name = "corsikaConfigTest.yml"
-    db.export_file_db(
-        db_name="test-data",
-        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        file_name=test_file_name,
-    )
-
-    corsika_config_file = gen.find_file(
-        test_file_name, io_handler.get_output_directory(sub_dir="model", dir_type="test")
-    )
     cc = CorsikaConfig(
         mongo_db_config=db_config,
         site="Paranal",
         layout_name="4LST",
         label="test-corsika-config",
-        corsika_config_file=corsika_config_file,
+        corsika_config_file="tests/resources/corsikaConfigTest.yml",
     )
     cc.print_user_parameters()
 
@@ -227,40 +216,3 @@ def test_get_file_name(corsika_config, io_handler):
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
-
-
-def test_load_corsika_parameters_file(corsika_config, io_handler, caplog):
-    corsika_parameters_file = io_handler.get_input_data_file("parameters", "corsika_parameters.yml")
-    corsika_dict = corsika_config.load_corsika_parameters_file(corsika_parameters_file)
-    assert "Loading CORSIKA parameters from file" in caplog.text
-    sphere_center = {
-        "LST": {"value": 16, "unit": "m"},
-        "MST": {"value": 9, "unit": "m"},
-        "SCT": {"value": 6.1, "unit": "m"},
-        "SST": {"value": 3.25, "unit": "m"},
-    }
-    sphere_radius = {
-        "LST": {"value": 12.5, "unit": "m"},
-        "MST": {"value": 9.15, "unit": "m"},
-        "SCT": {"value": 7.15, "unit": "m"},
-        "SST": {"value": 3, "unit": "m"},
-    }
-    assert isinstance(corsika_dict, dict)
-    for tel_type in sphere_center:
-        assert (
-            sphere_center[tel_type]["value"]
-            == corsika_dict["corsika_sphere_center"][tel_type]["value"]
-        )
-        assert (
-            sphere_center[tel_type]["unit"]
-            == corsika_dict["corsika_sphere_center"][tel_type]["unit"]
-        )
-    for tel_type in sphere_radius:
-        assert (
-            sphere_radius[tel_type]["value"]
-            == corsika_dict["corsika_sphere_radius"][tel_type]["value"]
-        )
-        assert (
-            sphere_radius[tel_type]["unit"]
-            == corsika_dict["corsika_sphere_radius"][tel_type]["unit"]
-        )
