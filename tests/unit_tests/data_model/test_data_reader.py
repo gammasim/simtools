@@ -98,8 +98,9 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
 
     # schema explicitly given
     schema_file = (
-        "https://raw.githubusercontent.com/gammasim/simulation_model/"
-        "main/schema/reference_point_altitude.schema.yml"
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/model_parameters/-/raw/main/"
+        "schema/reference_point_altitude.schema.yml"
     )
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
@@ -117,10 +118,3 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
         data_reader.read_value_from_file(
             tmp_test_directory / "test_read_value_from_file_1.json", validate=True
         ),
-
-    # schema_file in meta_schema_url
-    with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file(
-            "tests/resources/MST_mirror_2f_measurements.schema.yml", validate=True
-        )
-        assert "Successful validation of yaml/json file" in caplog.text

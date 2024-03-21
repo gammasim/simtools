@@ -2,9 +2,6 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
-# from simtools.corsika.corsika_config import CorsikaConfig
-# from simtools.io_operations.io_handler import IOHandler
-
 __all__ = [
     "EdgePixelObject",
     "HexEdgePixelHandler",
@@ -286,7 +283,7 @@ class MSTHandler(TelescopeHandler):
         radius = handlebox.height
         patch = mpatches.Circle(
             xy=center,
-            radius=radius * self.radius_dict[mst] / self.radius_dict[mst],
+            radius=radius * self.radius_dict[mst] / self.radius_dict[lst],
             facecolor=self.colors_dict[mst],
             edgecolor=self.colors_dict[mst],
             transform=handlebox.get_transform(),

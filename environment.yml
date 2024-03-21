@@ -13,12 +13,15 @@ dependencies:
   - matplotlib-base
   - numpy
   - numpydoc
+  - pip
   - pre-commit
   - pylint
   - pymongo
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-profiling
+  - pytest-repeat
   - pytest-xdist
   - python-dotenv
   - pyyaml

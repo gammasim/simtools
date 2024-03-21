@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import uuid
 
@@ -23,6 +24,7 @@ def db_cleanup(db, random_id):
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
     db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["sites_" + random_id].drop()
 
 
 @pytest.fixture()
@@ -34,9 +36,16 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
+def test_reading_db_lst_without_simulation_repo(db):
+
+    db_copy = copy.deepcopy(db)
+    db_copy.mongo_db_config["db_simulation_model_url"] = None
+    pars = db.get_model_parameters("North", "LSTN-01", "Released")
+    assert pars["parabolic_dish"]["value"] == 1
+
+
 def test_reading_db_lst(db):
     logger.info("----Testing reading LST-----")
-    assert 1 == 1
     pars = db.get_model_parameters("North", "LSTN-01", "Released")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["value"] == 1
@@ -90,6 +99,9 @@ def test_get_derived_values(db):
     except ValueError:
         logger.error("Derived DB not updated for new telescope names. Expect failure")
         raise AssertionError
+
+    with pytest.raises(AttributeError):
+        pars = db.get_derived_values("North", None, "Prod5")
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
@@ -279,6 +291,37 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["new_test_parameter_quantity_str"]["type"] == "float"
     assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
 
+    # site parameters
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        site="North",
+        version="test",
+        parameter="corsika_observation_level",
+        value="1800. m",
+        collection_name="sites_" + random_id,
+    )
+    pars = db.read_mongo_db(
+        db_name=f"sandbox_{random_id}",
+        telescope_model_name="North",
+        model_version="test",
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        collection_name="sites_" + random_id,
+        write_files=False,
+    )
+    assert pars["corsika_observation_level"]["value"] == pytest.approx(1800.0)
+    assert pars["corsika_observation_level"]["unit"] == "m"
+
+    # wrong collection
+    with pytest.raises(ValueError):
+        db.add_new_parameter(
+            db_name=f"sandbox_{random_id}",
+            site="North",
+            version="test",
+            parameter="corsika_observation_level",
+            value="1800. m",
+            collection_name="wrong_collection" + random_id,
+        )
+
 
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
@@ -324,12 +367,10 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value") or pars[
-                "corsika_observation_level"
-            ].get("value")
+            _obs_level = pars["corsika_observation_level"].get("value")
             assert _obs_level == pytest.approx(2156.0)
         else:
-            _obs_level = pars["altitude"]["value"] or pars["altitude"]["value"]
+            _obs_level = pars["altitude"]["value"]
             assert _obs_level == pytest.approx(2158.0)
     else:
         assert pars["altitude"] == 2156
@@ -339,11 +380,9 @@ def test_reading_db_sites(db):
     if db.mongo_db_config:
         # temporary solution for simulation model parameter renaming
         if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value") or pars[
-                "corsika_observation_level"
-            ].get("value")
+            _obs_level = pars["corsika_observation_level"].get("value")
         else:
-            _obs_level = pars["altitude"].get("value") or pars["altitude"].get("value")
+            _obs_level = pars["altitude"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
