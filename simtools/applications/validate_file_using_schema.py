@@ -66,6 +66,11 @@ def _parse(label, description):
         choices=["metadata", "schema", "data"],
         default="data",
     )
+    config.parser.add_argument(
+        "--require_exact_data_type",
+        help="require exact data type for validation",
+        action="store_true",
+    )
     return config.initialize(paths=False)
 
 
@@ -123,6 +128,7 @@ def validate_data_file(args_dict, logger):
     data_validator = validate_data.DataValidator(
         schema_file=_get_schema_file_name(args_dict),
         data_file=args_dict["file_name"],
+        check_exact_data_type=args_dict["require_exact_data_type"],
     )
     data_validator.validate_and_transform()
     logger.info(f"Successful validation of data file {args_dict['file_name']}")

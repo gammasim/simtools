@@ -4,7 +4,7 @@ $ref: '#/definitions/SimtoolsDataAndModelParameters'
 title: SimPipe Data and Model Parameter Metaschema
 description: YAML representation of data and model parameter metaschema
 version: 0.1.0
-name: data.metaschema
+name: model_parameter_and_data_schema.metaschema
 type: object
 additionalProperties: false
 
@@ -280,6 +280,10 @@ definitions:
         type: string
         description: |-
           "version of simulation software this parameter is used"
+      internal_parameter_name:
+        type: string
+        description: |-
+          "Naming of parameter as used this simulation software"
     required:
       - name
     title: SimulationSoftware
@@ -342,7 +346,7 @@ definitions:
     type: string
     enum:
       - boolean
-      - datatable
+      - data_table
       - double
       - float64
       - int

@@ -354,10 +354,14 @@ class DataValidator:
                 return None
             if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
                 return None
+            # allow ints to be converted to floats
+            if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.floating):
+                return None
 
         self._logger.error(
             f"Invalid data type in column '{column_name}'. "
-            f"Expected type '{reference_dtype}', found '{dtype}'"
+            f"Expected type '{reference_dtype}', found '{dtype}' "
+            f"(exact type: {self.check_exact_data_type})"
         )
         raise TypeError
 
@@ -599,7 +603,7 @@ class DataValidator:
     def _get_data_description(self, column_name=None, status_test=False):
         """
         Return data description as provided by the schema file.
-        For tables (type: 'datatable'), return the description of
+        For tables (type: 'data_table'), return the description of
         the column named 'column_name'. For other types, return
         all data descriptions.
         For columns named 'colX' return the Xth column in the reference data.
