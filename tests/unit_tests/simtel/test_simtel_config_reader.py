@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import astropy.units as u
@@ -164,7 +165,27 @@ def test_get_type_from_simtel_cfg(config_reader_num_gains):
     assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("float64", 5)
     assert _config._get_type_from_simtel_cfg(["Text", "55"]) == ("str", 1)
     assert _config._get_type_from_simtel_cfg(["IBool", "1"]) == ("bool", 1)
+    assert _config._get_type_from_simtel_cfg(["FUnc", "55"]) == ("str", 1)
     _config.return_arrays_as_strings = False
+
+
+def test_resolve_all_in_column(config_reader_num_gains):
+
+    _config = config_reader_num_gains
+
+    # empty
+    assert _config._resolve_all_in_column([]) == ([], {})
+    # no all
+    assert _config._resolve_all_in_column(["1", "2", "3"]) == (["1", "2", "3"], {})
+    # "all:"
+    assert _config._resolve_all_in_column(["all:", "2"]) == (["2"], {})
+    # "all:1"
+    assert _config._resolve_all_in_column(["all:1"]) == (["1"], {})
+    # "all: 1"
+    assert _config._resolve_all_in_column(["all: 1"]) == (["1"], {})
+
+    # "all: 0, 3:500"
+    assert _config._resolve_all_in_column(["all:1", "3:5"]) == (["1"], {"3": "5"})
 
 
 def test_add_value_from_simtel_cfg(config_reader_num_gains):
@@ -173,7 +194,12 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     # default
     assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)
+    assert _config._add_value_from_simtel_cfg(["all", "5"], dtype="int") == (5, 1)
+    assert _config._add_value_from_simtel_cfg(["all:5"], dtype="int") == (5, 1)
     assert _config._add_value_from_simtel_cfg(["all: 5"], dtype="int") == (5, 1)
+    value, ndim = _config._add_value_from_simtel_cfg(["all:5", "2:1"], dtype="int", ndim=4)
+    assert list(value) == [5, 5, 1, 5]
+    assert ndim == 4
 
     # comma separated, return array as list
     _config.return_arrays_as_strings = False
@@ -188,10 +214,13 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
 def test_get_simtel_parameter_name(config_reader_num_gains):
 
-    _config = config_reader_num_gains
+    _config = copy.deepcopy(config_reader_num_gains)
     assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
     assert _config._get_simtel_parameter_name("telescope_transmission") == "TELESCOPE_TRANSMISSION"
     assert _config._get_simtel_parameter_name("NUM_GAINS") == "NUM_GAINS"
+    # test pass on TypeError
+    _config.schema_dict = None
+    assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
 
 
 def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
