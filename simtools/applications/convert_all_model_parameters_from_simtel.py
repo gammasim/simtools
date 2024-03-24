@@ -39,6 +39,8 @@ import logging
 import re
 from pathlib import Path
 
+import numpy as np
+
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations.io_handler import IOHandler
@@ -138,15 +140,25 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
     return list(simtel_parameter_set)
 
 
-def main():
+def read_and_export_parameters(args_dict, logger):
+    """
+    Read and export parameters from simtel configuration file to json files.
 
-    args_dict, _ = _parse(
-        label=Path(__file__).stem,
-        description="Convert simulation model parameters from sim_telarray to simtools format.",
-    )
+    Parameters
+    ----------
+    args_dict: dict
+        Dictionary with command line arguments.
+    logger: logging.Logger
+        Logger object
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    Returns
+    -------
+    list
+        List of simtel parameters not found in schema files.
+    list
+        List of simtools parameter not found in simtel configuration file.
+
+    """
 
     _parameters, _schema_files = get_list_of_parameters_and_schema_files(
         args_dict["schema_directory"]
@@ -188,17 +200,75 @@ def main():
         if simtel_config_reader.simtel_parameter_name.lower() in _simtel_parameters:
             _simtel_parameters.remove(simtel_config_reader.simtel_parameter_name.lower())
 
-    if len(_simtel_parameters) > 0:
-        logger.info(f"Simtel parameters not found in schema files ({len(_simtel_parameters)}):")
-        for para in _simtel_parameters:
-            logger.info(f"  {para}")
+    return _parameters_not_in_simtel, _simtel_parameters
+
+
+def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger):
+    """
+    Print simtel parameters not found in schema files and simtools parameters not found in simtel
+    configuration file.
+
+    Parameters
+    ----------
+    _parameters_not_in_simtel: list
+        List of simtel parameters not found in schema files.
+    _simtel_parameters: list
+        List of simtel parameters not found in simtools schema files.
+    args_dict: dict
+        Dictionary with command line arguments.
+    logger: logging.Logger
+        Logger object
+
+    """
+
     if len(_parameters_not_in_simtel) > 0:
         logger.info(
-            f"Simtools parameters not found in simtel configuration file"
-            f"({len(_parameters_not_in_simtel)}):"
+            f"Parameters not found in simtools schema files ({len(_parameters_not_in_simtel)}):"
         )
-        for para in _parameters_not_in_simtel:
+        for para in sorted(_parameters_not_in_simtel):
             logger.info(f"  {para}")
+
+    if len(_simtel_parameters) > 0:
+        logger.info(f"Simtel parameters not found in schema files ({len(_simtel_parameters)}):")
+        for para in sorted(_simtel_parameters):
+            logger.info(f"Simtel parameter: {para}")
+            simtel_config_reader = SimtelConfigReader(
+                schema_file=None,
+                simtel_config_file=args_dict["simtel_cfg_file"],
+                simtel_telescope_name=args_dict["simtel_telescope_name"],
+                parameter_name=para,
+            )
+            _default = simtel_config_reader.parameter_dict.get("default")
+            _tel_value = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
+            # simple comparison of default value and telescope values, does not work for lists
+            try:
+                if _default == _tel_value or np.isclose(_default, _tel_value):
+                    logger.info(f"    Default and telescope values are equal: {_default}")
+                    continue
+            except (ValueError, TypeError):
+                pass
+            if isinstance(_default, np.ndarray):
+                logger.warning(f"    Default value: {_default} (length: {_default.size})")
+            else:
+                logger.warning(f"    Default value: {_default}")
+            if isinstance(_tel_value, np.ndarray):
+                logger.warning(f"    Telescope value: {_tel_value} (length: {_tel_value.size})")
+            else:
+                logger.warning(f"    Telescope value: {_tel_value}")
+
+
+def main():
+
+    args_dict, _ = _parse(
+        label=Path(__file__).stem,
+        description="Convert simulation model parameters from sim_telarray to simtools format.",
+    )
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(args_dict, logger)
+    print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger)
 
 
 if __name__ == "__main__":
