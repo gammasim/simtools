@@ -60,6 +60,8 @@ class SimtelConfigReader:
         Parameter name (default: read from schema file)
     return_arrays_as_strings: bool
         If True, return arrays as comma separated strings.
+    camera_pixels: int
+        Number of camera pixels
     """
 
     def __init__(
@@ -69,6 +71,7 @@ class SimtelConfigReader:
         simtel_telescope_name,
         parameter_name=None,
         return_arrays_as_strings=True,
+        camera_pixels=None,
     ):
         """
         Initialize SimtelConfigReader.
@@ -86,6 +89,7 @@ class SimtelConfigReader:
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
         self.return_arrays_as_strings = return_arrays_as_strings
+        self.camera_pixels = camera_pixels
         self.parameter_dict = self._read_simtel_config_file(
             simtel_config_file, simtel_telescope_name
         )
@@ -255,7 +259,7 @@ class SimtelConfigReader:
 
         _para_dict = {}
         # first: extract line type (required for conversions and dimension)
-        _para_dict["type"], _para_dict["dimension"] = self._get_type_from_simtel_cfg(
+        _para_dict["type"], _para_dict["dimension"] = self._get_type_and_dimension_from_simtel_cfg(
             matching_lines["type"]
         )
         # then: extract other fields
@@ -364,11 +368,11 @@ class SimtelConfigReader:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
 
-    @staticmethod
-    def _get_type_from_simtel_cfg(column):
+    def _get_type_and_dimension_from_simtel_cfg(self, column):
         """
         Return type and dimension from simtel configuration column.
-        'Func' type from simtel is treated as string.
+        'Func' type from simtel is treated as string. Return number
+        of camera pixel for a hard-wired set up parameters.
 
         Parameters
         ----------
@@ -386,6 +390,8 @@ class SimtelConfigReader:
             return "str", 1
         if column[0].lower() == "ibool":
             return "bool", int(column[1])
+        if self.camera_pixels is not None and self.simtel_parameter_name in ["NIGHTSKY_BACKGROUND"]:
+            return str(np.dtype(column[0].lower())), self.camera_pixels
         return str(np.dtype(column[0].lower())), int(column[1])
 
     def _get_simtel_parameter_name(self, parameter_name):
