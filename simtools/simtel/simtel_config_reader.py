@@ -164,7 +164,8 @@ class SimtelConfigReader:
     def compare_simtel_config_with_schema(self):
         """
         Compare limits and defaults reported by simtel_array with schema
-        (for debugging purposes; simple printing).
+        (for debugging purposes; simple printing). Check for differences
+        in 'default' and 'limits' entries.
 
         """
 

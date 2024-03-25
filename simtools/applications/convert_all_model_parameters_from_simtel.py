@@ -206,7 +206,8 @@ def read_and_export_parameters(args_dict, logger):
 def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger):
     """
     Print simtel parameters not found in schema files and simtools parameters not found in simtel
-    configuration file.
+    configuration file. For parameters not found, check if the setting for the chose telescope
+    is different from the default values.
 
     Parameters
     ----------
