@@ -555,12 +555,12 @@ def generate_file_name(
     ----------
     file_type: str
         Type of file (e.g., config, output, plot)
-    key: str
-        Additional key (d80_cm, d80_deg, eff_area or eff_flen)
+    suffix: str
+        File suffix
     site: str
         South or North.
     telescope_model_name: str
-        LST-1, MST-FlashCam-D, ...
+        LSTN-01, MSTS-01, ...
     zenith_angle: float
         Zenith angle (deg).
     azimuth_angle: float
