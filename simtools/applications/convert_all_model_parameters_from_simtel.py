@@ -143,6 +143,9 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
 def read_and_export_parameters(args_dict, logger):
     """
     Read and export parameters from simtel configuration file to json files.
+    Only applicable parameters are exported to json.
+    Provide extensive logging information on the parameters found in the simtel
+    configuration file.
 
     Parameters
     ----------
@@ -193,12 +196,16 @@ def read_and_export_parameters(args_dict, logger):
 
         simtel_config_reader.compare_simtel_config_with_schema()
 
-        simtel_config_reader.export_parameter_dict_to_json(
-            io_handler.get_output_file(f"{_parameter}.json"), _json_dict
-        )
+        if _json_dict["applicable"]:
+            simtel_config_reader.export_parameter_dict_to_json(
+                io_handler.get_output_file(f"{_parameter}.json"), _json_dict
+            )
 
         if simtel_config_reader.simtel_parameter_name.lower() in _simtel_parameters:
             _simtel_parameters.remove(simtel_config_reader.simtel_parameter_name.lower())
+
+        if _json_dict["file"]:
+            logger.info(f"File name for {_parameter} is {_json_dict['value']}")
 
     return _parameters_not_in_simtel, _simtel_parameters
 
