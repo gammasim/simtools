@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import shutil
 
 import astropy.units as u
 import pytest
@@ -15,7 +16,10 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture
 def camera_efficiency_lst(telescope_model_lst, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
-        telescope_model=telescope_model_lst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_lst,
+        label="validate_camera_efficiency",
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_lst
 
@@ -23,27 +27,26 @@ def camera_efficiency_lst(telescope_model_lst, simtel_path):
 @pytest.fixture
 def camera_efficiency_sst(telescope_model_sst, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
-        telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_sst,
+        label="validate_camera_efficiency",
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_sst
 
 
 @pytest.fixture
-def results_file(db, io_handler):
+def results_file(io_handler):
     test_file_name = (
-        "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
+        "tests/resources/"
+        "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency.ecsv"
     )
     output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
         sub_dir="camera-efficiency",
         dir_type="test",
     )
-    db.export_file_db(
-        db_name="test-data",
-        dest=output_directory,
-        file_name=test_file_name,
-    )
-
+    shutil.copy(test_file_name, output_directory)
     return output_directory.joinpath(test_file_name)
 
 
@@ -67,18 +70,11 @@ def test_validate_telescope_model(simtel_path):
 
 
 def test_load_files(camera_efficiency_lst):
-    assert (
-        camera_efficiency_lst._file_results.name
-        == "camera-efficiency-table-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.ecsv"
-    )
-    assert (
-        camera_efficiency_lst._file_simtel.name
-        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.dat"
-    )
-    assert (
-        camera_efficiency_lst._file_log.name
-        == "camera-efficiency-North-LST-1-za020deg_azm000deg_validate_camera_efficiency.log"
-    )
+    _name = "camera-efficiency-table-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency"
+    assert camera_efficiency_lst._file_results.name == _name + ".ecsv"
+    _name = "camera-efficiency-North-LSTN-01-za020deg_azm000deg_validate_camera_efficiency"
+    assert camera_efficiency_lst._file_simtel.name == _name + ".dat"
+    assert camera_efficiency_lst._file_log.name == _name + ".log"
 
 
 def test_read_results(camera_efficiency_lst, results_file):
@@ -145,4 +141,4 @@ def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_fil
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for LST-1" in summary
+    assert "Results summary for LSTN-01" in summary

@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.mark.parametrize("telescope_model_name", ["sst-1M", "sst-ASTRI", "sst-GCT"])
+@pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
 def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler):
     # Test with 3 SSTs
     version = "prod3"

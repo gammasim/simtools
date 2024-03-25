@@ -66,20 +66,15 @@ def is_two_mirror_telescope(telescope_model_name):
     Parameters
     ----------
     telescope_model_name: str
-        Telescope model name (ex. LST-1).
+        Telescope model name (ex. LSTN-01).
 
     Returns
     -------
     bool
         True if the telescope is a two mirror one.
     """
-    tel_class, tel_type, _ = names.split_telescope_model_name(telescope_model_name)
-    if tel_class == "SST":
-        # Only 1M is False
-        return "1M" not in tel_type
-    if tel_class == "SCT":
-        # SCT always two mirrors
-        return True
 
-    # All MSTs and LSTs
+    tel_type = names.get_telescope_type_from_telescope_name(telescope_model_name)
+    if "SST" in tel_type or "SCT" in tel_type:
+        return True
     return False

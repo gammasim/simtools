@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     EXPORT: utm
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
-    SELECT_ASSETS: ['LST', 'MST']
+    SELECT_ASSETS: ['LSTN', 'MSTN']
     SKIP_INPUT_VALIDATION: True
     SKIP_OUTPUT_VALIDATION: True
     LOG_LEVEL: DEBUG

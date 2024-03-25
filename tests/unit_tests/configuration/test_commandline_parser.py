@@ -21,11 +21,14 @@ def test_site():
 
 
 def test_telescope():
-    assert parser.CommandLineParser.telescope("LST-1") == "LST-1"
-    assert parser.CommandLineParser.telescope("MST-FlashCam") == "MST-FlashCam"
+    assert parser.CommandLineParser.telescope("LSTN-01") == "LSTN-01"
+    assert parser.CommandLineParser.telescope("MSTN-design") == "MSTN-design"
 
     with pytest.raises(ValueError, match=r"Invalid name Whipple"):
         assert parser.CommandLineParser.telescope("Whipple")
+
+    with pytest.raises(ValueError, match=r"Invalid name LST"):
+        assert parser.CommandLineParser.telescope("LST")
 
 
 def test_efficiency_interval():

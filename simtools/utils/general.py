@@ -298,6 +298,30 @@ def _validate_and_convert_value(par_name, par_info, value_in):
     return _validate_and_convert_value_with_units(value, value_keys, par_name, par_info)
 
 
+def join_url_or_path(url_or_path, *args):
+    """
+    Join URL or path with additional subdirectories and file.
+    This is the equivalent to Path.join(), with extended functionality
+    working also for URLs.
+
+    Parameters
+    ----------
+    url_or_path: str or Path
+        URL or path to be extended.
+    args: list
+        Additional arguments to be added to the URL or path.
+
+    Returns
+    -------
+    str or Path
+        Extended URL or path.
+
+    """
+    if "://" in str(url_or_path):
+        return "/".join([url_or_path.rstrip("/"), *args])
+    return Path(url_or_path).joinpath(*args)
+
+
 def is_url(url):
     """
     Check if a string is a valid URL.
@@ -345,47 +369,50 @@ def collect_data_from_http(url):
 
     """
 
-    _logger.debug(f"Downloaded yaml file from {url}")
     try:
-        with tempfile.NamedTemporaryFile() as tmp_file:
+        with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
             if url.endswith("yml") or url.endswith("yaml"):
                 data = yaml.load(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
+            elif url.endswith("list"):
+                lines = tmp_file.readlines()
+                data = [line.strip() for line in lines]
             else:
                 msg = f"File extension of {url} not supported (should be json or yaml)"
                 _logger.error(msg)
                 raise TypeError(msg)
-    except TypeError:
+    except TypeError as exc:
         msg = "Invalid url {url}"
         _logger.error(msg)
-        raise
-    except urllib.error.HTTPError:
-        msg = f"Failed to download yaml file from {url}"
+        raise InvalidConfigData(msg) from exc
+    except urllib.error.HTTPError as exc:
+        msg = f"Failed to download file from {url}"
         _logger.error(msg)
-        raise
+        raise InvalidConfigData(msg) from exc
 
+    _logger.debug(f"Downloaded file from {url}")
     return data
 
 
 def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     """
-    Collect input data that can be given either as a dict or as a yaml/json file.
+    Collect input data from file or dictionary.
 
     Parameters
     ----------
     file_name: str
-        Name of the yaml/json file.
+        Name of the yaml/json/ascii file.
     in_dict: dict
         Data as dict.
     allow_empty: bool
-        If True, an error won't be raised in case both yaml and dict are None.
+        If True, an error won't be raised in case both file_name and dict are None.
 
     Returns
     -------
-    data: dict
-        Data as dict.
+    data: dict or list
+        Data as dict or list.
     """
 
     if file_name is not None:
@@ -393,12 +420,15 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
             _logger.warning("Both in_dict and file_name were given - file_name will be used")
         if is_url(str(file_name)):
             data = collect_data_from_http(file_name)
-        elif Path(file_name).suffix.lower() == ".json":
-            with open(file_name, encoding="utf-8") as file:
-                data = json.load(file)
         else:
             with open(file_name, encoding="utf-8") as file:
-                data = yaml.load(file)
+                if Path(file_name).suffix.lower() == ".json":
+                    data = json.load(file)
+                elif Path(file_name).suffix.lower() == ".list":
+                    lines = file.readlines()
+                    data = [line.strip() for line in lines]
+                else:
+                    data = yaml.load(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
@@ -790,9 +820,11 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
                     item.replace(substring, "") if isinstance(item, str) else item for item in value
                 ]
                 modified_items = [
-                    remove_substring_recursively_from_dict(item, substring)
-                    if isinstance(item, dict)
-                    else item
+                    (
+                        remove_substring_recursively_from_dict(item, substring)
+                        if isinstance(item, dict)
+                        else item
+                    )
                     for item in modified_items
                 ]
                 data_dict[key] = modified_items
@@ -842,13 +874,14 @@ def extract_type_of_value(value) -> str:
     return _type
 
 
-def get_value_unit_type(value):
+def get_value_unit_type(value, unit_str=None):
     """
     Get the value, unit and type of a value.
     The value is stripped of its unit and the unit is returned
     in its string form (i.e., to_string()).
     The type is returned as a string representation of the type.
     For example, for a string, it returns 'str' rather than '<class 'str'>'.
+    An additional unit string can be given and the return value is converted to this units.
 
     Note that Quantities are always floats, even if the original value is represented as an int.
 
@@ -856,6 +889,8 @@ def get_value_unit_type(value):
     ----------
     value: str, int, float, bool, u.Quantity
         Value to be parsed.
+    unit_str: str
+        Unit to be used for the value.
 
     Returns
     -------
@@ -864,9 +899,7 @@ def get_value_unit_type(value):
         and string representation of the type of the value.
     """
 
-    base_value = value
     base_unit = None
-    base_type = ""
     if isinstance(value, (str, u.Quantity)):
         try:
             _quantity_value = u.Quantity(value)
@@ -881,4 +914,45 @@ def get_value_unit_type(value):
         base_value = value
         base_type = extract_type_of_value(base_value)
 
+    if unit_str is not None:
+        try:
+            base_value = base_value * u.Unit(base_unit).to(u.Unit(unit_str))
+        except u.UnitConversionError:
+            _logger.error(f"Cannot convert {base_unit} to {unit_str}.")
+            raise
+        except TypeError:
+            pass
+        base_unit = unit_str
+
     return base_value, base_unit, base_type
+
+
+def get_value_as_quantity(value, unit):
+    """
+    Get a value as a Quantity with a given unit. If value is a Quantity, convert to the given unit.
+
+    Parameters
+    ----------
+    value:
+        value to get a unit. It can be a float, int, or a Quantity (convertible to 'unit').
+    unit: astropy.units.Unit
+        Unit to apply to 'quantity'.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Quantity of value 'quantity' and unit 'unit'.
+
+    Raises
+    ------
+    u.UnitConversionError
+        If the value cannot be converted to the given unit.
+    """
+    if isinstance(value, u.Quantity):
+        try:
+            value = value.to(unit)
+            return value
+        except u.UnitConversionError:
+            _logger.error(f"Cannot convert {value.unit} to {unit}.")
+            raise
+    return value * unit
