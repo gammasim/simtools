@@ -10,7 +10,7 @@ description: |-
   Mirror panel 2F measurements determining
   panel radius and panel PSF.
 data:
-  - type: datatable
+  - type: data_table
     table_columns:
       - name: mirror_panel_id
         description: |-
