@@ -183,7 +183,7 @@ class CameraEfficiency:
         """
         self._logger.info("Analyzing CameraEfficiency")
 
-        if self._file["results"].exists() and not force:
+        if "results" in self._file and not force:
             self._logger.info("Results file exists and force=False - skipping analyze")
             self._read_results()
             return
