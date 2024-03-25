@@ -2,6 +2,8 @@
 
 import logging
 
+from simtools.utils import names
+
 __all__ = ["SimtelConfigWriter"]
 
 
@@ -25,29 +27,6 @@ class SimtelConfigWriter:
     """
 
     TAB = " " * 3
-    SITE_PARS = [
-        "altitude",
-        "atmospheric_transmission",
-        "ref_lat",
-        "ref_long",
-        "array_coordinates",
-        "atmospheric_profile",
-        "magnetic_field",
-    ]
-    PARS_NOT_TO_WRITE = [
-        "pixel_shape",
-        "pixel_diameter",
-        "lightguide_efficiency_angle_file",
-        "lightguide_efficiency_wavelength_file",
-        "ref_lat",
-        "ref_long",
-        "array_coordinates",
-        "atmospheric_profile",
-        "magnetic_field",
-        "EPSG",
-        "mirror_panel_shape",
-        "mirror_panel_diameter",
-    ]
 
     def __init__(
         self, site, model_version, layout_name=None, telescope_model_name=None, label=None
@@ -73,8 +52,9 @@ class SimtelConfigWriter:
         config_file_path: str or Path
             Path of the file to write on.
         parameters: dict
-            Model parameters in the same structure as used by the TelescopeModel class.
+            Model parameters
         """
+        self._logger.debug(f"Writing telescope config file {config_file_path}")
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -85,11 +65,12 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            for par in parameters.keys():
-                if par in self.PARS_NOT_TO_WRITE:
-                    continue
-                value = parameters[par]["Value"]
-                file.write(f"{par} = {value}\n")
+            for par, value in parameters.items():
+                _simtel_name = names.get_simtel_name_from_parameter_name(
+                    par, search_telescope_parameters=True, search_site_parameters=False
+                )
+                if _simtel_name is not None:
+                    file.write(f"{_simtel_name} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
         """
@@ -190,7 +171,7 @@ class SimtelConfigWriter:
 
     def _write_header(self, file, title, comment_char="%"):
         """
-        Writes a generic header. commen_char is the character to be used for comments, which \
+        Writes a generic header. comment_char is the character to be used for comments, which \
         differs among ctypes of config files.
         """
         header = f"{comment_char}{50 * '='}\n"
@@ -215,9 +196,10 @@ class SimtelConfigWriter:
     def _write_site_parameters(self, file, site_parameters):
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
-        for par in site_parameters:
-            if par in self.PARS_NOT_TO_WRITE:
-                continue
-            value = site_parameters[par]["Value"]
-            file.write(self.TAB + f"{par} = {value}\n")
+        for par, value in site_parameters.items():
+            _simtel_name = names.get_simtel_name_from_parameter_name(
+                par, search_telescope_parameters=False, search_site_parameters=True
+            )
+            if _simtel_name is not None:
+                file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")

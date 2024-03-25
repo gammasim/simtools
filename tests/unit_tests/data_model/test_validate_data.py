@@ -28,8 +28,16 @@ def test_validate_and_transform(caplog):
     data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
     data_validator.schema_file_name = "tests/resources/MST_mirror_2f_measurements.schema.yml"
     with caplog.at_level(logging.INFO):
-        data_validator.validate_and_transform()
+        _table = data_validator.validate_and_transform()
+        assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
+
+    data_validator.data_file_name = "tests/resources/num_gains.json"
+    data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    with caplog.at_level(logging.INFO):
+        _dict = data_validator.validate_and_transform()
+        assert isinstance(_dict, dict)
+    assert "Validating data from:" in caplog.text
 
 
 def test_validate_data_file(caplog):
@@ -42,7 +50,7 @@ def test_validate_data_file(caplog):
         data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/reference_position_mercator.yml"
+    data_validator.data_file_name = "tests/resources/reference_point_altitude.json"
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating data from:" in caplog.text
@@ -67,6 +75,15 @@ def test_validate_data_columns(tmp_test_directory, caplog):
     )
     data_validator_3.validate_data_file()
     data_validator_3._validate_data_table()
+    # test change of units
+    _value_in_org = data_validator_3.data_table["psf"].value[0]
+    data_validator_3._validate_data_columns()
+    for col in data_validator_3._data_description:
+        col["unit"] = "m" if col["unit"] == "cm" else col["unit"]
+    data_validator_3._validate_data_columns()
+    _value_in_m = data_validator_3.data_table["psf"].value[0]
+    assert data_validator_3.data_table["psf"].unit == "m"
+    assert _value_in_org == pytest.approx(_value_in_m * 100.0)
 
     _incomplete_schema = {"data": []}
     with open(tmp_test_directory / "incomplete_data_schema.schema.yml", "w") as _file:
@@ -81,7 +98,7 @@ def test_validate_data_columns(tmp_test_directory, caplog):
 
 def test_sort_data():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     table_1 = Table()
     table_1["wavelength"] = Column([300.0, 350.0, 315.0], unit="nm", dtype="float32")
@@ -105,7 +122,7 @@ def test_sort_data():
     reverse_sorted_data_columns = get_reference_columns()
     reverse_sorted_data_columns[0]["input_processing"] = ["remove_duplicates", "reversesort"]
     data_validator_reverse = validate_data.DataValidator()
-    data_validator_reverse._reference_data_columns = reverse_sorted_data_columns
+    data_validator_reverse._data_description = reverse_sorted_data_columns
 
     data_validator_reverse.data_table = table_1
     data_validator_reverse._sort_data()
@@ -127,7 +144,7 @@ def test_sort_data():
 
 def test_check_data_for_duplicates():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     table_unique = Table()
     table_unique["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
@@ -188,7 +205,7 @@ def test_interval_check_required_range():
 
 def test_check_range(caplog):
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     col_1 = Column(name="qe", data=[0.1, 0.5], dtype="float32")
     data_validator._check_range(col_1.name, col_1.min(), col_1.max(), "allowed_range")
@@ -213,10 +230,14 @@ def test_check_range(caplog):
             data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
     assert "Value for column 'qe' out of range" in caplog.text
 
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
+
 
 def test_check_and_convert_units():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     table_1 = Table()
     table_1["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
@@ -227,7 +248,9 @@ def test_check_and_convert_units():
     table_1["position_y"] = Column([5.0, 7], unit="km", dtype="float32")
 
     for col_name in table_1.colnames:
-        table_1[col_name] = data_validator._check_and_convert_units(table_1[col_name], col_name)
+        table_1[col_name], _ = data_validator._check_and_convert_units(
+            table_1[col_name], unit=None, col_name=col_name
+        )
 
     # check unit conversion for "position_x" (column type Quantity)
     assert table_1["position_x"].unit == u.m
@@ -242,19 +265,43 @@ def test_check_and_convert_units():
 
     with pytest.raises(IndexError):
         for col_name in table_2.colnames:
-            data_validator._check_and_convert_units(table_2[col_name], col_name)
+            data_validator._check_and_convert_units(table_2[col_name], unit=None, col_name=col_name)
 
     table_3 = Table()
     table_3["wavelength"] = Column([300.0, 350.0], unit="kg", dtype="float32")
 
     with pytest.raises(u.core.UnitConversionError):
         for col_name in table_3.colnames:
-            data_validator._check_and_convert_units(table_3[col_name], col_name)
+            data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
+
+    # convert numbers and quantities
+    assert data_validator._check_and_convert_units(300.0, unit="nm", col_name="wavelength") == (
+        300.0,
+        u.nm,
+    )
+    assert data_validator._check_and_convert_units(300.0, unit="mm", col_name="wavelength") == (
+        300000000.0,
+        u.nm,
+    )
+    data_validator._data_description[0]["type"] = "int"
+    assert data_validator._check_and_convert_units(300, unit="nm", col_name="wavelength") == (
+        300,
+        u.nm,
+    )
+
+    data_validator._data_description[0]["type"] = ["int", "int"]
+    assert data_validator._check_and_convert_units(
+        [300, 350], unit=["nm", "nm"], col_name="wavelength"
+    ) == ([300, 350], u.nm)
+    data_validator._data_description[0]["type"] = ["int", "int"]
+    assert data_validator._check_and_convert_units(
+        [300, 350], unit=["nm", None], col_name="wavelength"
+    ) == ([300, 350], u.nm)
 
 
 def test_check_required_columns():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     table_1 = Table()
     table_1["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
@@ -272,36 +319,39 @@ def test_check_required_columns():
         data_validator._check_required_columns()
 
 
-def test_get_reference_data_column():
+def test_get_data_description():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
-    assert isinstance(data_validator._get_reference_data_column("wavelength"), dict)
+    assert isinstance(data_validator._get_data_description("wavelength"), dict)
 
-    _entry = data_validator._get_reference_data_column("wavelength")
+    _entry = data_validator._get_data_description("wavelength")
     assert _entry["name"] == "wavelength"
 
     with pytest.raises(IndexError):
-        data_validator._get_reference_data_column("wrong_column")
+        data_validator._get_data_description("wrong_column")
 
-    assert data_validator._get_reference_data_column("wavelength", status_test=True)
-    assert not data_validator._get_reference_data_column("wrong_column", status_test=True)
+    assert data_validator._get_data_description("wavelength", status_test=True)
+    assert not data_validator._get_data_description("wrong_column", status_test=True)
 
-    data_validator._reference_data_columns = get_reference_columns_name_colx()
+    data_validator._data_description = get_reference_columns_name_colx()
 
-    assert isinstance(data_validator._get_reference_data_column("col1"), dict)
+    assert isinstance(data_validator._get_data_description("col1"), dict)
 
     with pytest.raises(IndexError):
-        data_validator._get_reference_data_column("col3")
+        data_validator._get_data_description("col3")
 
-    assert data_validator._get_reference_data_column("col1", status_test=True)
+    assert data_validator._get_data_description("col1", status_test=True)
 
-    assert data_validator._get_reference_data_column("col1") == {"name": "col1"}
+    assert data_validator._get_data_description("col1") == {"name": "col1"}
+
+    with pytest.raises(IndexError):
+        data_validator._get_data_description(100)
 
 
 def test_get_reference_unit():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     assert data_validator._get_reference_unit("wavelength") == "nm"
     assert data_validator._get_reference_unit("qe") == u.dimensionless_unscaled
@@ -310,35 +360,54 @@ def test_get_reference_unit():
 
 def test_get_unique_column_requirements():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     assert data_validator._get_unique_column_requirement() == ["wavelength"]
 
 
 def test_check_data_type(caplog):
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     with caplog.at_level(logging.DEBUG):
-        data_validator._check_data_type(
-            Column([300.0, 350.0, 315.0], dtype="double", name="wavelength"), "wavelength"
-        )
-    assert "Data column 'wavelength' has correct data type" in caplog.text
+        assert data_validator._check_data_type(np.dtype("double"), "wavelength") is None
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(TypeError):
-            assert data_validator._check_data_type(
-                Column([300.0, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
-            )
+            assert data_validator._check_data_type(np.dtype("float32"), "wavelength")
     assert (
         "Invalid data type in column 'wavelength'. Expected type 'double', found 'float32'"
         in caplog.text
     )
 
+    # sub types only
+    data_validator.check_exact_data_type = False
+
+    # floats
+    assert data_validator._check_data_type(np.dtype("float32"), "wavelength") is None
+
+    # ints
+    data_validator._data_description[0]["type"] = "int"
+    assert data_validator._check_data_type(np.dtype("int64"), "wavelength") is None
+
+    # string types
+    data_validator._data_description[0]["type"] = "string"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "str"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "file"
+    assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+
+    # bool types
+    data_validator._data_description[0]["type"] = "bool"
+    assert data_validator._check_data_type(np.dtype("bool"), "wavelength") is None
+    data_validator._data_description[0]["type"] = "boolean"
+    assert data_validator._check_data_type(np.dtype("bool"), "wavelength") is None
+
 
 def test_check_for_not_a_number():
     data_validator = validate_data.DataValidator()
-    data_validator._reference_data_columns = get_reference_columns()
+    data_validator._data_description = get_reference_columns()
 
     assert not (
         data_validator._check_for_not_a_number(
@@ -346,32 +415,26 @@ def test_check_for_not_a_number():
         )
     )
 
+    assert data_validator._check_for_not_a_number("string", "wavelength")
+
     # wavelength does not allow for nan
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, 315.0], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "wavelength")
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([np.nan, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([np.nan, 350.0, np.inf], "wavelength")
     with pytest.raises(ValueError):
-        data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, np.inf], dtype="float32", name="wavelength"), "wavelength"
-        )
+        data_validator._check_for_not_a_number([300.0, 350.0, np.inf], "wavelength")
 
     # position_x allows for nan
-    assert not (
-        data_validator._check_for_not_a_number(
-            Column([300.0, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
-        )
-    )
-    assert data_validator._check_for_not_a_number(
-        Column([np.nan, 350.0, 315.0], dtype="float32", name="position_x"), "position_x"
-    )
-    assert data_validator._check_for_not_a_number(
-        Column([333.0, np.inf, 315.0], dtype="float32", name="position_x"), "position_x"
-    )
+    assert not (data_validator._check_for_not_a_number([300.0, 350.0, 315.0], "position_x"))
+    assert data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "position_x")
+    assert data_validator._check_for_not_a_number([333.0, np.inf, 315.0], "position_x")
+
+    assert not data_validator._check_for_not_a_number(333.0, "wavelength")
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(np.inf, "wavelength")
+    with pytest.raises(ValueError):
+        data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
 def test_read_validation_schema(tmp_test_directory):
@@ -420,12 +483,44 @@ def test_read_validation_schema(tmp_test_directory):
 
 # incomplete test
 def test_validate_data_dict():
+
+    # parameter with unit
     data_validator = validate_data.DataValidator(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
+        schema_file=(
+            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
+            "model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
+        )
     )
-    data_validator.data = {"no_name": "test_data", "value": [1, 2, 3], "units": ["", "", ""]}
+    data_validator.data_dict = {
+        "name": "reference_point_altitude",
+        "value": 1000.0,
+        "unit": "km",
+    }
+    data_validator._validate_data_dict()
+
+    # parameter without unit
+    data_validator_2 = validate_data.DataValidator(
+        schema_file=(
+            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
+            "model_parameters/-/raw/main/schema/num_gains.schema.yml"
+        )
+    )
+    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
+    data_validator_2._validate_data_dict()
+
+    data_validator_2.data_dict = {"name": "num_gains", "value": np.array([2]), "unit": [""]}
+    data_validator_2._validate_data_dict()
+
+    data_validator.data_dict = {
+        "no_name": "test_data",
+        "value": [1.0, 2.0, 3.0],
+        "unit": ["", "", ""],
+    }
     with pytest.raises(KeyError):
         data_validator._validate_data_dict()
+
+    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
+    data_validator_2._validate_data_dict()
 
 
 def get_reference_columns_name_colx():
@@ -457,7 +552,7 @@ def get_reference_columns():
             "name": "wavelength",
             "description": "wavelength",
             "required": True,
-            "units": "nm",
+            "unit": "nm",
             "type": "double",
             "required_range": {"unit": "nm", "min": 300, "max": 700},
             "input_processing": ["remove_duplicates", "sort"],
@@ -466,7 +561,7 @@ def get_reference_columns():
             "name": "qe",
             "description": "average quantum or photon detection efficiency",
             "required": True,
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "type": "double",
             "allowed_range": {"unit": "unitless", "min": 0.0, "max": 1.0},
         },
@@ -474,7 +569,7 @@ def get_reference_columns():
             "name": "position_x",
             "description": "x position",
             "required": False,
-            "units": "m",
+            "unit": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
             "input_processing": ["allow_nan"],
@@ -483,7 +578,7 @@ def get_reference_columns():
             "name": "position_y",
             "description": "y position",
             "required": False,
-            "units": "m",
+            "unit": "m",
             "type": "double",
             "allowed_range": {"unit": "m", "min": 0.0, "max": 1.0},
             "input_processing": ["allow_nan"],
@@ -492,7 +587,7 @@ def get_reference_columns():
             "name": "abc",
             "description": "not required",
             "required": False,
-            "units": "kg",
+            "unit": "kg",
             "type": "double",
             "allowed_range": {"unit": "kg", "min": 0.0, "max": 100.0},
         },

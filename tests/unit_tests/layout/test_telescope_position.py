@@ -48,14 +48,14 @@ def position_for_testing():
 
 
 def test_str(crs_wgs84, crs_local, crs_utm):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     _tcors = tel.__str__()
-    assert _tcors == "LST-01"
+    assert _tcors == "LSTN-01"
 
     tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
     _tcors = tel.__str__()
-    _test_string = "LST-01\t Ground x(->North): 50.00 y(->West): -25.00"
+    _test_string = "LSTN-01\t Ground x(->North): 50.00 y(->West): -25.00"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convert_all(crs_local=crs_local, crs_wgs84=crs_wgs84)
     _tcors = tel.__str__()
@@ -63,14 +63,14 @@ def test_str(crs_wgs84, crs_local, crs_utm):
     assert _tcors == (_test_string + "\t Alt: 2158.00")
     tel.convert_all(crs_local=crs_local, crs_wgs84=crs_wgs84, crs_utm=crs_utm)
     _tcors = tel.__str__()
-    _test_string = "LST-01\t Ground x(->North): 50.00 y(->West): -25.00"
+    _test_string = "LSTN-01\t Ground x(->North): 50.00 y(->West): -25.00"
     _test_string += "\t UTM East: 217635.45 UTM North: 3185116.68"
     _test_string += "\t Longitude: 28.76262 Latitude: -17.89177"
     assert _tcors == (_test_string + "\t Alt: 2158.00")
 
 
 def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     with pytest.raises(InvalidCoordSystem):
         tel.get_coordinates("not_valid_crs")
@@ -103,7 +103,7 @@ def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_coordinate_variable():
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     # value should stay a value
     assert tel._get_coordinate_value(5.0, None) == pytest.approx(5.0, 1.0e-6)
@@ -119,7 +119,7 @@ def test_get_coordinate_variable():
 
 
 def test_set_coordinates():
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     with pytest.raises(InvalidCoordSystem):
         tel.set_coordinates("not_valid_crs", 5.0, 2.0, 3.0)
@@ -132,20 +132,22 @@ def test_set_coordinates():
 
 
 def test_set_altitude():
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     tel.set_altitude(5.0)
-    for _crs in tel.crs.values():
-        assert _crs["zz"]["value"] == pytest.approx(5.0, 1.0e-6)
+    for key, _crs in tel.crs.items():
+        if tel.is_coordinate_system(key):
+            assert _crs["zz"]["value"] == pytest.approx(5.0, 1.0e-6)
     tel.set_altitude(5.0 * u.cm)
-    for _crs in tel.crs.values():
-        assert _crs["zz"]["value"] == pytest.approx(0.05, 1.0e-6)
+    for key, _crs in tel.crs.items():
+        if tel.is_coordinate_system(key):
+            assert _crs["zz"]["value"] == pytest.approx(0.05, 1.0e-6)
 
 
 def test_convert(crs_wgs84, crs_local, crs_utm):
     test_position = position_for_testing()
 
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     # local to mercator
     _lat, _lon = tel._convert(crs_local, crs_wgs84, test_position["pos_x"], test_position["pos_y"])
@@ -184,7 +186,7 @@ def test_convert(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_reference_system_from(crs_utm):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTS-01")
 
     assert tel._get_reference_system_from() == (None, None)
 
@@ -200,7 +202,7 @@ def test_get_reference_system_from(crs_utm):
 
 
 def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTS-01")
 
     with pytest.raises(InvalidCoordSystem):
         tel.has_coordinates("not_a_system")
@@ -222,7 +224,7 @@ def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
 
 
 def test_has_altitude():
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTS-01")
 
     with pytest.raises(InvalidCoordSystem):
         tel.has_altitude("not_a_system")
@@ -244,7 +246,7 @@ def test_has_altitude():
 
 
 def test_set_coordinate_system(crs_wgs84):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     with pytest.raises(InvalidCoordSystem):
         tel._set_coordinate_system("not_a_system", crs_wgs84)
@@ -255,38 +257,38 @@ def test_set_coordinate_system(crs_wgs84):
 
 
 def test_altitude_transformations():
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     _z = tel.convert_telescope_altitude_to_corsika_system(
         tel_altitude=2.177 * u.km,
-        corsika_obs_level=2158.0 * u.m,
-        corsika_sphere_center=16.0 * u.m,
+        corsika_observation_level=2158.0 * u.m,
+        telescope_axis_height=16.0 * u.m,
     )
     assert _z.value == pytest.approx(35.0, 0.1)
 
     with pytest.raises(TypeError):
         tel.convert_telescope_altitude_to_corsika_system(
             tel_altitude=2177,
-            corsika_obs_level=2158.0 * u.m,
-            corsika_sphere_center=16.0 * u.m,
+            corsika_observation_level=2158.0 * u.m,
+            telescope_axis_height=16.0 * u.m,
         )
 
     _alt = tel.convert_telescope_altitude_from_corsika_system(
         tel_corsika_z=35.0 * u.m,
-        corsika_obs_level=2.158 * u.km,
-        corsika_sphere_center=16.0 * u.m,
+        corsika_observation_level=2.158 * u.km,
+        telescope_axis_height=16.0 * u.m,
     )
     assert _alt.value == pytest.approx(2177.0, 0.1)
     with pytest.raises(TypeError):
         tel.convert_telescope_altitude_from_corsika_system(
             tel_corsika_z=35.0 * u.m,
-            corsika_obs_level=2.158,
-            corsika_sphere_center=16.0 * u.m,
+            corsika_observation_level=2.158,
+            telescope_axis_height=16.0 * u.m,
         )
 
 
 def test_convert_all(crs_wgs84, crs_local, crs_utm):
-    tel = TelescopePosition(name="LST-01")
+    tel = TelescopePosition(name="LSTN-01")
 
     tel.set_coordinates("ground", 0.0, 0.0, 2158.0 * u.m)
     tel.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
@@ -298,7 +300,7 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert 3185067.2783240844 == pytest.approx(tel.crs["utm"]["yy"]["value"], 1.0e-9)
     assert 2158.0 == pytest.approx(tel.crs["utm"]["zz"]["value"], 1.0e-9)
 
-    tel_nan = TelescopePosition(name="LST-02")
+    tel_nan = TelescopePosition(name="LSTN-02")
     tel_nan.set_coordinates("ground", np.nan, np.nan, 2158.0 * u.m)
     tel_nan.convert_all(crs_wgs84=crs_wgs84, crs_local=crs_local, crs_utm=crs_utm)
     assert np.isnan(tel_nan.crs["mercator"]["xx"]["value"])
@@ -308,7 +310,7 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
 
 
 def test_get_altitude():
-    telescope = TelescopePosition(name="LST-01")
+    telescope = TelescopePosition(name="LSTS-01")
     assert np.isnan(telescope.get_altitude())
 
     telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
@@ -316,56 +318,57 @@ def test_get_altitude():
 
 
 def test_print_compact_format(capsys):
-    telescope = TelescopePosition(name="LST-01")
+    telescope = TelescopePosition(name="LSTS-01")
+    telescope.set_auxiliary_parameter("telescope_axis_height", 16.0 * u.m)
+    telescope.set_auxiliary_parameter("telescope_sphere_radius", 12.5 * u.m)
     telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
-    expected_output = "LST-01 100.00 200.00 2100.00"
+    expected_output = "LSTS-01 100.00 200.00 2100.00"
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=None,
-        corsika_sphere_center=None,
+        corsika_observation_level=None,
     )
     _output = capsys.readouterr().out
     # ignore differences in spaces
     assert "".join(expected_output.split()) == "".join(_output.split())
 
-    expected_output = "LST-01 100.00 200.00 115.00"
+    expected_output = "LSTS-01 100.00 200.00 116.00"
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=2000.0 * u.m,
-        corsika_sphere_center=15.0 * u.m,
+        corsika_observation_level=2000.0 * u.m,
     )
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
-    expected_output = "telescope_name position_x position_y position_z\nLST-01 100.00 200.00 115.00"
+    expected_output = (
+        "telescope_name position_x position_y position_z\nLSTS-01 100.00 200.00 116.00"
+    )
     telescope.print_compact_format(
         crs_name="ground",
-        corsika_obs_level=2000.0 * u.m,
-        corsika_sphere_center=15.0 * u.m,
+        corsika_observation_level=2000.0 * u.m,
         print_header=True,
     )
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("mercator", xx=28.7621661, yy=-17.8920302, zz=2100.0)
-    expected_output = "LST-01 28.76216610 -17.89203020    2100.00"
+    expected_output = "LSTS-01 28.76216610 -17.89203020    2100.00"
     telescope.print_compact_format("mercator")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
     # corsika_sphere should have no impact on output
-    telescope.print_compact_format("mercator", corsika_sphere_center=15.0 * u.m)
+    telescope.print_compact_format("mercator")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
-    expected_output = "LST-01 217611.23 3185066.28    2100.00"
+    expected_output = "LSTS-01 217611.23 3185066.28    2100.00"
     telescope.print_compact_format("utm")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
     telescope.set_coordinates("utm", xx=217611.227, yy=3185066.278, zz=2100.0)
     telescope.geo_code = "ABC"
-    expected_output = "LST-01 217611.23 3185066.28    2100.00  ABC"
+    expected_output = "LSTS-01 217611.23 3185066.28    2100.00  ABC"
     telescope.print_compact_format("utm")
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())

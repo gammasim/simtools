@@ -2,7 +2,8 @@
 """
     Summary
     -------
-    Validate yaml, json, or ecsv file using a json schema file.
+    Validate a file using a schema.
+    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
 
     Command line arguments
     ----------------------
@@ -10,6 +11,8 @@
       input file to be validated
     schema (str)
       schema file (jsonschema format) used for validation
+    data_type (str)
+        type of input data (allowed types: metadata, schema, data)
 
     Raises
     ------
@@ -23,7 +26,8 @@
 
         simtools-validate-file-using-schema \
          --file_name tests/resources/MLTdata-preproduction.meta.yml \
-         --schema simtools/schemas/metadata.metaschema.yml
+         --schema simtools/schemas/metadata.metaschema.yml \
+         --data_type metadata
 
 """
 
@@ -32,7 +36,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import data_reader, metadata_collector, validate_data
+from simtools.data_model import metadata_collector, metadata_model, validate_data
 
 
 def _parse(label, description):
@@ -57,70 +61,98 @@ def _parse(label, description):
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
     config.parser.add_argument("--schema", help="json schema file", required=False)
     config.parser.add_argument(
-        "--validate_metadata",
-        help="validate metadata",
-        action="store_true",
-        default=False,
+        "--data_type",
+        help="type of input data",
+        choices=["metadata", "schema", "data"],
+        default="data",
     )
     return config.initialize(paths=False)
 
 
-def _validate_yaml_or_json_file(args_dict, logger):
+def _get_schema_file_name(args_dict, data_dict=None):
     """
-    Validate a yaml or json file.
+    Get schema file name from metadata, data dict, or from command line argument.
+
+    Parameters
+    ----------
+    args_dict (dict)
+        command line arguments
+    data_dict (dict)
+        dictionary with metaschema information
+
+    Returns
+    -------
+    schema_file: str
+        schema file name
+
+    """
+
+    schema_file = args_dict.get("schema")
+    if schema_file is None and data_dict is not None:
+        schema_file = data_dict.get("meta_schema_url")
+    if schema_file is None:
+        metadata = metadata_collector.MetadataCollector(
+            None, metadata_file_name=args_dict["file_name"]
+        )
+        schema_file = metadata.get_data_model_schema_file_name()
+    return schema_file
+
+
+def validate_schema(args_dict, logger):
+    """
+    Validate a schema file given in yaml or json format.
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
     """
 
-    data_reader.read_value_from_file(
-        file_name=args_dict["file_name"],
-        schema_file=args_dict["schema"],
-        validate=True,
-    )
-    logger.debug("Successful validation of json/yaml file")
+    try:
+        data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
+    except FileNotFoundError as exc:
+        logger.error(f"Error reading schema file from {args_dict['file_name']}")
+        raise exc
+    metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
+    logger.info(f"Successful validation of schema file {args_dict['file_name']}")
 
 
-def _validate_ecsv_file(args_dict, logger):
+def validate_data_file(args_dict, logger):
     """
-    Validate an ecsv file
+    Validate a data file (e.g., in ecsv, json, yaml format)
 
     """
-
     data_validator = validate_data.DataValidator(
-        schema_file=args_dict["schema"],
+        schema_file=_get_schema_file_name(args_dict),
         data_file=args_dict["file_name"],
     )
     data_validator.validate_and_transform()
-    logger.debug("Successful validation of escv file")
+    logger.info(f"Successful validation of data file {args_dict['file_name']}")
 
 
-def _validate_metadata(args_dict, logger):
+def validate_metadata(args_dict, logger):
     """
     Validate metadata.
 
     """
-
     # metadata_collector runs the metadata validation by default, no need to do anything else
     metadata_collector.MetadataCollector(None, metadata_file_name=args_dict["file_name"])
-    logger.debug("Successful validation of metadata")
+    logger.info(f"Successful validation of metadata {args_dict['file_name']}")
 
 
 def main():
     label = Path(__file__).stem
-    args_dict, _ = _parse(label, description="Validate yaml or ecsv file using a json schema file.")
+    args_dict, _ = _parse(
+        label, description="Validate a file (metadata, schema, or data file) using a schema."
+    )
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    if args_dict["validate_metadata"]:
-        _validate_metadata(args_dict, logger)
-    elif any(args_dict["file_name"].endswith(ext) for ext in (".yml", ".yaml", ".json")):
-        _validate_yaml_or_json_file(args_dict, logger)
-    elif args_dict["file_name"].endswith(".ecsv"):
-        _validate_ecsv_file(args_dict, logger)
+    if args_dict["data_type"].lower() == "metadata":
+        validate_metadata(args_dict, logger)
+    elif args_dict["data_type"].lower() == "schema":
+        validate_schema(args_dict, logger)
     else:
-        logger.error(f"File extension not supported for {args_dict['file_name']}")
+        validate_data_file(args_dict, logger)
 
 
 if __name__ == "__main__":

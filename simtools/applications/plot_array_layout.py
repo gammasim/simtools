@@ -45,9 +45,9 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.utils import names
 from simtools.visualization.visualize import plot_array
 
 
@@ -112,14 +112,35 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize()
+    return config.initialize(db_config=True, site_model=True)
+
+
+def _get_site_from_telescope_list_name(telescope_list_file):
+    """
+    Get the site name from the telescope list file name.
+
+    Parameters
+    ----------
+    telescope_list_file: str
+        Telescope list file name.
+
+    Returns
+    -------
+    str
+        Site name.
+
+    """
+    for _site in names.site_names:
+        if _site in str(telescope_list_file):
+            return _site
+    return None
 
 
 def main():
     label = Path(__file__).stem
     description = "Plots layout array."
     usage = "python applications/plot_array_layout.py --array_layout_name test_layout"
-    args_dict, _ = _parse(label, description, usage)
+    args_dict, db_config = _parse(label, description, usage)
     io_handler_instance = io_handler.IOHandler()
 
     if args_dict["rotate_angle"] is None:
@@ -147,6 +168,11 @@ def main():
 
     for one_file in telescope_file:
         logger.debug(f"Processing: {one_file}.")
+        site = (
+            _get_site_from_telescope_list_name(one_file)
+            if args_dict["site"] is None
+            else args_dict["site"]
+        )
         for one_angle in rotate_angles:
             logger.debug(f"Processing: {one_angle}.")
             if args_dict["figure_name"] is None:
@@ -157,10 +183,16 @@ def main():
             else:
                 plot_file_name = args_dict["figure_name"]
 
-            telescope_table = data_reader.read_table_from_file(one_file)
-            telescopes_dict = ArrayLayout.include_radius_into_telescope_table(telescope_table)
+            array_layout = ArrayLayout(
+                mongo_db_config=db_config,
+                site=site,
+                telescope_list_file=one_file,
+            )
+            # export_telescope_list_table
             fig_out = plot_array(
-                telescopes_dict, rotate_angle=one_angle, show_tel_label=args_dict["show_tel_label"]
+                array_layout.export_telescope_list_table("ground"),
+                rotate_angle=one_angle,
+                show_tel_label=args_dict["show_tel_label"],
             )
             output_dir = io_handler_instance.get_output_directory(
                 label, sub_dir="application-plots"

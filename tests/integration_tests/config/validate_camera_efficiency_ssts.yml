@@ -1,9 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-validate-camera-efficiency
-  TEST_NAME: MST-FlashCam-D
+  TEST_NAME: SSTS
   CONFIGURATION:
     SITE: South
-    TELESCOPE: MST-FlashCam-D
+    TELESCOPE: SSTS-design
     MODEL_VERSION: prod5
-    NSB_SPECTRUM: tests/resources/benn_ellison_spectrum_for_testing.txt
     OUTPUT_PATH: simtools-tests

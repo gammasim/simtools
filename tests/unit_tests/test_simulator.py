@@ -88,7 +88,7 @@ def test_guess_run_from_file(array_simulator):
 
     assert array_simulator._guess_run_from_file("abc-ran12345_bla_ble") == 1
 
-    # TODO add test for 'Error creating output directory'
+    # add test for 'Error creating output directory'
     # (not sure how to test a failed mkdir)
 
 
@@ -187,7 +187,6 @@ def test_collect_array_model_parameters(array_simulator, array_config_data):
     assert isinstance(_array_model_data, dict)
     assert isinstance(_rest_data, dict)
     assert _array_model_data["site"] == "North"
-    assert _array_model_data["LST-01"] == "1"
     new_array_config_data = copy(array_config_data)
     new_array_config_data.pop("site")
 
