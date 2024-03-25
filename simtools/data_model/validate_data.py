@@ -599,7 +599,7 @@ class DataValidator:
     def _get_data_description(self, column_name=None, status_test=False):
         """
         Return data description as provided by the schema file.
-        For tables (type: 'datatable'), return the description of
+        For tables (type: 'data_table'), return the description of
         the column named 'column_name'. For other types, return
         all data descriptions.
         For columns named 'colX' return the Xth column in the reference data.
