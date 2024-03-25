@@ -119,21 +119,18 @@ def test_compare_simtel_config_with_schema(
 ):
 
     _config_ng = config_reader_num_gains
-    _config_ng.compare_simtel_config_with_schema()
-    assert "from simtel: 2" in caplog.text
-    assert "from schema: {'min': 1, 'max': 2})" in caplog.text
 
+    with caplog.at_level(logging.WARNING):
+        _config_ng.compare_simtel_config_with_schema()
+        assert "from simtel: NUM_GAINS" in caplog.text
+        assert "from schema: num_gains" in caplog.text
+
+    caplog.clear()
     _config_tt = config_reader_telescope_transmission
-    _config_tt.compare_simtel_config_with_schema()
-    assert "from simtel: [0.89" in caplog.text
-    assert "from schema: {'min': 0.0" in caplog.text
-    del _config_tt.schema_dict["data"][0]["allowed_range"]
-    _config_tt.compare_simtel_config_with_schema()
-    assert "from schema: None" in caplog.text
-
-    del _config_ng.schema_dict["data"][0]["default"]
-    _config_ng.compare_simtel_config_with_schema()
-    assert "from schema: None" in caplog.text
+    with caplog.at_level(logging.WARNING):
+        _config_tt.compare_simtel_config_with_schema()
+        assert "from simtel: TELESCOPE_TRANSMISSION [0.89" in caplog.text
+        assert "from schema: telescope_transmission [0.0, 1.0]" in caplog.text
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
@@ -191,6 +188,10 @@ def test_resolve_all_in_column(config_reader_num_gains):
 def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     _config = config_reader_num_gains
+
+    # None
+    assert _config._add_value_from_simtel_cfg(["None"], dtype="str") == ("None", 1)
+    assert _config._add_value_from_simtel_cfg(["none"], dtype="str") == ("None", 1)
 
     # default
     assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)

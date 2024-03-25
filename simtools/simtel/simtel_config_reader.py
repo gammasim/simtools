@@ -168,23 +168,49 @@ class SimtelConfigReader:
 
         """
 
-        self._logger.info(
-            f"Comparing simtel_array configuration with schema for {self.parameter_name} "
-            f"(sim_telarray: {self.simtel_parameter_name})"
-        )
+        for data_type in ["default", "limits"]:
+            _from_simtel = self.parameter_dict.get(data_type)
+            # ignore limits checks for boolean
+            if data_type == "limits" and self.parameter_dict.get("type") == "bool":
+                continue
+            try:
+                if data_type == "limits":
+                    _from_schema = [
+                        self.schema_dict["data"][0]["allowed_range"].get("min"),
+                        self.schema_dict["data"][0]["allowed_range"].get("max"),
+                    ]
+                    _from_schema = _from_schema[0] if _from_schema[1] is None else _from_schema
+                else:
+                    if len(self.schema_dict["data"]) == 1:
+                        _from_schema = self.schema_dict["data"][0]["default"]
+                    else:
+                        _from_schema = [data.get("default") for data in self.schema_dict["data"]]
+            except (KeyError, IndexError):
+                _from_schema = None
 
-        self._logger.info("Limits:")
-        self._logger.info(f"  from simtel: {self.parameter_dict.get('limits')}")
-        try:
-            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['allowed_range']})")
-        except (KeyError, IndexError):
-            self._logger.info("  from schema: None")
-        self._logger.info("Defaults:")
-        self._logger.info(f"  from simtel: {self.parameter_dict.get('default')}")
-        try:
-            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['default']}")
-        except (KeyError, IndexError):
-            self._logger.info("  from schema: None")
+            if isinstance(_from_schema, list):
+                _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
+
+            try:
+                if _from_simtel == _from_schema:
+                    self._logger.debug(f"Values for {data_type} match")
+                    continue
+            except ValueError:
+                pass
+            try:
+                if np.all(np.isclose(_from_simtel, _from_schema)):
+                    self._logger.debug(f"Values for {data_type} match")
+                    continue
+            except (TypeError, ValueError):
+                pass
+            self._logger.warning(f"Values for {data_type} do not match:")
+            self._logger.warning(
+                f"  from simtel: {self.simtel_parameter_name} {_from_simtel}"
+                f" ({type(_from_simtel)})"
+            )
+            self._logger.warning(
+                f"  from schema: {self.parameter_name} {_from_schema}" f" ({type(_from_schema)})"
+            )
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -265,6 +291,7 @@ class SimtelConfigReader:
         if not any(isinstance(item, str) and item.startswith("all") for item in column):
             return column, {}
 
+        self._logger.debug(f"Resolving 'all' entries in column: {column}")
         # remove 'all:' entries
         column = [item for item in column if item not in ("all:", "all")]
         # resolve 'all:5' type entries
@@ -311,6 +338,7 @@ class SimtelConfigReader:
         self._logger.debug(
             f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
         )
+        column = ["None" if item.lower() == "none" else item for item in column]
         column, except_from_all = self._resolve_all_in_column(column)
         # extend array to required length (simtel uses sometimes 'all:' for all entries)
         if ndim > 1 and len(column) < ndim:
@@ -323,6 +351,8 @@ class SimtelConfigReader:
         if len(except_from_all) > 0:
             for index, value in except_from_all.items():
                 column[int(index)] = value
+        if dtype == "bool":
+            column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
@@ -330,7 +360,8 @@ class SimtelConfigReader:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
 
-    def _get_type_from_simtel_cfg(self, column):
+    @staticmethod
+    def _get_type_from_simtel_cfg(column):
         """
         Return type and dimension from simtel configuration column.
         'Func' type from simtel is treated as string.
