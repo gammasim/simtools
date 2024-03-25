@@ -176,17 +176,21 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, ca
     assert "No entries found for parameter" in caplog.text
 
 
-def test_get_type_from_simtel_cfg(config_reader_num_gains):
+def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
 
-    _config = config_reader_num_gains
+    _config = copy.deepcopy(config_reader_num_gains)
 
-    # type
-    assert _config._get_type_from_simtel_cfg(["Int", "1"]) == ("int64", 1)
-    assert _config._get_type_from_simtel_cfg(["Double", "5"]) == ("float64", 5)
-    assert _config._get_type_from_simtel_cfg(["Text", "55"]) == ("str", 1)
-    assert _config._get_type_from_simtel_cfg(["IBool", "1"]) == ("bool", 1)
-    assert _config._get_type_from_simtel_cfg(["FUnc", "55"]) == ("str", 1)
-    _config.return_arrays_as_strings = False
+    assert _config._get_type_and_dimension_from_simtel_cfg(["Int", "1"]) == ("int64", 1)
+    assert _config._get_type_and_dimension_from_simtel_cfg(["Double", "5"]) == ("float64", 5)
+    assert _config._get_type_and_dimension_from_simtel_cfg(["Text", "55"]) == ("str", 1)
+    assert _config._get_type_and_dimension_from_simtel_cfg(["IBool", "1"]) == ("bool", 1)
+    assert _config._get_type_and_dimension_from_simtel_cfg(["FUnc", "55"]) == ("str", 1)
+
+    # fixed values for camera pixel
+    _config.simtel_parameter_name = "NIGHTSKY_BACKGROUND"
+    assert _config._get_type_and_dimension_from_simtel_cfg(["Double", "5"]) == ("float64", 5)
+    _config.camera_pixels = 1855
+    assert _config._get_type_and_dimension_from_simtel_cfg(["Double", "5"]) == ("float64", 1855)
 
 
 def test_resolve_all_in_column(config_reader_num_gains):
