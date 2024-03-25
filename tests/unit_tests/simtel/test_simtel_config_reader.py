@@ -120,17 +120,40 @@ def test_compare_simtel_config_with_schema(
 
     _config_ng = config_reader_num_gains
 
+    # no differences; should result in no output
+    caplog.clear()
     with caplog.at_level(logging.WARNING):
         _config_ng.compare_simtel_config_with_schema()
-        assert "from simtel: NUM_GAINS" in caplog.text
-        assert "from schema: num_gains" in caplog.text
+        assert caplog.text == ""
 
+    # no limits defined for telescope_transmission
     caplog.clear()
     _config_tt = config_reader_telescope_transmission
     with caplog.at_level(logging.WARNING):
         _config_tt.compare_simtel_config_with_schema()
-        assert "from simtel: TELESCOPE_TRANSMISSION [0.89" in caplog.text
-        assert "from schema: telescope_transmission [0.0, 1.0]" in caplog.text
+        assert "Values for limits do not match" in caplog.text
+        assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
+        assert "from schema: telescope_transmission [0. 1.]" in caplog.text
+
+    # change parameter type to bool; should result in no limit check
+    caplog.clear()
+    _config_tt.parameter_dict["type"] = "bool"
+    with caplog.at_level(logging.WARNING):
+        _config_tt.compare_simtel_config_with_schema()
+        assert "Values for limits do not match" not in caplog.text
+
+    # remove keys and elements to enforce error tests
+    caplog.clear()
+    _config_ng.schema_dict["data"][0].pop("default")
+    with caplog.at_level(logging.WARNING):
+        _config_ng.compare_simtel_config_with_schema()
+        assert "from schema: num_gains None" in caplog.text
+
+    caplog.clear()
+    _config_ng.schema_dict["data"].pop(0)
+    with caplog.at_level(logging.WARNING):
+        _config_ng.compare_simtel_config_with_schema()
+        assert "from schema: num_gains None" in caplog.text
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
@@ -208,6 +231,15 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     assert _list[0] == pytest.approx(0.89)
     assert _list[2] == pytest.approx(0.0)
     assert (len(_list), _ndim) == (5, 5)
+
+    # boolean values with 0,1 as input
+    assert _config._add_value_from_simtel_cfg(["0"], dtype="bool") == (False, 1)
+    assert _config._add_value_from_simtel_cfg(["1"], dtype="bool") == (True, 1)
+    _list, _ndim = _config._add_value_from_simtel_cfg(["0", "1", "5"], dtype="bool")
+    assert _ndim == 3
+    assert not _list[0]
+    assert _list[1]
+    assert _list[2]
 
     # no input / output
     assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
