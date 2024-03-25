@@ -192,7 +192,10 @@ class SimtelConfigReader:
                 _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
 
             try:
-                if _from_simtel == _from_schema:
+                if (
+                    not isinstance(_from_schema, (list, np.ndarray))
+                    and _from_simtel == _from_schema
+                ):
                     self._logger.debug(f"Values for {data_type} match")
                     continue
             except ValueError:
