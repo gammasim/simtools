@@ -7,9 +7,10 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtoo
 meta_schema_version: 0.1.0
 name: telescope_transmission
 developer_note: |-
-  If compiled with the \texttt{RAYTRACING_INTERSECT_RODS} pre-processor
+  Note 1 - If compiled with the \texttt{RAYTRACING_INTERSECT_RODS} pre-processor
   definition, the default value is 1.00, as the absorption is
   calculated explicitly.
+  Note 2 - p0 should be uint
 description: |-
   Off-axis angle-dependent transmission, accounting for absorption and
   shadowing by masts.  Two types of functions are available, a constant
@@ -43,49 +44,49 @@ data:
     description: |
       Constant transmission factor $p_0$.
     required: true
-    units: dimensionless
+    unit: dimensionless
     default: 0.89
     allowed_range:
       min: 0.0
       max: 1.0
   - name: transmission_function
     required: false
-    type: uint
+    type: double
     description: |
       Transmission function identifier.
     default: 0
     allowed_range:
       min: 0
       max: 1
-    units: dimensionless
+    unit: dimensionless
   - name: transmission_p2
     description: |
       Transmission factor $p_2$.
     required: false
     type: double
     default: 0.0
-    units: dimensionless
+    unit: dimensionless
   - name: transmission_p3
     description: |
       Transmission factor $p_3$.
     required: false
     type: double
     default: 0.0
-    units: dimensionless
+    unit: dimensionless
   - name: transmission_p4
     description: |
       Transmission factor $p_4$.
     required: false
     type: double
     default: 0.0
-    units: dimensionless
+    unit: dimensionless
   - name: transmission_p5
     description: |
       Transmission factor $p_5.
     required: false
     type: double
     default: 0.0
-    units: dimensionless
+    unit: dimensionless
 instrument:
   class: Structure
   type:
