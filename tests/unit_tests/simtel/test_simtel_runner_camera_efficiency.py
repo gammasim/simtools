@@ -25,7 +25,7 @@ def simtel_runner_camera_efficiency(camera_efficiency_sst, telescope_model_sst, 
     simtel_runner_camera_efficiency = SimtelRunnerCameraEfficiency(
         simtel_source_path=simtel_path,
         telescope_model=telescope_model_sst,
-        file_simtel=camera_efficiency_sst._file_simtel,
+        file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
     return simtel_runner_camera_efficiency

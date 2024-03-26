@@ -170,102 +170,144 @@ def test_get_telescope_type_from_telescope_name():
             names.get_telescope_type_from_telescope_name(_name)
 
 
-def test_camera_efficiency_names():
-    """
-    Test the various camera efficiency names functions
-    """
+def test_generate_file_name_camera_efficiency():
 
     site = "South"
-    telescope_model_name = "LST-1"
+    telescope_model_name = "LSTS-01"
     zenith_angle = 20
     azimuth_angle = 180
     label = "test"
+
     assert (
-        names.camera_efficiency_results_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency-table",
+            ".ecsv",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg_test.ecsv"
+        == "camera-efficiency-table-South-LSTS-01-za20.0deg_azm180deg_test.ecsv"
     )
+
     assert (
-        names.camera_efficiency_simtel_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency",
+            ".dat",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.dat"
+        == "camera-efficiency-South-LSTS-01-za20.0deg_azm180deg_test.dat"
     )
+
     assert (
-        names.camera_efficiency_log_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency",
+            ".log",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.log"
+        == "camera-efficiency-South-LSTS-01-za20.0deg_azm180deg_test.log"
     )
 
     site = "North"
-    telescope_model_name = "MST-FlashCam-D"
+    telescope_model_name = "MSTN"
     zenith_angle = 40
     azimuth_angle = 0
     label = "test"
     assert (
-        names.camera_efficiency_results_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency-table",
+            ".ecsv",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-table-North-MST-FlashCam-D-za040deg_azm000deg_test.ecsv"
+        == "camera-efficiency-table-North-MSTN-za40.0deg_azm000deg_test.ecsv"
     )
     assert (
-        names.camera_efficiency_simtel_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency",
+            ".dat",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-North-MST-FlashCam-D-za040deg_azm000deg_test.dat"
+        == "camera-efficiency-North-MSTN-za40.0deg_azm000deg_test.dat"
     )
     assert (
-        names.camera_efficiency_log_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency",
+            ".log",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-North-MST-FlashCam-D-za040deg_azm000deg_test.log"
+        == "camera-efficiency-North-MSTN-za40.0deg_azm000deg_test.log"
     )
 
     site = "South"
-    telescope_model_name = "LST-1"
+    telescope_model_name = "LSTS-01"
     zenith_angle = 20
     azimuth_angle = 180
     label = None
     assert (
-        names.camera_efficiency_results_file_name(
-            site, telescope_model_name, zenith_angle, azimuth_angle, label
+        names.generate_file_name(
+            "camera-efficiency-table",
+            ".ecsv",
+            site,
+            telescope_model_name,
+            zenith_angle,
+            azimuth_angle,
+            label=label,
         )
-        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg.ecsv"
+        == "camera-efficiency-table-South-LSTS-01-za20.0deg_azm180deg.ecsv"
     )
 
 
 def test_simtel_telescope_config_file_name():
     assert (
-        names.simtel_telescope_config_file_name(
-            "South", "LST-1", "prod5", label=None, extra_label=None
+        names.simtel_config_file_name(
+            "South", "prod5", telescope_model_name="LSTS-01", label=None, extra_label=None
         )
-        == "CTA-South-LST-1-prod5.cfg"
+        == "CTA-South-LSTS-01-prod5.cfg"
     )
     assert (
-        names.simtel_telescope_config_file_name(
-            "South", "LST-1", "prod5", label="A", extra_label=None
+        names.simtel_config_file_name(
+            "South", "prod5", telescope_model_name="LSTS-01", label="A", extra_label=None
         )
-        == "CTA-South-LST-1-prod5_A.cfg"
+        == "CTA-South-LSTS-01-prod5_A.cfg"
     )
     assert (
-        names.simtel_telescope_config_file_name(
-            "South", "LST-1", "prod5", label="A", extra_label="B"
+        names.simtel_config_file_name(
+            "South", "prod5", telescope_model_name="LSTS-01", label="A", extra_label="B"
         )
-        == "CTA-South-LST-1-prod5_A_B.cfg"
+        == "CTA-South-LSTS-01-prod5_A_B.cfg"
     )
 
 
 def test_simtel_array_config_file_name():
     assert (
-        names.simtel_array_config_file_name(
+        names.simtel_config_file_name(
             array_name="4LSTs", site="South", model_version="prod5", label=None
         )
         == "CTA-4LSTs-South-prod5.cfg"
     )
     assert (
-        names.simtel_array_config_file_name(
+        names.simtel_config_file_name(
             array_name="4LSTs", site="South", model_version="prod5", label="A"
         )
         == "CTA-4LSTs-South-prod5_A.cfg"
@@ -312,150 +354,87 @@ def test_layout_telescope_list_file_name():
     )
 
 
-def test_ray_tracing_file_name():
+def test_generate_file_name_ray_tracing():
     assert (
-        names.ray_tracing_file_name(
+        names.generate_file_name(
+            file_type="Photons",
+            suffix=".lis",
             site="South",
-            telescope_model_name="LST-1",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             off_axis_angle=2.5,
             mirror_number=3,
             label="instance1",
-            base="Photons",
         )
-        == "Photons-South-LST-1-d10.5-za45.0-off2.500_mirror3_instance1.lis"
+        == "Photons-South-LSTS-01-d10.5km-za45.0deg-off2.500deg_mirror3_instance1.lis"
     )
 
     assert (
-        names.ray_tracing_file_name(
+        names.generate_file_name(
+            file_type="log",
             site="South",
-            telescope_model_name="LST-1",
+            suffix=".log",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             off_axis_angle=2.5,
             mirror_number=None,
             label=None,
-            base="log",
         )
-        == "log-South-LST-1-d10.5-za45.0-off2.500.log"
+        == "log-South-LSTS-01-d10.5km-za45.0deg-off2.500deg.log"
     )
 
-
-def test_ray_tracing_results_file_name():
     assert (
-        names.ray_tracing_results_file_name(
+        names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".ecsv",
             site="South",
-            telescope_model_name="LST-1",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             label="instance1",
         )
-        == "ray-tracing-South-LST-1-d10.5-za45.0_instance1.ecsv"
+        == "ray-tracing-South-LSTS-01-d10.5km-za45.0deg_instance1.ecsv"
     )
     assert (
-        names.ray_tracing_results_file_name(
+        names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".ecsv",
             site="South",
-            telescope_model_name="LST-1",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             label=None,
         )
-        == "ray-tracing-South-LST-1-d10.5-za45.0.ecsv"
+        == "ray-tracing-South-LSTS-01-d10.5km-za45.0deg.ecsv"
     )
 
-
-def test_ray_tracing_plot_file_name():
     assert (
-        names.ray_tracing_plot_file_name(
-            key="d80_cm",
+        names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".pdf",
+            extra_label="d80_cm",
             site="South",
-            telescope_model_name="LST-1",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             label="instance1",
         )
-        == "ray-tracing-South-LST-1-d80_cm-d10.5-za45.0_instance1.pdf"
+        == "ray-tracing-South-LSTS-01-d10.5km-za45.0deg_instance1_d80_cm.pdf"
     )
     assert (
-        names.ray_tracing_plot_file_name(
-            key="d80_cm",
+        names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".pdf",
+            extra_label="d80_cm",
             site="South",
-            telescope_model_name="LST-1",
+            telescope_model_name="LSTS-01",
             source_distance=10.5,
             zenith_angle=45.0,
             label=None,
         )
-        == "ray-tracing-South-LST-1-d80_cm-d10.5-za45.0.pdf"
-    )
-
-
-def test_camera_efficiency_results_file_name():
-    assert (
-        names.camera_efficiency_results_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label="test",
-        )
-        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg_test.ecsv"
-    )
-    assert (
-        names.camera_efficiency_results_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label=None,
-        )
-        == "camera-efficiency-table-South-LST-1-za020deg_azm180deg.ecsv"
-    )
-
-
-def test_camera_efficiency_simtel_file_name():
-    assert (
-        names.camera_efficiency_simtel_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label="test",
-        )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.dat"
-    )
-    assert (
-        names.camera_efficiency_simtel_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label=None,
-        )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg.dat"
-    )
-
-
-def test_camera_efficiency_log_file_name():
-    assert (
-        names.camera_efficiency_log_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label="test",
-        )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg_test.log"
-    )
-    assert (
-        names.camera_efficiency_log_file_name(
-            site="South",
-            telescope_model_name="LST-1",
-            zenith_angle=20,
-            azimuth_angle=180,
-            label=None,
-        )
-        == "camera-efficiency-South-LST-1-za020deg_azm180deg.log"
+        == "ray-tracing-South-LSTS-01-d10.5km-za45.0deg_d80_cm.pdf"
     )
 
 
