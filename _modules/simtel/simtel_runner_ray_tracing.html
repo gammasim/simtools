@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_runner_ray_tracing &#8212; simtools v0.1.dev1+g8556816</title>
+    <title>simtel.simtel_runner_ray_tracing &#8212; simtools v0.1.dev1+g2d2bf7e</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=f53f0597"></script>
+    <script src="../../_static/documentation_options.js?v=89bd62ee"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g8556816</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g2d2bf7e</p>
 
 
 
@@ -197,15 +197,18 @@
         <span class="c1"># Loop to define and remove existing files.</span>
         <span class="c1"># Files will be named _base_file = self.__dict__[&#39;_&#39; + base + &#39;File&#39;]</span>
         <span class="k">for</span> <span class="n">base_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;stars&quot;</span><span class="p">,</span> <span class="s2">&quot;photons&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">]:</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">ray_tracing_file_name</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">source_distance</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mirror_numbers</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-                <span class="n">base_name</span><span class="p">,</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
+                <span class="n">file_type</span><span class="o">=</span><span class="n">base_name</span><span class="p">,</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.log&quot;</span> <span class="k">if</span> <span class="n">base_name</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span> <span class="k">else</span> <span class="s2">&quot;.lis&quot;</span><span class="p">,</span>
+                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">source_distance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">source_distance</span><span class="p">,</span>
+                <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+                <span class="n">off_axis_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">,</span>
+                <span class="n">mirror_number</span><span class="o">=</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mirror_numbers</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">force_simulate</span><span class="p">:</span>
