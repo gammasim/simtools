@@ -190,12 +190,18 @@ def get_number_of_camera_pixel(args_dict, logger):
 
     """
 
-    simtel_config_reader = SimtelConfigReader(
-        schema_file=Path(args_dict["schema_directory"]) / "camera_pixels.schema.yml",
-        simtel_config_file=args_dict["simtel_cfg_file"],
-        simtel_telescope_name=args_dict["simtel_telescope_name"],
-    )
-    _camera_pixel = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
+    try:
+        simtel_config_reader = SimtelConfigReader(
+            schema_file=Path(args_dict["schema_directory"]) / "camera_pixels.schema.yml",
+            simtel_config_file=args_dict["simtel_cfg_file"],
+            simtel_telescope_name=args_dict["simtel_telescope_name"],
+        )
+        _camera_pixel = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
+    except FileNotFoundError:
+        logger.warning(
+            "Camera pixel schema file not found. Using default value for number of camera pixels."
+        )
+        _camera_pixel = None
     logger.info(f"Number of camera pixels: {_camera_pixel}")
     return _camera_pixel
 
