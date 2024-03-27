@@ -108,15 +108,18 @@ class SimtelRunnerRayTracing(SimtelRunner):
         # Loop to define and remove existing files.
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
         for base_name in ["stars", "photons", "log"]:
-            file_name = names.ray_tracing_file_name(
-                self.telescope_model.site,
-                self.telescope_model.name,
-                self.config.source_distance,
-                self.config.zenith_angle,
-                self.config.off_axis_angle,
-                self.config.mirror_numbers if self.config.single_mirror_mode else None,
-                self.label,
-                base_name,
+            file_name = names.generate_file_name(
+                file_type=base_name,
+                suffix=".log" if base_name == "log" else ".lis",
+                site=self.telescope_model.site,
+                telescope_model_name=self.telescope_model.name,
+                source_distance=self.config.source_distance,
+                zenith_angle=self.config.zenith_angle,
+                off_axis_angle=self.config.off_axis_angle,
+                mirror_number=(
+                    self.config.mirror_numbers if self.config.single_mirror_mode else None
+                ),
+                label=self.label,
             )
             file = self._base_directory.joinpath(file_name)
             if file.exists() and force_simulate:

@@ -302,8 +302,12 @@ class ModelParameter:
 
         # Setting file name and the location
         if self.site is not None and self.name is not None:
-            config_file_name = names.simtel_telescope_config_file_name(
-                self.site, self.name, self.model_version, self.label, self._extra_label
+            config_file_name = names.simtel_config_file_name(
+                self.site,
+                self.model_version,
+                telescope_model_name=self.name,
+                label=self.label,
+                extra_label=self._extra_label,
             )
             self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
