@@ -74,6 +74,7 @@ class CorsikaConfig:
         mongo_db_config,
         site,
         layout_name,
+        model_version="Released",
         layout=None,
         label=None,
         corsika_config_data=None,
@@ -104,6 +105,7 @@ class CorsikaConfig:
         self.layout = (
             ArrayLayout.from_array_layout_name(
                 mongo_db_config=mongo_db_config,
+                model_version=model_version,
                 array_layout_name=f"{self.site}-{self.layout_name}",
                 label=self.label,
             )
