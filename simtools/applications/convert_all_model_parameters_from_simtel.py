@@ -185,8 +185,8 @@ def get_number_of_camera_pixel(args_dict, logger):
 
     Returns
     -------
-    int
-        Number of camera pixels.
+    int, None
+        Number of camera pixels (None if file is not found)
 
     """
 
