@@ -172,6 +172,14 @@ def db_no_config_file():
 
 
 @pytest.fixture
+def model_version_site():
+    """
+    Site model version used in tests.
+    """
+    return "2024-02-01"
+
+
+@pytest.fixture
 def telescope_model_lst(db_config, io_handler):
     telescope_model_LST = TelescopeModel(
         site="North",
