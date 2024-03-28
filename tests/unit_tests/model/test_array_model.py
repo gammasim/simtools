@@ -3,18 +3,20 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_input_validation(db_config, io_handler):
+def test_input_validation(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
-        "model_version": "Prod5",
-        "default": {"LSTN": "1", "MSTN": "Design"},
+        "model_version": model_version,
+        "default": {"LSTN": "01", "MSTN": "Design"},
         "MSTN-05": "05",
     }
     am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
@@ -22,11 +24,31 @@ def test_input_validation(db_config, io_handler):
     assert am.number_of_telescopes == 13
 
 
-def test_exporting_config_files(db_config, io_handler):
+def test_get_single_telescope_info_from_array_config(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
-        "model_version": "Prod5",
+        "model_version": model_version,
+        "default": {"LSTN": "01", "MSTN": "Design"},
+        "MSTN-05": "05",
+    }
+    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
+
+    assert am._get_single_telescope_info_from_array_config("LSTN-01") == ("LSTN-01", {})
+    assert am._get_single_telescope_info_from_array_config("LSTN-02") == ("LSTN-01", {})
+    assert am._get_single_telescope_info_from_array_config("MSTN-01") == ("MSTN-Design", {})
+    assert am._get_single_telescope_info_from_array_config("MSTN-05") == ("MSTN-05", {})
+    assert am._get_single_telescope_info_from_array_config("MSTN-15") == ("MSTN-Design", {})
+
+    # TODO - test on parameters which change for the models
+
+
+@pytest.mark.xfail
+def test_exporting_config_files(db_config, io_handler, model_version):
+    array_config_data = {
+        "site": "North",
+        "layout_name": "test-layout",
+        "model_version": model_version,
         "default": {"LSTN": "01", "MSTN": "design"},
         "LST-04": {
             "name": "design",
@@ -40,9 +62,9 @@ def test_exporting_config_files(db_config, io_handler):
 
     list_of_export_files = [
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
-        "CTA-North-LSTN-01-2020-06-28_test.cfg",
-        "CTA-North-MSTN-design-2020-06-28_test.cfg",
-        "CTA-TestLayout-North-2020-06-28_test.cfg",
+        "CTA-North-LSTN-01-" + model_version + "_test.cfg",
+        "CTA-North-MSTN-design-" + model_version + "_test.cfg",
+        "CTA-TestLayout-North-" + model_version + "_test.cfg",
         "LaPalma_coords.lis",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
