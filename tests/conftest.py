@@ -172,9 +172,9 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def model_version_site():
+def model_version():
     """
-    Site model version used in tests.
+    Simulation model version used in tests.
     """
     return "2024-02-01"
 
