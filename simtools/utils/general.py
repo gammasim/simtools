@@ -974,5 +974,5 @@ def user_confirm():
             answer = input("Is this OK? [y/n]").lower()
             return answer == "y"
         except EOFError:
-            return False
+            break
     return False
