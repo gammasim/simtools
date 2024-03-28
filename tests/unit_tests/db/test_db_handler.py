@@ -486,11 +486,11 @@ def test_get_all_available_telescopes(db):
 
 
 def test_get_telescope_db_name(db):
-    assert db.get_telescope_db_name("LSTN-01") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTN-02") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTN-design") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTS-design") == "LSTS-design"
-    assert db.get_telescope_db_name("SSTS-01") == "SSTS-design"
-    assert db.get_telescope_db_name("SSTS-design") == "SSTS-design"
+    assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
+    assert db.get_telescope_db_name("LSTN-02", model_version="Prod5") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
+    assert db.get_telescope_db_name("SSTS-01", model_version="Prod5") == "SSTS-design"
+    assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
     with pytest.raises(ValueError):
-        db.get_telescope_db_name("SSTN-05")
+        db.get_telescope_db_name("SSTN-05", model_version="Prod5")
