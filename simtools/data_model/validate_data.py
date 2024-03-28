@@ -354,10 +354,14 @@ class DataValidator:
                 return None
             if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
                 return None
+            # allow ints to be converted to floats
+            if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.floating):
+                return None
 
         self._logger.error(
             f"Invalid data type in column '{column_name}'. "
-            f"Expected type '{reference_dtype}', found '{dtype}'"
+            f"Expected type '{reference_dtype}', found '{dtype}' "
+            f"(exact type: {self.check_exact_data_type})"
         )
         raise TypeError
 
