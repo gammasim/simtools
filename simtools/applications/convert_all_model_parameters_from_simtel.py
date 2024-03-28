@@ -327,6 +327,27 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
             logger.warning(f"    Telescope value: {_tel_value}")
 
 
+def print_list_of_files(args_dict, logger):
+    """
+    Print model parameters which describe a file name.
+    This is useful to find files which are part of the model.
+
+    Parameters
+    ----------
+    args_dict: dict
+        Dictionary with command line arguments.
+    logger: logging.Logger
+        Logger object
+
+    """
+
+    model_files = sorted(list(Path(args_dict["output_path"]).rglob("*.json")))
+    for file in model_files:
+        model_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
+        if model_dict.get("file"):
+            logger.info(f"{file.name}: {model_dict['value']}")
+
+
 def main():
 
     args_dict, _ = _parse(
@@ -339,6 +360,7 @@ def main():
 
     _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(args_dict, logger)
     print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger)
+    print_list_of_files(args_dict, logger)
 
 
 if __name__ == "__main__":
