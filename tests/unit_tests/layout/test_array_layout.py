@@ -39,22 +39,24 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture
-def array_layout_north_four_LST_instance(db_config):
+def array_layout_north_four_LST_instance(db_config, model_version):
     return ArrayLayout(
         site="North",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
+        model_version=model_version,
     )
 
 
 @pytest.fixture
-def array_layout_south_four_LST_instance(db_config):
+def array_layout_south_four_LST_instance(db_config, model_version):
     return ArrayLayout(
         site="South",
         mongo_db_config=db_config,
         label="test_layout",
         name="LST4",
+        model_version=model_version,
     )
 
 
