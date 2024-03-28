@@ -60,13 +60,13 @@ def array_layout_south_four_LST_instance(db_config, model_version):
     )
 
 
-def test_from_array_layout_name(io_handler, db_config):
+def test_from_array_layout_name(io_handler, db_config, model_version):
     layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, array_layout_name="South-4LST"
+        mongo_db_config=db_config, model_version=model_version, array_layout_name="South-4LST"
     )
     assert 4 == layout.get_number_of_telescopes()
     layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, array_layout_name="North-4MST"
+        mongo_db_config=db_config, model_version=model_version, array_layout_name="North-4MST"
     )
     assert 4 == layout.get_number_of_telescopes()
 
@@ -113,12 +113,15 @@ def test_initialize_coordinate_systems(
     )
 
 
-def test_select_assets(telescope_north_with_calibration_devices_test_file, db_config):
+def test_select_assets(
+    telescope_north_with_calibration_devices_test_file, db_config, model_version
+):
     layout = ArrayLayout(
         site="North",
         name="test_layout",
         telescope_list_file=telescope_north_with_calibration_devices_test_file,
         mongo_db_config=db_config,
+        model_version=model_version,
     )
 
     layout.select_assets(None)
@@ -138,17 +141,17 @@ def test_add_tel(
     array_layout_north_instance,
     array_layout_south_instance,
 ):
-    def test_one_site(instance, altitude):
+    def test_one_site(instance, altitude, tel_name):
         ntel_before = instance.get_number_of_telescopes()
-        instance.add_telescope("LSTN-00", "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
+        instance.add_telescope(tel_name, "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
         ntel_after = instance.get_number_of_telescopes()
         assert ntel_before + 1 == ntel_after
 
-        instance.add_telescope("LSTN-00", "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
+        instance.add_telescope(tel_name, "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
-    test_one_site(array_layout_north_instance, 2190.0)
-    test_one_site(array_layout_south_instance, 2181.0)
+    test_one_site(array_layout_north_instance, 2197.0, "MSTN-20")
+    test_one_site(array_layout_south_instance, 2181.0, "LSTS-05")
 
 
 def test_build_layout(
@@ -397,26 +400,35 @@ def test_try_set_coordinate(
     )
 
 
-def test_len(telescope_north_test_file, db_config):
+def test_len(telescope_north_test_file, db_config, model_version):
     layout = ArrayLayout(
-        telescope_list_file=telescope_north_test_file, mongo_db_config=db_config, site="North"
+        telescope_list_file=telescope_north_test_file,
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site="North",
     )
     assert len(layout) == 13
 
 
-def test_getitem(db_config, telescope_north_test_file):
+def test_getitem(db_config, telescope_north_test_file, model_version):
     layout = ArrayLayout(
-        mongo_db_config=db_config, site="North", telescope_list_file=telescope_north_test_file
+        telescope_list_file=telescope_north_test_file,
+        mongo_db_config=db_config,
+        model_version=model_version,
+        site="North",
     )
 
     assert layout[0].name == "LSTN-01"
 
 
 def test_export_telescope_list_table(
-    db_config, telescope_north_test_file, telescope_north_utm_test_file
+    db_config, telescope_north_test_file, telescope_north_utm_test_file, model_version
 ):
     layout = ArrayLayout(
-        mongo_db_config=db_config, site="North", telescope_list_file=telescope_north_test_file
+        mongo_db_config=db_config,
+        site="North",
+        model_version=model_version,
+        telescope_list_file=telescope_north_test_file,
     )
     table = layout.export_telescope_list_table(crs_name="ground")
     assert isinstance(table, QTable)
@@ -427,7 +439,10 @@ def test_export_telescope_list_table(
     assert "sequence_number" not in table.colnames
 
     layout_utm = ArrayLayout(
-        mongo_db_config=db_config, site="North", telescope_list_file=telescope_north_utm_test_file
+        mongo_db_config=db_config,
+        site="North",
+        model_version=model_version,
+        telescope_list_file=telescope_north_utm_test_file,
     )
     table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
     assert "asset_code" in table_utm.colnames

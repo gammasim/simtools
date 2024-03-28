@@ -217,13 +217,17 @@ def telescope_model_sst(db_config, io_handler):
 
 
 @pytest.fixture
-def array_layout_north_instance(io_handler, db_config):
-    return ArrayLayout(site="North", mongo_db_config=db_config, name="test_layout")
+def array_layout_north_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
-def array_layout_south_instance(io_handler, db_config):
-    return ArrayLayout(site="South", mongo_db_config=db_config, name="test_layout")
+def array_layout_south_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
@@ -272,7 +276,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture
-def simulator_config_data(tmp_test_directory):
+def simulator_config_data(tmp_test_directory, model_version):
     return {
         "common": {
             "site": "North",
@@ -292,7 +296,7 @@ def simulator_config_data(tmp_test_directory):
             "run_range": [6, 10],
         },
         "array": {
-            "model_version": "Prod5",
+            "model_version": model_version,
             "default": {"LSTN": "design", "MSTN": "design"},
             #            "LSTN-01": "01",
         },
