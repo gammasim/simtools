@@ -258,7 +258,12 @@ class DatabaseHandler:
         """
 
         self._logger.debug(f"Tel_name_db: {telescope_model_name}")
-        _which_tel_labels = [self.get_telescope_db_name(telescope_model_name)]
+        _which_tel_labels = [
+            self.get_telescope_db_name(
+                telescope_name=telescope_model_name,
+                model_version=model_version,
+            )
+        ]
 
         _pars = {}
         for _tel in _which_tel_labels:
@@ -1248,8 +1253,8 @@ class DatabaseHandler:
 
     def get_all_available_telescopes(
         self,
+        model_version,
         db_name=DB_CTA_SIMULATION_MODEL,
-        model_version="Released",
     ):
         """
         Get all available telescope names in the collection "telescopes" in the DB.
@@ -1259,7 +1264,7 @@ class DatabaseHandler:
         db_name: str
             the name of the DB
         model_version: str
-            Which version to get the telescopes of (default: "Released").
+            Which version to get the telescopes of
 
         Returns
         -------
@@ -1283,7 +1288,7 @@ class DatabaseHandler:
 
         return _all_available_telescopes
 
-    def get_telescope_db_name(self, telescope_name):
+    def get_telescope_db_name(self, telescope_name, model_version):
         """
         Translate telescope name to the name used in the DB. This is required,
         as not all telescopes are defined in the database yet. In these cases,
@@ -1293,6 +1298,8 @@ class DatabaseHandler:
         ----------
         telescope_name: str
             Name of the telescope model (e.g. MSTN-01)
+        model_version: str
+            Which version to get the telescopes
 
         Returns
         -------
@@ -1307,7 +1314,7 @@ class DatabaseHandler:
         """
 
         if self._available_telescopes is None:
-            self._available_telescopes = self.get_all_available_telescopes()
+            self._available_telescopes = self.get_all_available_telescopes(model_version)
 
         _telescope_name_validated = names.validate_telescope_name(telescope_name)
         if _telescope_name_validated in self._available_telescopes:
