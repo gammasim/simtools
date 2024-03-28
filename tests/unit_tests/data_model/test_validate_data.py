@@ -385,6 +385,7 @@ def test_check_data_type(caplog):
 
     # floats
     assert data_validator._check_data_type(np.dtype("float32"), "wavelength") is None
+    assert data_validator._check_data_type(np.dtype("int64"), "wavelength") is None
 
     # ints
     data_validator._data_description[0]["type"] = "int"
