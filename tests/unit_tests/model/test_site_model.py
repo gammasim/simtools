@@ -8,12 +8,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_site_model(db_config, model_version_site):
+def test_site_model(db_config, model_version):
     _south = SiteModel(
         site="South",
         mongo_db_config=db_config,
         label="testing-sitemodel",
-        model_version=model_version_site,
+        model_version=model_version,
     )
 
     assert isinstance(_south.get_reference_point(), dict)
@@ -25,12 +25,12 @@ def test_site_model(db_config, model_version_site):
     assert isinstance(_pars["altitude"], float)
 
 
-def test_get_corsika_site_parameters(db_config, model_version_site):
+def test_get_corsika_site_parameters(db_config, model_version):
     _north = SiteModel(
         site="North",
         mongo_db_config=db_config,
         label="testing-sitemodel",
-        model_version=model_version_site,
+        model_version=model_version,
     )
 
     assert "corsika_observation_level" in _north.get_corsika_site_parameters()
