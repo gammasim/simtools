@@ -975,4 +975,3 @@ def user_confirm():
             return answer == "y"
         except EOFError:
             break
-    return False
