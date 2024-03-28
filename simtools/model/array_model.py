@@ -79,28 +79,26 @@ class ArrayModel:
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validate_array_data(array_config_data)
 
-        # Site
-        self.site = names.validate_site_name(array_config_data["site"])
-
-        # Grabbing layout name and building ArrayLayout
-        self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
-        self.layout = ArrayLayout.from_array_layout_name(
-            mongo_db_config=self.mongo_db_config,
-            array_layout_name=self.site + "-" + self.layout_name,
-            label=self.label,
-        )
-
         # Model version
-        if (
-            "model_version" not in array_config_data.keys()
-            or array_config_data["model_version"] is None
-        ):
+        if array_config_data.get("model_version") is None:
             self._logger.warning("model_version not given in array_config_data - using 'Released'")
             self.model_version = "Released"
         else:
             self.model_version = names.validate_model_version_name(
                 array_config_data["model_version"]
             )
+
+        # Site
+        self.site = names.validate_site_name(array_config_data["site"])
+
+        # Array layout
+        self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
+        self.layout = ArrayLayout.from_array_layout_name(
+            mongo_db_config=self.mongo_db_config,
+            array_layout_name=self.site + "-" + self.layout_name,
+            model_version=self.model_version,
+            label=self.label,
+        )
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._array_config_data = {
