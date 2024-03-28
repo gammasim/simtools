@@ -968,10 +968,10 @@ def user_confirm():
         True if the answer is Y/y.
 
     """
-    answer = ""
-    while answer not in ["y", "n"]:
+    while True:
         try:
             answer = input("Is this OK? [y/n]").lower()
             return answer == "y"
         except EOFError:
             break
+    return False
