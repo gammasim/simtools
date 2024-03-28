@@ -956,3 +956,23 @@ def get_value_as_quantity(value, unit):
             _logger.error(f"Cannot convert {value.unit} to {unit}.")
             raise
     return value * unit
+
+
+def user_confirm():
+    """
+    Ask the user to enter y or n (case-insensitive) on the command line.
+
+    Returns
+    -------
+    bool:
+        True if the answer is Y/y.
+
+    """
+    answer = ""
+    while answer not in ["y", "n"]:
+        try:
+            answer = input("Is this OK? [y/n]").lower()
+            return answer == "y"
+        except EOFError:
+            return False
+    return False

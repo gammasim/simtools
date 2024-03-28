@@ -3,11 +3,26 @@
 """
     Summary
     -------
-    This application is used to add a new parameter to a collection in the DB
-    using a json file as input.
+    This application adds a new parameter / value to a collection in the DB using a json
+    file as input.
 
-    This application should not be used by anyone but expert users and not often.
-    Therefore, no additional documentation about this applications will be given.
+    Command line arguments
+    ----------------------
+    file_name (str, required)
+        Name of the file to upload including the full path.
+    db_collection (str, required)
+        The DB collection to which to add the file.
+
+    Example
+    -------
+
+    Upload a file to sites collection:
+
+    .. code-block:: console
+
+        simtools-add-value-from-json-to-db \
+            --file_name new_value.json --db_collection sites
+
 
 """
 
@@ -33,28 +48,29 @@ def main():
 
     par_dict = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
 
-    logger.info(f"Adding the following parameters to the DB: {par_dict['parameter']}")
+    logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
 
-    value_and_version = {
-        "prod6": par_dict["value"],
-        "default": 0,
-    }
-
-    for version, value in value_and_version.items():
+    print(f"Should {par_dict} be inserted to the {args_dict['db_collection']} collection?:\n")
+    if gen.user_confirm():
         db.add_new_parameter(
             db_name=db.DB_CTA_SIMULATION_MODEL,
             telescope=par_dict["instrument"],
             parameter=par_dict["parameter"],
-            version=version,
-            value=value,
+            version=par_dict["version"],
+            value=par_dict["value"],
             site=par_dict["site"],
             type=par_dict["type"],
             collection_name=args_dict["db_collection"],
             applicable=par_dict["applicable"],
             file=par_dict["file"],
-            unit=par_dict["unit"] if "unit" in par_dict and par_dict["unit"] is not None else None,
+            unit=par_dict.get("unit", None),
             file_prefix="./",
         )
+        logger.info(
+            f"Value for {par_dict['parameter']} added to {args_dict['db_collection']} collection"
+        )
+    else:
+        logger.info("Aborted, no change applied to the database")
 
 
 if __name__ == "__main__":

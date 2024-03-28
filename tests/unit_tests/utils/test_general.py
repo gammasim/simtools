@@ -6,6 +6,7 @@ import os
 import time
 from copy import copy
 from pathlib import Path
+from unittest.mock import patch
 
 import astropy.units as u
 import numpy as np
@@ -745,3 +746,13 @@ def test_assign_unit_to_quantity():
 
     with pytest.raises(u.UnitConversionError):
         gen.get_value_as_quantity(1000 * u.TeV, u.m)
+
+
+@patch("builtins.input", side_effect=["Y", "y"])
+def test_user_confirm_yes(mock_input):
+    assert gen.user_confirm()
+
+
+@patch("builtins.input", side_effect=["N", "n", EOFError, "not_Y_or_N"])
+def test_user_confirm_no(mock_input):
+    assert not gen.user_confirm()
