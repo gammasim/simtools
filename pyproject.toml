@@ -75,6 +75,7 @@ dependencies = [
 "repository" = "https://github.com/gammasim/simtools"
 [project.scripts]
 simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
+simtools-add-value-from-json-to-db = "simtools.applications.add_value_from_json_to_db:main"
 simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
 simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
 simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"

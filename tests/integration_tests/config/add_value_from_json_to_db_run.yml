@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-add-value-from-json-to-db
+  TEST_NAME: run
+  CONFIGURATION:
+    FILE_NAME: ./tests/resources/num_gains.json
+    DB_COLLECTION: telescopes
+    DB: sandbox
