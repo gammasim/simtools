@@ -279,7 +279,6 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 def simulator_config_data(tmp_test_directory, model_version):
     return {
         "common": {
-            "model_version": model_version,
             "site": "North",
             "layout_name": "test-layout",
             "data_directory": f"{str(tmp_test_directory)}/test-output",

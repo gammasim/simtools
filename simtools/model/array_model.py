@@ -25,6 +25,8 @@ class ArrayModel:
     ----------
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Version of the model (e.g., prod5).
     array_config_file: str
         Path to a yaml file with the array config data.
     array_config_data: dict
@@ -33,7 +35,14 @@ class ArrayModel:
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, mongo_db_config, label=None, array_config_file=None, array_config_data=None):
+    def __init__(
+        self,
+        mongo_db_config,
+        model_version,
+        label=None,
+        array_config_file=None,
+        array_config_data=None,
+    ):
         """
         Initialize ArrayModel.
         """
@@ -44,7 +53,7 @@ class ArrayModel:
         self.site = None
         self.layout = None
         self.layout_name = None
-        self.model_version = None
+        self.model_version = model_version
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
         array_config_data = collect_data_from_file_or_dict(array_config_file, array_config_data)
@@ -79,19 +88,8 @@ class ArrayModel:
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validate_array_data(array_config_data)
 
-        # Model version
-        if array_config_data.get("model_version") is None:
-            self._logger.warning("model_version not given in array_config_data - using 'Released'")
-            self.model_version = "Released"
-        else:
-            self.model_version = names.validate_model_version_name(
-                array_config_data["model_version"]
-            )
-
-        # Site
         self.site = names.validate_site_name(array_config_data["site"])
 
-        # Array layout
         self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
         self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=self.mongo_db_config,

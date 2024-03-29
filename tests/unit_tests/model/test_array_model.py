@@ -11,28 +11,30 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_input_validation(db_config, io_handler, model_version):
+@pytest.fixture
+def array_model(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
-        "model_version": model_version,
         "default": {"LSTN": "01", "MSTN": "Design"},
         "MSTN-05": "05",
     }
-    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
+    return ArrayModel(
+        label="test",
+        array_config_data=array_config_data,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+
+
+def test_input_validation(array_model):
+    am = array_model
     am.print_telescope_list()
     assert am.number_of_telescopes == 13
 
 
-def test_get_single_telescope_info_from_array_config(db_config, io_handler, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
-        "model_version": model_version,
-        "default": {"LSTN": "01", "MSTN": "Design"},
-        "MSTN-05": "05",
-    }
-    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
+def test_get_single_telescope_info_from_array_config(array_model):
+    am = array_model
 
     assert am._get_single_telescope_info_from_array_config("LSTN-01") == ("LSTN-01", {})
     assert am._get_single_telescope_info_from_array_config("LSTN-02") == ("LSTN-01", {})
@@ -48,14 +50,18 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
-        "model_version": model_version,
         "default": {"LSTN": "01", "MSTN": "design"},
         "LST-04": {
             "name": "design",
             "camera_config_name": "LST-test",
         },
     }
-    am = ArrayModel(label="test", array_config_data=array_config_data, mongo_db_config=db_config)
+    am = ArrayModel(
+        label="test",
+        array_config_data=array_config_data,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
 
     am.export_simtel_telescope_config_files()
     am.export_simtel_array_config_file()

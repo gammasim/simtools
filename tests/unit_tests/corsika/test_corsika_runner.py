@@ -28,9 +28,10 @@ def corsika_config_data(tmp_test_directory):
 
 
 @pytest.fixture
-def corsika_runner(corsika_config_data, io_handler, simtel_path, db_config):
+def corsika_runner(corsika_config_data, io_handler, simtel_path, db_config, model_version):
     corsika_runner = CorsikaRunner(
         mongo_db_config=db_config,
+        model_version=model_version,
         site="south",
         layout_name="test-layout",
         simtel_source_path=simtel_path,
