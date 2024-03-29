@@ -23,9 +23,9 @@ def simtel_config_writer():
 
 
 @pytest.fixture
-def layout(io_handler, db_config):
+def layout(io_handler, db_config, model_version):
     layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, array_layout_name="South-4LST"
+        mongo_db_config=db_config, model_version=model_version, array_layout_name="South-4LST"
     )
     return layout
 

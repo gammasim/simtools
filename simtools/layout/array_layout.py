@@ -53,7 +53,7 @@ class ArrayLayout:
         self,
         mongo_db_config,
         site,
-        model_version="Released",
+        model_version,
         label=None,
         name=None,
         telescope_list_file=None,

@@ -56,6 +56,8 @@ class CorsikaConfig:
         North or South.
     layout_name: str
         Name of the layout.
+    model_version: str
+        Version of the model (e.g., prod5).
     label: str
         Instance label.
     corsika_config_data: dict
@@ -74,7 +76,7 @@ class CorsikaConfig:
         mongo_db_config,
         site,
         layout_name,
-        model_version="Released",
+        model_version,
         layout=None,
         label=None,
         corsika_config_data=None,
@@ -99,7 +101,6 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
 
-        # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(layout_name)
         self._logger.debug(f"Building ArrayLayout {self.layout_name}")
         self.layout = (
