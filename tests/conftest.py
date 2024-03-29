@@ -180,11 +180,11 @@ def model_version():
 
 
 @pytest.fixture
-def telescope_model_lst(db_config, io_handler):
+def telescope_model_lst(db_config, io_handler, model_version):
     telescope_model_LST = TelescopeModel(
         site="North",
         telescope_model_name="LSTN-01",
-        model_version="Prod5",
+        model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )
@@ -192,11 +192,11 @@ def telescope_model_lst(db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_mst(db_config, io_handler):
+def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
         site="South",
         telescope_model_name="MSTS-design",
-        model_version="Prod5",
+        model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
     )
@@ -205,11 +205,11 @@ def telescope_model_mst(db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_sst(db_config, io_handler):
+def telescope_model_sst(db_config, io_handler, model_version):
     telescope_model_SST = TelescopeModel(
         site="South",
         telescope_model_name="SSTS-design",
-        model_version="Prod5",
+        model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
@@ -279,6 +279,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 def simulator_config_data(tmp_test_directory, model_version):
     return {
         "common": {
+            "model_version": model_version,
             "site": "North",
             "layout_name": "test-layout",
             "data_directory": f"{str(tmp_test_directory)}/test-output",
@@ -296,7 +297,6 @@ def simulator_config_data(tmp_test_directory, model_version):
             "run_range": [6, 10],
         },
         "array": {
-            "model_version": model_version,
             "default": {"LSTN": "design", "MSTN": "design"},
             #            "LSTN-01": "01",
         },
