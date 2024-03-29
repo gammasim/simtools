@@ -149,7 +149,7 @@ class SimtelConfigReader:
 
         try:
             dict_to_write["value"] = self._output_format_for_arrays(dict_to_write["value"])
-            dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"])
+            dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"], True)
             dict_to_write["limits"] = self._output_format_for_arrays(dict_to_write["limits"])
         except KeyError:
             pass
@@ -513,7 +513,7 @@ class SimtelConfigReader:
         data_validator.validate_and_transform()
         return data_validator.data_dict
 
-    def _output_format_for_arrays(self, data):
+    def _output_format_for_arrays(self, data, comma_separated=False):
         """
         Convert arrays to strings if required.
 
@@ -521,6 +521,8 @@ class SimtelConfigReader:
         ----------
         data: object
             Object of data to convert (e.g., double or list)
+        comma_separated: bool
+            If True, return arrays as comma separated strings.
 
         Returns
         -------
@@ -532,5 +534,7 @@ class SimtelConfigReader:
             return data
         if len(data) == 1 or not self.return_arrays_as_strings:
             return data
+        if comma_separated:
+            return ", ".join(str(item) for item in data)
 
         return " ".join(str(item) for item in data)
