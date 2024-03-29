@@ -213,7 +213,7 @@ class DatabaseHandler:
         if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
-                if not info.get("file"):
+                if not info.get("file") or info["value"] == "None":
                     continue
                 if Path(dest).joinpath(info["value"]).exists():
                     self._logger.debug(f"File {info['value']} already exists in {dest}")
