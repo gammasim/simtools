@@ -59,6 +59,23 @@ def test_get_parameter_value_with_unit(telescope_model_lst):
     assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
 
 
+def test_get_parameter_value_as_list(telescope_model_lst):
+
+    tel_model = telescope_model_lst
+    t_1 = tel_model.get_parameter_value_as_list("telescope_transmission")
+    assert isinstance(t_1, list)
+    assert len(t_1) == 6
+
+    t_dont_extend = tel_model.get_parameter_value_as_list("telescope_transmission", 12)
+    assert len(t_dont_extend) == 6
+
+    t_single_float = tel_model.get_parameter_value_as_list("camera_transmission")
+    assert len(t_single_float) == 1
+    t_four_floats = tel_model.get_parameter_value_as_list("camera_transmission", 4, 1.0)
+    assert len(t_four_floats) == 4
+    assert pytest.approx(t_four_floats[3]) == 1.0
+
+
 def test_handling_parameters(telescope_model_lst):
     tel_model = telescope_model_lst
 

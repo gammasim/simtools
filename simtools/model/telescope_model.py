@@ -158,22 +158,6 @@ class TelescopeModel(ModelParameter):
         tel._is_exported_model_files_up_to_date = True
         return tel
 
-    def get_telescope_transmission_parameters(self):
-        """
-        Get tel. transmission pars as a list of floats.
-
-        Returns
-        -------
-        list of floats
-            List of 4 parameters that describe the tel. transmission vs off-axis.
-        """
-
-        telescope_transmission = self.get_parameter_value("telescope_transmission")
-        if isinstance(telescope_transmission, str):
-            return [float(v) for v in self.get_parameter_value("telescope_transmission").split()]
-
-        return [float(telescope_transmission), 0, 0, 0]
-
     def export_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero):
         """
         Export a mirror list file with a single mirror in it.
@@ -242,7 +226,11 @@ class TelescopeModel(ModelParameter):
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
-        focal_length = self.get_parameter_value("effective_focal_length")
+        focal_length = 0.0
+        try:
+            focal_length = self.get_parameter_value_as_list("effective_focal_length")[0]
+        except IndexError:
+            pass
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
             focal_length = self.get_parameter_value("focal_length")

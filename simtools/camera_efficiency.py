@@ -428,7 +428,7 @@ class CameraEfficiency:
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()
             * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
-            / self._telescope_model.get_telescope_transmission_parameters()[0]
+            / self._telescope_model.get_parameter_value_as_list("telescope_transmission")[0]
         )
 
         # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
