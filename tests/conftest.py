@@ -296,8 +296,7 @@ def simulator_config_data(tmp_test_directory, model_version):
             "run_range": [6, 10],
         },
         "array": {
-            "default": {"LSTN": "design", "MSTN": "design"},
-            #            "LSTN-01": "01",
+            "default": {"LSTN": "01", "MSTN": "design"},
         },
     }
 
