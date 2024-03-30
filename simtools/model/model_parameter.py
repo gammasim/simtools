@@ -6,6 +6,7 @@ from copy import copy
 from pydoc import locate
 
 import astropy.units as u
+import numpy as np
 
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
@@ -160,6 +161,33 @@ class ModelParameter:
             return float(_value) * u.Unit(_units)
         except (KeyError, TypeError):
             return _value
+
+    def get_parameter_value_as_list(self, par_name, n_dim=None, default=0.0):
+        """
+        Get parameter as a list of floats. This is used to
+        resolve the string representation of lists as used
+        in the database. Allow to return a single value as a list
+        (note that arrays are not extended to n_dim).
+
+        Returns
+        -------
+        list of floats
+            List of parameter values.
+        n_dim: int
+            Dimension of list (only relevant when parameter is not found)
+        default: float
+            Default value to use if the parameter is not found.
+        """
+
+        _parameter = self.get_parameter_value(par_name)
+        if isinstance(_parameter, str):
+            return [float(v) for v in self.get_parameter_value(par_name).split()]
+        if n_dim is None:
+            return [float(_parameter)]
+
+        _default_array = np.full(n_dim, default)
+        _default_array[0] = float(_parameter)
+        return list(_default_array)
 
     def get_parameter_type(self, par_name):
         """
