@@ -41,6 +41,7 @@ def test_shall_run(simtel_runner_camera_efficiency):
     assert simtel_runner_camera_efficiency._shall_run()
 
 
+@pytest.mark.xfail(reason="Missing primary_mirror_incidence_angle for prod6 in Derived-DB")
 def test_make_run_command(simtel_runner_camera_efficiency):
     command = simtel_runner_camera_efficiency._make_run_command()
 
@@ -54,6 +55,7 @@ def test_make_run_command(simtel_runner_camera_efficiency):
     assert "-fqe PDE_V_4.4V_LVR5_ext.txt" in command
 
 
+@pytest.mark.xfail(reason="Missing primary_mirror_incidence_angle for prod6 in Derived-DB")
 def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
     simtel_runner_camera_efficiency.nsb_spectrum = (
         "tests/resources/benn_ellison_spectrum_for_testing.txt"
@@ -82,6 +84,7 @@ def test_check_run_result(simtel_runner_camera_efficiency):
         simtel_runner_camera_efficiency._check_run_result()
 
 
+@pytest.mark.xfail(reason="Missing camera_filter_incidence_angle for prod6 in Derived-DB")
 def test_get_one_dim_distribution(simtel_runner_camera_efficiency):
     camera_filter_file = simtel_runner_camera_efficiency._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
