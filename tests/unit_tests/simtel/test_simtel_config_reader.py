@@ -362,6 +362,7 @@ def test_output_format_for_arrays(config_reader_num_gains):
     assert np.array_equal(_config._output_format_for_arrays(np.array([1, 2, 3])), [1, 2, 3])
     _config.return_arrays_as_strings = True
     assert _config._output_format_for_arrays(np.array([1, 2, 3])) == "1 2 3"
+    assert _config._output_format_for_arrays(np.array([1, 2, 3]), True) == "1, 2, 3"
 
 
 def test_jsonnumpy_encoder():
