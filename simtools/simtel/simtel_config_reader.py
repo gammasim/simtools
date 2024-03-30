@@ -346,7 +346,7 @@ class SimtelConfigReader:
         self._logger.debug(
             f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
         )
-        column = ["None" if item.lower() == "none" else item for item in column]
+        column = [None if item.lower() == "none" else item for item in column]
         column, except_from_all = self._resolve_all_in_column(column)
         # extend array to required length (simtel uses sometimes 'all:' for all entries)
         if ndim > 1 and len(column) < ndim:
@@ -363,7 +363,11 @@ class SimtelConfigReader:
             column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
+            return (
+                np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
+                if column[0] is not None
+                else None
+            ), 1
         if len(column) > 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None

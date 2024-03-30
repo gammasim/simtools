@@ -130,9 +130,9 @@ class DataValidator:
             else [self.data_dict["unit"]]
         )
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            self._check_for_not_a_number(value, index)
             self._check_data_type(np.array(value).dtype, index)
             if self.data_dict.get("type") != "string":
+                self._check_for_not_a_number(value, index)
                 value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
                     value, unit, index
                 )
@@ -346,7 +346,10 @@ class DataValidator:
                 return None
         # allow any sub-type of integer or float for success
         else:
-            if np.issubdtype(dtype, np.str_) and reference_dtype in ("string", "str", "file"):
+            # dtype is 'object' for 'file' type and value None
+            if (
+                np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")
+            ) and reference_dtype in ("string", "str", "file"):
                 return None
             if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
                 return None

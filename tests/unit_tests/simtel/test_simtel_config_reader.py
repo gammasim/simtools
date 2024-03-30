@@ -217,8 +217,10 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     _config = config_reader_num_gains
 
     # None
-    assert _config._add_value_from_simtel_cfg(["None"], dtype="str") == ("None", 1)
-    assert _config._add_value_from_simtel_cfg(["none"], dtype="str") == ("None", 1)
+    assert _config._add_value_from_simtel_cfg(["None"], dtype="str") == (None, 1)
+    assert _config._add_value_from_simtel_cfg(["none"], dtype="str") == (None, 1)
+    assert _config._add_value_from_simtel_cfg(["none"], dtype=None) == (None, 1)
+    assert _config._add_value_from_simtel_cfg(["22"], dtype=None) == ("22", 1)
 
     # default
     assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)
