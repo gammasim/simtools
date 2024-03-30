@@ -191,8 +191,14 @@ def test_updating_export_model_files(db_config, io_handler):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-def test_export_derived_files(telescope_model_lst):
-    tel_model = telescope_model_lst
+def test_export_derived_files(io_handler, db_config):
+    tel_model = TelescopeModel(
+        site="North",
+        telescope_model_name="LSTN-01",
+        model_version="Prod5",
+        mongo_db_config=db_config,
+        label="test-telescope-model-lst",
+    )
 
     _ = tel_model.derived
     assert (

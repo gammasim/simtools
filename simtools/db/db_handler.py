@@ -213,7 +213,7 @@ class DatabaseHandler:
         if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
-                if not info.get("file") or info["value"] == "None":
+                if not info or not info.get("file") or info["value"] is None:
                     continue
                 if Path(dest).joinpath(info["value"]).exists():
                     self._logger.debug(f"File {info['value']} already exists in {dest}")
@@ -491,17 +491,29 @@ class DatabaseHandler:
         }
         if only_applicable:
             query["applicable"] = True
-        if collection.count_documents(query) < 1:
+        n_documents = collection.count_documents(query)
+        if n_documents > 0:
+            for post in collection.find(query):
+                par_now = post["parameter"]
+                _parameters[par_now] = post
+                _parameters[par_now].pop("parameter", None)
+                _parameters[par_now].pop("site", None)
+                _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
+        # TODO - temporary solution to avoid breaking the code until
+        # the reference data is moved to the site collection
+        else:
+            try:
+                _parameters["nsb_reference_value"] = self.get_site_parameters(
+                    site=site, model_version=model_version, only_applicable=only_applicable
+                )["nsb_reference_value"]
+            except (KeyError, TypeError):
+                pass
+            n_documents = len(_parameters)
+        if n_documents < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
-        for post in collection.find(query):
-            par_now = post["parameter"]
-            _parameters[par_now] = post
-            _parameters[par_now].pop("parameter", None)
-            _parameters[par_now].pop("site", None)
-            _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
 

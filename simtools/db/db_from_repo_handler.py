@@ -158,7 +158,6 @@ def _update_parameters_from_repo(
     if db_simulation_model_url is None:
         logger.debug(f"No repository specified, skipping {parameter_collection} parameter updates")
         return parameters
-    logger.warning(f"Ignoring model version {model_version} in parameter updates from repository.")
 
     if parameter_collection in ["telescope", "calibration"]:
         _file_path = gen.join_url_or_path(
@@ -180,9 +179,9 @@ def _update_parameters_from_repo(
     for key in parameters:
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
-            parameters[key] = gen.collect_data_from_file_or_dict(
-                file_name=_parameter_file, in_dict=None
-            )
+            _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
+            if _tmp_par.get("version") == model_version:
+                parameters[key] = _tmp_par
         except (FileNotFoundError, gen.InvalidConfigData):
             # use design telescope model in case there is no model defined for this telescope ID
             # accept errors, as not all parameters are defined in the repository
@@ -190,10 +189,13 @@ def _update_parameters_from_repo(
                 _parameter_file = gen.join_url_or_path(
                     db_simulation_model_url, db_simulation_model, _design_model, f"{key}.json"
                 )
-                parameters[key] = gen.collect_data_from_file_or_dict(
+                _tmp_par = gen.collect_data_from_file_or_dict(
                     file_name=_parameter_file, in_dict=None
                 )
+                if _tmp_par.get("version") == model_version:
+                    parameters[key] = _tmp_par
             except (FileNotFoundError, TypeError, gen.InvalidConfigData):
                 pass
 
-    return parameters
+    # return all entries which are not None
+    return {key: value for key, value in parameters.items() if value is not None}

@@ -17,7 +17,7 @@ def test_update_parameters_from_repo(caplog, db_config):
                 parameters={},
                 site="North",
                 telescope_name="MSTN-01",
-                model_version=None,
+                model_version="2024-02-01",
                 parameter_collection="telescope",
                 db_simulation_model_url=None,
                 db_simulation_model="verified_model",
@@ -33,7 +33,7 @@ def test_update_parameters_from_repo(caplog, db_config):
             parameters=dict.fromkeys(_pars_telescope_model, None),
             site="North",
             telescope_name=_tel,
-            model_version=None,
+            model_version="2024-02-01",
             parameter_collection="telescope",
             db_simulation_model_url=db_config["db_simulation_model_url"],
             db_simulation_model="verified_model",
@@ -53,7 +53,7 @@ def test_update_parameters_from_repo(caplog, db_config):
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         telescope_name=None,
-        model_version=None,
+        model_version="2024-02-01",
         parameter_collection="site",
         db_simulation_model_url=db_config["db_simulation_model_url"],
         db_simulation_model="verified_model",
@@ -66,7 +66,7 @@ def test_update_parameters_from_repo(caplog, db_config):
                 parameters=dict.fromkeys(_pars_telescope_model, None),
                 site="North",
                 telescope_name="MSTN-01",
-                model_version=None,
+                model_version="2024-02-01",
                 parameter_collection="not_a_collection",
                 db_simulation_model_url=db_config["db_simulation_model_url"],
                 db_simulation_model="verified_model",
@@ -79,7 +79,7 @@ def test_update_parameters_from_repo(caplog, db_config):
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         telescope_name=None,
-        model_version=None,
+        model_version="2024-02-01",
         parameter_collection="site",
         db_simulation_model_url=db_config["db_simulation_model_url"],
         db_simulation_model="verified_model",
@@ -92,7 +92,7 @@ def test_update_telescope_parameters_from_repo(db_config):
         parameters=dict.fromkeys(_pars_telescope_model, None),
         site="North",
         telescope_name="MSTN-01",
-        model_version=None,
+        model_version="2024-02-01",
         db_simulation_model_url=db_config["db_simulation_model_url"],
     )
     assert len(_pars) > 0
@@ -107,7 +107,7 @@ def test_update_site_parameters_from_repo(db_config):
     _pars = db_from_repo_handler.update_site_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
-        model_version=None,
+        model_version="2024-02-01",
         db_simulation_model_url=db_config["db_simulation_model_url"],
     )
     assert len(_pars) > 0
