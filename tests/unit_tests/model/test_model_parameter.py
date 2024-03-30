@@ -55,7 +55,7 @@ def test_get_parameter_value(telescope_model_lst):
 def test_get_parameter_value_with_unit(telescope_model_lst):
     tel_model = telescope_model_lst
 
-    assert isinstance(tel_model.get_parameter_value_with_unit("effective_focal_length"), u.Quantity)
+    assert isinstance(tel_model.get_parameter_value_with_unit("fadc_mhz"), u.Quantity)
     assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
 
 

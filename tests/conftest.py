@@ -216,6 +216,19 @@ def telescope_model_sst(db_config, io_handler, model_version):
     return telescope_model_SST
 
 
+# TODO - keep prod5 until prod6 model is complete in DB
+@pytest.fixture
+def telescope_model_sst_prod5(db_config, io_handler):
+    telescope_model_SST = TelescopeModel(
+        site="South",
+        telescope_model_name="SSTS-design",
+        model_version="Prod5",
+        mongo_db_config=db_config,
+        label="test-telescope-model-sst",
+    )
+    return telescope_model_SST
+
+
 @pytest.fixture
 def array_layout_north_instance(io_handler, db_config, model_version):
     return ArrayLayout(

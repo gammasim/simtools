@@ -9,6 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
 def test_get_on_axis_eff_optical_area(telescope_model_lst):
     tel_model = telescope_model_lst
 
@@ -17,8 +18,9 @@ def test_get_on_axis_eff_optical_area(telescope_model_lst):
     )  # Value for LST -1
 
 
-def test_read_two_dim_wavelength_angle(telescope_model_sst):
-    tel_model = telescope_model_sst
+# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
+    tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
@@ -32,8 +34,9 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst):
     assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
 
 
-def test_read_incidence_angle_distribution(telescope_model_sst):
-    tel_model = telescope_model_sst
+# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
+    tel_model = telescope_model_sst_prod5
 
     _ = tel_model.derived
     incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
@@ -46,8 +49,9 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
     ].value == pytest.approx(0.027980644661989726)
 
 
-def test_calc_average_curve(telescope_model_sst):
-    tel_model = telescope_model_sst
+# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+def test_calc_average_curve(telescope_model_sst_prod5):
+    tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
     _ = tel_model.derived
 
@@ -61,8 +65,9 @@ def test_calc_average_curve(telescope_model_sst):
     ] == pytest.approx(0.9398265298920796)
 
 
-def test_export_table_to_model_directory(telescope_model_sst):
-    tel_model = telescope_model_sst
+# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+def test_export_table_to_model_directory(telescope_model_sst_prod5):
+    tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
     _ = tel_model.derived
 

@@ -2,8 +2,8 @@
 
 import logging
 import shutil
+from ast import literal_eval
 from copy import copy
-from pydoc import locate
 
 import astropy.units as u
 import numpy as np
@@ -478,8 +478,17 @@ class ModelParameter:
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        type_of_par_name = locate(self.get_parameter_type(par_name))
-        if not isinstance(value, type_of_par_name):
+        # value might be list of floats (as typically in the DB)
+        if isinstance(value, str) and len(value.split()) > 1:
+            try:
+                value_as_list = [float(v) for v in value.split()]
+                self._logger.debug(f"Parameter value is a list of floats: {value_as_list}")
+            except ValueError:
+                self._logger.error(
+                    f"Could not cast {value} to {self.get_parameter_type(par_name)}."
+                )
+                raise
+        elif not np.issubdtype(type(value), self.get_parameter_type(par_name)):
             self._logger.warning(
                 f"The type of the provided value ({value}, {type(value)}) "
                 f"is different from the type of {par_name} "
@@ -487,12 +496,16 @@ class ModelParameter:
                 f"Attempting to cast to the correct type."
             )
             try:
+                try:
+                    type_of_par_name = literal_eval(self.get_parameter_type(par_name))
+                except NameError:
+                    type_of_par_name = getattr(np, self.get_parameter_type(par_name))
                 value = type_of_par_name(value)
-            except ValueError:
+            except (ValueError, AttributeError) as exc:
                 self._logger.error(
                     f"Could not cast {value} to {self.get_parameter_type(par_name)}."
                 )
-                raise
+                raise exc
 
         self._logger.debug(
             f"Changing parameter {par_name} "
