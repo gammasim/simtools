@@ -478,7 +478,7 @@ class ModelParameter:
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        # value might be list of floats (as typically in the DB)
+        # value might be list of floats (as typically found in the DB)
         if isinstance(value, str) and len(value.split()) > 1:
             try:
                 value_as_list = [float(v) for v in value.split()]
