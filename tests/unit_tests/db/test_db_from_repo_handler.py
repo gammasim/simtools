@@ -26,6 +26,15 @@ def test_update_parameters_from_repo(caplog, db_config):
         )
         assert "No repository specified, skipping" in caplog.text
 
+    if (
+        db_config["db_simulation_model_url"] is None
+        or len(db_config["db_simulation_model_url"]) == 0
+    ):
+        db_config["db_simulation_model_url"] = (
+            "https://gitlab.cta-observatory.org/cta-science/simulations/"
+            "simulation-model/model_parameters/-/raw/main/"
+        )
+
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
 
     for _tel in ["MSTN-01", "MSTN-design"]:
