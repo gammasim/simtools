@@ -31,7 +31,6 @@ def telescope_model_from_config_file(io_handler, lst_config_file):
     return tel_model
 
 
-@pytest.mark.xfail
 def test_get_parameter_dict(telescope_model_lst):
     tel_model = telescope_model_lst
     assert isinstance(tel_model.get_parameter_dict("num_gains"), dict)
