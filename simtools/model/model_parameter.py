@@ -2,7 +2,6 @@
 
 import logging
 import shutil
-from ast import literal_eval
 from copy import copy
 
 import astropy.units as u
@@ -478,7 +477,7 @@ class ModelParameter:
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        # value might be list of floats (as typically found in the DB)
+        # value might be list of floats (as typically in the DB)
         if isinstance(value, str) and len(value.split()) > 1:
             try:
                 value_as_list = [float(v) for v in value.split()]
@@ -489,23 +488,18 @@ class ModelParameter:
                 )
                 raise
         elif not np.issubdtype(type(value), self.get_parameter_type(par_name)):
-            self._logger.warning(
-                f"The type of the provided value ({value}, {type(value)}) "
-                f"is different from the type of {par_name} "
-                f"({self.get_parameter_type(par_name)}). "
-                f"Attempting to cast to the correct type."
-            )
-            try:
-                try:
-                    type_of_par_name = literal_eval(self.get_parameter_type(par_name))
-                except NameError:
-                    type_of_par_name = getattr(np, self.get_parameter_type(par_name))
-                value = type_of_par_name(value)
-            except (ValueError, AttributeError) as exc:
+            # allow int to float casting (but not the other way around to avoid loss of precision
+            if np.issubdtype(type(value), np.integer) and np.issubdtype(
+                self.get_parameter_type(par_name), float
+            ):
+                value = float(value)
+            else:
                 self._logger.error(
-                    f"Could not cast {value} to {self.get_parameter_type(par_name)}."
+                    f"The type of the provided value ({value}, {type(value)}) "
+                    f"is different from the type of {par_name} "
+                    f"({self.get_parameter_type(par_name)}). "
                 )
-                raise exc
+                raise ValueError
 
         self._logger.debug(
             f"Changing parameter {par_name} "
