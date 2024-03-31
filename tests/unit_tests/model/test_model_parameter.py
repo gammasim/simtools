@@ -103,22 +103,26 @@ def test_change_parameter(telescope_model_lst):
     tel_model = telescope_model_lst
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
-    logger.info("Testing changing camera_pixels to a different integer")
-    new_camera_pixels = 9999
-    tel_model.change_parameter("camera_pixels", new_camera_pixels)
+    tel_model.change_parameter("camera_pixels", 9999)
+    assert 9999 == tel_model.get_parameter_value("camera_pixels")
 
-    assert new_camera_pixels == tel_model.get_parameter_value("camera_pixels")
-
-    logger.info("Testing changing camera_pixels to a float")
-    new_camera_pixels = 9999.9
-    tel_model.change_parameter("camera_pixels", new_camera_pixels)
-
-    assert int(new_camera_pixels) == tel_model.get_parameter_value("camera_pixels")
+    with pytest.raises(ValueError):
+        logger.info("Testing changing camera_pixels to a float (now allowed)")
+        tel_model.change_parameter("camera_pixels", 9999.9)
 
     with pytest.raises(ValueError):
         logger.info("Testing changing camera_pixels to a nonsense string")
-        new_camera_pixels = "bla_bla"
-        tel_model.change_parameter("camera_pixels", new_camera_pixels)
+        tel_model.change_parameter("camera_pixels", "bla_bla")
+
+    logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
+    tel_model.change_parameter("mirror_focal_length", 55.0)
+    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
+    tel_model.change_parameter("mirror_focal_length", 55)
+    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
+
+    with pytest.raises(ValueError):
+        logger.info("Testing changing mirror_focal_length to a nonsense string")
+        tel_model.change_parameter("mirror_focal_length", "bla_bla")
 
 
 def test_flen_type(telescope_model_lst):
