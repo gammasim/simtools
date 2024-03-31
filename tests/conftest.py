@@ -216,7 +216,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
     return telescope_model_SST
 
 
-# TODO - keep prod5 until prod6 model is complete in DB
+# TODO - keep prod5 until a complete prod6 model is in the DB
 @pytest.fixture
 def telescope_model_sst_prod5(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
