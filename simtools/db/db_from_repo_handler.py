@@ -177,6 +177,7 @@ def _update_parameters_from_repo(
         raise ValueError
 
     for key in parameters:
+        _tmp_par = {}
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
             _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
