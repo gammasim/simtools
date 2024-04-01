@@ -120,6 +120,7 @@ def main():
 
     array_model = ArrayModel(
         label=args_dict["label"],
+        model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         array_config_file=args_dict["array_config"],
     )
