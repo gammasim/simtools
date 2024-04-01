@@ -359,7 +359,7 @@ def main():
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
-        tel.change_parameter("mirror_reflection_random_angle", str(rnda))
+        tel.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing.from_kwargs(
             telescope_model=tel,
             single_mirror_mode=True,
