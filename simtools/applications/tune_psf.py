@@ -149,7 +149,7 @@ def main():
         action="store_true",
     )
 
-    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
     label = "tune_psf"
 
     logger = logging.getLogger()

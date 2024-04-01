@@ -121,7 +121,7 @@ def _parse(label=None, description=None):
         required=False,
         default="./simtools-output/",
     )
-    return config.initialize(telescope_model=True, job_submission=True, db_config=True)
+    return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
 
 
 def main():
