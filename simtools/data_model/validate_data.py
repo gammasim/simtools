@@ -340,33 +340,18 @@ class DataValidator:
         """
 
         reference_dtype = self._get_data_description(column_name).get("type", None)
-
-        if self.check_exact_data_type:
-            if np.issubdtype(dtype, reference_dtype):
-                return None
-        # allow any sub-type of integer or float for success
-        else:
-            # dtype is 'object' for 'file' type and value None
-            if (
-                np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")
-            ) and reference_dtype in ("string", "str", "file"):
-                return None
-            if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
-                return None
-            if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.integer):
-                return None
-            if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
-                return None
-            # allow ints to be converted to floats
-            if np.issubdtype(dtype, np.integer) and np.issubdtype(reference_dtype, np.floating):
-                return None
-
-        self._logger.error(
-            f"Invalid data type in column '{column_name}'. "
-            f"Expected type '{reference_dtype}', found '{dtype}' "
-            f"(exact type: {self.check_exact_data_type})"
-        )
-        raise TypeError
+        if not gen.validate_data_type(
+            reference_dtype=reference_dtype,
+            value=None,
+            dtype=dtype,
+            allow_subtypes=(not self.check_exact_data_type),
+        ):
+            self._logger.error(
+                f"Invalid data type in column '{column_name}'. "
+                f"Expected type '{reference_dtype}', found '{dtype}' "
+                f"(exact type: {self.check_exact_data_type})"
+            )
+            raise TypeError
 
     def _check_for_not_a_number(self, data, col_name):
         """
