@@ -42,8 +42,6 @@ def test_get_single_telescope_info_from_array_config(array_model):
     assert am._get_single_telescope_info_from_array_config("MSTN-05") == ("MSTN-05", {})
     assert am._get_single_telescope_info_from_array_config("MSTN-15") == ("MSTN-Design", {})
 
-    # TODO - test on parameters which change for the models
-
 
 def test_exporting_config_files(db_config, io_handler, model_version):
     array_config_data = {
