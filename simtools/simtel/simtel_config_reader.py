@@ -269,7 +269,7 @@ class SimtelConfigReader:
                 _para_dict[key], _ = self._add_value_from_simtel_cfg(
                     matching_lines[key],
                     dtype=_para_dict.get("type"),
-                    ndim=_para_dict.get("dimension"),
+                    n_dim=_para_dict.get("dimension"),
                     default=_para_dict.get("default"),
                 )
             except KeyError:
@@ -318,7 +318,7 @@ class SimtelConfigReader:
 
         return column, except_from_all
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None, ndim=1, default=None):
+    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
         """
         Extract value(s) from simtel configuration file columns.
         This function is fine-tuned to the simtel configuration output.
@@ -329,7 +329,7 @@ class SimtelConfigReader:
             List of strings to extract value from.
         dtype: str
             Data type to convert value to.
-        ndim: int
+        n_dim: int
             Length of array to be returned.
         default: object
             Default value to extend array to required length.
@@ -344,18 +344,18 @@ class SimtelConfigReader:
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
         self._logger.debug(
-            f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
+            f"Adding value from simtel config: {column} (n_dim={n_dim}, default={default})"
         )
         column = [None if item.lower() == "none" else item for item in column]
         column, except_from_all = self._resolve_all_in_column(column)
         # extend array to required length (simtel uses sometimes 'all:' for all entries)
-        if ndim > 1 and len(column) < ndim:
+        if n_dim > 1 and len(column) < n_dim:
             try:
                 # skip formatting: black reformats and violates E203
                 column += default[len(column):]  # fmt: skip
             except TypeError:
                 # extend array to required length using previous value
-                column.extend([column[-1]] * (ndim - len(column)))
+                column.extend([column[-1]] * (n_dim - len(column)))
         if len(except_from_all) > 0:
             for index, value in except_from_all.items():
                 column[int(index)] = value
