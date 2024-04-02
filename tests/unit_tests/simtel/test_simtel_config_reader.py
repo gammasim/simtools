@@ -34,7 +34,6 @@ def config_reader_num_gains(simtel_config_file, schema_num_gains):
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
-        return_arrays_as_strings=True,
     )
 
 
@@ -44,7 +43,6 @@ def config_reader_telescope_transmission(simtel_config_file, schema_telescope_tr
         schema_file=schema_telescope_transmission,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
-        return_arrays_as_strings=True,
     )
 
 
@@ -231,8 +229,7 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     assert list(value) == [5, 5, 1, 5]
     assert ndim == 4
 
-    # comma separated, return array as list
-    _config.return_arrays_as_strings = False
+    # comma separated
     _list, _ndim = _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], dtype="double")
     assert _list[0] == pytest.approx(0.89)
     assert _list[2] == pytest.approx(0.0)
@@ -268,7 +265,6 @@ def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
-        return_arrays_as_strings=True,
     )
 
     assert _config._check_parameter_applicability("LSTN-01")
@@ -292,7 +288,6 @@ def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
-        return_arrays_as_strings=True,
     )
 
     assert not _config._parameter_is_a_file()
@@ -313,7 +308,6 @@ def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
-        return_arrays_as_strings=True,
     )
 
     assert _config._get_unit_from_schema() is None
@@ -349,20 +343,6 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
         with pytest.raises(ValueError):
             _config._validate_parameter_dict(_temp_dict)
         assert "out of range" in caplog.text
-
-
-def test_output_format_for_arrays(config_reader_num_gains):
-
-    _config = config_reader_num_gains
-
-    assert _config._output_format_for_arrays(None) is None
-    assert _config._output_format_for_arrays("a") == "a"
-    assert _config._output_format_for_arrays(5) == 5
-    _config.return_arrays_as_strings = False
-    assert np.array_equal(_config._output_format_for_arrays(np.array([1, 2, 3])), [1, 2, 3])
-    _config.return_arrays_as_strings = True
-    assert _config._output_format_for_arrays(np.array([1, 2, 3])) == "1 2 3"
-    assert _config._output_format_for_arrays(np.array([1, 2, 3]), True) == "1, 2, 3"
 
 
 def test_jsonnumpy_encoder():

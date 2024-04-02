@@ -58,8 +58,6 @@ class SimtelConfigReader:
         Telescope name (sim_telarray convention)
     parameter_name: str
         Parameter name (default: read from schema file)
-    return_arrays_as_strings: bool
-        If True, return arrays as comma separated strings.
     camera_pixels: int
         Number of camera pixels
     """
@@ -70,7 +68,6 @@ class SimtelConfigReader:
         simtel_config_file,
         simtel_telescope_name,
         parameter_name=None,
-        return_arrays_as_strings=True,
         camera_pixels=None,
     ):
         """
@@ -88,7 +85,6 @@ class SimtelConfigReader:
         self.parameter_name = self.schema_dict.get("name") if self.schema_dict else parameter_name
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
-        self.return_arrays_as_strings = return_arrays_as_strings
         self.camera_pixels = camera_pixels
         self.parameter_dict = self._read_simtel_config_file(
             simtel_config_file, simtel_telescope_name
@@ -148,9 +144,9 @@ class SimtelConfigReader:
         """
 
         try:
-            dict_to_write["value"] = self._output_format_for_arrays(dict_to_write["value"])
-            dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"], True)
-            dict_to_write["limits"] = self._output_format_for_arrays(dict_to_write["limits"])
+            dict_to_write["value"] = gen.convert_list_to_string(dict_to_write["value"])
+            dict_to_write["unit"] = gen.convert_list_to_string(dict_to_write["unit"], True)
+            dict_to_write["limits"] = gen.convert_list_to_string(dict_to_write["limits"])
         except KeyError:
             pass
 
@@ -516,28 +512,3 @@ class SimtelConfigReader:
         )
         data_validator.validate_and_transform()
         return data_validator.data_dict
-
-    def _output_format_for_arrays(self, data, comma_separated=False):
-        """
-        Convert arrays to strings if required.
-
-        Parameters
-        ----------
-        data: object
-            Object of data to convert (e.g., double or list)
-        comma_separated: bool
-            If True, return arrays as comma separated strings.
-
-        Returns
-        -------
-        object or str:
-            Converted data as string (if required)
-
-        """
-        if data is None or not isinstance(data, (list, np.ndarray)):
-            return data
-        if len(data) == 1 or not self.return_arrays_as_strings:
-            return data
-        if comma_separated:
-            return ", ".join(str(item) for item in data)
-        return " ".join(str(item) for item in data)

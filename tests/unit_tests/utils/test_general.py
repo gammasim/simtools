@@ -801,3 +801,29 @@ def test_validate_data_type():
 
     with pytest.raises(ValueError):
         gen.validate_data_type("int", None, None, False)
+
+
+def test_convert_list_to_string():
+
+    assert gen.convert_list_to_string(None) is None
+    assert gen.convert_list_to_string("a") == "a"
+    assert gen.convert_list_to_string(5) == 5
+    assert gen.convert_list_to_string([1, 2, 3]) == "1 2 3"
+    assert gen.convert_list_to_string(np.array([1, 2, 3])) == "1 2 3"
+    assert gen.convert_list_to_string(np.array([1, 2, 3]), True) == "1, 2, 3"
+
+
+def test_convert_string_to_list():
+
+    t_1 = gen.convert_string_to_list("1 2 3 4")
+    assert len(t_1) == 4
+    assert pytest.approx(t_1[1]) == 2.0
+
+    t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
+    assert len(t_2) == 4
+    assert pytest.approx(t_2[1]) == 0.2
+
+    t_3 = gen.convert_string_to_list("0.1")
+    assert pytest.approx(t_3[0]) == 0.1
+
+    assert gen.convert_string_to_list("bla_bla") == "bla_bla"

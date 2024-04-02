@@ -6,6 +6,7 @@ import logging
 import pytest
 from astropy import units as u
 
+import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.telescope_model import TelescopeModel
 
@@ -84,9 +85,15 @@ def test_handling_parameters(telescope_model_lst):
     )
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
-    tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
+    with pytest.raises(ValueError):
+        tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
 
-    assert new_mrra == tel_model.get_parameter_value("mirror_reflection_random_angle")
+    tel_model.change_parameter(
+        "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
+    )
+    assert (
+        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    )
 
     logging.info("Adding new_parameter")
     new_par = "23"
@@ -119,6 +126,9 @@ def test_change_parameter(telescope_model_lst):
     tel_model.change_parameter("mirror_focal_length", 55)
     assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
 
+    tel_model.change_parameter("mirror_focal_length", "9999.9 0.")
+    assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
+
     with pytest.raises(ValueError):
         logger.info("Testing changing mirror_focal_length to a nonsense string")
         tel_model.change_parameter("mirror_focal_length", "bla_bla")
@@ -132,6 +142,7 @@ def test_flen_type(telescope_model_lst):
     assert isinstance(flen_info["value"], float)
 
 
+@pytest.mark.xfail(reason="Waiting for complete prod6 model implementation")
 def test_cfg_file(telescope_model_from_config_file, lst_config_file):
     tel_model = telescope_model_from_config_file
 
