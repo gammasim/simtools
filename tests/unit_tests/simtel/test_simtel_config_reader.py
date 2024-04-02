@@ -227,7 +227,7 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     assert _config._add_value_from_simtel_cfg(["all", "5"], dtype="int") == (5, 1)
     assert _config._add_value_from_simtel_cfg(["all:5"], dtype="int") == (5, 1)
     assert _config._add_value_from_simtel_cfg(["all: 5"], dtype="int") == (5, 1)
-    value, ndim = _config._add_value_from_simtel_cfg(["all:5", "2:1"], dtype="int", ndim=4)
+    value, ndim = _config._add_value_from_simtel_cfg(["all:5", "2:1"], dtype="int", n_dim=4)
     assert list(value) == [5, 5, 1, 5]
     assert ndim == 4
 
