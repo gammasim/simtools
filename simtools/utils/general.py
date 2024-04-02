@@ -1034,3 +1034,52 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
         return True
 
     return False
+
+
+def convert_list_to_string(data, comma_separated=False):
+    """
+    Convert arrays to string (if required)
+
+    Parameters
+    ----------
+    data: object
+        Object of data to convert (e.g., double or list)
+    comma_separated: bool
+        If True, return arrays as comma separated strings.
+
+    Returns
+    -------
+    object or str:
+        Converted data as string (if required)
+
+    """
+    if data is None or not isinstance(data, (list, np.ndarray)):
+        return data
+    if comma_separated:
+        return ", ".join(str(item) for item in data)
+    return " ".join(str(item) for item in data)
+
+
+def convert_string_to_list(data_string):
+    """
+    Convert string (as used e.g. in sim_telarray) to list of floats.
+    Allow coma or space separated strings.
+
+    Parameters
+    ----------
+    data_string: object
+        String to be converted
+
+    Returns
+    -------
+    list, str
+        Converted data from string (if required).
+        Return data_string if conversion fails.
+
+    """
+
+    try:
+        return [float(v) for v in data_string.split()]
+    except ValueError:
+        pass
+    return data_string

@@ -7,6 +7,7 @@ from copy import copy
 import astropy.units as u
 import numpy as np
 
+import simtools.utils.general as gen
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -180,7 +181,7 @@ class ModelParameter:
 
         _parameter = self.get_parameter_value(par_name)
         if isinstance(_parameter, str):
-            return [float(v) for v in self.get_parameter_value(par_name).split()]
+            return gen.convert_string_to_list(self.get_parameter_value(par_name))
         if n_dim is None:
             return [float(_parameter)]
 
@@ -478,38 +479,16 @@ class ModelParameter:
             raise InvalidModelParameter(msg)
 
         if isinstance(value, str):
-            # value might be list of floats (as typically in the DB)
-            if len(value.split()) > 1:
-                try:
-                    value = [float(v) for v in value.split()]
-                    self._logger.debug(f"Parameter value is a list of floats: {value}")
-                except ValueError:
-                    self._logger.error(
-                        f"Could not cast {value} to {self.get_parameter_type(par_name)}."
-                    )
-                    raise
-            elif self.get_parameter_type(par_name) == "string":
-                value = str(value)
-            else:
-                self._logger.error(
-                    f"The type of the provided value ({value}, {type(value)}) "
-                    f"is different from the type of {par_name} "
-                    f"({self.get_parameter_type(par_name)}). "
-                )
-                raise ValueError
-        elif not np.issubdtype(type(value), self.get_parameter_type(par_name)):
-            # allow int to float casting (but not the other way around to avoid loss of precision
-            if np.issubdtype(type(value), np.integer) and np.issubdtype(
-                self.get_parameter_type(par_name), float
-            ):
-                value = float(value)
-            else:
-                self._logger.error(
-                    f"The type of the provided value ({value}, {type(value)}) "
-                    f"is different from the type of {par_name} "
-                    f"({self.get_parameter_type(par_name)}). "
-                )
-                raise ValueError
+            value = gen.convert_string_to_list(value)
+
+        if not gen.validate_data_type(
+            reference_dtype=self.get_parameter_type(par_name),
+            value=value,
+            dtype=None,
+            allow_subtypes=True,
+        ):
+            self._logger.error(f"Could not cast {value} to {self.get_parameter_type(par_name)}.")
+            raise ValueError
 
         self._logger.debug(
             f"Changing parameter {par_name} "
