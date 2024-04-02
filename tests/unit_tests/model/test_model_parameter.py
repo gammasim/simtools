@@ -85,8 +85,10 @@ def test_handling_parameters(telescope_model_lst):
     )
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
-    with pytest.raises(ValueError):
-        tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
+    tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
+    assert (
+        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    )
 
     tel_model.change_parameter(
         "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
@@ -181,7 +183,7 @@ def test_updating_export_model_files(db_config, io_handler):
     tel = TelescopeModel(
         site="North",
         telescope_model_name="LSTN-01",
-        model_version="prod4",
+        model_version="prod6",
         label="test-telescope-model-2",
         mongo_db_config=db_config,
     )
