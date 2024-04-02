@@ -407,7 +407,7 @@ class ModelParameter:
         Returns
         -------
         dict
-            simtel parameters as dict
+            simtel parameters as dict (sorted by parameter names)
 
         """
 
@@ -416,7 +416,7 @@ class ModelParameter:
             _par_name = names.get_simtel_name_from_parameter_name(key, telescope_model, site_model)
             if _par_name is not None:
                 _simtel_parameter_value[_par_name] = self._parameters[key].get("value")
-        return _simtel_parameter_value
+        return dict(sorted(_simtel_parameter_value.items()))
 
     def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
         """
@@ -477,16 +477,26 @@ class ModelParameter:
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        # value might be list of floats (as typically in the DB)
-        if isinstance(value, str) and len(value.split()) > 1:
-            try:
-                value_as_list = [float(v) for v in value.split()]
-                self._logger.debug(f"Parameter value is a list of floats: {value_as_list}")
-            except ValueError:
+        if isinstance(value, str):
+            # value might be list of floats (as typically in the DB)
+            if len(value.split()) > 1:
+                try:
+                    value = [float(v) for v in value.split()]
+                    self._logger.debug(f"Parameter value is a list of floats: {value}")
+                except ValueError:
+                    self._logger.error(
+                        f"Could not cast {value} to {self.get_parameter_type(par_name)}."
+                    )
+                    raise
+            elif self.get_parameter_type(par_name) == "string":
+                value = str(value)
+            else:
                 self._logger.error(
-                    f"Could not cast {value} to {self.get_parameter_type(par_name)}."
+                    f"The type of the provided value ({value}, {type(value)}) "
+                    f"is different from the type of {par_name} "
+                    f"({self.get_parameter_type(par_name)}). "
                 )
-                raise
+                raise ValueError
         elif not np.issubdtype(type(value), self.get_parameter_type(par_name)):
             # allow int to float casting (but not the other way around to avoid loss of precision
             if np.issubdtype(type(value), np.integer) and np.issubdtype(
