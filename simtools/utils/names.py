@@ -92,6 +92,7 @@ array_layout_names = {
     "TestLayout": ["test-layout"],
 }
 
+# TODO - this is temporary
 # List of site parameters which are not part of the simtel configuration
 # or which have different naming in the database and simtel configuration.
 # simtel: True if this is a simtel parameter (allows to give alternative "name")
@@ -117,6 +118,7 @@ site_parameters = {
     "ref_lat": {"db_name": "ref_lat", "simtel": False},
 }
 
+# TODO - this is temporary
 # List of telescope parameters which are not part of the simtel configuration
 # or which has a different name in the simtel configuration.
 telescope_parameters = {
@@ -124,16 +126,20 @@ telescope_parameters = {
     "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
     "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
     "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
-    "lightguide_efficiency_angle_file": {
-        "db_name": "lightguide_efficiency_angle_file",
+    "lightguide_efficiency_vs_incident_angle": {
+        "db_name": "lightguide_efficiency_vs_incident_angle",
         "simtel": False,
     },
-    "lightguide_efficiency_wavelength_file": {
-        "db_name": "lightguide_efficiency_wavelength_file",
+    "lightguide_efficiency_vs_wavelength": {
+        "db_name": "lightguide_efficiency_vs_wavelength",
         "simtel": False,
     },
     "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
+    "asum_shaping": {"db_name": "asum_shaping_file", "simtel": True},
+    "dsum_shaping": {"db_name": "dsum_shaping_file", "simtel": True},
+    "nsb_pixel_rate": {"db_name": "nsb_pixel_rate", "simtel": False},
+    "nsb_reference_value": {"db_name": "nsb_reference_value", "simtel": False},
 }
 
 
