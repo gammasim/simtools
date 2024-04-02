@@ -5,7 +5,7 @@ default:
   layout_name: test-layout
   data_directory: Null
   array:
-    model_version: Prod5
+    model_version: Prod6
     zenith: 20 deg
     phi: 0 deg
     default:
