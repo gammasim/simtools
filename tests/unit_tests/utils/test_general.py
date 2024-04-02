@@ -756,3 +756,48 @@ def test_user_confirm_yes(mock_input):
 @patch("builtins.input", side_effect=["N", "n", EOFError, "not_Y_or_N"])
 def test_user_confirm_no(mock_input):
     assert not gen.user_confirm()
+
+
+def test_validate_data_type():
+
+    test_cases = [
+        # Test exact data type match
+        ("int", 5, None, False, True),
+        ("int", 5.5, None, False, False),
+        ("float", 3.14, None, False, True),
+        ("str", "hello", None, False, True),
+        ("bool", True, None, False, True),
+        ("bool", 1, None, False, False),
+        ("int", None, type(5), False, True),
+        ("float", None, type(3.14), False, True),
+        ("str", None, type("hello"), False, True),
+        ("bool", None, type(True), False, True),
+        ("bool", None, type(True), False, True),
+        # Test allow_subtypes=True
+        ("float", 5, None, True, True),
+        ("float", [1, 2, 3], None, True, True),
+        ("int", [1, 2, 3], None, True, True),
+        ("int", np.array([1, 2, 3]), None, True, True),
+        ("float", np.array([1.0, 2.0, 3.0]), None, True, True),
+        ("file", "hello", None, True, True),
+        ("string", "hello", None, True, True),
+        ("file", None, "object", True, True),  # 'file' type with None value
+        ("boolean", True, None, True, True),
+        ("int", None, np.uint8, True, True),  # Subtype of 'int'
+        ("float", None, int, True, True),  # 'int' can be converted to 'float'
+    ]
+
+    for reference_dtype, value, dtype, allow_subtypes, expected_result in test_cases:
+        gen._logger.debug(f"{reference_dtype} {value} {dtype} {allow_subtypes} {expected_result}")
+        assert (
+            gen.validate_data_type(
+                reference_dtype=reference_dtype,
+                value=value,
+                dtype=dtype,
+                allow_subtypes=allow_subtypes,
+            )
+            is expected_result
+        )
+
+    with pytest.raises(ValueError):
+        gen.validate_data_type("int", None, None, False)
