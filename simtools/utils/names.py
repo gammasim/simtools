@@ -140,6 +140,24 @@ telescope_parameters = {
     "dsum_shaping": {"db_name": "dsum_shaping_file", "simtel": True},
     "nsb_pixel_rate": {"db_name": "nsb_pixel_rate", "simtel": False},
     "nsb_reference_value": {"db_name": "nsb_reference_value", "simtel": False},
+    "primary_mirror_diameter": {"db_name": "primary_diameter", "simtel": True},
+    "primary_mirror_degraded_map": {"db_name": "primary_degraded_map", "simtel": True},
+    "primary_mirror_hole_diameter": {"db_name": "primary_hole_diameter", "simtel": True},
+    "primary_mirror_ref_radius": {"db_name": "primary_ref_radius", "simtel": True},
+    "primary_mirror_segmentation": {"db_name": "primary_segmentation", "simtel": True},
+    "secondary_mirror_baffle": {"db_name": "secondary_baffle", "simtel": True},
+    "secondary_mirror_degraded_map": {"db_name": "secondary_degraded_map", "simtel": True},
+    "secondary_mirror_degraded_reflection": {
+        "db_name": "mirror2_degraded_reflection",
+        "simtel": True,
+    },
+    "secondary_mirror_diameter": {"db_name": "secondary_diameter", "simtel": True},
+    "secondary_mirror_hole_diameter": {"db_name": "secondary_hole_diameter", "simtel": True},
+    "secondary_mirror_ref_radius": {"db_name": "secondary_ref_radius", "simtel": True},
+    "secondary_mirror_reflectivity": {"db_name": "mirror_secondary_reflectivity", "simtel": True},
+    "secondary_mirror_segmentation": {"db_name": "secondary_segmentation", "simtel": True},
+    "secondary_mirror_shadow_diameter": {"db_name": "secondary_shadow_diameter", "simtel": True},
+    "secondary_mirror_shadow_offset": {"db_name": "secondary_shadow_offset", "simtel": True},
 }
 
 

@@ -70,6 +70,7 @@ class SimtelConfigWriter:
                     par, search_telescope_parameters=True, search_site_parameters=False
                 )
                 if _simtel_name is not None:
+                    value = "none" if value is None else value  # simtel requires 'none'
                     file.write(f"{_simtel_name} = {value}\n")
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
