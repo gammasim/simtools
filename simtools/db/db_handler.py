@@ -155,6 +155,7 @@ class DatabaseHandler:
             return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site_validated,
+                parameter_collection="telescopes",
                 telescope_name=_tel_model_name_validated,
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
@@ -390,9 +391,11 @@ class DatabaseHandler:
         )
         # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_site_parameters_from_repo(
+            return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=site,
+                telescope_name=None,
+                parameter_collection="site",
                 model_version=_version_validated,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )

@@ -13,12 +13,12 @@ logger.setLevel(logging.DEBUG)
 def test_update_parameters_from_repo(caplog, db_config):
     with caplog.at_level(logging.DEBUG):
         assert (
-            db_from_repo_handler._update_parameters_from_repo(
+            db_from_repo_handler.update_model_parameters_from_repo(
                 parameters={},
                 site="North",
                 telescope_name="MSTN-01",
                 model_version="2024-02-01",
-                parameter_collection="telescope",
+                parameter_collection="telescopes",
                 db_simulation_model_url=None,
                 db_simulation_model="verified_model",
             )
@@ -38,12 +38,12 @@ def test_update_parameters_from_repo(caplog, db_config):
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
 
     for _tel in ["MSTN-01", "MSTN-design"]:
-        _pars_mstn = db_from_repo_handler._update_parameters_from_repo(
+        _pars_mstn = db_from_repo_handler.update_model_parameters_from_repo(
             parameters=dict.fromkeys(_pars_telescope_model, None),
             site="North",
             telescope_name=_tel,
             model_version="2024-02-01",
-            parameter_collection="telescope",
+            parameter_collection="telescopes",
             db_simulation_model_url=db_config["db_simulation_model_url"],
             db_simulation_model="verified_model",
         )
@@ -58,7 +58,7 @@ def test_update_parameters_from_repo(caplog, db_config):
         "reference_point_utm_east",
     ]
 
-    _pars_south = db_from_repo_handler._update_parameters_from_repo(
+    _pars_south = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         telescope_name=None,
@@ -71,7 +71,7 @@ def test_update_parameters_from_repo(caplog, db_config):
 
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
-            db_from_repo_handler._update_parameters_from_repo(
+            db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=dict.fromkeys(_pars_telescope_model, None),
                 site="North",
                 telescope_name="MSTN-01",
@@ -84,7 +84,7 @@ def test_update_parameters_from_repo(caplog, db_config):
 
     # Test with a parameter that is not in the repository (no error should be raised)
     _pars_site_model.append("not_a_parameter")
-    db_from_repo_handler._update_parameters_from_repo(
+    db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         telescope_name=None,
@@ -101,6 +101,7 @@ def test_update_telescope_parameters_from_repo(db_config):
         parameters=dict.fromkeys(_pars_telescope_model, None),
         site="North",
         telescope_name="MSTN-01",
+        parameter_collection="telescopes",
         model_version="2024-02-01",
         db_simulation_model_url=db_config["db_simulation_model_url"],
     )
@@ -113,9 +114,11 @@ def test_update_site_parameters_from_repo(db_config):
         "geomag_horizontal",
         "reference_point_utm_east",
     ]
-    _pars = db_from_repo_handler.update_site_parameters_from_repo(
+    _pars = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
+        telescope_name=None,
+        parameter_collection="site",
         model_version="2024-02-01",
         db_simulation_model_url=db_config["db_simulation_model_url"],
     )
