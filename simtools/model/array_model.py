@@ -56,8 +56,7 @@ class ArrayModel:
         self.model_version = model_version
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
-        array_config_data = collect_data_from_file_or_dict(array_config_file, array_config_data)
-        self._load_array_data(array_config_data)
+        self._load_array_data(collect_data_from_file_or_dict(array_config_file, array_config_data))
         self._set_config_file_directory()
         self._build_array_model()
         self._telescope_model_files_exported = False
@@ -248,7 +247,6 @@ class ArrayModel:
             raise InvalidArrayConfigData(msg)
 
         if tel_name in self._array_config_data.keys():
-            # Specific info for this telescope
             return _process_single_telescope(self._array_config_data[tel_name])
 
         # Checking if default option exists in array_config_data
@@ -261,9 +259,9 @@ class ArrayModel:
             msg = (
                 "default option was not given in array_config_data "
                 + f"for the telescope {tel_name}"
+                + " (this is ok if all telescopes are explicitly defined)"
             )
-            self._logger.error(msg)
-            raise InvalidArrayConfigData(msg)
+            self._logger.warning(msg)
 
         # Grabbing the default option
         return _process_single_telescope(self._array_config_data["default"][tel_type])
