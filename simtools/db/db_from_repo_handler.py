@@ -59,7 +59,11 @@ def update_model_parameters_from_repo(
 
     if parameter_collection in ["telescopes", "calibration"]:
         _file_path = gen.join_url_or_path(
-            db_simulation_model_url, db_simulation_model, telescope_name
+            db_simulation_model_url,
+            "model_versions",
+            model_version,
+            db_simulation_model,
+            telescope_name,
         )
         # use design telescope model in case there is no model defined for this telescope ID
         _design_model = names.get_telescope_type_from_telescope_name(telescope_name) + "-design"
@@ -67,7 +71,11 @@ def update_model_parameters_from_repo(
             _design_model = None
     elif parameter_collection == "site":
         _file_path = gen.join_url_or_path(
-            db_simulation_model_url, db_simulation_model, "Site", site
+            db_simulation_model_url,
+            "model_versions",
+            model_version,
+            db_simulation_model,
+            "OBS-" + site,
         )
         _design_model = None
     else:
@@ -83,11 +91,15 @@ def update_model_parameters_from_repo(
             # use design telescope model in case there is no model defined for this telescope ID
             # accept errors, as not all parameters are defined in the repository
             try:
-                _parameter_file = gen.join_url_or_path(
-                    db_simulation_model_url, db_simulation_model, _design_model, f"{key}.json"
+                _file_path = gen.join_url_or_path(
+                    db_simulation_model_url,
+                    "model_versions",
+                    model_version,
+                    db_simulation_model,
+                    _design_model,
                 )
                 _tmp_par = gen.collect_data_from_file_or_dict(
-                    file_name=_parameter_file, in_dict=None
+                    file_name=gen.join_url_or_path(_file_path, f"{key}.json"), in_dict=None
                 )
             except (FileNotFoundError, TypeError, gen.InvalidConfigData):
                 pass
