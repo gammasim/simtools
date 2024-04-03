@@ -116,6 +116,7 @@ site_parameters = {
     "EPSG": {"db_name": "EPSG", "simtel": False},
     "ref_long": {"db_name": "ref_long", "simtel": False},
     "ref_lat": {"db_name": "ref_lat", "simtel": False},
+    "nsb_reference_value": {"db_name": "nsb_reference_value", "simtel": False},
 }
 
 # TODO - this is temporary

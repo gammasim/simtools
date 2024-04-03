@@ -344,7 +344,13 @@ class Simulator:
             raise
 
         # Reading telescope keys
-        tel_keys = [k for k in _rest_data.keys() if k[1:4] in ["ST-", "CT-"]]
+        tel_keys = []
+        for key in _rest_data.keys():
+            try:
+                names.validate_telescope_name(key)
+                tel_keys.append(key)
+            except ValueError:
+                pass
         for key in tel_keys:
             _array_model_data[key] = _rest_data.pop(key)
 
