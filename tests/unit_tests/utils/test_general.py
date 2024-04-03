@@ -738,6 +738,10 @@ def test_get_value_unit_type() -> None:
     with pytest.raises(u.UnitConversionError):
         gen.get_value_unit_type(1 * u.TeV, "m")
 
+    # cases of simtel-like strings representing arrays
+    assert gen.get_value_unit_type("1 2") == ("1 2", None, "str")
+    assert gen.get_value_unit_type("0 0") == ("0 0", None, "str")
+
 
 def test_assign_unit_to_quantity():
     assert gen.get_value_as_quantity(10, u.m) == 10 * u.m
