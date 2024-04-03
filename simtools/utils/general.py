@@ -908,6 +908,13 @@ def get_value_unit_type(value, unit_str=None):
             base_type = extract_type_of_value(base_value)
             if _quantity_value.unit.to_string() != "":
                 base_unit = _quantity_value.unit.to_string()
+                try:  # handle case of e.g., "0 0" and avoid unit.scale
+                    float(base_unit)
+                    base_value = value
+                    base_type = "str"
+                    base_unit = None
+                except ValueError:
+                    pass
         except TypeError:
             base_value = value
             base_type = "str"
