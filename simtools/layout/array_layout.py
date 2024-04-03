@@ -435,9 +435,9 @@ class ArrayLayout:
             _telescope_model_name = self.db.get_telescope_db_name(
                 telescope_name=telescope.name, model_version=self.model_version
             )
-            self._logger.info(
+            self._logger.debug(
                 f"Reading auxiliary telescope parameters for {telescope.name}"
-                f" (telescope model {_telescope_model_name})"
+                f" (telescope model {_telescope_model_name}, version {self.model_version})"
             )
             if _telescope_model_name not in self._auxiliary_parameters:
                 tel_model = TelescopeModel(
