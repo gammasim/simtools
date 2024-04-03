@@ -166,10 +166,10 @@ def _parse(description=None):
         help="Simulates only array detection, no showers",
         action="store_true",
     )
-    return config.initialize(db_config=True, job_submission=True)
+    return config.initialize(db_config=True, job_submission=True, simulation_model="version")
 
 
-def _proccess_simulation_config_file(config_file, primary_config, logger):
+def _process_simulation_config_file(config_file, primary_config, logger):
     """
     Read simulation configuration file with details on shower
     and array simulations
@@ -243,7 +243,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    label, shower_configs, array_configs = _proccess_simulation_config_file(
+    label, shower_configs, array_configs = _process_simulation_config_file(
         args_dict["productionconfig"], args_dict["primary"], logger
     )
     if args_dict["label"] is None:
@@ -266,6 +266,7 @@ def main():
             submit_command=args_dict["submit_command"],
             test=args_dict["test"],
             mongo_db_config=db_config,
+            model_version=args_dict["model_version"],
         )
 
     if args_dict["showers_only"]:
@@ -285,6 +286,7 @@ def main():
                 config_data=config_data,
                 submit_command=args_dict["submit_command"],
                 mongo_db_config=db_config,
+                model_version=args_dict["model_version"],
             )
         for primary, array in array_simulators.items():
             if args_dict["corsika_files"] is None:
