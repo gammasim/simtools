@@ -5,7 +5,6 @@ import shutil
 from copy import copy
 
 import astropy.units as u
-import numpy as np
 
 import simtools.utils.general as gen
 from simtools.db import db_handler
@@ -78,9 +77,12 @@ class ModelParameter:
         self._is_config_file_up_to_date = False
         self._is_exported_model_files_up_to_date = False
 
-    def get_parameter_dict(self, par_name):
+    def _get_parameter_dict(self, par_name):
         """
-        Get dictionary for an existing model parameter.
+        Get model parameter dictionary as stored in the DB.
+        No conversion to values are applied for the use in simtools
+        (e.g., no conversion from the string representation of lists
+        to lists).
 
         Parameters
         ----------
@@ -110,7 +112,10 @@ class ModelParameter:
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
-        Get the value of an existing parameter of the model.
+        Get the value of a model parameter. List of values stored
+        in strings are returns as lists, so that no knowledge
+        of the database structure is needed when accessing the
+        model parameters.
 
         Parameters
         ----------
@@ -130,12 +135,22 @@ class ModelParameter:
             If par_name does not match any parameter in this model.
         """
 
-        parameter_dict = parameter_dict if parameter_dict else self.get_parameter_dict(par_name)
+        parameter_dict = parameter_dict if parameter_dict else self._get_parameter_dict(par_name)
         try:
-            return parameter_dict["value"]
+            _parameter = parameter_dict["value"]
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} does not have a value")
             raise exc
+        if isinstance(_parameter, str):
+            _is_float = False
+            try:
+                _is_float = self.get_parameter_type(par_name).startswith("float")
+            except (InvalidModelParameter, TypeError):  # float - in case we don't know
+                _is_float = True
+            _parameter = gen.convert_string_to_list(_parameter, is_float=_is_float)
+            _parameter = _parameter if len(_parameter) > 1 else _parameter[0]
+
+        return _parameter
 
     def get_parameter_value_with_unit(self, par_name):
         """
@@ -153,40 +168,13 @@ class ModelParameter:
         provided in the model, the value is returned without a unit.
 
         """
-        _parameter = self.get_parameter_dict(par_name)
+        _parameter = self._get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
             _units = _parameter.get("unit")
             return float(_value) * u.Unit(_units)
         except (KeyError, TypeError):
             return _value
-
-    def get_parameter_value_as_list(self, par_name, n_dim=None, default=0.0):
-        """
-        Get parameter as a list of floats. This is used to
-        resolve the string representation of lists as used
-        in the database. Allow to return a single value as a list
-        (note that arrays are not extended to n_dim).
-
-        Returns
-        -------
-        list of floats
-            List of parameter values.
-        n_dim: int
-            Dimension of list (only relevant when parameter is not found)
-        default: float
-            Default value to use if the parameter is not found.
-        """
-
-        _parameter = self.get_parameter_value(par_name)
-        if isinstance(_parameter, str):
-            return gen.convert_string_to_list(self.get_parameter_value(par_name))
-        if n_dim is None:
-            return [float(_parameter)]
-
-        _default_array = np.full(n_dim, default)
-        _default_array[0] = float(_parameter)
-        return list(_default_array)
 
     def get_parameter_type(self, par_name):
         """
@@ -204,7 +192,7 @@ class ModelParameter:
             type of the parameter (None if no type is defined)
 
         """
-        parameter_dict = self.get_parameter_dict(par_name)
+        parameter_dict = self._get_parameter_dict(par_name)
         try:
             return parameter_dict.get("type")
         except KeyError:
@@ -227,7 +215,7 @@ class ModelParameter:
             True if file flag is set.
 
         """
-        parameter_dict = self.get_parameter_dict(par_name)
+        parameter_dict = self._get_parameter_dict(par_name)
         try:
             if parameter_dict.get("file"):
                 return True

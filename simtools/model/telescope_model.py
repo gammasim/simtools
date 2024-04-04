@@ -228,7 +228,7 @@ class TelescopeModel(ModelParameter):
         camera_config_file = self.get_parameter_value("camera_config_file")
         focal_length = 0.0
         try:
-            focal_length = self.get_parameter_value_as_list("effective_focal_length")[0]
+            focal_length = self.get_parameter_value("effective_focal_length")[0]
         except IndexError:
             pass
         if focal_length == 0.0:

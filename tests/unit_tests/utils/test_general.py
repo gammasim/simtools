@@ -822,6 +822,12 @@ def test_convert_string_to_list():
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
     assert pytest.approx(t_1[1]) == 2.0
+    assert isinstance(t_1[1], float)
+
+    t_int = gen.convert_string_to_list("1 2 3 4", False)
+    assert len(t_int) == 4
+    assert t_int[1] == 2
+    assert isinstance(t_int[1], int)
 
     t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
     assert len(t_2) == 4

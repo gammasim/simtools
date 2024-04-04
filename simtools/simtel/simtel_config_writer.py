@@ -80,7 +80,7 @@ class SimtelConfigWriter:
             file.write("iobuf_maximum = 1000000000\n")
             file.write("iobuf_output_maximum = 400000000\n")
 
-    def write_array_config_file(self, config_file_path, layout, telescope_model, site_parameters):
+    def write_array_config_file(self, config_file_path, layout, telescope_model, site_model):
         """
         Writes the sim_telarray config file for an array of telescopes.
 
@@ -92,8 +92,8 @@ class SimtelConfigWriter:
             Instance of ArrayLayout referent to the array model.
         telescope_model: list of TelescopeModel
             List of TelescopeModel's instances as used by the ArrayModel instance.
-        site_parameters: dict
-            Site parameters.
+        site_model: Site model
+            Site model.
         """
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
@@ -112,7 +112,7 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             # Writing site parameters
-            self._write_site_parameters(file, site_parameters)
+            self._write_site_parameters(file, site_model)
 
             # Maximum telescopes
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -201,10 +201,11 @@ class SimtelConfigWriter:
         header += f"{comment_char}\n"
         file.write(header)
 
-    def _write_site_parameters(self, file, site_parameters):
+    def _write_site_parameters(self, file, site_model):
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
-        for par, value in site_parameters.items():
+        _site_parameters = site_model.get_simtel_parameters()
+        for par, value in _site_parameters.items():
             _simtel_name = names.get_simtel_name_from_parameter_name(
                 par, search_telescope_parameters=False, search_site_parameters=True
             )
