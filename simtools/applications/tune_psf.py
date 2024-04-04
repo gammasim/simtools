@@ -96,7 +96,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.model.model_utils import split_simtel_parameter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 from simtools.visualization import visualize
@@ -199,14 +198,12 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    raw_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
-    split_par = split_simtel_parameter(raw_par)
+    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     mrra_0 = split_par[0]
     mfr_0 = split_par[1]
     mrra2_0 = split_par[2]
 
-    raw_par = tel_model.get_parameter_value("mirror_align_random_horizontal")
-    mar_0 = split_simtel_parameter(raw_par)[0]
+    mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
 
     logger.debug(
         "Previous parameter values:\n"
@@ -219,7 +216,7 @@ def main():
     if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
-    # Drawing parameters randonly
+    # Drawing parameters randomly
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     n_runs = 50

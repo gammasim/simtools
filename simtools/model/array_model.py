@@ -317,7 +317,7 @@ class ArrayModel:
             config_file_path=self._config_file_path,
             layout=self.layout,
             telescope_model=self._telescope_model,
-            site_parameters=self._site_model.get_simtel_parameters(),
+            site_model=self._site_model,
         )
         self._array_model_file_exported = True
 

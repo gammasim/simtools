@@ -1067,10 +1067,10 @@ def convert_list_to_string(data, comma_separated=False):
     return " ".join(str(item) for item in data)
 
 
-def convert_string_to_list(data_string):
+def convert_string_to_list(data_string, is_float=True):
     """
-    Convert string (as used e.g. in sim_telarray) to list of floats.
-    Allow coma or space separated strings.
+    Convert string (as used e.g. in sim_telarray) to list of floats
+    or integers.  Allow coma or space separated strings.
 
     Parameters
     ----------
@@ -1086,7 +1086,9 @@ def convert_string_to_list(data_string):
     """
 
     try:
-        return [float(v) for v in data_string.split()]
+        if is_float:
+            return [float(v) for v in data_string.split()]
+        return [int(v) for v in data_string.split()]
     except ValueError:
         pass
     return data_string

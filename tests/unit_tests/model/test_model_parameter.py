@@ -34,13 +34,13 @@ def telescope_model_from_config_file(io_handler, lst_config_file):
 
 def test_get_parameter_dict(telescope_model_lst):
     tel_model = telescope_model_lst
-    assert isinstance(tel_model.get_parameter_dict("num_gains"), dict)
-    assert isinstance(tel_model.get_parameter_dict("num_gains")["value"], int)
-    assert isinstance(tel_model.get_parameter_dict("telescope_axis_height")["value"], float)
-    assert tel_model.get_parameter_dict("telescope_axis_height")["unit"] == "m"
+    assert isinstance(tel_model._get_parameter_dict("num_gains"), dict)
+    assert isinstance(tel_model._get_parameter_dict("num_gains")["value"], int)
+    assert isinstance(tel_model._get_parameter_dict("telescope_axis_height")["value"], float)
+    assert tel_model._get_parameter_dict("telescope_axis_height")["unit"] == "m"
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter_dict("not_a_parameter")
+        tel_model._get_parameter_dict("not_a_parameter")
 
 
 def test_get_parameter_value(telescope_model_lst):
@@ -51,29 +51,40 @@ def test_get_parameter_value(telescope_model_lst):
     with pytest.raises(KeyError):
         tel_model.get_parameter_value("num_gains", parameter_dict=_par_dict_value_missing)
 
+    tel_model._parameters["num_gains"]["value"] = "2 3 4"
+    t_int = tel_model.get_parameter_value("num_gains")
+    assert len(t_int) == 3
+    assert isinstance(t_int, list)
+    assert isinstance(t_int[2], int)
+
+    t_1 = tel_model.get_parameter_value("telescope_transmission")
+    assert isinstance(t_1, list)
+    assert len(t_1) == 6
+
+    # single value floats should return as floats
+    _tmp_dict = {
+        "value": "0.8",
+        "type": "float64",
+    }
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert pytest.approx(t_2) == 0.8
+    # string-type lists
+    _tmp_dict["value"] = "0.8 0.9"
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert len(t_2) == 2
+    assert pytest.approx(t_2[0]) == 0.8
+    assert pytest.approx(t_2[1]) == 0.9
+    # mixed strings should stay string
+    _tmp_dict["value"] = "0.8 abc"
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert t_2 == "0.8 abc"
+
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
     tel_model = telescope_model_lst
 
     assert isinstance(tel_model.get_parameter_value_with_unit("fadc_mhz"), u.Quantity)
     assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
-
-
-def test_get_parameter_value_as_list(telescope_model_lst):
-
-    tel_model = telescope_model_lst
-    t_1 = tel_model.get_parameter_value_as_list("telescope_transmission")
-    assert isinstance(t_1, list)
-    assert len(t_1) == 6
-
-    t_dont_extend = tel_model.get_parameter_value_as_list("telescope_transmission", 12)
-    assert len(t_dont_extend) == 6
-
-    t_single_float = tel_model.get_parameter_value_as_list("camera_transmission")
-    assert len(t_single_float) == 1
-    t_four_floats = tel_model.get_parameter_value_as_list("camera_transmission", 4, 1.0)
-    assert len(t_four_floats) == 4
-    assert pytest.approx(t_four_floats[3]) == 1.0
 
 
 def test_handling_parameters(telescope_model_lst):
@@ -101,10 +112,11 @@ def test_handling_parameters(telescope_model_lst):
     new_par = "23"
     tel_model.add_parameter("new_parameter", new_par)
 
-    assert new_par == tel_model.get_parameter_value("new_parameter")
+    assert pytest.approx(tel_model.get_parameter_value("new_parameter")) == 23.0
+    assert isinstance(tel_model.get_parameter_value("new_parameter"), float)
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter_dict("bla_bla")
+        tel_model._get_parameter_dict("bla_bla")
 
 
 def test_change_parameter(telescope_model_lst):
@@ -138,7 +150,7 @@ def test_change_parameter(telescope_model_lst):
 
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
-    flen_info = tel_model.get_parameter_dict("focal_length")
+    flen_info = tel_model._get_parameter_dict("focal_length")
     logger.info(f"Focal Length = {flen_info['value']}, type = {flen_info['type']}")
 
     assert isinstance(flen_info["value"], float)
