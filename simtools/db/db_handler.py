@@ -28,8 +28,6 @@ class DatabaseHandler:
 
     Parameters
     ----------
-    io_handler: IOHandler
-        Instance of IOHandler
     mongo_db_config: dict
         Dictionary with the MongoDB configuration with the following entries:
         "db_server" - DB server address
@@ -45,7 +43,6 @@ class DatabaseHandler:
     DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
-    DB_REFERENCE_DATA = "Staging-CTA-Reference-Data"
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -452,71 +449,6 @@ class DatabaseHandler:
             _parameters[par_now].pop("parameter", None)
             _parameters[par_now].pop("site", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-
-        return _parameters
-
-    def get_reference_data(self, site, model_version, only_applicable=False):
-        """
-        Get parameters from MongoDB for a specific telescope.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        model_version: str
-            Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        Raises
-        ------
-        ValueError
-            if query returned zero results.
-
-        """
-
-        _site_validated = names.validate_site_name(site)
-        collection = DatabaseHandler.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
-        _parameters = {}
-
-        _model_version = self._convert_version_to_tagged(
-            names.validate_model_version_name(model_version),
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-        )
-
-        query = {
-            "site": _site_validated,
-            "version": _model_version,
-        }
-        if only_applicable:
-            query["applicable"] = True
-        n_documents = collection.count_documents(query)
-        if n_documents > 0:
-            for post in collection.find(query):
-                par_now = post["parameter"]
-                _parameters[par_now] = post
-                _parameters[par_now].pop("parameter", None)
-                _parameters[par_now].pop("site", None)
-                _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-        # TODO - temporary solution to avoid breaking the code until
-        # the reference data is moved to the site collection
-        else:
-            try:
-                _parameters["nsb_reference_value"] = self.get_site_parameters(
-                    site=site, model_version=model_version, only_applicable=only_applicable
-                )["nsb_reference_value"]
-            except (KeyError, TypeError):
-                pass
-            n_documents = len(_parameters)
-        if n_documents < 1:
-            raise ValueError(
-                "The following query returned zero results! Check the input data and rerun.\n",
-                query,
-            )
 
         return _parameters
 

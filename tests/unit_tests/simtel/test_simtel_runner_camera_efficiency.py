@@ -12,10 +12,14 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst, simtel_path):
+def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
+
     telescope_model_sst.export_model_files()
     camera_efficiency_sst = CameraEfficiency(
-        telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_sst,
+        site_model=site_model_south,
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_sst
 

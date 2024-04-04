@@ -13,6 +13,7 @@ import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -177,6 +178,26 @@ def model_version():
     Simulation model version used in tests.
     """
     return "2024-02-01"
+
+
+@pytest.fixture
+def site_model_south(db_config, model_version):
+    return SiteModel(
+        site="South",
+        mongo_db_config=db_config,
+        label="site-south",
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
+def site_model_north(db_config, model_version):
+    return SiteModel(
+        site="North",
+        mongo_db_config=db_config,
+        label="site-north",
+        model_version=model_version,
+    )
 
 
 @pytest.fixture
