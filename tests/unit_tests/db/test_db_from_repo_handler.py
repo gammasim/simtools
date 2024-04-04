@@ -10,8 +10,21 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.fixture
+def simulation_model_url(db_config):
+    if (
+        db_config["db_simulation_model_url"] is None
+        or len(db_config["db_simulation_model_url"]) == 0
+    ):
+        db_config["db_simulation_model_url"] = (
+            "https://gitlab.cta-observatory.org/cta-science/simulations/"
+            "simulation-model/model_parameters/-/raw/main/"
+        )
+    return db_config["db_simulation_model_url"]
+
+
 @pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
-def test_update_parameters_from_repo(caplog, db_config):
+def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     with caplog.at_level(logging.DEBUG):
         assert (
             db_from_repo_handler.update_model_parameters_from_repo(
@@ -27,15 +40,6 @@ def test_update_parameters_from_repo(caplog, db_config):
         )
         assert "No repository specified, skipping" in caplog.text
 
-    if (
-        db_config["db_simulation_model_url"] is None
-        or len(db_config["db_simulation_model_url"]) == 0
-    ):
-        db_config["db_simulation_model_url"] = (
-            "https://gitlab.cta-observatory.org/cta-science/simulations/"
-            "simulation-model/model_parameters/-/raw/main/"
-        )
-
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
 
     for _tel in ["MSTN-01", "MSTN-design"]:
@@ -45,7 +49,7 @@ def test_update_parameters_from_repo(caplog, db_config):
             telescope_name=_tel,
             model_version="2024-02-01",
             parameter_collection="telescopes",
-            db_simulation_model_url=db_config["db_simulation_model_url"],
+            db_simulation_model_url=simulation_model_url,
             db_simulation_model="verified_model",
         )
         assert len(_pars_mstn) > 0
@@ -65,7 +69,7 @@ def test_update_parameters_from_repo(caplog, db_config):
         telescope_name=None,
         model_version="2024-02-01",
         parameter_collection="site",
-        db_simulation_model_url=db_config["db_simulation_model_url"],
+        db_simulation_model_url=simulation_model_url,
         db_simulation_model="verified_model",
     )
     assert len(_pars_south) > 0
@@ -78,7 +82,7 @@ def test_update_parameters_from_repo(caplog, db_config):
                 telescope_name="MSTN-01",
                 model_version="2024-02-01",
                 parameter_collection="not_a_collection",
-                db_simulation_model_url=db_config["db_simulation_model_url"],
+                db_simulation_model_url=simulation_model_url,
                 db_simulation_model="verified_model",
             )
         assert "Unknown parameter collection" in caplog.text
@@ -91,12 +95,13 @@ def test_update_parameters_from_repo(caplog, db_config):
         telescope_name=None,
         model_version="2024-02-01",
         parameter_collection="site",
-        db_simulation_model_url=db_config["db_simulation_model_url"],
+        db_simulation_model_url=simulation_model_url,
         db_simulation_model="verified_model",
     )
 
 
-def test_update_telescope_parameters_from_repo(db_config):
+@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
+def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
     _pars = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_telescope_model, None),
@@ -104,11 +109,22 @@ def test_update_telescope_parameters_from_repo(db_config):
         telescope_name="MSTN-01",
         parameter_collection="telescopes",
         model_version="2024-02-01",
-        db_simulation_model_url=db_config["db_simulation_model_url"],
+        db_simulation_model_url=simulation_model_url,
     )
     assert len(_pars) > 0
 
+    _pars_design = db_from_repo_handler.update_model_parameters_from_repo(
+        parameters=dict.fromkeys(_pars_telescope_model, None),
+        site="North",
+        telescope_name="MSTN-design",
+        parameter_collection="telescopes",
+        model_version="2024-02-01",
+        db_simulation_model_url=simulation_model_url,
+    )
+    assert len(_pars_design) > 0
 
+
+@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
 def test_update_site_parameters_from_repo(db_config):
     _pars_site_model = [
         "corsika_observation_level",
