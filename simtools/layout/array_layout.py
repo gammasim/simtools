@@ -67,6 +67,9 @@ class ArrayLayout:
         self._logger = logging.getLogger(__name__)
 
         self.mongo_db_config = mongo_db_config
+        # TODO - remove db_handler from ArrayLayout
+        # (this is the only place in simtools where the db_handler is called
+        # from output the model_parameter module)
         self.db = (
             db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
             if mongo_db_config is not None
