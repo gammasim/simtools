@@ -10,6 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
 def test_update_parameters_from_repo(caplog, db_config):
     with caplog.at_level(logging.DEBUG):
         assert (

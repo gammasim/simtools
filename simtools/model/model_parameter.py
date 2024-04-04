@@ -59,7 +59,6 @@ class ModelParameter:
             self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
-        self._reference_data = None
         self._derived = None
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
@@ -269,47 +268,6 @@ class ModelParameter:
                     file_name=(par_now.get("value") or par_now.get("Value")),
                 )
 
-    @property
-    def reference_data(self):
-        """
-        Load the reference data information if the class instance hasn't done it yet.
-        """
-        if self._reference_data is None:
-            self._load_reference_data()
-        return self._reference_data
-
-    def _load_reference_data(self):
-        """Load the reference data for this telescope from the DB."""
-        self._logger.debug("Reading reference data from DB")
-        self._reference_data = self.db.get_reference_data(
-            self.site, self.model_version, only_applicable=True
-        )
-
-    def get_reference_data_value(self, par_name):
-        """
-        Get the value for a reference data parameter.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the reference data parameter.
-
-        Returns
-        -------
-        Value of the reference parameter.
-
-        Raises
-        ------
-        KeyError
-            If par_name does not match any reference parameter in this model.
-        """
-
-        try:
-            return self.reference_data[par_name]["value"]
-        except KeyError as exc:
-            self._logger.error(f"Reference parameter {par_name} does not have a value")
-            raise exc
-
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par in self._parameters:
@@ -487,7 +445,10 @@ class ModelParameter:
             dtype=None,
             allow_subtypes=True,
         ):
-            self._logger.error(f"Could not cast {value} to {self.get_parameter_type(par_name)}.")
+            self._logger.error(
+                f"Could not cast {value} of type {type(value)} "
+                f"to {self.get_parameter_type(par_name)}."
+            )
             raise ValueError
 
         self._logger.debug(

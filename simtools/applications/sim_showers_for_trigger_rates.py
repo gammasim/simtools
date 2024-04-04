@@ -159,6 +159,7 @@ def main():
         submit_command=args_dict.get("submit_command", ""),
         test=args_dict["test"],
         mongo_db_config=db_config,
+        model_version=args_dict.get("model_version", None),
     )
 
     if not args_dict["test"]:

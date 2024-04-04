@@ -82,12 +82,6 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
-def test_get_reference_data(db):
-    logger.info("----Testing reading reference data-----")
-    pars = db.get_reference_data("South", "Prod5")
-    assert pars["nsb_reference_value"]["value"] == pytest.approx(0.24)
-
-
 def test_get_derived_values(db):
     logger.info("----Testing reading derived values-----")
     try:

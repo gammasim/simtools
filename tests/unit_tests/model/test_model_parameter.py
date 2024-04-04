@@ -239,18 +239,3 @@ def test_export_derived_files(io_handler, db_config):
         .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
         .exists()
     )
-
-
-def test_load_reference_data(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.reference_data["nsb_reference_value"]["value"] == pytest.approx(0.24)
-
-
-def test_get_reference_data_value(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.get_reference_data_value("nsb_reference_value") == pytest.approx(0.24)
-
-    with pytest.raises(KeyError):
-        tel_model.get_reference_data_value("bla_bla")

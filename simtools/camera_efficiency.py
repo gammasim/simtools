@@ -24,6 +24,8 @@ class CameraEfficiency:
     ----------
     telescope_model: TelescopeModel
         Instance of the TelescopeModel class.
+    site_mode: SiteModel
+        Instance of the SiteModel class.
     simtel_source_path: str (or Path)
         Location of sim_telarray installation.
     label: str
@@ -39,6 +41,7 @@ class CameraEfficiency:
     def __init__(
         self,
         telescope_model,
+        site_model,
         simtel_source_path,
         label=None,
         config_data=None,
@@ -53,6 +56,7 @@ class CameraEfficiency:
 
         self._simtel_source_path = simtel_source_path
         self._telescope_model = self._validate_telescope_model(telescope_model)
+        self._site_model = site_model
         self.label = label if label is not None else self._telescope_model.label
         self.test = test
 
@@ -96,6 +100,7 @@ class CameraEfficiency:
         args, config_data = gen.separate_args_and_config_data(
             expected_args=[
                 "telescope_model",
+                "site_model",
                 "label",
                 "simtel_source_path",
                 "test",
@@ -441,7 +446,7 @@ class CameraEfficiency:
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
-            * self._telescope_model.get_reference_data_value("nsb_reference_value")
+            * self._site_model.get_parameter_value("nsb_reference_value")
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions

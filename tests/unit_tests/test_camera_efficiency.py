@@ -14,9 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_lst(telescope_model_lst, simtel_path):
+def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
         telescope_model=telescope_model_lst,
+        site_model=site_model_north,
         label="validate_camera_efficiency",
         simtel_source_path=simtel_path,
         test=True,
@@ -25,9 +26,10 @@ def camera_efficiency_lst(telescope_model_lst, simtel_path):
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst, simtel_path):
+def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst,
+        site_model=site_model_south,
         label="validate_camera_efficiency",
         simtel_source_path=simtel_path,
         test=True,
@@ -50,12 +52,13 @@ def results_file(io_handler):
     return output_directory.joinpath(test_file_name)
 
 
-def test_from_kwargs(telescope_model_lst, simtel_path):
+def test_from_kwargs(telescope_model_lst, site_model_north, simtel_path):
     tel_model = telescope_model_lst
     label = "test-from-kwargs"
     zenith_angle = 30 * u.deg
     ce = CameraEfficiency.from_kwargs(
         telescope_model=tel_model,
+        site_model=site_model_north,
         simtel_source_path=simtel_path,
         label=label,
         zenith_angle=zenith_angle,
@@ -64,9 +67,11 @@ def test_from_kwargs(telescope_model_lst, simtel_path):
     assert ce.config.zenith_angle == 30
 
 
-def test_validate_telescope_model(simtel_path):
+def test_validate_telescope_model(simtel_path, site_model_north):
     with pytest.raises(ValueError):
-        CameraEfficiency(telescope_model="bla_bla", simtel_source_path=simtel_path)
+        CameraEfficiency(
+            telescope_model="bla_bla", site_model=site_model_north, simtel_source_path=simtel_path
+        )
 
 
 def test_load_files(camera_efficiency_lst):
@@ -124,12 +129,13 @@ def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file)
     assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
 
 
-def test_export_results(simtel_path, telescope_model_lst, caplog):
+def test_export_results(simtel_path, telescope_model_lst, site_model_north, caplog):
     config_data = {
         "zenith_angle": 20 * u.deg,
     }
     camera_efficiency = CameraEfficiency(
         telescope_model=telescope_model_lst,
+        site_model=site_model_north,
         simtel_source_path=simtel_path,
         config_data=config_data,
         label="export_results",
