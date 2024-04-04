@@ -4,5 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     TELESCOPE: MSTN-design
-    MODEL_VERSION: prod5
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests

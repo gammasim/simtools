@@ -171,8 +171,7 @@ class ModelParameter:
         _parameter = self._get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
-            _units = _parameter.get("unit")
-            return float(_value) * u.Unit(_units)
+            return _value * u.Unit(_parameter.get("unit"))
         except (KeyError, TypeError):
             return _value
 
