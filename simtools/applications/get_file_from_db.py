@@ -66,7 +66,6 @@ def main():
         db.DB_TABULATED_DATA,
         db.DB_CTA_SIMULATION_MODEL,
         db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
-        db.DB_REFERENCE_DATA,
         db.DB_DERIVED_VALUES,
         "sandbox",
         "test-data",
