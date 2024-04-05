@@ -396,4 +396,5 @@ definitions:
       - External
       - Observation execution
       - SimPipe Derived
+      - Configuration
     title: Source
