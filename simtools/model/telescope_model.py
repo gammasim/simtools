@@ -313,7 +313,7 @@ class TelescopeModel(ModelParameter):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
 
         ray_tracing_data = astropy.io.ascii.read(
-            self.config_file_directory.joinpath(self.get_parameter_value("ray_tracing"))
+            self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
         )
         if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
             self._logger.error(
