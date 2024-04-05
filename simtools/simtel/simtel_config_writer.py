@@ -46,7 +46,7 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
 
-    def write_telescope_config_file(self, config_file_path, parameters):
+    def write_telescope_config_file(self, config_file_path, parameters, config_parameters=None):
         """
         Writes the sim_telarray config file for a single telescope.
 
@@ -56,6 +56,8 @@ class SimtelConfigWriter:
             Path of the file to write on.
         parameters: dict
             Model parameters
+        config_parameters: dict
+            Simulation software configuration parameters
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
         with open(config_file_path, "w", encoding="utf-8") as file:
@@ -69,6 +71,8 @@ class SimtelConfigWriter:
             file.write("#endif\n\n")
 
             self._add_simtel_metadata(parameters, "telescope")
+            if config_parameters is not None:
+                parameters.update(config_parameters)
 
             for par, value in parameters.items():
                 _simtel_name = names.get_simtel_name_from_parameter_name(
@@ -81,11 +85,6 @@ class SimtelConfigWriter:
                     elif isinstance(value, (list, np.ndarray)):
                         value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
-            # TODO temporary
-            file.write("min_photoelectrons = 25\n")
-            file.write("min_photons = 300.0\n")
-            file.write("iobuf_maximum = 1000000000\n")
-            file.write("iobuf_output_maximum = 400000000\n")
 
     def _add_simtel_metadata(self, parameters, config_type):
         """

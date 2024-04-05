@@ -94,8 +94,17 @@ def test_get_derived_values(db):
         logger.error("Derived DB not updated for new telescope names. Expect failure")
         raise AssertionError
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         pars = db.get_derived_values("North", None, "Prod5")
+
+
+def test_get_sim_telarray_configuration_parameters(db):
+
+    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-01", "Prod6")
+    assert "min_photoelectrons" in _pars
+
+    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-design", "Prod6")
+    assert "min_photoelectrons" in _pars
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):

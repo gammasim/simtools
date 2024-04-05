@@ -20,7 +20,7 @@ def test_site_model(db_config, model_version):
     for key in ["center_altitude", "center_northing", "center_easting", "epsg_code"]:
         assert key in _south.get_reference_point()
 
-    _pars = _south.get_simtel_parameters()
+    _pars = _south.get_simtel_parameters(_south._parameters)
     assert "altitude" in _pars
     assert isinstance(_pars["altitude"], float)
 
