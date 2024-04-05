@@ -2,6 +2,9 @@
 
 import logging
 
+import numpy as np
+
+import simtools.utils.general as gen
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
@@ -73,6 +76,8 @@ class SimtelConfigWriter:
                     value = "none" if value is None else value  # simtel requires 'none'
                     if isinstance(value, bool):
                         value = 1 if value else 0
+                    elif isinstance(value, (list, np.ndarray)):
+                        value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
             # TODO temporary
             file.write("min_photoelectrons = 25\n")
