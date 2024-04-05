@@ -251,7 +251,7 @@ class ModelParameter:
             if par_now.get("File") or par_now.get("file"):
                 self.db.export_file_db(
                     db_name=self.db.DB_DERIVED_VALUES,
-                    dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
+                    dest=self.config_file_directory,
                     file_name=(par_now.get("value") or par_now.get("Value")),
                 )
 
@@ -548,17 +548,6 @@ class ModelParameter:
         if not self._is_config_file_up_to_date and not no_export:
             self.export_config_file()
         return self.config_file_path
-
-    def get_derived_directory(self):
-        """
-        Get the directory where all the files with derived values for are written to.
-
-        Returns
-        -------
-        Path
-            Directory where all the files with derived values are written to.
-        """
-        return self.config_file_directory.parents[0].joinpath("derived")
 
     def _load_simtel_config_writer(self):
         """

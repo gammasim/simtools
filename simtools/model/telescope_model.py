@@ -292,6 +292,7 @@ class TelescopeModel(ModelParameter):
         """
 
         _file = self.config_file_directory.joinpath(file_name)
+        self._logger.debug("Reading two dimensional distribution from %s", _file)
         line_to_start_from = 0
         with open(_file, "r", encoding="utf-8") as f:
             for i_line, line in enumerate(f):
@@ -312,7 +313,7 @@ class TelescopeModel(ModelParameter):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
 
         ray_tracing_data = astropy.io.ascii.read(
-            self.get_derived_directory().joinpath(self.get_parameter_value("ray_tracing"))
+            self.config_file_directory.joinpath(self.get_parameter_value("ray_tracing"))
         )
         if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
             self._logger.error(
@@ -337,6 +338,10 @@ class TelescopeModel(ModelParameter):
             Instance of astropy.table.Table with the incidence angle distribution.
         """
 
+        self._logger.debug(
+            "Reading incidence angle distribution from %s",
+            self.config_file_directory.joinpath(incidence_angle_dist_file),
+        )
         incidence_angle_dist = astropy.io.ascii.read(
             self.config_file_directory.joinpath(incidence_angle_dist_file)
         )
