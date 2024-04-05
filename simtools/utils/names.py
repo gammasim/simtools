@@ -161,6 +161,7 @@ telescope_parameters = {
     "secondary_mirror_shadow_offset": {"db_name": "secondary_shadow_offset", "simtel": True},
     "camera_filter_incidence_angle": {"db_name": "camera_filter_incidence_angle", "simtel": False},
     "camera_window_incidence_angle": {"db_name": "camera_window_incidence_angle", "simtel": False},
+    "optics_properties": {"db_name": "optics_properties", "simtel": False},
     "primary_mirror_incidence_angle": {
         "db_name": "primary_mirror_incidence_angle",
         "simtel": False,
