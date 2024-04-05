@@ -100,15 +100,3 @@ class SiteModel(ModelParameter):
             "geomag_vertical": self.get_parameter_value_with_unit("geomag_vertical"),
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
         }
-
-    def get_simtel_parameters(self, telescope_model=False, site_model=True):
-        """
-        Get simtel site parameters as dict
-
-        Returns
-        -------
-        dict
-            Simtel site parameters as dict
-
-        """
-        return super().get_simtel_parameters(telescope_model=telescope_model, site_model=site_model)

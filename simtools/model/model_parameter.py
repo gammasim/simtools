@@ -58,6 +58,7 @@ class ModelParameter:
             self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
+        self._config_parameters = {}
         self._derived = None
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
@@ -304,6 +305,14 @@ class ModelParameter:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, only_applicable=True
             )
+            try:
+                self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
+                    self.site, self.name, self.model_version
+                )
+            except ValueError:
+                self._logger.warning(
+                    f"No sim_telarray configuration parameters found for {self.site}, {self.name}"
+                )
 
         if self.site is not None:
             self._logger.debug(f"Reading site parameters from DB ({self.site} site)")
@@ -338,13 +347,15 @@ class ModelParameter:
         """
         return self._extra_label if self._extra_label is not None else ""
 
-    def get_simtel_parameters(self, telescope_model=True, site_model=True):
+    def get_simtel_parameters(self, parameters, telescope_model=True, site_model=True):
         """
         Get simtel parameters as name and value pairs. Do not include parameters
         labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
 
         Parameters
         ----------
+        parameters: dict
+            Parameters to be renamed (if necessary)
         telescope_model: bool
             If True, telescope model parameters are included.
         site_model: bool
@@ -358,10 +369,10 @@ class ModelParameter:
         """
 
         _simtel_parameter_value = {}
-        for key in self._parameters:
+        for key in parameters:
             _par_name = names.get_simtel_name_from_parameter_name(key, telescope_model, site_model)
             if _par_name is not None:
-                _simtel_parameter_value[_par_name] = self._parameters[key].get("value")
+                _simtel_parameter_value[_par_name] = parameters[key].get("value")
         return dict(sorted(_simtel_parameter_value.items()))
 
     def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
@@ -507,7 +518,9 @@ class ModelParameter:
         # Using SimtelConfigWriter to write the config file.
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self.config_file_path, parameters=self.get_simtel_parameters()
+            config_file_path=self.config_file_path,
+            parameters=self.get_simtel_parameters(parameters=self._parameters),
+            config_parameters=self.get_simtel_parameters(parameters=self._config_parameters),
         )
 
     @property

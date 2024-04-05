@@ -68,6 +68,12 @@ def main():
         )
     )
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
+    config.parser.add_argument(
+        "--db_collection",
+        help="DB collection to which to add the file ",
+        default="telescopes",
+        required=False,
+    )
     args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
 
     logger = logging.getLogger()
@@ -75,7 +81,11 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["telescope"] is not None:
+    if args_dict["db_collection"] == "configuration_sim_telarray":
+        pars = db.get_sim_telarray_configuration_parameters(
+            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+        )
+    elif args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
             args_dict["site"], args_dict["telescope"], args_dict["model_version"]
         )
