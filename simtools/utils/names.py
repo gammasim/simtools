@@ -159,6 +159,16 @@ telescope_parameters = {
     "secondary_mirror_segmentation": {"db_name": "secondary_segmentation", "simtel": True},
     "secondary_mirror_shadow_diameter": {"db_name": "secondary_shadow_diameter", "simtel": True},
     "secondary_mirror_shadow_offset": {"db_name": "secondary_shadow_offset", "simtel": True},
+    "camera_filter_incidence_angle": {"db_name": "camera_filter_incidence_angle", "simtel": False},
+    "camera_window_incidence_angle": {"db_name": "camera_window_incidence_angle", "simtel": False},
+    "primary_mirror_incidence_angle": {
+        "db_name": "primary_mirror_incidence_angle",
+        "simtel": False,
+    },
+    "secondary_mirror_incidence_angle": {
+        "db_name": "secondary_mirror_incidence_angle",
+        "simtel": False,
+    },
 }
 
 
