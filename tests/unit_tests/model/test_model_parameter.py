@@ -246,8 +246,6 @@ def test_export_derived_files(io_handler, db_config):
     )
 
     _ = tel_model.derived
-    assert (
-        tel_model.get_derived_directory()
-        .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
-        .exists()
-    )
+    assert tel_model.config_file_directory.joinpath(
+        "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+    ).exists()

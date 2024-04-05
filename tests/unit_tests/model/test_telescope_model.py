@@ -40,7 +40,7 @@ def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
 
     _ = tel_model.derived
     incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
-    assert tel_model.get_derived_directory().joinpath(incidence_angle_file).exists()
+    assert tel_model.config_file_directory.joinpath(incidence_angle_file).exists()
     incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
     assert len(incidence_angle_dist["Incidence angle"]) > 0
     assert len(incidence_angle_dist["Fraction"]) > 0
