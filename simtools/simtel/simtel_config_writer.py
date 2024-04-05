@@ -68,6 +68,8 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
+            self._add_simtel_metadata(parameters, "telescope")
+
             for par, value in parameters.items():
                 _simtel_name = names.get_simtel_name_from_parameter_name(
                     par, search_telescope_parameters=True, search_site_parameters=False
@@ -84,6 +86,37 @@ class SimtelConfigWriter:
             file.write("min_photons = 300.0\n")
             file.write("iobuf_maximum = 1000000000\n")
             file.write("iobuf_output_maximum = 400000000\n")
+
+    def _add_simtel_metadata(self, parameters, config_type):
+        """
+        Add metadata to the simtel configuration file.
+
+        Parameters
+        ----------
+        parameters: dict
+            Model parameters
+        type: str
+            Type of the configuration file (telescope, site)
+
+        """
+
+        if config_type == "telescope":
+            parameters["camera_config_name"] = self._telescope_model_name
+            parameters["camera_config_variant"] = ""
+            parameters["camera_config_version"] = self._model_version
+            parameters["optics_config_name"] = self._telescope_model_name
+            parameters["optics_config_variant"] = ""
+            parameters["optics_config_version"] = self._model_version
+        elif config_type == "site":
+            parameters["site_config_name"] = self._site
+            parameters["site_config_variant"] = ""
+            parameters["site_config_version"] = self._model_version
+            parameters["array_config_name"] = self._layout_name
+            parameters["array_config_variant"] = ""
+            parameters["array_config_version"] = self._model_version
+        else:
+            self._logger.error(f"Unknown metadata type {config_type}")
+            raise ValueError
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_model):
         """
@@ -210,6 +243,7 @@ class SimtelConfigWriter:
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
+        self._add_simtel_metadata(_site_parameters, "site")
         for par, value in _site_parameters.items():
             _simtel_name = names.get_simtel_name_from_parameter_name(
                 par, search_telescope_parameters=False, search_site_parameters=True
