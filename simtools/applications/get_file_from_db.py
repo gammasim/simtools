@@ -42,6 +42,7 @@ import logging
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
+from simtools.io_operations import io_handler
 
 
 def main():
@@ -56,10 +57,11 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, output=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    _io_handler = io_handler.IOHandler()
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     available_dbs = [
@@ -71,27 +73,24 @@ def main():
         "test-data",
     ]
     file_id = None
-    if args_dict["output_path"].exists():
-        for db_name in available_dbs:
-            try:
-                file_id = db.export_file_db(
-                    db_name, args_dict["output_path"], args_dict["file_name"]
-                )
-                logger.info(
-                    f"Got file {args_dict['file_name']} from DB {db_name} "
-                    f"and saved into {args_dict['output_path']}"
-                )
-                break
-            except FileNotFoundError:
-                continue
-
-        if file_id is None:
-            logger.error(
-                f"The file {args_dict['file_name']} was not found in any of the available DBs."
+    for db_name in available_dbs:
+        try:
+            file_id = db.export_file_db(
+                db_name, _io_handler.get_output_directory(), args_dict["file_name"]
             )
-            raise FileNotFoundError
-    else:
-        logger.error(f"Aborted, directory {args_dict['output_path']} does not exist")
+            logger.info(
+                f"Got file {args_dict['file_name']} from DB {db_name} "
+                f"and saved into {_io_handler.get_output_directory()}"
+            )
+            break
+        except FileNotFoundError:
+            continue
+
+    if file_id is None:
+        logger.error(
+            f"The file {args_dict['file_name']} was not found in any of the available DBs."
+        )
+        raise FileNotFoundError
 
 
 if __name__ == "__main__":
