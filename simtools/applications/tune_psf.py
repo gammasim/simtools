@@ -184,11 +184,13 @@ def main():
         parameters to the all_parameters list.
         """
         pars = {}
-        mrra = f"{mirror_reflection:.4f},{mirror_reflection_fraction:.2f},{mirror_reflection_2:.4f}"
-        pars["mirror_reflection_random_angle"] = mrra
-        mar = f"{mirror_align:.4f},28.,0.,0."
-        pars["mirror_align_random_horizontal"] = mar
-        pars["mirror_align_random_vertical"] = mar
+        pars["mirror_reflection_random_angle"] = [
+            mirror_reflection,
+            mirror_reflection_fraction,
+            mirror_reflection_2,
+        ]
+        pars["mirror_align_random_horizontal"] = [mirror_align, 28.0, 0.0, 0.0]
+        pars["mirror_align_random_vertical"] = [mirror_align, 28.0, 0.0, 0.0]
         all_parameters.append(pars)
 
     # Grabbing the previous values of the parameters from the tel model.
@@ -315,7 +317,7 @@ def main():
             min_rmsd = rmsd
             best_pars = pars
 
-    # Rerunnig and plotting the best pars
+    # Rerunning and plotting the best pars
     run_pars(best_pars, plot=True)
 
     plt.close()
