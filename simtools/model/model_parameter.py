@@ -347,7 +347,7 @@ class ModelParameter:
         """
         return self._extra_label if self._extra_label is not None else ""
 
-    def get_simtel_parameters(self, parameters, telescope_model=True, site_model=True):
+    def get_simtel_parameters(self, parameters=None, telescope_model=True, site_model=True):
         """
         Get simtel parameters as name and value pairs. Do not include parameters
         labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
@@ -367,6 +367,8 @@ class ModelParameter:
             simtel parameters as dict (sorted by parameter names)
 
         """
+        if parameters is None:
+            parameters = self._parameters
 
         _simtel_parameter_value = {}
         for key in parameters:
