@@ -6,7 +6,7 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
-    rev: 24.2.0
+    rev: 24.3.0
     hooks:
       - id: black
         args: ["--line-length=100"]
@@ -18,8 +18,9 @@ repos:
         args: ["--max-line-length=100"]
   # https://github.com/pre-commit/pre-commit-hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
+      - id: check-yaml
       - id: trailing-whitespace
       - id: end-of-file-fixer
   - repo: local
@@ -37,13 +38,13 @@ repos:
           ]
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
-    rev: v2.3.0  # most recent docstr-coverage release or commit sha
+    rev: v2.3.1  # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # gitup action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.6.26
+    rev: v1.6.27
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
@@ -51,3 +52,8 @@ repos:
     rev: "1.7.0"
     hooks:
       - id: pyproject-fmt
+  # codespell
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
