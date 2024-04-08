@@ -493,7 +493,7 @@ class Simulator:
         Returns
         -------
         runs_and_files: dict
-            dictionary with runnumber as key and (if availble) simulation
+            dictionary with runnumber as key and (if available) simulation
             file name as value
 
         """

@@ -284,7 +284,7 @@ class CameraEfficiency:
             f"{self.calc_camera_efficiency():.4f}\n"
             "Telescope total efficiency"
             f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
-            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
+            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
             "(A-PERF-2025/B-TEL-0090): "
             f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
             "Expected NSB pixel rate for the provided NSB spectrum: "
