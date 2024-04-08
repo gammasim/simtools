@@ -26,16 +26,16 @@ class ModelParameter:
 
     Parameters
     ----------
+    db: DatabaseHandler
+        Database handler.
+    model_version: str
+        Version of the model (ex. prod5).
     site: str
         Site name (e.g., South or North).
     telescope_model_name: str
         Telescope model name (e.g., LSTN-01, LSTN-design).
     mongo_db_config: dict
         MongoDB configuration.
-    model_version: str
-        Version of the model (ex. prod5).
-    db: DatabaseHandler
-        Database handler.
     label: str
         Instance label. Important for output file naming.
 
@@ -43,10 +43,10 @@ class ModelParameter:
 
     def __init__(
         self,
+        mongo_db_config,
+        model_version,
         site=None,
         telescope_model_name=None,
-        mongo_db_config=None,
-        model_version="Released",
         db=None,
         label=None,
     ):

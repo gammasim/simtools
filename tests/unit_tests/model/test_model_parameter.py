@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import filecmp
 import logging
 
 import pytest
@@ -18,18 +17,6 @@ logger.setLevel(logging.DEBUG)
 def lst_config_file():
     """Return the path to test config file for LSTN-01"""
     return "tests/resources/CTA-North-LSTN-01-Released_test-telescope-model.cfg"
-
-
-@pytest.fixture
-def telescope_model_from_config_file(io_handler, lst_config_file):
-    label = "test-telescope-model"
-    tel_model = TelescopeModel.from_config_file(
-        site="North",
-        telescope_model_name="LSTN-01",
-        label=label,
-        config_file_name=lst_config_file,
-    )
-    return tel_model
 
 
 def test_get_parameter_dict(telescope_model_lst):
@@ -154,32 +141,6 @@ def test_flen_type(telescope_model_lst):
     logger.info(f"Focal Length = {flen_info['value']}, type = {flen_info['type']}")
 
     assert isinstance(flen_info["value"], float)
-
-
-@pytest.mark.xfail(reason="Waiting for complete prod6 model implementation")
-def test_cfg_file(telescope_model_from_config_file, lst_config_file):
-    tel_model = telescope_model_from_config_file
-
-    tel_model.export_config_file()
-
-    logger.info(f"Config file (original): {lst_config_file}")
-    logger.info(f"Config file (new): {tel_model.get_config_file()}")
-
-    assert filecmp.cmp(lst_config_file, tel_model.get_config_file())
-
-    cfg_file = tel_model.get_config_file()
-    tel = TelescopeModel.from_config_file(
-        site="south",
-        telescope_model_name="ssts-design",
-        label="test-sst",
-        config_file_name=cfg_file,
-    )
-    tel.export_config_file()
-    logger.info(f"Config file (sst): {tel.get_config_file()}")
-    # TODO: testing that file can be written and that it is different,
-    #       but not the file has the
-    #       correct contents
-    assert False is filecmp.cmp(lst_config_file, tel.get_config_file())
 
 
 def test_updating_export_model_files(db_config, io_handler):
