@@ -23,7 +23,6 @@ def simulation_model_url(db_config):
     return db_config["db_simulation_model_url"]
 
 
-@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
 def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     with caplog.at_level(logging.DEBUG):
         assert (
@@ -100,7 +99,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     )
 
 
-@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
 def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
     _pars_telescope_model = ["telescope_axis_height", "telescope_sphere_radius"]
     _pars = db_from_repo_handler.update_model_parameters_from_repo(
