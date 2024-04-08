@@ -36,9 +36,8 @@ class TelescopeModel(ModelParameter):
         self,
         site,
         telescope_model_name,
-        mongo_db_config=None,
-        model_version="Released",
-        db=None,
+        mongo_db_config,
+        model_version,
         label=None,
     ):
         """
@@ -52,7 +51,7 @@ class TelescopeModel(ModelParameter):
             telescope_model_name=telescope_model_name,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
-            db=db,
+            db=None,
             label=label,
         )
 
@@ -77,86 +76,6 @@ class TelescopeModel(ModelParameter):
         if self._camera is None:
             self._load_camera()
         return self._camera
-
-    @classmethod
-    def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
-        """
-        Create a TelescopeModel from a sim_telarray config file.
-
-        Notes
-        -----
-        This function does not deal with ifdef/indef etc., it just keeps the last version
-        of the parameters in the file. This is fine for now since we do not
-        expect to read from sim_telarray config files in the future.
-
-        Parameters
-        ----------
-        config_file_name: str or Path
-            Path to the input config file.
-        site: str
-            South or North.
-        telescope_model_name: str
-            Telescope model for the base set of parameters (ex. LSTN-01, ...).
-        label: str
-            Instance label. Important for output file naming.
-
-        Returns
-        -------
-        TelescopeModel
-            Instance of TelescopeModel.
-        """
-        parameters = {}
-        tel = cls(
-            site=site,
-            telescope_model_name=telescope_model_name,
-            mongo_db_config=None,
-            label=label,
-        )
-
-        def _process_line(words):
-            """
-            Process a line of the input config file that contains a parameter.
-
-            Parameters
-            ----------
-            words: list of str
-                List of str from the split of a line from the file.
-
-            Returns
-            -------
-            (par_name, par_value)
-            """
-            i_comment = len(words)  # Index of any possible comment
-            for w in words:
-                if "%" in w:
-                    i_comment = words.index(w)
-                    break
-            words = words[0:i_comment]  # Removing comment
-            par_name = words[0].replace("=", "")
-            par_value = ""
-            for w in words[1:]:
-                w = w.replace("=", "")
-                w = w.replace(",", " ")
-                par_value += w + " "
-            par_value = par_value.rstrip().lstrip()  # Removing trailing spaces (left and right)
-            return par_name, par_value
-
-        with open(config_file_name, "r", encoding="utf-8") as file:
-            for line in file:
-                words = line.split()
-                if len(words) == 0:
-                    continue
-                if "%" in words[0] or "echo" in words:
-                    continue
-                if "#" not in line and len(words) > 0:
-                    par, value = _process_line(words)
-                    parameters[par] = value
-
-        for par_name, value in parameters.items():
-            tel.add_parameter(names.get_parameter_name_from_simtel_name(par_name), value)
-
-        tel._is_exported_model_files_up_to_date = True
-        return tel
 
     def export_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero):
         """

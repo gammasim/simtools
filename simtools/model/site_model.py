@@ -26,9 +26,8 @@ class SiteModel(ModelParameter):
     def __init__(
         self,
         site,
-        mongo_db_config=None,
-        model_version="Released",
-        db=None,
+        mongo_db_config,
+        model_version,
         label=None,
     ):
         """
@@ -41,7 +40,7 @@ class SiteModel(ModelParameter):
             site=site,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
-            db=db,
+            db=None,
             label=label,
         )
 
