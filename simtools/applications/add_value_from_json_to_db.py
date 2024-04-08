@@ -12,6 +12,9 @@
         Name of the file to upload including the full path.
     db_collection (str, required)
         The DB collection to which to add the file.
+    db (str)
+        The DB to insert the files to. \
+        The choices are either the default CTA simulation DB or a sandbox for testing.
 
     Example
     -------
@@ -34,10 +37,24 @@ from simtools.db import db_handler
 
 
 def main():
+    _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
     config = configurator.Configurator(description="Add a new parameter to the DB.")
     config.parser.add_argument("--file_name", help="file to be added", required=True)
     config.parser.add_argument(
-        "--db_collection", help="DB collection to which to add the file ", required=True
+        "--db_collection", help="DB collection to which to add new values.", required=True
+    )
+    config.parser.add_argument(
+        "--db",
+        type=str,
+        default=_db_tmp.DB_TABULATED_DATA,
+        choices=[
+            _db_tmp.DB_TABULATED_DATA,
+            _db_tmp.DB_DERIVED_VALUES,
+            _db_tmp.DB_REFERENCE_DATA,
+            "sandbox",
+            "test-data",
+        ],
+        help=("The database to insert the new values to."),
     )
     args_dict, db_config = config.initialize(db_config=True)
 
