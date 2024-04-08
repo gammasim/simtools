@@ -40,7 +40,7 @@ _logger = logging.getLogger(__name__)
 
 
 class UnableToIdentifyConfigEntry(Exception):
-    """Exception for unable to indentify configuration entry."""
+    """Exception for unable to identify configuration entry."""
 
 
 class MissingRequiredConfigEntry(Exception):
