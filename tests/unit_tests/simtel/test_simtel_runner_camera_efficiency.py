@@ -86,9 +86,28 @@ def test_check_run_result(simtel_runner_camera_efficiency):
         simtel_runner_camera_efficiency._check_run_result()
 
 
-@pytest.mark.xfail(reason="Missing camera_filter_incidence_angle for prod6 in Derived-DB")
-def test_get_one_dim_distribution(simtel_runner_camera_efficiency):
-    camera_filter_file = simtel_runner_camera_efficiency._get_one_dim_distribution(
+def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model_sst_prod5):
+
+    logger.warning(
+        "Running test_get_one_dim_distribution using prod5 model "
+        " (prod6 model with 1D transmission function)"
+    )
+
+    # 2D transmission window not defined in prod6; required prod5 runner
+    telescope_model_sst_prod5.export_model_files()
+    camera_efficiency_sst_prod5 = CameraEfficiency(
+        telescope_model=telescope_model_sst_prod5,
+        site_model=site_model_south,
+        simtel_source_path=simtel_path,
+        test=True,
+    )
+    simtel_runner_camera_efficiency_prod5 = SimtelRunnerCameraEfficiency(
+        simtel_source_path=simtel_path,
+        telescope_model=telescope_model_sst_prod5,
+        file_simtel=camera_efficiency_sst_prod5._file["simtel"],
+        label="test-simtel-runner-camera-efficiency",
+    )
+    camera_filter_file = simtel_runner_camera_efficiency_prod5._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
     )
     assert camera_filter_file.exists()
