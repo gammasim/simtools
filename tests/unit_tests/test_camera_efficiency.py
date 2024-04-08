@@ -144,7 +144,6 @@ def test_export_results(simtel_path, telescope_model_lst, site_model_north, capl
     assert "Cannot export results because they do not exist" in caplog.text
 
 
-@pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
 def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_file):
     camera_efficiency_lst._read_results()
     telescope_model_lst.export_model_files()

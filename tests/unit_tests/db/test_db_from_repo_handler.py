@@ -124,7 +124,6 @@ def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
     assert len(_pars_design) > 0
 
 
-@pytest.mark.xfail(reason="Requires merging of model_parameters repo with new directory structure")
 def test_update_site_parameters_from_repo(db_config):
     _pars_site_model = [
         "corsika_observation_level",
