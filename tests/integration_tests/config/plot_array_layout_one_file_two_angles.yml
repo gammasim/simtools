@@ -3,5 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: one_file_two_angles
   CONFIGURATION:
     TELESCOPE_LIST: data/layout/telescope_positions-North-TestLayout.ecsv
+    MODEL_VERSION: prod6
     ROTATE_ANGLE: ["20", "30"]
     OUTPUT_PATH: simtools-tests

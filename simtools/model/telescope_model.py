@@ -36,9 +36,8 @@ class TelescopeModel(ModelParameter):
         self,
         site,
         telescope_model_name,
-        mongo_db_config=None,
-        model_version="Released",
-        db=None,
+        mongo_db_config,
+        model_version,
         label=None,
     ):
         """
@@ -52,7 +51,7 @@ class TelescopeModel(ModelParameter):
             telescope_model_name=telescope_model_name,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
-            db=db,
+            db=None,
             label=label,
         )
 
@@ -77,102 +76,6 @@ class TelescopeModel(ModelParameter):
         if self._camera is None:
             self._load_camera()
         return self._camera
-
-    @classmethod
-    def from_config_file(cls, config_file_name, site, telescope_model_name, label=None):
-        """
-        Create a TelescopeModel from a sim_telarray config file.
-
-        Notes
-        -----
-        This function does not deal with ifdef/indef etc., it just keeps the last version
-        of the parameters in the file. This is fine for now since we do not
-        expect to read from sim_telarray config files in the future.
-
-        Parameters
-        ----------
-        config_file_name: str or Path
-            Path to the input config file.
-        site: str
-            South or North.
-        telescope_model_name: str
-            Telescope model for the base set of parameters (ex. LSTN-01, ...).
-        label: str
-            Instance label. Important for output file naming.
-
-        Returns
-        -------
-        TelescopeModel
-            Instance of TelescopeModel.
-        """
-        parameters = {}
-        tel = cls(
-            site=site,
-            telescope_model_name=telescope_model_name,
-            mongo_db_config=None,
-            label=label,
-        )
-
-        def _process_line(words):
-            """
-            Process a line of the input config file that contains a parameter.
-
-            Parameters
-            ----------
-            words: list of str
-                List of str from the split of a line from the file.
-
-            Returns
-            -------
-            (par_name, par_value)
-            """
-            i_comment = len(words)  # Index of any possible comment
-            for w in words:
-                if "%" in w:
-                    i_comment = words.index(w)
-                    break
-            words = words[0:i_comment]  # Removing comment
-            par_name = words[0].replace("=", "")
-            par_value = ""
-            for w in words[1:]:
-                w = w.replace("=", "")
-                w = w.replace(",", " ")
-                par_value += w + " "
-            par_value = par_value.rstrip().lstrip()  # Removing trailing spaces (left and right)
-            return par_name, par_value
-
-        with open(config_file_name, "r", encoding="utf-8") as file:
-            for line in file:
-                words = line.split()
-                if len(words) == 0:
-                    continue
-                if "%" in words[0] or "echo" in words:
-                    continue
-                if "#" not in line and len(words) > 0:
-                    par, value = _process_line(words)
-                    parameters[par] = value
-
-        for par_name, value in parameters.items():
-            tel.add_parameter(names.get_parameter_name_from_simtel_name(par_name), value)
-
-        tel._is_exported_model_files_up_to_date = True
-        return tel
-
-    def get_telescope_transmission_parameters(self):
-        """
-        Get tel. transmission pars as a list of floats.
-
-        Returns
-        -------
-        list of floats
-            List of 4 parameters that describe the tel. transmission vs off-axis.
-        """
-
-        telescope_transmission = self.get_parameter_value("telescope_transmission")
-        if isinstance(telescope_transmission, str):
-            return [float(v) for v in self.get_parameter_value("telescope_transmission").split()]
-
-        return [float(telescope_transmission), 0, 0, 0]
 
     def export_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero):
         """
@@ -242,7 +145,11 @@ class TelescopeModel(ModelParameter):
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
-        focal_length = self.get_parameter_value("effective_focal_length")
+        focal_length = 0.0
+        try:
+            focal_length = self.get_parameter_value("effective_focal_length")[0]
+        except IndexError:
+            pass
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
             focal_length = self.get_parameter_value("focal_length")
@@ -304,6 +211,7 @@ class TelescopeModel(ModelParameter):
         """
 
         _file = self.config_file_directory.joinpath(file_name)
+        self._logger.debug("Reading two dimensional distribution from %s", _file)
         line_to_start_from = 0
         with open(_file, "r", encoding="utf-8") as f:
             for i_line, line in enumerate(f):
@@ -324,7 +232,7 @@ class TelescopeModel(ModelParameter):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
 
         ray_tracing_data = astropy.io.ascii.read(
-            self.get_derived_directory().joinpath(self.get_parameter_value("ray_tracing"))
+            self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
         )
         if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
             self._logger.error(
@@ -349,8 +257,12 @@ class TelescopeModel(ModelParameter):
             Instance of astropy.table.Table with the incidence angle distribution.
         """
 
+        self._logger.debug(
+            "Reading incidence angle distribution from %s",
+            self.config_file_directory.joinpath(incidence_angle_dist_file),
+        )
         incidence_angle_dist = astropy.io.ascii.read(
-            self.get_derived_directory().joinpath(incidence_angle_dist_file)
+            self.config_file_directory.joinpath(incidence_angle_dist_file)
         )
         return incidence_angle_dist
 
@@ -411,15 +323,3 @@ class TelescopeModel(ModelParameter):
         file_to_write_to = self._config_file_directory.joinpath(file_name)
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
-
-    def get_simtel_parameters(self, telescope_model=True, site_model=True):
-        """
-        Get simtel site parameters as dict
-
-        Returns
-        -------
-        dict
-            simtel parameters as dict
-
-        """
-        return super().get_simtel_parameters(telescope_model=telescope_model, site_model=site_model)

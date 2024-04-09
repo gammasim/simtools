@@ -33,6 +33,22 @@
           --telescope LSTN-01\
           --model_version "2024-03-06"
 
+    The export of the model parameters from sim_telarray for prod6 can be done e.g., as follows:
+
+    .. code-block:: console
+
+        ./sim_telarray/bin/sim_telarray -c sim_telarray/cfg/CTA/CTA-PROD6-LaPalma.cfg \
+            -C limits=no-internal -C initlist=no-internal -C list=no-internal \
+            -C typelist=no-internal -C maximum_telescopes=30 -DNSB_AUTOSCALE \
+            -DNECTARCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=30 /dev/null \
+            2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_la_palma.cfg
+
+        ./sim_telarray/bin/sim_telarray -c sim_telarray/cfg/CTA/CTA-PROD6-Paranal.cfg \
+            -C limits=no-internal -C initlist=no-internal -C list=no-internal \
+            -C typelist=no-internal -C maximum_telescopes=87 -DNSB_AUTOSCALE \
+            -DFLASHCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=87 /dev/null \
+            2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal.cfg
+
 """
 
 import logging
@@ -84,7 +100,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    return config.initialize(telescope_model=True)
+    return config.initialize(simulation_model="telescope")
 
 
 def get_list_of_parameters_and_schema_files(schema_directory):

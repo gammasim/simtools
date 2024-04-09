@@ -5,5 +5,6 @@ CTA_SIMPIPE:
     ARRAY_LAYOUT:
       - North-4LST
       - South-4LST
+    MODEL_VERSION: prod6
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
