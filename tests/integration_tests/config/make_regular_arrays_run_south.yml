@@ -1,6 +1,7 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-make-regular-arrays
-  TEST_NAME: run
+  TEST_NAME: run-south
   CONFIGURATION:
     OUTPUT_PATH: simtools-tests
     SITE: South
+    MODEL_VERSION: prod6

@@ -252,7 +252,7 @@ class RayTracing:
 
         focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
         tel_transmission_pars = (
-            self._telescope_model.get_telescope_transmission_parameters()
+            self._telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
             else [1, 0, 0, 0]
         )
