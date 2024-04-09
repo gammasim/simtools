@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=3158ba61"></script>
+    <script src="../../_static/documentation_options.js?v=7e8f4725"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -145,7 +145,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">telescope_list_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -159,6 +159,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
+        <span class="c1"># TODO - consider the usage of db_handler:</span>
+        <span class="c1"># this is the only place in simtools where the db_handler is called</span>
+        <span class="c1"># from outside the model_parameter module</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -187,7 +190,7 @@
 <div class="viewcode-block" id="ArrayLayout.from_array_layout_name">
 <a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.from_array_layout_name">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_array_layout_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">array_layout_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_array_layout_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">array_layout_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).</span>
 <span class="sd">        Layout definitions are given in the `data/layout` path.</span>
@@ -198,6 +201,8 @@
 <span class="sd">            MongoDB configuration.</span>
 <span class="sd">        array_layout_name: str</span>
 <span class="sd">            e.g. South-4LST, North-Prod5 ...</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Version of the model (e.g., prod6).</span>
 <span class="sd">        label: str</span>
 <span class="sd">            Instance label. Important for output file naming.</span>
 
@@ -220,6 +225,7 @@
             <span class="n">site</span><span class="o">=</span><span class="n">site_name</span><span class="p">,</span>
             <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">valid_array_layout_name</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
             <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">,</span>
         <span class="p">)</span>
@@ -524,10 +530,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_class_from_telescope_name</span><span class="p">(</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescope&quot;</span><span class="p">:</span>
-            <span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_telescope_db_name</span><span class="p">(</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_telescope_db_name</span><span class="p">(</span>
+                <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Reading auxiliary telescope parameters for </span><span class="si">{</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; (telescope model </span><span class="si">{</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (telescope model </span><span class="si">{</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2">, version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">_telescope_model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span><span class="p">:</span>
                 <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>

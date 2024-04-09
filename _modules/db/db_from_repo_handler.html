@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=3158ba61"></script>
+    <script src="../../_static/documentation_options.js?v=7e8f4725"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -102,7 +102,13 @@
 <div class="viewcode-block" id="update_model_parameters_from_repo">
 <a class="viewcode-back" href="../../db_handler.html#db.db_from_repo_handler.update_model_parameters_from_repo">[docs]</a>
 <span class="k">def</span> <span class="nf">update_model_parameters_from_repo</span><span class="p">(</span>
-    <span class="n">parameters</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_simulation_model_url</span>
+    <span class="n">parameters</span><span class="p">,</span>
+    <span class="n">site</span><span class="p">,</span>
+    <span class="n">telescope_name</span><span class="p">,</span>
+    <span class="n">parameter_collection</span><span class="p">,</span>
+    <span class="n">model_version</span><span class="p">,</span>
+    <span class="n">db_simulation_model_url</span><span class="p">,</span>
+    <span class="n">db_simulation_model</span><span class="o">=</span><span class="s2">&quot;verified_model&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Update model parameters with values from a repository.</span>
@@ -135,127 +141,18 @@
         <span class="n">site</span><span class="p">,</span>
         <span class="n">telescope_name</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="c1"># TODO - these parameters should go into the database</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating telescope parameters from repository using temporary parameter list&quot;</span><span class="p">)</span>
-    <span class="n">_tmp_additional_parameters</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">,</span>
-    <span class="p">]</span>
-    <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_tmp_additional_parameters</span><span class="p">})</span>
-
-    <span class="k">return</span> <span class="n">_update_parameters_from_repo</span><span class="p">(</span>
-        <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-        <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-        <span class="n">parameter_collection</span><span class="o">=</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span>
-        <span class="n">db_simulation_model_url</span><span class="o">=</span><span class="n">db_simulation_model_url</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="update_site_parameters_from_repo">
-<a class="viewcode-back" href="../../db_handler.html#db.db_from_repo_handler.update_site_parameters_from_repo">[docs]</a>
-<span class="k">def</span> <span class="nf">update_site_parameters_from_repo</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_simulation_model_url</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Update site parameters with values from a repository.</span>
-<span class="sd">    Existing entries will be updated, new entries will be added.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    parameters: dict</span>
-<span class="sd">        Dictionary with parameters to be updated.</span>
-<span class="sd">    site: str</span>
-<span class="sd">        Observatory site (e.g., South or North)</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Model version to use.</span>
-<span class="sd">    db_simulation_model_url: str</span>
-<span class="sd">        URL to the simulation model repository.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Updated dictionary with parameters.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># TODO - these parameters should go into the database</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating site parameters from repository using temporary parameter list&quot;</span><span class="p">)</span>
-    <span class="n">_tmp_additional_parameters</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;geomag_horizontal&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;geomag_vertical&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;geomag_rotation&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;reference_point_latitude&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;reference_point_utm_east&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;reference_point_utm_north&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;reference_point_altitude&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;reference_point_longitude&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span>
-    <span class="p">]</span>
-    <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_tmp_additional_parameters</span><span class="p">})</span>
-
-    <span class="k">return</span> <span class="n">_update_parameters_from_repo</span><span class="p">(</span>
-        <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-        <span class="n">telescope_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-        <span class="n">parameter_collection</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
-        <span class="n">db_simulation_model_url</span><span class="o">=</span><span class="n">db_simulation_model_url</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
-<span class="k">def</span> <span class="nf">_update_parameters_from_repo</span><span class="p">(</span>
-    <span class="n">parameters</span><span class="p">,</span>
-    <span class="n">site</span><span class="p">,</span>
-    <span class="n">telescope_name</span><span class="p">,</span>
-    <span class="n">model_version</span><span class="p">,</span>
-    <span class="n">parameter_collection</span><span class="p">,</span>
-    <span class="n">db_simulation_model_url</span><span class="p">,</span>
-    <span class="n">db_simulation_model</span><span class="o">=</span><span class="s2">&quot;verified_model&quot;</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Update parameters with values from a repository.</span>
-<span class="sd">    Existing entries will be updated, new entries will be added.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    parameters: dict</span>
-<span class="sd">        Dictionary with parameters to be updated.</span>
-<span class="sd">    site: str</span>
-<span class="sd">        Observatory site (e.g., South or North)</span>
-<span class="sd">    telescope_name: str</span>
-<span class="sd">        Telescope name (e.g., MSTN-01, MSTN-DESIGN)</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Model version to use.</span>
-<span class="sd">    parameter_to_query: dict</span>
-<span class="sd">        Dictionary with parameter names and labels to be queried.</span>
-<span class="sd">    parameter_collection: str</span>
-<span class="sd">        Collection of parameters to be queried (e.g., telescope or site parameters).</span>
-<span class="sd">    db_simulation_model_url: str</span>
-<span class="sd">        URL to the simulation model repository.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Updated dictionary with parameters.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If the parameter collection is not recognized.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">db_simulation_model_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No repository specified, skipping </span><span class="si">{</span><span class="n">parameter_collection</span><span class="si">}</span><span class="s2"> parameter updates&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">parameters</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ignoring model version </span><span class="si">{</span><span class="n">model_version</span><span class="si">}</span><span class="s2"> in parameter updates from repository.&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">parameter_collection</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">parameter_collection</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration&quot;</span><span class="p">]:</span>
         <span class="n">_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
-            <span class="n">db_simulation_model_url</span><span class="p">,</span> <span class="n">db_simulation_model</span><span class="p">,</span> <span class="n">telescope_name</span>
+            <span class="n">db_simulation_model_url</span><span class="p">,</span>
+            <span class="s2">&quot;model_versions&quot;</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="p">,</span>
+            <span class="n">db_simulation_model</span><span class="p">,</span>
+            <span class="n">telescope_name</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># use design telescope model in case there is no model defined for this telescope ID</span>
         <span class="n">_design_model</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span>
@@ -263,7 +160,11 @@
             <span class="n">_design_model</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">elif</span> <span class="n">parameter_collection</span> <span class="o">==</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span>
         <span class="n">_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
-            <span class="n">db_simulation_model_url</span><span class="p">,</span> <span class="n">db_simulation_model</span><span class="p">,</span> <span class="s2">&quot;Site&quot;</span><span class="p">,</span> <span class="n">site</span>
+            <span class="n">db_simulation_model_url</span><span class="p">,</span>
+            <span class="s2">&quot;model_versions&quot;</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="p">,</span>
+            <span class="n">db_simulation_model</span><span class="p">,</span>
+            <span class="s2">&quot;OBS-&quot;</span> <span class="o">+</span> <span class="n">site</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">_design_model</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
@@ -271,25 +172,32 @@
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+        <span class="n">_tmp_par</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">_parameter_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span><span class="n">_file_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-                <span class="n">file_name</span><span class="o">=</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
-            <span class="p">)</span>
+            <span class="n">_tmp_par</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">):</span>
             <span class="c1"># use design telescope model in case there is no model defined for this telescope ID</span>
             <span class="c1"># accept errors, as not all parameters are defined in the repository</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">_parameter_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
-                    <span class="n">db_simulation_model_url</span><span class="p">,</span> <span class="n">db_simulation_model</span><span class="p">,</span> <span class="n">_design_model</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json&quot;</span>
+                <span class="n">_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
+                    <span class="n">db_simulation_model_url</span><span class="p">,</span>
+                    <span class="s2">&quot;model_versions&quot;</span><span class="p">,</span>
+                    <span class="n">model_version</span><span class="p">,</span>
+                    <span class="n">db_simulation_model</span><span class="p">,</span>
+                    <span class="n">_design_model</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-                    <span class="n">file_name</span><span class="o">=</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
+                <span class="n">_tmp_par</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
+                    <span class="n">file_name</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span><span class="n">_file_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">),</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">):</span>
                 <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">_tmp_par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">model_version</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tmp_par</span>
 
-    <span class="k">return</span> <span class="n">parameters</span>
+    <span class="c1"># return all entries which are not None</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span></div>
+
 </pre></div>
 
           </div>

@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=3158ba61"></script>
+    <script src="../../_static/documentation_options.js?v=7e8f4725"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -122,8 +122,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">telescope_model</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">simulation_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">job_submission</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -136,20 +135,16 @@
 <span class="sd">            Add path configuration to list of args.</span>
 <span class="sd">        output: bool</span>
 <span class="sd">            Add output file configuration to list of args.</span>
-<span class="sd">        telescope_model: bool</span>
-<span class="sd">            Add telescope model configuration to list of args.</span>
-<span class="sd">        site_model: bool</span>
-<span class="sd">            Add site model configuration to list of args (not required of telescope_model is True).</span>
+<span class="sd">        simulation_model: list</span>
+<span class="sd">            List of simulation model configuration parameters to add to list of args</span>
+<span class="sd">            (use: &#39;version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
 <span class="sd">        db_config: bool</span>
 <span class="sd">            Add database configuration parameters to list of args.</span>
 <span class="sd">        job_submission: bool</span>
 <span class="sd">            Add job submission configuration parameters to list of args.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">telescope_model</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">initialize_telescope_model_arguments</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">site_model</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">initialize_telescope_model_arguments</span><span class="p">(</span><span class="n">add_telescope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_simulation_model_arguments</span><span class="p">(</span><span class="n">simulation_model</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">job_submission</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">initialize_job_submission_arguments</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">db_config</span><span class="p">:</span>
@@ -347,34 +342,31 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="CommandLineParser.initialize_telescope_model_arguments">
-<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_telescope_model_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_telescope_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_model_version</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_telescope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="CommandLineParser.initialize_simulation_model_arguments">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_simulation_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize default arguments for site and telescope model definition</span>
+<span class="sd">        Initialize default arguments for simulation model definition.</span>
+<span class="sd">        Note that the model version is always required.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        add_model_version: bool</span>
-<span class="sd">            Set to allow a simulation model argument.</span>
-<span class="sd">        add_telescope: bool</span>
-<span class="sd">            Set to allow a telescope name argument.</span>
+<span class="sd">        model_options: list</span>
+<span class="sd">            Options to be set: &quot;telescope&quot;, &quot;site&quot;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">add_telescope</span><span class="p">:</span>
-            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;telescope model&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;site model&quot;</span><span class="p">)</span>
-        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--site&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CTAO site (e.g., North, South)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">add_telescope</span><span class="p">:</span>
-            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-                <span class="s2">&quot;--telescope&quot;</span><span class="p">,</span>
-                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;telescope model name (e.g., LST-1, SST-D, ...)&quot;</span><span class="p">,</span>
-                <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">add_model_version</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">model_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation model&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;site&quot;</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="ow">or</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+                <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                    <span class="s2">&quot;--site&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;site (e.g., North, South)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+                <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                    <span class="s2">&quot;--telescope&quot;</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;telescope model name (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
                 <span class="s2">&quot;--model_version&quot;</span><span class="p">,</span>
                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;model version&quot;</span><span class="p">,</span>

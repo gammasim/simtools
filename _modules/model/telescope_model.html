@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.telescope_model &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>model.telescope_model &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=3158ba61"></script>
+    <script src="../../_static/documentation_options.js?v=7e8f4725"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -125,9 +125,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span>
-        <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -141,7 +140,7 @@
             <span class="n">telescope_model_name</span><span class="o">=</span><span class="n">telescope_model_name</span><span class="p">,</span>
             <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
             <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -166,108 +165,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_camera</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span>
-
-<div class="viewcode-block" id="TelescopeModel.from_config_file">
-<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.from_config_file">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_config_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_file_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a TelescopeModel from a sim_telarray config file.</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        This function does not deal with ifdef/indef etc., it just keeps the last version</span>
-<span class="sd">        of the parameters in the file. This is fine for now since we do not</span>
-<span class="sd">        expect to read from sim_telarray config files in the future.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        config_file_name: str or Path</span>
-<span class="sd">            Path to the input config file.</span>
-<span class="sd">        site: str</span>
-<span class="sd">            South or North.</span>
-<span class="sd">        telescope_model_name: str</span>
-<span class="sd">            Telescope model for the base set of parameters (ex. LSTN-01, ...).</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Instance label. Important for output file naming.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        TelescopeModel</span>
-<span class="sd">            Instance of TelescopeModel.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">tel</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-            <span class="n">telescope_model_name</span><span class="o">=</span><span class="n">telescope_model_name</span><span class="p">,</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">_process_line</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Process a line of the input config file that contains a parameter.</span>
-
-<span class="sd">            Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            words: list of str</span>
-<span class="sd">                List of str from the split of a line from the file.</span>
-
-<span class="sd">            Returns</span>
-<span class="sd">            -------</span>
-<span class="sd">            (par_name, par_value)</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">i_comment</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>  <span class="c1"># Index of any possible comment</span>
-            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="n">w</span><span class="p">:</span>
-                    <span class="n">i_comment</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
-                    <span class="k">break</span>
-            <span class="n">words</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i_comment</span><span class="p">]</span>  <span class="c1"># Removing comment</span>
-            <span class="n">par_name</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">par_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-                <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
-                <span class="n">par_value</span> <span class="o">+=</span> <span class="n">w</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
-            <span class="n">par_value</span> <span class="o">=</span> <span class="n">par_value</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>  <span class="c1"># Removing trailing spaces (left and right)</span>
-            <span class="k">return</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_value</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">if</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;echo&quot;</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">if</span> <span class="s2">&quot;#&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">_process_line</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
-                    <span class="n">parameters</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">tel</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">get_parameter_name_from_simtel_name</span><span class="p">(</span><span class="n">par_name</span><span class="p">),</span> <span class="n">value</span><span class="p">)</span>
-
-        <span class="n">tel</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="n">tel</span></div>
-
-
-<div class="viewcode-block" id="TelescopeModel.get_telescope_transmission_parameters">
-<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_telescope_transmission_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_telescope_transmission_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get tel. transmission pars as a list of floats.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        list of floats</span>
-<span class="sd">            List of 4 parameters that describe the tel. transmission vs off-axis.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">telescope_transmission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">telescope_transmission</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
-
-        <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">telescope_transmission</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span></div>
-
 
 <div class="viewcode-block" id="TelescopeModel.export_single_mirror_list_file">
 <a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.export_single_mirror_list_file">[docs]</a>
@@ -343,7 +240,11 @@
     <span class="k">def</span> <span class="nf">_load_camera</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loading camera attribute by creating a Camera object with the camera config file.&quot;&quot;&quot;</span>
         <span class="n">camera_config_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_config_file&quot;</span><span class="p">)</span>
-        <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;effective_focal_length&quot;</span><span class="p">)</span>
+        <span class="n">focal_length</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;effective_focal_length&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">pass</span>
         <span class="k">if</span> <span class="n">focal_length</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using focal_length because effective_focal_length is 0.&quot;</span><span class="p">)</span>
             <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;focal_length&quot;</span><span class="p">)</span>
@@ -410,6 +311,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading two dimensional distribution from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_file</span><span class="p">)</span>
         <span class="n">line_to_start_from</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i_line</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -433,7 +335,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the on-axis effective optical area (derived previously for this telescope).&quot;&quot;&quot;</span>
 
         <span class="n">ray_tracing_data</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_derived_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;ray_tracing&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;optics_properties&quot;</span><span class="p">))</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ray_tracing_data</span><span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
@@ -461,8 +363,12 @@
 <span class="sd">            Instance of astropy.table.Table with the incidence angle distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Reading incidence angle distribution from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">incidence_angle_dist_file</span><span class="p">),</span>
+        <span class="p">)</span>
         <span class="n">incidence_angle_dist</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_derived_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">incidence_angle_dist_file</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">incidence_angle_dist_file</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">incidence_angle_dist</span></div>
 
@@ -529,21 +435,6 @@
         <span class="n">file_to_write_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
         <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_to_write_to</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.commented_header&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file_to_write_to</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
-
-
-<div class="viewcode-block" id="TelescopeModel.get_simtel_parameters">
-<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_simtel_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_simtel_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">site_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get simtel site parameters as dict</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            simtel parameters as dict</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">=</span><span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

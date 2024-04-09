@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../_static/simtools.css" />
-    <script src="../_static/documentation_options.js?v=3158ba61"></script>
+    <script src="../_static/documentation_options.js?v=7e8f4725"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -113,6 +113,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    telescope_model: TelescopeModel</span>
 <span class="sd">        Instance of the TelescopeModel class.</span>
+<span class="sd">    site_model: SiteModel</span>
+<span class="sd">        Instance of the SiteModel class.</span>
 <span class="sd">    simtel_source_path: str (or Path)</span>
 <span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    label: str</span>
@@ -128,6 +130,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="p">,</span>
         <span class="n">simtel_source_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -142,6 +145,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span> <span class="o">=</span> <span class="n">simtel_source_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_telescope_model</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span> <span class="o">=</span> <span class="n">site_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
 
@@ -187,6 +191,7 @@
         <span class="n">args</span><span class="p">,</span> <span class="n">config_data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">separate_args_and_config_data</span><span class="p">(</span>
             <span class="n">expected_args</span><span class="o">=</span><span class="p">[</span>
                 <span class="s2">&quot;telescope_model&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;site_model&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;label&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;simtel_source_path&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;test&quot;</span><span class="p">,</span>
@@ -384,7 +389,7 @@
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_camera_efficiency</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Telescope total efficiency&quot;</span>
             <span class="sa">f</span><span class="s2">&quot; with gaps (was A-PERF-2020): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tel_efficiency</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) &quot;</span>
+            <span class="s2">&quot;Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) &quot;</span>
             <span class="s2">&quot;(A-PERF-2025/B-TEL-0090): &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tel_efficiency</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Expected NSB pixel rate for the provided NSB spectrum: &quot;</span>
@@ -546,7 +551,7 @@
             <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4&quot;</span><span class="p">])</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_active_solid_angle</span><span class="p">()</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_on_axis_eff_optical_area</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_telescope_transmission_parameters</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="c1"># (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:</span>
@@ -559,7 +564,7 @@
         <span class="n">nsb_integral</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="p">(</span><span class="n">n1_sum</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">n1_integral_edges_sum</span><span class="p">)</span>
         <span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">nsb_rate_provided_spectrum</span>
-            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_reference_data_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
             <span class="o">/</span> <span class="n">nsb_integral</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">nsb_rate_provided_spectrum</span><span class="p">,</span> <span class="n">nsb_rate_ref_conditions</span></div>

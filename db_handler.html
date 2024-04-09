@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g10eb34e</title>
+    <title>Database support &#8212; simtools v0.1.dev1+gb785748</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=3158ba61"></script>
+    <script src="_static/documentation_options.js?v=7e8f4725"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -32,7 +32,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g10eb34e</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb785748</p>
 
 
 
@@ -131,8 +131,6 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>io_handler: IOHandler</strong></dt><dd><p>Instance of IOHandler</p>
-</dd>
 <dt><strong>mongo_db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration with the following entries:
 “db_server” - DB server address
 “db_api_port” - Port to use
@@ -366,14 +364,14 @@ from telescope LSTN-01.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_available_telescopes">
-<span class="sig-name descname"><span class="pre">get_all_available_telescopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Staging-CTA-Simulation-Model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Released'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_available_telescopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Staging-CTA-Simulation-Model'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes" title="Link to this definition">¶</a></dt>
 <dd><p>Get all available telescope names in the collection “telescopes” in the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the telescopes of (default: “Released”).</p>
+<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the telescopes of</p>
 </dd>
 </dl>
 </dd>
@@ -425,7 +423,7 @@ this argument sets which site parameter get the versions of</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_derived_values">
 <span class="sig-name descname"><span class="pre">get_derived_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_derived_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_derived_values" title="Link to this definition">¶</a></dt>
-<dd><p>Get a derived value from the DB for a specific telescope.</p>
+<dd><p>Get all derived values from the DB for a specific telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -454,7 +452,7 @@ this argument sets which site parameter get the versions of</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>site: str</strong></dt><dd><p>South or North.</p>
 </dd>
-<dt><strong>telescope_model_name: str</strong></dt><dd><p>Name of the telescope model (e.g. LST-1, MST-FlashCam-D)</p>
+<dt><strong>telescope_model_name: str</strong></dt><dd><p>Name of the telescope model (e.g. LSTN-01, MSTS-design)</p>
 </dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
 </dd>
@@ -471,32 +469,9 @@ this argument sets which site parameter get the versions of</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_reference_data">
-<span class="sig-name descname"><span class="pre">get_reference_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_reference_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_reference_data" title="Link to this definition">¶</a></dt>
-<dd><p>Get parameters from MongoDB for a specific telescope.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>site: str</strong></dt><dd><p>South or North.</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
-</dd>
-<dt><strong>only_applicable: bool</strong></dt><dd><p>If True, only applicable parameters will be read.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict containing the parameters</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>if query returned zero results.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters">
+<span class="sig-name descname"><span class="pre">get_sim_telarray_configuration_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_sim_telarray_configuration_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Get sim_telarray configuration parameters from the DB for a specific telescope.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -524,7 +499,7 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_telescope_db_name">
-<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">¶</a></dt>
 <dd><p>Translate telescope name to the name used in the DB. This is required,
 as not all telescopes are defined in the database yet. In these cases,
 use the “design” telescope.</p>
@@ -532,6 +507,8 @@ use the “design” telescope.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>telescope_name: str</strong></dt><dd><p>Name of the telescope model (e.g. MSTN-01)</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the telescopes</p>
 </dd>
 </dl>
 </dd>
@@ -697,7 +674,7 @@ If the field does not exist, it will be added.</p>
 Read simulation model values from files in simulation model repository.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_from_repo_handler.update_model_parameters_from_repo">
-<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_model_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_from_repo_handler.html#update_model_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_model_parameters_from_repo" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_model_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'verified_model'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_from_repo_handler.html#update_model_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_model_parameters_from_repo" title="Link to this definition">¶</a></dt>
 <dd><p>Update model parameters with values from a repository.
 Existing entries will be updated, new entries will be added.</p>
 <dl class="field-list simple">
@@ -710,33 +687,6 @@ Existing entries will be updated, new entries will be added.</p>
 <dt><strong>telescope_name: str</strong></dt><dd><p>Telescope name (e.g., MSTN-01, MSTN-DESIGN)</p>
 </dd>
 <dt><strong>parameter_collection: str</strong></dt><dd><p>Collection of parameters to be queried (e.g., telescope or site)</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version to use.</p>
-</dd>
-<dt><strong>db_simulation_model_url: str</strong></dt><dd><p>URL to the simulation model repository.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Updated dictionary with parameters.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="db.db_from_repo_handler.update_site_parameters_from_repo">
-<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_site_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_from_repo_handler.html#update_site_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_site_parameters_from_repo" title="Link to this definition">¶</a></dt>
-<dd><p>Update site parameters with values from a repository.
-Existing entries will be updated, new entries will be added.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>parameters: dict</strong></dt><dd><p>Dictionary with parameters to be updated.</p>
-</dd>
-<dt><strong>site: str</strong></dt><dd><p>Observatory site (e.g., South or North)</p>
 </dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Model version to use.</p>
 </dd>
