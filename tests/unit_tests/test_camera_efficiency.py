@@ -18,8 +18,8 @@ def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
-        label="validate_camera_efficiency",
         simtel_source_path=simtel_path,
+        label="validate_camera_efficiency",
         test=True,
     )
     return camera_efficiency_lst
@@ -30,8 +30,8 @@ def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
-        label="validate_camera_efficiency",
         simtel_source_path=simtel_path,
+        label="validate_camera_efficiency",
         test=True,
     )
     return camera_efficiency_sst
@@ -137,8 +137,8 @@ def test_export_results(simtel_path, telescope_model_lst, site_model_north, capl
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
         simtel_source_path=simtel_path,
-        config_data=config_data,
         label="export_results",
+        config_data=config_data,
     )
     camera_efficiency.export_results()
     assert "Cannot export results because they do not exist" in caplog.text

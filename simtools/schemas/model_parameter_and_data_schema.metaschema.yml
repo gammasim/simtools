@@ -372,7 +372,7 @@ definitions:
       - mV * ns
       - nm
       - ns
-      - 1/(sr*ns*cm**2)
+      - 1 / (sr * ns * cm**2)
       - pct
       - uA
       - uT
