@@ -443,7 +443,7 @@ class DatabaseHandler:
 
     def get_derived_values(self, site, telescope_model_name, model_version):
         """
-        Get a derived value from the DB for a specific telescope.
+        Get all derived values from the DB for a specific telescope.
 
         Parameters
         ----------

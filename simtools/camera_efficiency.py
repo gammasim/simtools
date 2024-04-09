@@ -24,7 +24,7 @@ class CameraEfficiency:
     ----------
     telescope_model: TelescopeModel
         Instance of the TelescopeModel class.
-    site_mode: SiteModel
+    site_model: SiteModel
         Instance of the SiteModel class.
     simtel_source_path: str (or Path)
         Location of sim_telarray installation.

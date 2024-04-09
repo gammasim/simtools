@@ -43,9 +43,9 @@ def corsika_file():
 @pytest.fixture
 def array_simulator(label, array_config_data, io_handler, db_config, model_version, simtel_path):
     array_simulator = Simulator(
-        label=label,
         simulator="simtel",
         simulator_source_path=simtel_path,
+        label=label,
         config_data=array_config_data,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -56,9 +56,9 @@ def array_simulator(label, array_config_data, io_handler, db_config, model_versi
 @pytest.fixture
 def shower_simulator(label, shower_config_data, io_handler, db_config, model_version, simtel_path):
     shower_simulator = Simulator(
-        label=label,
         simulator="corsika",
         simulator_source_path=simtel_path,
+        label=label,
         config_data=shower_config_data,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -71,9 +71,9 @@ def shower_array_simulator(
     label, simulator_config_data, io_handler, db_config, model_version, simtel_path
 ):
     shower_array_simulator = Simulator(
-        label=label,
         simulator="corsika_simtel",
         simulator_source_path=simtel_path,
+        label=label,
         config_data=simulator_config_data,
         mongo_db_config=db_config,
         model_version=model_version,

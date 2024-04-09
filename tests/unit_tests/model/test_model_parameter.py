@@ -111,7 +111,7 @@ def test_change_parameter(telescope_model_lst):
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
     tel_model.change_parameter("camera_pixels", 9999)
-    assert 9999 == tel_model.get_parameter_value("camera_pixels")
+    assert tel_model.get_parameter_value("camera_pixels") == 9999
 
     with pytest.raises(ValueError):
         logger.info("Testing changing camera_pixels to a float (now allowed)")
