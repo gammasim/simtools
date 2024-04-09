@@ -31,8 +31,7 @@ class CommandLineParser(argparse.ArgumentParser):
         self,
         paths=True,
         output=False,
-        telescope_model=False,
-        site_model=False,
+        simulation_model=None,
         db_config=False,
         job_submission=False,
     ):
@@ -45,20 +44,16 @@ class CommandLineParser(argparse.ArgumentParser):
             Add path configuration to list of args.
         output: bool
             Add output file configuration to list of args.
-        telescope_model: bool
-            Add telescope model configuration to list of args.
-        site_model: bool
-            Add site model configuration to list of args (not required of telescope_model is True).
+        simulation_model: list
+            List of simulation model configuration parameters to add to list of args
+            (use: 'version', 'telescope', 'site')
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
             Add job submission configuration parameters to list of args.
         """
 
-        if telescope_model:
-            self.initialize_telescope_model_arguments()
-        elif site_model:
-            self.initialize_telescope_model_arguments(add_telescope=False)
+        self.initialize_simulation_model_arguments(simulation_model)
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
@@ -237,32 +232,29 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
 
-    def initialize_telescope_model_arguments(self, add_model_version=True, add_telescope=True):
+    def initialize_simulation_model_arguments(self, model_options):
         """
-        Initialize default arguments for site and telescope model definition
+        Initialize default arguments for simulation model definition.
+        Note that the model version is always required.
 
         Parameters
         ----------
-        add_model_version: bool
-            Set to allow a simulation model argument.
-        add_telescope: bool
-            Set to allow a telescope name argument.
+        model_options: list
+            Options to be set: "telescope", "site"
         """
 
-        if add_telescope:
-            _job_group = self.add_argument_group("telescope model")
-        else:
-            _job_group = self.add_argument_group("site model")
-        _job_group.add_argument(
-            "--site", help="CTAO site (e.g., North, South)", type=self.site, required=False
-        )
-        if add_telescope:
-            _job_group.add_argument(
-                "--telescope",
-                help="telescope model name (e.g., LST-1, SST-D, ...)",
-                type=self.telescope,
-            )
-        if add_model_version:
+        if model_options is not None:
+            _job_group = self.add_argument_group("simulation model")
+            if "site" in model_options or "telescope" in model_options:
+                _job_group.add_argument(
+                    "--site", help="site (e.g., North, South)", type=self.site, required=False
+                )
+            if "telescope" in model_options:
+                _job_group.add_argument(
+                    "--telescope",
+                    help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
+                    type=self.telescope,
+                )
             _job_group.add_argument(
                 "--model_version",
                 help="model version",

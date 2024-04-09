@@ -8,8 +8,10 @@ CTA_SIMPIPE:
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+    MODEL_VERSION: prod6
     CORSIKA_FILES: |
       ./tests/resources/run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst
+    LOG_LEVEL: debug
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
         simtel-data/North/proton/data/run000001_proton_za020deg_azm000deg_North_TestLayout_test-
