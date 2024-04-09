@@ -50,7 +50,6 @@ def main():
         choices=[
             _db_tmp.DB_TABULATED_DATA,
             _db_tmp.DB_DERIVED_VALUES,
-            _db_tmp.DB_REFERENCE_DATA,
             "sandbox",
             "test-data",
         ],

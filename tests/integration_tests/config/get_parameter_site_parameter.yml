@@ -4,3 +4,4 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     PARAMETER: reference_point_altitude
+    MODEL_VERSION: prod6

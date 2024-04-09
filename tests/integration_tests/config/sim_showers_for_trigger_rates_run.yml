@@ -5,6 +5,7 @@ CTA_SIMPIPE:
     ARRAY: 4LST
     SITE: North
     PRIMARY: proton
+    MODEL_VERSION: prod6
     NRUNS: 2
     NEVENTS: 10000
     TEST: true

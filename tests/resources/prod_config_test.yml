@@ -5,13 +5,15 @@ default:
   layout_name: test-layout
   data_directory: Null
   array:
-    model_version: Prod5
+    model_version: Prod6
     zenith: 20 deg
     phi: 0 deg
     default:
-      LSTN: 'design'
       MSTN: 'design'
     LSTN-01: '01'
+    LSTN-02: '02'
+    LSTN-03: '03'
+    LSTN-04: '04'
   showers:
     eslope: -2
     zenith: 20 deg
@@ -34,14 +36,14 @@ gamma:
     cscat: [5, 1500.0 m, 0]
   array:
     MSTN-05:
-      name: NectarCam-D
+      name: "05"
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
     MSTN-06:
-      name: NectarCam-D
+      name: "06"
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
     MSTN-07:
-      name: NectarCam-D
+      name: "07"
       fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
       discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat

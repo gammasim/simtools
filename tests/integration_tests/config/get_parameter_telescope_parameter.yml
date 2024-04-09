@@ -5,4 +5,4 @@ CTA_SIMPIPE:
     SITE: North
     TELESCOPE: LSTN-01
     PARAMETER: mirror_list
-    MODEL_VERSION: prod5
+    MODEL_VERSION: prod6
