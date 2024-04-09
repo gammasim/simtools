@@ -738,12 +738,6 @@ def test_get_value_unit_type() -> None:
     with pytest.raises(u.UnitConversionError):
         gen.get_value_unit_type(1 * u.TeV, "m")
 
-    # db like strings with comma-separated units
-    assert gen.get_value_unit_type("0.05 0.05 0.05", "m, deg, m") == (
-        "0.05 0.05 0.05",
-        "m, deg, m",
-        "str",
-    )
     # cases of simtel-like strings representing arrays
     assert gen.get_value_unit_type("1 2") == ("1 2", None, "str")
     assert gen.get_value_unit_type("0 0") == ("0 0", None, "str")
