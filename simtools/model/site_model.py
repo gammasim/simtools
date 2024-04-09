@@ -26,9 +26,8 @@ class SiteModel(ModelParameter):
     def __init__(
         self,
         site,
-        mongo_db_config=None,
-        model_version="Released",
-        db=None,
+        mongo_db_config,
+        model_version,
         label=None,
     ):
         """
@@ -41,7 +40,7 @@ class SiteModel(ModelParameter):
             site=site,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
-            db=db,
+            db=None,
             label=label,
         )
 
@@ -100,15 +99,3 @@ class SiteModel(ModelParameter):
             "geomag_vertical": self.get_parameter_value_with_unit("geomag_vertical"),
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
         }
-
-    def get_simtel_parameters(self, telescope_model=False, site_model=True):
-        """
-        Get simtel site parameters as dict
-
-        Returns
-        -------
-        dict
-            Simtel site parameters as dict
-
-        """
-        return super().get_simtel_parameters(telescope_model=telescope_model, site_model=site_model)

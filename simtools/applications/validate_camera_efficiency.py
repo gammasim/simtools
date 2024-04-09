@@ -71,6 +71,7 @@ from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.io_operations import io_handler
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
 
@@ -118,7 +119,7 @@ def _parse(label):
         default=None,
         required=False,
     )
-    _args_dict, _db_config = config.initialize(db_config=True, telescope_model=True)
+    _args_dict, _db_config = config.initialize(db_config=True, simulation_model="telescope")
     if _args_dict["site"] is None or _args_dict["telescope"] is None:
         config.parser.print_help()
         print("\n\nSite and telescope must be provided\n\n")
@@ -144,6 +145,11 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+    site_model = SiteModel(
+        site=args_dict["site"],
+        model_version=args_dict["model_version"],
+        mongo_db_config=_db_config,
+    )
 
     # For debugging purposes
     tel_model.export_config_file()
@@ -152,6 +158,7 @@ def main():
 
     ce = CameraEfficiency(
         telescope_model=tel_model,
+        site_model=site_model,
         simtel_source_path=args_dict["simtel_path"],
         label=label,
         config_data={

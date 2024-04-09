@@ -136,7 +136,9 @@ def _parse(label=None, description=None):
         required=False,
         action="store_true",
     )
-    return config.initialize(output=True, require_command_line=True, db_config=True)
+    return config.initialize(
+        output=True, require_command_line=True, db_config=True, simulation_model="version"
+    )
 
 
 def main():
@@ -154,6 +156,7 @@ def main():
 
     layout = array_layout.ArrayLayout(
         mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
         site=metadata.get_site(from_input_meta=True),
         telescope_list_file=args_dict["input"],
         telescope_list_metadata_file=args_dict["input_meta"],

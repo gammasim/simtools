@@ -5,4 +5,5 @@ CTA_SIMPIPE:
     TELESCOPE_LIST:
       - data/layout/telescope_positions-North-TestLayout.ecsv
       - data/layout/telescope_positions-South-TestLayout.ecsv
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
