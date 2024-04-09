@@ -113,13 +113,14 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="version")
 
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     array_model = ArrayModel(
         label=args_dict["label"],
+        model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         array_config_file=args_dict["array_config"],
     )

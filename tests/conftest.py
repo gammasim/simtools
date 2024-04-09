@@ -13,6 +13,7 @@ import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -172,11 +173,39 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def telescope_model_lst(db_config, io_handler):
+def model_version():
+    """
+    Simulation model version used in tests.
+    """
+    return "2024-02-01"
+
+
+@pytest.fixture
+def site_model_south(db_config, model_version):
+    return SiteModel(
+        site="South",
+        mongo_db_config=db_config,
+        label="site-south",
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
+def site_model_north(db_config, model_version):
+    return SiteModel(
+        site="North",
+        mongo_db_config=db_config,
+        label="site-north",
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
+def telescope_model_lst(db_config, io_handler, model_version):
     telescope_model_LST = TelescopeModel(
         site="North",
         telescope_model_name="LSTN-01",
-        model_version="Prod5",
+        model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )
@@ -184,11 +213,11 @@ def telescope_model_lst(db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_mst(db_config, io_handler):
+def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
         site="South",
         telescope_model_name="MSTS-design",
-        model_version="Prod5",
+        model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
     )
@@ -197,7 +226,20 @@ def telescope_model_mst(db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_sst(db_config, io_handler):
+def telescope_model_sst(db_config, io_handler, model_version):
+    telescope_model_SST = TelescopeModel(
+        site="South",
+        telescope_model_name="SSTS-design",
+        model_version=model_version,
+        mongo_db_config=db_config,
+        label="test-telescope-model-sst",
+    )
+    return telescope_model_SST
+
+
+# TODO - keep prod5 until a complete prod6 model is in the DB
+@pytest.fixture
+def telescope_model_sst_prod5(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
         telescope_model_name="SSTS-design",
@@ -209,13 +251,17 @@ def telescope_model_sst(db_config, io_handler):
 
 
 @pytest.fixture
-def array_layout_north_instance(io_handler, db_config):
-    return ArrayLayout(site="North", mongo_db_config=db_config, name="test_layout")
+def array_layout_north_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
-def array_layout_south_instance(io_handler, db_config):
-    return ArrayLayout(site="South", mongo_db_config=db_config, name="test_layout")
+def array_layout_south_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
@@ -264,7 +310,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture
-def simulator_config_data(tmp_test_directory):
+def simulator_config_data(tmp_test_directory, model_version):
     return {
         "common": {
             "site": "North",
@@ -284,9 +330,7 @@ def simulator_config_data(tmp_test_directory):
             "run_range": [6, 10],
         },
         "array": {
-            "model_version": "Prod5",
-            "default": {"LSTN": "design", "MSTN": "design"},
-            #            "LSTN-01": "01",
+            "default": {"LSTN": "01", "MSTN": "design"},
         },
     }
 

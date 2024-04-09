@@ -82,12 +82,6 @@ def test_reading_db_sst(db):
         assert pars["camera_pixels"] == 2048
 
 
-def test_get_reference_data(db):
-    logger.info("----Testing reading reference data-----")
-    pars = db.get_reference_data("South", "Prod5")
-    assert pars["nsb_reference_value"]["value"] == pytest.approx(0.24)
-
-
 def test_get_derived_values(db):
     logger.info("----Testing reading derived values-----")
     try:
@@ -100,8 +94,17 @@ def test_get_derived_values(db):
         logger.error("Derived DB not updated for new telescope names. Expect failure")
         raise AssertionError
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         pars = db.get_derived_values("North", None, "Prod5")
+
+
+def test_get_sim_telarray_configuration_parameters(db):
+
+    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-01", "Prod6")
+    assert "min_photoelectrons" in _pars
+
+    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-design", "Prod6")
+    assert "min_photoelectrons" in _pars
 
 
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
@@ -486,11 +489,11 @@ def test_get_all_available_telescopes(db):
 
 
 def test_get_telescope_db_name(db):
-    assert db.get_telescope_db_name("LSTN-01") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTN-02") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTN-design") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTS-design") == "LSTS-design"
-    assert db.get_telescope_db_name("SSTS-01") == "SSTS-design"
-    assert db.get_telescope_db_name("SSTS-design") == "SSTS-design"
+    assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
+    assert db.get_telescope_db_name("LSTN-02", model_version="Prod5") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
+    assert db.get_telescope_db_name("SSTS-01", model_version="Prod5") == "SSTS-design"
+    assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
     with pytest.raises(ValueError):
-        db.get_telescope_db_name("SSTN-05")
+        db.get_telescope_db_name("SSTN-05", model_version="Prod5")

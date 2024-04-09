@@ -214,7 +214,7 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(db_config=True, output=True, telescope_model=True)
+    return config.initialize(db_config=True, output=True, simulation_model="telescope")
 
 
 def _define_telescope_model(label, args_dict, db_config):
@@ -359,7 +359,7 @@ def main():
 
     def run(rnda):
         """Runs the simulations for one given value of rnda"""
-        tel.change_parameter("mirror_reflection_random_angle", str(rnda))
+        tel.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing.from_kwargs(
             telescope_model=tel,
             single_mirror_mode=True,
@@ -383,9 +383,7 @@ def main():
     if args_dict["rnda"] != 0:
         rnda_start = args_dict["rnda"]
     else:
-        rnda_start = tel.get_parameter_value("mirror_reflection_random_angle")
-        if isinstance(rnda_start, str):
-            rnda_start = float(rnda_start.split()[0])
+        rnda_start = tel.get_parameter_value("mirror_reflection_random_angle")[0]
 
     logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start} deg")
 

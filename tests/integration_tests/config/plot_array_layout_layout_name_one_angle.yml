@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: layout_name_one_angle
   CONFIGURATION:
     SITE: North
+    MODEL_VERSION: prod6
     ARRAY_LAYOUT: North-4LST
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
