@@ -92,7 +92,11 @@ def _load_schema(schema_file=None):
     if schema_file is None:
         schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
-    schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
+    try:
+        schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
+    except FileNotFoundError:
+        schema_file = files("simtools").joinpath("schemas") / schema_file
+        schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
 
     return schema, schema_file

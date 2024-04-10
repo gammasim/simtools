@@ -5,6 +5,7 @@ This should be the only module in simtools with knowledge on the
 implementation of the metadata model.
 
 """
+
 import datetime
 import getpass
 import logging
@@ -17,6 +18,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools.data_model import metadata_model
 from simtools.io_operations import io_handler
+from simtools.utils import names
 
 __all__ = ["MetadataCollector"]
 
@@ -47,6 +49,7 @@ class MetadataCollector:
         """
 
         self._logger = logging.getLogger(__name__)
+        self.observatory = "cta"
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict if args_dict else {}
@@ -67,13 +70,13 @@ class MetadataCollector:
 
         """
 
-        self._fill_contact_meta(self.top_level_meta["cta"]["contact"])
-        self._fill_product_meta(self.top_level_meta["cta"]["product"])
-        self._fill_activity_meta(self.top_level_meta["cta"]["activity"])
-        self._fill_process_meta(self.top_level_meta["cta"]["process"])
-        self._fill_context_from_input_meta(self.top_level_meta["cta"]["context"])
+        self._fill_contact_meta(self.top_level_meta[self.observatory]["contact"])
+        self._fill_product_meta(self.top_level_meta[self.observatory]["product"])
+        self._fill_activity_meta(self.top_level_meta[self.observatory]["activity"])
+        self._fill_process_meta(self.top_level_meta[self.observatory]["process"])
+        self._fill_context_from_input_meta(self.top_level_meta[self.observatory]["context"])
         self._fill_associated_elements_from_args(
-            self.top_level_meta["cta"]["context"]["associated_elements"]
+            self.top_level_meta[self.observatory]["context"]["associated_elements"]
         )
 
     def get_data_model_schema_file_name(self):
@@ -100,12 +103,12 @@ class MetadataCollector:
 
         # from metadata
         try:
-            if self.top_level_meta["cta"]["product"]["data"]["model"]["url"]:
+            if self.top_level_meta[self.observatory]["product"]["data"]["model"]["url"]:
                 self._logger.debug(
                     "Schema file from product metadata: "
-                    f"{self.top_level_meta['cta']['product']['data']['model']['url']}"
+                    f"{self.top_level_meta[self.observatory]['product']['data']['model']['url']}"
                 )
-                return self.top_level_meta["cta"]["product"]["data"]["model"]["url"]
+                return self.top_level_meta[self.observatory]["product"]["data"]["model"]["url"]
         except KeyError:
             pass
 
@@ -118,9 +121,9 @@ class MetadataCollector:
         try:
             self._logger.debug(
                 "Schema file from input metadata: "
-                f"{self.input_metadata['cta']['product']['data']['model']['url']}"
+                f"{self.input_metadata[self.observatory]['product']['data']['model']['url']}"
             )
-            return self.input_metadata["cta"]["product"]["data"]["model"]["url"]
+            return self.input_metadata[self.observatory]["product"]["data"]["model"]["url"]
         except KeyError:
             pass
 
@@ -143,6 +146,33 @@ class MetadataCollector:
         except gen.InvalidConfigData:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
+
+    def get_site(self, from_input_meta=False):
+        """
+        Get site entry from metadata. Allow to get from collected or from input metadata
+
+        Parameters
+        ----------
+        from_input_meta: bool
+            Get site from input metadata (default: False)
+
+        Returns
+        -------
+        str
+            Site name
+
+        """
+        try:
+            _site = (
+                self.top_level_meta[self.observatory]["instrument"]["site"]
+                if not from_input_meta
+                else self.input_metadata[self.observatory]["instrument"]["site"]
+            )
+            if _site is not None:
+                return names.validate_site_name(_site)
+        except KeyError:
+            pass
+        return None
 
     def _fill_contact_meta(self, contact_dict):
         """
@@ -186,12 +216,12 @@ class MetadataCollector:
 
         try:
             if "site" in self.args_dict:
-                _association["site"] = self.args_dict["site"]
+                _association["site"] = names.validate_site_name(self.args_dict["site"])
             if "telescope" in self.args_dict:
-                _split_telescope_name = self.args_dict["telescope"].split("-")
-                _association["class"] = _split_telescope_name[0]
-                _association["type"] = _split_telescope_name[1]
-                _association["subtype"] = _split_telescope_name[2]
+                _telescope_name = names.validate_telescope_name(self.args_dict["telescope"])
+                _association["class"] = "telescope"
+                _association["type"] = names.get_telescope_type_from_telescope_name(_telescope_name)
+                _association["subtype"] = ""
         except (TypeError, KeyError):
             self._logger.error("Error reading association metadata from args")
             raise
@@ -215,20 +245,22 @@ class MetadataCollector:
         """
 
         try:
-            self._merge_config_dicts(context_dict, self.input_metadata["cta"]["context"])
+            self._merge_config_dicts(context_dict, self.input_metadata[self.observatory]["context"])
             for key in ("document", "associated_elements", "associated_data"):
-                self._copy_list_type_metadata(context_dict, self.input_metadata["cta"], key)
+                self._copy_list_type_metadata(
+                    context_dict, self.input_metadata[self.observatory], key
+                )
         except KeyError:
             self._logger.debug("No context metadata defined in input metadata file.")
 
         try:
             self._fill_context_sim_list(
-                context_dict["associated_data"], self.input_metadata["cta"]["product"]
+                context_dict["associated_data"], self.input_metadata[self.observatory]["product"]
             )
         except (KeyError, TypeError):
             self._logger.debug("No input product metadata appended to associated data.")
 
-    def _read_input_metadata_from_file(self, metadata_file_name=None, observatory="CTA"):
+    def _read_input_metadata_from_file(self, metadata_file_name=None):
         """
         Read and validate input metadata from file. In case of an ecsv file including a
         table, the metadata is read from the table meta data. Returns empty dict in case
@@ -238,8 +270,6 @@ class MetadataCollector:
         ---------
         metadata_file_name: str or Path
             Name of metadata file.
-        observatory: str
-            Observatory name.
 
         Returns
         -------
@@ -251,27 +281,25 @@ class MetadataCollector:
         gen.InvalidConfigData, FileNotFoundError
             if metadata cannot be read from file.
         KeyError:
-            if metadata does not exist for the given observatory.
+            if metadata does not exist
 
         """
 
-        try:
-            metadata_file_name = (
-                self.args_dict.get("input_meta", None)
-                if metadata_file_name is None
-                else metadata_file_name
-            )
-        except TypeError:
-            pass
+        metadata_file_name = (
+            self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
+            if metadata_file_name is None
+            else metadata_file_name
+        )
 
         if metadata_file_name is None:
             self._logger.debug("No input metadata file defined.")
             return {}
 
+        self._logger.debug("Reading meta data from %s", metadata_file_name)
+
         # metadata from yml or json file
         if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
             try:
-                self._logger.debug("Reading meta data from %s", metadata_file_name)
                 _input_metadata = gen.collect_data_from_file_or_dict(
                     file_name=metadata_file_name, in_dict=None
                 )
@@ -291,10 +319,14 @@ class MetadataCollector:
         # metadata from table meta in ecsv file
         elif Path(metadata_file_name).suffix == ".ecsv":
             try:
-                _input_metadata = {observatory: Table.read(metadata_file_name).meta[observatory]}
-            except (FileNotFoundError, KeyError):
+                _input_metadata = {
+                    self.observatory.upper(): Table.read(metadata_file_name).meta[
+                        self.observatory.upper()
+                    ]
+                }
+            except (FileNotFoundError, KeyError, AttributeError):
                 self._logger.error(
-                    "Failed reading metadata for %s from %s", observatory, metadata_file_name
+                    "Failed reading metadata for %s from %s", self.observatory, metadata_file_name
                 )
                 raise
         else:
@@ -469,8 +501,8 @@ class MetadataCollector:
 
         meta_dict = gen.change_dict_keys_case(meta_dict, True)
         try:
-            meta_dict["cta"]["product"]["description"] = self._remove_line_feed(
-                meta_dict["cta"]["product"]["description"]
+            meta_dict[self.observatory]["product"]["description"] = self._remove_line_feed(
+                meta_dict[self.observatory]["product"]["description"]
             )
         except (KeyError, AttributeError):
             pass

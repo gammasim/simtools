@@ -108,15 +108,18 @@ class SimtelRunnerRayTracing(SimtelRunner):
         # Loop to define and remove existing files.
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
         for base_name in ["stars", "photons", "log"]:
-            file_name = names.ray_tracing_file_name(
-                self.telescope_model.site,
-                self.telescope_model.name,
-                self.config.source_distance,
-                self.config.zenith_angle,
-                self.config.off_axis_angle,
-                self.config.mirror_numbers if self.config.single_mirror_mode else None,
-                self.label,
-                base_name,
+            file_name = names.generate_file_name(
+                file_type=base_name,
+                suffix=".log" if base_name == "log" else ".lis",
+                site=self.telescope_model.site,
+                telescope_model_name=self.telescope_model.name,
+                source_distance=self.config.source_distance,
+                zenith_angle=self.config.zenith_angle,
+                off_axis_angle=self.config.off_axis_angle,
+                mirror_number=(
+                    self.config.mirror_numbers if self.config.single_mirror_mode else None
+                ),
+                label=self.label,
             )
             file = self._base_directory.joinpath(file_name)
             if file.exists() and force_simulate:
@@ -164,12 +167,12 @@ class SimtelRunnerRayTracing(SimtelRunner):
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.telescope_model.get_config_file()}"
         command += " -I../cfg/CTA"
-        command += f" -I{self.telescope_model.get_config_directory()}"
+        command += f" -I{self.telescope_model.config_file_directory}"
         command += super()._config_option("random_state", "none")
         command += super()._config_option("IMAGING_LIST", str(self._photons_file))
         command += super()._config_option("stars", str(self._stars_file))
         command += super()._config_option(
-            "altitude", self.telescope_model.get_parameter_value("altitude")
+            "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
         )
         command += super()._config_option(
             "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle

@@ -2,11 +2,6 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
-from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io_operations.io_handler import IOHandler
-from simtools.utils import names
-from simtools.utils.names import hess, lst, magic, mst, sct, sst, veritas
-
 __all__ = [
     "EdgePixelObject",
     "HexEdgePixelHandler",
@@ -30,6 +25,16 @@ __all__ = [
     "TelescopeHandler",
 ]
 
+# assume same size of telescope at both sides
+# (good assumption for plotting)
+lst = "LSTN"
+mst = "MSTN"
+sst = "SSTS"
+sct = "SCTS"
+hess = "HESS"
+magic = "MAGIC"
+veritas = "VERITAS"
+
 
 class TelescopeHandler(object):
     """
@@ -37,25 +42,31 @@ class TelescopeHandler(object):
     inherit from this class.
     """
 
-    def __init__(self):
-        io_handler = IOHandler()
-        corsika_parameters_file = io_handler.get_input_data_file(
-            "parameters", "corsika_parameters.yml"
-        )
-        corsika_info = CorsikaConfig.load_corsika_parameters_file(corsika_parameters_file)
-
-        self.radius_dict = {}
+    def __init__(self, radius=None):
         self.colors_dict = {
-            lst: "darkorange",
-            mst: "dodgerblue",
-            sct: "black",
-            sst: "darkgreen",
-            hess: "grey",
-            magic: "grey",
-            veritas: "grey",
+            "LSTN": "darkorange",
+            "MSTN": "dodgerblue",
+            "LSTS": "darkorange",
+            "MSTS": "dodgerblue",
+            "SCTS": "black",
+            "SSTS": "darkgreen",
+            "HESS": "grey",
+            "MAGIC": "grey",
+            "VERITAS": "grey",
         }
-        for key, value in corsika_info["corsika_sphere_radius"].items():
-            self.radius_dict[key] = value["value"]
+
+        # hardwired values; this is for plotting purposes only
+        self.radius_dict = {
+            "LSTN": 12.5,
+            "MSTN": 9.15,
+            "LSTS": 12.5,
+            "MSTS": 9.15,
+            "SCTS": 7.15,
+            "SSTS": 3.0,
+            "HESS": 6.0,
+            "MAGIC": 8.5,
+            "VERITAS": 6.0,
+        }
 
 
 class PixelObject(object):
@@ -419,8 +430,10 @@ class MeanRadiusOuterEdgeHandler(object):
 
 
 all_telescope_objects = {
-    lst: LSTObject,
-    mst: MSTObject,
+    "LSTN": LSTObject,
+    "LSTS": LSTObject,
+    "MSTN": MSTObject,
+    "MSTS": MSTObject,
     sct: SCTObject,
     sst: SSTObject,
     hess: HESSObject,
@@ -428,8 +441,10 @@ all_telescope_objects = {
     veritas: VERITASObject,
 }
 all_telescope_handlers = {
-    lst: LSTHandler,
-    mst: MSTHandler,
+    "LSTN": LSTHandler,
+    "LSTS": LSTHandler,
+    "MSTN": MSTHandler,
+    "MSTS": MSTHandler,
     sct: SCTHandler,
     sst: SSTHandler,
     hess: HESSHandler,
@@ -438,7 +453,7 @@ all_telescope_handlers = {
 }
 legend_handler_map = {}
 try:
-    for tel_type in names.all_telescope_class_names:
+    for tel_type in all_telescope_objects.keys():
         legend_handler_map[all_telescope_objects[tel_type]] = all_telescope_handlers[tel_type]
 except KeyError:
     pass

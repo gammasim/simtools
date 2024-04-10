@@ -29,11 +29,12 @@ def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
     output_directory = ray_tracing_lst._output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv",
+        "tests/resources/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
-        "tests/resources/photons-North-LST-1-d10.0-za20.0-off0.000_validate_optics.lis.gz",
+        "tests/resources/photons-North-LSTN-01-d10.0km-za20.0deg-off0.000"
+        "deg_validate_optics.lis.gz",
         output_directory,
     )
     return ray_tracing_lst
@@ -181,13 +182,15 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog):
     with caplog.at_level(logging.INFO):
         ray_tracing_lst.plot(key="d80_cm", save=True)
         assert "Saving fig in" in caplog.text
-    plot_file_name = names.ray_tracing_plot_file_name(
-        "d80_cm",
-        ray_tracing_lst._telescope_model.site,
-        ray_tracing_lst._telescope_model.name,
-        ray_tracing_lst._source_distance,
-        ray_tracing_lst.config.zenith_angle,
-        ray_tracing_lst.label,
+    plot_file_name = names.generate_file_name(
+        file_type="ray-tracing",
+        suffix=".pdf",
+        extra_label="d80_cm",
+        site=ray_tracing_lst._telescope_model.site,
+        telescope_model_name=ray_tracing_lst._telescope_model.name,
+        source_distance=ray_tracing_lst._source_distance,
+        zenith_angle=ray_tracing_lst.config.zenith_angle,
+        label=ray_tracing_lst.label,
     )
     plot_file = ray_tracing_lst._output_directory.joinpath("figures").joinpath(plot_file_name)
     assert plot_file.exists() is True

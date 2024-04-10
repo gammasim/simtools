@@ -15,8 +15,8 @@ import logging
 import astropy.units as u
 
 import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.configuration import configurator
+from simtools.db import db_handler
 from simtools.utils import names
 
 
@@ -24,7 +24,7 @@ def main():
     config = configurator.Configurator(
         description=("Add a new parameter to the sites collection in the DB.")
     )
-    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -64,7 +64,7 @@ def main():
                 )
                 pars = db.read_mongo_db(
                     db_name=db.DB_CTA_SIMULATION_MODEL,
-                    telescope_model_name_db=telescope_now,
+                    telescope_model_name=telescope_now,
                     model_version=version_now,
                     run_location="./",
                     collection_name="telescopes",
