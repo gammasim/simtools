@@ -1,9 +1,9 @@
 import logging
 from copy import copy
 
-from simtools import db_handler
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
@@ -19,12 +19,14 @@ class InvalidArrayConfigData(Exception):
 class ArrayModel:
     """
     ArrayModel is an abstract representation of the MC model at the array level. It contains the\
-    list of TelescopeModel's and a ArrayLayout.
+    list of TelescopeModels, SiteModel, and a ArrayLayout.
 
     Parameters
     ----------
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Version of the model (e.g., prod5).
     array_config_file: str
         Path to a yaml file with the array config data.
     array_config_data: dict
@@ -33,7 +35,14 @@ class ArrayModel:
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, mongo_db_config, label=None, array_config_file=None, array_config_data=None):
+    def __init__(
+        self,
+        mongo_db_config,
+        model_version,
+        label=None,
+        array_config_file=None,
+        array_config_data=None,
+    ):
         """
         Initialize ArrayModel.
         """
@@ -44,11 +53,10 @@ class ArrayModel:
         self.site = None
         self.layout = None
         self.layout_name = None
-        self.model_version = None
+        self.model_version = model_version
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
-        array_config_data = collect_data_from_file_or_dict(array_config_file, array_config_data)
-        self._load_array_data(array_config_data)
+        self._load_array_data(collect_data_from_file_or_dict(array_config_file, array_config_data))
         self._set_config_file_directory()
         self._build_array_model()
         self._telescope_model_files_exported = False
@@ -79,28 +87,15 @@ class ArrayModel:
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validate_array_data(array_config_data)
 
-        # Site
         self.site = names.validate_site_name(array_config_data["site"])
 
-        # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
         self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=self.mongo_db_config,
             array_layout_name=self.site + "-" + self.layout_name,
+            model_version=self.model_version,
             label=self.label,
         )
-
-        # Model version
-        if (
-            "model_version" not in array_config_data.keys()
-            or array_config_data["model_version"] is None
-        ):
-            self._logger.warning("model_version not given in array_config_data - using 'Released'")
-            self.model_version = "Released"
-        else:
-            self.model_version = names.validate_model_version_name(
-                array_config_data["model_version"]
-            )
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._array_config_data = {
@@ -146,45 +141,40 @@ class ArrayModel:
 
         # Getting site parameters from DB
         self._logger.debug("Getting site parameters from DB")
-        db = db_handler.DatabaseHandler(mongo_db_config=self.mongo_db_config)
-        self._site_parameters = db.get_site_parameters(
-            self.site, self.model_version, only_applicable=True
+        self._site_model = SiteModel(
+            site=self.site,
+            mongo_db_config=self.mongo_db_config,
+            model_version=self.model_version,
+            label=self.label,
         )
 
         # Building telescope models
         self._telescope_model = []  # List of telescope models
-        _all_telescope_model_names = []  # List of telescope names without repetition
+        _all_telescope_names = []  # List of telescope names without repetition
         _all_pars_to_change = {}
         for tel in self.layout:
-            tel_size = names.get_telescope_class(tel.name)
-
             # Collecting telescope name and pars to change from array_config_data
-            tel_model_name, pars_to_change = self._get_single_telescope_info_from_array_config(
-                tel.name, tel_size
-            )
+            tel_name, pars_to_change = self._get_single_telescope_info_from_array_config(tel.name)
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
-            self._logger.debug(f"tel_model_name: {tel_model_name}")
-
             # Building the basic models - no pars to change yet
-            if tel_model_name not in _all_telescope_model_names:
+            if tel_name not in _all_telescope_names:
                 # First time a telescope name is built
-                _all_telescope_model_names.append(tel_model_name)
+                _all_telescope_names.append(tel_name)
                 tel_model = TelescopeModel(
                     site=self.site,
-                    telescope_model_name=tel_model_name,
+                    telescope_model_name=tel_name,
                     model_version=self.model_version,
+                    mongo_db_config=self.mongo_db_config,
                     label=self.label,
-                    db=db,
                 )
             else:
                 # Telescope name already exists.
                 # Finding the TelescopeModel and copying it.
                 for tel_now in self._telescope_model:
-                    if tel_now.name != tel_model_name:
+                    if tel_now.name != tel_name:
                         continue
-                    self._logger.debug(f"Copying tel model {tel_now.name} already loaded from DB")
                     tel_model = copy(tel_now)
                     break
 
@@ -204,14 +194,14 @@ class ArrayModel:
                     continue
                 self._logger.debug(
                     f"Changing {len(_all_pars_to_change[tel_data.name])} pars of a "
-                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name],}, ..."
+                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name], }, ..."
                 )
                 tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
                 tel_model.set_extra_label(tel_data.name)
 
-    def _get_single_telescope_info_from_array_config(self, tel_name, tel_size):
+    def _get_single_telescope_info_from_array_config(self, tel_name):
         """
-        array_config_data contains the default telescope models for each telescope size and the \
+        array_config_data contains the default telescope models for each telescope type and the \
         list of specific telescopes. For each case, the data can be given only as a name or as a \
         dict with 'name' and parameters to change. This function has to identify these two cases\
         and collect the telescope name and the dict with the parameters to change.
@@ -219,12 +209,12 @@ class ArrayModel:
         Parameters
         ----------
         tel_name: str
-            Name of the telescope at the layout level (LST-01, MST-05, ...).
-        tel_size: str
-            LST, MST or SST.
+            Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).
         """
 
-        def _proccess_single_telescope(data):
+        tel_type = names.get_telescope_type_from_telescope_name(tel_name)
+
+        def _process_single_telescope(data):
             """
             Parameters
             ----------
@@ -238,7 +228,7 @@ class ArrayModel:
                     msg = "ArrayConfig has no name for a telescope"
                     self._logger.error(msg)
                     raise InvalidArrayConfigData(msg)
-                tel_name = tel_size + "-" + data["name"]
+                tel_name = tel_type + "-" + data["name"]
                 pars_to_change = {k: v for (k, v) in data.items() if k != "name"}
                 self._logger.debug(
                     "Grabbing tel data as dict - "
@@ -248,7 +238,7 @@ class ArrayModel:
                 return tel_name, pars_to_change
             if isinstance(data, str):
                 # Case 1: data is string (only name)
-                tel_name = tel_size + "-" + data
+                tel_name = tel_type + "-" + data
                 return tel_name, {}
 
             # Case 2: data has a wrong type
@@ -257,25 +247,24 @@ class ArrayModel:
             raise InvalidArrayConfigData(msg)
 
         if tel_name in self._array_config_data.keys():
-            # Specific info for this telescope
-            return _proccess_single_telescope(self._array_config_data[tel_name])
+            return _process_single_telescope(self._array_config_data[tel_name])
 
         # Checking if default option exists in array_config_data
         not_contains_default_key = (
             "default" not in self._array_config_data.keys()
-            or tel_size not in self._array_config_data["default"].keys()
+            or tel_type not in self._array_config_data["default"].keys()
         )
 
         if not_contains_default_key:
             msg = (
                 "default option was not given in array_config_data "
                 + f"for the telescope {tel_name}"
+                + " (this is ok if all telescopes are explicitly defined)"
             )
-            self._logger.error(msg)
-            raise InvalidArrayConfigData(msg)
+            self._logger.warning(msg)
 
         # Grabbing the default option
-        return _proccess_single_telescope(self._array_config_data["default"][tel_size])
+        return _process_single_telescope(self._array_config_data["default"][tel_type])
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
@@ -308,8 +297,11 @@ class ArrayModel:
         """
 
         # Setting file name and the location
-        config_file_name = names.simtel_array_config_file_name(
-            self.layout_name, self.site, self.model_version, self.label
+        config_file_name = names.simtel_config_file_name(
+            array_name=self.layout_name,
+            site=self.site,
+            model_version=self.model_version,
+            label=self.label,
         )
         self._config_file_path = self._config_file_directory.joinpath(config_file_name)
 
@@ -325,7 +317,7 @@ class ArrayModel:
             config_file_path=self._config_file_path,
             layout=self.layout,
             telescope_model=self._telescope_model,
-            site_parameters=self._site_parameters,
+            site_model=self._site_model,
         )
         self._array_model_file_exported = True
 

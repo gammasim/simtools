@@ -3,4 +3,5 @@ CTA_SIMPIPE:
   TEST_NAME: run
   CONFIGURATION:
     ARRAY_CONFIG: ./tests/resources/array_config_test.yml
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-output

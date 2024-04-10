@@ -20,13 +20,13 @@ __all__ = ["Camera"]
 
 class Camera:
     """
-    Camera class, defining pixel layout including rotation, finding neighbour pixels, calculating\
+    Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating\
     FoV and plotting the camera.
 
     Parameters
     ----------
     telescope_model_name: string
-        As provided by the telescope model method TelescopeModel (ex South-LST-1).
+        As provided by the telescope model method TelescopeModel (e.g., LSTN-01)
     camera_config_file: string
         The sim_telarray file name.
     focal_length: float
@@ -34,21 +34,20 @@ class Camera:
         in the same unit as the pixel positions in the camera_config_file, usually cm.
     """
 
-    # Constants for finding neighbour pixels.
+    # Constants for finding neighbor pixels.
     PMT_NEIGHBOR_RADIUS_FACTOR = 1.1
     SIPM_NEIGHBOR_RADIUS_FACTOR = 1.4
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
     def __init__(self, telescope_model_name, camera_config_file, focal_length):
         """
-        Initialize Camera class, defining pixel layout including rotation, finding neighbour pixels,
+        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,
         calculating FoV and plotting the camera.
         """
 
         self._logger = logging.getLogger(__name__)
 
         self._telescope_model_name = telescope_model_name
-        _, self._camera_name, _ = names.split_telescope_model_name(telescope_model_name)
         self._camera_config_file = camera_config_file
         self._focal_length = focal_length
         if self._focal_length <= 0:
@@ -740,7 +739,9 @@ class Camera:
 
             if self._pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
                 font_size = 4
-                if names.get_telescope_class(self._telescope_model_name) == "SCT":
+                if "SCT" in names.get_telescope_type_from_telescope_name(
+                    self._telescope_model_name
+                ):
                     font_size = 2
                 plt.text(
                     xy_pix_pos[0],

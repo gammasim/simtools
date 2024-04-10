@@ -87,8 +87,12 @@ class Configurator:
         """
 
         self.parser.initialize_default_arguments()
+        simulation_model = None
         if arg_list and "--site" in arg_list:
-            self.parser.initialize_telescope_model_arguments(True, "--telescope" in arg_list)
+            simulation_model = ["site"]
+        if arg_list and "--telescope" in arg_list:
+            simulation_model = ["site", "telescope"]
+        self.parser.initialize_simulation_model_arguments(simulation_model)
         if add_db_config:
             self.parser.initialize_db_config_arguments()
 
@@ -100,8 +104,7 @@ class Configurator:
         require_command_line=True,
         paths=True,
         output=False,
-        telescope_model=False,
-        site_model=False,
+        simulation_model=None,
         db_config=False,
         job_submission=False,
     ):
@@ -124,10 +127,9 @@ class Configurator:
             Add path configuration to list of args.
         output: bool
             Add output file configuration to list of args.
-        telescope_model: bool
-            Add telescope model configuration to list of args.
-        site_model: bool
-            Add site model configuration to list of args (not required if telescope_model is set)
+        simulation_model: list
+            List of simulation model configuration parameters to add to list of args
+            (use: 'version', 'telescope', 'site')
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -150,8 +152,7 @@ class Configurator:
         self.parser.initialize_default_arguments(
             paths=paths,
             output=output,
-            telescope_model=telescope_model,
-            site_model=site_model,
+            simulation_model=simulation_model,
             db_config=db_config,
             job_submission=job_submission,
         )
@@ -467,7 +468,13 @@ class Configurator:
         """
 
         _db_dict = {}
-        _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
+        _db_para = (
+            "db_api_user",
+            "db_api_pw",
+            "db_api_port",
+            "db_server",
+            "db_simulation_model_url",
+        )
         try:
             for _para in _db_para:
                 _db_dict[_para] = self.config[_para]

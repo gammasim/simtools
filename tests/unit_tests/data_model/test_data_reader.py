@@ -57,7 +57,7 @@ def test_read_value_from_file(tmp_test_directory):
     with pytest.raises(gen.InvalidConfigData):
         data_reader.read_value_from_file(None, validate=False)
 
-    test_dict_1 = {"Value": 5.0}
+    test_dict_1 = {"value": 5.0}
     with open(tmp_test_directory / "test_read_value_from_file_1.json", "w", encoding="utf-8") as f:
         json.dump(test_dict_1, f)
     assert isinstance(
@@ -67,7 +67,7 @@ def test_read_value_from_file(tmp_test_directory):
         float,
     )
 
-    test_dict_2 = {"Value": "string_test"}
+    test_dict_2 = {"value": "string_test"}
     with open(tmp_test_directory / "test_read_value_from_file_2.json", "w", encoding="utf-8") as f:
         json.dump(test_dict_2, f)
     assert (
@@ -98,8 +98,9 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
 
     # schema explicitly given
     schema_file = (
-        "https://raw.githubusercontent.com/gammasim/simulation_model/"
-        "main/schema/reference_point_altitude.schema.yml"
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/model_parameters/-/raw/main/"
+        "schema/reference_point_altitude.schema.yml"
     )
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
@@ -117,10 +118,3 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
         data_reader.read_value_from_file(
             tmp_test_directory / "test_read_value_from_file_1.json", validate=True
         ),
-
-    # schema_file in meta_schema_url
-    with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file(
-            "tests/resources/MST_mirror_2f_measurements.schema.yml", validate=True
-        )
-        assert "Successful validation of yaml/json file" in caplog.text

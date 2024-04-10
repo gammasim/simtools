@@ -43,7 +43,7 @@ CTA:
       MODEL:
         NAME: array_coordinates_utm
         VERSION: 0.1.0
-        URL: https://raw.githubusercontent.com/gammasim/workflows/main/schemas/array_coordinates_UTM.schema.yml
+        URL: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/array_coordinates_UTM.schema.yml
   CONTEXT:
     DOCUMENT:
       - TYPE: CTAO-DOC
