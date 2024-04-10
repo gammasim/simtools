@@ -3,10 +3,10 @@
 import logging
 import shutil
 from copy import copy
-from pydoc import locate
 
 import astropy.units as u
 
+import simtools.utils.general as gen
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -26,16 +26,16 @@ class ModelParameter:
 
     Parameters
     ----------
+    db: DatabaseHandler
+        Database handler.
+    model_version: str
+        Version of the model (ex. prod5).
     site: str
         Site name (e.g., South or North).
     telescope_model_name: str
         Telescope model name (e.g., LSTN-01, LSTN-design).
     mongo_db_config: dict
         MongoDB configuration.
-    model_version: str
-        Version of the model (ex. prod5).
-    db: DatabaseHandler
-        Database handler.
     label: str
         Instance label. Important for output file naming.
 
@@ -43,10 +43,10 @@ class ModelParameter:
 
     def __init__(
         self,
+        mongo_db_config,
+        model_version,
         site=None,
         telescope_model_name=None,
-        mongo_db_config=None,
-        model_version="Released",
         db=None,
         label=None,
     ):
@@ -58,7 +58,7 @@ class ModelParameter:
             self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self._parameters = {}
-        self._reference_data = None
+        self._config_parameters = {}
         self._derived = None
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
@@ -78,9 +78,12 @@ class ModelParameter:
         self._is_config_file_up_to_date = False
         self._is_exported_model_files_up_to_date = False
 
-    def get_parameter_dict(self, par_name):
+    def _get_parameter_dict(self, par_name):
         """
-        Get dictionary for an existing model parameter.
+        Get model parameter dictionary as stored in the DB.
+        No conversion to values are applied for the use in simtools
+        (e.g., no conversion from the string representation of lists
+        to lists).
 
         Parameters
         ----------
@@ -110,7 +113,10 @@ class ModelParameter:
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
-        Get the value of an existing parameter of the model.
+        Get the value of a model parameter. List of values stored
+        in strings are returns as lists, so that no knowledge
+        of the database structure is needed when accessing the
+        model parameters.
 
         Parameters
         ----------
@@ -130,12 +136,22 @@ class ModelParameter:
             If par_name does not match any parameter in this model.
         """
 
-        parameter_dict = parameter_dict if parameter_dict else self.get_parameter_dict(par_name)
+        parameter_dict = parameter_dict if parameter_dict else self._get_parameter_dict(par_name)
         try:
-            return parameter_dict["value"]
+            _parameter = parameter_dict["value"]
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} does not have a value")
             raise exc
+        if isinstance(_parameter, str):
+            _is_float = False
+            try:
+                _is_float = self.get_parameter_type(par_name).startswith("float")
+            except (InvalidModelParameter, TypeError):  # float - in case we don't know
+                _is_float = True
+            _parameter = gen.convert_string_to_list(_parameter, is_float=_is_float)
+            _parameter = _parameter if len(_parameter) > 1 else _parameter[0]
+
+        return _parameter
 
     def get_parameter_value_with_unit(self, par_name):
         """
@@ -153,11 +169,10 @@ class ModelParameter:
         provided in the model, the value is returned without a unit.
 
         """
-        _parameter = self.get_parameter_dict(par_name)
+        _parameter = self._get_parameter_dict(par_name)
         _value = self.get_parameter_value(None, _parameter)
         try:
-            _units = _parameter.get("unit")
-            return float(_value) * u.Unit(_units)
+            return _value * u.Unit(_parameter.get("unit"))
         except (KeyError, TypeError):
             return _value
 
@@ -177,7 +192,7 @@ class ModelParameter:
             type of the parameter (None if no type is defined)
 
         """
-        parameter_dict = self.get_parameter_dict(par_name)
+        parameter_dict = self._get_parameter_dict(par_name)
         try:
             return parameter_dict.get("type")
         except KeyError:
@@ -200,7 +215,7 @@ class ModelParameter:
             True if file flag is set.
 
         """
-        parameter_dict = self.get_parameter_dict(par_name)
+        parameter_dict = self._get_parameter_dict(par_name)
         try:
             if parameter_dict.get("file"):
                 return True
@@ -237,50 +252,9 @@ class ModelParameter:
             if par_now.get("File") or par_now.get("file"):
                 self.db.export_file_db(
                     db_name=self.db.DB_DERIVED_VALUES,
-                    dest=self.io_handler.get_output_directory(label=self.label, sub_dir="derived"),
+                    dest=self.config_file_directory,
                     file_name=(par_now.get("value") or par_now.get("Value")),
                 )
-
-    @property
-    def reference_data(self):
-        """
-        Load the reference data information if the class instance hasn't done it yet.
-        """
-        if self._reference_data is None:
-            self._load_reference_data()
-        return self._reference_data
-
-    def _load_reference_data(self):
-        """Load the reference data for this telescope from the DB."""
-        self._logger.debug("Reading reference data from DB")
-        self._reference_data = self.db.get_reference_data(
-            self.site, self.model_version, only_applicable=True
-        )
-
-    def get_reference_data_value(self, par_name):
-        """
-        Get the value for a reference data parameter.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the reference data parameter.
-
-        Returns
-        -------
-        Value of the reference parameter.
-
-        Raises
-        ------
-        KeyError
-            If par_name does not match any reference parameter in this model.
-        """
-
-        try:
-            return self.reference_data[par_name]["value"]
-        except KeyError as exc:
-            self._logger.error(f"Reference parameter {par_name} does not have a value")
-            raise exc
 
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
@@ -302,8 +276,12 @@ class ModelParameter:
 
         # Setting file name and the location
         if self.site is not None and self.name is not None:
-            config_file_name = names.simtel_telescope_config_file_name(
-                self.site, self.name, self.model_version, self.label, self._extra_label
+            config_file_name = names.simtel_config_file_name(
+                self.site,
+                self.model_version,
+                telescope_model_name=self.name,
+                label=self.label,
+                extra_label=self._extra_label,
             )
             self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
@@ -327,6 +305,14 @@ class ModelParameter:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, only_applicable=True
             )
+            try:
+                self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
+                    self.site, self.name, self.model_version
+                )
+            except ValueError:
+                self._logger.warning(
+                    f"No sim_telarray configuration parameters found for {self.site}, {self.name}"
+                )
 
         if self.site is not None:
             self._logger.debug(f"Reading site parameters from DB ({self.site} site)")
@@ -361,13 +347,15 @@ class ModelParameter:
         """
         return self._extra_label if self._extra_label is not None else ""
 
-    def get_simtel_parameters(self, telescope_model=True, site_model=True):
+    def get_simtel_parameters(self, parameters=None, telescope_model=True, site_model=True):
         """
         Get simtel parameters as name and value pairs. Do not include parameters
         labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
 
         Parameters
         ----------
+        parameters: dict
+            Parameters to be renamed (if necessary)
         telescope_model: bool
             If True, telescope model parameters are included.
         site_model: bool
@@ -376,16 +364,18 @@ class ModelParameter:
         Returns
         -------
         dict
-            simtel parameters as dict
+            simtel parameters as dict (sorted by parameter names)
 
         """
+        if parameters is None:
+            parameters = self._parameters
 
         _simtel_parameter_value = {}
-        for key in self._parameters:
+        for key in parameters:
             _par_name = names.get_simtel_name_from_parameter_name(key, telescope_model, site_model)
             if _par_name is not None:
-                _simtel_parameter_value[_par_name] = self._parameters[key].get("value")
-        return _simtel_parameter_value
+                _simtel_parameter_value[_par_name] = parameters[key].get("value")
+        return dict(sorted(_simtel_parameter_value.items()))
 
     def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
         """
@@ -446,21 +436,20 @@ class ModelParameter:
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
-        type_of_par_name = locate(self.get_parameter_type(par_name))
-        if not isinstance(value, type_of_par_name):
-            self._logger.warning(
-                f"The type of the provided value ({value}, {type(value)}) "
-                f"is different from the type of {par_name} "
-                f"({self.get_parameter_type(par_name)}). "
-                f"Attempting to cast to the correct type."
+        if isinstance(value, str):
+            value = gen.convert_string_to_list(value)
+
+        if not gen.validate_data_type(
+            reference_dtype=self.get_parameter_type(par_name),
+            value=value,
+            dtype=None,
+            allow_subtypes=True,
+        ):
+            self._logger.error(
+                f"Could not cast {value} of type {type(value)} "
+                f"to {self.get_parameter_type(par_name)}."
             )
-            try:
-                value = type_of_par_name(value)
-            except ValueError:
-                self._logger.error(
-                    f"Could not cast {value} to {self.get_parameter_type(par_name)}."
-                )
-                raise
+            raise ValueError
 
         self._logger.debug(
             f"Changing parameter {par_name} "
@@ -531,7 +520,9 @@ class ModelParameter:
         # Using SimtelConfigWriter to write the config file.
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self.config_file_path, parameters=self.get_simtel_parameters()
+            config_file_path=self.config_file_path,
+            parameters=self.get_simtel_parameters(parameters=self._parameters),
+            config_parameters=self.get_simtel_parameters(parameters=self._config_parameters),
         )
 
     @property
@@ -572,17 +563,6 @@ class ModelParameter:
         if not self._is_config_file_up_to_date and not no_export:
             self.export_config_file()
         return self.config_file_path
-
-    def get_derived_directory(self):
-        """
-        Get the directory where all the files with derived values for are written to.
-
-        Returns
-        -------
-        Path
-            Directory where all the files with derived values are written to.
-        """
-        return self.config_file_directory.parents[0].joinpath("derived")
 
     def _load_simtel_config_writer(self):
         """

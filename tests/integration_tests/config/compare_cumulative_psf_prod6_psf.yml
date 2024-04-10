@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     TELESCOPE: LSTN-01
-    MODEL_VERSION: prod5
+    MODEL_VERSION: prod6
     DATA: ./tests/resources/PSFcurve_data_v2.txt
     ZENITH: 20
     TEST: true

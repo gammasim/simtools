@@ -56,8 +56,10 @@ class SimtelConfigReader:
         Path of the file to read from.
     simtel_telescope_name: str
         Telescope name (sim_telarray convention)
-    return_arrays_as_strings: bool
-        If True, return arrays as comma separated strings.
+    parameter_name: str
+        Parameter name (default: read from schema file)
+    camera_pixels: int
+        Number of camera pixels
     """
 
     def __init__(
@@ -65,7 +67,8 @@ class SimtelConfigReader:
         schema_file,
         simtel_config_file,
         simtel_telescope_name,
-        return_arrays_as_strings=True,
+        parameter_name=None,
+        camera_pixels=None,
     ):
         """
         Initialize SimtelConfigReader.
@@ -74,13 +77,15 @@ class SimtelConfigReader:
         self._logger.debug("Init SimtelConfigReader")
 
         self.schema_file = schema_file
-        self.schema_dict = gen.collect_data_from_file_or_dict(
-            file_name=self.schema_file, in_dict=None
+        self.schema_dict = (
+            gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
+            if self.schema_file is not None
+            else None
         )
-        self.parameter_name = self.schema_dict.get("name")
+        self.parameter_name = self.schema_dict.get("name") if self.schema_dict else parameter_name
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
-        self.return_arrays_as_strings = return_arrays_as_strings
+        self.camera_pixels = camera_pixels
         self.parameter_dict = self._read_simtel_config_file(
             simtel_config_file, simtel_telescope_name
         )
@@ -139,9 +144,9 @@ class SimtelConfigReader:
         """
 
         try:
-            dict_to_write["value"] = self._output_format_for_arrays(dict_to_write["value"])
-            dict_to_write["unit"] = self._output_format_for_arrays(dict_to_write["unit"])
-            dict_to_write["limits"] = self._output_format_for_arrays(dict_to_write["limits"])
+            dict_to_write["value"] = gen.convert_list_to_string(dict_to_write["value"])
+            dict_to_write["unit"] = gen.convert_list_to_string(dict_to_write["unit"], True)
+            dict_to_write["limits"] = gen.convert_list_to_string(dict_to_write["limits"])
         except KeyError:
             pass
 
@@ -159,27 +164,57 @@ class SimtelConfigReader:
     def compare_simtel_config_with_schema(self):
         """
         Compare limits and defaults reported by simtel_array with schema
-        (for debugging purposes; simple printing).
+        (for debugging purposes; simple printing). Check for differences
+        in 'default' and 'limits' entries.
 
         """
 
-        self._logger.info(
-            f"Comparing simtel_array configuration with schema for {self.parameter_name} "
-            f"(sim_telarray: {self.simtel_parameter_name})"
-        )
+        for data_type in ["default", "limits"]:
+            _from_simtel = self.parameter_dict.get(data_type)
+            # ignore limits checks for boolean
+            if data_type == "limits" and self.parameter_dict.get("type") == "bool":
+                continue
+            try:
+                if data_type == "limits":
+                    _from_schema = [
+                        self.schema_dict["data"][0]["allowed_range"].get("min"),
+                        self.schema_dict["data"][0]["allowed_range"].get("max"),
+                    ]
+                    _from_schema = _from_schema[0] if _from_schema[1] is None else _from_schema
+                else:
+                    if len(self.schema_dict["data"]) == 1:
+                        _from_schema = self.schema_dict["data"][0]["default"]
+                    else:
+                        _from_schema = [data.get("default") for data in self.schema_dict["data"]]
+            except (KeyError, IndexError):
+                _from_schema = None
 
-        self._logger.info("Limits:")
-        self._logger.info(f"  from simtel: {self.parameter_dict.get('limits')}")
-        try:
-            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['allowed_range']})")
-        except (KeyError, IndexError):
-            self._logger.info("  from schema: None")
-        self._logger.info("Defaults:")
-        self._logger.info(f"  from simtel: {self.parameter_dict.get('default')}")
-        try:
-            self._logger.info(f"  from schema: {self.schema_dict['data'][0]['default']}")
-        except (KeyError, IndexError):
-            self._logger.info("  from schema: None")
+            if isinstance(_from_schema, list):
+                _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
+
+            try:
+                if (
+                    not isinstance(_from_schema, (list, np.ndarray))
+                    and _from_simtel == _from_schema
+                ):
+                    self._logger.debug(f"Values for {data_type} match")
+                    continue
+            except ValueError:
+                pass
+            try:
+                if np.all(np.isclose(_from_simtel, _from_schema)):
+                    self._logger.debug(f"Values for {data_type} match")
+                    continue
+            except (TypeError, ValueError):
+                pass
+            self._logger.warning(f"Values for {data_type} do not match:")
+            self._logger.warning(
+                f"  from simtel: {self.simtel_parameter_name} {_from_simtel}"
+                f" ({type(_from_simtel)})"
+            )
+            self._logger.warning(
+                f"  from schema: {self.parameter_name} {_from_schema}" f" ({type(_from_schema)})"
+            )
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -220,7 +255,7 @@ class SimtelConfigReader:
 
         _para_dict = {}
         # first: extract line type (required for conversions and dimension)
-        _para_dict["type"], _para_dict["dimension"] = self._get_type_from_simtel_cfg(
+        _para_dict["type"], _para_dict["dimension"] = self._get_type_and_dimension_from_simtel_cfg(
             matching_lines["type"]
         )
         # then: extract other fields
@@ -230,7 +265,7 @@ class SimtelConfigReader:
                 _para_dict[key], _ = self._add_value_from_simtel_cfg(
                     matching_lines[key],
                     dtype=_para_dict.get("type"),
-                    ndim=_para_dict.get("dimension"),
+                    n_dim=_para_dict.get("dimension"),
                     default=_para_dict.get("default"),
                 )
             except KeyError:
@@ -238,7 +273,48 @@ class SimtelConfigReader:
 
         return _para_dict
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None, ndim=1, default=None):
+    def _resolve_all_in_column(self, column):
+        """
+        Resolve 'all' entries in a column. This needs to resolve the following cases:
+        no 'all' in any entry; ['all:', '5'], ['all: 5'], ['all:5', '3:1']
+        This function is fine-tuned to the simtel configuration output.
+
+        Parameters
+        ----------
+        column: list
+            List of strings to resolve.
+
+        Returns
+        -------
+        list
+            List of resolved strings.
+
+        """
+
+        # don't do anything if all string items in column do not start with 'all'
+        if not any(isinstance(item, str) and item.startswith("all") for item in column):
+            return column, {}
+
+        self._logger.debug(f"Resolving 'all' entries in column: {column}")
+        # remove 'all:' entries
+        column = [item for item in column if item not in ("all:", "all")]
+        # resolve 'all:5' type entries
+        column = [
+            item.split(":")[1].replace(" ", "") if item.startswith("all:") else item
+            for item in column
+        ]
+        # find 'index:value' type entries
+        except_from_all = {}
+        for item in column:
+            if ":" in item:
+                index, value = item.split(":")
+                except_from_all[index] = value
+        # finally remove entries containing ':'
+        column = [item for item in column if ":" not in item]
+
+        return column, except_from_all
+
+    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
         """
         Extract value(s) from simtel configuration file columns.
         This function is fine-tuned to the simtel configuration output.
@@ -249,7 +325,7 @@ class SimtelConfigReader:
             List of strings to extract value from.
         dtype: str
             Data type to convert value to.
-        ndim: int
+        n_dim: int
             Length of array to be returned.
         default: object
             Default value to extend array to required length.
@@ -260,33 +336,43 @@ class SimtelConfigReader:
             Values extracted from column. Of object is a list of array, return length of array.
 
         """
-        # lists of values are space or comma separated
+        # string represents a lists of values (space or comma separated)
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
-            column = [item for item in column if item != "all:"]
         self._logger.debug(
-            f"Adding value from simtel config: {column} (ndim={ndim}, default={default})"
+            f"Adding value from simtel config: {column} (n_dim={n_dim}, default={default})"
         )
-        # remove any ':all' entries
-        column = [item for item in column if item != "all:"]
-        # extend array to required length (simtel uses sometimes 'all:' for all telescopes)
-        if ndim > 1 and len(column) < ndim:
+        column = [None if item.lower() == "none" else item for item in column]
+        column, except_from_all = self._resolve_all_in_column(column)
+        # extend array to required length (simtel uses sometimes 'all:' for all entries)
+        if n_dim > 1 and len(column) < n_dim:
             try:
                 # skip formatting: black reformats and violates E203
                 column += default[len(column):]  # fmt: skip
             except TypeError:
                 # extend array to required length using previous value
-                column.extend([column[-1]] * (ndim - len(column)))
+                column.extend([column[-1]] * (n_dim - len(column)))
+        if len(except_from_all) > 0:
+            for index, value in except_from_all.items():
+                column[int(index)] = value
+        if dtype == "bool":
+            column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            return np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1
+            return (
+                np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
+                if column[0] is not None
+                else None
+            ), 1
         if len(column) > 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
         return None, None
 
-    def _get_type_from_simtel_cfg(self, column):
+    def _get_type_and_dimension_from_simtel_cfg(self, column):
         """
         Return type and dimension from simtel configuration column.
+        'Func' type from simtel is treated as string. Return number
+        of camera pixel for a hard-wired set up parameters.
 
         Parameters
         ----------
@@ -300,10 +386,12 @@ class SimtelConfigReader:
 
         """
 
-        if column[0].lower() == "text":
+        if column[0].lower() == "text" or column[0].lower() == "func":
             return "str", 1
         if column[0].lower() == "ibool":
             return "bool", int(column[1])
+        if self.camera_pixels is not None and self.simtel_parameter_name in ["NIGHTSKY_BACKGROUND"]:
+            return str(np.dtype(column[0].lower())), self.camera_pixels
         return str(np.dtype(column[0].lower())), int(column[1])
 
     def _get_simtel_parameter_name(self, parameter_name):
@@ -327,7 +415,7 @@ class SimtelConfigReader:
             for sim_soft in self.schema_dict["simulation_software"]:
                 if sim_soft["name"] == "sim_telarray":
                     return sim_soft["internal_parameter_name"].upper()
-        except KeyError:
+        except (KeyError, TypeError):
             pass
 
         return parameter_name.upper()
@@ -424,25 +512,3 @@ class SimtelConfigReader:
         )
         data_validator.validate_and_transform()
         return data_validator.data_dict
-
-    def _output_format_for_arrays(self, data):
-        """
-        Convert arrays to strings if required.
-
-        Parameters
-        ----------
-        data: object
-            Object of data to convert (e.g., double or list)
-
-        Returns
-        -------
-        object or str:
-            Converted data as string (if required)
-
-        """
-        if data is None or not isinstance(data, (list, np.ndarray)):
-            return data
-        if len(data) == 1 or not self.return_arrays_as_strings:
-            return data
-
-        return " ".join(str(item) for item in data)

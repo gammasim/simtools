@@ -112,7 +112,7 @@ def _parse(label, description, usage):
         default=None,
     )
 
-    return config.initialize(db_config=True, site_model=True)
+    return config.initialize(db_config=True, simulation_model="site")
 
 
 def _get_site_from_telescope_list_name(telescope_list_file):
@@ -185,6 +185,7 @@ def main():
 
             array_layout = ArrayLayout(
                 mongo_db_config=db_config,
+                model_version=args_dict["model_version"],
                 site=site,
                 telescope_list_file=one_file,
             )

@@ -8,7 +8,6 @@ env:
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
-  SIMTOOLS_DB_SIMULATION_MODEL_URL: "./model_parameters"
 
 on:
   pull_request:
@@ -43,6 +42,4 @@ jobs:
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
           export PYTHONPATH=$PYTHONPATH:.
-          # Clone simulation model repo for faster file access
-          git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
           pytest --color=yes --durations=10 -n auto --dist loadscope --no-cov tests/integration_tests/

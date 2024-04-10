@@ -25,6 +25,8 @@ class ArrayModel:
     ----------
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Version of the model (e.g., prod5).
     array_config_file: str
         Path to a yaml file with the array config data.
     array_config_data: dict
@@ -33,7 +35,14 @@ class ArrayModel:
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, mongo_db_config, label=None, array_config_file=None, array_config_data=None):
+    def __init__(
+        self,
+        mongo_db_config,
+        model_version,
+        label=None,
+        array_config_file=None,
+        array_config_data=None,
+    ):
         """
         Initialize ArrayModel.
         """
@@ -44,11 +53,10 @@ class ArrayModel:
         self.site = None
         self.layout = None
         self.layout_name = None
-        self.model_version = None
+        self.model_version = model_version
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
-        array_config_data = collect_data_from_file_or_dict(array_config_file, array_config_data)
-        self._load_array_data(array_config_data)
+        self._load_array_data(collect_data_from_file_or_dict(array_config_file, array_config_data))
         self._set_config_file_directory()
         self._build_array_model()
         self._telescope_model_files_exported = False
@@ -79,28 +87,15 @@ class ArrayModel:
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validate_array_data(array_config_data)
 
-        # Site
         self.site = names.validate_site_name(array_config_data["site"])
 
-        # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
         self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=self.mongo_db_config,
             array_layout_name=self.site + "-" + self.layout_name,
+            model_version=self.model_version,
             label=self.label,
         )
-
-        # Model version
-        if (
-            "model_version" not in array_config_data.keys()
-            or array_config_data["model_version"] is None
-        ):
-            self._logger.warning("model_version not given in array_config_data - using 'Released'")
-            self.model_version = "Released"
-        else:
-            self.model_version = names.validate_model_version_name(
-                array_config_data["model_version"]
-            )
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         self._array_config_data = {
@@ -252,7 +247,6 @@ class ArrayModel:
             raise InvalidArrayConfigData(msg)
 
         if tel_name in self._array_config_data.keys():
-            # Specific info for this telescope
             return _process_single_telescope(self._array_config_data[tel_name])
 
         # Checking if default option exists in array_config_data
@@ -265,9 +259,9 @@ class ArrayModel:
             msg = (
                 "default option was not given in array_config_data "
                 + f"for the telescope {tel_name}"
+                + " (this is ok if all telescopes are explicitly defined)"
             )
-            self._logger.error(msg)
-            raise InvalidArrayConfigData(msg)
+            self._logger.warning(msg)
 
         # Grabbing the default option
         return _process_single_telescope(self._array_config_data["default"][tel_type])
@@ -303,8 +297,11 @@ class ArrayModel:
         """
 
         # Setting file name and the location
-        config_file_name = names.simtel_array_config_file_name(
-            self.layout_name, self.site, self.model_version, self.label
+        config_file_name = names.simtel_config_file_name(
+            array_name=self.layout_name,
+            site=self.site,
+            model_version=self.model_version,
+            label=self.label,
         )
         self._config_file_path = self._config_file_directory.joinpath(config_file_name)
 
@@ -320,7 +317,7 @@ class ArrayModel:
             config_file_path=self._config_file_path,
             layout=self.layout,
             telescope_model=self._telescope_model,
-            site_parameters=self._site_model.get_simtel_parameters(),
+            site_model=self._site_model,
         )
         self._array_model_file_exported = True
 

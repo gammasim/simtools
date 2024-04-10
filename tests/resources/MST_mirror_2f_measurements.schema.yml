@@ -3,14 +3,14 @@
 title: Schema for mirror panel 2F measurements
 version: 0.1.0
 meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: mirror_2f_measurement
 description: |-
   Mirror panel 2F measurements determining
   panel radius and panel PSF.
 data:
-  - type: datatable
+  - type: data_table
     table_columns:
       - name: mirror_panel_id
         description: |-
