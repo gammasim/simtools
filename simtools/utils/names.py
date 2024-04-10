@@ -71,6 +71,7 @@ all_site_names = {
     "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
 }
 
+all_calibration_device_names = {"ILL": ["ILLS", "ILLN"]}
 all_model_version_names = {
     "2015-07-21": [""],
     "2015-10-20-p1": [""],
