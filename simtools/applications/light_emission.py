@@ -35,7 +35,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--light_source_type",
-        help="Select calibration light source type: laser (1), other (2)",
+        help="Select calibration light source type: varying distances (1), layout positions (2)",
         type=int,
         default=1,
     )
@@ -43,6 +43,12 @@ def _parse(label):
         "--distance_ls",
         help="Light source distance in m (Example --distance_ls 800 1200)",
         nargs="+",
+    )
+    config.parser.add_argument(
+        "--illuminator",
+        help="Illuminator in array, i.e. ILL-02",
+        type=str,
+        default=None,
     )
     return config.initialize(db_config=True, telescope_model=True, require_command_line=False)
 
@@ -111,7 +117,7 @@ def default_le_configs(le_application):
 
 
 def select_application(args_dict):
-    if args_dict["light_source_type"] == 1:
+    if args_dict["light_source_type"] == 1 or args_dict["light_source_type"] == 2:
         le_application = "xyzls"
 
     return le_application
@@ -131,13 +137,14 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
-
     if args_dict["distance_ls"] is not None:
         default_le_config["z_pos"]["default"] = [
             100 * int(dist) for dist in args_dict["distance_ls"]
         ] * u.cm
-        print(default_le_config["z_pos"]["default"])
+
+    if args_dict["illuminator"] is not None:
+        # TODO: add illuminator positions from configuration later
+        pass
 
     telescope_model = TelescopeModel(
         site=args_dict["site"],
@@ -166,17 +173,14 @@ def main():
             simtel_source_path=args_dict["simtel_path"],
             label=label,
         )
-        # command = le._make_light_emission_script()
-        # command = le._make_simtel_script(output_dir)
         run_script = le.prepare_script(generate_postscript=True)
         subprocess.run(run_script, shell=False, check=False)
         # le.plot_simtel() #custom plots using eventio
-
         try:
             fig = le.plot_simtel_ctapipe()
             figures.append(fig)
-        except InvalidParameter:
-            msg = f"telescope not triggered at distance of {distance.to(u.meter)}"
+        except (InvalidParameter, AttributeError):
+            msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
             logger.warning(msg)
 
     save_figs_to_pdf(

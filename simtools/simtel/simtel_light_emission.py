@@ -89,6 +89,11 @@ class SimulatorLightEmission(SimtelRunner):
 
         self.le_application = le_application
         self.default_le_config = default_le_config
+        self.distance = np.sqrt(
+            self.default_le_config["x_pos"]["default"] ** 2
+            + self.default_le_config["y_pos"]["default"] ** 2
+            + self.default_le_config["z_pos"]["default"] ** 2
+        )
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -207,6 +212,7 @@ class SimulatorLightEmission(SimtelRunner):
         #    "telescope_theta",
         #    self.config.zenith_angle + self.config.off_axis_angle,
         # )
+        # command += super()._config_option("telescope_theta", "70")
         command += super()._config_option("telescope_phi", "0")
         command += super()._config_option("power_law", "2.68")
         command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
