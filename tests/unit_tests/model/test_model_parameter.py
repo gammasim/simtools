@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
-import filecmp
 import logging
 
 import pytest
 from astropy import units as u
 
+import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameter
 from simtools.model.telescope_model import TelescopeModel
 
@@ -15,31 +15,19 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def lst_config_file():
-    """Return the path to test config file for LST-1"""
-    return "tests/resources/CTA-North-LST-1-Released_test-telescope-model.cfg"
-
-
-@pytest.fixture
-def telescope_model_from_config_file(io_handler, lst_config_file):
-    label = "test-telescope-model"
-    tel_model = TelescopeModel.from_config_file(
-        site="North",
-        telescope_model_name="LSTN-01",
-        label=label,
-        config_file_name=lst_config_file,
-    )
-    return tel_model
+    """Return the path to test config file for LSTN-01"""
+    return "tests/resources/CTA-North-LSTN-01-Released_test-telescope-model.cfg"
 
 
 def test_get_parameter_dict(telescope_model_lst):
     tel_model = telescope_model_lst
-    assert isinstance(tel_model.get_parameter_dict("num_gains"), dict)
-    assert isinstance(tel_model.get_parameter_dict("num_gains")["value"], int)
-    assert isinstance(tel_model.get_parameter_dict("telescope_axis_height")["value"], float)
-    assert tel_model.get_parameter_dict("telescope_axis_height")["unit"] == "m"
+    assert isinstance(tel_model._get_parameter_dict("num_gains"), dict)
+    assert isinstance(tel_model._get_parameter_dict("num_gains")["value"], int)
+    assert isinstance(tel_model._get_parameter_dict("telescope_axis_height")["value"], float)
+    assert tel_model._get_parameter_dict("telescope_axis_height")["unit"] == "m"
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter_dict("not_a_parameter")
+        tel_model._get_parameter_dict("not_a_parameter")
 
 
 def test_get_parameter_value(telescope_model_lst):
@@ -50,11 +38,39 @@ def test_get_parameter_value(telescope_model_lst):
     with pytest.raises(KeyError):
         tel_model.get_parameter_value("num_gains", parameter_dict=_par_dict_value_missing)
 
+    tel_model._parameters["num_gains"]["value"] = "2 3 4"
+    t_int = tel_model.get_parameter_value("num_gains")
+    assert len(t_int) == 3
+    assert isinstance(t_int, list)
+    assert isinstance(t_int[2], int)
+
+    t_1 = tel_model.get_parameter_value("telescope_transmission")
+    assert isinstance(t_1, list)
+    assert len(t_1) == 6
+
+    # single value floats should return as floats
+    _tmp_dict = {
+        "value": "0.8",
+        "type": "float64",
+    }
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert pytest.approx(t_2) == 0.8
+    # string-type lists
+    _tmp_dict["value"] = "0.8 0.9"
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert len(t_2) == 2
+    assert pytest.approx(t_2[0]) == 0.8
+    assert pytest.approx(t_2[1]) == 0.9
+    # mixed strings should stay string
+    _tmp_dict["value"] = "0.8 abc"
+    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    assert t_2 == "0.8 abc"
+
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
     tel_model = telescope_model_lst
 
-    assert isinstance(tel_model.get_parameter_value_with_unit("effective_focal_length"), u.Quantity)
+    assert isinstance(tel_model.get_parameter_value_with_unit("fadc_mhz"), u.Quantity)
     assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
 
 
@@ -68,72 +84,63 @@ def test_handling_parameters(telescope_model_lst):
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
     tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
+    assert (
+        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    )
 
-    assert new_mrra == tel_model.get_parameter_value("mirror_reflection_random_angle")
+    tel_model.change_parameter(
+        "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
+    )
+    assert (
+        pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
+    )
 
     logging.info("Adding new_parameter")
     new_par = "23"
     tel_model.add_parameter("new_parameter", new_par)
 
-    assert new_par == tel_model.get_parameter_value("new_parameter")
+    assert pytest.approx(tel_model.get_parameter_value("new_parameter")) == 23.0
+    assert isinstance(tel_model.get_parameter_value("new_parameter"), float)
 
     with pytest.raises(InvalidModelParameter):
-        tel_model.get_parameter_dict("bla_bla")
+        tel_model._get_parameter_dict("bla_bla")
 
 
 def test_change_parameter(telescope_model_lst):
     tel_model = telescope_model_lst
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
-    logger.info("Testing changing camera_pixels to a different integer")
-    new_camera_pixels = 9999
-    tel_model.change_parameter("camera_pixels", new_camera_pixels)
+    tel_model.change_parameter("camera_pixels", 9999)
+    assert tel_model.get_parameter_value("camera_pixels") == 9999
 
-    assert new_camera_pixels == tel_model.get_parameter_value("camera_pixels")
-
-    logger.info("Testing changing camera_pixels to a float")
-    new_camera_pixels = 9999.9
-    tel_model.change_parameter("camera_pixels", new_camera_pixels)
-
-    assert int(new_camera_pixels) == tel_model.get_parameter_value("camera_pixels")
+    with pytest.raises(ValueError):
+        logger.info("Testing changing camera_pixels to a float (now allowed)")
+        tel_model.change_parameter("camera_pixels", 9999.9)
 
     with pytest.raises(ValueError):
         logger.info("Testing changing camera_pixels to a nonsense string")
-        new_camera_pixels = "bla_bla"
-        tel_model.change_parameter("camera_pixels", new_camera_pixels)
+        tel_model.change_parameter("camera_pixels", "bla_bla")
+
+    logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
+    tel_model.change_parameter("mirror_focal_length", 55.0)
+    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
+    tel_model.change_parameter("mirror_focal_length", 55)
+    assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
+
+    tel_model.change_parameter("mirror_focal_length", "9999.9 0.")
+    assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
+
+    with pytest.raises(ValueError):
+        logger.info("Testing changing mirror_focal_length to a nonsense string")
+        tel_model.change_parameter("mirror_focal_length", "bla_bla")
 
 
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
-    flen_info = tel_model.get_parameter_dict("focal_length")
+    flen_info = tel_model._get_parameter_dict("focal_length")
     logger.info(f"Focal Length = {flen_info['value']}, type = {flen_info['type']}")
 
     assert isinstance(flen_info["value"], float)
-
-
-def test_cfg_file(telescope_model_from_config_file, lst_config_file):
-    tel_model = telescope_model_from_config_file
-
-    tel_model.export_config_file()
-
-    logger.info(f"Config file (original): {lst_config_file}")
-    logger.info(f"Config file (new): {tel_model.get_config_file()}")
-
-    assert filecmp.cmp(lst_config_file, tel_model.get_config_file())
-
-    cfg_file = tel_model.get_config_file()
-    tel = TelescopeModel.from_config_file(
-        site="south",
-        telescope_model_name="ssts-design",
-        label="test-sst",
-        config_file_name=cfg_file,
-    )
-    tel.export_config_file()
-    logger.info(f"Config file (sst): {tel.get_config_file()}")
-    # TODO: testing that file can be written and that it is different,
-    #       but not the file has the
-    #       correct contents
-    assert False is filecmp.cmp(lst_config_file, tel.get_config_file())
 
 
 def test_updating_export_model_files(db_config, io_handler):
@@ -149,7 +156,7 @@ def test_updating_export_model_files(db_config, io_handler):
     tel = TelescopeModel(
         site="North",
         telescope_model_name="LSTN-01",
-        model_version="prod4",
+        model_version="prod6",
         label="test-telescope-model-2",
         mongo_db_config=db_config,
     )
@@ -190,27 +197,16 @@ def test_updating_export_model_files(db_config, io_handler):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-def test_export_derived_files(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    _ = tel_model.derived
-    assert (
-        tel_model.get_derived_directory()
-        .joinpath("ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv")
-        .exists()
+def test_export_derived_files(io_handler, db_config):
+    tel_model = TelescopeModel(
+        site="North",
+        telescope_model_name="LSTN-01",
+        model_version="Prod5",
+        mongo_db_config=db_config,
+        label="test-telescope-model-lst",
     )
 
-
-def test_load_reference_data(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.reference_data["nsb_reference_value"]["value"] == pytest.approx(0.24)
-
-
-def test_get_reference_data_value(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.get_reference_data_value("nsb_reference_value") == pytest.approx(0.24)
-
-    with pytest.raises(KeyError):
-        tel_model.get_reference_data_value("bla_bla")
+    _ = tel_model.derived
+    assert tel_model.config_file_directory.joinpath(
+        "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
+    ).exists()

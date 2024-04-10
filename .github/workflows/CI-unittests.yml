@@ -7,7 +7,6 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL_URL: "./model_parameters"
 
 on:
   pull_request:
@@ -98,8 +97,6 @@ jobs:
       - name: Unit tests
         shell: bash -l {0}
         run: |
-          # Clone simulation model repo for faster file access
-          git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
           pytest --durations=10 --color=yes -n auto --dist loadscope
 
       - name: Upload coverage report to codecov

@@ -4,4 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     INPUT: tests/resources/telescope_positions-North-ground.ecsv
     PRINT: ground
+    MODEL_VERSION: prod6
     LOG_LEVEL: DEBUG

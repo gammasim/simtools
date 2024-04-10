@@ -3,5 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: one_file_with_name_with_extension
   CONFIGURATION:
     TELESCOPE_LIST: data/layout/telescope_positions-North-TestLayout.ecsv
+    MODEL_VERSION: prod6
     FIGURE_NAME: test.png
     OUTPUT_PATH: simtools-tests

@@ -4,6 +4,6 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: South
     TELESCOPE: MSTS-design
-    MODEL_VERSION: prod5
+    MODEL_VERSION: prod6
     NSB_SPECTRUM: tests/resources/benn_ellison_spectrum_for_testing.txt
     OUTPUT_PATH: simtools-tests
