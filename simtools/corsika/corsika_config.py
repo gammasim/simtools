@@ -571,7 +571,7 @@ class CorsikaConfig:
         Returns
         -------
         list
-            List of astropy quantities.
+            List of astropy quantities (or strings)
         """
 
         if isinstance(value_args, str):
