@@ -70,7 +70,6 @@ def main():
         db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
         db.DB_DERIVED_VALUES,
         "sandbox",
-        "test-data",
     ]
     file_id = None
     for db_name in available_dbs:
