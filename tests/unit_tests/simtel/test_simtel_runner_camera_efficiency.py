@@ -12,10 +12,14 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def camera_efficiency_sst(telescope_model_sst, simtel_path):
+def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
+
     telescope_model_sst.export_model_files()
     camera_efficiency_sst = CameraEfficiency(
-        telescope_model=telescope_model_sst, simtel_source_path=simtel_path, test=True
+        telescope_model=telescope_model_sst,
+        site_model=site_model_south,
+        simtel_source_path=simtel_path,
+        test=True,
     )
     return camera_efficiency_sst
 
@@ -47,11 +51,11 @@ def test_make_run_command(simtel_runner_camera_efficiency):
     assert "testeff" in command
     assert "-fnsb" not in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
-    assert "-flen 2.15191 -spix 0.62" in command
+    assert "-flen 2.15191 -spix 0.6" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
-    assert "-teltrans 0.92362" in command
-    assert "weighted_average_1D_transmission_astri_window_new.dat" in command
-    assert "-fqe PDE_V_4.4V_LVR5_ext.txt" in command
+    assert "-teltrans 0.921" in command
+    assert "transmission_sstcam_weighted_220512.dat" in command
+    assert "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat" in command
 
 
 def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
@@ -64,11 +68,11 @@ def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
     assert "-fnsb" in command
     assert "benn_ellison_spectrum_for_testing.txt" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
-    assert "-flen 2.15191 -spix 0.62" in command
+    assert "-flen 2.15191 -spix 0.6" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
-    assert "-teltrans 0.92362" in command
-    assert "weighted_average_1D_transmission_astri_window_new.dat" in command
-    assert "-fqe PDE_V_4.4V_LVR5_ext.txt" in command
+    assert "-teltrans 0.921" in command
+    assert "transmission_sstcam_weighted_220512.dat" in command
+    assert "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat" in command
 
 
 def test_check_run_result(simtel_runner_camera_efficiency):
@@ -82,8 +86,28 @@ def test_check_run_result(simtel_runner_camera_efficiency):
         simtel_runner_camera_efficiency._check_run_result()
 
 
-def test_get_one_dim_distribution(simtel_runner_camera_efficiency):
-    camera_filter_file = simtel_runner_camera_efficiency._get_one_dim_distribution(
+def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model_sst_prod5):
+
+    logger.warning(
+        "Running test_get_one_dim_distribution using prod5 model "
+        " (prod6 model with 1D transmission function)"
+    )
+
+    # 2D transmission window not defined in prod6; required prod5 runner
+    telescope_model_sst_prod5.export_model_files()
+    camera_efficiency_sst_prod5 = CameraEfficiency(
+        telescope_model=telescope_model_sst_prod5,
+        site_model=site_model_south,
+        simtel_source_path=simtel_path,
+        test=True,
+    )
+    simtel_runner_camera_efficiency_prod5 = SimtelRunnerCameraEfficiency(
+        simtel_source_path=simtel_path,
+        telescope_model=telescope_model_sst_prod5,
+        file_simtel=camera_efficiency_sst_prod5._file["simtel"],
+        label="test-simtel-runner-camera-efficiency",
+    )
+    camera_filter_file = simtel_runner_camera_efficiency_prod5._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
     )
     assert camera_filter_file.exists()

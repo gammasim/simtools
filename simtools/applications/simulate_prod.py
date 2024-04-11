@@ -208,7 +208,7 @@ def _parse(description=None):
         required=False,
         default=False,
     )
-    return config.initialize(db_config=True, telescope_model=True)
+    return config.initialize(db_config=True, simulation_model="telescope")
 
 
 def main():
@@ -248,6 +248,7 @@ def main():
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
     )
 
     simulator.simulate()

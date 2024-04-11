@@ -24,6 +24,8 @@ class CameraEfficiency:
     ----------
     telescope_model: TelescopeModel
         Instance of the TelescopeModel class.
+    site_model: SiteModel
+        Instance of the SiteModel class.
     simtel_source_path: str (or Path)
         Location of sim_telarray installation.
     label: str
@@ -39,6 +41,7 @@ class CameraEfficiency:
     def __init__(
         self,
         telescope_model,
+        site_model,
         simtel_source_path,
         label=None,
         config_data=None,
@@ -53,6 +56,7 @@ class CameraEfficiency:
 
         self._simtel_source_path = simtel_source_path
         self._telescope_model = self._validate_telescope_model(telescope_model)
+        self._site_model = site_model
         self.label = label if label is not None else self._telescope_model.label
         self.test = test
 
@@ -96,6 +100,7 @@ class CameraEfficiency:
         args, config_data = gen.separate_args_and_config_data(
             expected_args=[
                 "telescope_model",
+                "site_model",
                 "label",
                 "simtel_source_path",
                 "test",
@@ -284,7 +289,7 @@ class CameraEfficiency:
             f"{self.calc_camera_efficiency():.4f}\n"
             "Telescope total efficiency"
             f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
-            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficency) "
+            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
             "(A-PERF-2025/B-TEL-0090): "
             f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
             "Expected NSB pixel rate for the provided NSB spectrum: "
@@ -428,7 +433,7 @@ class CameraEfficiency:
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()
             * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
-            / self._telescope_model.get_telescope_transmission_parameters()[0]
+            / self._telescope_model.get_parameter_value("telescope_transmission")[0]
         )
 
         # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
@@ -441,7 +446,7 @@ class CameraEfficiency:
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
-            * self._telescope_model.get_reference_data_value("nsb_reference_value")
+            * self._site_model.get_parameter_value("nsb_reference_value")
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions

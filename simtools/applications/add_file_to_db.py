@@ -50,25 +50,6 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def _user_confirm():
-    """
-    Ask the user to enter y or n (case-insensitive).
-
-    Returns
-    -------
-    bool: True if the answer is Y/y.
-    """
-
-    answer = ""
-    while answer not in ["y", "n"]:
-        try:
-            answer = input("Is this OK? [y/n]").lower()
-            return answer == "y"
-        except EOFError:
-            return False
-    return False
-
-
 def main():
     _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
@@ -104,9 +85,7 @@ def main():
         choices=[
             _db_tmp.DB_TABULATED_DATA,
             _db_tmp.DB_DERIVED_VALUES,
-            _db_tmp.DB_REFERENCE_DATA,
             "sandbox",
-            "test-data",
         ],
         help=("The database to insert the files to."),
     )
@@ -142,7 +121,7 @@ def main():
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
     print(*files_to_insert, sep="\n")
     print()
-    if _user_confirm():
+    if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
             db.insert_file_to_db(file_to_insert_now, args_dict["db"])
             logger.info(f"File {file_to_insert_now} inserted to {args_dict['db']} DB")

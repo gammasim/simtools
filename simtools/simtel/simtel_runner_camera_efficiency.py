@@ -82,7 +82,13 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
         # Processing focal length
-        focal_length = self._telescope_model.get_parameter_value_with_unit("effective_focal_length")
+        focal_length = 0.0
+        try:
+            focal_length = self._telescope_model.get_parameter_value_with_unit(
+                "effective_focal_length"
+            )[0]
+        except IndexError:
+            pass
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0")
             focal_length = self._telescope_model.get_parameter_value_with_unit("focal_length")
@@ -136,7 +142,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         if mirror_class == 2:
             command += " -m2"
             command += f" -fref2 {mirror_reflectivity_secondary}"
-        command += f" -teltrans {self._telescope_model.get_telescope_transmission_parameters()[0]}"
+        command += " -teltrans "
+        command += f"{self._telescope_model.get_parameter_value('telescope_transmission')[0]}"
         command += f" -camtrans {camera_transmission}"
         command += f" -fflt {camera_filter_file}"
         command += (

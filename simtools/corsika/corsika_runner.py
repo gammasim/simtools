@@ -56,6 +56,8 @@ class CorsikaRunner:
     ----------
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Version of the model (e.g., prod5).
     site: str
         South or North.
     layout_name: str
@@ -77,6 +79,7 @@ class CorsikaRunner:
     def __init__(
         self,
         mongo_db_config,
+        model_version,
         site,
         layout_name,
         simtel_source_path,
@@ -99,6 +102,7 @@ class CorsikaRunner:
         self.site = names.validate_site_name(site)
         self.layout_name = names.validate_array_layout_name(layout_name)
         self.array_model = array_model
+        self.model_version = model_version
 
         self._keep_seeds = keep_seeds
 
@@ -149,6 +153,7 @@ class CorsikaRunner:
         try:
             self.corsika_config = CorsikaConfig(
                 mongo_db_config=mongo_db_config,
+                model_version=self.model_version,
                 site=self.site,
                 label=self.label,
                 layout_name=self.layout_name,

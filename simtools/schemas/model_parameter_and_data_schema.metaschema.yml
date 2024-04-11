@@ -236,6 +236,7 @@ definitions:
         type: string
         description: "instrument class"
         enum:
+          - Calibration
           - Camera
           - Site
           - Structure
@@ -372,6 +373,7 @@ definitions:
       - mV * ns
       - nm
       - ns
+      - 1 / (sr * ns * cm**2)
       - pct
       - uA
       - uT
@@ -395,4 +397,5 @@ definitions:
       - External
       - Observation execution
       - SimPipe Derived
+      - Configuration
     title: Source

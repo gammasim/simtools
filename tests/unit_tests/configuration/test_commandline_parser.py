@@ -104,9 +104,9 @@ def test_azimuth_angle(caplog):
 
 
 def test_initialize_default_arguments():
-    _parser_1 = parser.CommandLineParser()
 
     # default arguments
+    _parser_1 = parser.CommandLineParser()
     _parser_1.initialize_default_arguments()
     job_groups = _parser_1._action_groups
     for group in job_groups:
@@ -124,15 +124,42 @@ def test_initialize_default_arguments():
     job_groups = _parser_2._action_groups
     assert "output" in [str(group.title) for group in job_groups]
 
-    _parser_3 = parser.CommandLineParser()
-    _parser_3.initialize_default_arguments(telescope_model=True)
-    job_groups = _parser_3._action_groups
-    assert "telescope model" in [str(group.title) for group in job_groups]
+    # simulation model is none
+    _parser_n = parser.CommandLineParser()
+    _parser_n.initialize_default_arguments(simulation_model=None)
 
-    _parser_4 = parser.CommandLineParser()
-    _parser_4.initialize_default_arguments(telescope_model=False, site_model=True)
-    job_groups = _parser_4._action_groups
-    assert "site model" in [str(group.title) for group in job_groups]
+    # model version only, no site or telescope
+    _parser_v = parser.CommandLineParser()
+    _parser_v.initialize_default_arguments(simulation_model=["version"])
+    job_groups = _parser_v._action_groups
+    assert "simulation model" in [str(group.title) for group in job_groups]
+    for group in job_groups:
+        if str(group.title) == "simulation model":
+            assert any(action.dest == "model_version" for action in group._group_actions)
+            assert all(action.dest != "site" for action in group._group_actions)
+            assert all(action.dest != "telescope" for action in group._group_actions)
+
+    # site model can exist without a telescope model
+    _parser_s = parser.CommandLineParser()
+    _parser_s.initialize_default_arguments(simulation_model=["site"])
+    job_groups = _parser_s._action_groups
+    assert "simulation model" in [str(group.title) for group in job_groups]
+    for group in job_groups:
+        if str(group.title) == "simulation model":
+            assert any(action.dest == "model_version" for action in group._group_actions)
+            assert any(action.dest == "site" for action in group._group_actions)
+            assert all(action.dest != "telescope" for action in group._group_actions)
+
+    # no telescope model without site model
+    _parser_t = parser.CommandLineParser()
+    _parser_t.initialize_default_arguments(simulation_model=["telescope", "site"])
+    job_groups = _parser_t._action_groups
+    assert "simulation model" in [str(group.title) for group in job_groups]
+    for group in job_groups:
+        if str(group.title) == "simulation model":
+            assert any(action.dest == "model_version" for action in group._group_actions)
+            assert any(action.dest == "site" for action in group._group_actions)
+            assert any(action.dest == "telescope" for action in group._group_actions)
 
     _parser_5 = parser.CommandLineParser()
     _parser_5.initialize_default_arguments(job_submission=True)
