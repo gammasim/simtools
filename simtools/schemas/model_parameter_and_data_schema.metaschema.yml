@@ -236,6 +236,7 @@ definitions:
         type: string
         description: "instrument class"
         enum:
+          - Calibration
           - Camera
           - Site
           - Structure
@@ -362,9 +363,11 @@ definitions:
       "Unit correspond to astropy unit names
       (wherever possible)"
     enum:
+      - byte
       - cm
       - count
       - count / mV
+      - count/mV
       - deg
       - dimensionless
       - GHz
@@ -372,8 +375,10 @@ definitions:
       - MHz
       - mV
       - mV * ns
+      - mV*ns
       - nm
       - ns
+      - 1/(sr*ns*cm**2)
       - 1 / (sr * ns * cm**2)
       - pct
       - uA
