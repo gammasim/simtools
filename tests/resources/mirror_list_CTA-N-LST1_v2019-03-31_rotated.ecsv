@@ -10,7 +10,7 @@
 # - {name: mirror_panel_id, datatype: int32}
 # meta: !!omap
 # - comments: ['Mirror positions and focal lengths for the LST1 prototype on La Palma, as based on the file newMirrorList.txt provided
-#       by LST team, reformated to required format by  awk', 'Updated on 31/03/19. Two mirrors (IDs 162 and 172) were exchanged for ones
+#       by LST team, reformatted to required format by  awk', 'Updated on 31/03/19. Two mirrors (IDs 162 and 172) were exchanged for ones
 #       with similar focal lengths. Updated also in November 2023: coordinates were rotated 180 degrees and mirrored following e-mail
 #       discussions with the LST team (Subject: MAGIC and sim_telarray reflector config files).']
 # - keywords: !!omap
