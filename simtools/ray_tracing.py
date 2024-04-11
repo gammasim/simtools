@@ -110,12 +110,14 @@ class RayTracing:
         self._has_results = False
 
         # Results file
-        file_name_results = names.ray_tracing_results_file_name(
-            self._telescope_model.site,
-            self._telescope_model.name,
-            self._source_distance,
-            self.config.zenith_angle,
-            self.label,
+        file_name_results = names.generate_file_name(
+            file_type="ray-tracing",
+            suffix=".ecsv",
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            source_distance=self._source_distance,
+            zenith_angle=self.config.zenith_angle,
+            label=self.label,
         )
         self._output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._file_results = self._output_directory.joinpath("results").joinpath(file_name_results)
@@ -195,15 +197,16 @@ class RayTracing:
                 )
                 simtel.run(test=test, force=force)
 
-                photons_file_name = names.ray_tracing_file_name(
-                    self._telescope_model.site,
-                    self._telescope_model.name,
-                    self._source_distance,
-                    self.config.zenith_angle,
-                    this_off_axis,
-                    this_mirror if self.config.single_mirror_mode else None,
-                    self.label,
-                    "photons",
+                photons_file_name = names.generate_file_name(
+                    file_type="photons",
+                    suffix=".lis",
+                    site=self._telescope_model.site,
+                    telescope_model_name=self._telescope_model.name,
+                    source_distance=self._source_distance,
+                    zenith_angle=self.config.zenith_angle,
+                    off_axis_angle=this_off_axis,
+                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
+                    label=self.label,
                 )
                 photons_file = self._output_directory.joinpath(photons_file_name)
 
@@ -249,7 +252,7 @@ class RayTracing:
 
         focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
         tel_transmission_pars = (
-            self._telescope_model.get_telescope_transmission_parameters()
+            self._telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
             else [1, 0, 0, 0]
         )
@@ -269,15 +272,16 @@ class RayTracing:
                 if self.config.single_mirror_mode:
                     self._logger.debug(f"mirror_number={this_mirror}")
 
-                photons_file_name = names.ray_tracing_file_name(
-                    self._telescope_model.site,
-                    self._telescope_model.name,
-                    self._source_distance,
-                    self.config.zenith_angle,
-                    this_off_axis,
-                    this_mirror if self.config.single_mirror_mode else None,
-                    self.label,
-                    "photons",
+                photons_file_name = names.generate_file_name(
+                    file_type="photons",
+                    suffix=".lis",
+                    site=self._telescope_model.site,
+                    telescope_model_name=self._telescope_model.name,
+                    source_distance=self._source_distance,
+                    zenith_angle=self.config.zenith_angle,
+                    off_axis_angle=this_off_axis,
+                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
+                    label=self.label,
                 )
 
                 photons_file = self._output_directory.joinpath(photons_file_name + ".gz")
@@ -408,25 +412,28 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-        if key not in self.YLABEL:
-            msg = "Invalid key to plot"
-            self._logger.error(msg)
-            raise KeyError(msg)
 
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
-        plot = visualize.plot_table(
-            self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
-        )
+        try:
+            plot = visualize.plot_table(
+                self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
+            )
+        except KeyError as exc:
+            msg = "Invalid key to plot"
+            self._logger.error(msg)
+            raise exc
 
         if save:
-            plot_file_name = names.ray_tracing_plot_file_name(
-                key,
-                self._telescope_model.site,
-                self._telescope_model.name,
-                self._source_distance,
-                self.config.zenith_angle,
-                self.label,
+            plot_file_name = names.generate_file_name(
+                file_type="ray-tracing",
+                suffix=".pdf",
+                extra_label=key,
+                site=self._telescope_model.site,
+                telescope_model_name=self._telescope_model.name,
+                source_distance=self._source_distance,
+                zenith_angle=self.config.zenith_angle,
+                label=self.label,
             )
             self._output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self._output_directory.joinpath("figures").joinpath(plot_file_name)

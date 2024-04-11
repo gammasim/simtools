@@ -1,6 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
-  TEST_NAME: layout_name
+  TEST_NAME: layout_by_name
   CONFIGURATION:
+    SITE: North
+    MODEL_VERSION: prod6
     ARRAY_LAYOUT: North-4LST
     OUTPUT_PATH: simtools-tests

@@ -1,8 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-validate-camera-efficiency
-  TEST_NAME: SST-D
+  TEST_NAME: MSTN
   CONFIGURATION:
-    SITE: South
-    TELESCOPE: SST-D
-    MODEL_VERSION: prod5
+    SITE: North
+    TELESCOPE: MSTN-design
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests

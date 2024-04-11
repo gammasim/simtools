@@ -17,8 +17,8 @@ import logging
 import yaml
 
 import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.configuration import configurator
+from simtools.db import db_handler
 
 
 def main():
@@ -37,7 +37,7 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -87,7 +87,7 @@ def main():
                 )
             pars = db.read_mongo_db(
                 db_name=db.DB_CTA_SIMULATION_MODEL,
-                telescope_model_name_db=f"{site}-MST-Structure-D",
+                telescope_model_name=f"{site}-MST-Structure-D",
                 model_version=version_now,
                 run_location="",
                 write_files=False,
