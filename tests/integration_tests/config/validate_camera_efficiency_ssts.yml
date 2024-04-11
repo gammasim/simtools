@@ -1,8 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-validate-camera-efficiency
-  TEST_NAME: MST-NectarCam-D
+  TEST_NAME: SSTS
   CONFIGURATION:
-    SITE: North
-    TELESCOPE: MST-NectarCam-D
-    MODEL_VERSION: prod5
+    SITE: South
+    TELESCOPE: SSTS-design
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests

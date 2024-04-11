@@ -37,10 +37,9 @@ import astropy.units as u
 
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
-from simtools import db_handler
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.utils import names
 
 
 def main():
@@ -53,48 +52,29 @@ def main():
             "The array layout files created should be available at the data/layout directory."
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True, site_model=True, output=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="site", output=True)
 
     label = "make_regular_arrays"
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    _io_handler = io_handler.IOHandler()
-
-    corsika_pars = gen.collect_data_from_file_or_dict(
-        _io_handler.get_input_data_file("parameters", "corsika_parameters.yml"), None
-    )
-
-    # Reading site parameters from DB
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    site_pars_db = db.get_site_parameters(
-        site=args_dict["site"], model_version=args_dict["model_version"]
-    )
-
-    layout_center_data = {}
-    layout_center_data["center_lat"] = float(site_pars_db["ref_lat"]["Value"]) * u.deg
-    layout_center_data["center_lon"] = float(site_pars_db["ref_long"]["Value"]) * u.deg
-    layout_center_data["center_alt"] = float(site_pars_db["altitude"]["Value"]) * u.m
-    layout_center_data["EPSG"] = site_pars_db["EPSG"]["Value"]
-    corsika_telescope_data = {}
-    corsika_telescope_data["corsika_obs_level"] = layout_center_data["center_alt"]
-    corsika_telescope_data["corsika_sphere_center"] = corsika_pars["corsika_sphere_center"]
-    corsika_telescope_data["corsika_sphere_radius"] = corsika_pars["corsika_sphere_radius"]
-
     # Telescope distances for 4 tel square arrays
     # !HARDCODED
     telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
+    if args_dict["site"] == "South":
+        array_list = ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]
+    else:
+        array_list = ["1MST", "4MST", "1LST", "4LST"]
 
-    for array_name in ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]:
+    for array_name in array_list:
         logger.info(f"Processing array {array_name}")
         layout = ArrayLayout(
             site=args_dict["site"],
             mongo_db_config=db_config,
+            model_version=args_dict.get("model_version", None),
             label=label,
             name=f"{args_dict['site']}-{array_name}",
-            layout_center_data=layout_center_data,
-            corsika_telescope_data=corsika_telescope_data,
         )
 
         tel_size = array_name[1:4]
@@ -102,7 +82,9 @@ def main():
         # Single telescope at the center
         if array_name[0] == "1":
             layout.add_telescope(
-                telescope_name=tel_size + "-01",
+                telescope_name=names.get_telescope_name_from_type_site_id(
+                    tel_size, args_dict["site"], "01"
+                ),
                 crs_name="ground",
                 xx=0 * u.m,
                 yy=0 * u.m,
@@ -111,28 +93,36 @@ def main():
         # 4 telescopes in a regular square grid
         else:
             layout.add_telescope(
-                telescope_name=tel_size + "-01",
+                telescope_name=names.get_telescope_name_from_type_site_id(
+                    tel_size, args_dict["site"], "01"
+                ),
                 crs_name="ground",
                 xx=telescope_distance[tel_size],
                 yy=telescope_distance[tel_size],
                 tel_corsika_z=0 * u.m,
             )
             layout.add_telescope(
-                telescope_name=tel_size + "-02",
+                telescope_name=names.get_telescope_name_from_type_site_id(
+                    tel_size, args_dict["site"], "02"
+                ),
                 crs_name="ground",
                 xx=-telescope_distance[tel_size],
                 yy=telescope_distance[tel_size],
                 tel_corsika_z=0 * u.m,
             )
             layout.add_telescope(
-                telescope_name=tel_size + "-03",
+                telescope_name=names.get_telescope_name_from_type_site_id(
+                    tel_size, args_dict["site"], "03"
+                ),
                 crs_name="ground",
                 xx=telescope_distance[tel_size],
                 yy=-telescope_distance[tel_size],
                 tel_corsika_z=0 * u.m,
             )
             layout.add_telescope(
-                telescope_name=tel_size + "-04",
+                telescope_name=names.get_telescope_name_from_type_site_id(
+                    tel_size, args_dict["site"], "04"
+                ),
                 crs_name="ground",
                 xx=-telescope_distance[tel_size],
                 yy=-telescope_distance[tel_size],
@@ -140,7 +130,7 @@ def main():
             )
 
         layout.convert_coordinates()
-        layout.print_telescope_list()
+        layout.print_telescope_list(crs_name="ground")
         output_file = args_dict.get("output_file", None)
         if output_file is not None:
             base_name, file_extension = os.path.splitext(output_file)
@@ -149,10 +139,7 @@ def main():
             args_dict=args_dict,
             output_file=output_file,
             metadata=None,
-            product_data=layout.export_telescope_list_table(
-                crs_name="ground",
-                corsika_z=False,
-            ),
+            product_data=layout.export_telescope_list_table(crs_name="ground"),
         )
 
 

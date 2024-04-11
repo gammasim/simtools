@@ -37,7 +37,7 @@ jobs:
 
       - name: download corsikasimtelpackage
         run: |
-          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL }}/download
+          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL_240318 }}/download
           mv download corsika7.7_simtelarray.tar.gz
 
       - name: Set up QEMU

@@ -1,7 +1,0 @@
-CTA_SIMPIPE:
-  APPLICATION: simtools-validate-file-using-schema
-  TEST_NAME: json_input
-  CONFIGURATION:
-    SCHEMA: >
-      https://raw.githubusercontent.com/gammasim/simulation_model/main/schema/reference_point_altitude.schema.yml
-    FILE_NAME: tests/resources/reference_point_altitude.json

@@ -18,16 +18,15 @@
     'model_version': name of a valid model version.
 
     'default': telescope model names to be assigned to each telescope size by default. \
-    It must contain entries for 'LST' and 'MST' (and 'SST' in case of South site).
 
     As optional data, specific telescope models can be assigned to individual telescopes. \
     This is done by the entries with the name of the telescope (as used by the layout \
-    definition, ex. LST-01, MST-05, SST-10).
+    definition, ex. LSTN-01, MSTN-05, SSTS-10).
 
     Each telescope model can be set in two ways.
 
     a) A single str with the name of telescope model.
-    Ex. 'MST-05': 'NectarCam-D'
+    Ex. 'MSTN-05': 'NectarCam-D'
 
     b) A dict containing a 'name' key with the name of the telescope model and further keys \
     with model parameters to be changed from the original model.
@@ -35,8 +34,8 @@
 
     .. code-block:: python
 
-        'MST-05': {
-                'name': 'NectarCam-D',
+        'MSTN-05': {
+                'name': 'design',
                 'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
                 'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
             }
@@ -114,13 +113,14 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="version")
 
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     array_model = ArrayModel(
         label=args_dict["label"],
+        model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         array_config_file=args_dict["array_config"],
     )

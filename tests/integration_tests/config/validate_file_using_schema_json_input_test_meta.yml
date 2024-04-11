@@ -3,4 +3,4 @@ CTA_SIMPIPE:
   TEST_NAME: json_input_test_meta
   CONFIGURATION:
     FILE_NAME: tests/resources/reference_point_altitude.json
-    VALIDATE_METADATA: true
+    DATA_TYPE: metadata

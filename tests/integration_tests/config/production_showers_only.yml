@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: showers_only
   CONFIGURATION:
     PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
+    MODEL_VERSION: prod6
     TASK: simulate
     SHOWERS_ONLY: true
     SUBMIT_COMMAND: local

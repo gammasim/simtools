@@ -15,10 +15,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.mark.parametrize("telescope_model_name", ["sst-1M", "sst-ASTRI", "sst-GCT"])
-def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler):
+@pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
+def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, model_version):
     # Test with 3 SSTs
-    version = "prod3"
     config_data = {
         "source_distance": 10 * u.km,
         "zenith_angle": 20 * u.deg,
@@ -27,7 +26,7 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler):
     tel = TelescopeModel(
         site="south",
         telescope_model_name=telescope_model_name,
-        model_version=version,
+        model_version=model_version,
         label="test-sst",
         mongo_db_config=db_config,
     )
