@@ -87,7 +87,7 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
     )
-    return config.initialize(telescope_model=True)
+    return config.initialize(simulation_model="telescope")
 
 
 def main():

@@ -24,7 +24,7 @@ def main():
     config = configurator.Configurator(
         description=("Add a new parameter to the sites collection in the DB.")
     )
-    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))

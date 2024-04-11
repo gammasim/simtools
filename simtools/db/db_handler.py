@@ -28,8 +28,6 @@ class DatabaseHandler:
 
     Parameters
     ----------
-    io_handler: IOHandler
-        Instance of IOHandler
     mongo_db_config: dict
         Dictionary with the MongoDB configuration with the following entries:
         "db_server" - DB server address
@@ -45,7 +43,6 @@ class DatabaseHandler:
     DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
-    DB_REFERENCE_DATA = "Staging-CTA-Reference-Data"
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -123,7 +120,7 @@ class DatabaseHandler:
         site: str
             South or North.
         telescope_model_name: str
-            Name of the telescope model (e.g. LST-1, MST-FlashCam-D)
+            Name of the telescope model (e.g. LSTN-01, MSTS-design)
         model_version: str
             Version of the model.
         only_applicable: bool
@@ -135,18 +132,13 @@ class DatabaseHandler:
 
         """
 
-        _site_validated = names.validate_site_name(site)
-        _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
-
-        _model_version = self._convert_version_to_tagged(
-            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        _site, _telescope_model_name, _model_version = self._validate_model_input(
+            site, telescope_model_name, model_version
         )
-        _version_validated = names.validate_model_version_name(_model_version)
-
         _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-            _tel_model_name_validated,
-            _version_validated,
+            _telescope_model_name,
+            _model_version,
             only_applicable,
         )
 
@@ -154,9 +146,10 @@ class DatabaseHandler:
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
             return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
-                site=_site_validated,
-                telescope_name=_tel_model_name_validated,
-                model_version=_version_validated,
+                site=_site,
+                parameter_collection="telescopes",
+                telescope_name=_telescope_model_name,
+                model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
 
@@ -213,7 +206,7 @@ class DatabaseHandler:
         if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
-                if not info.get("file"):
+                if not info or not info.get("file") or info["value"] is None:
                     continue
                 if Path(dest).joinpath(info["value"]).exists():
                     self._logger.debug(f"File {info['value']} already exists in {dest}")
@@ -258,7 +251,12 @@ class DatabaseHandler:
         """
 
         self._logger.debug(f"Tel_name_db: {telescope_model_name}")
-        _which_tel_labels = [self.get_telescope_db_name(telescope_model_name)]
+        _which_tel_labels = [
+            self.get_telescope_db_name(
+                telescope_name=telescope_model_name,
+                model_version=model_version,
+            )
+        ]
 
         _pars = {}
         for _tel in _which_tel_labels:
@@ -375,20 +373,21 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-        _site = names.validate_site_name(site)
-        _version_validated = names.validate_model_version_name(model_version)
+        _site, _, _model_version = self._validate_model_input(site, None, model_version)
         _pars = self._get_site_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _site,
-            _version_validated,
+            _model_version,
             only_applicable,
         )
         # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_site_parameters_from_repo(
+            return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
-                site=site,
-                model_version=_version_validated,
+                site=_site,
+                telescope_name=None,
+                parameter_collection="site",
+                model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
         return _pars
@@ -419,70 +418,12 @@ class DatabaseHandler:
 
         """
 
-        _site_validated = names.validate_site_name(site)
         collection = DatabaseHandler.db_client[db_name].sites
         _parameters = {}
 
-        _model_version = self._convert_version_to_tagged(
-            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
         query = {
-            "site": _site_validated,
-            "version": _model_version,
-        }
-        if only_applicable:
-            query["applicable"] = True
-        if collection.count_documents(query) < 1:
-            raise ValueError(
-                "The following query returned zero results! Check the input data and rerun.\n",
-                query,
-            )
-        for post in collection.find(query):
-            par_now = post["parameter"]
-            _parameters[par_now] = post
-            _parameters[par_now].pop("parameter", None)
-            _parameters[par_now].pop("site", None)
-            _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-
-        return _parameters
-
-    def get_reference_data(self, site, model_version, only_applicable=False):
-        """
-        Get parameters from MongoDB for a specific telescope.
-
-        Parameters
-        ----------
-        site: str
-            South or North.
-        model_version: str
-            Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        Raises
-        ------
-        ValueError
-            if query returned zero results.
-
-        """
-
-        _site_validated = names.validate_site_name(site)
-        collection = DatabaseHandler.db_client[DatabaseHandler.DB_REFERENCE_DATA].reference_values
-        _parameters = {}
-
-        _model_version = self._convert_version_to_tagged(
-            names.validate_model_version_name(model_version),
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-        )
-
-        query = {
-            "site": _site_validated,
-            "version": _model_version,
+            "site": site,
+            "version": model_version,
         }
         if only_applicable:
             query["applicable"] = True
@@ -502,7 +443,7 @@ class DatabaseHandler:
 
     def get_derived_values(self, site, telescope_model_name, model_version):
         """
-        Get a derived value from the DB for a specific telescope.
+        Get all derived values from the DB for a specific telescope.
 
         Parameters
         ----------
@@ -518,34 +459,69 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-
-        try:
-            _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
-        except AttributeError as exc:
-            self._logger.error(
-                "Telescope name required to return derived model parameters"
-                " (this error might point to a problem with the DB configuration)"
-            )
-            raise exc
-        _model_version = self._convert_version_to_tagged(
-            names.validate_model_version_name(model_version),
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+        _, _telescope_model_name, _model_version = self._validate_model_input(
+            site, telescope_model_name, model_version
         )
 
-        self._logger.debug(
-            f"Getting derived values for {_tel_model_name_validated}, {site} from the DB"
-        )
-
-        _pars = self.read_mongo_db(
+        return self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
-            _tel_model_name_validated,
+            _telescope_model_name,
             _model_version,
             run_location=None,
             collection_name="derived_values",
             write_files=False,
         )
 
-        return _pars
+    def get_sim_telarray_configuration_parameters(self, site, telescope_model_name, model_version):
+        """
+        Get sim_telarray configuration parameters from the DB for a specific telescope.
+
+        """
+
+        _, _telescope_model_name, _model_version = self._validate_model_input(
+            site, telescope_model_name, model_version
+        )
+        try:
+            return self.read_mongo_db(
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                _telescope_model_name,
+                _model_version,
+                run_location=None,
+                collection_name="configuration_sim_telarray",
+                write_files=False,
+            )
+        except ValueError:
+            return self.read_mongo_db(
+                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
+                _model_version,
+                run_location=None,
+                collection_name="configuration_sim_telarray",
+                write_files=False,
+            )
+
+    def _validate_model_input(self, site, telescope_model_name, model_version):
+        """
+        Validate input for model parameter queries.
+
+        site: str
+            South or North.
+        telescope_model_name: str
+            Name of the telescope model (e.g. LSTN-01, MSTS-design)
+        model_version: str
+            Version of the model.
+
+        """
+
+        return (
+            names.validate_site_name(site),
+            names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
+            names.validate_model_version_name(
+                self._convert_version_to_tagged(
+                    model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+                )
+            ),
+        )
 
     @staticmethod
     def _get_file_mongo_db(db_name, file_name):
@@ -1059,7 +1035,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
         db_entry = {}
-        if "telescopes" in collection_name:
+        if "telescopes" in collection_name or "configuration_sim_telarray" in collection_name:
             db_entry["instrument"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
             db_entry["instrument"] = names.validate_site_name(site)
@@ -1248,8 +1224,8 @@ class DatabaseHandler:
 
     def get_all_available_telescopes(
         self,
+        model_version,
         db_name=DB_CTA_SIMULATION_MODEL,
-        model_version="Released",
     ):
         """
         Get all available telescope names in the collection "telescopes" in the DB.
@@ -1259,7 +1235,7 @@ class DatabaseHandler:
         db_name: str
             the name of the DB
         model_version: str
-            Which version to get the telescopes of (default: "Released").
+            Which version to get the telescopes of
 
         Returns
         -------
@@ -1283,7 +1259,7 @@ class DatabaseHandler:
 
         return _all_available_telescopes
 
-    def get_telescope_db_name(self, telescope_name):
+    def get_telescope_db_name(self, telescope_name, model_version):
         """
         Translate telescope name to the name used in the DB. This is required,
         as not all telescopes are defined in the database yet. In these cases,
@@ -1293,6 +1269,8 @@ class DatabaseHandler:
         ----------
         telescope_name: str
             Name of the telescope model (e.g. MSTN-01)
+        model_version: str
+            Which version to get the telescopes
 
         Returns
         -------
@@ -1307,7 +1285,7 @@ class DatabaseHandler:
         """
 
         if self._available_telescopes is None:
-            self._available_telescopes = self.get_all_available_telescopes()
+            self._available_telescopes = self.get_all_available_telescopes(model_version)
 
         _telescope_name_validated = names.validate_telescope_name(telescope_name)
         if _telescope_name_validated in self._available_telescopes:

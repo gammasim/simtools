@@ -398,6 +398,7 @@ def test_check_data_type(caplog):
     assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
     data_validator._data_description[0]["type"] = "file"
     assert data_validator._check_data_type(np.dtype("U10"), "wavelength") is None
+    assert data_validator._check_data_type(np.array(None).dtype, "wavelength") is None
 
     # bool types
     data_validator._data_description[0]["type"] = "bool"

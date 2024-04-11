@@ -121,7 +121,7 @@ def _parse(label=None, description=None):
         required=False,
         default="./simtools-output/",
     )
-    return config.initialize(telescope_model=True, job_submission=True, db_config=True)
+    return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
 
 
 def main():
@@ -159,6 +159,7 @@ def main():
         submit_command=args_dict.get("submit_command", ""),
         test=args_dict["test"],
         mongo_db_config=db_config,
+        model_version=args_dict.get("model_version", None),
     )
 
     if not args_dict["test"]:

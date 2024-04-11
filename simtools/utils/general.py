@@ -16,6 +16,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import astropy.units as u
+import numpy as np
 from astropy.io.misc import yaml
 
 __all__ = [
@@ -907,6 +908,13 @@ def get_value_unit_type(value, unit_str=None):
             base_type = extract_type_of_value(base_value)
             if _quantity_value.unit.to_string() != "":
                 base_unit = _quantity_value.unit.to_string()
+                try:  # handle case of e.g., "0 0" and avoid unit.scale
+                    float(base_unit)
+                    base_value = value
+                    base_type = "str"
+                    base_unit = None
+                except ValueError:
+                    pass
         except TypeError:
             base_value = value
             base_type = "str"
@@ -956,3 +964,130 @@ def get_value_as_quantity(value, unit):
             _logger.error(f"Cannot convert {value.unit} to {unit}.")
             raise
     return value * unit
+
+
+def user_confirm():
+    """
+    Ask the user to enter y or n (case-insensitive) on the command line.
+
+    Returns
+    -------
+    bool:
+        True if the answer is Y/y.
+
+    """
+    while True:
+        try:
+            answer = input("Is this OK? [y/n]").lower()
+            return answer == "y"
+        except EOFError:
+            break
+    return False
+
+
+def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
+    """
+    Validate data type of value (scalar, list, np array) or type object against a
+    reference data type. Allow to check for exact data type or allow sub types
+    (e.g. uint is accepted for int).  Take into account 'file' type as used in the
+    model parameter database
+
+    Parameters
+    ----------
+    reference_dtype: str
+        Reference data type to be checked against.
+    value: any
+        Value to be checked (if dtype is None).
+    dtype: type
+        Type object to be checked (if value is None).
+    allow_subtypes: bool
+        If True, allow subtypes to be accepted.
+
+    Returns
+    -------
+    bool:
+        True if the data type is valid.
+
+    """
+    if value is not None and dtype is None:
+        if isinstance(value, (list, np.ndarray)):
+            value = np.array(value)
+            dtype = value.dtype
+        else:
+            dtype = type(value)
+    elif value is None and dtype is None:
+        raise ValueError("Either value or dtype must be given.")
+
+    # strict comparison
+    if not allow_subtypes:
+        return np.issubdtype(dtype, reference_dtype)
+    # allow any sub-type of integer or float for success
+    # dtype is 'object' for 'file' type and value None
+    if (np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")) and reference_dtype in (
+        "string",
+        "str",
+        "file",
+    ):
+        return True
+    if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
+        return True
+    # allow ints to be converted to floats
+    if np.issubdtype(dtype, np.integer) and (
+        np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
+    ):
+        return True
+    if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
+        return True
+
+    return False
+
+
+def convert_list_to_string(data, comma_separated=False):
+    """
+    Convert arrays to string (if required)
+
+    Parameters
+    ----------
+    data: object
+        Object of data to convert (e.g., double or list)
+    comma_separated: bool
+        If True, return arrays as comma separated strings.
+
+    Returns
+    -------
+    object or str:
+        Converted data as string (if required)
+
+    """
+    if data is None or not isinstance(data, (list, np.ndarray)):
+        return data
+    if comma_separated:
+        return ", ".join(str(item) for item in data)
+    return " ".join(str(item) for item in data)
+
+
+def convert_string_to_list(data_string, is_float=True):
+    """
+    Convert string (as used e.g. in sim_telarray) to list of floats
+    or integers.  Allow coma or space separated strings.
+
+    Parameters
+    ----------
+    data_string: object
+        String to be converted
+
+    Returns
+    -------
+    list, str
+        Converted data from string (if required).
+        Return data_string if conversion fails.
+
+    """
+
+    try:
+        if is_float:
+            return [float(v) for v in data_string.split()]
+        return [int(v) for v in data_string.split()]
+    except ValueError:
+        pass
+    return data_string

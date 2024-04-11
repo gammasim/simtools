@@ -96,7 +96,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.model.model_utils import split_simtel_parameter
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing import RayTracing
 from simtools.visualization import visualize
@@ -149,7 +148,7 @@ def main():
         action="store_true",
     )
 
-    args_dict, db_config = config.initialize(db_config=True, telescope_model=True)
+    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
     label = "tune_psf"
 
     logger = logging.getLogger()
@@ -185,11 +184,13 @@ def main():
         parameters to the all_parameters list.
         """
         pars = {}
-        mrra = f"{mirror_reflection:.4f},{mirror_reflection_fraction:.2f},{mirror_reflection_2:.4f}"
-        pars["mirror_reflection_random_angle"] = mrra
-        mar = f"{mirror_align:.4f},28.,0.,0."
-        pars["mirror_align_random_horizontal"] = mar
-        pars["mirror_align_random_vertical"] = mar
+        pars["mirror_reflection_random_angle"] = [
+            mirror_reflection,
+            mirror_reflection_fraction,
+            mirror_reflection_2,
+        ]
+        pars["mirror_align_random_horizontal"] = [mirror_align, 28.0, 0.0, 0.0]
+        pars["mirror_align_random_vertical"] = [mirror_align, 28.0, 0.0, 0.0]
         all_parameters.append(pars)
 
     # Grabbing the previous values of the parameters from the tel model.
@@ -199,14 +200,12 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    raw_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
-    split_par = split_simtel_parameter(raw_par)
+    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     mrra_0 = split_par[0]
     mfr_0 = split_par[1]
     mrra2_0 = split_par[2]
 
-    raw_par = tel_model.get_parameter_value("mirror_align_random_horizontal")
-    mar_0 = split_simtel_parameter(raw_par)[0]
+    mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
 
     logger.debug(
         "Previous parameter values:\n"
@@ -219,7 +218,7 @@ def main():
     if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
-    # Drawing parameters randonly
+    # Drawing parameters randomly
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     n_runs = 50
@@ -318,7 +317,7 @@ def main():
             min_rmsd = rmsd
             best_pars = pars
 
-    # Rerunnig and plotting the best pars
+    # Rerunning and plotting the best pars
     run_pars(best_pars, plot=True)
 
     plt.close()
