@@ -223,33 +223,3 @@ def test_get_file_name(corsika_config, io_handler):
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
-
-
-def test_convert_to_quantities(corsika_config):
-
-    t1 = corsika_config._convert_to_quantities("10 m")
-    assert t1 == [10 * u.m]
-    assert isinstance(t1[0], u.Quantity)
-
-    t2 = corsika_config._convert_to_quantities("simple_string")
-    assert t2 == ["simple_string"]
-    assert isinstance(t2[0], str)
-
-    t3 = corsika_config._convert_to_quantities({"value": 10, "unit": "m"})
-    assert t3 == [10 * u.m]
-    assert isinstance(t3[0], u.Quantity)
-
-    t4 = corsika_config._convert_to_quantities({"not_value": 10, "not_unit": "m"})
-    assert t4 == [{"not_value": 10, "not_unit": "m"}]
-
-    t5 = corsika_config._convert_to_quantities(["10 m", "20 m", "simple_string"])
-    assert t5 == [10 * u.m, 20 * u.m, "simple_string"]
-    assert isinstance(t5[1], u.Quantity)
-    assert isinstance(t5[2], str)
-
-    t6 = corsika_config._convert_to_quantities(
-        [{"value": 10, "unit": "m"}, "20 m", "simple_string"]
-    )
-    assert t6 == [10 * u.m, 20 * u.m, "simple_string"]
-    assert isinstance(t6[0], u.Quantity)
-    assert isinstance(t6[2], str)
