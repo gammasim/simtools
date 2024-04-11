@@ -16,7 +16,6 @@ RUN cd /workdir/ && \
     source env/bin/activate && \
     cd /workdir/simtools/ && \
     pip install -U pip && \
-    pip install --no-cache wheel && \
     pip install --no-cache-dir .
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
