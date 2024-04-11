@@ -254,7 +254,7 @@ class CorsikaConfig:
         """
 
         # Turning value_args into a list, if it is not.
-        value_args = gen.copy_as_list(value_args_in)
+        value_args = self._convert_to_quantities(value_args_in)
 
         if len(value_args) == 1 and par_name in ["THETAP", "AZM"]:
             # Fixing single value zenith or azimuth angle.
@@ -263,7 +263,7 @@ class CorsikaConfig:
         elif len(value_args) == 1 and par_name == "VIEWCONE":
             # Fixing single value viewcone.
             # VIEWCONE should be written as a 2 values range in the CORSIKA input file
-            value_args = [0 * par_info["unit"][0], value_args[0]]
+            value_args = [0.0 * u.Unit(par_info["unit"][0]), value_args[0]]
         elif par_name == "PRMPAR":
             value_args = self._convert_primary_input_and_store_primary_name(value_args)
         elif par_name == "ESLOPE":
@@ -286,8 +286,10 @@ class CorsikaConfig:
             if unit is None:
                 value_args_with_units.append(arg)
                 continue
+
             if isinstance(arg, str):
                 arg = u.quantity.Quantity(arg)
+
             if not isinstance(arg, u.quantity.Quantity):
                 msg = f"CORSIKA input given without unit: {par_name}"
                 self._logger.error(msg)
@@ -556,3 +558,35 @@ class CorsikaConfig:
         if not self._is_file_updated:
             self.export_input_file(use_multipipe)
         return self.config_file_path
+
+    def _convert_to_quantities(self, value_args):
+        """
+        Convert a list of value, unit pairs into a list of astropy quantities.
+        Parameters
+        ----------
+        value_args: list
+            List of value/unit pairs.
+        Returns
+        -------
+        list
+            List of astropy quantities (or strings)
+        """
+
+        if isinstance(value_args, str):
+            return [value_args]
+        if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:
+            return [value_args["value"] * u.Unit(value_args["unit"])]
+        if isinstance(value_args, list):
+            return [
+                (
+                    value
+                    if isinstance(value, u.Quantity)
+                    else (
+                        value["value"] * u.Unit(value["unit"])
+                        if isinstance(value, dict) and "value" in value and "unit" in value
+                        else value
+                    )
+                )
+                for value in value_args
+            ]
+        return [value_args]
