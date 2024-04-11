@@ -86,7 +86,6 @@ def main():
             _db_tmp.DB_TABULATED_DATA,
             _db_tmp.DB_DERIVED_VALUES,
             "sandbox",
-            "test-data",
         ],
         help=("The database to insert the files to."),
     )
