@@ -287,9 +287,6 @@ class CorsikaConfig:
                 value_args_with_units.append(arg)
                 continue
 
-            if isinstance(arg, str):
-                arg = u.quantity.Quantity(arg)
-
             if not isinstance(arg, u.quantity.Quantity):
                 msg = f"CORSIKA input given without unit: {par_name}"
                 self._logger.error(msg)
@@ -575,20 +572,23 @@ class CorsikaConfig:
         """
 
         if isinstance(value_args, str):
-            return [value_args]
+            try:
+                return [u.Quantity(value_args)]
+            except TypeError:
+                return [value_args]
         if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:
             return [value_args["value"] * u.Unit(value_args["unit"])]
         if isinstance(value_args, list):
-            return [
-                (
-                    value
-                    if isinstance(value, u.Quantity)
-                    else (
-                        value["value"] * u.Unit(value["unit"])
-                        if isinstance(value, dict) and "value" in value and "unit" in value
-                        else value
-                    )
-                )
-                for value in value_args
-            ]
+            new_value_args = []
+            for value in value_args:
+                if isinstance(value, u.Quantity):
+                    new_value_args.append(value)
+                elif isinstance(value, dict) and "value" in value and "unit" in value:
+                    new_value_args.append(value["value"] * u.Unit(value["unit"]))
+                else:
+                    try:
+                        new_value_args.append(u.Quantity(value))
+                    except TypeError:
+                        new_value_args.append(value)
+            return new_value_args
         return [value_args]
