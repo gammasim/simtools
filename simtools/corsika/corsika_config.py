@@ -562,6 +562,10 @@ class CorsikaConfig:
     def _convert_to_quantities(self, value_args):
         """
         Convert a list of value, unit pairs into a list of astropy quantities.
+        (note similarity to simtools.general.validate_config_data; unfortunately
+        minor differences are required as CORSIKA is very specific about the
+        input parameter representation).
+
         Parameters
         ----------
         value_args: list
