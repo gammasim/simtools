@@ -236,6 +236,7 @@ definitions:
         type: string
         description: "instrument class"
         enum:
+          - Calibration
           - Camera
           - Site
           - Structure
