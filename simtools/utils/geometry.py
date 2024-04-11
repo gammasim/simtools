@@ -73,7 +73,7 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
     distance_sorted = np.sort(radial_distance_map, axis=None)
 
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
-    # acount for it using weights below.
+    # account for it using weights below.
 
     weights, radial_bin_edges = np.histogram(distance_sorted, bins=bins, range=(0, max_dist))
     histogram_1d = np.empty_like(weights, dtype=float)
