@@ -1,8 +1,8 @@
-# Mirror positions and focal lengths for the LST1 prototype 
+# Mirror positions and focal lengths for the LST1 prototype
 # on La Palma, as based on the file newMirrorList.txt provided by LST team,
-# reformated to required format by 
+# reformatted to required format by
 #   awk '{ printf "  %8.2f\t  %8.2f\t  %6.2f\t  %8.2f\t    %d\t   0.0\t    #%%  id=%d\n",$1,$2,$3,100.*$4,$5,$6 }'
-# 
+#
 # Updated on 31/03/19. Two mirrors (IDs 162 and 172) were exchanged for ones with similar focal lengths.
 # Updated also in November 2023:
 #    coordinates were rotated 180 degrees and mirrored following e-mail discussions with the LST team
@@ -18,7 +18,7 @@
 #   1: x pos. [cm] (note: x -> down)
 #   2: y pos. [cm] (note: y -> right when looking from camera)
 #   3: diameter [cm], flat-to-flat
-#   4: focal length [cm] or 0. 
+#   4: focal length [cm] or 0.
 #      Note: positive, no RANDOM_FOCAL_LENGTH based values added in sim_telarray.
 #   5: shape code (3)
 #   6: z pos. = 0.0 -> will be calculated automatically based on paraboloid
