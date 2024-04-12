@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 from simtools.data_model import metadata_model
+from simtools.utils import general as gen
 
 
 def test_get_default_metadata_dict():
@@ -47,6 +48,53 @@ def test_validate_schema(tmp_test_directory):
     with pytest.raises(jsonschema.exceptions.ValidationError):
         invalid_data = {"name": "Alice", "age": "Thirty"}
         metadata_model.validate_schema(invalid_data, schema_file)
+
+
+def test_validate_schema_astro_py_units(caplog):
+    _schema = "simtools/schemas/model_parameter_and_data_schema.metaschema.yml"
+
+    _dict_1 = gen.collect_data_from_file_or_dict(
+        file_name="tests/resources/num_gains.schema.yml", in_dict=None
+    )
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+
+    # m and cm
+    _dict_1["data"][0]["unit"] = "m"
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+    _dict_1["data"][0]["unit"] = "cm"
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+
+    # combined units
+    _dict_1["data"][0]["unit"] = "cm/s"
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+    _dict_1["data"][0]["unit"] = "km/ s"
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+
+    # dimensionless
+    _dict_1["data"][0]["unit"] = "dimensionless"
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+    _dict_1["data"][0]["unit"] = ""
+    with caplog.at_level(logging.DEBUG):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    assert "Successful validation of data using schema from" in caplog.text
+
+    # not good
+    _dict_1["data"][0]["unit"] = "not_a_unit"
+    with caplog.at_level(logging.DEBUG):
+        with pytest.raises(jsonschema.exceptions.ValidationError):
+            metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
 
 
 def test_resolve_references():
