@@ -391,6 +391,7 @@ def collect_data_from_http(url):
                     # pylint: disable=import-outside-toplevel
                     import astropy.io.misc.yaml as astropy_yaml
 
+                    tmp_file.seek(0)
                     data = astropy_yaml.load(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
@@ -453,6 +454,7 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
                         # pylint: disable=import-outside-toplevel
                         import astropy.io.misc.yaml as astropy_yaml
 
+                        file.seek(0)
                         data = astropy_yaml.load(file)
         return data
     if in_dict is not None:
