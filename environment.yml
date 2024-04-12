@@ -7,6 +7,7 @@ dependencies:
   - astropy
   - boost-histogram
   - ctapipe
+  - ctao-dpps-cosmic-ray-spectra
   - eventio
   - flake8
   - jsonschema

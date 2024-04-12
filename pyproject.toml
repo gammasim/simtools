@@ -38,6 +38,7 @@ dynamic = [
 dependencies = [
   "astropy",
   "boost-histogram",
+  "ctao-dpps-cosmic-ray-spectra",
   "ctapipe",
   "eventio",
   "jsonschema",
