@@ -108,7 +108,9 @@ jobs:
         with:
           context: .
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-          platforms: linux/amd64,linux/arm64/v8
+          # TODO disable arm64/v8 until issues with boost histograms are solved
+          # platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64
           push:
             ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-${{ matrix.type }}
