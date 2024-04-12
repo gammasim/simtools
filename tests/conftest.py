@@ -10,9 +10,10 @@ from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_operations.io_handler
-from simtools import db_handler
 from simtools.configuration.configurator import Configurator
+from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -49,8 +50,13 @@ def io_handler(tmp_test_directory):
 def mock_settings_env_vars(tmp_test_directory):
     """
     Removes all environment variable from the test system.
-    Explicitely sets those needed.
+    Explicitly sets those needed.
     """
+    _url = (
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/model_parameters/-/raw/main"
+    )
+
     with mock.patch.dict(
         os.environ,
         {
@@ -59,6 +65,7 @@ def mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
+            "SIMTOOLS_DB_SIMULATION_MODEL_URL": _url,
         },
         clear=True,
     ):
@@ -66,11 +73,12 @@ def mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtel_path(mock_settings_env_vars):
-    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
-    if simtel_path.exists():
-        return simtel_path
-    return ""
+def simtel_path():
+    """
+    This fixture does not really set the sim_telarray path because it is used only
+    in unit tests which do not run sim_telarray
+    """
+    return Path("")
 
 
 @pytest.fixture
@@ -109,7 +117,7 @@ def args_dict_site(tmp_test_directory, simtel_path):
             "--site",
             "South",
             "--telescope",
-            "MST-NectarCam-D",
+            "MSTS-07",
             "--label",
             "integration_test",
         )
@@ -117,7 +125,7 @@ def args_dict_site(tmp_test_directory, simtel_path):
 
 
 @pytest.fixture
-def configurator(tmp_test_directory, simtel_path):
+def configurator(tmp_test_directory, mock_settings_env_vars, simtel_path):
     config = Configurator()
     config.default_config(
         ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
@@ -137,7 +145,7 @@ def db_config():
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server")
+    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server", "db_simulation_model_url")
     for _para in _db_para:
         if _para not in mongo_db_config:
             mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
@@ -165,23 +173,51 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def telescope_model_lst(db_config, io_handler):
+def model_version():
+    """
+    Simulation model version used in tests.
+    """
+    return "2024-02-01"
+
+
+@pytest.fixture
+def site_model_south(db_config, model_version):
+    return SiteModel(
+        site="South",
+        mongo_db_config=db_config,
+        label="site-south",
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
+def site_model_north(db_config, model_version):
+    return SiteModel(
+        site="North",
+        mongo_db_config=db_config,
+        label="site-north",
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
+def telescope_model_lst(db_config, io_handler, model_version):
     telescope_model_LST = TelescopeModel(
         site="North",
-        telescope_model_name="LST-1",
-        model_version="Prod5",
+        telescope_model_name="LSTN-01",
+        model_version=model_version,
         mongo_db_config=db_config,
-        label="validate_camera_efficiency",
+        label="test-telescope-model-lst",
     )
     return telescope_model_LST
 
 
 @pytest.fixture
-def telescope_model_mst(db_config, io_handler):
+def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
-        site="north",
-        telescope_model_name="mst-FlashCam-D",
-        model_version="Prod5",
+        site="South",
+        telescope_model_name="MSTS-design",
+        model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
     )
@@ -190,10 +226,23 @@ def telescope_model_mst(db_config, io_handler):
 
 
 @pytest.fixture
-def telescope_model_sst(db_config, io_handler):
+def telescope_model_sst(db_config, io_handler, model_version):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SST-D",
+        telescope_model_name="SSTS-design",
+        model_version=model_version,
+        mongo_db_config=db_config,
+        label="test-telescope-model-sst",
+    )
+    return telescope_model_SST
+
+
+# TODO - keep prod5 until a complete prod6 model is in the DB
+@pytest.fixture
+def telescope_model_sst_prod5(db_config, io_handler):
+    telescope_model_SST = TelescopeModel(
+        site="South",
+        telescope_model_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
@@ -202,65 +251,17 @@ def telescope_model_sst(db_config, io_handler):
 
 
 @pytest.fixture
-def array_layout_north_instance(io_handler, db_config):
-    return ArrayLayout(site="North", mongo_db_config=db_config, name="test_layout")
+def array_layout_north_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
-def array_layout_south_instance(io_handler, db_config):
-    return ArrayLayout(site="South", mongo_db_config=db_config, name="test_layout")
-
-
-@pytest.fixture
-def manual_corsika_dict_north():
-    return {
-        "corsika_sphere_radius": {
-            "LST": 12.5 * u.m,
-            "MST": 9.15 * u.m,
-            "SCT": 7.15 * u.m,
-            "SST": 3 * u.m,
-            "HESS": 7.5 * u.m,  # Value for CT1-4
-            "MAGIC": 10 * u.m,  # Value used in Prod6
-            "VERITAS": 9.15
-            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
-        },
-        "corsika_sphere_center": {
-            "LST": 16 * u.m,
-            "MST": 9 * u.m,
-            "SCT": 6.1 * u.m,
-            "SST": 3.25 * u.m,
-            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
-            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
-            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
-        },
-        "corsika_obs_level": 2158 * u.m,
-    }
-
-
-@pytest.fixture
-def manual_corsika_dict_south():
-    return {
-        "corsika_sphere_radius": {
-            "LST": 12.5 * u.m,
-            "MST": 9.15 * u.m,
-            "SCT": 7.15 * u.m,
-            "SST": 3 * u.m,
-            "HESS": 7.5 * u.m,  # Value for CT1-4
-            "MAGIC": 10 * u.m,  # Value used in Prod6
-            "VERITAS": 9.15
-            * u.m,  # Invented value (same diameter as the MST, so copy the same value)
-        },
-        "corsika_sphere_center": {
-            "LST": 16 * u.m,
-            "MST": 9 * u.m,
-            "SCT": 6.1 * u.m,
-            "SST": 3.25 * u.m,
-            "HESS": 7.5 * u.m,  # Invented value for CT1-4, copied from radius
-            "MAGIC": 10 * u.m,  # Invented value for MAGIC, copied from radius
-            "VERITAS": 9 * u.m,  # Invented value for VERITAS, copied from MST
-        },
-        "corsika_obs_level": 2147 * u.m,
-    }
+def array_layout_south_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
@@ -309,7 +310,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture
-def simulator_config_data(tmp_test_directory):
+def simulator_config_data(tmp_test_directory, model_version):
     return {
         "common": {
             "site": "North",
@@ -329,9 +330,7 @@ def simulator_config_data(tmp_test_directory):
             "run_range": [6, 10],
         },
         "array": {
-            "model_version": "Prod5",
-            "default": {"LST": "D234", "MST": "NectarCam-D"},
-            "LST-01": "1",
+            "default": {"LSTN": "01", "MSTN": "design"},
         },
     }
 
@@ -350,9 +349,10 @@ def shower_config_data(simulator_config_data):
 def file_has_text():
     def wrapper(file, text):
         try:
-            with open(file, "rb", 0) as string_file, mmap.mmap(
-                string_file.fileno(), 0, access=mmap.ACCESS_READ
-            ) as text_file_input:
+            with (
+                open(file, "rb", 0) as string_file,
+                mmap.mmap(string_file.fileno(), 0, access=mmap.ACCESS_READ) as text_file_input,
+            ):
                 re_search_1 = re.compile(f"{text}".encode())
                 search_result_1 = re_search_1.search(text_file_input)
                 if search_result_1 is None:

@@ -190,7 +190,6 @@ class GeoCoordinates:
         ) ** 2
 
         _denominator = (
-            semi_major_axis**2 * np.cos(_lat_rad) ** 2
-            + semi_minor_axis**2 * np.sin(_lat_rad) ** 2
+            semi_major_axis**2 * np.cos(_lat_rad) ** 2 + semi_minor_axis**2 * np.sin(_lat_rad) ** 2
         )
         return np.sqrt(_numerator / _denominator)

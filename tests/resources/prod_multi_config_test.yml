@@ -16,6 +16,6 @@ showers:
 array:
   model_version: Prod5
   default:
-    LST: 'D234'
-    MST: NectarCam-D
-  LST-01: '1'
+    LSTN: 'design'
+    MSTN: 'design'
+  LSTN-01: '1'

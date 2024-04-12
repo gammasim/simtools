@@ -60,20 +60,6 @@ PRIMARIES:
     number: 5626
     names: ['FE']
 
-SITE_PARAMETERS:
-  South:
-    OBSLEV: [2147.e2]
-    ATMOSPHERE: [26, 'Y']
-    MAGNET: [20.925, -9.119]
-    # ARRANG: [-3.433]
-    ARRANG: [0]
-  North:
-    OBSLEV: [2158.e2]
-    ATMOSPHERE: [36, 'Y']
-    MAGNET: [30.576, 23.571]
-    # ARRANG: [-5.3195]
-    ARRANG: [0]
-
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
   FIXCHI: [0.]
@@ -102,49 +88,3 @@ IACT_TUNING_PARAMETERS:
     ['IO_BUFFER', '800MB'],
     ['MAX_BUNCHES', '1000000']
   ]
-
-corsika_sphere_center:
-  LST:
-    value: 16
-    unit: "m"
-  MST:
-    value: 9
-    unit: "m"
-  SCT:
-    value: 6.1
-    unit: "m"
-  SST:
-    value: 3.25
-    unit: "m"
-  HESS:
-    value: 7.5 # Invented value for CT1-4, copied from radius
-    unit: "m"
-  MAGIC:
-    value: 10.0 # Invented value for MAGIC, copied from radius
-    unit: "m"
-  VERITAS:
-    value: 9 # Invented value for VERITAS, copied from MST
-    unit: "m"
-
-corsika_sphere_radius:
-  LST:
-    value: 12.5
-    unit: "m"
-  MST:
-    value: 9.15
-    unit: "m"
-  SCT:
-    value: 7.15
-    unit: "m"
-  SST:
-    value: 3.
-    unit: "m"
-  HESS:
-    value: 7.5 # Value for CT1-4
-    unit: "m"
-  MAGIC:
-    value: 10.0 # Value used in Prod6
-    unit: "m"
-  VERITAS:
-    value: 9.15 # Invented value (same diameter as the MST, so copy the same value)
-    unit: "m"

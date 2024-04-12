@@ -1,8 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-validate-camera-fov
-  TEST_NAME: run
+  TEST_NAME: fov-run
   CONFIGURATION:
     SITE: North
-    TELESCOPE: MST-NectarCam-D
-    MODEL_VERSION: prod5
+    TELESCOPE: MSTN-design
+    MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests

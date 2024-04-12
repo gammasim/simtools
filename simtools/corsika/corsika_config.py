@@ -56,6 +56,8 @@ class CorsikaConfig:
         North or South.
     layout_name: str
         Name of the layout.
+    model_version: str
+        Version of the model (e.g., prod5).
     label: str
         Instance label.
     corsika_config_data: dict
@@ -74,6 +76,8 @@ class CorsikaConfig:
         mongo_db_config,
         site,
         layout_name,
+        model_version,
+        layout=None,
         label=None,
         corsika_config_data=None,
         corsika_config_file=None,
@@ -97,13 +101,19 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
 
-        # Grabbing layout name and building ArrayLayout
         self.layout_name = names.validate_array_layout_name(layout_name)
-        self.layout = ArrayLayout.from_array_layout_name(
-            mongo_db_config=mongo_db_config,
-            array_layout_name=f"{self.site}-{self.layout_name}",
-            label=self.label,
+        self._logger.debug(f"Building ArrayLayout {self.layout_name}")
+        self.layout = (
+            ArrayLayout.from_array_layout_name(
+                mongo_db_config=mongo_db_config,
+                model_version=model_version,
+                array_layout_name=f"{self.site}-{self.layout_name}",
+                label=self.label,
+            )
+            if layout is None
+            else layout
         )
+        self.site_model = self.layout.site_model
 
         # Load parameters
         if corsika_parameters_file is None:
@@ -387,7 +397,7 @@ class CorsikaConfig:
 
             file.write("\n* [ SITE PARAMETERS ]\n")
             text_site_parameters = _get_text_single_line(
-                self._corsika_parameters["SITE_PARAMETERS"][self.site]
+                self.site_model.get_corsika_site_parameters(config_file_style=True)
             )
             file.write(text_site_parameters)
 
@@ -422,7 +432,7 @@ class CorsikaConfig:
             )
             file.write(text_debugging)
 
-            file.write("\n* [ OUTUPUT FILE ]\n")
+            file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
                 run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
                 file.write(f"TELFIL |{str(run_cta_script)}\n")

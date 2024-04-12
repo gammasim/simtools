@@ -4,9 +4,9 @@ import gzip
 import logging
 import os
 import time
-import urllib.error
 from copy import copy
 from pathlib import Path
+from unittest.mock import patch
 
 import astropy.units as u
 import numpy as np
@@ -24,7 +24,7 @@ from simtools.utils.general import (
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
+def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(
@@ -52,6 +52,11 @@ def test_collect_dict_data(args_dict, io_handler, caplog) -> None:
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
         assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
+    with open(tmp_test_directory / "test_file.list", "w", encoding="utf-8") as output:
+        output.write("test_line_1\n test_line_2\n")
+    _lines = gen.collect_data_from_file_or_dict(tmp_test_directory / "test_file.list", None)
+    assert len(_lines) == 2
+
 
 def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/test_parameters.yml"
@@ -67,7 +72,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     assert len(_dict) > 0
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
-    with pytest.raises(urllib.error.HTTPError):
+    with pytest.raises(gen.InvalidConfigData):
         gen.collect_data_from_http(_url + _file)
 
 
@@ -523,8 +528,8 @@ def test_is_url():
 def test_collect_data_dict_from_json():
     file = "tests/resources/reference_point_altitude.json"
     data = gen.collect_data_from_file_or_dict(file, None)
-    assert len(data) == 5
-    assert data["units"] == "m"
+    assert len(data) == 6
+    assert data["unit"] == "m"
 
 
 def test_collect_data_from_http():
@@ -539,16 +544,24 @@ def test_collect_data_from_http():
     assert isinstance(data, dict)
 
     file = "tests/resources/simtel_histograms_file_list.txt"
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidConfigData):
         data = gen.collect_data_from_http(url + file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
-    with pytest.raises(urllib.error.HTTPError):
+    with pytest.raises(InvalidConfigData):
         data = gen.collect_data_from_http(url + file)
 
 
+def test_join_url_or_path():
+    assert gen.join_url_or_path("http://www.desy.de", "test") == "http://www.desy.de/test"
+    assert (
+        gen.join_url_or_path("http://www.desy.de", "test", "test") == "http://www.desy.de/test/test"
+    )
+    assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
+
+
 def test_change_dict_keys_case(caplog) -> None:
-    # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
+    # note that entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
@@ -718,3 +731,109 @@ def test_get_value_unit_type() -> None:
 
     # Test with string representation of Quantity.
     assert gen.get_value_unit_type("1 m") == (pytest.approx(1), "m", "float")
+
+    # test unit fields
+    assert gen.get_value_unit_type(1, "m") == (1, "m", "int")
+    assert gen.get_value_unit_type(1.0 * u.km, "m") == (1000.0, "m", "float")
+    with pytest.raises(u.UnitConversionError):
+        gen.get_value_unit_type(1 * u.TeV, "m")
+
+    # cases of simtel-like strings representing arrays
+    assert gen.get_value_unit_type("1 2") == ("1 2", None, "str")
+    assert gen.get_value_unit_type("0 0") == ("0 0", None, "str")
+
+
+def test_assign_unit_to_quantity():
+    assert gen.get_value_as_quantity(10, u.m) == 10 * u.m
+
+    assert gen.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
+
+    with pytest.raises(u.UnitConversionError):
+        gen.get_value_as_quantity(1000 * u.TeV, u.m)
+
+
+@patch("builtins.input", side_effect=["Y", "y"])
+def test_user_confirm_yes(mock_input):
+    assert gen.user_confirm()
+
+
+@patch("builtins.input", side_effect=["N", "n", EOFError, "not_Y_or_N"])
+def test_user_confirm_no(mock_input):
+    assert not gen.user_confirm()
+
+
+def test_validate_data_type():
+
+    test_cases = [
+        # Test exact data type match
+        ("int", 5, None, False, True),
+        ("int", 5.5, None, False, False),
+        ("float", 3.14, None, False, True),
+        ("str", "hello", None, False, True),
+        ("bool", True, None, False, True),
+        ("bool", 1, None, False, False),
+        ("int", None, type(5), False, True),
+        ("float", None, type(3.14), False, True),
+        ("str", None, type("hello"), False, True),
+        ("bool", None, type(True), False, True),
+        ("bool", None, type(True), False, True),
+        # Test allow_subtypes=True
+        ("float", 5, None, True, True),
+        ("float", [1, 2, 3], None, True, True),
+        ("int", [1, 2, 3], None, True, True),
+        ("int", np.array([1, 2, 3]), None, True, True),
+        ("float", np.array([1.0, 2.0, 3.0]), None, True, True),
+        ("file", "hello", None, True, True),
+        ("string", "hello", None, True, True),
+        ("file", None, "object", True, True),  # 'file' type with None value
+        ("boolean", True, None, True, True),
+        ("int", None, np.uint8, True, True),  # Subtype of 'int'
+        ("float", None, int, True, True),  # 'int' can be converted to 'float'
+    ]
+
+    for reference_dtype, value, dtype, allow_subtypes, expected_result in test_cases:
+        gen._logger.debug(f"{reference_dtype} {value} {dtype} {allow_subtypes} {expected_result}")
+        assert (
+            gen.validate_data_type(
+                reference_dtype=reference_dtype,
+                value=value,
+                dtype=dtype,
+                allow_subtypes=allow_subtypes,
+            )
+            is expected_result
+        )
+
+    with pytest.raises(ValueError):
+        gen.validate_data_type("int", None, None, False)
+
+
+def test_convert_list_to_string():
+
+    assert gen.convert_list_to_string(None) is None
+    assert gen.convert_list_to_string("a") == "a"
+    assert gen.convert_list_to_string(5) == 5
+    assert gen.convert_list_to_string([1, 2, 3]) == "1 2 3"
+    assert gen.convert_list_to_string(np.array([1, 2, 3])) == "1 2 3"
+    assert gen.convert_list_to_string(np.array([1, 2, 3]), True) == "1, 2, 3"
+
+
+def test_convert_string_to_list():
+
+    t_1 = gen.convert_string_to_list("1 2 3 4")
+    assert len(t_1) == 4
+    assert pytest.approx(t_1[1]) == 2.0
+    assert isinstance(t_1[1], float)
+
+    t_int = gen.convert_string_to_list("1 2 3 4", False)
+    assert len(t_int) == 4
+    assert t_int[1] == 2
+    assert isinstance(t_int[1], int)
+
+    t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
+    assert len(t_2) == 4
+    assert pytest.approx(t_2[1]) == 0.2
+
+    t_3 = gen.convert_string_to_list("0.1")
+    assert pytest.approx(t_3[0]) == 0.1
+
+    assert gen.convert_string_to_list("bla_bla") == "bla_bla"
