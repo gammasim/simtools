@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from simtools.model.model_parameter import InvalidModelParameter
 from simtools.simtel.simtel_runner import SimtelRunner
 
 __all__ = ["SimtelRunnerCameraEfficiency"]
@@ -81,20 +82,30 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
         # Processing focal length
-        focal_length = self._telescope_model.get_parameter_value_with_unit("effective_focal_length")
+        focal_length = 0.0
+        try:
+            focal_length = self._telescope_model.get_parameter_value_with_unit(
+                "effective_focal_length"
+            )[0]
+        except IndexError:
+            pass
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0")
             focal_length = self._telescope_model.get_parameter_value_with_unit("focal_length")
 
         # Processing mirror class
         mirror_class = 1
-        if self._telescope_model.has_parameter("mirror_class"):
+        try:
             mirror_class = self._telescope_model.get_parameter_value("mirror_class")
+        except InvalidModelParameter:
+            pass
 
         # Processing camera transmission
         camera_transmission = 1
-        if self._telescope_model.has_parameter("camera_transmission"):
+        try:
             camera_transmission = self._telescope_model.get_parameter_value("camera_transmission")
+        except KeyError:
+            pass
 
         # Processing camera filter
         # A special case is testeff does not support 2D distributions
@@ -121,7 +132,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
-        command += f" -alt {self._telescope_model.get_parameter_value('altitude')}"
+        command += f" -alt {self._telescope_model.get_parameter_value('corsika_observation_level')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length.to('m').value}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
@@ -131,7 +142,8 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         if mirror_class == 2:
             command += " -m2"
             command += f" -fref2 {mirror_reflectivity_secondary}"
-        command += f" -teltrans {self._telescope_model.get_telescope_transmission_parameters()[0]}"
+        command += " -teltrans "
+        command += f"{self._telescope_model.get_parameter_value('telescope_transmission')[0]}"
         command += f" -camtrans {camera_transmission}"
         command += f" -fflt {camera_filter_file}"
         command += (
@@ -220,7 +232,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         """
 
         validated_nsb_spectrum_file = (
-            self._telescope_model.get_config_directory() / Path(nsb_spectrum_file).name
+            self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
         with open(nsb_spectrum_file, "r", encoding="utf-8") as file:
             lines = file.readlines()

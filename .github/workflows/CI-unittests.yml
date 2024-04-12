@@ -21,12 +21,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            python-version: "3.9"
-            install-method: mamba
-
           - os: macos-latest
-            python-version: "3.9"
+            python-version: "3.11"
             install-method: mamba
 
           - os: ubuntu-latest
@@ -37,6 +33,10 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: pip
+
+          - os: ubuntu-latest
+            python-version: "3.12"
+            install-method: mamba
 
     defaults:
       run:
@@ -97,7 +97,7 @@ jobs:
       - name: Unit tests
         shell: bash -l {0}
         run: |
-          pytest --durations=10 --color=yes
+          pytest --durations=10 --color=yes -n auto --dist loadscope
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v4

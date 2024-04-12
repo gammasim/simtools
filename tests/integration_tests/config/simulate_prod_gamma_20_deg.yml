@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg
   CONFIGURATION:
     PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test.yml
-    MODEL_VERSION: prod5
+    MODEL_VERSION: prod6
     SITE: North
     PRIMARY: gamma
     AZIMUTH_ANGLE: North

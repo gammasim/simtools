@@ -106,6 +106,7 @@ class Simulator:
         submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
+        model_version=None,
         test=False,
     ):
         """
@@ -134,6 +135,7 @@ class Simulator:
         self._submit_command = submit_command
         self._extra_commands = extra_commands
         self._mongo_db_config = mongo_db_config
+        self._model_version = model_version
 
         self._load_configuration_and_simulation_model(config_data, config_file)
 
@@ -243,6 +245,7 @@ class Simulator:
             label=self.label,
             array_config_data=_array_model_config,
             mongo_db_config=self._mongo_db_config,
+            model_version=self._model_version,
         )
 
     def _separate_corsika_and_simtel_config_data(self, config_data):
@@ -334,14 +337,20 @@ class Simulator:
             _array_model_data["layout_name"] = names.validate_array_layout_name(
                 _rest_data.pop("layout_name")
             )
-            _array_model_data["model_version"] = _rest_data.pop("model_version")
+            _array_model_data["model_version"] = _rest_data.pop("model_version", None)
             _array_model_data["default"] = _rest_data.pop("default")
         except KeyError:
             self._logger.error("Missing parameter in simulation configuration data")
             raise
 
         # Reading telescope keys
-        tel_keys = [k for k in _rest_data.keys() if k[1:4] in ["ST-", "CT-"]]
+        tel_keys = []
+        for key in _rest_data.keys():
+            try:
+                names.validate_telescope_name(key)
+                tel_keys.append(key)
+            except ValueError:
+                pass
         for key in tel_keys:
             _array_model_data[key] = _rest_data.pop(key)
 
@@ -358,6 +367,7 @@ class Simulator:
         }
         corsika_args = {
             "mongo_db_config": self._mongo_db_config,
+            "model_version": self._model_version,
             "site": self.site,
             "layout_name": self.layout_name,
             "corsika_parameters_file": self._corsika_parameters_file,
@@ -493,7 +503,7 @@ class Simulator:
         Returns
         -------
         runs_and_files: dict
-            dictionary with runnumber as key and (if availble) simulation
+            dictionary with runnumber as key and (if available) simulation
             file name as value
 
         """

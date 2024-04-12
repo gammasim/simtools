@@ -13,6 +13,7 @@ dependencies:
   - matplotlib-base
   - numpy
   - numpydoc
+  - pip
   - pre-commit
   - pylint
   - pymongo
@@ -20,6 +21,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-profiling
+  - pytest-repeat
   - pytest-xdist
   - python-dotenv
   - pyyaml
