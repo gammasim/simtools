@@ -102,6 +102,19 @@ class DataValidator:
         except (AttributeError, TypeError):
             pass
 
+    def validate_parameter_and_file_name(self):
+        """
+        Validate that file name and key 'parameter_name' in data dict are the same.
+
+        """
+
+        if not self.data_dict.get("parameter") == Path(self.data_file_name).stem:
+            self._logger.error(
+                f"Parameter name in data dict {self.data_dict.get('parameter')} and "
+                f"file name {Path(self.data_file_name).stem} do not match."
+            )
+            raise ValueError
+
     def _validate_data_dict(self):
         """
         Validate values in a dictionary. Handles different types of naming in data dicts

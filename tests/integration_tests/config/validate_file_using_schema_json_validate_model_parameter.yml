@@ -1,0 +1,8 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-validate-file-using-schema
+  TEST_NAME: json_validate_model_parameter
+  CONFIGURATION:
+    SCHEMA: >
+      https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml
+    FILE_NAME: tests/resources/reference_point_altitude.json
+    DATA_TYPE: model_parameter
