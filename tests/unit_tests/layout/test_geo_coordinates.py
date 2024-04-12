@@ -47,7 +47,7 @@ def test_crs_local():
         "no_defs": None,
         "type": "crs",
     }
-    # ignore warnings from pyproj that te crs.to_dict()
+    # ignore warnings from pyproj that the crs.to_dict()
     # method is not sufficient to fully describe a
     # coordinate system - this is not relevant for the
     # simple comparison of the crs parameters

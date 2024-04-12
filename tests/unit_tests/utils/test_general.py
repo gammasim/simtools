@@ -561,7 +561,7 @@ def test_join_url_or_path():
 
 
 def test_change_dict_keys_case(caplog) -> None:
-    # note that ist entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
+    # note that entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
         "REFERENCE": {"VERSION": "0.1.0"},
         "ACTIVITY": {"NAME": "submit", "ID": "84890304", "DESCRIPTION": "Set data"},
