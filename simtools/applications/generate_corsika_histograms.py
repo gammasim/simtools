@@ -65,7 +65,7 @@
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                    unit: &id001 !astropy.units.Unit {unit: m}
+                    unit: &id001 m
                     value: -1000.0
                 stop: &id002 !astropy.units.Quantity
                     unit: *id001
@@ -81,7 +81,7 @@
                 bins: 80
                 scale: linear
                 start: !astropy.units.Quantity
-                    unit: &id003 !astropy.units.Unit {unit: nm}
+                    unit: nm
                     value: 200.0
                 stop: !astropy.units.Quantity
                     unit: *id003
@@ -91,7 +91,7 @@
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                    unit: &id004 !astropy.units.Unit {unit: ns}
+                    unit: ns
                     value: -2000.0
                 stop: !astropy.units.Quantity
                     unit: *id004
@@ -100,7 +100,7 @@
                 bins: 100
                 scale: linear
                 start: !astropy.units.Quantity
-                    unit: &id005 !astropy.units.Unit {unit: km}
+                    unit: km
                     value: 120.0
                 stop: !astropy.units.Quantity
                     unit: *id005
