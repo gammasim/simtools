@@ -1094,8 +1094,8 @@ def convert_list_to_string(data, comma_separated=False):
 
 def convert_string_to_list(data_string, is_float=True):
     """
-    Convert string (as used e.g. in sim_telarray) to list of floats
-    or integers.  Allow coma or space separated strings.
+    Convert string (as used e.g. in sim_telarray) to list.
+    Allow coma or space separated strings.
 
     Parameters
     ----------
@@ -1116,4 +1116,9 @@ def convert_string_to_list(data_string, is_float=True):
         return [int(v) for v in data_string.split()]
     except ValueError:
         pass
+    if "," in data_string:
+        result = data_string.split(",")
+        return [item.strip() for item in result]
+    if " " in data_string:
+        return data_string.split()
     return data_string
