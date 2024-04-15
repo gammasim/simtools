@@ -680,5 +680,4 @@ class DataValidator:
         """
         if isinstance(self.data_dict["value"], str):
             self.data_dict["value"] = gen.convert_string_to_list(self.data_dict["value"])
-        if isinstance(self.data_dict["unit"], str):
             self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
