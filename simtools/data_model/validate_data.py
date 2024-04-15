@@ -680,7 +680,9 @@ class DataValidator:
         """
         if isinstance(self.data_dict["value"], str):
             try:
-                _is_float = self.data_dict.get("type").startswith("float")
+                _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
+                    "type"
+                ).startswith("double")
             except AttributeError:
                 _is_float = True
             self.data_dict["value"] = gen.convert_string_to_list(
