@@ -56,6 +56,18 @@ def test_validate_data_file(caplog):
     assert "Validating data from:" in caplog.text
 
 
+def test_validate_parameter_and_file_name():
+
+    data_validator = validate_data.DataValidator()
+    data_validator.data_file_name = "tests/resources/num_gains.json"
+    data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    data_validator.validate_and_transform()
+
+    data_validator.data_dict["parameter"] = "incorrect_name"
+    with pytest.raises(ValueError):
+        data_validator.validate_parameter_and_file_name()
+
+
 def test_validate_data_columns(tmp_test_directory, caplog):
     data_validator = validate_data.DataValidator()
     with pytest.raises(TypeError):
@@ -523,6 +535,34 @@ def test_validate_data_dict():
 
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
     data_validator_2._validate_data_dict()
+
+
+def test_prepare_model_parameter():
+    data_validator = validate_data.DataValidator()
+    data_validator.data_dict = {
+        "name": "reference_point_altitude",
+        "value": 1000.0,
+        "unit": "km",
+    }
+    data_validator._prepare_model_parameter()
+    assert pytest.approx(data_validator.data_dict["value"]) == 1000.0
+    assert data_validator.data_dict["unit"] == "km"
+
+    data_validator.data_dict["value"] = "1000. 2000. 3000."
+    data_validator._prepare_model_parameter()
+    assert pytest.approx(data_validator.data_dict["value"][0]) == 1000.0
+    assert pytest.approx(data_validator.data_dict["value"][2]) == 3000.0
+    assert data_validator.data_dict["unit"] == "km"
+
+    data_validator.data_dict["unit"] = "km, kg, s"
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["unit"][0] == "km"
+    assert data_validator.data_dict["unit"][1] == "kg"
+    assert data_validator.data_dict["unit"][2] == "s"
+
+    data_validator.data_dict["unit"] = ", , "
+    data_validator._prepare_model_parameter()
+    assert all(item == "" for item in data_validator.data_dict["unit"])
 
 
 def get_reference_columns_name_colx():

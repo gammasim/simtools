@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-validate-file-using-schema
+  TEST_NAME: json_validate_model_parameter
+  CONFIGURATION:
+    SCHEMA: tests/resources/num_gains.schema.yml
+    FILE_NAME: tests/resources/num_gains.json
+    DATA_TYPE: model_parameter
