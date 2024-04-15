@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
-from ctao_cr_spectra.spectral import PowerLaw
+from ctao_cr_spectra.spectral import DIFFUSE_FLUX_UNIT, POINT_SOURCE_FLUX_UNIT, PowerLaw
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
@@ -433,9 +433,9 @@ class SimtelHistogram:
             The differential flux of the energy distribution.
         """
         if self.config["diffuse"] == 1:
-            norm_unit = 1 / (u.cm**2 * u.s * u.sr * u.TeV)
+            norm_unit = DIFFUSE_FLUX_UNIT
         else:
-            norm_unit = 1 / (u.cm**2 * u.s * u.TeV)
+            norm_unit = POINT_SOURCE_FLUX_UNIT
 
         non_norm_simulated_power_law_function = PowerLaw(
             normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
@@ -506,7 +506,7 @@ class SimtelHistogram:
             self.energy_range[0],
             self.energy_range[1],
         )
-        obs_time = self.total_num_simulated_events / first_estimate * u.s
+        obs_time = (self.total_num_simulated_events / first_estimate) * u.s
         return obs_time
 
     def _estimate_trigger_rate_uncertainty(self):
