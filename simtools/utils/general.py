@@ -388,11 +388,7 @@ def collect_data_from_http(url):
                 try:
                     data = yaml.safe_load(tmp_file)
                 except yaml.constructor.ConstructorError:
-                    # pylint: disable=import-outside-toplevel
-                    import astropy.io.misc.yaml as astropy_yaml
-
-                    tmp_file.seek(0)
-                    data = astropy_yaml.load(tmp_file)
+                    data = _load_yaml_using_astropy(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
             elif url.endswith("list"):
@@ -451,11 +447,7 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
                     try:
                         data = yaml.safe_load(file)
                     except yaml.constructor.ConstructorError:
-                        # pylint: disable=import-outside-toplevel
-                        import astropy.io.misc.yaml as astropy_yaml
-
-                        file.seek(0)
-                        data = astropy_yaml.load(file)
+                        data = _load_yaml_using_astropy(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
@@ -1122,3 +1114,24 @@ def convert_string_to_list(data_string, is_float=True):
     if " " in data_string:
         return data_string.split()
     return data_string
+
+
+def _load_yaml_using_astropy(file):
+    """
+    Load a yaml file using astropy's yaml loader.
+
+    Parameters
+    ----------
+    file: file
+        File to be loaded.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the file content.
+    """
+    # pylint: disable=import-outside-toplevel
+    import astropy.io.misc.yaml as astropy_yaml
+
+    file.seek(0)
+    return astropy_yaml.load(file)

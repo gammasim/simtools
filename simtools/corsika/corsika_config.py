@@ -569,7 +569,7 @@ class CorsikaConfig:
         Parameters
         ----------
         value_args: list
-            List of value/unit pairs.
+            List of value/unit pairs (e.g., ["10 m", "20 m"])
         Returns
         -------
         list
