@@ -57,9 +57,14 @@ class DataValidator:
         self.data_table = data_table
         self.check_exact_data_type = check_exact_data_type
 
-    def validate_and_transform(self):
+    def validate_and_transform(self, is_model_parameter=False):
         """
         Data and data file validation.
+
+        Parameters
+        ----------
+        is_model_parameter: bool
+            This is a model parameter (add some data preparation)
 
         Returns
         -------
@@ -76,6 +81,8 @@ class DataValidator:
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
+            if is_model_parameter:
+                self._prepare_model_parameter()
             self._validate_data_dict()
             return self.data_dict
         if isinstance(self.data_table, Table):
@@ -665,3 +672,13 @@ class DataValidator:
                 f"Data column '{column_name}' not found in reference column definition"
             )
             raise
+
+    def _prepare_model_parameter(self):
+        """
+        Apply data preparation for model parameters.
+
+        """
+        if isinstance(self.data_dict["value"], str):
+            self.data_dict["value"] = gen.convert_string_to_list(self.data_dict["value"])
+        if isinstance(self.data_dict["unit"], str):
+            self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
