@@ -50,7 +50,7 @@ def test_validate_schema(tmp_test_directory):
         metadata_model.validate_schema(invalid_data, schema_file)
 
 
-def test_validate_schema_astro_py_units(caplog):
+def test_validate_schema_astropy_units(caplog):
     _schema = "simtools/schemas/model_parameter_and_data_schema.metaschema.yml"
 
     _dict_1 = gen.collect_data_from_file_or_dict(
