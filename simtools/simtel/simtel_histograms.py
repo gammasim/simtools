@@ -3,7 +3,8 @@ import logging
 
 import numpy as np
 from astropy import units as u
-from ctao_cr_spectra.spectral import PowerLaw, irfdoc_proton_spectrum
+from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
+from ctao_cr_spectra.spectral import PowerLaw
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
@@ -386,7 +387,7 @@ class SimtelHistogram:
             The function describing the spectral distribution.
         """
         # Define the particle distribution
-        particle_distribution_function = copy.copy(irfdoc_proton_spectrum)
+        particle_distribution_function = copy.copy(IRFDOC_PROTON_SPECTRUM)
         if re_weight:
             correction_factor = self.get_correction_factor()
         else:
@@ -410,7 +411,7 @@ class SimtelHistogram:
 
         simulation_energy_distribution = self.get_simulation_spectral_distribution()
         # Expected integrated CR flux
-        cr_energy_integrated = irfdoc_proton_spectrum.integrate_energy(
+        cr_energy_integrated = IRFDOC_PROTON_SPECTRUM.integrate_energy(
             self.energy_range[0], self.energy_range[1]
         )
         # Simulated integrated flux (differs from above due to optimization of computational time)
@@ -439,7 +440,7 @@ class SimtelHistogram:
         non_norm_simulated_power_law_function = PowerLaw(
             normalization=1 * norm_unit, index=self.config["spectral_index"], e_ref=1 * u.TeV
         )
-        non_norm_simulated_events_rate = non_norm_simulated_power_law_function.derive_events_rate(
+        non_norm_simulated_events_rate = non_norm_simulated_power_law_function.compute_events_rate(
             inner=self.view_cone[0],
             outer=self.view_cone[1],
             area=self.total_area,
@@ -475,7 +476,7 @@ class SimtelHistogram:
         """
         system_trigger_rate = (
             trigger_probability
-            * particle_distribution_function.derive_events_rate(
+            * particle_distribution_function.compute_events_rate(
                 inner=self.view_cone[0],
                 outer=self.view_cone[1],
                 area=self.total_area,
@@ -497,7 +498,7 @@ class SimtelHistogram:
         float: astropy.Quantity[time]
             Estimated observation time based on the total number of particles simulated.
         """
-        first_estimate = irfdoc_proton_spectrum.derive_number_events(
+        first_estimate = IRFDOC_PROTON_SPECTRUM.compute_number_events(
             self.view_cone[0],
             self.view_cone[1],
             1 * u.s,
