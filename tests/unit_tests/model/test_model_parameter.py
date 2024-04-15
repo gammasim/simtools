@@ -61,10 +61,10 @@ def test_get_parameter_value(telescope_model_lst):
     assert len(t_2) == 2
     assert pytest.approx(t_2[0]) == 0.8
     assert pytest.approx(t_2[1]) == 0.9
-    # mixed strings should stay string
+    # mixed strings should become list of strings
     _tmp_dict["value"] = "0.8 abc"
     t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
-    assert t_2 == "0.8 abc"
+    assert t_2 == ["0.8", "abc"]
 
 
 def test_get_parameter_value_with_unit(telescope_model_lst):
