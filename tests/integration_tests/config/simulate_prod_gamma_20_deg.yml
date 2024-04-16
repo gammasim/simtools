@@ -10,6 +10,6 @@ CTA_SIMPIPE:
     ZENITH_ANGLE: 20
     START_RUN: 0
     RUN: 2
-    NSHOW: 10
+    NSHOW: 5
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
