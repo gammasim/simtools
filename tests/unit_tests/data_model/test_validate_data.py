@@ -554,15 +554,30 @@ def test_prepare_model_parameter():
     assert pytest.approx(data_validator.data_dict["value"][2]) == 3000.0
     assert data_validator.data_dict["unit"] == "km"
 
+    data_validator.data_dict["value"] = "1000. 2000. 3000."
     data_validator.data_dict["unit"] = "km, kg, s"
     data_validator._prepare_model_parameter()
     assert data_validator.data_dict["unit"][0] == "km"
     assert data_validator.data_dict["unit"][1] == "kg"
     assert data_validator.data_dict["unit"][2] == "s"
 
+    data_validator.data_dict["value"] = "1000. 2000. 3000."
     data_validator.data_dict["unit"] = ", , "
     data_validator._prepare_model_parameter()
     assert all(item == "" for item in data_validator.data_dict["unit"])
+
+    data_validator.data_dict["value"] = "1000. 2000. 3000."
+    data_validator.data_dict["unit"] = "ct mV, m/s, N /m**2"
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["unit"][0] == "ct mV"
+    assert data_validator.data_dict["unit"][1] == "m/s"
+    assert data_validator.data_dict["unit"][2] == "N /m**2"
+
+    data_validator.data_dict["value"] = "1000 2000 3000"
+    data_validator.data_dict["unit"] = "ct"
+    data_validator.data_dict["type"] = "int64"
+    data_validator._prepare_model_parameter()
+    assert isinstance(data_validator.data_dict["value"][0], int)
 
 
 def get_reference_columns_name_colx():
