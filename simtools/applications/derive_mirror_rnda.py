@@ -371,7 +371,7 @@ def main():
             simtel_source_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
-        ray.simulate(test=False, force=True)  # force has to be True, always
+        ray.simulate(test=args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)
 
         return (
