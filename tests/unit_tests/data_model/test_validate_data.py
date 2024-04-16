@@ -566,6 +566,13 @@ def test_prepare_model_parameter():
     data_validator._prepare_model_parameter()
     assert all(item == "" for item in data_validator.data_dict["unit"])
 
+    data_validator.data_dict["value"] = "1000. 2000. 3000."
+    data_validator.data_dict["unit"] = "ct mV, m/s, N /m**2"
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["unit"][0] == "ct mV"
+    assert data_validator.data_dict["unit"][1] == "m/s"
+    assert data_validator.data_dict["unit"][2] == "N /m**2"
+
     data_validator.data_dict["value"] = "1000 2000 3000"
     data_validator.data_dict["unit"] = "ct"
     data_validator.data_dict["type"] = "int64"
