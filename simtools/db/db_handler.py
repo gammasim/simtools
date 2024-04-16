@@ -48,6 +48,8 @@ class DatabaseHandler:
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
+    site_parameters = {}
+    model_parameters = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -135,6 +137,15 @@ class DatabaseHandler:
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
+
+        _array_elements_key = (
+            f"{_site}-{_telescope_model_name}-" f"{_model_version}-{str(only_applicable)}"
+        )
+        try:
+            return DatabaseHandler.model_parameters[_array_elements_key]
+        except KeyError:
+            pass
+
         _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _telescope_model_name,
@@ -144,7 +155,7 @@ class DatabaseHandler:
 
         # update using simulation model repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_model_parameters_from_repo(
+            _pars = db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site,
                 parameter_collection="telescopes",
@@ -152,6 +163,7 @@ class DatabaseHandler:
                 model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
+        DatabaseHandler.model_parameters[_array_elements_key] = _pars
 
         return _pars
 
@@ -250,7 +262,6 @@ class DatabaseHandler:
 
         """
 
-        self._logger.debug(f"Tel_name_db: {telescope_model_name}")
         _which_tel_labels = [
             self.get_telescope_db_name(
                 telescope_name=telescope_model_name,
@@ -374,6 +385,16 @@ class DatabaseHandler:
 
         """
         _site, _, _model_version = self._validate_model_input(site, None, model_version)
+        self._logger.debug(
+            f"Getting {site} parameters from MongoDB {DatabaseHandler.DB_CTA_SIMULATION_MODEL}"
+            f" {model_version} {only_applicable}"
+        )
+        _site_key = f"{site}-{model_version}-{str(only_applicable)}"
+        try:
+            return DatabaseHandler.site_parameters[_site_key]
+        except KeyError:
+            pass
+
         _pars = self._get_site_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _site,
@@ -382,7 +403,7 @@ class DatabaseHandler:
         )
         # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_model_parameters_from_repo(
+            _pars = db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site,
                 telescope_name=None,
@@ -390,6 +411,7 @@ class DatabaseHandler:
                 model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
+        DatabaseHandler.site_parameters[_site_key] = _pars
         return _pars
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
