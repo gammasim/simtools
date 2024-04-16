@@ -143,7 +143,7 @@ def test_ray_tracing_read_results(ray_tracing_lst):
 
     assert ray_tracing_lst._has_results is True
     assert len(ray_tracing_lst._results) > 0
-    assert ray_tracing_lst.get_mean("d80_cm").value == pytest.approx(4.256768651160611, abs=1e-5)
+    assert ray_tracing_lst.get_mean("d80_cm") == pytest.approx(4.256768651160611, abs=1e-5)
 
 
 def test_export_results(simtel_path, telescope_model_lst, caplog):
@@ -218,9 +218,7 @@ def test_ray_tracing_get_std_dev(ray_tracing_lst):
     """Test the get_std_dev method of the RayTracing class"""
 
     ray_tracing_lst.analyze(force=False)
-    assert ray_tracing_lst.get_std_dev(key="d80_cm").value == pytest.approx(
-        0.8418404935128992, abs=1e-5
-    )
+    assert ray_tracing_lst.get_std_dev(key="d80_cm") == pytest.approx(0.8418404935128992, abs=1e-5)
 
 
 def test_ray_tracing_no_images(ray_tracing_lst, caplog):
