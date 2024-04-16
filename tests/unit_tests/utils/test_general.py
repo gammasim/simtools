@@ -552,8 +552,7 @@ def test_collect_data_dict_from_json():
 
 def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
-    # TODO main    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
+    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
