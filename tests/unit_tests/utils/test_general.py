@@ -66,8 +66,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/test_parameters.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
-    # TODO TMP    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
     _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
@@ -81,8 +80,7 @@ def test_collect_dict_from_url(io_handler) -> None:
         gen.collect_data_from_http(_url + _file)
 
     # yaml file with astropy header
-    # TODO TMP    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
     _url_dict = gen.collect_data_from_http(
         _url + "tests/resources/corsikaConfigTest_astropy_headers.yml"
     )
@@ -90,8 +88,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     assert len(_dict) > 0
 
     # simple list
-    # TODO TMP    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/module-import/"
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
     _url_list = gen.collect_data_from_http(_url + "tests/resources/test_file.list")
     assert isinstance(_url_list, list)
     assert len(_url_list) == 2
