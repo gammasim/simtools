@@ -14,3 +14,6 @@ CTA_SIMPIPE:
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        test-production/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.simtel.zst
