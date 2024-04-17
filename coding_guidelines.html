@@ -5,12 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Coding Guidelines &#8212; simtools v0.1.dev1+gbd87383</title>
+    <title>Coding Guidelines &#8212; simtools v0.1.dev1+g1b57817</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=61a93510"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="_static/documentation_options.js?v=2b434e33"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -31,7 +33,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gbd87383</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g1b57817</p>
 
 
 
@@ -73,7 +75,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -81,7 +83,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -99,13 +101,13 @@
           <div class="body" role="main">
             
   <section id="coding-guidelines">
-<span id="codingguidelines"></span><h1>Coding Guidelines<a class="headerlink" href="#coding-guidelines" title="Link to this heading">¶</a></h1>
+<span id="codingguidelines"></span><h1>Coding Guidelines<a class="headerlink" href="#coding-guidelines" title="Link to this heading"></a></h1>
 <p>This document describes the coding guidelines for the project.</p>
 <p>In general, the simtools project follows the PEP8 style.
 It uses the same guidelines outlined in the <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest/developer-guide/style-guide.html">ctapipe style guide</a>
 and <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html">code guidelines</a></p>
 <section id="automatic-formatting">
-<h2>Automatic Formatting<a class="headerlink" href="#automatic-formatting" title="Link to this heading">¶</a></h2>
+<h2>Automatic Formatting<a class="headerlink" href="#automatic-formatting" title="Link to this heading"></a></h2>
 <p>Linting and code checks are done automatically using the pre-commit functionality using <code class="docutils literal notranslate"><span class="pre">isort</span></code>,
 <code class="docutils literal notranslate"><span class="pre">black</span></code> and <code class="docutils literal notranslate"><span class="pre">pyflakes</span></code>. As part of the CI workflow Codacy performs a few additional code checks.</p>
 <p>It is recommended for developers to install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>:</p>
@@ -124,14 +126,14 @@ and <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest
 </div>
 </section>
 <section id="code-linting">
-<h2>Code Linting<a class="headerlink" href="#code-linting" title="Link to this heading">¶</a></h2>
+<h2>Code Linting<a class="headerlink" href="#code-linting" title="Link to this heading"></a></h2>
 <p>Linters of almost all file types are run by the CI-linter workflow.</p>
 <p>To run pylint locally, use:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pylint $(git ls-files &#39;simtools/*.py&#39;)
 </pre></div>
 </div>
 <section id="api-documentation">
-<h3>API documentation<a class="headerlink" href="#api-documentation" title="Link to this heading">¶</a></h3>
+<h3>API documentation<a class="headerlink" href="#api-documentation" title="Link to this heading"></a></h3>
 <p>Docstrings following the Numpy style must be added to any public function, class or method.
 It is also recommended to add docstrings-like comments to private functions.</p>
 <p>In applications, the modules should contain docstrings with a general description, command line
@@ -163,7 +165,7 @@ A typical example should look like:</p>
 </section>
 </section>
 <section id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h2>
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading"></a></h2>
 <p>Sufficient logging information should be provided to users and developers. As general guideline, the
 following logging levels should be used:</p>
 <ul class="simple">
@@ -175,9 +177,9 @@ following logging levels should be used:</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">logger.error,</span> <span class="pre">logger.warning,</span> <span class="pre">logger.debug,</span> <span class="pre">logger.info</span></code>.</p>
 </section>
 <section id="naming">
-<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading">¶</a></h2>
+<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading"></a></h2>
 <section id="telescope-names">
-<h3>Telescope Names<a class="headerlink" href="#telescope-names" title="Link to this heading">¶</a></h3>
+<h3>Telescope Names<a class="headerlink" href="#telescope-names" title="Link to this heading"></a></h3>
 <p>The telescope names as used by simtools follow the pattern “Site-Class-Type”, where:</p>
 <ul class="simple">
 <li><p>“Site” is either “North” or “South”;</p></li>
@@ -199,7 +201,7 @@ to the standard ones
 (e.g “flashcam” will be converted to “FlashCam”).</p>
 </section>
 <section id="validating-names">
-<h3>Validating names<a class="headerlink" href="#validating-names" title="Link to this heading">¶</a></h3>
+<h3>Validating names<a class="headerlink" href="#validating-names" title="Link to this heading"></a></h3>
 <p>Names that are recurrently used along the the package should be validated when given as input.
 Examples of names are: telescope, site, camera, model version. The functionalities to validate names
 are found in  <a class="reference internal" href="utils.html#utilsnames"><span class="std std-ref">utils.names</span></a>. The function _validate_name receives the input string

@@ -5,12 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulator &#8212; simtools v0.1.dev1+gbd87383</title>
+    <title>Simulator &#8212; simtools v0.1.dev1+g1b57817</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=61a93510"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="_static/documentation_options.js?v=2b434e33"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -32,7 +34,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gbd87383</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g1b57817</p>
 
 
 
@@ -89,7 +91,7 @@
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -97,7 +99,7 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -115,19 +117,19 @@
           <div class="body" role="main">
             
   <section id="simulator">
-<span id="simulators"></span><h1>Simulator<a class="headerlink" href="#simulator" title="Link to this heading">¶</a></h1>
+<span id="simulators"></span><h1>Simulator<a class="headerlink" href="#simulator" title="Link to this heading"></a></h1>
 <p>Base modules for calling external simulation software.</p>
 <section id="id1">
-<h2>simulator<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<h2>simulator<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <span class="target" id="module-simulator"><span id="simulatormodule"></span></span><dl class="py exception">
 <dt class="sig sig-object py" id="simulator.InvalidRunsToSimulate">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">InvalidRunsToSimulate</span></span><a class="reference internal" href="_modules/simulator.html#InvalidRunsToSimulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.InvalidRunsToSimulate" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">InvalidRunsToSimulate</span></span><a class="reference internal" href="_modules/simulator.html#InvalidRunsToSimulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.InvalidRunsToSimulate" title="Link to this definition"></a></dt>
 <dd><p>Exception for invalid runs to simulate.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simulator.Simulator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition"></a></dt>
 <dd><p>Simulator is responsible for managing simulation of showers and array of telescopes.     It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.</p>
 <p>The configuration is set as a dict config_data or a yaml     file config_file.</p>
 <p>Example of config_data for shower simulations:</p>
@@ -191,7 +193,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.file_list">
-<span class="sig-name descname"><span class="pre">file_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.file_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.file_list" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">file_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.file_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.file_list" title="Link to this definition"></a></dt>
 <dd><p>List output files obtained with simulation run</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -205,7 +207,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.get_list_of_histogram_files">
-<span class="sig-name descname"><span class="pre">get_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_histogram_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_histogram_files" title="Link to this definition"></a></dt>
 <dd><p>Get list of histogram files.
 (not applicable to all simulation types)</p>
 <dl class="field-list simple">
@@ -220,7 +222,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.get_list_of_input_files">
-<span class="sig-name descname"><span class="pre">get_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_input_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_input_files" title="Link to this definition"></a></dt>
 <dd><p>Get list of input files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -234,7 +236,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.get_list_of_log_files">
-<span class="sig-name descname"><span class="pre">get_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_log_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_log_files" title="Link to this definition"></a></dt>
 <dd><p>Get list of log files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -248,7 +250,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.get_list_of_output_files">
-<span class="sig-name descname"><span class="pre">get_list_of_output_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_output_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_list_of_output_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.get_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_output_files" title="Link to this definition"></a></dt>
 <dd><p>Get list of output files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -270,31 +272,31 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.print_list_of_histogram_files">
-<span class="sig-name descname"><span class="pre">print_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_histogram_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_histogram_files" title="Link to this definition"></a></dt>
 <dd><p>Print list of histogram files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.print_list_of_input_files">
-<span class="sig-name descname"><span class="pre">print_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_input_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_input_files" title="Link to this definition"></a></dt>
 <dd><p>Print list of output files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.print_list_of_log_files">
-<span class="sig-name descname"><span class="pre">print_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_log_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_log_files" title="Link to this definition"></a></dt>
 <dd><p>Print list of log files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.print_list_of_output_files">
-<span class="sig-name descname"><span class="pre">print_list_of_output_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_output_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_list_of_output_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.print_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_output_files" title="Link to this definition"></a></dt>
 <dd><p>Print list of output files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.resources">
-<span class="sig-name descname"><span class="pre">resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.resources" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.resources" title="Link to this definition"></a></dt>
 <dd><p>Print a simple report on computing resources used
 (includes run time per run only at this point)</p>
 <dl class="field-list simple">
@@ -309,7 +311,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulator.Simulator.simulate">
-<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.simulate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.simulate" title="Link to this definition"></a></dt>
 <dd><p>Submit a run script as a job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -323,7 +325,7 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="simulator.Simulator.simulator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulator</span></span><a class="headerlink" href="#simulator.Simulator.simulator" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulator</span></span><a class="headerlink" href="#simulator.Simulator.simulator" title="Link to this definition"></a></dt>
 <dd><p>The attribute simulator</p>
 </dd></dl>
 
