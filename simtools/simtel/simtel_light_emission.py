@@ -28,7 +28,9 @@ class SimulatorLightEmission(SimtelRunner):
     Parameters
     ----------
     telescope_model:
-        TelescopeModel class to define site, telescope model etc.
+        TelescopeModel instance to define site, telescope model etc.
+    calibration_model:
+        CalibrationModel instance to define calibration device
     default_le_config: dict
         defines parameters for running the sim_telarray light emission application.
     le_application: str
@@ -49,6 +51,7 @@ class SimulatorLightEmission(SimtelRunner):
     def __init__(
         self,
         telescope_model,
+        calibration_model,
         default_le_config,
         le_application,
         simtel_source_path,
@@ -69,6 +72,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._telescope_model = telescope_model
         self.label = label if label is not None else self._telescope_model.label
 
+        self._calibration_model = calibration_model
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
         try:
@@ -114,6 +118,7 @@ class SimulatorLightEmission(SimtelRunner):
         args, config_data = gen.separate_args_and_config_data(
             expected_args=[
                 "telescope_model",
+                "calibration_model",
                 "default_le_config",
                 "le_application",
                 "simtel_source_path",

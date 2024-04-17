@@ -7,7 +7,8 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.model.telescope_model import InvalidParameter, TelescopeModel
+from simtools.model.calibration_model import CalibrationModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
 
@@ -35,11 +36,18 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--light_source_type",
-        help="Select calibration light source type: varying distances (1), layout positions (2)",
+        help="Select calibration light source type: laser (1), led (2)",
         type=int,
         default=1,
     )
     config.parser.add_argument(
+        "--light_source_positioning",
+        help="Select calibration light source positioning: \
+              varying distances (1), layout positions (2)",
+        type=int,
+        default=1,
+    )
+    config.parser.add_argument(  # remove
         "--distance_ls",
         help="Light source distance in m (Example --distance_ls 800 1200)",
         nargs="+",
@@ -50,7 +58,11 @@ def _parse(label):
         type=str,
         default=None,
     )
-    return config.initialize(db_config=True, telescope_model=True, require_command_line=False)
+    return config.initialize(
+        db_config=True,
+        simulation_model="telescope",
+        require_command_line=False,
+    )
 
 
 def default_le_configs(le_application):
@@ -58,7 +70,7 @@ def default_le_configs(le_application):
     "Isotropic", "Gauss:<rms>", "Rayleigh", "Cone:<angle>", and "FilledCone:<angle>", "Parallel",
      with all angles given in degrees, all with respect to the given direction vector
     (vertically downwards if missing). If the light source has a non-zero length and velocity
-    (in units of the vaccum speed of light), it is handled as a moving source,
+    (in units of the vacuum speed of light), it is handled as a moving source,
     in the given direction.
     """
 
@@ -154,13 +166,21 @@ def main():
         label=label,
     )
     # important for triggering with a single telescope
-    telescope_model.remove_parameters("array_triggers")
-    try:
-        # set to 0 to have the optical axis of the MST aligned.
-        telescope_model.remove_parameters("axes_offsets")
-    except InvalidParameter:
-        msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
-        logger.warning(msg)
+    # telescope_model.remove_parameters("array_triggers")
+    # try:
+    # set to 0 to have the optical axis of the MST aligned.
+    #    telescope_model.remove_parameters("axes_offsets")
+    # except InvalidParameter:
+    #    msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
+    #    logger.warning(msg)
+
+    calibration_model = CalibrationModel(
+        site=args_dict["site"],
+        calibration_device_model_name="ILLN-01",
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        label=label,
+    )
 
     figures = []
     for distance in default_le_config["z_pos"]["default"]:
@@ -168,6 +188,7 @@ def main():
         le_config["z_pos"]["default"] = distance
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
+            calibration_model=calibration_model,
             default_le_config=le_config,
             le_application=le_application,
             simtel_source_path=args_dict["simtel_path"],
@@ -179,7 +200,7 @@ def main():
         try:
             fig = le.plot_simtel_ctapipe()
             figures.append(fig)
-        except (InvalidParameter, AttributeError):
+        except AttributeError:
             msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
             logger.warning(msg)
 
