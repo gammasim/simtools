@@ -23,6 +23,7 @@ def db_cleanup(db, random_id):
     # Cleanup
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
     db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["calibration_devices_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["sites_" + random_id].drop()
 
@@ -313,6 +314,26 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     )
     assert pars["corsika_observation_level"]["value"] == pytest.approx(1800.0)
     assert pars["corsika_observation_level"]["unit"] == "m"
+
+    # calibration_devices parameters
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="ILLN-design",
+        version="test",
+        parameter="led_pulse_offset",
+        value="0 ns",
+        collection_name="calibration_devices_" + random_id,
+    )
+    pars = db.read_mongo_db(
+        db_name=f"sandbox_{random_id}",
+        telescope_model_name="ILLN-design",
+        model_version="test",
+        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        collection_name="calibration_devices_" + random_id,
+        write_files=False,
+    )
+    assert pars["led_pulse_offset"]["value"] == 0
+    assert pars["led_pulse_offset"]["unit"] == "ns"
 
     # wrong collection
     with pytest.raises(ValueError):
