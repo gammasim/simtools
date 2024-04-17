@@ -222,6 +222,8 @@ def main():
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     n_runs = 50
+    if args_dict["test"]:
+        n_runs = 5
     for _ in range(n_runs):
         mrra_range = 0.004 if not args_dict["fixed"] else 0
         mrf_range = 0.1
