@@ -316,31 +316,29 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     assert pars["camera_pixels"]["applicable"] is False
 
 
-def test_reading_db_sites(db):
+def test_reading_db_sites(db, db_config, simulation_model_url):
     logger.info("----Testing reading La Palma parameters-----")
-    pars = db.get_site_parameters("North", "Released")
+    db.mongo_db_config["db_simulation_model_url"] = None
+    pars = db.get_site_parameters("North", "prod6")
     if db.mongo_db_config:
-        # temporary solution for simulation model parameter renaming
-        if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value")
-            assert _obs_level == pytest.approx(2156.0)
-        else:
-            _obs_level = pars["altitude"]["value"]
-            assert _obs_level == pytest.approx(2158.0)
+        _obs_level = pars["corsika_observation_level"].get("value")
+        assert _obs_level == pytest.approx(2156.0)
     else:
         assert pars["altitude"] == 2156
 
     logger.info("----Testing reading Paranal parameters-----")
-    pars = db.get_site_parameters("South", "Released")
+    pars = db.get_site_parameters("South", "prod6")
     if db.mongo_db_config:
-        # temporary solution for simulation model parameter renaming
-        if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value")
-        else:
-            _obs_level = pars["altitude"].get("value")
+        _obs_level = pars["corsika_observation_level"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
+
+    if db.mongo_db_config.get("db_simulation_model_url", None) is None:
+        db.mongo_db_config["db_simulation_model_url"] = simulation_model_url
+    pars = db.get_site_parameters("South", "prod6")
+    assert pars["corsika_observation_level"]["value"] == 2147.0
+    db.mongo_db_config["db_simulation_model_url"] = None  # make sure that this is reset
 
 
 def test_separating_get_and_write(db, io_handler):
@@ -450,10 +448,20 @@ def test_get_telescope_db_name(db):
     with pytest.raises(ValueError):
         db.get_telescope_db_name("SSTN-05", model_version="Prod5")
 
-    db.get_telescope_db_name("ILLN-01", model_version="Prod5")
+    with pytest.raises(ValueError):
+        db.get_telescope_db_name("ILLN-01", model_version="Prod5")
 
 
 def test_parameter_cache_key(db):
 
     assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
     assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
+
+
+def test_get_tagged_version(db):
+
+    with pytest.raises(ValueError):
+        db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="NotReleased")
+
+    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Released") == "2020-06-28"
+    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Latest") == "2020-06-28"
