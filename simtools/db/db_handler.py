@@ -1181,9 +1181,12 @@ class DatabaseHandler:
         Create a cache key for the parameter cache dictionaries.
 
         """
+        _model_version = self._convert_version_to_tagged(
+            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
         if telescope is None:
-            return f"{site}-{model_version}"
-        return f"{site}-{telescope}-{model_version}"
+            return f"{site}-{_model_version}"
+        return f"{site}-{telescope}-{_model_version}"
 
     def _reset_parameter_cache(self, site, telescope, model_version):
         """
