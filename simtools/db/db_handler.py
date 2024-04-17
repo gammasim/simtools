@@ -110,6 +110,7 @@ class DatabaseHandler:
         site,
         telescope_model_name,
         model_version,
+        collection,
         only_applicable=False,
     ):
         """
@@ -123,6 +124,8 @@ class DatabaseHandler:
             Name of the telescope model (e.g. LSTN-01, MSTS-design)
         model_version: str
             Version of the model.
+        collection: str
+
         only_applicable: bool
             If True, only applicable parameters will be read.
 
@@ -139,6 +142,7 @@ class DatabaseHandler:
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _telescope_model_name,
             _model_version,
+            collection,
             only_applicable,
         )
 
@@ -228,7 +232,7 @@ class DatabaseHandler:
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _get_model_parameters_mongo_db(
-        self, db_name, telescope_model_name, model_version, only_applicable=False
+        self, db_name, telescope_model_name, model_version, collection, only_applicable=False
     ):
         """
         Get parameters from MongoDB for a specific telescope.
@@ -241,6 +245,8 @@ class DatabaseHandler:
             Name of the telescope model (e.g. MST-FlashCam-D ...)
         model_version: str
             Version of the model.
+        collection: str
+
         only_applicable: bool
             If True, only applicable parameters will be read.
 
@@ -267,6 +273,7 @@ class DatabaseHandler:
                     db_name,
                     _tel,
                     model_version,
+                    collection_name=collection,
                     run_location=None,
                     write_files=False,
                     only_applicable=only_applicable,
@@ -281,7 +288,7 @@ class DatabaseHandler:
         telescope_model_name,
         model_version,
         run_location,
-        collection_name="telescopes",
+        collection_name,
         write_files=True,
         only_applicable=False,
     ):

@@ -34,6 +34,9 @@ class ModelParameter:
         Site name (e.g., South or North).
     telescope_model_name: str
         Telescope model name (e.g., LSTN-01, LSTN-design).
+    collection: str
+        instrument class (e.g. telescopes, calibration_devices)
+        as stored under collection in the DB.
     mongo_db_config: dict
         MongoDB configuration.
     label: str
@@ -47,6 +50,7 @@ class ModelParameter:
         model_version,
         site=None,
         telescope_model_name=None,
+        collection="telescopes",
         db=None,
         label=None,
     ):
@@ -66,6 +70,7 @@ class ModelParameter:
             if telescope_model_name is not None
             else None
         )
+        self.collection = collection
         self.label = label
         self.model_version = names.validate_model_version_name(model_version)
         self._config_file_directory = None
@@ -300,10 +305,10 @@ class ModelParameter:
         if self.name is not None:
             self._logger.debug(
                 f"Reading telescope parameters from DB "
-                f"({self.name}, {self.model_version}, {self.site})"
+                f"({self.name}, {self.model_version}, {self.site}, {self.collection})"
             )
             self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.model_version, only_applicable=True
+                self.site, self.name, self.model_version, self.collection, only_applicable=True
             )
             try:
                 self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
@@ -460,6 +465,32 @@ class ModelParameter:
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
+
+        self._is_config_file_up_to_date = False
+
+    def remove_parameters(self, *par_names):
+        """
+        Remove a set of parameters from the model.
+
+        Parameters
+        ----------
+        *par_names
+            Each parameter to be removed has to be passed as par_names.
+
+        Raises
+        ------
+        InvalidModelParameter
+            If at least one of the parameter to be removed is not in this model.
+        """
+        for par_name in par_names:
+            if par_name in self._parameters[par_name]:
+                self._logger.debug(f"Removing parameter {par_name}")
+                del self._parameters[par_name]
+
+            else:
+                msg = f"Could not remove parameter {par_name} because it does not exist"
+                self._logger.error(msg)
+                raise InvalidModelParameter(msg)
 
         self._is_config_file_up_to_date = False
 
