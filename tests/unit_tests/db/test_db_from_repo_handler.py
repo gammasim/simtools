@@ -10,19 +10,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
-def simulation_model_url(db_config):
-    if (
-        db_config["db_simulation_model_url"] is None
-        or len(db_config["db_simulation_model_url"]) == 0
-    ):
-        db_config["db_simulation_model_url"] = (
-            "https://gitlab.cta-observatory.org/cta-science/simulations/"
-            "simulation-model/model_parameters/-/raw/main/"
-        )
-    return db_config["db_simulation_model_url"]
-
-
 def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     with caplog.at_level(logging.DEBUG):
         assert (
