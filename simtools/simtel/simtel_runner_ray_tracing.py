@@ -90,7 +90,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         # RayTracing - default parameters
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
-        self.photons_per_run = 100000 if not test else 10000
+        self.photons_per_run = 100000 if not test else 5000
 
         self._load_required_files(force_simulate)
 
