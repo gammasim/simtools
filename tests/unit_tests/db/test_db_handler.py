@@ -227,6 +227,11 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["new_test_parameter_quantity_str"]["type"] == "float"
     assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
 
+    # make sure that cache has been emptied after updating
+    assert (
+        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+    )
+
     # site parameters
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
@@ -315,6 +320,11 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         write_files=False,
     )
     assert pars["camera_pixels"]["applicable"] is False
+
+    # make sure that cache has been emptied after updating
+    assert (
+        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+    )
 
 
 def test_reading_db_sites(db, db_config, simulation_model_url):
