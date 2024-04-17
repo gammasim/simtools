@@ -139,7 +139,7 @@ class DatabaseHandler:
         )
 
         _array_elements_cache_key = self._parameter_cache_key(
-            site, telescope_model_name, model_version, only_applicable
+            site, telescope_model_name, model_version
         )
         try:
             return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
@@ -389,7 +389,7 @@ class DatabaseHandler:
             f"Getting {site} parameters from MongoDB {DatabaseHandler.DB_CTA_SIMULATION_MODEL}"
             f" {model_version} {only_applicable}"
         )
-        _site_cache_key = self._parameter_cache_key(site, None, model_version, only_applicable)
+        _site_cache_key = self._parameter_cache_key(site, None, model_version)
         try:
             return DatabaseHandler.site_parameters_cached[_site_cache_key]
         except KeyError:
@@ -854,6 +854,8 @@ class DatabaseHandler:
 
         collection.update_one(query, query_update)
 
+        self._reset_parameter_cache(site, telescope, _model_version)
+
     def add_new_parameter(
         self,
         db_name,
@@ -944,6 +946,8 @@ class DatabaseHandler:
         for file_to_insert_now in files_to_add_to_db:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
+
+        self._reset_parameter_cache(site, telescope, version)
 
     def _convert_version_to_tagged(self, model_version, db_name):
         """Convert to tagged version, if needed."""
@@ -1167,11 +1171,20 @@ class DatabaseHandler:
         self._logger.error("Telescope %s not found in the database.", telescope_name)
         raise ValueError
 
-    def _parameter_cache_key(self, site, telescope, model_version, only_applicable):
+    def _parameter_cache_key(self, site, telescope, model_version):
         """
         Create a cache key for the parameter cache dictionaries.
 
         """
         if telescope is None:
-            return f"{site}-{model_version}-{only_applicable}"
-        return f"{site}-{telescope}-{model_version}-{only_applicable}"
+            return f"{site}-{model_version}"
+        return f"{site}-{telescope}-{model_version}"
+
+    def _reset_parameter_cache(self, site, telescope, model_version):
+        """
+        Reset the cache for the parameters.
+
+        """
+        _cache_key = self._parameter_cache_key(site, telescope, model_version)
+        DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
+        DatabaseHandler.model_parameters_cached.pop(_cache_key, None)

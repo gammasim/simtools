@@ -429,3 +429,11 @@ def test_get_telescope_db_name(db):
     assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
     with pytest.raises(ValueError):
         db.get_telescope_db_name("SSTN-05", model_version="Prod5")
+
+    db.get_telescope_db_name("ILLN-01", model_version="Prod5")
+
+
+def test_parameter_cache_key(db):
+
+    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
+    assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
