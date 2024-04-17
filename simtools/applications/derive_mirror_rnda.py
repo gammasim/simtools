@@ -349,7 +349,7 @@ def main():
     tel = _define_telescope_model(label, args_dict, db_config)
 
     if args_dict["test"]:
-        args_dict["number_of_mirrors_to_test"] = 4
+        args_dict["number_of_mirrors_to_test"] = 2
 
     if args_dict["psf_measurement"]:
         _get_psf_containment(logger, args_dict)
@@ -371,7 +371,7 @@ def main():
             simtel_source_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
-        ray.simulate(test=False, force=True)  # force has to be True, always
+        ray.simulate(test=args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)
 
         return (
