@@ -320,7 +320,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
 def test_reading_db_sites(db, db_config, simulation_model_url):
     logger.info("----Testing reading La Palma parameters-----")
     db.mongo_db_config["db_simulation_model_url"] = None
-    pars = db.get_site_parameters("North", "prod6")
+    pars = db.get_site_parameters("North", "2024-02-01")
     if db.mongo_db_config:
         _obs_level = pars["corsika_observation_level"].get("value")
         assert _obs_level == pytest.approx(2156.0)
@@ -328,16 +328,17 @@ def test_reading_db_sites(db, db_config, simulation_model_url):
         assert pars["altitude"] == 2156
 
     logger.info("----Testing reading Paranal parameters-----")
-    pars = db.get_site_parameters("South", "prod6")
+    pars = db.get_site_parameters("South", "2024-02-01")
     if db.mongo_db_config:
         _obs_level = pars["corsika_observation_level"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
 
+    db._reset_parameter_cache("South", None, "2024-02-01")
     if db.mongo_db_config.get("db_simulation_model_url", None) is None:
         db.mongo_db_config["db_simulation_model_url"] = simulation_model_url
-    pars = db.get_site_parameters("South", "prod6")
+    pars = db.get_site_parameters("South", "2024-02-01")
     assert pars["corsika_observation_level"]["value"] == 2147.0
     db.mongo_db_config["db_simulation_model_url"] = None  # make sure that this is reset
 
