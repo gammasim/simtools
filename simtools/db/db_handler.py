@@ -1047,8 +1047,13 @@ class DatabaseHandler:
             db_entry["instrument"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
             db_entry["instrument"] = names.validate_site_name(site)
+        elif "calibration_devices" in collection_name:
+            db_entry["instrument"] = names.validate_telescope_name(telescope)
         else:
-            raise ValueError("Can only add new parameters to the sites or telescopes collections")
+            raise ValueError(
+                "Can only add new parameters to the sites, \
+                telescopes or calibration_devices collections"
+            )
 
         db_entry["version"] = version
         db_entry["parameter"] = parameter
