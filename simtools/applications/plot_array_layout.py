@@ -40,6 +40,7 @@
 import logging
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 from astropy import units as u
 
@@ -152,6 +153,7 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    matplotlib.use("Agg")
 
     if args_dict["telescope_list"] is not None:
         logger.info("Plotting array from telescope list file(s).")
@@ -195,6 +197,7 @@ def main():
                 rotate_angle=one_angle,
                 show_tel_label=args_dict["show_tel_label"],
             )
+
             output_dir = io_handler_instance.get_output_directory(
                 label, sub_dir="application-plots"
             )
@@ -218,6 +221,7 @@ def main():
                     logger.info(f"Saving figure to {plot_file}.{ext}.")
                     plt.savefig(f"{str(plot_file)}.{ext}", bbox_inches="tight", dpi=400)
                 fig_out.clf()
+            plt.close()
 
 
 if __name__ == "__main__":
