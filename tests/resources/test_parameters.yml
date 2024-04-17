@@ -24,25 +24,25 @@
 #
 zenith_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
+  unit: 'deg'
   default: 20.0
   names: ['zenith', 'theta']
 azimuth_angle:
   len: 1
-  unit: !astropy.units.Unit {unit: deg}
+  unit: 'deg'
   default: null # No default is given for the sake of the test
   names: ['azimuth', 'phi']
 off_axis_angle: # Parameter with undefined length
   len: null
-  unit: !astropy.units.Unit {unit: deg}
+  unit: 'deg'
   names: ['offaxis', 'offset']
 source_distance:
   len: 1
-  unit: !astropy.units.Unit {unit: km}
+  unit: 'km'
   default: 10
 cscat: # Parameter with len > 1 and multiple units.
   len: 3
-  unit: [null, !astropy.units.Unit {unit: m}, !astropy.units.Unit {unit: m}]
+  unit: [null, 'm', 'm']
   names: ['scat']
 validated_name:
   len: 1
@@ -50,9 +50,9 @@ validated_name:
   names: ['test_name']
 dict_par:
   len: 2
-  unit: [null, !astropy.units.Unit {unit: cm}]
+  unit: [null, 'cm']
   default:
     blah: 1
-    bleh: !astropy.units.Quantity
-      unit: !astropy.units.Unit {unit: cm}
+    bleh:
+      unit: 'cm'
       value: 2

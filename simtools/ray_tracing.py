@@ -245,7 +245,7 @@ class RayTracing:
             If True, the telescope transmission is not applied.
         containment_fraction: float
             Containment fraction for PSF containment calculation. Allowed values are in the
-            inverval [0,1]
+            interval [0,1]
         """
 
         do_analyze = not self._file_results.exists() or force
@@ -347,7 +347,7 @@ class RayTracing:
             Photon list file.
         containment_fraction: float
             Containment fraction for PSF containment calculation. Allowed values are in the
-            inverval [0,1]
+            interval [0,1]
 
         Returns
         -------

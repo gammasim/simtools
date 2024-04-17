@@ -236,6 +236,7 @@ definitions:
         type: string
         description: "instrument class"
         enum:
+          - Calibration
           - Camera
           - Site
           - Structure
@@ -261,6 +262,8 @@ definitions:
     description: "specific type of instrument"
     enum:
       - Atmosphere
+      - ILLN
+      - ILLS
       - LSTN
       - LSTS
       - MSTN
@@ -357,26 +360,8 @@ definitions:
   Unit:
     type: string
     description: |-
-      "Unit correspond to astropy unit names
-      (wherever possible)"
-    enum:
-      - cm
-      - count
-      - count / mV
-      - deg
-      - dimensionless
-      - GHz
-      - m
-      - MHz
-      - mV
-      - mV * ns
-      - nm
-      - ns
-      - 1 / (sr * ns * cm**2)
-      - pct
-      - uA
-      - uT
-      - V
+      "Unit correspond to astropy unit names"
+    format: astropy_unit
     title: Unit
   SimulationSoftwareName:
     type: string

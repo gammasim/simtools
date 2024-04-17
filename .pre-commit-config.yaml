@@ -51,3 +51,8 @@ repos:
     rev: "1.7.0"
     hooks:
       - id: pyproject-fmt
+  # codespell
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell

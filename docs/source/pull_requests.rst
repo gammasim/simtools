@@ -4,7 +4,7 @@ Pull requests
 *************
 
 Pull requests are one of our most important and powerful development tools.
-They help to obtain good quality, homogenous, and maintainable code.
+They help to obtain good quality, homogeneous, and maintainable code.
 
 Both reviewing pull requests and addressing reviewers' comments is hard.
 The following thoughts might help to obtain an efficient and pleasant reviewing process.
