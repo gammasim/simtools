@@ -223,3 +223,21 @@ def test_get_file_name(corsika_config, io_handler):
     assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
+
+
+def test_convert_to_quantities(corsika_config):
+
+    assert corsika_config._convert_to_quantities("10 m") == [10 * u.m]
+    assert corsika_config._convert_to_quantities("simple_string") == ["simple_string"]
+    assert corsika_config._convert_to_quantities({"value": 10, "unit": "m"}) == [10 * u.m]
+    assert corsika_config._convert_to_quantities({"not_value": 10, "not_unit": "m"}) == [
+        {"not_value": 10, "not_unit": "m"}
+    ]
+    assert corsika_config._convert_to_quantities(["10 m", "20 m", "simple_string"]) == [
+        10 * u.m,
+        20 * u.m,
+        "simple_string",
+    ]
+    assert corsika_config._convert_to_quantities(
+        [{"value": 10, "unit": "m"}, "20 m", "simple_string"]
+    ) == [10 * u.m, 20 * u.m, "simple_string"]

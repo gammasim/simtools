@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 
 import astropy.units as u
 import numpy as np
-from astropy.io.misc import yaml
+import yaml
 
 __all__ = [
     "change_dict_keys_case",
@@ -62,7 +62,7 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
     given by the parameters dict. The entries will be validated
     in terms of length, units and names.
 
-    See data/test-data/test_parameters.yml for an example of the structure
+    See ./tests/resources/test_parameters.yml for an example of the structure
     of the parameters dict.
 
     Parameters
@@ -124,9 +124,17 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         if par_name in out_data:
             continue
         if "default" in par_info.keys() and par_info["default"] is not None:
-            default_value = par_info["default"]
+            if isinstance(par_info["default"], dict):
+                default_value = par_info["default"]["value"]
+                default_value = (
+                    default_value * u.Unit(par_info["default"]["unit"])
+                    if "unit" in par_info["default"]
+                    else default_value
+                )
+            else:
+                default_value = par_info["default"]
             if not isinstance(default_value, u.Quantity) and "unit" in par_info:
-                default_value *= par_info["unit"]
+                default_value *= u.Unit(par_info["unit"])
             validated_value = _validate_and_convert_value(par_name, par_info, default_value)
             out_data[par_name] = validated_value
         elif "default" in par_info.keys() and par_info["default"] is None:
@@ -267,7 +275,10 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
             _logger.error(msg)
             raise InvalidConfigEntry(msg)
         if not arg.unit.is_equivalent(unit):
-            msg = f"Config entry given with wrong unit: {par_name}"
+            msg = (
+                f"Config entry given with wrong unit: {par_name}"
+                f" (should be {unit}, is {arg.unit})"
+            )
             _logger.error(msg)
             raise InvalidConfigEntry(msg)
         value_with_units.append(arg.to(unit).value)
@@ -374,7 +385,10 @@ def collect_data_from_http(url):
         with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
             if url.endswith("yml") or url.endswith("yaml"):
-                data = yaml.load(tmp_file)
+                try:
+                    data = yaml.safe_load(tmp_file)
+                except yaml.constructor.ConstructorError:
+                    data = _load_yaml_using_astropy(tmp_file)
             elif url.endswith("json"):
                 data = json.load(tmp_file)
             elif url.endswith("list"):
@@ -429,7 +443,11 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
                     lines = file.readlines()
                     data = [line.strip() for line in lines]
                 else:
-                    data = yaml.load(file)
+                    # try plain yaml first for efficiency reason
+                    try:
+                        data = yaml.safe_load(file)
+                    except yaml.constructor.ConstructorError:
+                        data = _load_yaml_using_astropy(file)
         return data
     if in_dict is not None:
         return dict(in_dict)
@@ -1068,8 +1086,8 @@ def convert_list_to_string(data, comma_separated=False):
 
 def convert_string_to_list(data_string, is_float=True):
     """
-    Convert string (as used e.g. in sim_telarray) to list of floats
-    or integers.  Allow coma or space separated strings.
+    Convert string (as used e.g. in sim_telarray) to list.
+    Allow coma or space separated strings.
 
     Parameters
     ----------
@@ -1090,4 +1108,30 @@ def convert_string_to_list(data_string, is_float=True):
         return [int(v) for v in data_string.split()]
     except ValueError:
         pass
+    if "," in data_string:
+        result = data_string.split(",")
+        return [item.strip() for item in result]
+    if " " in data_string:
+        return data_string.split()
     return data_string
+
+
+def _load_yaml_using_astropy(file):
+    """
+    Load a yaml file using astropy's yaml loader.
+
+    Parameters
+    ----------
+    file: file
+        File to be loaded.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the file content.
+    """
+    # pylint: disable=import-outside-toplevel
+    import astropy.io.misc.yaml as astropy_yaml
+
+    file.seek(0)
+    return astropy_yaml.load(file)
