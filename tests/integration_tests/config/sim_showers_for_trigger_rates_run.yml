@@ -11,3 +11,6 @@ CTA_SIMPIPE:
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        sim_showers_for_trigger_rates/corsika-data/North/proton/data/run000001/corsika_run000001_proton_za020deg_azm000deg_North_4LST_sim_showers_for_trigger_rates.zst
