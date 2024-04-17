@@ -64,7 +64,7 @@ class DatabaseHandler:
 
         self.mongo_db_config = mongo_db_config
         self.io_handler = io_handler.IOHandler()
-        self._available_telescopes = None
+        self._available_array_elements = None
 
         self._set_up_connection()
 
@@ -261,6 +261,7 @@ class DatabaseHandler:
             self.get_telescope_db_name(
                 telescope_name=telescope_model_name,
                 model_version=model_version,
+                collection=collection,
             )
         ]
 
@@ -1229,30 +1230,33 @@ class DatabaseHandler:
 
         return _all_versions
 
-    def get_all_available_telescopes(
+    def get_all_available_array_elements(
         self,
         model_version,
+        collection,
         db_name=DB_CTA_SIMULATION_MODEL,
     ):
         """
-        Get all available telescope names in the collection "telescopes" in the DB.
+        Get all available array element names in the specified collection in the DB.
 
         Parameters
         ----------
         db_name: str
             the name of the DB
         model_version: str
-            Which version to get the telescopes of
-
+            Which version to get the array elements of
+        collection: str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices
         Returns
         -------
-        all_available_telescopes: list
-            List of all telescope names found
+        _available_array_elements: list
+            List of all array element names found in collection
 
         """
 
-        collection = DatabaseHandler.db_client[db_name]["telescopes"]
-
+        collection = DatabaseHandler.db_client[db_name][collection]
+        print("collection", collection)
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
@@ -1262,11 +1266,11 @@ class DatabaseHandler:
             "version": _model_version,
         }
 
-        _all_available_telescopes = collection.find(query).distinct("instrument")
+        _all_available_array_elements = collection.find(query).distinct("instrument")
 
-        return _all_available_telescopes
+        return _all_available_array_elements
 
-    def get_telescope_db_name(self, telescope_name, model_version):
+    def get_telescope_db_name(self, telescope_name, model_version, collection):
         """
         Translate telescope name to the name used in the DB. This is required,
         as not all telescopes are defined in the database yet. In these cases,
@@ -1291,16 +1295,18 @@ class DatabaseHandler:
 
         """
 
-        if self._available_telescopes is None:
-            self._available_telescopes = self.get_all_available_telescopes(model_version)
-
+        if self._available_array_elements is None:
+            self._available_array_elements = self.get_all_available_array_elements(
+                model_version, collection
+            )
+        print("self._available_array_elements: ", self._available_array_elements)
         _telescope_name_validated = names.validate_telescope_name(telescope_name)
-        if _telescope_name_validated in self._available_telescopes:
+        if _telescope_name_validated in self._available_array_elements:
             return _telescope_name_validated
         _design_name = (
             f"{names.get_telescope_type_from_telescope_name(_telescope_name_validated)}-design"
         )
-        if _design_name in self._available_telescopes:
+        if _design_name in self._available_array_elements:
             return _design_name
 
         self._logger.error("Telescope %s not found in the database.", telescope_name)

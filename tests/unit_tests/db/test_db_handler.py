@@ -473,8 +473,8 @@ def test_get_all_versions(db):
     )
 
 
-def test_get_all_available_telescopes(db):
-    available_telescopes = db.get_all_available_telescopes(model_version="Prod5")
+def test_get_all_available_array_elements(db):
+    available_telescopes = db.get_all_available_array_elements(model_version="Prod5")
 
     expected_telescope_names = [
         "LSTN-01",

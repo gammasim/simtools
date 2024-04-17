@@ -54,7 +54,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--illuminator",
-        help="Illuminator in array, i.e. ILL-02",
+        help="Illuminator in array, i.e. ILLN-design",
         type=str,
         default=None,
     )
@@ -176,7 +176,7 @@ def main():
 
     calibration_model = CalibrationModel(
         site=args_dict["site"],
-        calibration_device_model_name="ILLN-01",
+        calibration_device_model_name=args_dict["illuminator"],
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
         label=label,
