@@ -6,11 +6,6 @@ on:
   pull_request:
     paths:
       - './docker/Dockerfile-simtelarray'
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   release:
     types: [published]
   schedule:
@@ -29,7 +24,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
+        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
         version: ['240318']
         hadronic_model: ['qgs2']
 
@@ -65,7 +60,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.type }}-${{ matrix.version }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.production }}-${{ matrix.version }}
           flavor: latest=true
 
       - name: Build and push Docker image
@@ -73,9 +68,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: '{"BUILD_OPT": ${{ matrix.type }}, "HADRONIC_MODEL": "qgs2"}'
+          build-args: '{"BUILD_OPT": ${{ matrix.production }}, "HADRONIC_MODEL": "qgs2"}'
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.type }}-${{ matrix.version }}
+          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.production }}-${{ matrix.version }}
