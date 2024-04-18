@@ -39,8 +39,7 @@ jobs:
 
       - name: download corsikasimtelpackage
         run: |
-          secret_name="CLOUD_SIMTEL_${{ matrix.version }}"
-          secret_value=${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.version)] }}
+          echo "CLOUD_SIMTEL_${{ matrix.version }}"
           wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.version)] }}/download
           mv download corsika7.7_simtelarray.tar.gz
 
