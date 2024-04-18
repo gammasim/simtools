@@ -41,8 +41,8 @@ def _parse(label):
         default=1,
     )
     config.parser.add_argument(
-        "--light_source_positioning",
-        help="Select calibration light source positioning: \
+        "--light_source_setup",
+        help="Select calibration light source positioning/setup: \
               varying distances (1), layout positions (2)",
         type=int,
         default=1,
@@ -181,11 +181,35 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+    if args_dict["light_source_setup"] == 1:
+        figures = []
+        for distance in default_le_config["z_pos"]["default"]:
+            le_config = default_le_config.copy()
+            le_config["z_pos"]["default"] = distance
+            le = SimulatorLightEmission.from_kwargs(
+                telescope_model=telescope_model,
+                calibration_model=calibration_model,
+                default_le_config=le_config,
+                le_application=le_application,
+                simtel_source_path=args_dict["simtel_path"],
+                label=label,
+            )
+            run_script = le.prepare_script(generate_postscript=True)
+            subprocess.run(run_script, shell=False, check=False)
+            # le.plot_simtel() #custom plots using eventio
+            try:
+                fig = le.plot_simtel_ctapipe()
+                figures.append(fig)
+            except AttributeError:
+                msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
+                logger.warning(msg)
 
-    figures = []
-    for distance in default_le_config["z_pos"]["default"]:
-        le_config = default_le_config.copy()
-        le_config["z_pos"]["default"] = distance
+        save_figs_to_pdf(
+            figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application}.pdf"
+        )
+
+    elif args_dict["light_source_setup"] == 2:
+
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
@@ -194,19 +218,6 @@ def main():
             simtel_source_path=args_dict["simtel_path"],
             label=label,
         )
-        run_script = le.prepare_script(generate_postscript=True)
-        subprocess.run(run_script, shell=False, check=False)
-        # le.plot_simtel() #custom plots using eventio
-        try:
-            fig = le.plot_simtel_ctapipe()
-            figures.append(fig)
-        except AttributeError:
-            msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
-            logger.warning(msg)
-
-    save_figs_to_pdf(
-        figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application}.pdf"
-    )
 
 
 if __name__ == "__main__":
