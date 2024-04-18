@@ -138,11 +138,12 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-
+        # TODO: temp. fix model version for calibration_devices here
+        if collection == "calibration_devices":
+            model_version = "2024-02-01"
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
-
         _array_elements_cache_key = self._parameter_cache_key(
             site, telescope_model_name, model_version
         )
@@ -150,7 +151,6 @@ class DatabaseHandler:
             return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
         except KeyError:
             pass
-
         _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _telescope_model_name,
@@ -1136,23 +1136,21 @@ class DatabaseHandler:
         """
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        print("collection", collection)
+
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
         )
-        print("_model_version", _model_version)
 
         query = {
             "version": _model_version,
         }
-        if collection_name == "telescopes":
+        try:
             _all_available_array_elements = collection.find(query).distinct("instrument")
-        elif collection_name == "calibration_devices":
-            _all_available_array_elements = collection.find(query).distinct("calibration_devices")
-        else:
-            raise ValueError(f"Query for collection name {collection_name} not implemented.")
-        print("_all_available_array_elements", _all_available_array_elements)
+        except ValueError as exc:
+            raise ValueError(
+                f"Query for collection name {collection_name} not implemented."
+            ) from exc
 
         return _all_available_array_elements
 
@@ -1185,7 +1183,6 @@ class DatabaseHandler:
             self._available_array_elements = self.get_all_available_array_elements(
                 model_version, collection
             )
-        print("self._available_array_elements: ", self._available_array_elements)
         _telescope_name_validated = names.validate_telescope_name(telescope_name)
         if _telescope_name_validated in self._available_array_elements:
             return _telescope_name_validated
