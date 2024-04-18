@@ -304,7 +304,7 @@ class ModelParameter:
 
         if self.name is not None:
             self._logger.debug(
-                f"Reading telescope parameters from DB "
+                f"Reading array element parameters from DB "
                 f"({self.name}, {self.model_version}, {self.site}, {self.collection})"
             )
             self._parameters = self.db.get_model_parameters(
@@ -312,7 +312,10 @@ class ModelParameter:
             )
             try:
                 self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
-                    self.site, self.name, self.model_version
+                    self.site,
+                    self.name,
+                    self.model_version,
+                    self.collection,
                 )
             except ValueError:
                 self._logger.warning(

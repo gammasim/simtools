@@ -114,7 +114,8 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or simulation model repository for a specific telescope.
+        Get parameters from either MongoDB or simulation model repository for a specific
+        array element, i.e. telescopes, calibration_device.
 
         Parameters
         ----------
@@ -125,6 +126,7 @@ class DatabaseHandler:
         model_version: str
             Version of the model.
         collection: str
+            collection of array element (e.g. telescopes, calibration_devices)
 
         only_applicable: bool
             If True, only applicable parameters will be read.
@@ -151,7 +153,7 @@ class DatabaseHandler:
             return db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site,
-                parameter_collection="telescopes",
+                parameter_collection=collection,
                 telescope_name=_telescope_model_name,
                 model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
@@ -480,7 +482,9 @@ class DatabaseHandler:
             write_files=False,
         )
 
-    def get_sim_telarray_configuration_parameters(self, site, telescope_model_name, model_version):
+    def get_sim_telarray_configuration_parameters(
+        self, site, telescope_model_name, model_version, collection="configuration_sim_telarray"
+    ):
         """
         Get sim_telarray configuration parameters from the DB for a specific telescope.
 
@@ -495,7 +499,7 @@ class DatabaseHandler:
                 _telescope_model_name,
                 _model_version,
                 run_location=None,
-                collection_name="configuration_sim_telarray",
+                collection_name=collection,
                 write_files=False,
             )
         except ValueError:
@@ -504,7 +508,7 @@ class DatabaseHandler:
                 names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
                 _model_version,
                 run_location=None,
-                collection_name="configuration_sim_telarray",
+                collection_name=collection,
                 write_files=False,
             )
 
@@ -520,7 +524,6 @@ class DatabaseHandler:
             Version of the model.
 
         """
-
         return (
             names.validate_site_name(site),
             names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
@@ -1238,7 +1241,7 @@ class DatabaseHandler:
     def get_all_available_array_elements(
         self,
         model_version,
-        collection,
+        collection_name,
         db_name=DB_CTA_SIMULATION_MODEL,
     ):
         """
@@ -1250,7 +1253,7 @@ class DatabaseHandler:
             the name of the DB
         model_version: str
             Which version to get the array elements of
-        collection: str
+        collection_name: str
             Which collection to get the array elements from:
             i.e. telescopes, calibration_devices
         Returns
@@ -1260,18 +1263,24 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection]
+        collection = DatabaseHandler.db_client[db_name][collection_name]
         print("collection", collection)
         _model_version = self._convert_version_to_tagged(
             names.validate_model_version_name(model_version),
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
         )
+        print("_model_version", _model_version)
 
         query = {
             "version": _model_version,
         }
-
-        _all_available_array_elements = collection.find(query).distinct("instrument")
+        if collection_name == "telescopes":
+            _all_available_array_elements = collection.find(query).distinct("instrument")
+        elif collection_name == "calibration_devices":
+            _all_available_array_elements = collection.find(query).distinct("calibration_devices")
+        else:
+            raise ValueError(f"Query for collection name {collection_name} not implemented.")
+        print("_all_available_array_elements", _all_available_array_elements)
 
         return _all_available_array_elements
 

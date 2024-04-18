@@ -14,8 +14,8 @@ class CalibrationModel(ModelParameter):
     ----------
     site: str
         Site name (e.g., South or North).
-    calibratrion_model_name: str
-        Calibration deivce model name (ex. ILLS-01, ILLN-01, ...).
+    calibration_model_name: str
+        Calibration device model name (ex. ILLS-01, ILLN-01, ...).
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
@@ -41,6 +41,7 @@ class CalibrationModel(ModelParameter):
             self,
             site=site,
             telescope_model_name=calibration_device_model_name,
+            collection="calibration_devices",
             mongo_db_config=mongo_db_config,
             model_version=model_version,
             db=None,
