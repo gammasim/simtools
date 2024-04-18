@@ -31,6 +31,7 @@ jobs:
       matrix:
         type: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
         version: ['240318']
+        hadronic_model: ['qgs2']
 
     steps:
       - name: Checkout repository
@@ -38,7 +39,9 @@ jobs:
 
       - name: download corsikasimtelpackage
         run: |
-          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets.CLOUD_SIMTEL_240318 }}/download
+          secret_name="CLOUD_SIMTEL_${{ matrix.version }}"
+          secret_value=${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.version)] }}
+          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.version)] }}/download
           mv download corsika7.7_simtelarray.tar.gz
 
       - name: Set up QEMU
@@ -63,7 +66,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.type }}-${{ matrix.version }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.type }}-${{ matrix.version }}
           flavor: latest=true
 
       - name: Build and push Docker image
@@ -76,4 +79,4 @@ jobs:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.type }}-${{ matrix.version }}
+          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.type }}-${{ matrix.version }}
