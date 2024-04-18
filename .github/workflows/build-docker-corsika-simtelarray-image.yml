@@ -29,7 +29,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['prod6-sc']
+        type: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
         version: ['240318']
 
     steps:
@@ -63,7 +63,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.type }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.type }}-${{ matrix.version }}
           flavor: latest=true
 
       - name: Build and push Docker image
@@ -76,4 +76,4 @@ jobs:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.type }}
+          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.type }}-${{ matrix.version }}
