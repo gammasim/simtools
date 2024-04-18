@@ -155,6 +155,19 @@ def db_config():
 
 
 @pytest.fixture
+def simulation_model_url(db_config):
+    if (
+        db_config["db_simulation_model_url"] is None
+        or len(db_config["db_simulation_model_url"]) == 0
+    ):
+        db_config["db_simulation_model_url"] = (
+            "https://gitlab.cta-observatory.org/cta-science/simulations/"
+            "simulation-model/model_parameters/-/raw/main/"
+        )
+    return db_config["db_simulation_model_url"]
+
+
+@pytest.fixture
 def db(db_config):
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     return db
