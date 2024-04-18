@@ -29,7 +29,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['corsika_sim_telarray']
+        type: ['prod6-sc']
 
     steps:
       - name: Checkout repository
@@ -62,7 +62,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.type }}
           flavor: latest=true
 
       - name: Build and push Docker image
@@ -70,8 +70,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
+          build-args: '{"BUILD_OPT": ${{ matrix.type }}, "HADRONIC_MODEL": "qgs2"}'
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
+          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.type }}
