@@ -150,13 +150,13 @@ class TelescopeModel(ModelParameter):
         Returns
         -------
         float:
-            Effective focal length.
+            Effective focal length in 'm'.
 
         """
         try:
-            return self.get_parameter_value("effective_focal_length")[0]
+            return self.get_parameter_value_with_unit("effective_focal_length")[0].to("m").value
         except TypeError:
-            return self.get_parameter_value("effective_focal_length")
+            return self.get_parameter_value_with_unit("effective_focal_length").to("m").value
 
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
