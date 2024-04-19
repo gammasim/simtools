@@ -316,7 +316,7 @@ def prepare_configuration(config, output_path, model_version=None):
     get_list_of_test_configurations(),
     ids=get_list_of_test_configurations(get_test_names=True),
 )
-def test_applications_from_config(tmp_test_directory, config, monkeypatch, request):
+def test_applications_from_config(tmp_test_directory, config, monkeypatch, request, model_version):
     """
     Test all applications from config files found in the config directory.
 
@@ -367,6 +367,6 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     # output validation for tests with default values
     # (no change of config from command line)
-    if request.config.getoption("--model_version") is None:
+    if request.config.getoption("--model_version") == model_version:
         output_status = validate_application_output(config)
         assert output_status == 0
