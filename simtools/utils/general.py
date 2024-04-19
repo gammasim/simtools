@@ -933,7 +933,7 @@ def get_value_unit_type(value, unit_str=None):
                     base_unit = None
                 except ValueError:
                     pass
-        except TypeError:
+        except (TypeError, ValueError):
             base_value = value
             base_type = "str"
     else:
