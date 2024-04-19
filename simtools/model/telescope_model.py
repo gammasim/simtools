@@ -168,7 +168,6 @@ class TelescopeModel(ModelParameter):
             pass
         if focal_length == 0.0:
             self._logger.warning("Using focal_length because effective_focal_length is 0.")
-            focal_length = self.get_parameter_value("focal_length")
         try:
             camera_config_file_path = gen.find_file(camera_config_file, self._config_file_directory)
         except FileNotFoundError:
@@ -181,7 +180,7 @@ class TelescopeModel(ModelParameter):
         self._camera = Camera(
             telescope_model_name=self.name,
             camera_config_file=camera_config_file_path,
-            focal_length=focal_length,
+            focal_length=focal_length * 1.0e2,  # Camera expects focal length in cm
         )
 
     def is_file_2d(self, par):
