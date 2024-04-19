@@ -185,6 +185,10 @@ def db_no_config_file():
     return db
 
 
+def pytest_addoption(parser):
+    parser.addoption("--model_version", action="store", default=None)
+
+
 @pytest.fixture
 def model_version():
     """
