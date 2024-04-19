@@ -108,7 +108,7 @@ def main():
 
     print(f"\nValidating the camera FoV of {tel_model.name}\n")
 
-    focal_length = tel_model.get_parameter_value("effective_focal_length")[0]
+    focal_length = tel_model.get_telescope_effective_focal_length()
     camera = tel_model.camera
 
     fov, r_edge_avg = camera.calc_fov()

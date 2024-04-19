@@ -142,12 +142,28 @@ class TelescopeModel(ModelParameter):
             )
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
+    def get_telescope_effective_focal_length(self):
+        """
+        Return effective focal length. Ensure backwards compatibility with older
+        sim-telarray versions.
+
+        Returns
+        -------
+        float:
+            Effective focal length.
+
+        """
+        try:
+            return self.get_parameter_value("effective_focal_length")[0]
+        except TypeError:
+            return self.get_parameter_value("effective_focal_length")
+
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
         focal_length = 0.0
         try:
-            focal_length = self.get_parameter_value("effective_focal_length")[0]
+            focal_length = self.get_telescope_effective_focal_length()
         except IndexError:
             pass
         if focal_length == 0.0:
