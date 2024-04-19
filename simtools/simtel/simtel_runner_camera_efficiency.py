@@ -84,9 +84,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         # Processing focal length
         focal_length = 0.0
         try:
-            focal_length = self._telescope_model.get_parameter_value_with_unit(
-                "effective_focal_length"
-            )[0]
+            focal_length = self._telescope_model.get_telescope_effective_focal_length()
         except IndexError:
             pass
         if focal_length == 0.0:
@@ -134,7 +132,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         command += " -nm -nsb-extra"
         command += f" -alt {self._telescope_model.get_parameter_value('corsika_observation_level')}"
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
-        command += f" -flen {focal_length.to('m').value}"
+        command += f" -flen {focal_length}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 1:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
