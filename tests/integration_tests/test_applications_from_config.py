@@ -270,7 +270,7 @@ def validate_application_output(config):
     return 0
 
 
-def prepare_configuration(config, output_path):
+def prepare_configuration(config, output_path, model_version=None):
     """
     Prepare configuration. This means either to write a temporary config file
     or to return a single string for single boolean options (e.g., --version).
@@ -282,6 +282,8 @@ def prepare_configuration(config, output_path):
         Dictionary with the configuration for the application test.
     output_path: str
         Output path.
+    model_version: str
+        Model versions (default: use those given in config files)
 
     Returns
     -------
@@ -294,6 +296,8 @@ def prepare_configuration(config, output_path):
         return None, "--" + list(config.keys())[0].lower()
 
     tmp_config_file = output_path / "tmp_config.yml"
+    if model_version is not None and "MODEL_VERSION" in config:
+        config.update({"MODEL_VERSION": model_version})
     if "OUTPUT_PATH" in config:
         config.update({"OUTPUT_PATH": str(Path(output_path).joinpath(config["OUTPUT_PATH"]))})
         config.update({"USE_PLAIN_OUTPUT_PATH": True})
@@ -312,7 +316,7 @@ def prepare_configuration(config, output_path):
     get_list_of_test_configurations(),
     ids=get_list_of_test_configurations(get_test_names=True),
 )
-def test_applications_from_config(tmp_test_directory, config, monkeypatch):
+def test_applications_from_config(tmp_test_directory, config, monkeypatch, request):
     """
     Test all applications from config files found in the config directory.
 
@@ -340,9 +344,12 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch):
 
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
+    logger.info(f"Model version: {request.config.getoption('--model_version')}")
     if "CONFIGURATION" in config:
         config_file, config_string = prepare_configuration(
-            config["CONFIGURATION"], output_path=tmp_output_path
+            config["CONFIGURATION"],
+            output_path=tmp_output_path,
+            model_version=request.config.getoption("--model_version"),
         )
     else:
         config_file = None
@@ -358,5 +365,8 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch):
     logger.info(f"Running application: {cmd}")
     assert os.system(cmd) == 0
 
-    output_status = validate_application_output(config)
-    assert output_status == 0
+    # output validation for tests with default values
+    # (no change of config from command line)
+    if request.config.getoption("--model_version") is None:
+        output_status = validate_application_output(config)
+        assert output_status == 0
