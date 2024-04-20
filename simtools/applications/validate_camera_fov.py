@@ -72,7 +72,7 @@ def main():
         "--camera_in_sky_coor",
         help=(
             "Plot the camera layout in sky coordinates "
-            "(akin to looking at it from behind for single mirror telesecopes)"
+            "(akin to looking at it from behind for single mirror telescopes)"
         ),
         action="store_true",
         default=False,
@@ -108,7 +108,7 @@ def main():
 
     print(f"\nValidating the camera FoV of {tel_model.name}\n")
 
-    focal_length = tel_model.get_telescope_effective_focal_length()
+    focal_length = tel_model.get_telescope_effective_focal_length("cm")
     camera = tel_model.camera
 
     fov, r_edge_avg = camera.calc_fov()
