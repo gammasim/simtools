@@ -82,14 +82,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         pixel_diameter = self._telescope_model.camera.get_pixel_diameter()
 
         # Processing focal length
-        focal_length = 0.0
-        try:
-            focal_length = self._telescope_model.get_telescope_effective_focal_length("m")
-        except IndexError:
-            pass
-        if focal_length == 0.0:
-            self._logger.warning("Using focal_length because effective_focal_length is 0")
-            focal_length = self._telescope_model.get_parameter_value_with_unit("focal_length")
+        focal_length = self._telescope_model.get_telescope_effective_focal_length("m", True)
 
         # Processing mirror class
         mirror_class = 1

@@ -86,3 +86,10 @@ def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_mod
 
     tel_model_sst = telescope_model_sst_prod5
     assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(2.15191)
+
+    # test zero case
+    tel_model_sst._parameters["effective_focal_length"]["value"] = 0.0
+    assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(0.0)
+    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
+    tel_model_sst._parameters["effective_focal_length"]["value"] = None
+    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
