@@ -84,7 +84,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         # Processing focal length
         focal_length = 0.0
         try:
-            focal_length = self._telescope_model.get_telescope_effective_focal_length()
+            focal_length = self._telescope_model.get_telescope_effective_focal_length("m")
         except IndexError:
             pass
         if focal_length == 0.0:

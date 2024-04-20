@@ -142,10 +142,15 @@ class TelescopeModel(ModelParameter):
             )
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
-    def get_telescope_effective_focal_length(self):
+    def get_telescope_effective_focal_length(self, unit="m"):
         """
         Return effective focal length. Ensure backwards compatibility with older
         sim-telarray versions.
+
+        Parameters
+        ----------
+        unit: str
+            Unit of the effective focal length. Default is 'm'.
 
         Returns
         -------
@@ -154,20 +159,14 @@ class TelescopeModel(ModelParameter):
 
         """
         try:
-            return self.get_parameter_value_with_unit("effective_focal_length")[0].to("m").value
+            return self.get_parameter_value_with_unit("effective_focal_length")[0].to(unit).value
         except TypeError:
-            return self.get_parameter_value_with_unit("effective_focal_length").to("m").value
+            return self.get_parameter_value_with_unit("effective_focal_length").to(unit).value
 
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
-        focal_length = 0.0
-        try:
-            focal_length = self.get_telescope_effective_focal_length()
-        except IndexError:
-            pass
-        if focal_length == 0.0:
-            self._logger.warning("Using focal_length because effective_focal_length is 0.")
+        focal_length = self.get_telescope_effective_focal_length("cm")
         try:
             camera_config_file_path = gen.find_file(camera_config_file, self._config_file_directory)
         except FileNotFoundError:
@@ -180,7 +179,7 @@ class TelescopeModel(ModelParameter):
         self._camera = Camera(
             telescope_model_name=self.name,
             camera_config_file=camera_config_file_path,
-            focal_length=focal_length * 1.0e2,  # Camera expects focal length in cm
+            focal_length=focal_length,
         )
 
     def is_file_2d(self, par):
