@@ -48,6 +48,8 @@ class DatabaseHandler:
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
+    site_parameters_cached = {}
+    model_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -135,6 +137,15 @@ class DatabaseHandler:
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
+
+        _array_elements_cache_key = self._parameter_cache_key(
+            site, telescope_model_name, model_version
+        )
+        try:
+            return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
+        except KeyError:
+            pass
+
         _pars = self._get_model_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _telescope_model_name,
@@ -144,7 +155,7 @@ class DatabaseHandler:
 
         # update using simulation model repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_model_parameters_from_repo(
+            _pars = db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site,
                 parameter_collection="telescopes",
@@ -153,7 +164,8 @@ class DatabaseHandler:
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
 
-        return _pars
+        DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = _pars
+        return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -250,7 +262,6 @@ class DatabaseHandler:
 
         """
 
-        self._logger.debug(f"Tel_name_db: {telescope_model_name}")
         _which_tel_labels = [
             self.get_telescope_db_name(
                 telescope_name=telescope_model_name,
@@ -374,6 +385,16 @@ class DatabaseHandler:
 
         """
         _site, _, _model_version = self._validate_model_input(site, None, model_version)
+        self._logger.debug(
+            f"Getting {site} parameters from MongoDB {DatabaseHandler.DB_CTA_SIMULATION_MODEL}"
+            f" {model_version} {only_applicable}"
+        )
+        _site_cache_key = self._parameter_cache_key(site, None, model_version)
+        try:
+            return DatabaseHandler.site_parameters_cached[_site_cache_key]
+        except KeyError:
+            pass
+
         _pars = self._get_site_parameters_mongo_db(
             DatabaseHandler.DB_CTA_SIMULATION_MODEL,
             _site,
@@ -382,7 +403,7 @@ class DatabaseHandler:
         )
         # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            return db_from_repo_handler.update_model_parameters_from_repo(
+            _pars = db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=_pars,
                 site=_site,
                 telescope_name=None,
@@ -390,7 +411,9 @@ class DatabaseHandler:
                 model_version=_model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
-        return _pars
+
+        DatabaseHandler.site_parameters_cached[_site_cache_key] = _pars
+        return DatabaseHandler.site_parameters_cached[_site_cache_key]
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
         """
@@ -732,85 +755,6 @@ class DatabaseHandler:
 
         _collection.delete_many(query)
 
-    def update_parameter(
-        self,
-        db_name,
-        telescope,
-        version,
-        parameter,
-        new_value,
-        collection_name="telescopes",
-        file_prefix=None,
-    ):
-        """
-        Update a parameter value for a specific telescope/version.
-        (This function should be rarely used since new values
-        should ideally have their own version.)
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB
-        telescope: str
-            Which telescope to update
-        version: str
-            Which version to update
-        parameter: str
-            Which parameter to update
-        new_value: type identical to the original parameter type
-            The new value to set for the parameter
-        collection_name: str
-            The name of the collection in which to update the parameter.
-        file_prefix: str or Path
-            where to find files to upload to the DB
-
-        Raises
-        ------
-        FileNotFoundError
-            if file_prefix is None
-
-        """
-
-        collection = DatabaseHandler.db_client[db_name][collection_name]
-
-        _model_version = self._convert_version_to_tagged(
-            version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
-        query = {
-            "instrument": telescope,
-            "version": _model_version,
-            "parameter": parameter,
-        }
-
-        par_entry = collection.find_one(query)
-        old_value = par_entry["value"]
-
-        self._logger.info(
-            f"For telescope {telescope}, version {_model_version}\n"
-            f"replacing {parameter} value from {old_value} to {new_value}"
-        )
-
-        files_to_add_to_db = set()
-        if self._is_file(new_value):
-            file = True
-            if file_prefix is None:
-                raise FileNotFoundError(
-                    "The location of the file to upload, "
-                    f"corresponding to the {parameter} parameter, must be provided."
-                )
-            file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add(f"{file_path}")
-            self._logger.info(f"Will also add the file {file_path} to the DB")
-        else:
-            file = False
-
-        query_update = {"$set": {"value": new_value, "file": file}}
-
-        collection.update_one(query, query_update)
-        for file_now in files_to_add_to_db:
-            self.insert_file_to_db(file_now, db_name)
-
     def update_parameter_field(
         self,
         db_name,
@@ -910,81 +854,7 @@ class DatabaseHandler:
 
         collection.update_one(query, query_update)
 
-    def add_parameter(
-        self,
-        db_name,
-        telescope,
-        parameter,
-        new_version,
-        new_value,
-        collection_name="telescopes",
-        file_prefix=None,
-    ):
-        """
-        Add a parameter value for a specific telescope.
-        A new document will be added to the DB,
-        with all fields taken from the last entry of this parameter to this telescope,
-        except the ones changed.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB
-        telescope: str
-            Which telescope to update
-        parameter: str
-            Which parameter to add
-        new_version: str
-            The version of the new parameter value
-        new_value: type identical to the original parameter type
-            The new value to set for the parameter
-        collection_name: str
-            The name of the collection to which to add a parameter.
-        file_prefix: str or Path
-            where to find files to upload to the DB
-
-        Raises
-        ------
-        FileNotFoundError
-            if file_prefix is None
-
-        """
-
-        collection = DatabaseHandler.db_client[db_name][collection_name]
-
-        _new_version = self._convert_version_to_tagged(
-            new_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
-        query = {
-            "instrument": telescope,
-            "parameter": parameter,
-        }
-
-        par_entry = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
-        par_entry["value"] = new_value
-        par_entry["version"] = _new_version
-        par_entry.pop("_id", None)
-
-        files_to_add_to_db = set()
-        if self._is_file(new_value):
-            par_entry["file"] = True
-            if file_prefix is None:
-                raise FileNotFoundError(
-                    "The location of the file to upload, "
-                    f"corresponding to the {parameter} parameter, must be provided."
-                )
-            file_path = Path(file_prefix).joinpath(new_value)
-            files_to_add_to_db.add(f"{file_path}")
-        else:
-            par_entry["file"] = False
-
-        self._logger.info(f"Will add the following entry to DB:\n{par_entry}")
-
-        collection.insert_one(par_entry)
-        if len(files_to_add_to_db) > 0:
-            self._logger.info(f"Will also add the file {file_path} to the DB")
-            self.insert_file_to_db(files_to_add_to_db, db_name)
+        self._reset_parameter_cache(site, telescope, _model_version)
 
     def add_new_parameter(
         self,
@@ -1081,6 +951,8 @@ class DatabaseHandler:
         for file_to_insert_now in files_to_add_to_db:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
+
+        self._reset_parameter_cache(site, telescope, version)
 
     def _convert_version_to_tagged(self, model_version, db_name):
         """Convert to tagged version, if needed."""
@@ -1303,3 +1175,24 @@ class DatabaseHandler:
 
         self._logger.error("Telescope %s not found in the database.", telescope_name)
         raise ValueError
+
+    def _parameter_cache_key(self, site, telescope, model_version):
+        """
+        Create a cache key for the parameter cache dictionaries.
+
+        """
+        _model_version = self._convert_version_to_tagged(
+            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
+        )
+        if telescope is None:
+            return f"{site}-{_model_version}"
+        return f"{site}-{telescope}-{_model_version}"
+
+    def _reset_parameter_cache(self, site, telescope, model_version):
+        """
+        Reset the cache for the parameters.
+
+        """
+        _cache_key = self._parameter_cache_key(site, telescope, model_version)
+        DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
+        DatabaseHandler.model_parameters_cached.pop(_cache_key, None)

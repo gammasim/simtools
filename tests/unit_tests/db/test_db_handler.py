@@ -155,74 +155,6 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler):
         )
 
 
-def test_adding_parameter_version_db(db, random_id, db_cleanup, io_handler):
-    logger.info("----Testing adding a new version of a parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="LSTN-01",
-        version_to_copy="Released",
-        new_tel_name="LSTN-test",
-        collection_name="telescopes",
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes_" + random_id,
-    )
-    db.add_parameter(
-        db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
-        parameter="camera_config_version",
-        new_version="test",
-        new_value=42,
-        collection_name="telescopes_" + random_id,
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        telescope_model_name="LSTN-test",
-        model_version="test",
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="telescopes_" + random_id,
-        write_files=False,
-    )
-    assert pars["camera_config_version"]["value"] == 42
-
-
-def test_update_parameter_db(db, random_id, db_cleanup, io_handler):
-    logger.info("----Testing updating a parameter-----")
-    db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
-        tel_to_copy="LSTN-01",
-        version_to_copy="Released",
-        new_tel_name="LSTN-test",
-        collection_name="telescopes",
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes_" + random_id,
-    )
-    db.add_parameter(
-        db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
-        parameter="camera_config_version",
-        new_version="test",
-        new_value=42,
-        collection_name="telescopes_" + random_id,
-    )
-    db.update_parameter(
-        db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
-        version="test",
-        parameter="camera_config_version",
-        new_value=999,
-        collection_name="telescopes_" + random_id,
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        telescope_model_name="LSTN-test",
-        model_version="test",
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="telescopes_" + random_id,
-        write_files=False,
-    )
-    assert pars["camera_config_version"]["value"] == 999
-
-
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
@@ -294,6 +226,11 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
     assert pars["new_test_parameter_quantity_str"]["value"] == pytest.approx(999.9)
     assert pars["new_test_parameter_quantity_str"]["type"] == "float"
     assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
+
+    # make sure that cache has been emptied after updating
+    assert (
+        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+    )
 
     # site parameters
     db.add_new_parameter(
@@ -384,32 +321,36 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     )
     assert pars["camera_pixels"]["applicable"] is False
 
+    # make sure that cache has been emptied after updating
+    assert (
+        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+    )
 
-def test_reading_db_sites(db):
+
+def test_reading_db_sites(db, db_config, simulation_model_url):
     logger.info("----Testing reading La Palma parameters-----")
-    pars = db.get_site_parameters("North", "Released")
+    db.mongo_db_config["db_simulation_model_url"] = None
+    pars = db.get_site_parameters("North", "2024-02-01")
     if db.mongo_db_config:
-        # temporary solution for simulation model parameter renaming
-        if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value")
-            assert _obs_level == pytest.approx(2156.0)
-        else:
-            _obs_level = pars["altitude"]["value"]
-            assert _obs_level == pytest.approx(2158.0)
+        _obs_level = pars["corsika_observation_level"].get("value")
+        assert _obs_level == pytest.approx(2156.0)
     else:
         assert pars["altitude"] == 2156
 
     logger.info("----Testing reading Paranal parameters-----")
-    pars = db.get_site_parameters("South", "Released")
+    pars = db.get_site_parameters("South", "2024-02-01")
     if db.mongo_db_config:
-        # temporary solution for simulation model parameter renaming
-        if "corsika_observation_level" in pars:
-            _obs_level = pars["corsika_observation_level"].get("value")
-        else:
-            _obs_level = pars["altitude"].get("value")
+        _obs_level = pars["corsika_observation_level"].get("value")
         assert _obs_level == pytest.approx(2147.0)
     else:
         assert pars["altitude"] == 2147
+
+    db._reset_parameter_cache("South", None, "2024-02-01")
+    if db.mongo_db_config.get("db_simulation_model_url", None) is None:
+        db.mongo_db_config["db_simulation_model_url"] = simulation_model_url
+    pars = db.get_site_parameters("South", "2024-02-01")
+    assert pars["corsika_observation_level"]["value"] == 2147.0
+    db.mongo_db_config["db_simulation_model_url"] = None  # make sure that this is reset
 
 
 def test_separating_get_and_write(db, io_handler):
@@ -518,3 +459,21 @@ def test_get_telescope_db_name(db):
     assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
     with pytest.raises(ValueError):
         db.get_telescope_db_name("SSTN-05", model_version="Prod5")
+
+    with pytest.raises(ValueError):
+        db.get_telescope_db_name("ILLN-01", model_version="Prod5")
+
+
+def test_parameter_cache_key(db):
+
+    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
+    assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
+
+
+def test_get_tagged_version(db):
+
+    with pytest.raises(ValueError):
+        db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="NotReleased")
+
+    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Released") == "2020-06-28"
+    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Latest") == "2020-06-28"
