@@ -1,10 +1,10 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg
+  TEST_NAME: gamma_20_deg_South
   CONFIGURATION:
-    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test.yml
+    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_South.yml
     MODEL_VERSION: prod6
-    SITE: North
+    SITE: South
     PRIMARY: gamma
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
