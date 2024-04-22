@@ -340,7 +340,7 @@ class DatabaseHandler:
             "version": _model_version,
         }
 
-        self._logger.debug(f"Trying the following query: {query}")
+        self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
         if only_applicable:
             query["applicable"] = True
         if collection.count_documents(query) < 1:
@@ -851,10 +851,13 @@ class DatabaseHandler:
             )
 
         query_update = {"$set": {field: new_value}}
-
         collection.update_one(query, query_update)
 
-        self._reset_parameter_cache(site, telescope, _model_version)
+        self._reset_parameter_cache(
+            site=site if site is not None else names.get_site_from_telescope_name(telescope),
+            telescope=telescope,
+            model_version=_model_version,
+        )
 
     def add_new_parameter(
         self,
@@ -1223,6 +1226,7 @@ class DatabaseHandler:
         Reset the cache for the parameters.
 
         """
+        self._logger.debug(f"Resetting cache for {site} {telescope} {model_version}")
         _cache_key = self._parameter_cache_key(site, telescope, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
