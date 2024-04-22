@@ -359,7 +359,7 @@ def get_telescope_type_from_telescope_name(name):
     return _validate_name(name.split("-")[0], array_element_names)
 
 
-def get_list_of_telescope_types(array_element_class="telescope", site=None, observatory="CTAO"):
+def get_list_of_telescope_types(array_element_class="telescopes", site=None, observatory="CTAO"):
     """
     Get list of telescope types.
 
@@ -378,7 +378,7 @@ def get_list_of_telescope_types(array_element_class="telescope", site=None, obse
     return [
         key
         for key, value in array_element_names.items()
-        if value["class"] == array_element_class
+        if value["collection"] == array_element_class
         and (site is None or value["site"] == site)
         and (observatory is None or value["observatory"] == observatory)
     ]
