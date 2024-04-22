@@ -130,7 +130,7 @@ def main():
                 logger.info("Files are uploaded with the corresponding model parameters")
                 continue
         logger.info(f"Reading model parameters for {element.name} into collection {collection}")
-        files_to_insert = [file_path for file_path in Path(element).glob("*json")]
+        files_to_insert = [file_path for file_path in Path(element).rglob("*json")]
         for file in files_to_insert:
             if collection == "files":
                 logger.info("Not yet implemented files")
