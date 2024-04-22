@@ -96,6 +96,14 @@ docker build -f Dockerfile-dev -t simtools-dev .
 
 Use the docker container in the same way as above, replacing `ghcr.io/gammasim/simtools-dev:latest` by `simtools-dev`.
 
+Containers can be built using different build arguments, e.g.,
+
+```bash
+docker build -f Dockerfile-simtelarray --build-arg="BUILD_OPT=prod5" -t simtel-docker-dev .
+```
+
+See the docker files for all available build arguments.
+
 ## Container for CORSIKA and simtelarray
 
 Provide a container including the following the CORSIKA and sim\_telarray simulation software packages.
