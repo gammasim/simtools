@@ -21,35 +21,35 @@ __all__ = [
 # Telescopes and other array elements
 array_element_names = {
     # CTAO telescopes
-    "LSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
-    "MSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
-    "LSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "MSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "SSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "SCTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
+    "LSTN": {"site": "North", "observatory": "CTAO", "collection": "telescopes"},
+    "MSTN": {"site": "North", "observatory": "CTAO", "collection": "telescopes"},
+    "LSTS": {"site": "South", "observatory": "CTAO", "collection": "telescopes"},
+    "MSTS": {"site": "South", "observatory": "CTAO", "collection": "telescopes"},
+    "SSTS": {"site": "South", "observatory": "CTAO", "collection": "telescopes"},
+    "SCTS": {"site": "South", "observatory": "CTAO", "collection": "telescopes"},
     # calibration devices
-    "ILLN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "RLDN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "STPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "MSPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "CEIN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "WSTN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "ASCN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "DUSN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "LISN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "ILLS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "RLDS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "STPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "MSPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "CEIS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "WSTS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "ASCS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "DUSS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "LISS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
+    "ILLN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "RLDN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "STPN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "MSPN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "CEIN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "WSTN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "ASCN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "DUSN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "LISN": {"site": "North", "observatory": "CTAO", "collection": "calibration_devices"},
+    "ILLS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "RLDS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "STPS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "MSPS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "CEIS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "WSTS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "ASCS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "DUSS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
+    "LISS": {"site": "South", "observatory": "CTAO", "collection": "calibration_devices"},
     # other telescopes
-    "MAGIC": {"site": "North", "observatory": "MAGIC", "class": "telescope"},
-    "VERITAS": {"site": "North", "observatory": "VERITAS", "class": "telescope"},
-    "HESS": {"site": "South", "observatory": "HESS", "class": "telescope"},
+    "MAGIC": {"site": "North", "observatory": "MAGIC", "collection": "telescopes"},
+    "VERITAS": {"site": "North", "observatory": "VERITAS", "collection": "telescopes"},
+    "HESS": {"site": "South", "observatory": "HESS", "collection": "telescopes"},
 }
 
 site_names = {
@@ -397,22 +397,22 @@ def get_site_from_telescope_name(name):
     return array_element_names[get_telescope_type_from_telescope_name(name)]["site"]
 
 
-def get_class_from_telescope_name(name):
+def get_collection_name_from_array_element_name(name):
     """
-    Get class (e.g., telescope, calibration) of array element from name
+    Get collection name(e.g., telescopes, calibration_devices) of array element from name
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        Array element name.
 
     Returns
     -------
     str
-        Class name.
+        Collection name .
     """
 
-    return array_element_names[get_telescope_type_from_telescope_name(name)]["class"]
+    return array_element_names[get_telescope_type_from_telescope_name(name)]["collection"]
 
 
 def get_simtel_name_from_parameter_name(
