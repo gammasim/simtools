@@ -62,6 +62,13 @@ def _parse(label=None, description=None):
         "--input_path",
         help="Path to model parameter repository.",
         type=Path,
+        required=True,
+    )
+    config.parser.add_argument(
+        "--db_name",
+        help="Name of the new DB to be created.",
+        type=str,
+        required=True,
     )
 
     return config.initialize(
@@ -108,7 +115,6 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    db_sandbox = "sandbox_20240422"
 
     input_path = Path(args_dict["input_path"])
     array_elements = [d for d in input_path.iterdir() if d.is_dir()]
@@ -121,7 +127,7 @@ def main():
             elif element.name == "configuration_sim_telarray":
                 collection = "configuration_sim_telarray"
             elif element.name == "Files":
-                logger.info("Files are uploaded with the corresponding parameters")
+                logger.info("Files are uploaded with the corresponding model parameters")
                 continue
         logger.info(f"Reading model parameters for {element.name} into collection {collection}")
         files_to_insert = [file_path for file_path in Path(element).glob("*json")]
@@ -133,7 +139,7 @@ def main():
                     file=file,
                     collection=collection,
                     db=db,
-                    db_name=db_sandbox,
+                    db_name=args_dict["db_name"],
                     file_path=input_path / "Files",
                     logger=logger,
                 )
