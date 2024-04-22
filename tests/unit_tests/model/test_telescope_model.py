@@ -78,3 +78,18 @@ def test_export_table_to_model_directory(telescope_model_sst_prod5):
     average_dist = tel_model.calc_average_curve(two_dim_dist, incidence_angle_dist)
     one_dim_file = tel_model.export_table_to_model_directory("test_average_curve.dat", average_dist)
     assert one_dim_file.exists()
+
+
+def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_model_sst_prod5):
+    tel_model_lst = telescope_model_lst
+    assert tel_model_lst.get_telescope_effective_focal_length("m") == pytest.approx(29.237)
+
+    tel_model_sst = telescope_model_sst_prod5
+    assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(2.15191)
+
+    # test zero case
+    tel_model_sst._parameters["effective_focal_length"]["value"] = 0.0
+    assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(0.0)
+    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
+    tel_model_sst._parameters["effective_focal_length"]["value"] = None
+    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)

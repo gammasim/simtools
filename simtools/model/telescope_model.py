@@ -142,17 +142,40 @@ class TelescopeModel(ModelParameter):
             )
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
+    def get_telescope_effective_focal_length(self, unit="m", return_focal_length_if_zero=False):
+        """
+        Return effective focal length. Ensure backwards compatibility with older
+        sim-telarray versions.
+
+        Parameters
+        ----------
+        unit: str
+            Unit of the effective focal length. Default is 'm'.
+        return_focal_length_if_zero: bool
+            If True, return the focal length if the effective focal length is 0.
+
+        Returns
+        -------
+        float:
+            Effective focal length.
+
+        """
+        try:
+            eff_focal_length = self.get_parameter_value_with_unit("effective_focal_length")[0]
+        except TypeError:
+            eff_focal_length = self.get_parameter_value_with_unit("effective_focal_length")
+        try:
+            eff_focal_length = eff_focal_length.to(unit).value
+        except AttributeError:
+            eff_focal_length = 0.0
+        if return_focal_length_if_zero and (eff_focal_length is None or eff_focal_length == 0.0):
+            return self.get_parameter_value_with_unit("focal_length").to(unit).value
+        return eff_focal_length
+
     def _load_camera(self):
         """Loading camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
-        focal_length = 0.0
-        try:
-            focal_length = self.get_parameter_value("effective_focal_length")[0]
-        except IndexError:
-            pass
-        if focal_length == 0.0:
-            self._logger.warning("Using focal_length because effective_focal_length is 0.")
-            focal_length = self.get_parameter_value("focal_length")
+        focal_length = self.get_telescope_effective_focal_length("cm", True)
         try:
             camera_config_file_path = gen.find_file(camera_config_file, self._config_file_directory)
         except FileNotFoundError:
