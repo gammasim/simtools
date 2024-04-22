@@ -34,9 +34,9 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
-import simtools.utils.names as names
 from simtools.configuration import configurator
 from simtools.db import db_handler
+from simtools.utils import names
 
 
 def _parse(label=None, description=None):
@@ -150,7 +150,7 @@ def main():
                 logger.info("Files are uploaded with the corresponding model parameters")
                 continue
         logger.info(f"Reading model parameters for {element.name} into collection {collection}")
-        files_to_insert = [file_path for file_path in Path(element).rglob("*json")]
+        files_to_insert = list(Path(element).rglob("*json"))
         for file in files_to_insert:
             if collection == "files":
                 logger.info("Not yet implemented files")
