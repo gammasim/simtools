@@ -108,6 +108,26 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_path, logger)
     )
 
 
+def _add_metadata_to_db(db, db_name, logger):
+    """
+    Add metadata to the DB.
+
+    Parameters
+    ----------
+    db: DatabaseHandler
+        Database handler object.
+
+    """
+    logger.info("Adding metadata to the DB")
+    db.add_tagged_version(
+        db_name=db_name,
+        released_version="2020-06-28",
+        released_label="Prod5",
+        latest_version="2020-06-28",
+        latest_label="Prod5",
+    )
+
+
 def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label, description="Add a new model parameter database to the DB")
@@ -143,6 +163,8 @@ def main():
                     file_path=input_path / "Files",
                     logger=logger,
                 )
+
+    _add_metadata_to_db(db, db_name=args_dict["db_name"], logger=logger)
 
 
 if __name__ == "__main__":
