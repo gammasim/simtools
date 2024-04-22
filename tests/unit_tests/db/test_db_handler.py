@@ -155,6 +155,20 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
         )
 
 
+def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version):
+
+    db.add_tagged_version(
+        db_name=f"sandbox_{random_id}",
+        released_version="2020-06-28",
+        released_label="Prod25",
+        latest_version="2024-02-01",
+        latest_label="Prod26",
+    )
+
+    assert db._get_tagged_version(f"sandbox_{random_id}", "Released") == "2020-06-28"
+    assert db._get_tagged_version(f"sandbox_{random_id}", "Latest") == "2024-02-01"
+
+
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
@@ -293,7 +307,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         )
 
 
-def test_update_parameter_field_db(db, random_id, io_handler):
+def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
