@@ -132,8 +132,8 @@ def test_get_site_from_telescope_name():
 
 
 def test_get_class_from_telescope_name():
-    assert "telescope" == names.get_class_from_telescope_name("LSTN-01")
-    assert "calibration" == names.get_class_from_telescope_name("ILLS-01")
+    assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
+    assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
     with pytest.raises(ValueError):
         names.get_site_from_telescope_name("SATW")
 
