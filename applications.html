@@ -5,13 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Applications &#8212; simtools v0.1.dev1+gb509e04</title>
+    <title>Applications &#8212; simtools v0.1.dev1+g993f827</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/jquery.js?v=5d32c60e"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-    <script src="_static/documentation_options.js?v=ddb22912"></script>
+    <script src="_static/documentation_options.js?v=22f17dc1"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -34,7 +32,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gb509e04</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g993f827</p>
 
 
 
@@ -120,7 +118,7 @@
           <div class="body" role="main">
             
   <section id="applications">
-<span id="id1"></span><h1>Applications<a class="headerlink" href="#applications" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Applications<a class="headerlink" href="#applications" title="Link to this heading">¶</a></h1>
 <p>Applications are python scripts built on the <a class="reference internal" href="library.html#library"><span class="std std-ref">API</span></a> that execute a well defined task.
 Applications are the building blocks of <a class="reference external" href="https://github.com/gammasim/workflows">Simulation System Workflows</a>.
 Application scripts can be found in <code class="docutils literal notranslate"><span class="pre">simtools/applications</span></code>.</p>
@@ -142,15 +140,15 @@ the specific type of application (e.g <em>ray-tracing</em> for optics related ap
 <em>camera-efficiency</em> for camera efficiency applications etc). All files related to the simulation model (e.g,
 sim_telarray config files) are stored in the sub-directory <em>model</em>.</p>
 <section id="module-add_file_to_db">
-<span id="add-file-to-db"></span><h2>add_file_to_db<a class="headerlink" href="#module-add_file_to_db" title="Link to this heading"></a></h2>
+<span id="add-file-to-db"></span><h2>add_file_to_db<a class="headerlink" href="#module-add_file_to_db" title="Link to this heading">¶</a></h2>
 <section id="summary">
-<h3>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h3>
 <p>This application adds a file to a DB.</p>
 <p>The name and location of the file are required.
 This application should complement the ones for updating parameters,     adding entries to the DB and getting files from the DB.</p>
 </section>
 <section id="command-line-arguments">
-<h3>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>file_name (str or list of str, required)</dt><dd><p>Name of the file to upload including the full path.         A list of files is also allowed, in which case only one -file_name is necessary,         i.e., python applications/add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat         If no path is given, the file is assumed to be in the CWD.</p>
 </dd>
@@ -163,7 +161,7 @@ This application should complement the ones for updating parameters,     adding 
 </dl>
 </section>
 <section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
 <p>uploading a dummy file.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-file-to-db --file_name test_application.dat --db test-data</span>
 </pre></div>
@@ -176,9 +174,9 @@ This application should complement the ones for updating parameters,     adding 
 </section>
 </section>
 <section id="module-compare_cumulative_psf">
-<span id="compare-cumulative-psf"></span><h2>compare_cumulative_psf<a class="headerlink" href="#module-compare_cumulative_psf" title="Link to this heading"></a></h2>
+<span id="compare-cumulative-psf"></span><h2>compare_cumulative_psf<a class="headerlink" href="#module-compare_cumulative_psf" title="Link to this heading">¶</a></h2>
 <section id="id2">
-<h3>Summary<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <p>This application simulates the cumulative PSF and compare with data (if available).</p>
 <p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contains 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
@@ -188,7 +186,7 @@ This application should complement the ones for updating parameters,     adding 
 <a class="reference internal image-reference" href="_images/compare_cumulative_psf_North-LST-1_image.png"><img alt="_images/compare_cumulative_psf_North-LST-1_image.png" src="_images/compare_cumulative_psf_North-LST-1_image.png" style="width: 49%;" /></a>
 </section>
 <section id="id3">
-<h3>Command line arguments<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -211,7 +209,7 @@ This application should complement the ones for updating parameters,     adding 
 </dl>
 </section>
 <section id="id4">
-<h3>Example<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <p>LST-1 Prod5</p>
 <p>Runtime &lt; 1 min.</p>
 <p>Get an example dataset from the DB:</p>
@@ -230,21 +228,21 @@ This application should complement the ones for updating parameters,     adding 
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="compare_cumulative_psf.load_data">
-<span class="sig-prename descclassname"><span class="pre">compare_cumulative_psf.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datafile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare_cumulative_psf.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compare_cumulative_psf.load_data" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">compare_cumulative_psf.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datafile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare_cumulative_psf.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compare_cumulative_psf.load_data" title="Link to this definition">¶</a></dt>
 <dd><p>Load the data file with the measured PSF vs radius [cm].</p>
 </dd></dl>
 
 </section>
 <section id="module-derive_mirror_rnda">
-<span id="derive-mirror-rnda"></span><h2>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading"></a></h2>
+<span id="derive-mirror-rnda"></span><h2>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">¶</a></h2>
 <section id="id5">
-<h3>Summary<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <p>Derive the simulation model parameter <strong>mirror_reflection_random_angle</strong>
 (sometimes called mirror roughness) to match the measured containment diameter
 of the optical point-spread function (PSF) of individual mirror panels.</p>
 </section>
 <section id="description">
-<h3>Description<a class="headerlink" href="#description" title="Link to this heading"></a></h3>
+<h3>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h3>
 <p>This application derives the value of the simulation model parameter
 <em>mirror_reflection_random_angle</em> using measurements of the focal length
 and PSF of individual mirror panels.</p>
@@ -297,7 +295,7 @@ D80 vs random reflection angle plot, on the left, and the D80 distributions
 </div></blockquote>
 </section>
 <section id="id6">
-<h3>Command line arguments<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. North-LST-1, South-SST-D, …)</p>
 </dd>
@@ -333,7 +331,7 @@ used to replace the default random_focal_length from the model.</p>
 </dl>
 </section>
 <section id="id7">
-<h3>Example<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <p>Derive mirror random reflection angle for a mid-sized telescope (MST),
 simulation production Prod5.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \</span>
@@ -364,9 +362,9 @@ Use the parameter <code class="docutils literal notranslate"><span class="pre">-
 </section>
 </section>
 <section id="module-generate_corsika_histograms">
-<span id="generate-corsika-histograms"></span><h2>generate_corsika_histograms<a class="headerlink" href="#module-generate_corsika_histograms" title="Link to this heading"></a></h2>
+<span id="generate-corsika-histograms"></span><h2>generate_corsika_histograms<a class="headerlink" href="#module-generate_corsika_histograms" title="Link to this heading">¶</a></h2>
 <section id="id8">
-<h3>Summary<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <p>This application produces a set of histograms of the distribution of Cherenkov photons on the
 ground (at observation level) read from the CORSIKA IACT output file provided as input.</p>
 <p>The histograms can be saved both into pdfs and in a hdf5 file.</p>
@@ -395,7 +393,7 @@ the <code class="xref py py-obj docutils literal notranslate"><span class="pre">
 are to be found in the CORSIKA manual, e.g., “total_energy”, “zenith”, “azimuth”.</p>
 </section>
 <section id="id9">
-<h3>Command line arguments<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>iact_file (str, required)</dt><dd><p>The name of the CORSIKA IACT file resulted from the CORSIKA simulation.</p>
 </dd>
@@ -503,7 +501,7 @@ histogram for <code class="xref py py-obj docutils literal notranslate"><span cl
 </dl>
 </section>
 <section id="id10">
-<h3>Example<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <p>Generate the histograms for a test IACT file:</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/tests/            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5</span>
@@ -519,13 +517,13 @@ histogram for <code class="xref py py-obj docutils literal notranslate"><span cl
 </section>
 </section>
 <section id="module-generate_default_metadata">
-<span id="generate-default-metadata"></span><h2>generate_default_metadata<a class="headerlink" href="#module-generate_default_metadata" title="Link to this heading"></a></h2>
+<span id="generate-default-metadata"></span><h2>generate_default_metadata<a class="headerlink" href="#module-generate_default_metadata" title="Link to this heading">¶</a></h2>
 <section id="id11">
-<h3>Summary<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
 <p>Generate a default simtools metadata file from a json schema.</p>
 </section>
 <section id="id12">
-<h3>Command line arguments<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>schema (str, optional)</dt><dd><p>Schema file describing the input data
 (default: simtools/schemas/metadata.metaschema.yml)</p>
@@ -535,7 +533,7 @@ histogram for <code class="xref py py-obj docutils literal notranslate"><span cl
 </dl>
 </section>
 <section id="id13">
-<h3>Example<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-default-metadata</span>
 <span class="go">    --schema simtools/schemas/metadata.metaschema.yml</span>
 <span class="go">    --output_file default_metadata.yml</span>
@@ -544,15 +542,15 @@ histogram for <code class="xref py py-obj docutils literal notranslate"><span cl
 </section>
 </section>
 <section id="module-generate_simtel_array_histograms">
-<span id="generate-simtel-array-histograms"></span><h2>generate_simtel_array_histograms<a class="headerlink" href="#module-generate_simtel_array_histograms" title="Link to this heading"></a></h2>
+<span id="generate-simtel-array-histograms"></span><h2>generate_simtel_array_histograms<a class="headerlink" href="#module-generate_simtel_array_histograms" title="Link to this heading">¶</a></h2>
 <section id="id14">
-<h3>Summary<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
 <p>This application allows to write sim_telarray histograms into pdf and hdf5 files.
 It accepts multiple lists of histograms files, a single list or a histogram file.
 Each histogram is plotted in a page of the pdf file if the –pdf option is activated.</p>
 </section>
 <section id="id15">
-<h3>Command line arguments<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>hist_file_names (str, optional)</dt><dd><p>Name of the histogram files to be plotted.
 It can be given as the histogram file names (more than one option allowed) or as a text
@@ -579,14 +577,14 @@ untouched.</p>
 </dl>
 </section>
 <section id="raises">
-<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>TypeError:</dt><dd><p>if argument passed through <code class="xref py py-obj docutils literal notranslate"><span class="pre">hist_file_names</span></code> is not a file.</p>
 </dd>
 </dl>
 </section>
 <section id="id16">
-<h3>Example<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-simtel-array-histograms --hist_file_names tests/resources/</span>
 <span class="go">    run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst</span>
 <span class="go">    --output_file_name test_hist_hdata --hdf5 --pdf</span>
@@ -595,15 +593,15 @@ untouched.</p>
 </section>
 </section>
 <section id="module-get_file_from_db">
-<span id="get-file-from-db"></span><h2>get_file_from_db<a class="headerlink" href="#module-get_file_from_db" title="Link to this heading"></a></h2>
+<span id="get-file-from-db"></span><h2>get_file_from_db<a class="headerlink" href="#module-get_file_from_db" title="Link to this heading">¶</a></h2>
 <section id="id17">
-<h3>Summary<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
 <p>Get a file from the DB.</p>
 <p>The name of the file is required.
 This application complements the ones for getting parameters, adding entries and files     to the DB.</p>
 </section>
 <section id="id18">
-<h3>Command line arguments<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>file_name (str or list of str, required)</dt><dd><p>Name of the file to get including its full directory. A list of files is also allowed.
 i.e., python applications/get_file_from_db.py -file_name mirror_CTA-N-LST1_v2019-03-31.dat.</p>
@@ -616,7 +614,7 @@ Default it $CWD.</p>
 </dl>
 </section>
 <section id="id19">
-<h3>Example<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h3>
 <p>getting a file from the DB.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat</span>
 </pre></div>
@@ -628,15 +626,15 @@ Default it $CWD.</p>
 </section>
 </section>
 <section id="module-get_parameter">
-<span id="get-parameter"></span><h2>get_parameter<a class="headerlink" href="#module-get_parameter" title="Link to this heading"></a></h2>
+<span id="get-parameter"></span><h2>get_parameter<a class="headerlink" href="#module-get_parameter" title="Link to this heading">¶</a></h2>
 <section id="id20">
-<h3>Summary<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
 <p>Get a parameter entry from DB for a specific telescope or a site.
 The application receives a parameter name, a site, a telescope (if applicable) and     optionally a version. It then prints out the parameter entry.
 If no version is provided, the value of the released model is printed..</p>
 </section>
 <section id="id21">
-<h3>Command line arguments<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>parameter (str, required)</dt><dd><p>Parameter name</p>
 </dd>
@@ -649,11 +647,11 @@ If no version is provided, the value of the released model is printed..</p>
 </dl>
 </section>
 <section id="id22">
-<h3>Raises<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<h3>Raises<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h3>
 <p>KeyError in case the parameter requested does not exist in the model parameters.</p>
 </section>
 <section id="id23">
-<h3>Example<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h3>
 <p>Get the mirror_list parameter from the DB.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-parameter --parameter mirror_list --site North --telescope LST-1         --model_version prod5</span>
 </pre></div>
@@ -671,16 +669,16 @@ If no version is provided, the value of the released model is printed..</p>
 </section>
 </section>
 <section id="module-make_regular_arrays">
-<span id="make-regular-arrays"></span><h2>make_regular_arrays<a class="headerlink" href="#module-make_regular_arrays" title="Link to this heading"></a></h2>
+<span id="make-regular-arrays"></span><h2>make_regular_arrays<a class="headerlink" href="#module-make_regular_arrays" title="Link to this heading">¶</a></h2>
 <section id="id24">
-<h3>Summary<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h3>
 <p>This application creates the layout array files (ECSV) of regular arrays
 with one telescope at the center of the array and with 4 telescopes
 in a square grid. These arrays are used for trigger rate simulations.</p>
 <p>The array layout files created should be available at the data/layout directory.</p>
 </section>
 <section id="id25">
-<h3>Command line arguments<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>observatory site (e.g., North or South).</p>
 </dd>
@@ -691,7 +689,7 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 </dl>
 </section>
 <section id="id26">
-<h3>Example<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h3>
 <p>Runtime &lt; 10 s.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-make-regular-arrays --site=North</span>
 </pre></div>
@@ -699,9 +697,9 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 </section>
 </section>
 <section id="module-plot_array_layout">
-<span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading"></a></h2>
+<span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading">¶</a></h2>
 <section id="id27">
-<h3>Summary<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h3>
 <p>This application plots the layout array and saves into disk.</p>
 <p>It accepts as input the telescope list file, the name of the layout, a sequence of arguments
 with the telescope files or a sequence of arguments with the layout names.</p>
@@ -710,7 +708,7 @@ A sequence of arguments for the rotation angle is also permitted, in which case 
 are plotted and saved separately.</p>
 </section>
 <section id="id28">
-<h3>Command line arguments<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>figure_name (str, optional)</dt><dd><p>File name for the pdf output.</p>
 </dd>
@@ -727,20 +725,20 @@ are plotted and saved separately.</p>
 </dl>
 </section>
 <section id="id29">
-<h3>Example<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha         --array_layout_name North-TestLayout</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="module-print_array_elements">
-<span id="print-array-elements"></span><h2>print_array_elements<a class="headerlink" href="#module-print_array_elements" title="Link to this heading"></a></h2>
+<span id="print-array-elements"></span><h2>print_array_elements<a class="headerlink" href="#module-print_array_elements" title="Link to this heading">¶</a></h2>
 <section id="id30">
-<h3>Summary<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h3>
 <p>Convert and print a list of array element positions in different coordinate     systems relevant for CTAO.</p>
 </section>
 <section id="id31">
-<h3>Description<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<h3>Description<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h3>
 <p>This application converts a list of array element positions in different CTAO     coordinate systems.</p>
 <p>Available coordinate systems are:</p>
 <ol class="arabic simple">
@@ -750,7 +748,7 @@ are plotted and saved separately.</p>
 </ol>
 </section>
 <section id="id32">
-<h3>Command line arguments<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>input (str)</dt><dd><p>File name with list of array element positions</p>
 </dd>
@@ -763,7 +761,7 @@ are plotted and saved separately.</p>
 </dl>
 </section>
 <section id="id33">
-<h3>Example<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h3>
 <p>Print a list of array elements using a list of telescope positions in UTM coordinates.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-print-array-elements \</span>
 <span class="go">    --input tests/resources/telescope_positions-North-utm.ecsv \</span>
@@ -782,9 +780,9 @@ are plotted and saved separately.</p>
 </section>
 </section>
 <section id="module-produce_array_config">
-<span id="produce-array-config"></span><h2>produce_array_config<a class="headerlink" href="#module-produce_array_config" title="Link to this heading"></a></h2>
+<span id="produce-array-config"></span><h2>produce_array_config<a class="headerlink" href="#module-produce_array_config" title="Link to this heading">¶</a></h2>
 <section id="id34">
-<h3>Summary<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id34" title="Link to this heading">¶</a></h3>
 <p>This application is an example of how to produce sim_telarray config     files for a given array.</p>
 <p>All the input required has to be given as a yaml file by the command     line argument array_config.</p>
 <p>The required entries in the array_config file are:</p>
@@ -822,7 +820,7 @@ Ex.:</p>
 </div>
 </section>
 <section id="id35">
-<h3>Command line arguments<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id35" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>label (str, optional)</dt><dd><p>Label to identify the output files/directories.</p>
 </dd>
@@ -833,7 +831,7 @@ Ex.:</p>
 </dl>
 </section>
 <section id="id36">
-<h3>Example<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h3>
 <p>North - Prod5, simple example</p>
 <p>Get the array configuration from DB:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name array_config_test.yml</span>
@@ -851,9 +849,9 @@ Ex.:</p>
 </section>
 </section>
 <section id="module-production">
-<span id="production"></span><h2>production<a class="headerlink" href="#module-production" title="Link to this heading"></a></h2>
+<span id="production"></span><h2>production<a class="headerlink" href="#module-production" title="Link to this heading">¶</a></h2>
 <section id="id37">
-<h3>Summary<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id37" title="Link to this heading">¶</a></h3>
 <p>This application perform array simulations.</p>
 <p>The simulations are split into two stages: showers and array.
 Shower simulations are performed with CORSIKA and array simulations     with sim_telarray. Note that either shower or array simulations are     submitted (so typically you first run shower simulations, and then the     array simulations).</p>
@@ -864,7 +862,7 @@ can be set to a different location via the option –data_directory.</p>
 <p>The workload management system used is given in the configuration file.     Allowed systems are qsub (using gridengine), condor_submit     (using HTcondor), and local (running the script locally).</p>
 </section>
 <section id="id38">
-<h3>Command line arguments<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>productionconfig (str, required)</dt><dd><p>Path to the simulation configuration file.</p>
 </dd>
@@ -897,7 +895,7 @@ This option should only be used in combination with the <code class="xref py py-
 </dl>
 </section>
 <section id="id39">
-<h3>Example<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h3>
 <p>Testing a mini-prod5 simulation.</p>
 <p>Get the configuration file from the DB</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name prod_config_test.yml</span>
@@ -916,9 +914,9 @@ This option should only be used in combination with the <code class="xref py py-
 </section>
 </section>
 <section id="module-sim_showers_for_trigger_rates">
-<span id="sim-showers-for-trigger-rates"></span><h2>sim_showers_for_trigger_rates<a class="headerlink" href="#module-sim_showers_for_trigger_rates" title="Link to this heading"></a></h2>
+<span id="sim-showers-for-trigger-rates"></span><h2>sim_showers_for_trigger_rates<a class="headerlink" href="#module-sim_showers_for_trigger_rates" title="Link to this heading">¶</a></h2>
 <section id="id40">
-<h3>Summary<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h3>
 <p>This application simulates showers to be used in trigger rate calculations.
 Arrays with one (1MST) or four telescopes (4LST) can be used, in case of     mono or stereo trigger configurations, respectively.</p>
 <p>Simulations are managed by the Simulator module.
@@ -926,7 +924,7 @@ Each run is simulated in a job. Each job is submitted by using the submission   
 <p>At the moment, the shower simulations are performed by CORSIKA, which requires     the zstd package. Please, make sure that the command to set your zstd path is     properly set by the extra_commands in the command line configuration.</p>
 </section>
 <section id="id41">
-<h3>Command line arguments<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>array (str, required)</dt><dd><p>Name of the array (1MST, 4LST …).</p>
 </dd>
@@ -953,7 +951,7 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </dl>
 </section>
 <section id="id42">
-<h3>Example<a class="headerlink" href="#id42" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h3>
 <p>Producing a set of proton showers for trigger rate simulations of LST.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary         proton --nruns 2 --nevents 10000 --test --submit_command local</span>
 </pre></div>
@@ -967,9 +965,9 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </section>
 </section>
 <section id="module-simulate_prod">
-<span id="simulate-prod"></span><h2>simulate_prod<a class="headerlink" href="#module-simulate_prod" title="Link to this heading"></a></h2>
+<span id="simulate-prod"></span><h2>simulate_prod<a class="headerlink" href="#module-simulate_prod" title="Link to this heading">¶</a></h2>
 <section id="id43">
-<h3>Summary<a class="headerlink" href="#id43" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h3>
 <p>This application is used to run simulations for productions (typically on the grid).
 It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
 with the provided “prod_tag” simulation configuration (e.g., Prod6)
@@ -984,7 +982,7 @@ in simtools since it is meant to be executed on a grid node
 (distributed to it by the workload management system).</p>
 </section>
 <section id="id44">
-<h3>Command line arguments<a class="headerlink" href="#id44" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>production_config (str, Path, required)</dt><dd><p>Simulation configuration file
 (contains the default setup which can be overwritten by the command line options).</p>
@@ -1025,7 +1023,7 @@ The files are written to the <code class="xref py py-obj docutils literal notran
 </dl>
 </section>
 <section id="id45">
-<h3>Example<a class="headerlink" href="#id45" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h3>
 <p>Run the application:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5         --site north --primary gamma --azimuth_angle north --zenith_angle 20         --start_run 0 --run 1</span>
 </pre></div>
@@ -1055,15 +1053,15 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </section>
 </section>
 <section id="module-submit_data_from_external">
-<span id="submit-data-from-external"></span><h2>submit_data_from_external<a class="headerlink" href="#module-submit_data_from_external" title="Link to this heading"></a></h2>
+<span id="submit-data-from-external"></span><h2>submit_data_from_external<a class="headerlink" href="#module-submit_data_from_external" title="Link to this heading">¶</a></h2>
 <section id="id46">
-<h3>Summary<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h3>
 <p>Submit model parameter (value, table) through the command line.</p>
 <p>Input data and metadata is validated, and if necessary enriched
 and converted following a pre-described schema.</p>
 </section>
 <section id="id47">
-<h3>Command line arguments<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id47" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>input_meta (str, optional)</dt><dd><p>input meta data file (yml format)</p>
 </dd>
@@ -1074,7 +1072,7 @@ and converted following a pre-described schema.</p>
 </dl>
 </section>
 <section id="id48">
-<h3>Example<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id48" title="Link to this heading">¶</a></h3>
 <p>Submit mirror measurements with associated metadata:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-data-from-external             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml             --input ./tests/resources/MLTdata-preproduction.ecsv             --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml             --output_file TEST-submit_data_from_external.ecsv</span>
 </pre></div>
@@ -1086,9 +1084,9 @@ and converted following a pre-described schema.</p>
 </section>
 </section>
 <section id="module-tune_psf">
-<span id="tune-psf"></span><h2>tune_psf<a class="headerlink" href="#module-tune_psf" title="Link to this heading"></a></h2>
+<span id="tune-psf"></span><h2>tune_psf<a class="headerlink" href="#module-tune_psf" title="Link to this heading">¶</a></h2>
 <section id="id49">
-<h3>Summary<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id49" title="Link to this heading">¶</a></h3>
 <p>This applications tunes the parameters mirror_reflection_random_angle,     mirror_align_random_horizontal and mirror_align_random_vertical using     cumulative PSF measurement.</p>
 <p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contain 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
@@ -1102,7 +1100,7 @@ and converted following a pre-described schema.</p>
 <a class="reference internal image-reference" href="_images/tune_psf.png" id="tune-psf-plot"><img alt="_images/tune_psf.png" id="tune-psf-plot" src="_images/tune_psf.png" style="width: 49%;" /></a>
 </section>
 <section id="id50">
-<h3>Command line arguments<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id50" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1127,7 +1125,7 @@ and converted following a pre-described schema.</p>
 </dl>
 </section>
 <section id="id51">
-<h3>Example<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id51" title="Link to this heading">¶</a></h3>
 <p>LST-1 Prod5</p>
 <p>Runtime &lt; 3 min.</p>
 <p>Get PSF data from the DB:</p>
@@ -1149,7 +1147,7 @@ and converted following a pre-described schema.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="tune_psf.load_data">
-<span class="sig-prename descclassname"><span class="pre">tune_psf.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tune_psf.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tune_psf.load_data" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">tune_psf.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tune_psf.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tune_psf.load_data" title="Link to this definition">¶</a></dt>
 <dd><p>Load data from file txt file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1163,16 +1161,16 @@ and converted following a pre-described schema.</p>
 
 </section>
 <section id="module-validate_camera_efficiency">
-<span id="validate-camera-efficiency"></span><h2>validate_camera_efficiency<a class="headerlink" href="#module-validate_camera_efficiency" title="Link to this heading"></a></h2>
+<span id="validate-camera-efficiency"></span><h2>validate_camera_efficiency<a class="headerlink" href="#module-validate_camera_efficiency" title="Link to this heading">¶</a></h2>
 <section id="id52">
-<h3>Summary<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h3>
 <p>This application validate the camera efficiency by simulating it using     the testeff program provided by sim_telarray.</p>
 <p>The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function    of wavelength are plotted. See examples below.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" style="width: 49%;" /></a>
 <a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" style="width: 49%;" /></a>
 </section>
 <section id="id53">
-<h3>Command line arguments<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1197,7 +1195,7 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </dl>
 </section>
 <section id="id54">
-<h3>Example<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id54" title="Link to this heading">¶</a></h3>
 <p>MST-NectarCam - Prod5</p>
 <p>Runtime &lt; 1 min.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-efficiency --site North             --azimuth_angle 0 --zenith_angle 20             --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt             --telescope MST-NectarCam-D --model_version prod5</span>
@@ -1211,15 +1209,15 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </section>
 </section>
 <section id="module-validate_camera_fov">
-<span id="validate-camera-fov"></span><h2>validate_camera_fov<a class="headerlink" href="#module-validate_camera_fov" title="Link to this heading"></a></h2>
+<span id="validate-camera-fov"></span><h2>validate_camera_fov<a class="headerlink" href="#module-validate_camera_fov" title="Link to this heading">¶</a></h2>
 <section id="id55">
-<h3>Summary<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h3>
 <p>This application calculate the camera FoV of the telescope requested and plot the camera     as seen for an observer facing the camera.</p>
 <p>An example of the camera plot can be found below.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot"><img alt="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot" src="_images/validate_camera_fov_North-LST-1_pixelLayout.png" style="width: 50%;" /></a>
 </section>
 <section id="id56">
-<h3>Command line arguments<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1236,7 +1234,7 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </dl>
 </section>
 <section id="id57">
-<h3>Example<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id57" title="Link to this heading">¶</a></h3>
 <p>LST - Prod5</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North             --telescope LST-1 --model_version prod5</span>
 </pre></div>
@@ -1249,9 +1247,9 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </section>
 </section>
 <section id="module-validate_optics">
-<span id="validate-optics"></span><h2>validate_optics<a class="headerlink" href="#module-validate_optics" title="Link to this heading"></a></h2>
+<span id="validate-optics"></span><h2>validate_optics<a class="headerlink" href="#module-validate_optics" title="Link to this heading">¶</a></h2>
 <section id="id58">
-<h3>Summary<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h3>
 <p>This application validates the optical model parameters through ray tracing simulations     of the whole telescope, assuming a point-like light source. The output includes PSF (D80),     effective mirror area and effective focal length as a function of the off-axis angle. 
 The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>Examples of the plots generated by this application are shown below. On the top, the D80     vs off-axis is shown in cm (left) and deg (right). On the bottom, the effective mirror     area (left) and the effective focal length (right) vs off-axis angle are shown.</p>
@@ -1261,7 +1259,7 @@ The telescope zenith angle and the source distance can be set by command line ar
 <a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_eff_flen.png"><img alt="_images/validate_optics_North-LST-1_eff_flen.png" src="_images/validate_optics_North-LST-1_eff_flen.png" style="width: 49%;" /></a>
 </section>
 <section id="id59">
-<h3>Command line arguments<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1286,7 +1284,7 @@ The telescope zenith angle and the source distance can be set by command line ar
 </dl>
 </section>
 <section id="id60">
-<h3>Example<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id60" title="Link to this heading">¶</a></h3>
 <p>LST-1 Prod5</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0         --zenith 20 --src_distance 10 --test</span>
 </pre></div>
@@ -1300,14 +1298,14 @@ The telescope zenith angle and the source distance can be set by command line ar
 </section>
 </section>
 <section id="module-validate_file_using_schema">
-<span id="validate-file-using-schema"></span><h2>validate_file_using_schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading"></a></h2>
+<span id="validate-file-using-schema"></span><h2>validate_file_using_schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading">¶</a></h2>
 <section id="id61">
-<h3>Summary<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<h3>Summary<a class="headerlink" href="#id61" title="Link to this heading">¶</a></h3>
 <p>Validate a file using a schema.
 Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</p>
 </section>
 <section id="id62">
-<h3>Command line arguments<a class="headerlink" href="#id62" title="Link to this heading"></a></h3>
+<h3>Command line arguments<a class="headerlink" href="#id62" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>file_name (str)</dt><dd><p>input file to be validated</p>
 </dd>
@@ -1318,33 +1316,33 @@ Input files can be metadata, schema, or data files in yaml, json, or ecsv format
 </dl>
 </section>
 <section id="id63">
-<h3>Raises<a class="headerlink" href="#id63" title="Link to this heading"></a></h3>
+<h3>Raises<a class="headerlink" href="#id63" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>FileNotFoundError</dt><dd><p>if file to be validated is not found</p>
 </dd>
 </dl>
 </section>
 <section id="id64">
-<h3>Example<a class="headerlink" href="#id64" title="Link to this heading"></a></h3>
+<h3>Example<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema          --file_name tests/resources/MLTdata-preproduction.meta.yml          --schema simtools/schemas/metadata.metaschema.yml          --data_type metadata</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="validate_file_using_schema.validate_data_file">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_file" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_file" title="Link to this definition">¶</a></dt>
 <dd><p>Validate a data file (e.g., in ecsv, json, yaml format)</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">¶</a></dt>
 <dd><p>Validate metadata.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="validate_file_using_schema.validate_schema">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_schema" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_schema" title="Link to this definition">¶</a></dt>
 <dd><p>Validate a schema file given in yaml or json format.
 Schema is either given as command line argument, read from the meta_schema_url or from
 the metadata section of the data dictionary.</p>
