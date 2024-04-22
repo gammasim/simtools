@@ -293,12 +293,12 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         )
 
 
-def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler, model_version):
+def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=db.DB_CTA_SIMULATION_MODEL,
         tel_to_copy="LSTN-01",
-        version_to_copy=model_version,
+        version_to_copy="Released",
         new_tel_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
@@ -314,7 +314,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler, model_
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         telescope="LSTN-test",
-        version=model_version,
+        version="Released",
         parameter="camera_pixels",
         field="applicable",
         new_value=False,
@@ -323,7 +323,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler, model_
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name="LSTN-test",
-        model_version=model_version,
+        model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
@@ -332,8 +332,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler, model_
 
     # make sure that cache has been emptied after updating
     assert (
-        db._parameter_cache_key("North", "LSTN-test", model_version)
-        not in db.model_parameters_cached
+        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
     )
 
 
