@@ -1,6 +1,7 @@
 import logging
 import re
 from functools import lru_cache
+from pathlib import Path
 
 import yaml
 
@@ -24,7 +25,8 @@ __all__ = [
 
 @lru_cache(maxsize=None)
 def load_array_elements():
-    with open("simtools/schemas/array_elements.yml", "r", encoding="utf-8") as file:
+    base_path = Path(__file__).parent
+    with open(base_path / "../schemas/array_elements.yml", "r", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
 
 
