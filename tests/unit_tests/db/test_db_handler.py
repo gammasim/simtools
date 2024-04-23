@@ -206,6 +206,15 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler):
         value="999.9 cm",
         collection_name="telescopes_" + random_id,
     )
+    db.add_new_parameter(
+        db_name=f"sandbox_{random_id}",
+        telescope="LSTN-test",
+        version="test",
+        parameter="new_test_parameter_simtel_list",
+        value="0.969 0.0 0.0 0.0 0.0 0.0",
+        collection_name="telescopes_" + random_id,
+        unit=None,
+    )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         telescope_model_name="LSTN-test",
