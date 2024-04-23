@@ -33,6 +33,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Pre-commit
+        uses: pre-commit/action@v3
+        with:
+          extra_args: --files $(git diff origin/main --name-only)
+
       - name: Check for non-ASCII characters
         run: |
           output=$(find . -type f \
