@@ -5,6 +5,7 @@ import logging
 import numpy as np
 
 import simtools.utils.general as gen
+import simtools.version
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
@@ -99,6 +100,10 @@ class SimtelConfigWriter:
 
         """
 
+        parameters["config_release"] = (
+            f"{self._model_version} written by " f"simtools v{simtools.version.__version__}"
+        )
+        parameters["config_version"] = self._model_version
         if config_type == "telescope":
             parameters["camera_config_name"] = self._telescope_model_name
             parameters["camera_config_variant"] = ""
