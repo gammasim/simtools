@@ -135,6 +135,10 @@ telescope_parameters = {
         "db_name": "lightguide_efficiency_vs_wavelength",
         "simtel": False,
     },
+    "lightguide_efficiency_angle_file": {
+        "db_name": "lightguide_efficiency_angle_file",
+        "simtel": False,
+    },  # prod5 and earlier parameter; not relevant for the future
     "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
     "asum_shaping": {"db_name": "asum_shaping_file", "simtel": True},
