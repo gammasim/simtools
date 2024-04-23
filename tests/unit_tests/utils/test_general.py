@@ -759,6 +759,7 @@ def test_get_value_unit_type() -> None:
     # cases of simtel-like strings representing arrays
     assert gen.get_value_unit_type("1 2") == ("1 2", None, "str")
     assert gen.get_value_unit_type("0 0") == ("0 0", None, "str")
+    assert gen.get_value_unit_type("0. 0. 0.5") == ("0. 0. 0.5", None, "str")
 
 
 def test_assign_unit_to_quantity():
