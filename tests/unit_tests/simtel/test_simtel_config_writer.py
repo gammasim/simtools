@@ -56,13 +56,13 @@ def test_add_simtel_metadata(simtel_config_writer):
 
     _tel = {}
     simtel_config_writer._add_simtel_metadata(_tel, "telescope")
-    assert len(_tel) == 6
+    assert len(_tel) == 8
     assert _tel["camera_config_name"] == simtel_config_writer._telescope_model_name
     assert _tel["optics_config_name"] == simtel_config_writer._telescope_model_name
 
     _site = {}
     simtel_config_writer._add_simtel_metadata(_site, "site")
-    assert len(_site) == 6
+    assert len(_site) == 8
     assert _site["site_config_name"] == simtel_config_writer._site
     assert _site["array_config_name"] == simtel_config_writer._layout_name
 
