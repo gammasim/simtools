@@ -1,9 +1,7 @@
 #!/usr/bin/python3
-
 """
-    Summary
-    -------
     This application adds all parameters found in a repository to the DB.
+
     Generates a new data with all required collections.
     Follows the structure of the CTAO gitlab model parameters repository.
     file as input.
@@ -11,14 +9,14 @@
     This is an application for experts and should not be used by the general user.
 
     Command line arguments
-    ----------------------
+
     input_path (str, required)
         Path of local copy of model parameter repository.
     db_name (str, required)
         Name of new DB to be created.
 
-    Example
-    -------
+    Examples
+    --------
 
     Upload a repository to the DB:
 
@@ -27,7 +25,6 @@
         simtools-add_model-parameters-from-repository-to-db \
             --input_path /path/to/repository \
             --db_name new_db_name
-
 """
 
 import logging
@@ -41,20 +38,19 @@ from simtools.utils import names
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
-    label: str
+    label : str
         Label describing application.
-    description: str
+    description : str
         Description of application.
 
     Returns
     -------
     CommandLineParser
-        Command line parser object
-
+        Command line parser object.
     """
 
     config = configurator.Configurator(label=label, description=description)
@@ -76,19 +72,24 @@ def _parse(label=None, description=None):
     )
 
 
-def add_values_from_json_to_db(file, collection, db, db_name, file_path, logger):
+def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logger):
     """
     Upload data from json files to db.
 
     Parameters
     ----------
-    files: list
-        List of json files to upload to the DB.
-    collection: str
+    file : list
+        Json file to be uploaded to the DB.
+    collection : str
         The DB collection to which to add the file.
-    db: DatabaseHandler
+    db : DatabaseHandler
         Database handler object.
-
+    db_name : str
+        Name of the database to be created.
+    file_prefix : str
+        Path to location of all additional files to be uploaded.
+    logger : logging.Logger
+        Logger object.
     """
     par_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
     logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
@@ -104,7 +105,7 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_path, logger)
         applicable=par_dict["applicable"],
         file=par_dict["file"],
         unit=par_dict.get("unit", None),
-        file_prefix=file_path,
+        file_prefix=file_prefix,
     )
 
 
@@ -114,9 +115,12 @@ def _add_metadata_to_db(db, db_name, logger):
 
     Parameters
     ----------
-    db: DatabaseHandler
+    db : DatabaseHandler
         Database handler object.
-
+    db_name : str
+        Name of the database to be created.
+    logger : logging.Logger
+        Logger object.
     """
     logger.info("Adding metadata to the DB")
     db.add_tagged_version(
@@ -129,6 +133,7 @@ def _add_metadata_to_db(db, db_name, logger):
 
 
 def main():
+    """Application main."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label, description="Add a new model parameter database to the DB")
     logger = logging.getLogger()
@@ -160,7 +165,7 @@ def main():
                     collection=collection,
                     db=db,
                     db_name=args_dict["db_name"],
-                    file_path=input_path / "Files",
+                    file_prefix=input_path / "Files",
                     logger=logger,
                 )
 
