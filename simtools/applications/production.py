@@ -23,7 +23,7 @@
 
     Command line arguments
     ----------------------
-    productionconfig (str, required)
+    simulation_configuration (str, required)
         Path to the simulation configuration file.
     primary (str)
         Name of the primary to be selected from the configuration file. In case it \
@@ -34,7 +34,7 @@
             simulate (perform simulations),
             file_list (print list of output files)
             inspect (plot sim_telarray histograms for quick inspection)
-            resources (print quicklook into used computational resources)
+            resources (print quick look into used computational resources)
     array_only (activation mode)
         Simulates only array detector (no showers).
     showers_only (activation mode)
@@ -66,7 +66,7 @@
 
     .. code-block:: console
 
-        simtools-production --task simulate --productionconfig prod_config_test.yml \
+        simtools-production --task simulate --simulation_configuration prod_config_test.yml \
         --test --showers_only --submit_command local
 
     The output is saved in simtools-output/test-production.
@@ -82,8 +82,6 @@
 import logging
 from copy import copy
 from pathlib import Path
-
-from astropy.io.misc import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -108,7 +106,7 @@ def _parse(description=None):
 
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
-        "--productionconfig",
+        "--simulation_configuration",
         help="Simulation configuration file",
         type=str,
         required=True,
@@ -193,8 +191,7 @@ def _process_simulation_config_file(config_file, primary_config, logger):
     """
 
     try:
-        with open(config_file, encoding="utf-8") as file:
-            config_data = yaml.load(file)
+        config_data = gen.collect_data_from_file_or_dict(file_name=config_file, in_dict=None)
     except FileNotFoundError:
         logger.error(f"Error loading simulation configuration file from {config_file}")
         raise
@@ -213,24 +210,24 @@ def _process_simulation_config_file(config_file, primary_config, logger):
         config_showers[primary] = copy(this_default.pop("showers", {}))
         config_arrays[primary] = copy(this_default.pop("array", {}))
 
-        # Grabbing common entries for showers and array
+        # common entries for showers and array
         for key, value in primary_data.items():
             if key in ["showers", "array"]:
                 continue
             config_showers[primary][key] = value
             config_arrays[primary][key] = value
 
-        # Grabbing showers entries
+        # showers entries
         for key, value in primary_data.get("showers", {}).items():
             config_showers[primary][key] = value
         config_showers[primary]["primary"] = primary
 
-        # Grabbing array entries
+        # array entries
         for key, value in primary_data.get("array", {}).items():
             config_arrays[primary][key] = value
         config_arrays[primary]["primary"] = primary
 
-        # Filling in the remaining default keys
+        # remaining default keys
         for key, value in this_default.items():
             config_showers[primary][key] = value
             config_arrays[primary][key] = value
@@ -244,7 +241,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     label, shower_configs, array_configs = _process_simulation_config_file(
-        args_dict["productionconfig"], args_dict["primary"], logger
+        args_dict["simulation_configuration"], args_dict["primary"], logger
     )
     if args_dict["label"] is None:
         args_dict["label"] = label
