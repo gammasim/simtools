@@ -246,7 +246,7 @@ def validate_application_output(config):
             # First check if the output is in the data directory (simtel_array related),
             # Then check if the file is in the output directory (remaining tools).
             logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
-            logger.info(f"File{integration_test['OUTPUT_FILE']}")
+            logger.info(f"File {integration_test['OUTPUT_FILE']}")
             try:
                 assert (
                     Path(config["CONFIGURATION"]["DATA_DIRECTORY"])
@@ -369,4 +369,4 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     # (no change of config from command line)
     if request.config.getoption("--model_version") == model_version:
         output_status = validate_application_output(config)
-        assert output_status == 0
+    assert output_status == 0

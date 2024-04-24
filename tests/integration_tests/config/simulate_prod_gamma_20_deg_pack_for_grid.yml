@@ -19,7 +19,3 @@ CTA_SIMPIPE:
         directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.log_hist.tar.gz
     - OUTPUT_FILE: |
         directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.simtel.zst
-    - OUTPUT_FILE: |
-        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.log_hist/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.hdata.zst
-    - OUTPUT_FILE: |
-        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.log_hist/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production.log.gz
