@@ -349,13 +349,12 @@ class ModelParameter:
 
     def get_simtel_parameters(self, parameters=None, telescope_model=True, site_model=True):
         """
-        Get simtel parameters as name and value pairs. Do not include parameters
-        labels with 'simtel': False in names.site_parameters or names.telescope_parameters.
+        Get simtel parameters as name and value pairs.
 
         Parameters
         ----------
         parameters: dict
-            Parameters to be renamed (if necessary)
+            Parameters (simtools) to be renamed (if necessary)
         telescope_model: bool
             If True, telescope model parameters are included.
         site_model: bool
@@ -372,7 +371,12 @@ class ModelParameter:
 
         _simtel_parameter_value = {}
         for key in parameters:
-            _par_name = names.get_simtel_name_from_parameter_name(key, telescope_model, site_model)
+            _par_name = names.get_simulation_software_name_from_parameter_name(
+                key,
+                simulation_software="sim_telarray",
+                search_telescope_parameters=telescope_model,
+                search_site_parameters=site_model,
+            )
             if _par_name is not None:
                 _simtel_parameter_value[_par_name] = parameters[key].get("value")
         return dict(sorted(_simtel_parameter_value.items()))
@@ -521,8 +525,8 @@ class ModelParameter:
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
-            parameters=self.get_simtel_parameters(parameters=self._parameters),
-            config_parameters=self.get_simtel_parameters(parameters=self._config_parameters),
+            parameters=self._parameters,
+            config_parameters=self._config_parameters,
         )
 
     @property
