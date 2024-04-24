@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     SIMTEL_CFG_FILE: ./tests/resources/simtel_config_test_la_palma.cfg
     SIMTEL_TELESCOPE_NAME: CT1
     TELESCOPE: LSTN-01
-    MODEL_VERSION: "2024-03-06"
+    MODEL_VERSION: "2024-02-01"
     SCHEMA_DIRECTORY: ./tests/resources/
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
