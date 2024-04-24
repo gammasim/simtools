@@ -10,6 +10,13 @@ CTA_SIMPIPE:
     ZENITH_ANGLE: 20
     START_RUN: 0
     RUN: 2
-    NSHOW: 5
+    NSHOW: 2
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        test-production-South/simtel-data/South/gamma/data/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.simtel.zst
+    - OUTPUT_FILE: |
+        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.log.gz
+    - OUTPUT_FILE: |
+        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.hdata.zst
