@@ -1,0 +1,61 @@
+%YAML 1.2
+---
+title: Schema for effective_focal_length model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: effective_focal_length
+developer_note: |-
+  Not a simulation model parameter but used for the analysis only.
+  Should be discussed further if this is the right place.
+description: |-
+  Due to asymmetric image aberrations, in particular for single-reflector
+  telescope, segmented or not, the inverse image ‘plate scale’ or, more
+  precisely, the ratio of off-center distance in the focal plane
+  (projection for curved focal surface) to the tangent of the off-axis
+  angle, does not match the nominal focal plane very well. This effective
+  value here should be better suitable for shower reconstruction than the
+  nominal focal length and is supposed to be based on ray-tracing
+  simulations of point sources, at distances typical of showers and
+  imaged onto the actual focal surface at the level of the pixel entrances.
+  Non-zero values will be reported as-is in the output data and
+  may be used for the built-in reconstruction in sim_telarray. If no value is given,
+  sim_telarray may estimate a value, based on optics type and f/D ratio, for its
+  internal purpose but will not report such an estimate in the output data.
+  Due to subtle effects of image cleaning (and thus image intensity) on
+  cutting off parts of the asymmetric point-spread function, analysis
+  programs should use this value or, if not available, an estimate of it
+  only as a starting point and evaluate the actual analysis specific
+  and perhaps image intensity and NSB dependent real effective focal length
+  by itself.
+short_description: |-
+  Effective focal length.
+  Only to be used for image analysis, has no effect on the simulation.
+data:
+  - type: double
+    unit: cm
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 10000.0
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetEffectiveFocalLength
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraPlateScale
+source:
+  - SimPipe Derived
+simulation_software:
+  - name: sim_telarray
