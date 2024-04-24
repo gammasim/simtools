@@ -295,7 +295,7 @@ def prepare_configuration(config, output_path, model_version=None):
     """
 
     if len(config) == 1 and next(iter(config.values())) is True:
-        return None, "--" + list(config.keys())[0].lower()
+        return None, "--" + list(config.keys())[0].lower(), None
 
     tmp_config_file = output_path / "tmp_config.yml"
     config_file_model_version = config.get("MODEL_VERSION")
