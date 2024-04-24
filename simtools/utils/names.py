@@ -1,3 +1,4 @@
+import glob
 import logging
 import re
 from functools import lru_cache
@@ -74,89 +75,28 @@ array_layout_names = {
     "TestLayout": ["test-layout"],
 }
 
-# TODO - this is temporary
-# List of site parameters which are not part of the simtel configuration
-# or which have different naming in the database and simtel configuration.
-# simtel: True if this is a simtel parameter (allows to give alternative "name")
-site_parameters = {
-    "reference_point_altitude": {"db_name": "altitude", "simtel": False},
-    "reference_point_longitude": {"db_name": "ref_long", "simtel": False},
-    "reference_point_latitude": {"db_name": "ref_lat", "simtel": False},
-    "reference_point_utm_north": {"db_name": "reference_point_utm_north", "simtel": False},
-    "reference_point_utm_east": {"db_name": "reference_point_utm_east", "simtel": False},
-    # Note naming inconsistency between old and new model
-    # altitude was the corsika observation level in the old model
-    "corsika_observation_level": {"db_name": "altitude", "simtel": True},
-    "epsg_code": {"db_name": "epsg_code", "simtel": False},
-    "geomag_horizontal": {"db_name": "geomag_horizontal", "simtel": False},
-    "geomag_vertical": {"db_name": "geomag_vertical", "simtel": False},
-    "geomag_rotation": {"db_name": "geomag_rotation", "simtel": False},
-    "array_coordinates": {"db_name": "array_coordinates", "simtel": False},
-    "atmospheric_profile": {"db_name": "atmospheric_profile", "simtel": False},
-    # TODO Duplication of old names; requires renaming in DB
-    "magnetic_field": {"db_name": "magnetic_field", "simtel": False},
-    "EPSG": {"db_name": "EPSG", "simtel": False},
-    "ref_long": {"db_name": "ref_long", "simtel": False},
-    "ref_lat": {"db_name": "ref_lat", "simtel": False},
-    "nsb_reference_value": {"db_name": "nsb_reference_value", "simtel": False},
-}
 
-# TODO - this is temporary
-# List of telescope parameters which are not part of the simtel configuration
-# or which has a different name in the simtel configuration.
-telescope_parameters = {
-    "telescope_axis_height": {"db_name": "telescope_axis_height", "simtel": False},
-    "telescope_sphere_radius": {"db_name": "telescope_sphere_radius", "simtel": False},
-    "pixel_shape": {"db_name": "pixel_shape", "simtel": False},
-    "pixel_diameter": {"db_name": "pixel_diameter", "simtel": False},
-    "lightguide_efficiency_vs_incident_angle": {
-        "db_name": "lightguide_efficiency_vs_incident_angle",
-        "simtel": False,
-    },
-    "lightguide_efficiency_vs_wavelength": {
-        "db_name": "lightguide_efficiency_vs_wavelength",
-        "simtel": False,
-    },
-    "lightguide_efficiency_angle_file": {
-        "db_name": "lightguide_efficiency_angle_file",
-        "simtel": False,
-    },  # prod5 and earlier parameter; not relevant for the future
-    "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
-    "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
-    "asum_shaping": {"db_name": "asum_shaping_file", "simtel": True},
-    "dsum_shaping": {"db_name": "dsum_shaping_file", "simtel": True},
-    "nsb_pixel_rate": {"db_name": "nsb_pixel_rate", "simtel": False},
-    "nsb_reference_value": {"db_name": "nsb_reference_value", "simtel": False},
-    "primary_mirror_diameter": {"db_name": "primary_diameter", "simtel": True},
-    "primary_mirror_degraded_map": {"db_name": "primary_degraded_map", "simtel": True},
-    "primary_mirror_hole_diameter": {"db_name": "primary_hole_diameter", "simtel": True},
-    "primary_mirror_ref_radius": {"db_name": "primary_ref_radius", "simtel": True},
-    "primary_mirror_segmentation": {"db_name": "primary_segmentation", "simtel": True},
-    "secondary_mirror_baffle": {"db_name": "secondary_baffle", "simtel": True},
-    "secondary_mirror_degraded_map": {"db_name": "secondary_degraded_map", "simtel": True},
-    "secondary_mirror_degraded_reflection": {
-        "db_name": "mirror2_degraded_reflection",
-        "simtel": True,
-    },
-    "secondary_mirror_diameter": {"db_name": "secondary_diameter", "simtel": True},
-    "secondary_mirror_hole_diameter": {"db_name": "secondary_hole_diameter", "simtel": True},
-    "secondary_mirror_ref_radius": {"db_name": "secondary_ref_radius", "simtel": True},
-    "secondary_mirror_reflectivity": {"db_name": "mirror_secondary_reflectivity", "simtel": True},
-    "secondary_mirror_segmentation": {"db_name": "secondary_segmentation", "simtel": True},
-    "secondary_mirror_shadow_diameter": {"db_name": "secondary_shadow_diameter", "simtel": True},
-    "secondary_mirror_shadow_offset": {"db_name": "secondary_shadow_offset", "simtel": True},
-    "camera_filter_incidence_angle": {"db_name": "camera_filter_incidence_angle", "simtel": False},
-    "camera_window_incidence_angle": {"db_name": "camera_window_incidence_angle", "simtel": False},
-    "optics_properties": {"db_name": "optics_properties", "simtel": False},
-    "primary_mirror_incidence_angle": {
-        "db_name": "primary_mirror_incidence_angle",
-        "simtel": False,
-    },
-    "secondary_mirror_incidence_angle": {
-        "db_name": "secondary_mirror_incidence_angle",
-        "simtel": False,
-    },
-}
+@lru_cache(maxsize=None)
+def load_model_parameters(class_key_list):
+    model_parameters = {}
+    schema_files = glob.glob(str(Path(__file__).parent / "../schemas/model_parameters") + "/*.yml")
+    for schema_file in schema_files:
+        with open(schema_file, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        try:
+            if data["instrument"]["class"] in class_key_list:
+                model_parameters[data["name"]] = data
+        except KeyError:
+            pass
+    return model_parameters
+
+
+def site_parameters():
+    return load_model_parameters(class_key_list="Site")
+
+
+def telescope_parameters():
+    return load_model_parameters(class_key_list=("Structure", "Camera"))
 
 
 def validate_telescope_id_name(name):
@@ -399,18 +339,23 @@ def get_collection_name_from_array_element_name(name):
     return array_elements()[get_telescope_type_from_telescope_name(name)]["collection"]
 
 
-def get_simtel_name_from_parameter_name(
-    par_name, search_telescope_parameters=True, search_site_parameters=True
+def get_simulation_software_name_from_parameter_name(
+    par_name,
+    simulation_software="sim_telarray",
+    search_telescope_parameters=True,
+    search_site_parameters=True,
 ):
     """
-    Get the simtel parameter name from the model parameter name.
-    Assumes that both names are equal if not defined otherwise in names.py
-    Returns the model parameter name if no simtel name is found.
+    Get the name used in the simulation software from the model parameter name.
+    Name convention is expected to be defined in the schema.
+    Returns the parameter name if no simulation software name is found.
 
     Parameters
     ----------
     par_name: str
         Model parameter name.
+    simulation_software: str
+        Simulation software name.
     search_telescope_parameters: bool
         If True, telescope model parameters are included.
     search_site_parameters: bool
@@ -424,17 +369,20 @@ def get_simtel_name_from_parameter_name(
 
     _parameter_names = {}
     if search_telescope_parameters:
-        _parameter_names.update(telescope_parameters)
+        _parameter_names.update(telescope_parameters())
     if search_site_parameters:
-        _parameter_names.update(site_parameters)
+        _parameter_names.update(site_parameters())
 
     try:
-        return (
-            _parameter_names[par_name]["db_name"] if _parameter_names[par_name]["simtel"] else None
-        )
-    except KeyError:
-        pass
-    return par_name
+        _parameter = _parameter_names[par_name]
+    except KeyError as err:
+        _logger.error(f"Parameter {par_name} without schema definition")
+        raise err
+
+    for software in _parameter.get("simulation_software", []):
+        if software.get("name") == simulation_software:
+            return software.get("internal_parameter_name", par_name)
+    return None
 
 
 def get_parameter_name_from_simtel_name(simtel_name):
@@ -453,11 +401,18 @@ def get_parameter_name_from_simtel_name(simtel_name):
         Model parameter name.
     """
 
-    _parameter_names = {**telescope_parameters, **site_parameters}
+    _parameters = {**telescope_parameters(), **site_parameters()}
 
-    for par_name, par_info in _parameter_names.items():
-        if par_info.get("db_name") == simtel_name and par_info.get("simtel"):
-            return par_name
+    for par_name, par_info in _parameters.items():
+        try:
+            for software in par_info["simulation_software"]:
+                if (
+                    software["name"] == "sim_telarray"
+                    and software["internal_parameter_name"] == simtel_name
+                ):
+                    return par_name
+        except KeyError:
+            pass
     return simtel_name
 
 

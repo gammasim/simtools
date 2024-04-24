@@ -71,13 +71,13 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            self._add_simtel_metadata(parameters, "telescope")
             if config_parameters is not None:
                 parameters.update(config_parameters)
 
             for par, value in parameters.items():
-                _simtel_name = names.get_simtel_name_from_parameter_name(
-                    par, search_telescope_parameters=True, search_site_parameters=False
+                _simtel_name = names.get_simulation_software_name_from_parameter_name(
+                    par,
+                    simulation_software="sim_telarray",
                 )
                 if _simtel_name is not None:
                     value = "none" if value is None else value  # simtel requires 'none'
@@ -86,20 +86,27 @@ class SimtelConfigWriter:
                     elif isinstance(value, (list, np.ndarray)):
                         value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
+            _config_meta = self._add_simtel_metadata("telescope")
+            for _simtel_name, value in _config_meta.items():
+                file.write(f"{_simtel_name} = {value}\n")
 
-    def _add_simtel_metadata(self, parameters, config_type):
+    def _add_simtel_metadata(self, config_type):
         """
-        Add metadata to the simtel configuration file.
+        Return simtel metadata.
 
         Parameters
         ----------
-        parameters: dict
-            Model parameters
         type: str
             Type of the configuration file (telescope, site)
 
+        Returns
+        -------
+        dict
+            Dictionary with simtel metadata.
+
         """
 
+        parameters = {}
         parameters["config_release"] = (
             f"{self._model_version} written by " f"simtools v{simtools.version.__version__}"
         )
@@ -121,6 +128,7 @@ class SimtelConfigWriter:
         else:
             self._logger.error(f"Unknown metadata type {config_type}")
             raise ValueError
+        return parameters
 
     def write_array_config_file(self, config_file_path, layout, telescope_model, site_model):
         """
@@ -247,11 +255,16 @@ class SimtelConfigWriter:
         """Writes site parameters."""
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
-        self._add_simtel_metadata(_site_parameters, "site")
         for par, value in _site_parameters.items():
-            _simtel_name = names.get_simtel_name_from_parameter_name(
-                par, search_telescope_parameters=False, search_site_parameters=True
+            _simtel_name = names.get_simulation_software_name_from_parameter_name(
+                par,
+                simulation_software="sim_telarray",
+                search_telescope_parameters=False,
+                search_site_parameters=True,
             )
             if _simtel_name is not None:
                 file.write(f"{self.TAB}{_simtel_name} = {value}\n")
+        _simtel_meta = self._add_simtel_metadata("site")
+        for _simtel_name, value in _simtel_meta.items():
+            file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")
