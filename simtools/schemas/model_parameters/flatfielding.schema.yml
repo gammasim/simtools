@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for flatfielding model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: flatfielding
+developer_note: |-
+  This is of integer type in sim_telarray with allowed values 0 and 1.
+  Assigned here as type boolean, discuss if this is correct.
+description: |-
+  If enabled, the gains in pixels are adjusted to achieve the same signal
+  from the same illumination. If disabled, the gains are adjusted to
+  have equal single-p.e. amplitudes.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+data:
+  - type: boolean
+    unit: dimensionless
+    default: 1
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

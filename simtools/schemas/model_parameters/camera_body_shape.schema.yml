@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for camera_body_shape model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_body_shape
+description: |-
+  Code for the shape of the camera,
+  \begin{itemize}
+  \item[$\circ$] 0 -- circular (default);
+  \item[$\circ$] 1 or 3 -- hexagonal;
+  \item[$\circ$] 2 -- square.
+  \end{itemize}
+  This shape is used only for the estimation of the shadowing.
+short_description: Camera body shape parameter (used to account for effects of shadowing).
+data:
+  - type: uint
+    unit: dimensionless
+    default: 0
+    allowed_range:
+      min: 0
+      max: 3
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetTelescopeShadowingParameters
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

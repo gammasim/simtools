@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for camera_filter model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: camera_filter
+description: |-
+  Wavelength dependence of the camera filter transmission, independent
+  of the pixel type.  The transmission may be given for the average or
+  various incident angles.  In the latter case, the transmission is
+  applied for each photon as a function of both its wavelength and its
+  incident angle.  The efficiency factors will be applied on top of the
+  global par:camera-transmission factor, and on top of any pixel-type
+  dependent efficiency (both angular and by wavelength), according to
+  the what is listed in par:camera_config_pixel_type.
+short_description: |-
+  Wavelength dependence of the camera transmission, possibly as a function
+  of incidence angle.
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
