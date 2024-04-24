@@ -89,7 +89,7 @@ Remember you need to `docker login` to the GitHub package repository with a pers
 Note: if the docker image already exists in your system, this same image will be used to run the container. Please make sure to update the image regularly by, e.g., removing it **before** running the command above. This can be done by passing the docker id:
 
 ```bash
-docker rmi <Your docker ID>
+docker rmi <image ID>
 ```
 
 For further useful docker commands, please check [the docker documentation](https://docs.docker.com/reference/cli/docker/).
