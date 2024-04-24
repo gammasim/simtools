@@ -14,6 +14,7 @@ import yaml
 from astropy.table import Table
 
 import simtools.utils.general as gen
+import simtools.utils.names as names
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -289,6 +290,7 @@ def prepare_configuration(config, output_path, model_version=None):
     -------
     str: path to the temporary config file.
     str: configuration string.
+    str: config file model version
 
     """
 
@@ -296,6 +298,7 @@ def prepare_configuration(config, output_path, model_version=None):
         return None, "--" + list(config.keys())[0].lower()
 
     tmp_config_file = output_path / "tmp_config.yml"
+    config_file_model_version = config.get("MODEL_VERSION")
     if model_version is not None and "MODEL_VERSION" in config:
         config.update({"MODEL_VERSION": model_version})
     if "OUTPUT_PATH" in config:
@@ -308,7 +311,7 @@ def prepare_configuration(config, output_path, model_version=None):
     with open(tmp_config_file, "w", encoding="utf-8") as file:
         yaml.safe_dump(config, file, sort_keys=False)
 
-    return tmp_config_file, None
+    return tmp_config_file, None, config_file_model_version
 
 
 @pytest.mark.parametrize(
@@ -346,7 +349,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     logger.info(f"Temporary output path: {tmp_output_path}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     if "CONFIGURATION" in config:
-        config_file, config_string = prepare_configuration(
+        config_file, config_string, config_file_model_version = prepare_configuration(
             config["CONFIGURATION"],
             output_path=tmp_output_path,
             model_version=request.config.getoption("--model_version"),
@@ -354,6 +357,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     else:
         config_file = None
         config_string = None
+        config_file_model_version = None
 
     cmd = get_application_command(
         app=config.get("APPLICATION", None),
@@ -366,7 +370,16 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     assert os.system(cmd) == 0
 
     # output validation for tests with default values
-    # (no change of config from command line)
-    # if request.config.getoption("--model_version") == model_version:
-    output_status = validate_application_output(config)
+    # executed only for the model version as given in the config file
+    output_status = 0
+    if request.config.getoption("--model_version") is None:
+        output_status = validate_application_output(config)
+    elif config_file_model_version is not None:
+        _from_command_line = names.validate_model_version_name(
+            request.config.getoption("--model_version")
+        )
+        _from_config_file = names.validate_model_version_name(config_file_model_version)
+        if _from_command_line == _from_config_file:
+            output_status = validate_application_output(config)
+
     assert output_status == 0
