@@ -34,3 +34,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: corsika
+  - name: sim_telarray
