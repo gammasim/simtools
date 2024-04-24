@@ -167,6 +167,7 @@ def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version
 
     assert db._get_tagged_version(f"sandbox_{random_id}", "Released") == "2020-06-28"
     assert db._get_tagged_version(f"sandbox_{random_id}", "Latest") == "2024-02-01"
+    db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_version):
