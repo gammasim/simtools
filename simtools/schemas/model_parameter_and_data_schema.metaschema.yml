@@ -262,14 +262,6 @@ definitions:
     description: "specific type of instrument"
     enum:
       - Atmosphere
-      - ILLN
-      - ILLS
-      - LSTN
-      - LSTS
-      - MSTN
-      - MSTS
-      - SSTS
-      - SCTS
       - Observatory
       - None
     title: InstrumentTypeElement
