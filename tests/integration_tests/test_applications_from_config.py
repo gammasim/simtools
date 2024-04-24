@@ -369,4 +369,4 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     # (no change of config from command line)
     if request.config.getoption("--model_version") == model_version:
         output_status = validate_application_output(config)
-    assert output_status == 0
+        assert output_status == 0
