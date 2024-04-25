@@ -486,8 +486,8 @@ class ModelParameter:
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
-            parameters=self._parameters,
-            config_parameters=self._config_parameters,
+            parameters=self.get_simtel_parameters(parameters=self._parameters),
+            config_parameters=self.get_simtel_parameters(parameters=self._config_parameters),
         )
 
     @property
