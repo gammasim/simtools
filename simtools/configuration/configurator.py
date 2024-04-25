@@ -473,6 +473,7 @@ class Configurator:
             "db_api_pw",
             "db_api_port",
             "db_server",
+            "db_simulation_model",
             "db_simulation_model_url",
         )
         try:
