@@ -38,7 +38,6 @@ from simtools.db import db_handler
 
 
 def main():
-    _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
     config = configurator.Configurator(description="Add a new parameter to the DB.")
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="file to be added", type=str)
@@ -52,14 +51,6 @@ def main():
     )
     config.parser.add_argument(
         "--db",
-        type=str,
-        default=_db_tmp.DB_TABULATED_DATA,
-        choices=[
-            _db_tmp.DB_TABULATED_DATA,
-            _db_tmp.DB_DERIVED_VALUES,
-            "sandbox",
-        ],
-        help=("The database to insert the new values to."),
     )
     args_dict, db_config = config.initialize(db_config=True)
 
@@ -92,7 +83,7 @@ def main():
             )
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
-                db_name=db.DB_CTA_SIMULATION_MODEL,
+                db_name=db_config["db_simulation_model"],
                 telescope=par_dict["instrument"],
                 parameter=par_dict["parameter"],
                 version=par_dict["version"],
