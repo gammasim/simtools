@@ -111,7 +111,7 @@ def test_get_sim_telarray_configuration_parameters(db, model_version):
 def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version):
     logger.info("----Testing copying a whole telescope-----")
     db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         tel_to_copy="LSTN-01",
         version_to_copy=model_version,
         new_tel_name="LSTN-test",
@@ -120,7 +120,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.copy_documents(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
@@ -165,15 +165,17 @@ def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version
         latest_label="Prod26",
     )
 
-    assert db._get_tagged_version(f"sandbox_{random_id}", "Released") == "2020-06-28"
-    assert db._get_tagged_version(f"sandbox_{random_id}", "Latest") == "2024-02-01"
+    assert (
+        db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
+    )
+    assert db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
     db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
 def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         tel_to_copy="LSTN-01",
         version_to_copy=model_version,
         new_tel_name="LSTN-test",
@@ -311,7 +313,7 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
 def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         tel_to_copy="LSTN-01",
         version_to_copy="Released",
         new_tel_name="LSTN-test",
@@ -320,7 +322,7 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         collection_to_copy_to="telescopes_" + random_id,
     )
     db.copy_documents(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         collection="metadata",
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
@@ -402,7 +404,7 @@ def test_export_file_db(db, io_handler):
     output_dir = io_handler.get_output_directory(sub_dir="model", dir_type="test")
     file_name = "mirror_CTA-S-LST_v2020-04-07.dat"
     file_to_export = output_dir / file_name
-    db.export_file_db(db.DB_CTA_SIMULATION_MODEL, output_dir, file_name)
+    db.export_file_db(None, output_dir, file_name)
     assert file_to_export.exists()
 
 
@@ -434,7 +436,6 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
 
 def test_get_all_versions(db):
     all_versions = db.get_all_versions(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
         telescope_model_name="LSTN-01",
         site="North",
         parameter="camera_config_file",
@@ -445,7 +446,6 @@ def test_get_all_versions(db):
     assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
 
     all_versions = db.get_all_versions(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
         site="North",
         parameter="corsika_observation_level",
         collection_name="sites",
@@ -494,7 +494,7 @@ def test_parameter_cache_key(db):
 def test_get_tagged_version(db):
 
     with pytest.raises(ValueError):
-        db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="NotReleased")
+        db._get_tagged_version(version="NotReleased")
 
-    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Released") == "2020-06-28"
-    assert db._get_tagged_version(db.DB_CTA_SIMULATION_MODEL, version="Latest") == "2020-06-28"
+    assert db._get_tagged_version(version="Released") == "2020-06-28"
+    assert db._get_tagged_version(version="Latest") == "2020-06-28"
