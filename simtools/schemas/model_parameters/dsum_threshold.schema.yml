@@ -13,7 +13,7 @@ description: |-
   must exceed (\'>\') the threshold here before we declare the telescope
   triggered. The assigned threshold value would have to be one count lower
   than in a camera-internal trigger implementation (like MSTS) where
-  reaching (\’>=\’) the threshold is enough.
+  reaching (\'>=\') the threshold is enough.
 short_description: Amplitude level above which a digital sum leads to a telescope
   trigger.
 data:
