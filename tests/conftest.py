@@ -65,6 +65,7 @@ def mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
+            "SIMTOOLS_DB_SIMULATION_MODEL": "sim_model",
             "SIMTOOLS_DB_SIMULATION_MODEL_URL": _url,
         },
         clear=True,
@@ -145,7 +146,14 @@ def db_config():
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
-    _db_para = ("db_api_user", "db_api_pw", "db_api_port", "db_server", "db_simulation_model_url")
+    _db_para = (
+        "db_api_user",
+        "db_api_pw",
+        "db_api_port",
+        "db_server",
+        "db_simulation_model",
+        "db_simulation_model_url",
+    )
     for _para in _db_para:
         if _para not in mongo_db_config:
             mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")

@@ -201,6 +201,13 @@ class CommandLineParser(argparse.ArgumentParser):
             default="admin",
         )
         _job_group.add_argument(
+            "--db_simulation_model",
+            help="name of simulation model database",
+            type=str,
+            required=False,
+            default="Staging-CTA-Simulation-Model",
+        )
+        _job_group.add_argument(
             "--db_simulation_model_url",
             help="simulation model repository URL",
             type=str,
