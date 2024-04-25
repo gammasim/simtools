@@ -8,6 +8,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.model.calibration_model import CalibrationModel
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
@@ -135,11 +136,22 @@ def select_application(args_dict):
     return le_application
 
 
+def remove_axes_offset(telescope_model, args_dict, logger):
+    try:
+        # set to 0 to have the optical axis of the MST aligned.
+        telescope_model.remove_parameters("axes_offsets")
+    except ArithmeticError:
+        msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
+        logger.warning(msg)
+    return telescope_model
+
+
 def main():
     """
     Run the application in the command line.
     Example:
-    simtools-simulate-light-emission --telescope MST-NectarCam-D --site North
+    simtools-simulate-light-emission --telescope MSTN-design --site North
+      --illuminator ILLN-design --light_source_setup 2 --model_version prod6
     """
 
     label = Path(__file__).stem
@@ -165,15 +177,10 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-    # important for triggering with a single telescope
-    # telescope_model.remove_parameters("array_triggers")
-    # try:
-    # set to 0 to have the optical axis of the MST aligned.
-    #    telescope_model.remove_parameters("axes_offsets")
-    # except InvalidParameter:
-    #    msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
-    #    logger.warning(msg)
 
+    # important for triggering with a single telescope
+    telescope_model.remove_parameters("array_triggers")
+    telescope_model = remove_axes_offset(telescope_model, args_dict, logger)
     calibration_model = CalibrationModel(
         site=args_dict["site"],
         calibration_device_model_name=args_dict["illuminator"],
@@ -181,6 +188,22 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+
+    # TODO: Use real coordinates from telescope, here we use ILLN-01 (utm)
+    calibration_model.add_parameter("x_pos", 217592.2, is_file=False, is_applicable=True)
+    calibration_model.add_parameter("y_pos", 3184479.9, is_file=False, is_applicable=True)
+    calibration_model.add_parameter("z_pos", 2295, is_file=False, is_applicable=True)
+
+    site_model = SiteModel(
+        site=args_dict["site"],
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        label=label,
+    )
+
+    print("altitude", site_model.get_parameter_value("corsika_observation_level"))
+    print("array_coordinates", site_model.get_corsika_site_parameters())
+
     if args_dict["light_source_setup"] == 1:
         figures = []
         for distance in default_le_config["z_pos"]["default"]:
@@ -189,6 +212,7 @@ def main():
             le = SimulatorLightEmission.from_kwargs(
                 telescope_model=telescope_model,
                 calibration_model=calibration_model,
+                site_model=site_model,
                 default_le_config=le_config,
                 le_application=le_application,
                 simtel_source_path=args_dict["simtel_path"],
@@ -209,15 +233,26 @@ def main():
         )
 
     elif args_dict["light_source_setup"] == 2:
+        # TODO: here we use hardcoded coordinates, change as soon as coordinates are in DB.
+        # i.e. calibration_model.coordinate
+
+        # illuminator  coordinates
+        default_le_config["x_pos"]["real"] = 200 * u.m
+        default_le_config["y_pos"]["real"] = 200 * u.m
+        default_le_config["z_pos"]["real"] = 200 * u.m
+        print("photons_per_run", calibration_model.get_parameter_value("laser_wavelength"))
 
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
-            default_le_config=le_config,
+            site_model=site_model,
+            default_le_config=default_le_config,
             le_application=le_application,
             simtel_source_path=args_dict["simtel_path"],
             label=label,
         )
+        run_script = le.prepare_script(generate_postscript=True)
+        subprocess.run(run_script, shell=False, check=False)
 
 
 if __name__ == "__main__":
