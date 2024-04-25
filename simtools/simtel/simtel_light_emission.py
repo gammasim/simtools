@@ -31,6 +31,8 @@ class SimulatorLightEmission(SimtelRunner):
         TelescopeModel instance to define site, telescope model etc.
     calibration_model:
         CalibrationModel instance to define calibration device
+    site_model:
+        SiteModel instance to define the site specific parameters
     default_le_config: dict
         defines parameters for running the sim_telarray light emission application.
     le_application: str
@@ -52,6 +54,7 @@ class SimulatorLightEmission(SimtelRunner):
         self,
         telescope_model,
         calibration_model,
+        site_model,
         default_le_config,
         le_application,
         simtel_source_path,
@@ -70,9 +73,16 @@ class SimulatorLightEmission(SimtelRunner):
         self._simtel_source_path = simtel_source_path
 
         self._telescope_model = telescope_model
+
+        # TODO: Use real coordinates from telescope
+        # self._telescope_model.add_parameter("x_pos", 217659.6, is_file=False, is_applicable=True)
+        # self._telescope_model.add_parameter("y_pos", 3184995.1, is_file=False, is_applicable=True)
+        # self._telescope_model.add_parameter("z_pos", 2185.0, is_file=False, is_applicable=True)
+
         self.label = label if label is not None else self._telescope_model.label
 
         self._calibration_model = calibration_model
+        self._site_model = site_model
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
         try:
@@ -119,6 +129,7 @@ class SimulatorLightEmission(SimtelRunner):
             expected_args=[
                 "telescope_model",
                 "calibration_model",
+                "site_model",
                 "default_le_config",
                 "le_application",
                 "simtel_source_path",
@@ -179,15 +190,18 @@ class SimulatorLightEmission(SimtelRunner):
         command = f" rm {self.output_directory}/{self.le_application}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application}"
-        # command += f" -a {self.default_le_config['beam_shape']['default']}:"
-        # command += f"{self.default_le_config['beam_width']['default'].value}"
-        # command += f" -p {self.default_le_config['pulse_shape']['default']}:"
-        # command += f"{self.default_le_config['pulse_width']['default'].value}"
-        command += f" -n {self.photons_per_run}"
+        # command += f" -a {self._calibration_model.get_parameter_value('beam_shape').value}"
+        # command += f"{self._calibration_model.get_parameter_value('beam_width').value}"
+        # command += f" -p {self._calibration_model.get_parameter_value('pulse_shape').value}"
+        # command += f" {self._calibration_model.get_parameter_value('pulse_width').value}"
+        command += f" -n {self._calibration_model.get_parameter_value('photons_per_run').value}"
+        # command += f" -n 1e10"
+
         command += f" -x {self.default_le_config['x_pos']['default'].value}"
         command += f" -y {self.default_le_config['y_pos']['default'].value}"
         command += f" -z {self.default_le_config['z_pos']['default'].value}"
         command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
+        command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
         command += f" -A {self.output_directory}/model/"
         command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application}.iact.gz"
@@ -204,7 +218,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
         command += super()._config_option(
-            "altitude", self._telescope_model.get_parameter_value("altitude")
+            "altitude", self._site_model.get_parameter_value("corsika_observation_level")
         )
         command += super()._config_option("maximum_telescopes", "1")
         command += super()._config_option("trigger_telescopes", "1")
