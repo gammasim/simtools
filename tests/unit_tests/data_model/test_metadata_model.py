@@ -120,6 +120,16 @@ def test_resolve_references():
     assert metadata_model._resolve_references(yaml_data) == expected_result
 
 
+def test_add_array_elements():
+
+    test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
+    test_dict_added = metadata_model._add_array_elements("InstrumentTypeElement", test_dict_1)
+    assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2
+    test_dict_2 = {"data": {"InstrumentTypeElement": {"not_the_right_enum": ["LSTN", "MSTN"]}}}
+    test_dict_added_2 = metadata_model._add_array_elements("InstrumentTypeElement", test_dict_2)
+    assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
+
+
 def test_fill_defaults(caplog):
     schema = {
         "CTA": {

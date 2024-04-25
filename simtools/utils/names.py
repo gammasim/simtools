@@ -25,12 +25,28 @@ __all__ = [
 
 @lru_cache(maxsize=None)
 def load_array_elements():
+    """
+    Load array elements from reference files and keep in cache.
+
+    Returns
+    -------
+    dict
+        Array elements.
+    """
     base_path = Path(__file__).parent
     with open(base_path / "../schemas/array_elements.yml", "r", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
 
 
 def array_elements():
+    """
+    Access to array elements table
+
+    Returns
+    -------
+    dict
+        Array elements.
+    """
     return load_array_elements()
 
 
