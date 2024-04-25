@@ -21,7 +21,7 @@ description: |-
   displacements of pixels along the $z$ axis.
   A value of 3 (=2+1) has all pixels in a common plane per module and
   all of the modules (and thus all of the pixels) looking parallel to
-  the optical axis. The ‘height’ (in z) of the module is again the
+  the optical axis. The 'height' (in z) of the module is again the
   average of where individually placed pixels would be (zero mean
   displacement in module).
   An extension to the camera definition file even allows for pixels to be
