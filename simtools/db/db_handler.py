@@ -37,12 +37,12 @@ class DatabaseHandler:
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
     """
 
+    DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     #    DB_TABULATED_DATA = "CTA-Simulation-Model"
     #    DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     # DB collection with updates field names
     DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
     DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
-    DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -350,7 +350,7 @@ class DatabaseHandler:
             "version": _model_version,
         }
 
-        self._logger.debug(f"Trying the following query: {query}")
+        self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
         if only_applicable:
             query["applicable"] = True
         if collection.count_documents(query) < 1:
@@ -862,10 +862,13 @@ class DatabaseHandler:
             )
 
         query_update = {"$set": {field: new_value}}
-
         collection.update_one(query, query_update)
 
-        self._reset_parameter_cache(site, telescope, _model_version)
+        self._reset_parameter_cache(
+            site=site if site is not None else names.get_site_from_telescope_name(telescope),
+            telescope=telescope,
+            model_version=_model_version,
+        )
 
     def add_new_parameter(
         self,
@@ -971,6 +974,36 @@ class DatabaseHandler:
             return self._get_tagged_version(db_name, model_version)
 
         return model_version
+
+    def add_tagged_version(
+        self, db_name, released_version, released_label, latest_version, latest_label
+    ):
+        """
+        Set the tag of the "Released" or "Latest" version of the MC Model.
+
+        Parameters
+        ----------
+        db_name: str
+            the name of the DB
+        released_version: str
+            The version name to set as "Released"
+        released_label: str
+            The released version name as label.
+        latest_version: str
+            The version name to set as "Latest"
+        latest_label: str
+            The latest version name as label.
+
+        """
+
+        collection = DatabaseHandler.db_client[db_name]["metadata"]
+        db_entry = {}
+        db_entry["Entry"] = "Simulation-Model-Tags"
+        db_entry["Tags"] = {
+            "Released": {"Value": released_version, "Label": released_label},
+            "Latest": {"Value": latest_version, "Label": latest_label},
+        }
+        collection.insert_one(db_entry)
 
     @staticmethod
     def _get_tagged_version(db_name, version="Released"):
@@ -1212,6 +1245,7 @@ class DatabaseHandler:
         Reset the cache for the parameters.
 
         """
+        self._logger.debug(f"Resetting cache for {site} {telescope} {model_version}")
         _cache_key = self._parameter_cache_key(site, telescope, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
