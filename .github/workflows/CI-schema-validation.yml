@@ -30,6 +30,7 @@ jobs:
 
       - name: Model parameter schema validation
         run: |
+          pip install -e .
           for file in simtools/schemas/model_parameters/*.yml; do
             echo "Testing schema $file"
             python simtools/applications/validate_file_using_schema.py \
