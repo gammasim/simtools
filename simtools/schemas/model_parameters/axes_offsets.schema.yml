@@ -1,0 +1,53 @@
+%YAML 1.2
+---
+title: Schema for axes_offsets model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: axes_offsets
+description: |-
+  Geometric offsets to be used in case that the azimuth, altitude, and
+  optical axes do not intersect at the reference point (the center of
+  the fiducial sphere in CORSIKA simulations). If both
+  values are non-zero but equal, the optical axis coincides with the
+  azimuth axis for vertical pointing.
+short_description: |-
+  Geometric offsets to be used in case that the azimuth, altitude,
+  and optical axes do not intersect at the reference point.
+data:
+  - type: double
+    unit: cm
+    default: 0.
+    description: |-
+      Horizontal offset between the (vertical) azimuth axis and the
+      (horizontal) altitude rotation axis. A positive value corresponds
+      to an altitude axis towards the reflector. Altitude axis is on
+      the optical axis, if the second parameter is zero.
+  - type: double
+    unit: cm
+    default: 0.
+    description: |-
+      Displacement perpendicular to the optical axis and the altitude
+      axis of the altitude rotation axis w.r.t to the reflector.
+      If the altitude axis is on the optical axis, the second parameter
+      is zero.
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

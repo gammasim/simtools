@@ -1,0 +1,43 @@
+%YAML 1.2
+---
+title: Schema for fadc_max_signal model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_max_signal
+description: |-
+  Maximum value of digitized signal per sample
+  (for high-gain channel for dual-gain readout).
+  For a typical 12-bit ADC this would be 4095.
+short_description: Maximum value of digitized signal per sample.
+data:
+  - type: uint
+    description: |-
+      Maximum FADC signal
+      (for high-gain channel in case of dual-readout chain).
+    unit: count
+    default: 0
+    allowed_range:
+      min: 0
+      max: 65535
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+    - ValidateCameraLinearity
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

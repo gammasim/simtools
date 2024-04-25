@@ -1,0 +1,43 @@
+%YAML 1.2
+---
+title: Schema for lightguide_efficiency_vs_wavelength model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/data.metaschema.yml
+meta_schema_version: 0.1.0
+name: lightguide_efficiency_vs_wavelength
+developer_note: |-
+  The extra funnel efficiency table is interpreted such that
+  efficiency factors are not double-counted on top of that in
+  the angle-dependence table (normalized to yield no extra
+  correction for 400 nm wavelength at the expected average
+  incidence angle).
+  This is not interchangeable with the window filter transmission.
+  Part of sim_telarray camera_config_file (parameter PixType).
+  To be replaced by a data table.
+description: Lightguide efficiency for on-axis photons vs wavelength.
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetLightGuideEfficiency
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
