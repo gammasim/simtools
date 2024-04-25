@@ -11,7 +11,7 @@ developer_note: |-
   Should be discussed further if this is the right place.
 description: |-
   Due to asymmetric image aberrations, in particular for single-reflector
-  telescope, segmented or not, the inverse image ‘plate scale’ or, more
+  telescope, segmented or not, the inverse image 'plate scale' or, more
   precisely, the ratio of off-center distance in the focal plane
   (projection for curved focal surface) to the tangent of the off-axis
   angle, does not match the nominal focal plane very well. This effective
