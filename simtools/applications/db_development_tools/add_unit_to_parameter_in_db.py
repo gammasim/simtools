@@ -35,14 +35,13 @@ def main():
     for site in ["North", "South"]:
         for par_now, unit_now in zip(pars_to_update, units):
             all_versions = db.get_all_versions(
-                db_name=db.DB_CTA_SIMULATION_MODEL,
                 site=site,
                 parameter=par_now,
                 collection_name="sites",
             )
             for version_now in all_versions:
                 db.update_parameter_field(
-                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    db_name=None,
                     site=site,
                     version=version_now,
                     parameter=par_now,
