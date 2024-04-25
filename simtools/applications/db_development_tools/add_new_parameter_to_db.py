@@ -51,6 +51,7 @@ def main():
             )
             for version_now in all_versions:
                 db.add_new_parameter(
+                    db_name=db_config["db_simulation_model"],
                     telescope=telescope_now,
                     parameter=par_now,
                     version=version_now,
@@ -61,6 +62,7 @@ def main():
                     file_prefix="./",
                 )
                 pars = db.read_mongo_db(
+                    db_name=db_config["db_simulation_model"],
                     telescope_model_name=telescope_now,
                     model_version=version_now,
                     run_location="./",
