@@ -92,7 +92,7 @@ def main():
             )
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
-                db_name=db.DB_CTA_SIMULATION_MODEL,
+                db_name=db_config["db_simulation_model"],
                 telescope=par_dict["instrument"],
                 parameter=par_dict["parameter"],
                 version=par_dict["version"],
