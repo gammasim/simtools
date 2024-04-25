@@ -256,7 +256,6 @@ class SimtelConfigWriter:
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
         for par, value in _site_parameters.items():
-            print("FFFF", par)
             _simtel_name = names.get_simulation_software_name_from_parameter_name(
                 par,
                 simulation_software="sim_telarray",
