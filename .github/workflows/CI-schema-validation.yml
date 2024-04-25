@@ -37,3 +37,4 @@ jobs:
             --schema model_parameter_and_data_schema.metaschema.yml \
             --data_type "schema" \
             --log_level DEBUG
+          done
