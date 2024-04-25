@@ -1,6 +1,8 @@
 FROM almalinux as build_image
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
+ARG BUILD_OPT="prod6-sc"
+ARG HADRONIC_MODEL="qgs2"
 
 RUN yum update -y && yum install -y \
     csh \
@@ -16,7 +18,7 @@ RUN mkdir sim_telarray
 COPY corsika7.7_simtelarray.tar.gz sim_telarray
 RUN cd sim_telarray && \
     tar -xvf corsika7.7_simtelarray.tar.gz && \
-    ./build_all prod6-sc qgs2 gsl
+    ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
 RUN find sim_telarray/ -name "*.tar.gz" -exec rm -f {} \;
 
