@@ -383,9 +383,12 @@ def get_simulation_software_name_from_parameter_name(
         _logger.error(f"Parameter {par_name} without schema definition")
         raise err
 
-    for software in _parameter.get("simulation_software", []):
-        if software.get("name") == simulation_software:
-            return software.get("internal_parameter_name", par_name)
+    try:
+        for software in _parameter.get("simulation_software", []):
+            if software.get("name") == simulation_software:
+                return software.get("internal_parameter_name", par_name)
+    except TypeError:  # catches cases for which 'simulation_software' is None
+        pass
     return None
 
 
