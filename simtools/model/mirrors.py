@@ -1,5 +1,6 @@
 import logging
 
+import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
@@ -59,10 +60,9 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-        # Getting mirror parameters from mirror list.
 
-        self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
+        self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
 
         self.number_of_mirrors = np.shape(self.mirror_table)[0]
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
@@ -123,6 +123,7 @@ class Mirrors:
     def _read_mirror_list_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
+        Allow to read mirror lists with different number of columns.
 
         Raises
         ------
@@ -130,27 +131,45 @@ class Mirrors:
             If number of mirrors is 0.
         """
 
-        self.mirror_table = Table.read(
-            self._mirror_list_file,
-            format="ascii.no_header",
-            names=[
-                "mirror_x",
-                "mirror_y",
-                "mirror_diameter",
-                "focal_length",
-                "shape_type",
-                "mirror_z",
-                "sep",
-                "mirror_panel_id",
-            ],
-            units=["cm", "cm", "cm", "cm", None, "cm", None, None],
-        )
-        self.mirror_table["mirror_panel_id"] = np.array(
-            [
-                int("".join(filter(str.isdigit, string)))
-                for string in self.mirror_table["mirror_panel_id"]
-            ]
-        )
+        self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
+
+        try:
+            self.mirror_table = Table.read(
+                self._mirror_list_file,
+                format="ascii.no_header",
+                names=[
+                    "mirror_x",
+                    "mirror_y",
+                    "mirror_diameter",
+                    "focal_length",
+                    "shape_type",
+                    "mirror_z",
+                    "sep",
+                    "mirror_panel_id",
+                ],
+                units=["cm", "cm", "cm", "cm", None, "cm", None, None],
+            )
+            self.mirror_table["mirror_panel_id"] = np.array(
+                [
+                    int("".join(filter(str.isdigit, string)))
+                    for string in self.mirror_table["mirror_panel_id"]
+                ]
+            )
+        except astropy.io.ascii.core.InconsistentTableError:
+            self._logger.debug("Try and read mirror list with low number of columns")
+            self.mirror_table = Table.read(
+                self._mirror_list_file,
+                format="ascii.no_header",
+                names=[
+                    "mirror_x",
+                    "mirror_y",
+                    "mirror_diameter",
+                    "focal_length",
+                    "shape_type",
+                ],
+                units=["cm", "cm", "cm", "cm", None],
+            )
+            self.mirror_table["mirror_panel_id"] = np.arange(len(self.mirror_table["mirror_x"]))
 
         self.shape_type = self.mirror_table["shape_type"][0]
         self.mirror_diameter = u.Quantity(
