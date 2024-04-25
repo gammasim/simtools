@@ -139,7 +139,7 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
     logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
     query = {"instrument": "LSTN-test"}
     db.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
-    query = {"Entry": "Simulation-Model-Tags"}
+    query = {"Entry": "Simulation-Model-Tags", "version": model_version}
     db.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
 
     # After deleting the copied telescope
