@@ -381,43 +381,6 @@ class ModelParameter:
                 _simtel_parameter_value[_par_name] = parameters[key].get("value")
         return dict(sorted(_simtel_parameter_value.items()))
 
-    def add_parameter(self, par_name, value, is_file=False, is_applicable=True):
-        """
-        Add a new parameters to the model. This function does not modify the DB, it affects only \
-        the current instance.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-        value:
-            Value of the parameter.
-        is_file: bool
-            Indicates whether the new parameter is a file or not.
-        is_applicable: bool
-            Indicates whether the new parameter is applicable or not.
-
-        Raises
-        ------
-        InvalidModelParameter
-            If an existing parameter is tried to be added.
-        """
-        if par_name in self._parameters:
-            msg = f"Parameter {par_name} already in the model, use change_parameter instead"
-            self._logger.error(msg)
-            raise InvalidModelParameter(msg)
-
-        self._logger.info(f"Adding {par_name}={value} to the model")
-        self._parameters[par_name] = {}
-        self._parameters[par_name]["value"] = value
-        self._parameters[par_name]["type"] = type(value)
-        self._parameters[par_name]["applicable"] = is_applicable
-        self._parameters[par_name]["file"] = is_file
-
-        self._is_config_file_up_to_date = False
-        if is_file:
-            self._is_exported_model_files_up_to_date = False
-
     def change_parameter(self, par_name, value):
         """
         Change the value of an existing parameter. This function does not modify the \
@@ -436,7 +399,7 @@ class ModelParameter:
             If the parameter to be changed does not exist in this model.
         """
         if par_name not in self._parameters:
-            msg = f"Parameter {par_name} not in the model, use add_parameters instead"
+            msg = f"Parameter {par_name} not in the model"
             self._logger.error(msg)
             raise InvalidModelParameter(msg)
 
@@ -481,8 +444,6 @@ class ModelParameter:
         for par, value in kwargs.items():
             if par in self._parameters:
                 self.change_parameter(par, value)
-            else:
-                self.add_parameter(par, value)
 
         self._is_config_file_up_to_date = False
 
