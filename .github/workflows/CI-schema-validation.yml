@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  linting:
+  schema-validation:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,13 +30,10 @@ jobs:
 
       - name: Model parameter schema validation
         run: |
-          find "simtools/schemas/model_parameters/" -name '*.json' > tmp
-          while IFS= read -r file; do
-            echo "Testing parameter $file"
-            schema_file="./schema/$(basename "$file" .json).schema.yml"
+          for file in simtools/schemas/model_parameters/*.yml; do
+            echo "Testing schema $file"
             python simtools/applications/validate_file_using_schema.py \
-              --file_name "$file" \
-              --schema "$schema_file" \
-              --data_type "model_parameter" \
-              --log_level DEBUG
-          done < tmp
+            --file_name "$file" \
+            --schema model_parameter_and_data_schema.metaschema.yml \
+            --data_type "schema" \
+            --log_level DEBUG
