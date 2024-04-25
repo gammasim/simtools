@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+gaf380f0</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g3785ea6</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=1515e577"></script>
+    <script src="../../_static/documentation_options.js?v=34e0c426"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+gaf380f0</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g3785ea6</p>
 
 
 
@@ -87,6 +87,10 @@
   <h1>Source code for utils.names</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -105,39 +109,21 @@
     <span class="s2">&quot;validate_telescope_name&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
-<span class="c1"># Telescopes and other array elements</span>
-<span class="n">array_element_names</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="c1"># CTAO telescopes</span>
-    <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;LSTS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;MSTS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;SSTS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;SCTS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="c1"># calibration devices</span>
-    <span class="s2">&quot;ILLN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;RLDN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;STPN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;MSPN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;CEIN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;WSTN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;ASCN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;DUSN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;LISN&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;ILLS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;RLDS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;STPS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;MSPS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;CEIS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;WSTS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;ASCS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;DUSS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;LISS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;CTAO&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">},</span>
-    <span class="c1"># other telescopes</span>
-    <span class="s2">&quot;MAGIC&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;MAGIC&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;VERITAS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;North&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;VERITAS&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;HESS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="s2">&quot;South&quot;</span><span class="p">,</span> <span class="s2">&quot;observatory&quot;</span><span class="p">:</span> <span class="s2">&quot;HESS&quot;</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">},</span>
-<span class="p">}</span>
+
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">array_elements</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load array elements from reference files and keep in cache.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Array elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;../schemas/array_elements.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
 
 <span class="n">site_names</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;South&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;paranal&quot;</span><span class="p">,</span> <span class="s2">&quot;south&quot;</span><span class="p">,</span> <span class="s2">&quot;cta-south&quot;</span><span class="p">,</span> <span class="s2">&quot;ctao-south&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">],</span>
@@ -415,9 +401,7 @@
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">_validate_name</span><span class="p">(</span><span class="n">_tel_type</span><span class="p">,</span> <span class="n">array_element_names</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">validate_telescope_id_name</span><span class="p">(</span><span class="n">_tel_id</span><span class="p">)</span>
-    <span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">_tel_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">validate_telescope_id_name</span><span class="p">(</span><span class="n">_tel_id</span><span class="p">)</span></div>
 
 
 
@@ -460,7 +444,7 @@
 <span class="sd">    str</span>
 <span class="sd">        Telescope type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_element_names</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
 
 
 
@@ -482,7 +466,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">key</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">array_element_names</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">array_element_class</span>
         <span class="ow">and</span> <span class="p">(</span><span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span><span class="p">)</span>
         <span class="ow">and</span> <span class="p">(</span><span class="n">observatory</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;observatory&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">observatory</span><span class="p">)</span>
@@ -505,7 +489,7 @@
 <span class="sd">    str</span>
 <span class="sd">        Site name (South or North).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">array_element_names</span><span class="p">[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
 
 
 
@@ -524,7 +508,7 @@
 <span class="sd">        Collection name .</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="n">array_element_names</span><span class="p">[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">get_simtel_name_from_parameter_name</span><span class="p">(</span>
