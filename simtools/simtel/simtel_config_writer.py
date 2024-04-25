@@ -74,11 +74,7 @@ class SimtelConfigWriter:
             if config_parameters is not None:
                 parameters.update(config_parameters)
 
-            for par, value in parameters.items():
-                _simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    par,
-                    simulation_software="sim_telarray",
-                )
+            for _simtel_name, value in parameters.items():
                 if _simtel_name is not None:
                     value = "none" if value is None else value  # simtel requires 'none'
                     if isinstance(value, bool):

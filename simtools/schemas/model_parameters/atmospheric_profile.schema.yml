@@ -30,4 +30,3 @@ source:
   - Calibration
 simulation_software:
   - name: corsika
-  - name: sim_telarray
