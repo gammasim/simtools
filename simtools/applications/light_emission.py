@@ -136,16 +136,6 @@ def select_application(args_dict):
     return le_application
 
 
-def remove_axes_offset(telescope_model, args_dict, logger):
-    try:
-        # set to 0 to have the optical axis of the MST aligned.
-        telescope_model.remove_parameters("axes_offsets")
-    except ArithmeticError:
-        msg = f"axes offset for telescope {args_dict['telescope']} does not exist"
-        logger.warning(msg)
-    return telescope_model
-
-
 def main():
     """
     Run the application in the command line.
@@ -178,9 +168,6 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-
-    # currently remove axes_offset: not working anymore, remove
-    telescope_model = remove_axes_offset(telescope_model, args_dict, logger)
 
     # Create calibration model
     calibration_model = CalibrationModel(

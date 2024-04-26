@@ -471,33 +471,6 @@ class ModelParameter:
 
         self._is_config_file_up_to_date = False
 
-    def remove_parameters(self, *par_names):
-        """
-        Remove a set of parameters from the model.
-
-        Parameters
-        ----------
-        *par_names
-            Each parameter to be removed has to be passed as par_names.
-
-        Raises
-        ------
-        InvalidModelParameter
-            If at least one of the parameter to be removed is not in this model.
-        """
-        for par_name in par_names:
-            if par_name in self._parameters:
-                self._logger.debug(f"Removing parameter {par_name}")
-                del self._parameters[par_name]
-
-            else:
-                msg = f"Could not remove parameter {par_name} because it does not exist"
-                self._logger.error(msg)
-                raise InvalidModelParameter(msg)
-
-        self._is_config_file_up_to_date = False
-        self._is_exported_model_files_up_to_date = False
-
     def change_multiple_parameters(self, **kwargs):
         """
         Change the value of multiple existing parameters in the model. This function does not \
