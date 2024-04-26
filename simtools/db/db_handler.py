@@ -1166,7 +1166,7 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name]["telescopes"]
+        collection = DatabaseHandler.db_client[db_name][collection_name]
 
         query = {
             "version": self._convert_version_to_tagged(
