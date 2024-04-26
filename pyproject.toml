@@ -59,7 +59,7 @@ dependencies = [
 "doc" = [
   "numpydoc",
   "sphinx",
-  "sphinx_rtd_theme",
+  "sphinx-book-theme",
 ]
 "tests" = [
   "pytest",
