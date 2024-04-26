@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for discriminator_fall_time model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: discriminator_fall_time
+description: |-
+  Fall time of discriminator/comparator output after the logical output
+  is reset to false.
+short_description: |-
+  Fall time of the discriminator output after the logical output is
+  reset to false.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+data:
+  - type: double
+    unit: ns
+    default: 1.0
+    condition: default_trigger==Majority
+    allowed_range:
+      min: 0.0
+      max: 100.0
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

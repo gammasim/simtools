@@ -1,0 +1,51 @@
+%YAML 1.2
+---
+title: Schema for fadc_lg_compensate_pedestal model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_lg_compensate_pedestal
+description: |-
+  Emulate FADC pedestal compensation (as e.g., done in camera firmware using FPGAs)
+  to homogenise significant pixel-to-pixel variations of raw pedestals values
+  (for low-gain channel for dual-gain readout).
+  The resulting values are still unsigned integers and no rescaling takes place
+  (pure integer pedestal offset). No compensation takes place for the default value
+  of "-1".  Values greater or equal to zero indicate the compensated pedestal value,
+  rounded to the nearest integer. For DC-coupled sensors, the compensation includes
+  any NSB pedestal shift. For cameras with multiple interlaced FADCs per channel and,
+  therefore, multiple pedestal values, the same integer compensation gets applied to
+  all pedestals of a channel. While the normal pedestal reported in the data includes
+  the compensation, the individual compensations applied for each pixel are reported
+  separately. If individual FADC values would fall below zero through this compensation,
+  they are clipped at zero.
+short_description: Emulation of FADC pedestal compensation.
+data:
+  - type: int
+    unit: dimensionless
+    default: -1
+    condition: num_gains==2
+    allowed_range:
+      min: -1
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+    - ValidatePedestalEvents
+    - ValidateTelescopeSimulationModel
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

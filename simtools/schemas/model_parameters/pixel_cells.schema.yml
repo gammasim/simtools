@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for pixel_cells model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: pixel_cells
+description: |-
+  Modeling of pixel saturation. Value corresponds to the
+  limited number of cells in a pixel (of SiPM type) which each can only
+  fire once during the typical arrival time spread of Cherenkov photons.
+  The presence of a non-zero value does not imply any microscopic model
+  of the pixel structure.
+data:
+  - type: int
+    unit: dimensionless
+    default: 0
+    allowed_range:
+      min: 0
+instrument:
+  class: Camera
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

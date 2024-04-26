@@ -81,12 +81,6 @@ def main():
     config.parser.add_argument(
         "--db",
         type=str,
-        default=_db_tmp.DB_TABULATED_DATA,
-        choices=[
-            _db_tmp.DB_TABULATED_DATA,
-            _db_tmp.DB_DERIVED_VALUES,
-            "sandbox",
-        ],
         help=("The database to insert the files to."),
     )
     args_dict, db_config = config.initialize(paths=False, db_config=True)

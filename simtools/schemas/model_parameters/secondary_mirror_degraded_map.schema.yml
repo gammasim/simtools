@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for secondary_mirror_degraded_map model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: |-
+  To be replaced by a data table. Accepted range is 0 to 1
+name: secondary_mirror_degraded_map
+description: |-
+  Position-dependent map of degradation factors for the secondary mirror.
+  This degradation gets applied on top of secondary_mirror_degraded_reflection.
+  Note that the impact of it on the nightsky background is not automatically
+  accounted for and must be evaluated separately and included in the
+  configured NSB pixel p.e. rates. It is recommended to use a map with an
+  average efficiency of 1.0 and use secondary_mirror_degraded_reflection
+  for the overall degradation.  Tables with equidistant spacing in both x and
+  y are highly recommended because the interpolation is faster.
+short_description: |-
+  Position-dependent map of degradation factors for the secondary mirror.
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+    - ValidateTelescopeShadowing
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: secondary_degraded_map
