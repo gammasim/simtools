@@ -1,0 +1,44 @@
+%YAML 1.2
+---
+title: Schema for dsum_shaping model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: dsum_shaping
+description: |-
+  Shaping (convolution) parameters for a digitized detector signal
+  (time step of ADC time slices) to the resulting signal from which a
+  digital-sum trigger decision may be derived. The values are a digital
+  signal processing kernel.  For example, a file containing
+  $\left( \begin{smallmatrix} 0 & 1\\ 1&-1 \end{smallmatrix} \right)$
+  would be a simple differencing filter,
+  $b[n] = a[n] - a[n-1]$.
+  The first column is in ADC bins behind current interval, the second
+  value is the factor applied to the corresponding ADC value.
+short_description: |-
+  Shaping (convolution) parameters for a digitized detector signal
+  to the resulting signal from which a digital-sum trigger decision may be
+  derived.
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: dsum_shaping_file

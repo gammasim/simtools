@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for mirror panel 2F measurements
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_panel_2f_measurement
+description: |-
+  Mirror panel 2F measurements determining
+  panel radius and panel PSF.
+data:
+  - type: data_table
+    table_columns:
+      - name: mirror_panel_id
+        description: |-
+          Mirror panel ID.
+        required: true
+        unit: dimensionless
+        type: string
+      - name: mirror_panel_radius
+        description: |-
+          Mirror panel radius.
+        required: true
+        unit: cm
+        type: double
+      - name: psf
+        description: |-
+          Spot size of mirror panel PSF at nominal distance.
+        required: true
+        unit: cm
+        type: double
+      - name: psf_opt
+        description: |-
+          Spot size of mirror panel PSF
+          (best value, not at nominal distance).
+        required: false
+        unit: cm
+        type: double

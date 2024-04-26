@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for fadc_dev_pedestal model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_dev_pedestal
+developer_note: |-
+  Not applicable for CTA telescopes.
+  TODO - decide if we should list parameters which are not relevant
+  for CTA (don't think we should).
+description: |-
+  Deviation of (F)ADCs pedestals in a single channel.
+  (for high-gain channel in case of dual-readout chain).
+data:
+  - type: double
+    description: |-
+      Deviation of (F)ADCs pedestals
+      (for high-gain channel in case of dual-readout chain).
+    unit: dimensionless
+    default: 0.
+    allowed_range:
+      min: 0.0
+instrument:
+  class: Camera
+  type:
+    - None
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

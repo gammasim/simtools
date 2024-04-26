@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for asum_offset model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: asum_offset
+description: Offset in time where shaping convolution is done.
+data:
+  - type: double
+    default: 0.0
+    unit: ns
+    allowed_range:
+      min: 0.0
+    condition: default_trigger==AnalogSum
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

@@ -1,0 +1,43 @@
+%YAML 1.2
+---
+title: Schema for qe_variation model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: qe_variation
+developer_note: |-
+  DISCUSS - rename to make clear this parameter is used for all
+  photodetectors (not PMTs only).
+description: |-
+  Variation of quantum or photon detection efficiency
+  (Gaussian r.m.s. spread of random fluctuations) between
+  photo detectors in a given camera. Given in fraction of
+  the average quantum or photon detection efficiency; the variation
+  is applied independent of the wavelength.
+data:
+  - type: double
+    unit: dimensionless
+    default: 0.035
+    allowed_range:
+      min: 0.0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+    - ValidateCameraGainsAndEfficiency
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
