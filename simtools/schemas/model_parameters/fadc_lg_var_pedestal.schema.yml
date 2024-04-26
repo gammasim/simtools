@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for fadc_lg_var_pedestal model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_lg_var_pedestal
+description: |-
+  Channel-to-channel (or pixel-to-pixel) variation of the pedestal per FADC
+  time slice (low-gain channels). Value is the r.m.s. of the randomly chosen pedestal values
+  around the FADC pedestal.
+data:
+  - type: double
+    description: |-
+      Pedestal variations
+      (for low-gain channel in case of dual-readout chain).
+    condition: num_gains==2
+    unit: count
+    default: -1.
+    allowed_range:
+      min: -2.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidatePedestalEvents
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

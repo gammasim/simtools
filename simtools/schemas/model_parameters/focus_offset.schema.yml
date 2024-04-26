@@ -1,0 +1,66 @@
+%YAML 1.2
+---
+title: Schema for focus_offset model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: focus_offset
+description: |-
+  Distance of the starlight focus from the camera pixels (light guides)
+  entry. In telescopes without dynamic focusing capability (either
+  through mirror alignment and camera positioning) this is best set
+  such that starlight gets focused onto the camera lid while showers
+  are focused onto the pixel entry.
+  Zenith angle dependence of the focus offset can be applied and includes
+  the constant value $\Delta_0$ and terms depending on cosine and sine
+  of the zenith angle. The total focus offset is
+  $\Delta = \Delta_0 + \Delta_c + \Delta_s$.
+  Set to zero for all 2M telescope types, as it is already included in
+  the first of the par:focal-surface-parameters values, assuming the
+  design value of that is for a light source at a typical shower maximum
+  distance.
+short_description: |-
+  Distance of the starlight focus from the camera pixels (light guides)
+  entry.
+data:
+  - type: double
+    name: focus_offset
+    description: Constant focus offset $\Delta_0$.
+    unit: cm
+    default: 2.8
+  - type: double
+    description: Zenith angle $\Delta_0$ at which minimum is reached.
+    unit: deg
+    default: 28.0
+  - type: double
+    description: |-
+      Scaling term $k_c$ in
+      $\Delta_c = (\cos(\theta)-\cos(\theta_0)) / k_c$.
+    unit: dimensionless
+    default: 0.0
+  - type: double
+    description: |-
+      Scaling term $k_s$ in
+      $\Delta_s = (\sin(\theta)-\sin(\theta_0)) / k_s$.
+    unit: dimensionless
+    default: 0.0
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateOpticalPSF
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

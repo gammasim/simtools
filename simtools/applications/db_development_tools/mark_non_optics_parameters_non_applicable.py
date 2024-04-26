@@ -78,7 +78,7 @@ def main():
         for site in ["North", "South"]:
             for par_now in non_optic_parameters:
                 db.update_parameter_field(
-                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    db_name=db_config["db_simulation_model"],
                     telescope=f"{site}-MST-Structure-D",
                     version=version_now,
                     parameter=par_now,
@@ -86,7 +86,7 @@ def main():
                     new_value=False,
                 )
             pars = db.read_mongo_db(
-                db_name=db.DB_CTA_SIMULATION_MODEL,
+                db_name=db_config["db_simulation_model"],
                 telescope_model_name=f"{site}-MST-Structure-D",
                 model_version=version_now,
                 run_location="",
