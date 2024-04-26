@@ -190,46 +190,26 @@ class SimulatorLightEmission(SimtelRunner):
 
     def calibration_pointing_direction(self):
         """
-        Calculate the pointing vector from the calibration device to the telescope.
-
-        This function calculates the pointing vector that represents the direction from the
-        calibration device towards the telescope based on their respective positions.
+        Calculate the pointing of the calibration device towards the telescope.
 
         Returns:
-        numpy.ndarray:
-            A 1D NumPy array representing the pointing vector from the calibration
-            device to the telescope. The vector is normalized, meaning its length is 1, and it
-            points from the calibration device towards the telescope.
-
-        Raises:
-        ValueError:
-            If the dimensions of the calibration and telescope positions are not compatible or if
-            any position parameter is missing in either the calibration or telescope models.
+        list: The pointing vector from the calibration device to the telescope.
         """
 
-        # TODO: add the transformations from telescope position to the actual mirror centers!
-
-        # Get the position of the calibration device
         x_cal = self._calibration_model.get_parameter_value("x_pos")
         y_cal = self._calibration_model.get_parameter_value("y_pos")
         z_cal = self._calibration_model.get_parameter_value("z_pos")
+        cal_vect = np.array([x_cal, y_cal, z_cal])
 
-        # Get the position of the telescope
         x_tel = self._telescope_model.get_parameter_value("x_pos")
         y_tel = self._telescope_model.get_parameter_value("y_pos")
         z_tel = self._telescope_model.get_parameter_value("z_pos")
-
-        # Create NumPy arrays for the positions
-        cal_vect = np.array([x_cal, y_cal, z_cal])
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
-        # Calculate the direction vector from calibration device to telescope
         direction_vector = cal_vect - tel_vect
-
-        # Normalize the direction vector to obtain the pointing vector
         pointing_vector = direction_vector / np.linalg.norm(direction_vector)
 
-        return pointing_vector
+        return pointing_vector.tolist()
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
         command = f" rm {self.output_directory}/{self.le_application}.simtel.gz\n"
@@ -245,7 +225,10 @@ class SimulatorLightEmission(SimtelRunner):
         command += f" -x {self.default_le_config['x_pos']['default'].value}"
         command += f" -y {self.default_le_config['y_pos']['default'].value}"
         command += f" -z {self.default_le_config['z_pos']['default'].value}"
+
         command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
+        # command += f" -d {','.join(map(str, calibration_pointing_direction())}"
+        #
         command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
         command += f" -A {self.output_directory}/model/"
 
