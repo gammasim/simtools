@@ -42,6 +42,6 @@ def test_handlers(io_handler):
     tel_handler = leg_h.TelescopeHandler()
     assert len(tel_handler.colors_dict) == len(
         names.get_list_of_telescope_types(
-            array_element_class="telescope", site=None, observatory=None
+            array_element_class="telescopes", site=None, observatory=None
         )
     )

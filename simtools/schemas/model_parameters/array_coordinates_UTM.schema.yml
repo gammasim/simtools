@@ -1,0 +1,77 @@
+%YAML 1.2
+---
+title: Schema for array_coordinates_utm input data
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: array_coordinates_utm
+description: |-
+  Array element positions (e.g., telescope positions) in UTM coordinates.
+developer_note: |-
+  Use NaN for missing values.
+data:
+  - type: data_table
+    table_columns:
+      - name: asset_code
+        description: |-
+          Asset code of the array element.
+        type: string
+        required: true
+        unit: dimensionless
+      - name: sequence_number
+        description: |-
+          Sequence number of the array element.
+        type: string
+        required: true
+        unit: dimensionless
+      - name: utm_east
+        description: |-
+          UTM East coordinate of the array element.
+        type: double
+        required: true
+        unit: m
+        input_processing:
+          - allow_nan
+      - name: utm_north
+        description: |-
+          UTM North coordinate of the array element.
+        type: double
+        required: true
+        unit: m
+        input_processing:
+          - allow_nan
+      - name: altitude
+        description: |-
+          Altitude of the array element.
+        required: true
+        type: double
+        unit: m
+        allowed_range:
+          min: 0.
+        input_processing:
+          - allow_nan
+      - name: geo_code
+        description: |-
+          Geographic code of the array element.
+        type: string
+        required: false
+        unit: dimensionless
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: corsika

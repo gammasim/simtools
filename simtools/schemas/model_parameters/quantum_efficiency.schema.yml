@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for quantum_efficiency model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: quantum_efficiency
+description: |-
+  Quantum or photon detection efficiency
+  averaged over all pixels per camera.
+  Random pixel-to-pixel variations are calculated using
+  the qe_variation parameter. Pixel-to-pixel differences
+  in detection efficiency using scaling factors can be
+  specified in the camera_config_file.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'no_such_qe.dat'
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+    - ValidateCameraGainsAndEfficiency
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

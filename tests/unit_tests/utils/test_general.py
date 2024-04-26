@@ -11,7 +11,7 @@ from unittest.mock import patch
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.io.misc import yaml
+import yaml
 
 import simtools.utils.general as gen
 from simtools.utils.general import (
@@ -52,10 +52,14 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
         assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
-    with open(tmp_test_directory / "test_file.list", "w", encoding="utf-8") as output:
-        output.write("test_line_1\n test_line_2\n")
-    _lines = gen.collect_data_from_file_or_dict(tmp_test_directory / "test_file.list", None)
+    _lines = gen.collect_data_from_file_or_dict("tests/resources/test_file.list", None)
     assert len(_lines) == 2
+
+    # astropy-type yaml file
+    _file = "tests/resources/corsikaConfigTest_astropy_headers.yml"
+    _dict = gen.collect_data_from_file_or_dict(_file, None)
+    assert isinstance(_dict, dict)
+    assert len(_dict) > 0
 
 
 def test_collect_dict_from_url(io_handler) -> None:
@@ -74,6 +78,20 @@ def test_collect_dict_from_url(io_handler) -> None:
     _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
     with pytest.raises(gen.InvalidConfigData):
         gen.collect_data_from_http(_url + _file)
+
+    # yaml file with astropy header
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url_dict = gen.collect_data_from_http(
+        _url + "tests/resources/corsikaConfigTest_astropy_headers.yml"
+    )
+    assert isinstance(_url_dict, dict)
+    assert len(_dict) > 0
+
+    # simple list
+    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url_list = gen.collect_data_from_http(_url + "tests/resources/test_file.list")
+    assert isinstance(_url_list, list)
+    assert len(_url_list) == 2
 
 
 def test_validate_config_data(args_dict, io_handler, caplog) -> None:
@@ -741,6 +759,7 @@ def test_get_value_unit_type() -> None:
     # cases of simtel-like strings representing arrays
     assert gen.get_value_unit_type("1 2") == ("1 2", None, "str")
     assert gen.get_value_unit_type("0 0") == ("0 0", None, "str")
+    assert gen.get_value_unit_type("0. 0. 0.5") == ("0. 0. 0.5", None, "str")
 
 
 def test_assign_unit_to_quantity():
@@ -837,3 +856,8 @@ def test_convert_string_to_list():
     assert pytest.approx(t_3[0]) == 0.1
 
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"
+    assert gen.convert_string_to_list("bla bla") == ["bla", "bla"]
+    assert gen.convert_string_to_list("bla,bla") == ["bla", "bla"]
+    # import for list of dimensionless entries in database
+    assert gen.convert_string_to_list(",") == ["", ""]
+    assert gen.convert_string_to_list(" , , ") == ["", "", ""]

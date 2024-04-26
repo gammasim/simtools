@@ -10,12 +10,22 @@ Follows CTAO top-level data model definition.
 import logging
 from importlib.resources import files
 
+import astropy.units as u
 import jsonschema
 
 import simtools.constants
 import simtools.utils.general as gen
+from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
+
+
+@jsonschema.Draft7Validator.FORMAT_CHECKER.checks("astropy_unit", ValueError)
+def check_astropy_unit(unit_string):
+    if unit_string == "dimensionless":
+        return True
+    u.Unit(unit_string)
+    return True
 
 
 def validate_schema(data, schema_file):
@@ -39,7 +49,9 @@ def validate_schema(data, schema_file):
     schema, schema_file = _load_schema(schema_file)
 
     try:
-        jsonschema.validate(data, schema=schema)
+        jsonschema.validate(
+            data, schema=schema, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER
+        )
     except jsonschema.exceptions.ValidationError:
         _logger.error(f"Failed using {schema}")
         raise
@@ -98,8 +110,47 @@ def _load_schema(schema_file=None):
         schema_file = files("simtools").joinpath("schemas") / schema_file
         schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
     _logger.debug(f"Loading schema from {schema_file}")
+    _add_array_elements("InstrumentTypeElement", schema)
 
     return schema, schema_file
+
+
+def _add_array_elements(key, schema):
+    """
+    Add list of array elements to schema.
+    This assumes an element [key]['enum'] is a list of elements.
+
+    Parameters
+    ----------
+    key: str
+        Key in schema dictionary
+    schema: dict
+        Schema dictionary
+
+    Returns
+    -------
+    dict
+        Schema dictionary with added array elements.
+
+    """
+
+    _list_of_array_elements = sorted(list(names.array_elements().keys()))
+
+    def recursive_search(sub_schema, key):
+        if key in sub_schema:
+            if "enum" in sub_schema[key] and isinstance(sub_schema[key]["enum"], list):
+                sub_schema[key]["enum"] = list(
+                    set(sub_schema[key]["enum"] + _list_of_array_elements)
+                )
+            else:
+                sub_schema[key]["enum"] = _list_of_array_elements
+        else:
+            for _, v in sub_schema.items():
+                if isinstance(v, dict):
+                    recursive_search(v, key)
+
+    recursive_search(schema, key)
+    return schema
 
 
 def _resolve_references(yaml_data, observatory="CTA"):

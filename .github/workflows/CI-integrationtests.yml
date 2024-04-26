@@ -7,6 +7,7 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_SIMULATION_MODEL: "Staging-CTA-Simulation-Model"
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
@@ -22,6 +23,9 @@ jobs:
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
       options: --user 0
+    strategy:
+      matrix:
+        type: ['2024-02-01', 'prod5']
 
     defaults:
       run:
@@ -42,4 +46,4 @@ jobs:
           source /workdir/env/bin/activate
           pip install '.[tests,dev,doc]'
           export PYTHONPATH=$PYTHONPATH:.
-          pytest --color=yes --durations=10 -n auto --dist loadscope --no-cov tests/integration_tests/
+          pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
