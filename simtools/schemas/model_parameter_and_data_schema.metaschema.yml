@@ -55,9 +55,11 @@ definitions:
       simulation_software:
         description: |-
           "name of simulation software"
-        type: array
-        items:
-          $ref: '#/definitions/SimulationSoftware'
+        anyOf:
+          - type: array
+            items:
+              $ref: '#/definitions/SimulationSoftware'
+          - None
     required:
       - version
       - meta_schema
