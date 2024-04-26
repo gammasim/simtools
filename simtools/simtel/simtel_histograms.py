@@ -36,6 +36,9 @@ class SimtelHistogram:
     """
 
     def __init__(self, histogram_file):
+        """
+        Initialize SimtelHistogram class.
+        """
         self.histogram_file = histogram_file
         self._config = None
         self._view_cone = None
