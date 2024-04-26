@@ -10,7 +10,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 def test_get_list_of_telescope_types():
-    assert names.get_list_of_telescope_types(array_element_class="telescope", site=None) == [
+    assert names.get_list_of_telescope_types(array_element_class="telescopes", site=None) == [
         "LSTN",
         "MSTN",
         "LSTS",
@@ -19,12 +19,12 @@ def test_get_list_of_telescope_types():
         "SCTS",
     ]
 
-    assert names.get_list_of_telescope_types(array_element_class="telescope", site="North") == [
+    assert names.get_list_of_telescope_types(array_element_class="telescopes", site="North") == [
         "LSTN",
         "MSTN",
     ]
 
-    assert names.get_list_of_telescope_types(array_element_class="telescope", site="South") == [
+    assert names.get_list_of_telescope_types(array_element_class="telescopes", site="South") == [
         "LSTS",
         "MSTS",
         "SSTS",
@@ -32,7 +32,7 @@ def test_get_list_of_telescope_types():
     ]
 
     assert "ILLN" in names.get_list_of_telescope_types(
-        array_element_class="calibration", site="North"
+        array_element_class="calibration_devices", site="North"
     )
 
 
@@ -132,8 +132,8 @@ def test_get_site_from_telescope_name():
 
 
 def test_get_class_from_telescope_name():
-    assert "telescope" == names.get_class_from_telescope_name("LSTN-01")
-    assert "calibration" == names.get_class_from_telescope_name("ILLS-01")
+    assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
+    assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
     with pytest.raises(ValueError):
         names.get_site_from_telescope_name("SATW")
 

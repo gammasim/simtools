@@ -262,14 +262,6 @@ definitions:
     description: "specific type of instrument"
     enum:
       - Atmosphere
-      - ILLN
-      - ILLS
-      - LSTN
-      - LSTS
-      - MSTN
-      - MSTS
-      - SSTS
-      - SCTS
       - Observatory
       - None
     title: InstrumentTypeElement
@@ -360,30 +352,8 @@ definitions:
   Unit:
     type: string
     description: |-
-      "Unit correspond to astropy unit names
-      (wherever possible)"
-    enum:
-      - byte
-      - cm
-      - count
-      - count / mV
-      - count/mV
-      - deg
-      - dimensionless
-      - GHz
-      - m
-      - MHz
-      - mV
-      - mV * ns
-      - mV*ns
-      - nm
-      - ns
-      - 1/(sr*ns*cm**2)
-      - 1 / (sr * ns * cm**2)
-      - pct
-      - uA
-      - uT
-      - V
+      "Unit correspond to astropy unit names"
+    format: astropy_unit
     title: Unit
   SimulationSoftwareName:
     type: string

@@ -413,7 +413,7 @@ class ArrayLayout:
 
         for row in table:
             tel = self._load_telescope_names(row)
-            if names.get_class_from_telescope_name(tel.name) == "telescope":
+            if names.get_collection_name_from_array_element_name(tel.name) == "telescopes":
                 self._set_telescope_auxiliary_parameters(tel)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
@@ -434,7 +434,7 @@ class ArrayLayout:
 
         """
 
-        if names.get_class_from_telescope_name(telescope.name) == "telescope":
+        if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
             _telescope_model_name = self.db.get_telescope_db_name(
                 telescope_name=telescope.name, model_version=self.model_version
             )

@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for corsika_observation_level model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: corsika_observation_level
+description: |-
+  Observation altitude above see level assumed in the air-shower code.
+  This should be lower than the lowest altitude of any telescope.
+short_description: Observation altitude above see level assumed in the air-shower code.
+data:
+  - type: double
+    unit: m
+    allowed_range:
+      min: 0.0
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: corsika
+    internal_parameter_name: OBSLEV
+  - name: sim_telarray
+    internal_parameter_name: altitude

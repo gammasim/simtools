@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for discriminator_hysteresis model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: discriminator_hysteresis
+description: |-
+  The switching off of a comparator is normally with some hysteresis to
+  avoid oscillating behavior. As a consequence, the signal has to be
+  below the threshold minus the hysteresis before it switches off.
+short_description: Value of the discriminator hysteresis.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+data:
+  - type: double
+    unit: mV
+    default: 0.0
+    condition: default_trigger==Majority
+    allowed_range:
+      min: 0.0
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

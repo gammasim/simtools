@@ -58,11 +58,22 @@ def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_tabl
     return mirror_list_file
 
 
-def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel):
+def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, tmp_test_directory):
     mirrors = mirror_template_simtel
     assert 198 == mirrors.number_of_mirrors
     assert 151.0 == pytest.approx(mirrors.mirror_diameter.value)
     assert 3 == mirrors.shape_type
+
+    # reduced table with less columns
+    columns_to_write = ["mirror_x", "mirror_y", "mirror_diameter", "focal_length", "shape_type"]
+    tmp_mirror_list = tmp_test_directory / "mirror_list_5columns.txt"
+    mirrors.mirror_table[columns_to_write].write(tmp_mirror_list, format="ascii.no_header")
+
+    red_mirrors = Mirrors(mirror_list_file=tmp_mirror_list)
+    assert 198 == red_mirrors.number_of_mirrors
+    assert red_mirrors.mirror_table["mirror_panel_id"][0] == 0
+    assert red_mirrors.mirror_table["mirror_panel_id"][5] == 5
+    assert "mirror_z" not in red_mirrors.mirror_table.columns
 
 
 def test_read_mirror_list_from_ecsv(io_handler, mirror_template_ecsv):

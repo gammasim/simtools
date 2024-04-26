@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+title: Schema for camera_config_file model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: camera_config_file
+description: |-
+  Definition of pixel types, positions, status (on/off), relative gain
+  (w.r.t the provided gain) and quantum/photodetector efficiency
+  scaling (scale the provided quantum/photodetector efficiency distribution,
+  ignoring wavelength dependence).
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateCameraGeometry
+    - ValidatePixelStatus
+    - ValidateCameraGainsAndEfficiency
+source:
+  - Initial instrument setup
+  - Calibration
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

@@ -1,5 +1,9 @@
 import logging
 import re
+from functools import lru_cache
+from pathlib import Path
+
+import yaml
 
 _logger = logging.getLogger(__name__)
 
@@ -18,39 +22,21 @@ __all__ = [
     "validate_telescope_name",
 ]
 
-# Telescopes and other array elements
-array_element_names = {
-    # CTAO telescopes
-    "LSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
-    "MSTN": {"site": "North", "observatory": "CTAO", "class": "telescope"},
-    "LSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "MSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "SSTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    "SCTS": {"site": "South", "observatory": "CTAO", "class": "telescope"},
-    # calibration devices
-    "ILLN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "RLDN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "STPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "MSPN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "CEIN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "WSTN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "ASCN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "DUSN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "LISN": {"site": "North", "observatory": "CTAO", "class": "calibration"},
-    "ILLS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "RLDS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "STPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "MSPS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "CEIS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "WSTS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "ASCS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "DUSS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    "LISS": {"site": "South", "observatory": "CTAO", "class": "calibration"},
-    # other telescopes
-    "MAGIC": {"site": "North", "observatory": "MAGIC", "class": "telescope"},
-    "VERITAS": {"site": "North", "observatory": "VERITAS", "class": "telescope"},
-    "HESS": {"site": "South", "observatory": "HESS", "class": "telescope"},
-}
+
+@lru_cache(maxsize=None)
+def array_elements():
+    """
+    Load array elements from reference files and keep in cache.
+
+    Returns
+    -------
+    dict
+        Array elements.
+    """
+    base_path = Path(__file__).parent
+    with open(base_path / "../schemas/array_elements.yml", "r", encoding="utf-8") as file:
+        return yaml.safe_load(file)["data"]
+
 
 site_names = {
     "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
@@ -135,6 +121,10 @@ telescope_parameters = {
         "db_name": "lightguide_efficiency_vs_wavelength",
         "simtel": False,
     },
+    "lightguide_efficiency_angle_file": {
+        "db_name": "lightguide_efficiency_angle_file",
+        "simtel": False,
+    },  # prod5 and earlier parameter; not relevant for the future
     "mirror_panel_shape": {"db_name": "mirror_panel_shape", "simtel": False},
     "mirror_panel_diameter": {"db_name": "mirror_panel_diameter", "simtel": False},
     "asum_shaping": {"db_name": "asum_shaping_file", "simtel": True},
@@ -310,9 +300,7 @@ def validate_telescope_name(name):
     except ValueError as exc:
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
-    return (
-        _validate_name(_tel_type, array_element_names) + "-" + validate_telescope_id_name(_tel_id)
-    )
+    return _validate_name(_tel_type, array_elements()) + "-" + validate_telescope_id_name(_tel_id)
 
 
 def get_telescope_name_from_type_site_id(telescope_type, site, telescope_id):
@@ -352,10 +340,10 @@ def get_telescope_type_from_telescope_name(name):
     str
         Telescope type.
     """
-    return _validate_name(name.split("-")[0], array_element_names)
+    return _validate_name(name.split("-")[0], array_elements())
 
 
-def get_list_of_telescope_types(array_element_class="telescope", site=None, observatory="CTAO"):
+def get_list_of_telescope_types(array_element_class="telescopes", site=None, observatory="CTAO"):
     """
     Get list of telescope types.
 
@@ -373,8 +361,8 @@ def get_list_of_telescope_types(array_element_class="telescope", site=None, obse
     """
     return [
         key
-        for key, value in array_element_names.items()
-        if value["class"] == array_element_class
+        for key, value in array_elements().items()
+        if value["collection"] == array_element_class
         and (site is None or value["site"] == site)
         and (observatory is None or value["observatory"] == observatory)
     ]
@@ -394,25 +382,25 @@ def get_site_from_telescope_name(name):
     str
         Site name (South or North).
     """
-    return array_element_names[get_telescope_type_from_telescope_name(name)]["site"]
+    return array_elements()[get_telescope_type_from_telescope_name(name)]["site"]
 
 
-def get_class_from_telescope_name(name):
+def get_collection_name_from_array_element_name(name):
     """
-    Get class (e.g., telescope, calibration) of array element from name
+    Get collection name(e.g., telescopes, calibration_devices) of array element from name
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        Array element name.
 
     Returns
     -------
     str
-        Class name.
+        Collection name .
     """
 
-    return array_element_names[get_telescope_type_from_telescope_name(name)]["class"]
+    return array_elements()[get_telescope_type_from_telescope_name(name)]["collection"]
 
 
 def get_simtel_name_from_parameter_name(

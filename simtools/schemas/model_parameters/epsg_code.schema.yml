@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for epsg_code model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: epsg_code
+developer_note: |-
+  Obtained from https://epsg.io/32628 and
+  https://epsg.io/32719
+description: |-
+  EPSG code to describe geodetic datums, spatial reference
+  system, and Earth ellipsoids at the site.
+short_description: Site EPSG code
+data:
+  - type: int
+    unit: dimensionless
+    allowed_range:
+      min: 1024
+      max: 32767
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
