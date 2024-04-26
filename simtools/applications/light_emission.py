@@ -170,6 +170,7 @@ def main():
         # TODO: add illuminator positions from configuration later
         pass
 
+    # Create telescope model
     telescope_model = TelescopeModel(
         site=args_dict["site"],
         telescope_model_name=args_dict["telescope"],
@@ -178,10 +179,10 @@ def main():
         label=label,
     )
 
-    # important for triggering with a single telescope
-    telescope_model.remove_parameters("array_triggers")
+    # currently remove axes_offset: not working anymore, remove
     telescope_model = remove_axes_offset(telescope_model, args_dict, logger)
 
+    # Create calibration model
     calibration_model = CalibrationModel(
         site=args_dict["site"],
         calibration_device_model_name=args_dict["illuminator"],
@@ -190,7 +191,7 @@ def main():
         label=label,
     )
 
-    # TODO: Use real coordinates from telescope, here we use ILLN-01 (utm)
+    # TODO: Use real coordinates from array_model or instance, here we use ILLN-01 (utm)
     calibration_model.add_parameter("x_pos", 217592.2, is_file=False, is_applicable=True)
     calibration_model.add_parameter("y_pos", 3184479.9, is_file=False, is_applicable=True)
     calibration_model.add_parameter("z_pos", 2295, is_file=False, is_applicable=True)
@@ -201,12 +202,6 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-
-    site_model.remove_parameters("array_triggers")
-    calibration_model.remove_parameters("array_triggers")
-
-    print("altitude", site_model.get_parameter_value("corsika_observation_level"))
-    print("array_coordinates", site_model.get_corsika_site_parameters())
 
     if args_dict["light_source_setup"] == 1:
         figures = []
