@@ -217,7 +217,7 @@ def _process_simulation_config_file(config_file, primary_config, logger):
             config_showers[primary][key] = value
             config_arrays[primary][key] = value
 
-        # showers entries
+        # shower entries
         for key, value in primary_data.get("showers", {}).items():
             config_showers[primary][key] = value
         config_showers[primary]["primary"] = primary
