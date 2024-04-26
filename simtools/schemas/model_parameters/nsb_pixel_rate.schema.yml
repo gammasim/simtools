@@ -1,0 +1,47 @@
+%YAML 1.2
+---
+title: Schema for nightsky_background model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: nsb_pixel_rate
+description: |-
+  'Number of photo-electrons per nanosecond per pixel due to night-sky
+  background. Note that the number here takes into account all
+  photo-electrons, including those not properly amplified or lost at the
+  first dynode.  A range of pixels can be given with
+  nightsky_background = (0-1236): 0.2, (1237-1854): 0.15.
+  Alternatively, all pixels can be set with nightsky_background = all: 0.2.'
+short_description: |-
+  Number of photo-electrons per nanosecond per pixel due to nightsky
+  background.
+data:
+  - type: double
+    unit: GHz
+    default: 0.218
+    allowed_range:
+      min: 0.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetNightSkyBackgroundRate
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidatePedestalEvents
+    - ValidateTriggerPerformance
+    - ValidateTelescopeSimulationModel
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: nightsky_background

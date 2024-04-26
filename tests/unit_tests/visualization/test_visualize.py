@@ -25,9 +25,9 @@ def test_plot_1d(db, io_handler):
     headers_type = {"names": (x_title, y_title), "formats": ("f8", "f8")}
     title = "Test 1D plot"
 
-    test_file_name = "ref_200_1100_190211a.dat"
+    test_file_name = "ref_LST1_2022_04_01.dat"
     db.export_file_db(
-        db_name=db.DB_CTA_SIMULATION_MODEL,
+        db_name=None,
         dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         file_name=test_file_name,
     )

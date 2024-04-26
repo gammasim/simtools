@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for disc_bins model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: disc_bins
+description: |-
+  Number of time bins used for the discriminator or comparator simulation.
+  This trigger simulation might cover a larger time window than the
+  FADC signals.
+short_description: Number of time bins used for the discriminator simulation.
+data:
+  - type: uint
+    unit: dimensionless
+    default: 20
+    allowed_range:
+      min: 1
+      max: 160
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

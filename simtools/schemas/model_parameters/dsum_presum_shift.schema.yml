@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for dsum_presum_shift model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: dsum_presum_shift
+description: |-
+  After a patch-wise pre-summation, the resulting sum may be
+  right-shifted to reduce the significant number of bits.
+  The presence of patches is indicated for
+  par:trigger_decision_circuitry
+  for the DigitalSumTrigger by e.g.\\
+  \texttt{DigitalSumTrigger * of 1[2,3] 4[5,6]} \\
+  instead of using a plain list of pixel IDs like\\
+  \texttt{DigitalSumTrigger * of 1 2 3 4 5 6}.
+short_description: |-
+  After a patch-wise pre-summation, the resulting sum may be
+  right-shifted to reduce the significant number of bits.
+data:
+  - type: uint
+    unit: dimensionless
+    default: 0
+    allowed_range:
+      min: 0
+      max: 4
+    condition: default_trigger==DigitalSum
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray
