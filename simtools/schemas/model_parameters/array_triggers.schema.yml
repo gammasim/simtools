@@ -17,7 +17,7 @@ data:
     unit: dimensionless
     default: None
 instrument:
-  class: Camera
+  class: Site
   type:
     - LSTN
     - LSTS
