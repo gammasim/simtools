@@ -43,3 +43,4 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
+  - name: simtools
