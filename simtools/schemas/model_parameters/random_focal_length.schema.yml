@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for random_focal_length model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: random_focal_length
+developer_note: Note - Description changed significantly in the sim_telarray manual
+  - Note
+description: |-
+  The spread of random fluctuations in mirror panel focal lengths.
+  These parameters get only applied if the focal lengths in the mirror list
+  file (par:mirror_list) are zero (automatic) or negative (individual with
+  error). For positive focal lengths in that list (definite values) the
+  random focal length value does not get applied.
+short_description: The spread of random fluctuations in mirror focal lengths.
+data:
+  - type: double
+    description: Width (r.m.s.) of Gaussian distribution for random focal lengths.
+    unit: cm
+    default: 7.4
+    condition: mirror_class==1
+  - type: double
+    description: Width of top-hat distribution for random focal lengths.
+    unit: cm
+    default: 0.0
+    condition: mirror_class==1
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateMirrorPanelParameters
+    - ValidateOpticalPSF
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

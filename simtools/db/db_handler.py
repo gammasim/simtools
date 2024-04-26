@@ -35,14 +35,11 @@ class DatabaseHandler:
         "db_api_user" - API username
         "db_api_pw" - Password for the API user
         "db_api_authentication_database" - DB with user info (optional, default is "admin")
+        "db_simulation_model" - Name of simulation model database
     """
 
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
-    #    DB_TABULATED_DATA = "CTA-Simulation-Model"
-    #    DB_CTA_SIMULATION_MODEL = "CTA-Simulation-Model"
     # DB collection with updates field names
-    DB_TABULATED_DATA = "Staging-CTA-Simulation-Model"
-    DB_CTA_SIMULATION_MODEL = "Staging-CTA-Simulation-Model"
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -152,7 +149,7 @@ class DatabaseHandler:
         except KeyError:
             pass
         _pars = self._get_model_parameters_mongo_db(
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+            self.mongo_db_config.get("db_simulation_model", None),
             _telescope_model_name,
             _model_version,
             collection,
@@ -197,6 +194,7 @@ class DatabaseHandler:
             If the desired file is not found.
 
         """
+        db_name = self._get_db_name(db_name)
 
         self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
         file_path_instance = self._get_file_mongo_db(db_name, file_name)
@@ -229,12 +227,8 @@ class DatabaseHandler:
                 if Path(dest).joinpath(info["value"]).exists():
                     self._logger.debug(f"File {info['value']} already exists in {dest}")
                     continue
-                file = self._get_file_mongo_db(
-                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, info["value"]
-                )
-                self._write_file_from_mongo_to_disk(
-                    DatabaseHandler.DB_CTA_SIMULATION_MODEL, dest, file
-                )
+                file = self._get_file_mongo_db(self._get_db_name(), info["value"])
+                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file)
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
             self._logger.warning(
                 "Exporting model files from simulation model repository not yet implemented"
@@ -341,13 +335,9 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
         _parameters = {}
 
-        _model_version = self._convert_version_to_tagged(
-            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
-
         query = {
             "instrument": telescope_model_name,
-            "version": _model_version,
+            "version": self._convert_version_to_tagged(model_version),
         }
 
         self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
@@ -395,8 +385,9 @@ class DatabaseHandler:
 
         """
         _site, _, _model_version = self._validate_model_input(site, None, model_version)
+        _db_name = self._get_db_name()
         self._logger.debug(
-            f"Getting {site} parameters from MongoDB {DatabaseHandler.DB_CTA_SIMULATION_MODEL}"
+            f"Getting {site} parameters from MongoDB {_db_name}"
             f" {model_version} {only_applicable}"
         )
         _site_cache_key = self._parameter_cache_key(site, None, model_version)
@@ -406,7 +397,7 @@ class DatabaseHandler:
             pass
 
         _pars = self._get_site_parameters_mongo_db(
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+            _db_name,
             _site,
             _model_version,
             only_applicable,
@@ -518,7 +509,7 @@ class DatabaseHandler:
         )
         try:
             return self.read_mongo_db(
-                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                self._get_db_name(),
                 _telescope_model_name,
                 _model_version,
                 run_location=None,
@@ -527,7 +518,7 @@ class DatabaseHandler:
             )
         except ValueError:
             return self.read_mongo_db(
-                DatabaseHandler.DB_CTA_SIMULATION_MODEL,
+                self._get_db_name(),
                 names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
                 _model_version,
                 run_location=None,
@@ -550,11 +541,7 @@ class DatabaseHandler:
         return (
             names.validate_site_name(site),
             names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
-            names.validate_model_version_name(
-                self._convert_version_to_tagged(
-                    model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-                )
-            ),
+            names.validate_model_version_name(self._convert_version_to_tagged(model_version)),
         )
 
     @staticmethod
@@ -646,6 +633,7 @@ class DatabaseHandler:
 
         """
 
+        db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
             db_to_copy_to = db_name
 
@@ -660,9 +648,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
         db_entries = []
 
-        _version_to_copy = self._convert_version_to_tagged(
-            version_to_copy, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
+        _version_to_copy = self._convert_version_to_tagged(version_to_copy)
 
         query = {
             "instrument": tel_to_copy,
@@ -711,6 +697,7 @@ class DatabaseHandler:
         BulkWriteError
 
         """
+        db_name = self._get_db_name(db_name)
 
         _collection = DatabaseHandler.db_client[db_name][collection]
         if collection_to_copy_to is None:
@@ -758,9 +745,7 @@ class DatabaseHandler:
         _collection = DatabaseHandler.db_client[db_name][collection]
 
         if "version" in query:
-            query["version"] = self._convert_version_to_tagged(
-                query["version"], DatabaseHandler.DB_CTA_SIMULATION_MODEL
-            )
+            query["version"] = self._convert_version_to_tagged(query["version"])
 
         self._logger.info(f"Deleting {_collection.count_documents(query)} entries from {db_name}")
 
@@ -812,15 +797,13 @@ class DatabaseHandler:
 
         """
 
+        db_name = self._get_db_name(db_name)
         allowed_fields = ["applicable", "unit", "type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-
-        _model_version = self._convert_version_to_tagged(
-            version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
+        _model_version = self._convert_version_to_tagged(version)
 
         query = {
             "version": _model_version,
@@ -916,6 +899,7 @@ class DatabaseHandler:
 
         """
 
+        db_name = self._get_db_name(db_name)
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
         db_entry = {}
@@ -968,23 +952,26 @@ class DatabaseHandler:
 
         self._reset_parameter_cache(site, telescope, version)
 
-    def _convert_version_to_tagged(self, model_version, db_name):
+    def _convert_version_to_tagged(self, model_version):
         """Convert to tagged version, if needed."""
         if model_version in ["Released", "Latest"]:
-            return self._get_tagged_version(db_name, model_version)
+            return self._get_tagged_version(model_version)
 
         return model_version
 
     def add_tagged_version(
-        self, db_name, released_version, released_label, latest_version, latest_label
+        self,
+        released_version,
+        released_label,
+        latest_version,
+        latest_label,
+        db_name=None,
     ):
         """
         Set the tag of the "Released" or "Latest" version of the MC Model.
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         released_version: str
             The version name to set as "Released"
         released_label: str
@@ -993,8 +980,11 @@ class DatabaseHandler:
             The version name to set as "Latest"
         latest_label: str
             The latest version name as label.
+        db_name: str
+            Database name
 
         """
+        db_name = self._get_db_name(db_name)
 
         collection = DatabaseHandler.db_client[db_name]["metadata"]
         db_entry = {}
@@ -1005,8 +995,23 @@ class DatabaseHandler:
         }
         collection.insert_one(db_entry)
 
-    @staticmethod
-    def _get_tagged_version(db_name, version="Released"):
+    def _get_db_name(self, db_name=None):
+        """
+        Return database name. If not provided, return the default database name.
+
+        Parameters
+        ----------
+        db_name: str
+            Database name
+
+        Returns
+        -------
+        str
+            Database name
+        """
+        return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
+
+    def _get_tagged_version(self, version="Released", db_name=None):
         """
         Get the tag of the "Released" or "Latest" version of the MC Model.
         The "Released" is the latest stable MC Model,
@@ -1014,10 +1019,10 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         version: str
             Can be "Released" or "Latest" (default: "Released").
+        db_name: str
+            Database name
 
         Returns
         -------
@@ -1034,14 +1039,14 @@ class DatabaseHandler:
         if version not in ["Released", "Latest"]:
             raise ValueError('The only default versions are "Released" or "Latest"')
 
-        collection = DatabaseHandler.db_client[db_name].metadata
+        collection = DatabaseHandler.db_client[self._get_db_name(db_name)].metadata
         query = {"Entry": "Simulation-Model-Tags"}
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
 
         return tags["Tags"][version]["Value"]
 
-    def insert_file_to_db(self, file_name, db_name=DB_CTA_SIMULATION_MODEL, **kwargs):
+    def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
         Insert a file to the DB.
 
@@ -1063,6 +1068,7 @@ class DatabaseHandler:
             "newly created DB GridOut._id.
 
         """
+        db_name = self._get_db_name(db_name)
 
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
@@ -1085,7 +1091,6 @@ class DatabaseHandler:
 
     def get_all_versions(
         self,
-        db_name,
         parameter,
         telescope_model_name=None,
         site=None,
@@ -1096,8 +1101,6 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
         parameter: str
             Which parameter to get the versions of
         telescope_model_name: str
@@ -1121,7 +1124,7 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = DatabaseHandler.db_client[self._get_db_name()][collection_name]
 
         query = {
             "parameter": parameter,
@@ -1143,12 +1146,7 @@ class DatabaseHandler:
 
         return _all_versions
 
-    def get_all_available_array_elements(
-        self,
-        model_version,
-        collection_name,
-        db_name=DB_CTA_SIMULATION_MODEL,
-    ):
+    def get_all_available_array_elements(self, model_version, collection_name, db_name=None):
         """
         Get all available array element names in the specified collection in the DB.
 
@@ -1167,16 +1165,13 @@ class DatabaseHandler:
             List of all array element names found in collection
 
         """
-
-        collection = DatabaseHandler.db_client[db_name][collection_name]
-
-        _model_version = self._convert_version_to_tagged(
-            names.validate_model_version_name(model_version),
-            DatabaseHandler.DB_CTA_SIMULATION_MODEL,
-        )
+        db_name = self._get_db_name(db_name)
+        collection = DatabaseHandler.db_client[db_name]["telescopes"]
 
         query = {
-            "version": _model_version,
+            "version": self._convert_version_to_tagged(
+                names.validate_model_version_name(model_version)
+            ),
         }
         try:
             _all_available_array_elements = collection.find(query).distinct("instrument")
@@ -1233,9 +1228,8 @@ class DatabaseHandler:
         Create a cache key for the parameter cache dictionaries.
 
         """
-        _model_version = self._convert_version_to_tagged(
-            model_version, DatabaseHandler.DB_CTA_SIMULATION_MODEL
-        )
+        _model_version = self._convert_version_to_tagged(model_version)
+
         if telescope is None:
             return f"{site}-{_model_version}"
         return f"{site}-{telescope}-{_model_version}"

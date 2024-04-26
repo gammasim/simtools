@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for secondary_mirror_degraded_reflection model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: secondary_mirror_degraded_reflection
+description: |-
+  Mirror degradation factor for the secondary mirror (wavelength independent).
+  Strictly interpreted as being for reflection on the secondary mirror of a
+  dual-mirror telescope, and still gets applied in simulations where only
+  the reflection on the primary mirror is bypassd (for example a
+  flat-fielding light source illuminating the camera via reflection on the
+  secondary).
+short_description: |-
+  Mirror degradation factor for the secondary mirror (wavelength independent).
+data:
+  - type: double
+    unit: dimensionless
+    default: 1.
+    allowed_range:
+      min: 0.
+      max: 1.
+    condition: mirror_class==2
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: mirror2_degraded_reflection
