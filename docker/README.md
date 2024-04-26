@@ -86,6 +86,14 @@ docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev
 
 Remember you need to `docker login` to the GitHub package repository with a personal token in order to download an image (follow [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
 
+Note: if the docker image already exists in your system, this same image will be used to run the container. Please make sure to update the image regularly by, e.g., removing it **before** running the command above. This can be done by passing the docker id:
+
+```bash
+docker rmi <image ID>
+```
+
+For further useful docker commands, please check [the docker documentation](https://docs.docker.com/reference/cli/docker/).
+
 ### Build a new developers container locally
 
 To build a new container locally run in the [simtools/docker](simtools/docker) directory:

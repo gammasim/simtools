@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+title: Schema for secondary_mirror_shadow_offset model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: secondary_mirror_shadow_offset
+description: |-
+  The secondary mirror shadowing element is normally assumed at the level
+  of the edge of the secondary.  If this parameter is non-zero, it can be
+  set at any position above the center of the primary mirror.
+  Even if placed in front of the secondary, it will not be used for
+  photons reflected from the secondary.
+short_description: |-
+  The offset of the shadowing element from the level of the edge of the
+  secondary mirror.
+data:
+  - type: double
+    unit: cm
+    condition: mirror_class==2
+    default: 0.0
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+    - ValidateTelescopeShadowing
+    - ValidateTelescopeEfficiency
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: secondary_shadow_offset

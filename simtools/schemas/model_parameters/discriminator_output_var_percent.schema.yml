@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for discriminator_output_var_percent model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: discriminator_output_var_percent
+description: |-
+  Channel-to-channel variation (Gaussian r.m.s.) of the output amplitude
+  of a pixel discriminator or comparator.
+short_description: |-
+  Channel-to-channel variation (Gaussian r.m.s.) of the output amplitude
+  of a pixel discriminator.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+data:
+  - type: double
+    unit: pct
+    default: 10.0
+    condition: default_trigger==Majority
+    allowed_range:
+      min: 0.0
+      max: 50.0
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

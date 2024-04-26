@@ -1,0 +1,41 @@
+name: CI-schema-validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'simtools/schemas/model_parameters/*'
+
+jobs:
+
+  schema-validation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Model parameter schema validation
+        run: |
+          pip install -e .
+          for file in simtools/schemas/model_parameters/*.yml; do
+            echo "Testing schema $file"
+            python simtools/applications/validate_file_using_schema.py \
+            --file_name "$file" \
+            --schema model_parameter_and_data_schema.metaschema.yml \
+            --data_type "schema" \
+            --log_level DEBUG
+          done
