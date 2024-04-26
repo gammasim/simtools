@@ -467,7 +467,7 @@ def test_get_simulation_software_name_from_parameter_name():
         names.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude", simulation_software="sim_telarray"
         )
-        == "reference_point_longitude"
+        is None  # this is not a sim_telarray parameter
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
