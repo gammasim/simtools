@@ -109,6 +109,8 @@ class SimulatorLightEmission(SimtelRunner):
             + self.default_le_config["z_pos"]["default"] ** 2
         )
 
+        self._telescope_model.export_config_file()
+
     @classmethod
     def from_kwargs(cls, **kwargs):
         """
@@ -137,7 +139,7 @@ class SimulatorLightEmission(SimtelRunner):
             ],
             **kwargs,
         )
-        print(config_data)
+        print("args", args)
 
         return cls(**args, config_data=config_data)
 
@@ -186,6 +188,49 @@ class SimulatorLightEmission(SimtelRunner):
             },
         }
 
+    def calibration_pointing_direction(self):
+        """
+        Calculate the pointing vector from the calibration device to the telescope.
+
+        This function calculates the pointing vector that represents the direction from the
+        calibration device towards the telescope based on their respective positions.
+
+        Returns:
+        numpy.ndarray:
+            A 1D NumPy array representing the pointing vector from the calibration
+            device to the telescope. The vector is normalized, meaning its length is 1, and it
+            points from the calibration device towards the telescope.
+
+        Raises:
+        ValueError:
+            If the dimensions of the calibration and telescope positions are not compatible or if
+            any position parameter is missing in either the calibration or telescope models.
+        """
+
+        # TODO: add the transformations from telescope position to the actual mirror centers!
+
+        # Get the position of the calibration device
+        x_cal = self._calibration_model.get_parameter_value("x_pos")
+        y_cal = self._calibration_model.get_parameter_value("y_pos")
+        z_cal = self._calibration_model.get_parameter_value("z_pos")
+
+        # Get the position of the telescope
+        x_tel = self._telescope_model.get_parameter_value("x_pos")
+        y_tel = self._telescope_model.get_parameter_value("y_pos")
+        z_tel = self._telescope_model.get_parameter_value("z_pos")
+
+        # Create NumPy arrays for the positions
+        cal_vect = np.array([x_cal, y_cal, z_cal])
+        tel_vect = np.array([x_tel, y_tel, z_tel])
+
+        # Calculate the direction vector from calibration device to telescope
+        direction_vector = cal_vect - tel_vect
+
+        # Normalize the direction vector to obtain the pointing vector
+        pointing_vector = direction_vector / np.linalg.norm(direction_vector)
+
+        return pointing_vector
+
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
         command = f" rm {self.output_directory}/{self.le_application}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
@@ -194,7 +239,7 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f"{self._calibration_model.get_parameter_value('beam_width').value}"
         # command += f" -p {self._calibration_model.get_parameter_value('pulse_shape').value}"
         # command += f" {self._calibration_model.get_parameter_value('pulse_width').value}"
-        command += f" -n {self._calibration_model.get_parameter_value('photons_per_run').value}"
+        command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
         # command += f" -n 1e10"
 
         command += f" -x {self.default_le_config['x_pos']['default'].value}"
@@ -203,6 +248,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
         command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
         command += f" -A {self.output_directory}/model/"
+
         command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application}.iact.gz"
         command += "\n"
@@ -213,7 +259,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
-        command += f" -c {self._telescope_model.get_config_file()}"
+        command += f" -c {self._telescope_model.get_config_file(no_export = True)}"
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"

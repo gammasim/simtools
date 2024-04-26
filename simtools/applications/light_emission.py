@@ -181,6 +181,7 @@ def main():
     # important for triggering with a single telescope
     telescope_model.remove_parameters("array_triggers")
     telescope_model = remove_axes_offset(telescope_model, args_dict, logger)
+
     calibration_model = CalibrationModel(
         site=args_dict["site"],
         calibration_device_model_name=args_dict["illuminator"],
@@ -200,6 +201,9 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+
+    site_model.remove_parameters("array_triggers")
+    calibration_model.remove_parameters("array_triggers")
 
     print("altitude", site_model.get_parameter_value("corsika_observation_level"))
     print("array_coordinates", site_model.get_corsika_site_parameters())
