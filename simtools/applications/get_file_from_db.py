@@ -65,8 +65,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     available_dbs = [
-        db.DB_TABULATED_DATA,
-        db.DB_CTA_SIMULATION_MODEL,
+        db_config["db_simulation_model"],
         db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
         db.DB_DERIVED_VALUES,
         "sandbox",

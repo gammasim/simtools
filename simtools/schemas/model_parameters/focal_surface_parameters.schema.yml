@@ -1,0 +1,158 @@
+%YAML 1.2
+---
+title: Schema for focal_surface_parameters model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: focal_surface_parameters
+description: |-
+  Defines the position of the focal surface along the optical axis and
+  its off-axis shape.  The par:focus-offset still applies, but with a
+  curved focal surface only in the camera centre, such that star light
+  would be focused on the camera lid surface but light from the typical
+  distance of the shower maximum would be focused on the pixel entrance.
+  Note that this offset may be impractically small with secondary mirrors
+  reducing the plate scale.  The direction of the incoming rays is not
+  transformed into the normal plane of the focal surface, thus
+  corresponding to pixels shifted w.r.t.\ to a plane.
+short_description: |-
+  Defines the position of the focal surface along the optical axis and its
+  off-axis shape.
+data:
+  - name: p0
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p1
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p2
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p3
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p4
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p5
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p6
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p7
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p8
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p9
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p10
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p11
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p12
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p13
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p14
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p15
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p16
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p17
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p18
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+  - name: p19
+    type: double
+    description: coefficient describing focal surface
+    required: true
+    unit: cm
+    default: 0.
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraGeometry
+    - ValidateOpticalPSF
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

@@ -1,0 +1,168 @@
+%YAML 1.2
+---
+title: Schema for primary_mirror_parameters model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: primary_mirror_parameters
+developer_note: |-
+  Note the application of dual_mirror_ref_radius (primary_ref_radius,
+  secondary_ref_radius) this this parameters.
+description: |-
+  Defines the position of the primary mirror along the optical
+  axis and its shape. The first parameter ($p_0$) is the offset of the
+  mirror with respect to the common reference point defined by
+  par:mirror-offset, with positive values indicating that the centre
+  of the primary (assuming it has no central hole) is above the reference
+  point. The secondary mirror looks the other way, i.e. $p_0$ will usually
+  be negative since in the coordinate frame of the secondary, it is
+  below the common reference point.  Apart from that, a parameter $p_i$
+  adds a term $p_i r^{2i}$ to the height of the mirror at
+  radial offset $r$.  A parabolic mirror will have the second parameter
+  ($p_1$) at a positive value and all further parameters at 0.
+  A concave secondary, reducing the focal length if placed between the
+  primary and its focus, will have $p_1 > 0.$.
+  A convex mirror (e.g.~for Cassegrain or Ritchey-Chr\'etien optics),
+  enlarging the focal length, will have $p_1 < 0$.
+short_description: |-
+  Parameters for a polynomial defining the position of the primary mirror
+  along the optical axis and its shape.
+data:
+  - name: p0
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p1
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p2
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p3
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p4
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p5
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p6
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p7
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p8
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p9
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p10
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p11
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p12
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p13
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p14
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p15
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p16
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p17
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p18
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+  - name: p19
+    type: double
+    description: coefficient describing primary mirror
+    required: true
+    unit: cm
+    default: 0.
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+    - ValidateOpticalPSF
+    - ValidateTelescopeEfficiency
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
