@@ -75,7 +75,6 @@ class ModelParameter:
         self.model_version = names.validate_model_version_name(model_version)
         self._config_file_directory = None
         self._config_file_path = None
-
         self._load_parameters_from_db()
 
         self.simtel_config_writer = None
@@ -317,6 +316,7 @@ class ModelParameter:
                     self.model_version,
                     self.collection,
                 )
+
             except ValueError:
                 self._logger.warning(
                     f"No sim_telarray configuration parameters found for {self.site}, {self.name}"
@@ -486,7 +486,7 @@ class ModelParameter:
             If at least one of the parameter to be removed is not in this model.
         """
         for par_name in par_names:
-            if par_name in self._parameters[par_name]:
+            if par_name in self._parameters:
                 self._logger.debug(f"Removing parameter {par_name}")
                 del self._parameters[par_name]
 
@@ -496,6 +496,7 @@ class ModelParameter:
                 raise InvalidModelParameter(msg)
 
         self._is_config_file_up_to_date = False
+        self._is_exported_model_files_up_to_date = False
 
     def change_multiple_parameters(self, **kwargs):
         """
