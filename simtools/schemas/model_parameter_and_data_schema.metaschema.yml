@@ -362,7 +362,7 @@ definitions:
     enum:
       - sim_telarray
       - corsika
-      - gammasim-tools
+      - simtools
     title: Name
   Source:
     type: string

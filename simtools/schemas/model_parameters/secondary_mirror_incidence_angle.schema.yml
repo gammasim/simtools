@@ -26,3 +26,4 @@ activity:
 source:
   - SimPipe Derived
 simulation_software:
+  - name: simtools
