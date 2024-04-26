@@ -1,0 +1,64 @@
+%YAML 1.2
+---
+title: Schema for mirror_align_random_vertical model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_align_random_vertical
+description: |-
+  Fluctuations of the mirror alignment angle with respect to nominal
+  alignment in the vertical component (in altitude or $x$ direction in
+  dish coordinates). The three terms are added up as independent
+  (i.e., by squares; therefore he square of the vertical mirror
+  alignment error is $\sigma^2 = \sigma_0^2 + \sigma_c^2 + \sigma_s^2$).
+  The values here are usually derived from fits to the measured point
+  spread functions, with the single mirror point-spread function adapted
+  beforehand. Note that, since this affects the angles of the mirrors,
+  the impact on the combined spot size is twice as large.
+short_description: |-
+  Gaussian r.m.s. spread of random fluctuations of the mirror alignment
+  angle with respect to nominal alignment in the vertical component.
+data:
+  - type: double
+    description: Constant value $\sigma_0$.
+    unit: deg
+    default: 0.0034
+  - type: double
+    description: Zenith angle $\theta_0$ at which minimum is reached.
+    unit: deg
+    default: 28.0
+  - type: double
+    description: |-
+      Scaling term $k_c$ in
+      $\sigma_c = (\cos(\theta)-\cos(\theta_0)) / k_c$.
+    unit: dimensionless
+    default: 0.01
+  - type: double
+    description: |-
+      Scaling term $k_s$ in
+      $\sigma_s = (\sin(\theta)-\sin(\theta_0)) / k_s$.
+    unit: dimensionless
+    default: 0.0
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetMirrorPanelAlignment
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateOpticalPSF
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+  - SimPipe Derived
+simulation_software:
+  - name: sim_telarray

@@ -1,0 +1,33 @@
+%YAML 1.2
+---
+title: Schema for nsb_reference_value model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: nsb_reference_value
+description: |-
+  Reference value for night-sky background flux in the wavelength range
+  from 300-650 nm (corresponding approximately to the extragalactic
+  night sky background level during astronomical darkness)
+short_description: Reference value for night-sky background flux.
+data:
+  - type: double
+    unit: 1/(sr*ns*cm**2)
+    default: 0.24
+instrument:
+  class: Site
+  type:
+    - Atmosphere
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

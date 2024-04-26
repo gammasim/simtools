@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for mirror_offset model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_offset
+description: |-
+  Offset of mirror back plane from fixed point of telescope mount
+  (if axes intersect) or from the altitude rotation axis, along
+  the direction of the optical axis.  Positive if fixed point
+  (or altitude axis) is between the mirror back plane and the focus or,
+  in other words, the center of the primary mirror is behind/below
+  the altitude rotation axis.
+short_description: |-
+  Offset of mirror back plane from fixed point of telescope mount or
+  from the altitude rotation axis, along the direction of the optical axis.
+data:
+  - type: double
+    unit: cm
+    default: 130.0
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

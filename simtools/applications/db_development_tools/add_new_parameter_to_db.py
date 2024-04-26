@@ -44,7 +44,6 @@ def main():
     for telescope_now in telescopes:
         for par_now, par_value in parameter.items():
             all_versions = db.get_all_versions(
-                db_name=db.DB_CTA_SIMULATION_MODEL,
                 telescope_model_name="-".join(telescope_now.split("-")[1:]),
                 site=names.get_site_from_telescope_name(telescope_now),
                 parameter="camera_config_file",  # Just a random parameter to get the versions
@@ -52,7 +51,7 @@ def main():
             )
             for version_now in all_versions:
                 db.add_new_parameter(
-                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    db_name=db_config["db_simulation_model"],
                     telescope=telescope_now,
                     parameter=par_now,
                     version=version_now,
@@ -63,7 +62,7 @@ def main():
                     file_prefix="./",
                 )
                 pars = db.read_mongo_db(
-                    db_name=db.DB_CTA_SIMULATION_MODEL,
+                    db_name=db_config["db_simulation_model"],
                     telescope_model_name=telescope_now,
                     model_version=version_now,
                     run_location="./",

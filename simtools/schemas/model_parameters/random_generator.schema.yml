@@ -1,0 +1,36 @@
+%YAML 1.2
+---
+title: Schema for random_generator model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: random_generator
+short_description: Random generator used.
+description: |-
+  Random generator used. Unless compiled with -DWITH_GSL_RNG the only valid
+  and known generator is "Ranlux". When using the GNU Scientific Library for
+  random number generators, this can be "Ranlux", "mt19937", "taus", "Ranlxd2",
+  or "GSL:" plus the name of any other GSL-based generator, or "GSL_RNG_TYPE"
+  to obtain the generator from the environment variable of that name.
+data:
+  - type: string
+    default: "Ranlux"
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: sim_telarray

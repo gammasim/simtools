@@ -1,0 +1,29 @@
+%YAML 1.2
+---
+title: Schema for camera_filter_incidence_angle model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: camera_filter_incidence_angle
+description: |-
+  Distribution of incidence angle on the camera filter.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'no_such_file.dat'
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - SimPipe Derived
+simulation_software:
+  - name: sim_telarray
