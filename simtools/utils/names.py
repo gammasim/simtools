@@ -418,7 +418,7 @@ def get_parameter_name_from_simtel_name(simtel_name):
                     and software["internal_parameter_name"] == simtel_name
                 ):
                     return par_name
-        except KeyError:
+        except (KeyError, TypeError):  # catches cases for which 'simulation_software' is None
             pass
     return simtel_name
 

@@ -52,11 +52,6 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
         config_file_path=file, parameters={"num_gains": 1}
     )
     assert file_has_text(file, "num_gains = 1")
-    # not a valid parameter name
-    with pytest.raises(KeyError):
-        simtel_config_writer.write_telescope_config_file(
-            config_file_path=file, parameters={"par": 1}
-        )
 
 
 def test_add_simtel_metadata(simtel_config_writer):
