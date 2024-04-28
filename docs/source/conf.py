@@ -147,7 +147,8 @@ html_theme_options = {
     "path_to_docs": "docs",
     "repository_url": "https://github.com/gammasim/simtools",
     "repository_branch": "main",
-    "show_toc_level": 2,
+    "use_issues_button": True,
+    "show_toc_level": 1,
     "announcement": (
         "simtools is under rapid development with continuous changes. "
         "Please contact the developers before using it."
@@ -165,6 +166,7 @@ html_theme_options = {
             "type": "url",
         },
     ],
+    "home_page_in_toc": True,
     "use_source_button": True,
     "use_download_button": True,
     "navigation_with_keys": False,
