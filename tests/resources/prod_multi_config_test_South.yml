@@ -1,0 +1,21 @@
+common:
+  # Make sure to include "divergent/convergent" in the label in case that is the pointing strategy. This tells sim_telarray not to overwrite the telescope pointings
+  label: 'test-production-South'
+  site: South
+  layout_name: test-layout
+  data_directory: ./
+  zenith: 20 deg
+  phi: 0 deg
+  primary: gamma
+showers:
+  eslope: -2.0
+  viewcone: [0 deg, 0 deg]
+  nshow: 10
+  erange: [3 GeV, 330 TeV]
+  cscat: [10, 1400.0 m, 0]
+array:
+  model_version: Prod5
+  default:
+    LSTS: 'design'
+    MSTS: 'design'
+    SSTS: 'design'

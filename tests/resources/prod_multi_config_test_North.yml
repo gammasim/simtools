@@ -1,6 +1,6 @@
 common:
   # Make sure to include "divergent/convergent" in the label in case that is the pointing strategy. This tells sim_telarray not to overwrite the telescope pointings
-  label: 'test-production'
+  label: 'test-production-North'
   site: North
   layout_name: test-layout
   data_directory: ./
