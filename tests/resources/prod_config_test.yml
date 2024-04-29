@@ -8,12 +8,6 @@ default:
     model_version: Prod6
     zenith: 20 deg
     phi: 0 deg
-    default:
-      MSTN: 'design'
-    LSTN-01: '01'
-    LSTN-02: '02'
-    LSTN-03: '03'
-    LSTN-04: '04'
   showers:
     eslope: -2
     zenith: 20 deg
