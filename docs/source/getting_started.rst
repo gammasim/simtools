@@ -85,14 +85,16 @@ The git installation method requires to install CORSIKA/sim_telarray separately,
 
 .. _DockerInstallation:
 
-Docker Installation
--------------------
+Container Installation
+----------------------
 
-The docker container ``simtools-prod`` includes all software required to run simtools applications:
+The container ``simtools-prod`` includes all software required to run simtools applications:
 
 * corsika and sim\_telarray
 * python packages required by simtools
 * simtools
+
+Containers are tested with docker, podman, and apptainer. Replace ``docker`` with the container system of your choice.
 
 To run bash in the `simtools-prod container  <https://github.com/gammasim/simtools/pkgs/container/simtools-prod>`_:
 
@@ -154,7 +156,7 @@ CTA users can download both packages from the `sim_telarray webpage <https://www
     $ tar -czf corsika7.7_simtelarray.tar.gz
     $ ./build_all prod5 qgs2 gsl
 
-The environmental variable ``$SIM_TELPATH`` should point towards the CORSIKA/sim_telarray installation
+The environmental variable ``$SIMTOOLS_SIMTEL_PATH`` should point towards the CORSIKA/sim_telarray installation
 (recommended to include it in the \.env file with all other environment variables).
 
 
@@ -171,8 +173,7 @@ The docker container has python packages, CORSIKA, and sim_telarray pre-installe
 Setting up a system to run simtools applications or tests should be a matter of minutes.
 
 Install Docker and start the Docker application (see
-`Docker installation page <https://docs.docker.com/engine/install/>`_). Other container systems like
-Apptainer, Singularity, Buildah/Podman, should work, but are not thoroughly tested.
+`Docker installation page <https://docs.docker.com/engine/install/>`_).
 
 Clone simtools from GitHub into a directory ``external/simtools``:
 
@@ -192,7 +193,7 @@ Start up a container (the image will be downloaded, if it is not available in yo
         bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 
 The container includes a CORSIKA and sim_telarray installation;
-the environmental variable ``$SIM_TELPATH`` and those for the database access are automatically set
+the environmental variable ``$SIMTOOLS_SIMTEL_PATH`` and those for the database access are automatically set
 (if variables are set correctly in the \.env` file).
 
 Test your installation following the instructions in :ref:`this section <TestingInstallation>`.

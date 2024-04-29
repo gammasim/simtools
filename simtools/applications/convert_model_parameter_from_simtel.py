@@ -28,11 +28,11 @@
 
     .. code-block:: console
 
-       simtools-convert-model-parameter-from-simtel \
-          --simtel_telescope_name CT1\
-          --telescope LSTN-01\
-          --schema tests/resources/num_gains.schema.yml\
-          --simtel_cfg_file tests/resources/simtel_config_test_la_palma.cfg\
+       simtools-convert-model-parameter-from-simtel \\
+          --simtel_telescope_name CT1 \\
+          --telescope LSTN-01 \\
+          --schema tests/resources/num_gains.schema.yml \\
+          --simtel_cfg_file tests/resources/simtel_config_test_la_palma.cfg \\
           --output_file num_gains.json
 
 """

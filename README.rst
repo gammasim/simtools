@@ -41,7 +41,8 @@ Useful links:
 
 simtools provides:
 
-* libraries for simulation model management and model database interface
+* libraries for simulation model definition and management
+* model database interface
 * tools for the preparation and configuration of simulation productions
 * applications for simulation model parameter derivation and validation
 * standardized interfaces and data products independent of the underlying simulation software (e.g., `CORSIKA <https://www.iap.kit.edu/corsika/>`_, `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_)
@@ -51,20 +52,12 @@ simtools is one part of the CTAO Simulation Pipeline, which consist of the follo
 
 - `CORSIKA <https://www.iap.kit.edu/corsika/>`_ air shower simulation code and the `sim_telarray <https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/>`_ telescope simulation code
 - `workflows <https://github.com/gammasim/workflows>`_ for setting, derivation and validation of simulation model parameters
-- `simulation model parameter and input data schema <https://github.com/gammasim/workflows/tree/main/schemas>`_
+- `simulation model parameter <https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters>`_
 - `databases <https://gammasim.github.io/simtools/databases.html>`_, especially the model parameter database
 
-simtools is under rapid development with continuous changes and additions planned.
-Please contact the developers before using it: simtools-developer@desy.de
-
 .. note::
-   simtools is currently under heavy development with continuous changes.
-   We are applying significant updates to the handling of model parameters
-   and to the model parameter database. Because of this, you need to have a
-   local copy of the `model_parameters <https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters>`_
-   repository in order to use simtools. Clone this and add to your .env file
-   the following entry: ``SIMTOOLS_DB_SIMULATION_MODEL_URL="../model_parameters/"``
-   (replace with the relative/absolute path for the location of the model_parameters repository).
+   simtools is currently under heavy development with continuous changes and additions planned.
+   Please contact the developers before using it: simtools-developer@desy.de
 
 
 Quick start
@@ -110,4 +103,4 @@ Please cite this software if it use used for a publication, see the `Zenodo reco
 Acknowledgements
 ================
 
-This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (PUNCH4NFDI).
+This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (`PUNCH4NFDI <https://www.punch4nfdi.de/>`).
