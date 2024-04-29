@@ -6,3 +6,4 @@ CTA_SIMPIPE:
     TELESCOPE: SSTS-design
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
+    LOG_LEVEL: debug
