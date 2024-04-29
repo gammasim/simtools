@@ -337,8 +337,6 @@ class Simulator:
             _array_model_data["layout_name"] = names.validate_array_layout_name(
                 _rest_data.pop("layout_name")
             )
-            _array_model_data["model_version"] = _rest_data.pop("model_version", None)
-            _array_model_data["default"] = _rest_data.pop("default")
         except KeyError:
             self._logger.error("Missing parameter in simulation configuration data")
             raise

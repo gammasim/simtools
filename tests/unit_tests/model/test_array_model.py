@@ -16,8 +16,6 @@ def array_model(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
-        "default": {"LSTN": "01", "MSTN": "Design"},
-        "MSTN-05": "05",
     }
     return ArrayModel(
         label="test",
@@ -33,14 +31,26 @@ def test_input_validation(array_model):
     assert am.number_of_telescopes == 13
 
 
-def test_get_single_telescope_info_from_array_config(array_model):
-    am = array_model
+def test_get_single_telescope_info_from_array_config(db_config, model_version):
+    array_config_data = {
+        "site": "North",
+        "layout_name": "test-layout",
+        "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
+            "name": "MSTN-05",
+            "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
+        },
+    }
+    am = ArrayModel(
+        label="test",
+        array_config_data=array_config_data,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
 
-    assert am._get_single_telescope_info_from_array_config("LSTN-01") == ("LSTN-01", {})
-    assert am._get_single_telescope_info_from_array_config("LSTN-02") == ("LSTN-01", {})
-    assert am._get_single_telescope_info_from_array_config("MSTN-01") == ("MSTN-Design", {})
-    assert am._get_single_telescope_info_from_array_config("MSTN-05") == ("MSTN-05", {})
-    assert am._get_single_telescope_info_from_array_config("MSTN-15") == ("MSTN-Design", {})
+    assert am._get_single_telescope_info_from_array_config("LSTN-01") == {}
+    assert am._get_single_telescope_info_from_array_config("MSTN-05") == {
+        "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
+    }
 
 
 def test_exporting_config_files(db_config, io_handler, model_version):
@@ -62,7 +72,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     list_of_export_files = [
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
         "CTA-North-LSTN-01-" + model_version + "_test.cfg",
-        "CTA-North-MSTN-design-" + model_version + "_test.cfg",
+        "CTA-North-MSTN-01-" + model_version + "_test.cfg",
         "CTA-TestLayout-North-" + model_version + "_test.cfg",
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",

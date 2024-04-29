@@ -13,9 +13,3 @@ showers:
   nshow: 10
   erange: [3 GeV, 330 TeV]
   cscat: [10, 1400.0 m, 0]
-array:
-  model_version: Prod5
-  default:
-    LSTN: 'design'
-    MSTN: 'design'
-  LSTN-01: '1'
