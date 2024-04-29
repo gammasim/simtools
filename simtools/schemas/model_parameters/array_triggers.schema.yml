@@ -9,7 +9,7 @@ developer_note: To be replaced by a data table
 name: array_triggers
 description: |-
   Stereo (array) trigger definition. Can also include specific coincidence gate
-  widths and different telescope multi- plicities for each line
+  widths and different telescope multiplicities for each line
 short_description: |-
   Stereo (array) trigger definition.
 data:
@@ -17,7 +17,7 @@ data:
     unit: dimensionless
     default: None
 instrument:
-  class: Camera
+  class: Site
   type:
     - LSTN
     - LSTS
