@@ -26,7 +26,7 @@
                     "MODEL": {
                         "NAME": "reference_point_altitude",
                         "VERSION": "0.1.0",
-                        "URL": "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
+                        "URL": "https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameters/reference_point_altitude.schema.yml"
                     }
                 },
                 "FORMAT": "json",
