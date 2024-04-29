@@ -2,7 +2,7 @@
 
 import json
 import logging
-from pathlib import Path
+from importlib.resources import files
 
 import astropy.units as u
 import jsonschema
@@ -98,7 +98,7 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
         assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
-    schema_dir = Path(__file__).parent / "../../../simtools/schemas/model_parameters/"
+    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
     schema_file = str(schema_dir) + "/reference_point_altitude.schema.yml"
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
