@@ -54,17 +54,17 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     assert file_has_text(file, "num_gains = 1")
 
 
-def test_add_simtel_metadata(simtel_config_writer):
+def test_get_simtel_metadata(simtel_config_writer):
 
-    _tel = simtel_config_writer._add_simtel_metadata("telescope")
+    _tel = simtel_config_writer._get_simtel_metadata("telescope")
     assert len(_tel) == 8
     assert _tel["camera_config_name"] == simtel_config_writer._telescope_model_name
     assert _tel["optics_config_name"] == simtel_config_writer._telescope_model_name
 
-    _site = simtel_config_writer._add_simtel_metadata("site")
+    _site = simtel_config_writer._get_simtel_metadata("site")
     assert len(_site) == 8
     assert _site["site_config_name"] == simtel_config_writer._site
     assert _site["array_config_name"] == simtel_config_writer._layout_name
 
     with pytest.raises(ValueError):
-        simtel_config_writer._add_simtel_metadata("unknown")
+        simtel_config_writer._get_simtel_metadata("unknown")
