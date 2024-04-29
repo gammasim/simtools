@@ -119,6 +119,24 @@ def default_le_configs(le_application):
                 "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
                 "names": ["z_position"],
             },
+            "x_pos_ILLN-01": {
+                "len": 1,
+                "unit": u.Unit("m"),
+                "default": 217592.2 * u.m,
+                "names": ["x_position"],
+            },
+            "y_pos_ILLN-01": {
+                "len": 1,
+                "unit": u.Unit("m"),
+                "default": 3184479.9 * u.m,
+                "names": ["y_position"],
+            },
+            "z_pos_ILLN-01": {
+                "len": 1,
+                "unit": u.Unit("m"),
+                "default": 2295 * u.m,
+                "names": ["z_position"],
+            },
             "direction": {
                 "len": 3,
                 "unit": u.dimensionless_unscaled,
@@ -140,7 +158,7 @@ def main():
     """
     Run the application in the command line.
     Example:
-    simtools-simulate-light-emission --telescope MSTN-design --site North
+    simtools-simulate-light-emission --telescope MSTN-design --site North \
       --illuminator ILLN-design --light_source_setup 2 --model_version prod6
     """
 
@@ -157,7 +175,6 @@ def main():
         ] * u.cm
 
     if args_dict["illuminator"] is not None:
-        # TODO: add illuminator positions from configuration later
         pass
 
     # Create telescope model
@@ -168,6 +185,8 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
+    # TODO: Use real coordinates from calibration_model or instance
+    # we use now ILLN-01 coordinates in the default configuration
 
     # Create calibration model
     calibration_model = CalibrationModel(
@@ -177,11 +196,6 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-
-    # TODO: Use real coordinates from array_model or instance, here we use ILLN-01 (utm)
-    calibration_model.add_parameter("x_pos", 217592.2, is_file=False, is_applicable=True)
-    calibration_model.add_parameter("y_pos", 3184479.9, is_file=False, is_applicable=True)
-    calibration_model.add_parameter("z_pos", 2295, is_file=False, is_applicable=True)
 
     site_model = SiteModel(
         site=args_dict["site"],
