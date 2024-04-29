@@ -438,23 +438,56 @@ def test_generate_file_name_ray_tracing():
     )
 
 
-def test_get_simtel_name_from_parameter_name():
-    assert names.get_simtel_name_from_parameter_name("focal_length") == "focal_length"
-    assert names.get_simtel_name_from_parameter_name("corsika_observation_level") == "altitude"
-    assert names.get_simtel_name_from_parameter_name("telescope_axis_height") is None
+def test_get_simulation_software_name_from_parameter_name():
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "focal_length", simulation_software="sim_telarray"
+        )
+        == "focal_length"
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "telescope_axis_height", simulation_software="sim_telarray"
+        )
+        is None
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "corsika_observation_level", simulation_software="sim_telarray"
+        )
+        == "altitude"
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "corsika_observation_level", simulation_software="corsika"
+        )
+        == "OBSLEV"
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "reference_point_longitude", simulation_software="sim_telarray"
+        )
+        is None  # this is not a sim_telarray parameter
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "reference_point_longitude", simulation_software="corsika"
+        )
+        == "reference_point_longitude"
+    )
 
-    assert (
-        names.get_simtel_name_from_parameter_name(
-            "corsika_observation_level", search_site_parameters=False
+    with pytest.raises(KeyError):
+        names.get_simulation_software_name_from_parameter_name(
+            "corsika_observation_level",
+            simulation_software="sim_telarray",
+            search_site_parameters=False,
         )
-        == "corsika_observation_level"
-    )
-    assert (
-        names.get_simtel_name_from_parameter_name(
-            "telescope_axis_height", search_telescope_parameters=False
+    with pytest.raises(KeyError):
+        names.get_simulation_software_name_from_parameter_name(
+            "telescope_axis_height",
+            simulation_software="sim_telarray",
+            search_telescope_parameters=False,
         )
-        == "telescope_axis_height"
-    )
 
 
 def test_get_parameter_name_from_simtel_name():

@@ -43,7 +43,7 @@ CTA:
       MODEL:
         NAME: simpipe-schema
         VERSION: 0.1.0
-        URL: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/mirror_panel_2f_measurements.schema.yml"
+        URL: "https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameters/mirror_panel_2f_measurements.schema.yml"
   CONTEXT:
     ASSOCIATED_ELEMENTS:
       - SITE: South
