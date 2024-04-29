@@ -25,7 +25,7 @@
 #         CATEGORY: CAL
 #         LEVEL: R1
 #         MODEL: {NAME: array_coordinates_utm,
-#           URL: 'https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/array_coordinates_UTM.schema.yml',
+#           URL: 'https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameters/array_coordinates_UTM.schema.yml',
 #           VERSION: 0.1.0}
 #         TYPE: Service
 #       DESCRIPTION: Telescope positions for the CTAO Northern site (UTM coordinate system). Consistent with document CTA-SPE-PSC-000000-0001
