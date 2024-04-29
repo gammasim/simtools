@@ -242,28 +242,47 @@ class SimulatorLightEmission(SimtelRunner):
 
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
-        command += f" -c {self._telescope_model.get_config_file(no_export = True)}"
+        command += f" -c {self._telescope_model.get_config_file()}"
+
+        # def remove_line_from_config(file_path, line_prefix):
+        #     with open(file_path, 'r') as file:
+        #         lines = file.readlines()
+
+        #     with open(file_path, 'w') as file:
+        #         for line in lines:
+        #             if not line.startswith(line_prefix):
+        #                 file.write(line)
+        # remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
+
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
-        command += super()._config_option(
-            "altitude", self._site_model.get_parameter_value("corsika_observation_level")
-        )
+        # command += super()._config_option(
+        #    "altitude", self._site_model.get_parameter_value("corsika_observation_level")
+        # )
         command += super()._config_option("maximum_telescopes", "1")
-        command += super()._config_option("trigger_telescopes", "1")
+        # command += super()._config_option("trigger_telescopes", "1")
         command += super()._config_option(
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
+        # command += super()._config_option("trigger_current_limit", "1e10")
+        command += super()._config_option("show", "all")
+        # command += super()._config_option("random_state", "none")
+        command += super()._config_option("ONLY_TRIGGERED_TELESCOPES", "0")
+        command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
+        # command += super()._config_option("ARRAY_WINDOW", "1000")
+        # command += super()._config_option("FAKE_TRIGGER", "1")
+
         # from light_emission_default config
         # command += super()._config_option(
         #    "telescope_theta",
         #    self.config.zenith_angle + self.config.off_axis_angle,
         # )
-        # command += super()._config_option("telescope_theta", "70")
+        command += super()._config_option("telescope_theta", "0")
         command += super()._config_option("telescope_phi", "0")
         command += super()._config_option("power_law", "2.68")
-        command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
+        # command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
         command += super()._config_option(
             "input_file", f"{self.output_directory}/{self.le_application}.iact.gz"
         )
@@ -366,6 +385,7 @@ class SimulatorLightEmission(SimtelRunner):
         for event in source:
             print(event.index.event_id)
         tel_id = sorted(event.r1.tel.keys())[0]
+
         calib = CameraCalibrator(subarray=source.subarray)
 
         calib(event)
