@@ -1,59 +1,198 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="./">
+
+<html lang="en" data-content_root="./" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; simtools v0.1.dev1+g4241c8b</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
-    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=96773cd9"></script>
+    <title>Configuration &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=6d720b77"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'configuration_module';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="CORSIKA" href="corsika.html" />
     <link rel="prev" title="Camera Efficiency" href="camera_efficiency.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
   
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
   
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
 
-  </head><body>
-  <div class="document">
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">simtools</a></h1>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
+  
 
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4241c8b</p>
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="library.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
@@ -78,50 +217,246 @@
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="library.html">API</a><ul>
-      <li>Previous: <a href="camera_efficiency.html" title="previous chapter">Camera Efficiency</a></li>
-      <li>Next: <a href="corsika.html" title="next chapter">CORSIKA</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
     </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/configuration_module.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-        </div>
-      </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
 
-          <div class="body" role="main">
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/configuration_module.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fconfiguration_module.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/configuration_module.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Configuration</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-configuration.configurator">configurator</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator"><code class="docutils literal notranslate"><span class="pre">Configurator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator.default_config"><code class="docutils literal notranslate"><span class="pre">Configurator.default_config()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator.initialize"><code class="docutils literal notranslate"><span class="pre">Configurator.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.InvalidConfigurationParameter"><code class="docutils literal notranslate"><span class="pre">InvalidConfigurationParameter</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-configuration.commandline_parser">commandline_parser</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser"><code class="docutils literal notranslate"><span class="pre">CommandLineParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.azimuth_angle"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.azimuth_angle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.efficiency_interval"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.efficiency_interval()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_application_execution_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_config_files"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_config_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_db_config_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_default_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_default_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_job_submission_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_output_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_output_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_path_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_path_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_simulation_model_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.site"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.site()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.telescope"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.zenith_angle"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.zenith_angle()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
   <section id="configuration">
-<span id="configurationmodule"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
+<span id="configurationmodule"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h1>
 <p>Reference documentation for the configuration of simtools applications.</p>
 <section id="module-configuration.configurator">
-<span id="configurator"></span><span id="configurationconfigurator"></span><h2>configurator<a class="headerlink" href="#module-configuration.configurator" title="Link to this heading">¶</a></h2>
+<span id="configurator"></span><span id="configurationconfigurator"></span><h2>configurator<a class="headerlink" href="#module-configuration.configurator" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="configuration.configurator.Configurator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">Configurator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">Configurator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator" title="Link to this definition">#</a></dt>
 <dd><p>Application configuration.</p>
 <p>Allow to set configuration parameters by</p>
 <ul class="simple">
@@ -150,7 +485,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.configurator.Configurator.default_config">
-<span class="sig-name descname"><span class="pre">default_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.default_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.default_config" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">default_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.default_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.default_config" title="Link to this definition">#</a></dt>
 <dd><p>Returns dictionary of default configuration</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -172,7 +507,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.configurator.Configurator.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">require_command_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.initialize" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">require_command_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/configurator.html#Configurator.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.Configurator.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize configuration from command line, configuration file, class config, or         environmental variable.</p>
 <p>Priorities in parameter settings.
 1. command line; 2. yaml file; 3. class init; 4. env variables.</p>
@@ -216,16 +551,16 @@
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="configuration.configurator.InvalidConfigurationParameter">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigurationParameter</span></span><a class="reference internal" href="_modules/configuration/configurator.html#InvalidConfigurationParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.InvalidConfigurationParameter" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.configurator.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigurationParameter</span></span><a class="reference internal" href="_modules/configuration/configurator.html#InvalidConfigurationParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.configurator.InvalidConfigurationParameter" title="Link to this definition">#</a></dt>
 <dd><p>Exception for Invalid configuration parameter.</p>
 </dd></dl>
 
 </section>
 <section id="module-configuration.commandline_parser">
-<span id="commandline-parser"></span><span id="configurationcommandline-parser"></span><h2>commandline_parser<a class="headerlink" href="#module-configuration.commandline_parser" title="Link to this heading">¶</a></h2>
+<span id="commandline-parser"></span><span id="configurationcommandline-parser"></span><h2>commandline_parser<a class="headerlink" href="#module-configuration.commandline_parser" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.commandline_parser.</span></span><span class="sig-name descname"><span class="pre">CommandLineParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter_class=&lt;class</span> <span class="pre">'argparse.HelpFormatter'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_chars='-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromfile_prefix_chars=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argument_default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_handler='error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_help=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_abbrev=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_on_error=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.commandline_parser.</span></span><span class="sig-name descname"><span class="pre">CommandLineParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter_class=&lt;class</span> <span class="pre">'argparse.HelpFormatter'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_chars='-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromfile_prefix_chars=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argument_default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_handler='error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_help=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_abbrev=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_on_error=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser" title="Link to this definition">#</a></dt>
 <dd><p>Command line parser for applications.</p>
 <p>Wrapper around standard python argparse.ArgumentParser.</p>
 <p>Command line arguments should be given in snake_case, e.g.  <code class="xref py py-obj docutils literal notranslate"><span class="pre">input_meta</span></code>.</p>
@@ -239,7 +574,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.azimuth_angle">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">azimuth_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.azimuth_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.azimuth_angle" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">azimuth_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.azimuth_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.azimuth_angle" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
 Other allowed options are north, south, east or west which will be translated to an angle
 where north corresponds to zero.</p>
@@ -267,7 +602,7 @@ where north corresponds to zero.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.efficiency_interval">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">efficiency_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.efficiency_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.efficiency_interval" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">efficiency_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.efficiency_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.efficiency_interval" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that value is an efficiency
 in the interval [0,1]</p>
 <dl class="field-list simple">
@@ -294,25 +629,25 @@ in the interval [0,1]</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">
-<span class="sig-name descname"><span class="pre">initialize_application_execution_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_application_execution_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_application_execution_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_application_execution_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize application execution arguments.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_config_files">
-<span class="sig-name descname"><span class="pre">initialize_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_config_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_config_files" title="Link to this definition">#</a></dt>
 <dd><p>Initialize configuration files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">
-<span class="sig-name descname"><span class="pre">initialize_db_config_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_db_config_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_db_config_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_db_config_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize DB configuration parameters.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_default_arguments">
-<span class="sig-name descname"><span class="pre">initialize_default_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_default_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_default_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_default_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_submission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_default_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_default_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize default arguments used by all applications (e.g., verbosity or test flag).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -335,25 +670,25 @@ in the interval [0,1]</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">
-<span class="sig-name descname"><span class="pre">initialize_job_submission_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_job_submission_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_job_submission_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_job_submission_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize job submission arguments for simulator.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_output_arguments">
-<span class="sig-name descname"><span class="pre">initialize_output_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_output_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_output_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_output_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_output_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_output_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize application output files(s)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_path_arguments">
-<span class="sig-name descname"><span class="pre">initialize_path_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_path_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_path_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_path_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_path_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_path_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize paths.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments">
-<span class="sig-name descname"><span class="pre">initialize_simulation_model_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_simulation_model_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialize_simulation_model_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.initialize_simulation_model_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments" title="Link to this definition">#</a></dt>
 <dd><p>Initialize default arguments for simulation model definition.
 Note that the model version is always required.</p>
 <dl class="field-list simple">
@@ -368,7 +703,7 @@ Note that the model version is always required.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.site">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.site" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.site" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that a valid site name is given</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -394,7 +729,7 @@ Note that the model version is always required.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.telescope">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.telescope" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.telescope" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that a valid telescope name is given</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -420,7 +755,7 @@ Note that the model version is always required.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.zenith_angle">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zenith_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.zenith_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.zenith_angle" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zenith_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/configuration/commandline_parser.html#CommandLineParser.zenith_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.zenith_angle" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that the zenith angle provided is in the interval [0, 180].
 We allow here zenith angles larger than 90 degrees in the improbable case
 such simulations are requested. It is not guaranteed that the actual simulation software
@@ -453,22 +788,130 @@ supports such angles!</p>
 </section>
 
 
-          </div>
-          
-        </div>
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="camera_efficiency.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Camera Efficiency</p>
       </div>
-    <div class="clearer"></div>
+    </a>
+    <a class="right-next"
+       href="corsika.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">CORSIKA</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
   </div>
-    <div class="footer">
-      
-      
-      
-      <a href="_sources/configuration_module.rst.txt"
-          rel="nofollow">Page source</a>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-configuration.configurator">configurator</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator"><code class="docutils literal notranslate"><span class="pre">Configurator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator.default_config"><code class="docutils literal notranslate"><span class="pre">Configurator.default_config()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.Configurator.initialize"><code class="docutils literal notranslate"><span class="pre">Configurator.initialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.configurator.InvalidConfigurationParameter"><code class="docutils literal notranslate"><span class="pre">InvalidConfigurationParameter</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-configuration.commandline_parser">commandline_parser</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser"><code class="docutils literal notranslate"><span class="pre">CommandLineParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.azimuth_angle"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.azimuth_angle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.efficiency_interval"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.efficiency_interval()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_application_execution_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_config_files"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_config_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_db_config_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_default_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_default_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_job_submission_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_output_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_output_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_path_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_path_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_simulation_model_arguments()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.site"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.site()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.telescope"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.zenith_angle"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.zenith_angle()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
     </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
-    
-
-    
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>

@@ -1,0 +1,699 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>corsika.corsika_default_config &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=6d720b77"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/corsika/corsika_default_config';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/corsika/corsika_default_config.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for corsika.corsika_default_config</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
+
+
+<div class="viewcode-block" id="CorsikaDefaultConfig">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">CorsikaDefaultConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class contains the default configuration for CORSIKA parameters for</span>
+<span class="sd">    the various primary particles. It includes all basic dependencies on zenith angles, etc.</span>
+<span class="sd">    The default values defined in this class assume the full CTAO arrays are simulated,</span>
+<span class="sd">    including full CTAO energy range and number of events optimized to run for roughly 24 hours</span>
+<span class="sd">    on a single node on the grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CorsikaDefaultConfig.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">=</span> <span class="n">primary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_energy_slope</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_ranges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_hardcoded_energy_ranges</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_showers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_hardcoded_number_of_showers</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Primary particle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        primary: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primary</span>
+
+    <span class="nd">@primary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">primary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set primary particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        primary: str</span>
+<span class="sd">            Which primary to simulate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">supported_primaries</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gamma_diffuse&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;electron&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;proton&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;muon&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;helium&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nitrogen&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;silicon&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iron&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">primary</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_primaries</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid primary particle: </span><span class="si">{</span><span class="n">primary</span><span class="si">}</span><span class="s2">. Must be one of </span><span class="si">{</span><span class="n">supported_primaries</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary</span> <span class="o">=</span> <span class="n">primary</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">zenith_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Zenith angle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        zenith_angle: astropy.units.Quantity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zenith_angle</span>
+
+    <span class="nd">@zenith_angle</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">zenith_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set zenith angle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        zenith_angle: astropy.units.Quantity</span>
+<span class="sd">            Which zenith angle to simulate (in degrees).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">allowed_zenith_angle_interval</span> <span class="o">=</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">zenith_angle</span> <span class="o">&lt;</span> <span class="n">allowed_zenith_angle_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="n">zenith_angle</span> <span class="o">&gt;</span> <span class="n">allowed_zenith_angle_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The zenith angle, </span><span class="si">{</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;is outside of the allowed interval, </span><span class="si">{</span><span class="n">allowed_zenith_angle_interval</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">&quot;This interval is enforced because values can only be interpolated &quot;</span>
+                <span class="s2">&quot;between zenith angles that were manually optimized.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">energy_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Energy slope.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        energy_slope: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_energy_slope</span>
+
+    <span class="k">def</span> <span class="nf">_define_hardcoded_energy_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the hardcoded energy ranges for the various primaries.</span>
+<span class="sd">        These energy ranges are for the full CTAO energy range (for both sites).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        energy_ranges: dict</span>
+<span class="sd">            Dictionary with the default energy ranges for the various primaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">energy_ranges</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">330</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">660</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">12</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">990</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">zenith_angle</span> <span class="ow">in</span> <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]:</span>
+            <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma_diffuse&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span>
+            <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;electron&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span>
+
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">600</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">12</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">800</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">16</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">1800</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">1200</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">2400</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">3600</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">4000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">80</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">8000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">160</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">12000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">50</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">5000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">10000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">15000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;iron&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">60</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">6000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;iron&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">120</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">12000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+        <span class="n">energy_ranges</span><span class="p">[</span><span class="s2">&quot;iron&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">240</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">18000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">energy_ranges</span>
+
+    <span class="k">def</span> <span class="nf">_define_hardcoded_number_of_showers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the hardcoded number of showers for the various primaries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        number_of_showers: dict</span>
+<span class="sd">            Dictionary with the default number of showers for the various primaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">number_of_showers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2500</span>
+
+        <span class="k">for</span> <span class="n">zenith_angle</span> <span class="ow">in</span> <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]:</span>
+            <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma_diffuse&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span>
+                <span class="n">zenith_angle</span>
+            <span class="p">]</span>
+            <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;electron&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">][</span><span class="n">zenith_angle</span><span class="p">]</span>
+
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;proton&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7500</span>
+
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;helium&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5000</span>
+
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">number_of_showers</span><span class="p">[</span><span class="s2">&quot;silicon&quot;</span><span class="p">][</span><span class="mi">60</span><span class="p">]</span> <span class="o">=</span> <span class="mi">500</span>
+
+        <span class="k">return</span> <span class="n">number_of_showers</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">interpolate_to_zenith_angle</span><span class="p">(</span>
+        <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">zenith_angles_to_interpolate</span><span class="p">,</span> <span class="n">values_to_interpolate</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interpolate values like energy range or number of showers to the provided zenith angle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        zenith_angle: astropy.units.Quantity</span>
+<span class="sd">            Which zenith angle to interpolate to (in degrees).</span>
+<span class="sd">        zenith_angles_to_interpolate: list</span>
+<span class="sd">            List of zenith angles for which we have values to interpolate between.</span>
+<span class="sd">        values_to_interpolate: list</span>
+<span class="sd">            List of values to interpolate between.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Interpolated value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">interpolation_function</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+            <span class="n">zenith_angles_to_interpolate</span><span class="p">,</span> <span class="n">values_to_interpolate</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;quadratic&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">interpolation_function</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CorsikaDefaultConfig.energy_range_for_primary">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.energy_range_for_primary">[docs]</a>
+    <span class="k">def</span> <span class="nf">energy_range_for_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the energy range for the primary particle for the given zenith angle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        energy_range: list</span>
+<span class="sd">            List with the energy range for the primary particle for the given zenith angle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">zenith_angles_to_interpolate</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_ranges</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">min_energy_to_interpolate</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">energy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">)</span> <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_ranges</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="n">max_energy_to_interpolate</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">energy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">)</span> <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_ranges</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_to_zenith_angle</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="n">zenith_angles_to_interpolate</span><span class="p">,</span> <span class="n">min_energy_to_interpolate</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_to_zenith_angle</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="n">zenith_angles_to_interpolate</span><span class="p">,</span> <span class="n">max_energy_to_interpolate</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CorsikaDefaultConfig.number_of_showers_for_primary">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.number_of_showers_for_primary">[docs]</a>
+    <span class="k">def</span> <span class="nf">number_of_showers_for_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of showers for the primary particle for the given zenith angle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        number_of_showers: int</span>
+<span class="sd">            Number of showers for the primary particle for the given zenith angle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">zenith_angles_to_interpolate</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_ranges</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">number_of_showers</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_showers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_to_zenith_angle</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">zenith_angles_to_interpolate</span><span class="p">,</span>
+            <span class="n">number_of_showers</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CorsikaDefaultConfig.view_cone_for_primary">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.view_cone_for_primary">[docs]</a>
+    <span class="k">def</span> <span class="nf">view_cone_for_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the view cone for the primary particle.</span>
+<span class="sd">        All diffuse primaries have a view cone of 10 deg by default.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        view_cone: list</span>
+<span class="sd">            List with the view cone for the primary particle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">==</span> <span class="s2">&quot;gamma&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">]</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

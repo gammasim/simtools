@@ -1,0 +1,994 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=6d720b77"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/model_parameter';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/model/model_parameter.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for model.model_parameter</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_config_writer</span> <span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidModelParameter&quot;</span><span class="p">,</span> <span class="s2">&quot;ModelParameter&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="InvalidModelParameter">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.InvalidModelParameter">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidModelParameter</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid model parameter.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ModelParameter">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for model parameters.</span>
+<span class="sd">    Provides methods to read and manipulate parameters from DB.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db: DatabaseHandler</span>
+<span class="sd">        Database handler.</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Version of the model (ex. prod5).</span>
+<span class="sd">    site: str</span>
+<span class="sd">        Site name (e.g., South or North).</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        Telescope model name (e.g., LSTN-01, LSTN-design).</span>
+<span class="sd">    mongo_db_config: dict</span>
+<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label. Important for output file naming.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="k">if</span> <span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">telescope_model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_parameters_from_db</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_get_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get model parameter dictionary as stored in the DB.</span>
+<span class="sd">        No conversion to values are applied for the use in simtools</span>
+<span class="sd">        (e.g., no conversion from the string representation of lists</span>
+<span class="sd">        to lists).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with complete DB entry for the given parameter.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidModelParameter</span>
+<span class="sd">            If par_name does not match any parameter in this model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not found in the model&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidModelParameter</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+<div class="viewcode-block" id="ModelParameter.get_parameter_value">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value of a model parameter. List of values stored</span>
+<span class="sd">        in strings are returns as lists, so that no knowledge</span>
+<span class="sd">        of the database structure is needed when accessing the</span>
+<span class="sd">        model parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        parameter_dict: dict</span>
+<span class="sd">            Dictionary with complete DB entry for the given parameter</span>
+<span class="sd">            (including the &#39;value&#39;, &#39;units&#39; fields).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Value of the parameter.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If par_name does not match any parameter in this model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">parameter_dict</span> <span class="o">=</span> <span class="n">parameter_dict</span> <span class="k">if</span> <span class="n">parameter_dict</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_parameter</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a value&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_parameter</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">_is_float</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_is_float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">InvalidModelParameter</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>  <span class="c1"># float - in case we don&#39;t know</span>
+                <span class="n">_is_float</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">_parameter</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">_parameter</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="n">_is_float</span><span class="p">)</span>
+            <span class="n">_parameter</span> <span class="o">=</span> <span class="n">_parameter</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_parameter</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">_parameter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">_parameter</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.get_parameter_value_with_unit">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\</span>
+<span class="sd">        If no unit is provided in the model, the value is returned without a unit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \</span>
+<span class="sd">        provided in the model, the value is returned without a unit.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">_parameter</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_value</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.get_parameter_type">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the type of existing parameter of the model</span>
+<span class="sd">        (value of &#39;type&#39; field of DB entry)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str or None</span>
+<span class="sd">            type of the parameter (None if no type is defined)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a type&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.get_parameter_file_flag">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_file_flag">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameter_file_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get value of parameter file flag of this database entry</span>
+<span class="sd">        (boolean &#39;file&#39; field of DB entry).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if file flag is set.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a file associated with it.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">derived</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the derived values and export them if the class instance hasn&#39;t done it yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_derived_values</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_export_derived_files</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span>
+
+    <span class="k">def</span> <span class="nf">_load_derived_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load derived values from the DB</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading derived values from DB&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_derived_values</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write to disk a file from the derived values DB.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">par_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;File&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_file_db</span><span class="p">(</span>
+                    <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">DB_DERIVED_VALUES</span><span class="p">,</span>
+                    <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="o">=</span><span class="p">(</span><span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Value&quot;</span><span class="p">)),</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="ModelParameter.print_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.print_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print parameters and their values for debugging purposes.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_set_config_file_directory_and_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set and create the directory and the name of the config file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;model&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Setting file name and the location</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config_file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">simtel_config_file_name</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="n">extra_label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config file path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_parameters_from_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Read parameters from DB and store them in _parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Reading telescope parameters from DB &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_sim_telarray_configuration_parameters</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No sim_telarray configuration parameters found for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading site parameters from DB (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2"> site)&quot;</span><span class="p">)</span>
+            <span class="n">_site_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_site_parameters</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_site_pars</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ModelParameter.set_extra_label">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.set_extra_label">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set an extra label for the name of the config file.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The config file directory name is not affected by the extra label. Only the file name is \</span>
+<span class="sd">        changed. This is important for the ArrayModel class to export multiple config files in the\</span>
+<span class="sd">        same directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        extra_label: str</span>
+<span class="sd">            Extra label to be appended to the original label.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="o">=</span> <span class="n">extra_label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the extra label if defined, if not return &#39;&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModelParameter.get_simtel_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_simtel_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_simtel_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">site_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get simtel parameters as name and value pairs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Parameters (simtools) to be renamed (if necessary)</span>
+<span class="sd">        telescope_model: bool</span>
+<span class="sd">            If True, telescope model parameters are included.</span>
+<span class="sd">        site_model: bool</span>
+<span class="sd">            If True, site model parameters are included.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            simtel parameters as dict (sorted by parameter names)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+
+        <span class="n">_simtel_parameter_value</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="n">_par_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span>
+                <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+                <span class="n">search_telescope_parameters</span><span class="o">=</span><span class="n">telescope_model</span><span class="p">,</span>
+                <span class="n">search_site_parameters</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">_par_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_simtel_parameter_value</span><span class="p">[</span><span class="n">_par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_simtel_parameter_value</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.change_parameter">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.change_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the value of an existing parameter. This function does not modify the \</span>
+<span class="sd">        DB, it affects only the current instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        value:</span>
+<span class="sd">            Value of the parameter.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidModelParameter</span>
+<span class="sd">            If the parameter to be changed does not exist in this model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">par_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> not in the model&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidModelParameter</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_data_type</span><span class="p">(</span>
+            <span class="n">reference_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Could not cast </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Changing parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># In case parameter is a file, the model files will be outdated</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_file_flag</span><span class="p">(</span><span class="n">par_name</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.change_multiple_parameters">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.change_multiple_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the value of multiple existing parameters in the model. This function does not \</span>
+<span class="sd">        modify the DB, it affects only the current instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Parameters should be passed as parameter_name=value.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="n">par</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.add_parameter_file">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.add_parameter_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a file to the config file directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        file_path: str</span>
+<span class="sd">            Path of the file to be added to the config file directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.export_model_files">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.export_model_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exports the model files into the config file directory.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Removing parameter files added manually (which are not in DB)</span>
+        <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="p">:</span>
+                <span class="n">pars_from_db</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">pars_from_db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.export_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.export_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Exporting model file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
+
+        <span class="c1"># Using SimtelConfigWriter to write the config file.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_simtel_config_writer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span><span class="o">.</span><span class="n">write_telescope_config_file</span><span class="p">(</span>
+            <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">),</span>
+            <span class="n">config_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_parameters</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Directory for configure files. Configure, if necessary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">config_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path of the config file. Configure, if necessary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span>
+
+<div class="viewcode-block" id="ModelParameter.get_config_file">
+<a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the config file for sim_telarray. The config file is produced if the file\</span>
+<span class="sd">        is not up to date.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        no_export: bool</span>
+<span class="sd">            Turn it on if you do not want the file to be exported.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            Path of the exported config file for sim_telarray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">no_export</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_load_simtel_config_writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the SimtelConfigWriter object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="o">=</span> <span class="n">SimtelConfigWriter</span><span class="p">(</span>
+                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

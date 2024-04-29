@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=6d720b77"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_config_reader';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_config_reader.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtel.simtel_config_reader</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">validate_data</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelConfigReader&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">JsonNumpyEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert numpy to python types as accepted by json.dump.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CompositeUnit</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">IrreducibleUnit</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Unit</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">if</span> <span class="n">o</span> <span class="o">!=</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SimtelConfigReader">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelConfigReader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SimtelConfigReader reads model parameters from configuration files and converts to the simtools</span>
+<span class="sd">    representation (json dict). The sim_telarray configuration can be generated using e.g., the</span>
+<span class="sd">    following simtel_array command:</span>
+
+<span class="sd">    ... code-block:: console</span>
+
+<span class="sd">        sim_telarray/bin/sim_telarray \</span>
+<span class="sd">            -c sim_telarray/cfg/CTA/CTA-PROD6-LaPalma.cfg\</span>
+<span class="sd">            -C limits=no-internal -C initlist=no-internal -C list=no-internal\</span>
+<span class="sd">            -C typelist=no-internal -C maximum_telescopes=30\</span>
+<span class="sd">            -DNSB_AUTOSCALE -DNECTARCAM -DHYPER_LAYOUT\</span>
+<span class="sd">            -DNUM_TELESCOPES=30 /dev/null 2&gt;|/dev/null | grep &#39;(@cfg)&#39;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    schema_file: str</span>
+<span class="sd">        Schema file describing the model parameter.</span>
+<span class="sd">    simtel_config_file: str or Path</span>
+<span class="sd">        Path of the file to read from.</span>
+<span class="sd">    simtel_telescope_name: str</span>
+<span class="sd">        Telescope name (sim_telarray convention)</span>
+<span class="sd">    parameter_name: str</span>
+<span class="sd">        Parameter name (default: read from schema file)</span>
+<span class="sd">    camera_pixels: int</span>
+<span class="sd">        Number of camera pixels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">schema_file</span><span class="p">,</span>
+        <span class="n">simtel_config_file</span><span class="p">,</span>
+        <span class="n">simtel_telescope_name</span><span class="p">,</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize SimtelConfigReader.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimtelConfigReader&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span> <span class="o">=</span> <span class="n">schema_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="k">else</span> <span class="n">parameter_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span> <span class="o">=</span> <span class="n">simtel_telescope_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="o">=</span> <span class="n">camera_pixels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_simtel_config_file</span><span class="p">(</span>
+            <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="SimtelConfigReader.get_validated_parameter_dict">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_validated_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a validated model parameter dictionary as filled into the database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Telescope name (e.g., LSTN-01)</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Model version string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Model parameter dictionary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting validated parameter dictionary for </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">_json_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="p">,</span>
+            <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">telescope_name</span><span class="p">,</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">),</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span><span class="p">),</span>
+            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_unit_from_schema</span><span class="p">(),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;string&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;str&quot;</span>
+                <span class="k">else</span> <span class="p">(</span>
+                    <span class="s2">&quot;boolean&quot;</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;applicable&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_parameter_applicability</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">),</span>
+            <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_is_a_file</span><span class="p">(),</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_parameter_dict</span><span class="p">(</span><span class="n">_json_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimtelConfigReader.export_parameter_dict_to_json">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_parameter_dict_to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">dict_to_write</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export parameter dictionary to json.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_name: str or Path</span>
+<span class="sd">            File name to export to.</span>
+<span class="sd">        dict_to_write: dict</span>
+<span class="sd">            Dictionary to export.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;limits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;limits&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting parameter dictionary to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+                <span class="n">dict_to_write</span><span class="p">,</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="bp">cls</span><span class="o">=</span><span class="n">JsonNumpyEncoder</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimtelConfigReader.compare_simtel_config_with_schema">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">[docs]</a>
+    <span class="k">def</span> <span class="nf">compare_simtel_config_with_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare limits and defaults reported by simtel_array with schema</span>
+<span class="sd">        (for debugging purposes; simple printing). Check for differences</span>
+<span class="sd">        in &#39;default&#39; and &#39;limits&#39; entries.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;limits&quot;</span><span class="p">]:</span>
+            <span class="n">_from_simtel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span>
+            <span class="c1"># ignore limits checks for boolean</span>
+            <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span><span class="p">:</span>
+                    <span class="n">_from_schema</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">),</span>
+                    <span class="p">]</span>
+                    <span class="n">_from_schema</span> <span class="o">=</span> <span class="n">_from_schema</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">_from_schema</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_from_schema</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">_from_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">_from_schema</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+                <span class="n">_from_schema</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">_from_schema</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]))</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+                    <span class="ow">and</span> <span class="n">_from_simtel</span> <span class="o">==</span> <span class="n">_from_schema</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> match&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> match&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> do not match:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;  from simtel: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">_from_simtel</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;  from schema: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">_from_schema</span><span class="si">}</span><span class="s2">&quot;</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_simtel_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read sim_telarray configuration file and return a dictionary with the parameter values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simtel_config_file: str or Path</span>
+<span class="sd">            Path of the file to read from.</span>
+<span class="sd">        simtel_telescope_name: str</span>
+<span class="sd">            Telescope name (sim_telarray convention)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with the parameter values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Reading simtel config file </span><span class="si">{</span><span class="n">simtel_config_file</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;for parameter </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">matching_lines</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="c1"># split line into parts (space, tabs, comma separated)</span>
+                    <span class="n">parts_of_lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;,\s*|\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">==</span> <span class="n">parts_of_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+                        <span class="n">matching_lines</span><span class="p">[</span><span class="n">parts_of_lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">parts_of_lines</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">simtel_config_file</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matching_lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No entries found for parameter </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">_para_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># first: extract line type (required for conversions and dimension)</span>
+        <span class="n">_para_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">_para_dict</span><span class="p">[</span><span class="s2">&quot;dimension&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span>
+            <span class="n">matching_lines</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># then: extract other fields</span>
+        <span class="c1"># (order of keys matter; not all field are present for all parameters)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">,</span> <span class="s2">&quot;limits&quot;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_para_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_value_from_simtel_cfg</span><span class="p">(</span>
+                    <span class="n">matching_lines</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span>
+                    <span class="n">n_dim</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dimension&quot;</span><span class="p">),</span>
+                    <span class="n">default</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">_para_dict</span>
+
+    <span class="k">def</span> <span class="nf">_resolve_all_in_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve &#39;all&#39; entries in a column. This needs to resolve the following cases:</span>
+<span class="sd">        no &#39;all&#39; in any entry; [&#39;all:&#39;, &#39;5&#39;], [&#39;all: 5&#39;], [&#39;all:5&#39;, &#39;3:1&#39;]</span>
+<span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column: list</span>
+<span class="sd">            List of strings to resolve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of resolved strings.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># don&#39;t do anything if all string items in column do not start with &#39;all&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resolving &#39;all&#39; entries in column: </span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># remove &#39;all:&#39; entries</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;all:&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)]</span>
+        <span class="c1"># resolve &#39;all:5&#39; type entries</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;all:&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span>
+        <span class="p">]</span>
+        <span class="c1"># find &#39;index:value&#39; type entries</span>
+        <span class="n">except_from_all</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+                <span class="n">except_from_all</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="c1"># finally remove entries containing &#39;:&#39;</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span> <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">except_from_all</span>
+
+    <span class="k">def</span> <span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract value(s) from simtel configuration file columns.</span>
+<span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column: list</span>
+<span class="sd">            List of strings to extract value from.</span>
+<span class="sd">        dtype: str</span>
+<span class="sd">            Data type to convert value to.</span>
+<span class="sd">        n_dim: int</span>
+<span class="sd">            Length of array to be returned.</span>
+<span class="sd">        default: object</span>
+<span class="sd">            Default value to extend array to required length.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        object, int</span>
+<span class="sd">            Values extracted from column. Of object is a list of array, return length of array.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># string represents a lists of values (space or comma separated)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Adding value from simtel config: </span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> (n_dim=</span><span class="si">{</span><span class="n">n_dim</span><span class="si">}</span><span class="s2">, default=</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">]</span>
+        <span class="n">column</span><span class="p">,</span> <span class="n">except_from_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_all_in_column</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="c1"># extend array to required length (simtel uses sometimes &#39;all:&#39; for all entries)</span>
+        <span class="k">if</span> <span class="n">n_dim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n_dim</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># skip formatting: black reformats and violates E203</span>
+                <span class="n">column</span> <span class="o">+=</span> <span class="n">default</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">):]</span>  <span class="c1"># fmt: skip</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="c1"># extend array to required length using previous value</span>
+                <span class="n">column</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">column</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_dim</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">except_from_all</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">except_from_all</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">column</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return type and dimension from simtel configuration column.</span>
+<span class="sd">        &#39;Func&#39; type from simtel is treated as string. Return number</span>
+<span class="sd">        of camera pixel for a hard-wired set up parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column: list</span>
+<span class="sd">            List of strings to extract value from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str, int</span>
+<span class="sd">            Type and dimension.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span> <span class="ow">or</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;func&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;str&quot;</span><span class="p">,</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;ibool&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;bool&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;NIGHTSKY_BACKGROUND&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return parameter name as used in sim_telarray. This is</span>
+<span class="sd">        documented in the schema file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameter_name: str</span>
+<span class="sd">            Model parameter name (as used in simtools)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Parameter name as used in sim_telarray.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sim_soft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">sim_soft</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">sim_soft</span><span class="p">[</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_check_parameter_applicability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if a parameter is applicable for a given telescope using</span>
+<span class="sd">        the information available in the schema file.</span>
+<span class="sd">        First check for exact telescope name, if not listed in the schema</span>
+<span class="sd">        use telescope type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Telescope name (e.g., LSTN-01)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if parameter is applicable to telescope.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">telescope_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Schema file does not contain &#39;instrument:type&#39; key.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parameter_is_a_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if parameter is a file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if parameter is a file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_get_unit_from_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return unit(s) from schema dict.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str or list</span>
+<span class="sd">            Parameter unit(s)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">unit_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
+                <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">unit_list</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">unit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_validate_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate json dictionary against model parameter data schema.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameter_dict: dict</span>
+<span class="sd">            Dictionary to validate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Validated dictionary (possibly converted to reference units).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Validating parameter dictionary </span><span class="si">{</span><span class="n">parameter_dict</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">,</span>
+            <span class="n">data_dict</span><span class="o">=</span><span class="n">parameter_dict</span><span class="p">,</span>
+            <span class="n">check_exact_data_type</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data_validator</span><span class="o">.</span><span class="n">data_dict</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

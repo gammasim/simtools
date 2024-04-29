@@ -1,57 +1,196 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="./">
+
+<html lang="en" data-content_root="./" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+g4241c8b</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
-    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=96773cd9"></script>
+    <title>Layout &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=6d720b77"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'array_layout';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MC Model" href="mc_model.html" />
     <link rel="prev" title="Job execution and submission" href="job_execution.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
   
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
   
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
 
-  </head><body>
-  <div class="document">
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">simtools</a></h1>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
+  
 
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4241c8b</p>
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="library.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
@@ -60,7 +199,7 @@
 <li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Layout</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
@@ -78,51 +217,264 @@
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="library.html">API</a><ul>
-      <li>Previous: <a href="job_execution.html" title="previous chapter">Job execution and submission</a></li>
-      <li>Next: <a href="mc_model.html" title="next chapter">MC Model</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
     </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/array_layout.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-        </div>
-      </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
 
-          <div class="body" role="main">
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/array_layout.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Farray_layout.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/array_layout.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Layout</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.array_layout">array_layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout"><code class="docutils literal notranslate"><span class="pre">ArrayLayout</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.from_array_layout_name"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.from_array_layout_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_corsika_input_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_corsika_input_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.select_assets"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.select_assets()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.InvalidTelescopeListFile"><code class="docutils literal notranslate"><span class="pre">InvalidTelescopeListFile</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.telescope_position">telescope_position</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.InvalidCoordSystem"><code class="docutils literal notranslate"><span class="pre">InvalidCoordSystem</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition"><code class="docutils literal notranslate"><span class="pre">TelescopePosition</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_all"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_all()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_telescope_altitude_from_corsika_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_telescope_altitude_to_corsika_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_axis_height"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_axis_height()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_sphere_radius"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_sphere_radius()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.has_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.has_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.has_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.has_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.is_coordinate_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.is_coordinate_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.print_compact_format"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.print_compact_format()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_auxiliary_parameter"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_auxiliary_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_coordinates()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.geo_coordinates">geo_coordinates</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_local"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_local()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_utm"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_utm()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_wgs84()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
   <section id="layout">
-<span id="id1"></span><h1>Layout<a class="headerlink" href="#layout" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Layout<a class="headerlink" href="#layout" title="Link to this heading">#</a></h1>
 <p>The Layout Array module deals with the telescope positions and coordinate transformations.
 It is used within CORSIKA Config and Array Model in order to encapsulate the information about the telescope positions.</p>
 <section id="module-layout.array_layout">
-<span id="array-layout"></span><span id="layoutarraymodule"></span><h2>array_layout<a class="headerlink" href="#module-layout.array_layout" title="Link to this heading">¶</a></h2>
+<span id="array-layout"></span><span id="layoutarraymodule"></span><h2>array_layout<a class="headerlink" href="#module-layout.array_layout" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">ArrayLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">ArrayLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout" title="Link to this definition">#</a></dt>
 <dd><p>Manage telescope positions at the array layout level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -148,7 +500,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.add_telescope">
-<span class="sig-name descname"><span class="pre">add_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.add_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.add_telescope" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.add_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.add_telescope" title="Link to this definition">#</a></dt>
 <dd><p>Add an individual telescope to the telescope list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -172,13 +524,13 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.convert_coordinates">
-<span class="sig-name descname"><span class="pre">convert_coordinates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.convert_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.convert_coordinates" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">convert_coordinates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.convert_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.convert_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Perform all the possible conversions the coordinates of the tel positions.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.export_telescope_list_table">
-<span class="sig-name descname"><span class="pre">export_telescope_list_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_telescope_list_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_telescope_list_table" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_telescope_list_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_telescope_list_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_telescope_list_table" title="Link to this definition">#</a></dt>
 <dd><p>Export array elements positions to astropy table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -200,7 +552,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.from_array_layout_name">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array_layout_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.from_array_layout_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.from_array_layout_name" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array_layout_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.from_array_layout_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.from_array_layout_name" title="Link to this definition">#</a></dt>
 <dd><p>Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, …).
 Layout definitions are given in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">data/layout</span></code> path.</p>
 <dl class="field-list simple">
@@ -227,7 +579,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.get_corsika_input_list">
-<span class="sig-name descname"><span class="pre">get_corsika_input_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.get_corsika_input_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.get_corsika_input_list" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_corsika_input_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.get_corsika_input_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.get_corsika_input_list" title="Link to this definition">#</a></dt>
 <dd><p>Get a string with the piece of text to be added to the CORSIKA input file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -241,7 +593,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.get_number_of_telescopes">
-<span class="sig-name descname"><span class="pre">get_number_of_telescopes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.get_number_of_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_number_of_telescopes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.get_number_of_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes" title="Link to this definition">#</a></dt>
 <dd><p>Return the number of telescopes in the list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -255,7 +607,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.print_telescope_list">
-<span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.print_telescope_list" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.print_telescope_list" title="Link to this definition">#</a></dt>
 <dd><p>Print list of telescopes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -269,7 +621,7 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.select_assets">
-<span class="sig-name descname"><span class="pre">select_assets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.select_assets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.select_assets" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">select_assets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.select_assets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.select_assets" title="Link to this definition">#</a></dt>
 <dd><p>Select a subsets of telescopes / assets from the layout.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -291,22 +643,22 @@ Layout definitions are given in the <code class="xref py py-obj docutils literal
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="layout.array_layout.InvalidTelescopeListFile">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">InvalidTelescopeListFile</span></span><a class="reference internal" href="_modules/layout/array_layout.html#InvalidTelescopeListFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.InvalidTelescopeListFile" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">InvalidTelescopeListFile</span></span><a class="reference internal" href="_modules/layout/array_layout.html#InvalidTelescopeListFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.InvalidTelescopeListFile" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid telescope list file.</p>
 </dd></dl>
 
 </section>
 <section id="module-layout.telescope_position">
-<span id="telescope-position"></span><span id="telescopedatamodule"></span><h2>telescope_position<a class="headerlink" href="#module-layout.telescope_position" title="Link to this heading">¶</a></h2>
+<span id="telescope-position"></span><span id="telescopedatamodule"></span><h2>telescope_position<a class="headerlink" href="#module-layout.telescope_position" title="Link to this heading">#</a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="layout.telescope_position.InvalidCoordSystem">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">InvalidCoordSystem</span></span><a class="reference internal" href="_modules/layout/telescope_position.html#InvalidCoordSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.InvalidCoordSystem" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">InvalidCoordSystem</span></span><a class="reference internal" href="_modules/layout/telescope_position.html#InvalidCoordSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.InvalidCoordSystem" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid coordinate system.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">TelescopePosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">TelescopePosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition" title="Link to this definition">#</a></dt>
 <dd><p>Store a telescope position and perform coordinate transformations.</p>
 <p>The definition of x_coord and y_coord in this class depend on the     coordinate system (e.g., (x_coord, y_coord) == (UTM_east, UTM_north)).     Altitude describes always the element height above sea level, position_z
 the height above a reference altitude (e.g., CORSIKA observation level).</p>
@@ -320,7 +672,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_all">
-<span class="sig-name descname"><span class="pre">convert_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_wgs84</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_utm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.convert_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_all" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">convert_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_wgs84</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_utm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.convert_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_all" title="Link to this definition">#</a></dt>
 <dd><p>Perform conversions and fill coordinate variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -338,7 +690,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">#</a></dt>
 <dd><p>Convert Corsika (pos_z) to altitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -362,7 +714,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">#</a></dt>
 <dd><p>Convert telescope altitude to CORSIKA system (pos_z).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -386,7 +738,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_altitude">
-<span class="sig-name descname"><span class="pre">get_altitude</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_altitude" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_altitude</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_altitude" title="Link to this definition">#</a></dt>
 <dd><p>”
 Get altitude of an array element</p>
 <dl class="field-list simple">
@@ -401,7 +753,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_axis_height">
-<span class="sig-name descname"><span class="pre">get_axis_height</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_axis_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_axis_height" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_axis_height</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_axis_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_axis_height" title="Link to this definition">#</a></dt>
 <dd><p>Get telescope axis height.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -415,7 +767,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_coordinates">
-<span class="sig-name descname"><span class="pre">get_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_coordinates" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Get coordinates in a given coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -442,7 +794,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_sphere_radius">
-<span class="sig-name descname"><span class="pre">get_sphere_radius</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_sphere_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_sphere_radius" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_sphere_radius</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_sphere_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_sphere_radius" title="Link to this definition">#</a></dt>
 <dd><p>Get telescope sphere radius.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -456,7 +808,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.has_altitude">
-<span class="sig-name descname"><span class="pre">has_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.has_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.has_altitude" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">has_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.has_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.has_altitude" title="Link to this definition">#</a></dt>
 <dd><p>Return True if array element has altitude defined.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -482,7 +834,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.has_coordinates">
-<span class="sig-name descname"><span class="pre">has_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.has_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.has_coordinates" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">has_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.has_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.has_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Check if coordinates are set for a given coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -510,7 +862,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.is_coordinate_system">
-<span class="sig-name descname"><span class="pre">is_coordinate_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.is_coordinate_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.is_coordinate_system" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">is_coordinate_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.is_coordinate_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.is_coordinate_system" title="Link to this definition">#</a></dt>
 <dd><p>Check if crs_name describes a coordinate system or auxiliary information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -536,7 +888,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.print_compact_format">
-<span class="sig-name descname"><span class="pre">print_compact_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.print_compact_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.print_compact_format" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_compact_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.print_compact_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.print_compact_format" title="Link to this definition">#</a></dt>
 <dd><p>Print array element coordinates in compact format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -560,7 +912,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.set_altitude">
-<span class="sig-name descname"><span class="pre">set_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_altitude" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_altitude" title="Link to this definition">#</a></dt>
 <dd><p>Set altitude of an array element. Assume that all coordinate system have same altitude         definition, meaning altitude is set for all systems here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -573,7 +925,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.set_auxiliary_parameter">
-<span class="sig-name descname"><span class="pre">set_auxiliary_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_auxiliary_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_auxiliary_parameter" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_auxiliary_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_auxiliary_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_auxiliary_parameter" title="Link to this definition">#</a></dt>
 <dd><p>Set auxiliary parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -589,7 +941,7 @@ Get altitude of an array element</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.set_coordinates">
-<span class="sig-name descname"><span class="pre">set_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_coordinates" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Set coordinates of an array element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
@@ -617,15 +969,15 @@ Get altitude of an array element</p>
 
 </section>
 <section id="module-layout.geo_coordinates">
-<span id="geo-coordinates"></span><span id="geocoordinatesmodule"></span><h2>geo_coordinates<a class="headerlink" href="#module-layout.geo_coordinates" title="Link to this heading">¶</a></h2>
+<span id="geo-coordinates"></span><span id="geocoordinatesmodule"></span><h2>geo_coordinates<a class="headerlink" href="#module-layout.geo_coordinates" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.geo_coordinates.</span></span><span class="sig-name descname"><span class="pre">GeoCoordinates</span></span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.geo_coordinates.</span></span><span class="sig-name descname"><span class="pre">GeoCoordinates</span></span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates" title="Link to this definition">#</a></dt>
 <dd><p>Geospatial Coordinate systems.
 Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates.crs_local">
-<span class="sig-name descname"><span class="pre">crs_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_local" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">crs_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_local" title="Link to this definition">#</a></dt>
 <dd><p>Local coordinate system definition.
 This is a cartesian coordinate system with the origin at the array center.
 X-axis points towards geographic North, y-axis towards geographic West.</p>
@@ -647,7 +999,7 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates.crs_utm">
-<span class="sig-name descname"><span class="pre">crs_utm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_utm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_utm" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">crs_utm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_utm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_utm" title="Link to this definition">#</a></dt>
 <dd><p>UTM coordinate system definition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -667,7 +1019,7 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates.crs_wgs84">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs_wgs84</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_wgs84"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs_wgs84</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_wgs84"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84" title="Link to this definition">#</a></dt>
 <dd><p>WGS84 coordinate system definition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -685,22 +1037,147 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </section>
 
 
-          </div>
-          
-        </div>
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="job_execution.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Job execution and submission</p>
       </div>
-    <div class="clearer"></div>
+    </a>
+    <a class="right-next"
+       href="mc_model.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">MC Model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
   </div>
-    <div class="footer">
-      
-      
-      
-      <a href="_sources/array_layout.rst.txt"
-          rel="nofollow">Page source</a>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.array_layout">array_layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout"><code class="docutils literal notranslate"><span class="pre">ArrayLayout</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.from_array_layout_name"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.from_array_layout_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_corsika_input_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_corsika_input_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.select_assets"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.select_assets()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.InvalidTelescopeListFile"><code class="docutils literal notranslate"><span class="pre">InvalidTelescopeListFile</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.telescope_position">telescope_position</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.InvalidCoordSystem"><code class="docutils literal notranslate"><span class="pre">InvalidCoordSystem</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition"><code class="docutils literal notranslate"><span class="pre">TelescopePosition</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_all"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_all()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_telescope_altitude_from_corsika_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.convert_telescope_altitude_to_corsika_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_axis_height"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_axis_height()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.get_sphere_radius"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.get_sphere_radius()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.has_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.has_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.has_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.has_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.is_coordinate_system"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.is_coordinate_system()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.print_compact_format"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.print_compact_format()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_altitude"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_altitude()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_auxiliary_parameter"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_auxiliary_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.telescope_position.TelescopePosition.set_coordinates"><code class="docutils literal notranslate"><span class="pre">TelescopePosition.set_coordinates()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.geo_coordinates">geo_coordinates</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_local"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_local()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_utm"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_utm()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_wgs84()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
     </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
-    
-
-    
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>

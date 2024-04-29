@@ -1,63 +1,202 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="./">
+
+<html lang="en" data-content_root="./" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g4241c8b</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=a66d8bb5" />
-    <link rel="stylesheet" type="text/css" href="_static/simtools.css" />
-    <script src="_static/documentation_options.js?v=96773cd9"></script>
+    <title>Database support &#8212; simtools v0.1.dev1+gbd3dff1 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=6d720b77"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'db_handler';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="I/O" href="io_operations.html" />
     <link rel="prev" title="Data Model" href="data_model.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
   
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
   
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
 
-  </head><body>
-  <div class="document">
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">simtools</a></h1>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
+  
 
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gbd3dff1 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4241c8b</p>
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=gammasim&repo=simtools&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="library.html">API</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="library.html">API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Database support</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Database support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
@@ -78,55 +217,250 @@
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="library.html">API</a><ul>
-      <li>Previous: <a href="data_model.html" title="previous chapter">Data Model</a></li>
-      <li>Next: <a href="io_operations.html" title="next chapter">I/O</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
     </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/db_handler.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-        </div>
-      </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
 
-          <div class="body" role="main">
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/db_handler.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdb_handler.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/db_handler.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Database support</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_tagged_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_tagged_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_documents"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_documents()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_telescope"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_sim_telarray_configuration_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_site_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_site_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_telescope_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_telescope_db_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_mongo_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.update_parameter_field"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.update_parameter_field()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_from_repo_handler.update_model_parameters_from_repo"><code class="docutils literal notranslate"><span class="pre">update_model_parameters_from_repo()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
   <section id="database-support">
-<span id="dbhandler"></span><h1>Database support<a class="headerlink" href="#database-support" title="Link to this heading">¶</a></h1>
+<span id="dbhandler"></span><h1>Database support<a class="headerlink" href="#database-support" title="Link to this heading">#</a></h1>
 <p>Modules for database access. See <a class="reference internal" href="databases.html#databases"><span class="std std-ref">Databases</span></a> for a discussion of database details.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#id1"><span class="std std-ref">db_handler</span></a></p></li>
 <li><p><a class="reference internal" href="#id2"><span class="std std-ref">db_from_repo_handler</span></a></p></li>
 </ul>
 <section id="db-handler">
-<h2>db_handler<a class="headerlink" href="#db-handler" title="Link to this heading">¶</a></h2>
+<h2>db_handler<a class="headerlink" href="#db-handler" title="Link to this heading">#</a></h2>
 <p id="module-db.db_handler"><span id="id1"></span>Module to handle interaction with DB.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">#</a></dt>
 <dd><p>DatabaseHandler provides the interface to the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -144,7 +478,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_new_parameter">
-<span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">#</a></dt>
 <dd><p>Add a parameter value for a specific telescope.
 A new document will be added to the DB,
 with all fields taken from the input parameters.</p>
@@ -183,7 +517,7 @@ with all fields taken from the input parameters.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_tagged_version">
-<span class="sig-name descname"><span class="pre">add_tagged_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">released_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">released_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.add_tagged_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_tagged_version" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_tagged_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">released_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">released_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.add_tagged_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_tagged_version" title="Link to this definition">#</a></dt>
 <dd><p>Set the tag of the “Released” or “Latest” version of the MC Model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -205,7 +539,7 @@ with all fields taken from the input parameters.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.copy_documents">
-<span class="sig-name descname"><span class="pre">copy_documents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.copy_documents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_documents" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">copy_documents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.copy_documents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_documents" title="Link to this definition">#</a></dt>
 <dd><p>Copy the documents matching to “query” to the DB “db_to_copy_to”.
 The documents are copied to the same collection as in “db_name”.
 (This function should be rarely used, probably only during “construction”.)</p>
@@ -240,7 +574,7 @@ from telescope LSTN-01 to “db_to_copy_to”.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.copy_telescope">
-<span class="sig-name descname"><span class="pre">copy_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tel_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.copy_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_telescope" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">copy_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tel_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.copy_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_telescope" title="Link to this definition">#</a></dt>
 <dd><p>Copy a full telescope configuration to a new telescope name.
 Only a specific version is copied.
 (This function should be rarely used, probably only during “construction”.)</p>
@@ -273,7 +607,7 @@ Only a specific version is copied.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.delete_query">
-<span class="sig-name descname"><span class="pre">delete_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.delete_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.delete_query" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">delete_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.delete_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.delete_query" title="Link to this definition">#</a></dt>
 <dd><p>Delete all entries from the DB which correspond to the provided query.
 (This function should be rarely used, if at all.)</p>
 <dl class="field-list">
@@ -300,7 +634,7 @@ from telescope LSTN-01.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_file_db">
-<span class="sig-name descname"><span class="pre">export_file_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.export_file_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_file_db" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_file_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.export_file_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_file_db" title="Link to this definition">#</a></dt>
 <dd><p>Get file from the DB and write to disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -330,7 +664,7 @@ from telescope LSTN-01.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_files">
-<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">#</a></dt>
 <dd><p>Export all the files in a model from the DB and write them to disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -352,7 +686,7 @@ from telescope LSTN-01.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_available_telescopes">
-<span class="sig-name descname"><span class="pre">get_all_available_telescopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_available_telescopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes" title="Link to this definition">#</a></dt>
 <dd><p>Get all available telescope names in the collection “telescopes” in the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -374,7 +708,7 @@ from telescope LSTN-01.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_versions">
-<span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">#</a></dt>
 <dd><p>Get all version entries in the DB of a telescope or site for a specific parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -408,7 +742,7 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_derived_values">
-<span class="sig-name descname"><span class="pre">get_derived_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_derived_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_derived_values" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_derived_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_derived_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_derived_values" title="Link to this definition">#</a></dt>
 <dd><p>Get all derived values from the DB for a specific telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -431,7 +765,7 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameters">
-<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get parameters from either MongoDB or simulation model repository for a specific telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -456,13 +790,13 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters">
-<span class="sig-name descname"><span class="pre">get_sim_telarray_configuration_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_sim_telarray_configuration_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_sim_telarray_configuration_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_sim_telarray_configuration_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get sim_telarray configuration parameters from the DB for a specific telescope.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_site_parameters">
-<span class="sig-name descname"><span class="pre">get_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_site_parameters" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_site_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get parameters from either MongoDB or simulation model repository for a specific site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -485,7 +819,7 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_telescope_db_name">
-<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">#</a></dt>
 <dd><p>Translate telescope name to the name used in the DB. This is required,
 as not all telescopes are defined in the database yet. In these cases,
 use the “design” telescope.</p>
@@ -515,7 +849,7 @@ use the “design” telescope.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.insert_file_to_db">
-<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Insert a file to the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -541,7 +875,7 @@ mostly these are unnecessary though.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_mongo_db">
-<span class="sig-name descname"><span class="pre">read_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.read_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_mongo_db" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.read_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_mongo_db" title="Link to this definition">#</a></dt>
 <dd><p>Build and execute query to Read the MongoDB for a specific telescope.
 Also writes the files listed in the parameter values into the sim_telarray run location</p>
 <dl class="field-list simple">
@@ -579,7 +913,7 @@ Also writes the files listed in the parameter values into the sim_telarray run l
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.update_parameter_field">
-<span class="sig-name descname"><span class="pre">update_parameter_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.update_parameter_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.update_parameter_field" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_parameter_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.update_parameter_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.update_parameter_field" title="Link to this definition">#</a></dt>
 <dd><p>Update a parameter field value for a specific telescope/version.
 This function only modifies the value of one of the following
 DB entries: Applicable, units, Type, items, minimum, maximum.
@@ -621,12 +955,12 @@ If the field does not exist, it will be added.</p>
 
 </section>
 <section id="db-from-repo-handler">
-<h2>db_from_repo_handler<a class="headerlink" href="#db-from-repo-handler" title="Link to this heading">¶</a></h2>
+<h2>db_from_repo_handler<a class="headerlink" href="#db-from-repo-handler" title="Link to this heading">#</a></h2>
 <p id="module-db.db_from_repo_handler"><span id="id2"></span>Module to mimic DB interaction for simulation model DB development.
 Read simulation model values from files in simulation model repository.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_from_repo_handler.update_model_parameters_from_repo">
-<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_model_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'verified_model'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_from_repo_handler.html#update_model_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_model_parameters_from_repo" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_model_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'verified_model'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_from_repo_handler.html#update_model_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_model_parameters_from_repo" title="Link to this definition">#</a></dt>
 <dd><p>Update model parameters with values from a repository.
 Existing entries will be updated, new entries will be added.</p>
 <dl class="field-list simple">
@@ -659,22 +993,129 @@ Existing entries will be updated, new entries will be added.</p>
 </section>
 
 
-          </div>
-          
-        </div>
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data_model.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Data Model</p>
       </div>
-    <div class="clearer"></div>
+    </a>
+    <a class="right-next"
+       href="io_operations.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">I/O</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
   </div>
-    <div class="footer">
-      
-      
-      
-      <a href="_sources/db_handler.rst.txt"
-          rel="nofollow">Page source</a>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_tagged_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_tagged_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_documents"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_documents()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_telescope"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_telescope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_sim_telarray_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_sim_telarray_configuration_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_site_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_site_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_telescope_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_telescope_db_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_mongo_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.update_parameter_field"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.update_parameter_field()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_from_repo_handler.update_model_parameters_from_repo"><code class="docutils literal notranslate"><span class="pre">update_model_parameters_from_repo()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
     </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
-    
-
-    
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>
