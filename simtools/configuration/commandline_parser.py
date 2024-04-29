@@ -205,7 +205,7 @@ class CommandLineParser(argparse.ArgumentParser):
             help="name of simulation model database",
             type=str,
             required=False,
-            default="Staging-CTA-Simulation-Model",
+            default=None,
         )
         _job_group.add_argument(
             "--db_simulation_model_url",

@@ -132,14 +132,13 @@ def test_load_sim_tel_config_and_model(
 ):
     with caplog.at_level(logging.DEBUG):
         array_simulator._load_sim_tel_config_and_model(array_config_data)
-    assert "in config_data cannot be identified" not in caplog.text
 
+    assert "in config_data cannot be identified" not in caplog.text
     assert isinstance(array_simulator.array_model, ArrayModel)
 
     with caplog.at_level(logging.DEBUG):
         shower_array_simulator._load_sim_tel_config_and_model(config_data=shower_array_config_data)
     assert "in config_data cannot be identified" in caplog.text
-
     assert isinstance(shower_array_simulator.array_model, ArrayModel)
 
 
