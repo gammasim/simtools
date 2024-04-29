@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-sim-showers-for-trigger-rates
-  TEST_NAME: run
+  TEST_NAME: run_south
   CONFIGURATION:
     ARRAY: 4MST
     SITE: South
