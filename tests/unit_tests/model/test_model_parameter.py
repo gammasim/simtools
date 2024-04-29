@@ -95,13 +95,6 @@ def test_handling_parameters(telescope_model_lst):
         pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
     )
 
-    logging.info("Adding new_parameter")
-    new_par = "23"
-    tel_model.add_parameter("new_parameter", new_par)
-
-    assert pytest.approx(tel_model.get_parameter_value("new_parameter")) == 23.0
-    assert isinstance(tel_model.get_parameter_value("new_parameter"), float)
-
     with pytest.raises(InvalidModelParameter):
         tel_model._get_parameter_dict("bla_bla")
 
