@@ -3,6 +3,6 @@ CTA_SIMPIPE:
   TEST_NAME: json_validate_data
   CONFIGURATION:
     SCHEMA: >
-      https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml
+      https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameters/reference_point_altitude.schema.yml
     FILE_NAME: tests/resources/reference_point_altitude.json
     DATA_TYPE: data

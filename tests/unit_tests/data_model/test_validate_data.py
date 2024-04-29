@@ -3,6 +3,7 @@
 import logging
 import shutil
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -498,12 +499,11 @@ def test_read_validation_schema(tmp_test_directory):
 # incomplete test
 def test_validate_data_dict():
 
+    schema_dir = Path(__file__).parent / "../../../simtools/schemas/model_parameters/"
+
     # parameter with unit
     data_validator = validate_data.DataValidator(
-        schema_file=(
-            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
-            "model_parameters/-/raw/main/schema/reference_point_altitude.schema.yml"
-        )
+        schema_file=str(schema_dir) + "/reference_point_altitude.schema.yml"
     )
     data_validator.data_dict = {
         "name": "reference_point_altitude",
@@ -514,10 +514,7 @@ def test_validate_data_dict():
 
     # parameter without unit
     data_validator_2 = validate_data.DataValidator(
-        schema_file=(
-            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
-            "model_parameters/-/raw/main/schema/num_gains.schema.yml"
-        )
+        schema_file=str(schema_dir) + "/num_gains.schema.yml"
     )
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
