@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g24c5877</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g4236c12</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=a66d8bb5" />
     <link rel="stylesheet" type="text/css" href="../../_static/simtools.css" />
-    <script src="../../_static/documentation_options.js?v=867d4457"></script>
+    <script src="../../_static/documentation_options.js?v=017b984f"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +29,7 @@
 
 
 
-<p class="blurb">Simulation Tools for CTA v0.1.dev1+g24c5877</p>
+<p class="blurb">Simulation Tools for CTA v0.1.dev1+g4236c12</p>
 
 
 
@@ -85,7 +85,8 @@
           <div class="body" role="main">
             
   <h1>Source code for utils.names</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
@@ -165,89 +166,28 @@
     <span class="s2">&quot;TestLayout&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;test-layout&quot;</span><span class="p">],</span>
 <span class="p">}</span>
 
-<span class="c1"># TODO - this is temporary</span>
-<span class="c1"># List of site parameters which are not part of the simtel configuration</span>
-<span class="c1"># or which have different naming in the database and simtel configuration.</span>
-<span class="c1"># simtel: True if this is a simtel parameter (allows to give alternative &quot;name&quot;)</span>
-<span class="n">site_parameters</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;reference_point_altitude&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;reference_point_longitude&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ref_long&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;reference_point_latitude&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ref_lat&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;reference_point_utm_north&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_point_utm_north&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;reference_point_utm_east&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_point_utm_east&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="c1"># Note naming inconsistency between old and new model</span>
-    <span class="c1"># altitude was the corsika observation level in the old model</span>
-    <span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;epsg_code&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;epsg_code&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;geomag_horizontal&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;geomag_horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;geomag_vertical&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;geomag_vertical&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;geomag_rotation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;geomag_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;array_coordinates&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;array_coordinates&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="c1"># TODO Duplication of old names; requires renaming in DB</span>
-    <span class="s2">&quot;magnetic_field&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;magnetic_field&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;EPSG&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;EPSG&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;ref_long&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ref_long&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;ref_lat&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ref_lat&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-<span class="p">}</span>
 
-<span class="c1"># TODO - this is temporary</span>
-<span class="c1"># List of telescope parameters which are not part of the simtel configuration</span>
-<span class="c1"># or which has a different name in the simtel configuration.</span>
-<span class="n">telescope_parameters</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;pixel_shape&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;pixel_shape&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;pixel_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;pixel_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;lightguide_efficiency_vs_incident_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;lightguide_efficiency_vs_incident_angle&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;lightguide_efficiency_vs_wavelength&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;lightguide_efficiency_vs_wavelength&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>  <span class="c1"># prod5 and earlier parameter; not relevant for the future</span>
-    <span class="s2">&quot;mirror_panel_shape&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;mirror_panel_shape&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;mirror_panel_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;mirror_panel_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;asum_shaping&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;asum_shaping_file&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;dsum_shaping&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;dsum_shaping_file&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;nsb_pixel_rate&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;nsb_pixel_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_degraded_map&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_degraded_map&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_hole_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_hole_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_ref_radius&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_ref_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_segmentation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_segmentation&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_baffle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_baffle&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_degraded_map&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_degraded_map&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_degraded_reflection&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;mirror2_degraded_reflection&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_hole_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_hole_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_ref_radius&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_ref_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_reflectivity&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;mirror_secondary_reflectivity&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_segmentation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_segmentation&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_shadow_diameter&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_shadow_diameter&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_shadow_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_shadow_offset&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-    <span class="s2">&quot;camera_filter_incidence_angle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_filter_incidence_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;camera_window_incidence_angle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_window_incidence_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;optics_properties&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;optics_properties&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-    <span class="s2">&quot;primary_mirror_incidence_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_mirror_incidence_angle&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;secondary_mirror_incidence_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_name&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_mirror_incidence_angle&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">}</span>
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="p">):</span>
+    <span class="n">model_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">schema_files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;../schemas/model_parameters&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/*.yml&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">schema_files</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">schema_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;class&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">class_key_list</span><span class="p">:</span>
+                <span class="n">model_parameters</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">model_parameters</span>
+
+
+<span class="k">def</span> <span class="nf">site_parameters</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="s2">&quot;Site&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">telescope_parameters</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Structure&quot;</span><span class="p">,</span> <span class="s2">&quot;Camera&quot;</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="validate_telescope_id_name">
@@ -511,18 +451,23 @@
     <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">get_simtel_name_from_parameter_name</span><span class="p">(</span>
-    <span class="n">par_name</span><span class="p">,</span> <span class="n">search_telescope_parameters</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">search_site_parameters</span><span class="o">=</span><span class="kc">True</span>
+<span class="k">def</span> <span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+    <span class="n">par_name</span><span class="p">,</span>
+    <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+    <span class="n">search_telescope_parameters</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">search_site_parameters</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the simtel parameter name from the model parameter name.</span>
-<span class="sd">    Assumes that both names are equal if not defined otherwise in names.py</span>
-<span class="sd">    Returns the model parameter name if no simtel name is found.</span>
+<span class="sd">    Get the name used in the simulation software from the model parameter name.</span>
+<span class="sd">    Name convention is expected to be defined in the schema.</span>
+<span class="sd">    Returns the parameter name if no simulation software name is found.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    par_name: str</span>
 <span class="sd">        Model parameter name.</span>
+<span class="sd">    simulation_software: str</span>
+<span class="sd">        Simulation software name.</span>
 <span class="sd">    search_telescope_parameters: bool</span>
 <span class="sd">        If True, telescope model parameters are included.</span>
 <span class="sd">    search_site_parameters: bool</span>
@@ -536,17 +481,23 @@
 
     <span class="n">_parameter_names</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">search_telescope_parameters</span><span class="p">:</span>
-        <span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">telescope_parameters</span><span class="p">)</span>
+        <span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">telescope_parameters</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">search_site_parameters</span><span class="p">:</span>
-        <span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">site_parameters</span><span class="p">)</span>
+        <span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">site_parameters</span><span class="p">())</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">_parameter_names</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;db_name&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;simtel&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">_parameter</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">err</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simulation_software</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">,</span> <span class="n">par_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># catches cases for which &#39;simulation_software&#39; is None</span>
         <span class="k">pass</span>
-    <span class="k">return</span> <span class="n">par_name</span>
+    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span> <span class="nf">get_parameter_name_from_simtel_name</span><span class="p">(</span><span class="n">simtel_name</span><span class="p">):</span>
@@ -565,11 +516,18 @@
 <span class="sd">        Model parameter name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">telescope_parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">site_parameters</span><span class="p">}</span>
+    <span class="n">_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">telescope_parameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">site_parameters</span><span class="p">()}</span>
 
-    <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">_parameter_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">par_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simtel_name</span> <span class="ow">and</span> <span class="n">par_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">par_name</span>
+    <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">software</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span>
+                    <span class="ow">and</span> <span class="n">software</span><span class="p">[</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">simtel_name</span>
+                <span class="p">):</span>
+                    <span class="k">return</span> <span class="n">par_name</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>  <span class="c1"># catches cases for which &#39;simulation_software&#39; is None</span>
+            <span class="k">pass</span>
     <span class="k">return</span> <span class="n">simtel_name</span>
 
 
