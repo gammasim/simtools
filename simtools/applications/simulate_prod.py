@@ -255,8 +255,8 @@ def main():
     logger.info(
         f"Production run is complete for primary {config_data['showers']['primary']} showers "
         f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
-        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
-        f"using the {config_data['array']['model_version']} telescope model."
+        f"{config_data['common']['zenith']} at the {args_dict['site']} site,"
+        f"using the {args_dict['model_version']} telescope model."
     )
 
     if args_dict["pack_for_grid_register"]:
