@@ -26,4 +26,4 @@ activity:
 source:
   - SimPipe Derived
 simulation_software:
-  - name: sim_telarray
+  - name: simtools
