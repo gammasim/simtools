@@ -82,11 +82,11 @@ class SimtelConfigWriter:
                     elif isinstance(value, (list, np.ndarray)):
                         value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
-            _config_meta = self._add_simtel_metadata("telescope")
+            _config_meta = self._get_simtel_metadata("telescope")
             for _simtel_name, value in _config_meta.items():
                 file.write(f"{_simtel_name} = {value}\n")
 
-    def _add_simtel_metadata(self, config_type):
+    def _get_simtel_metadata(self, config_type):
         """
         Return simtel metadata.
 
@@ -260,7 +260,7 @@ class SimtelConfigWriter:
             )
             if _simtel_name is not None:
                 file.write(f"{self.TAB}{_simtel_name} = {value}\n")
-        _simtel_meta = self._add_simtel_metadata("site")
+        _simtel_meta = self._get_simtel_metadata("site")
         for _simtel_name, value in _simtel_meta.items():
             file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")
