@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-generate-corsika-histograms
-  TEST_NAME: 2D_run_header
+  TEST_NAME: 2d_run_header
   CONFIGURATION:
     IACT_FILE: |
       ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
@@ -12,3 +12,7 @@ CTA_SIMPIPE:
       - azimuth
     OUTPUT_PATH: simtools-tests
     TEST: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/test_file_2D_run_header.pdf
+    - OUTPUT_FILE: application-plots/test_file_2D_run_header.hdf5
+    - OUTPUT_FILE: application-plots/test_file_2D_run_header.hdf5_event_2d_histograms.pdf
