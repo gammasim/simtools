@@ -3,7 +3,7 @@
 Simulation Software
 *******************
 
-Simulation software is external to simtools and used by several applications.
+Simulation software is external to simtools and used by several simtools applications.
 This includes the main software tools CORSIKA and sim_telarray, and several other tools listed in the following
 
 CORSIKA
