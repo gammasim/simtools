@@ -1,9 +1,9 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-sim-showers-for-trigger-rates
-  TEST_NAME: run
+  TEST_NAME: run_south
   CONFIGURATION:
-    ARRAY: 4LST
-    SITE: North
+    ARRAY: 4MST
+    SITE: South
     PRIMARY: proton
     MODEL_VERSION: prod6
     NRUNS: 2
@@ -13,4 +13,4 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        sim_showers_for_trigger_rates/corsika-data/North/proton/data/run000001/corsika_run000001_proton_za020deg_azm000deg_North_4LST_sim_showers_for_trigger_rates.zst
+        sim_showers_for_trigger_rates/corsika-data/South/proton/data/run000001/corsika_run000001_proton_za020deg_azm000deg_South_4MST_sim_showers_for_trigger_rates.zst
