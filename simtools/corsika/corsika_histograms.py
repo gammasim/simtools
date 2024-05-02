@@ -110,7 +110,7 @@ class CorsikaHistograms:
         """
         Property for the hdf5 file name.
         The idea of this property is to allow setting (or changing) the name of the hdf5 file
-         even after creating the class instance.
+        even after creating the class instance.
         """
         return self._hdf5_file_name
 
@@ -1381,14 +1381,14 @@ class CorsikaHistograms:
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
         """
-        Export to a hdf5 file the 1D histogram for the key `event_header_element` from the CORSIKA
+        Export to a hdf5 file the 1D histogram for the key 'event_header_element' from the CORSIKA
         event header.
 
         Parameters
         ----------
         event_header_element: str
             The key to the CORSIKA event header element.
-            Possible choices are stored in `self.all_event_keys`.
+            Possible choices are stored in 'self.all_event_keys'.
         bins: float
             Number of bins for the histogram.
         hist_range: 2-tuple
@@ -1430,8 +1430,8 @@ class CorsikaHistograms:
         overwrite=False,
     ):
         """
-        Export to a hdf5 file the 2D histogram for the key `event_header_element_1` and
-        `event_header_element_2`from the CORSIKA event header.
+        Export to a hdf5 file the 2D histogram for the key 'event_header_element_1' and
+        'event_header_element_2'from the CORSIKA event header.
 
         Parameters
         ----------
@@ -1439,14 +1439,15 @@ class CorsikaHistograms:
             The key to the CORSIKA event header element.
         event_header_element_2: str
             The key to the CORSIKA event header element.
-            Possible choices for `event_header_element_1` and `event_header_element_2` are stored
-            in `self.all_event_keys`.
+            Possible choices for 'event_header_element_1' and 'event_header_element_2' are stored
+            in 'self.all_event_keys'.
         bins: float
             Number of bins for the histogram.
         hist_range: 2-tuple
             Tuple to define the range of the histogram.
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
+
         """
         hist, x_bin_edges, y_bin_edges = self.event_2d_histogram(
             event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range

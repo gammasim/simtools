@@ -6,6 +6,22 @@ Data Model
 Modules in the ``data_model`` sections provide functionality for reading, writing, and validation of data.
 Data products ingested or produced by simtools generally follows the CTA data model.
 
+.. _datareader:
+
+data_reader
+-----------
+
+.. automodule:: data_model.data_reader
+   :members:
+
+.. _datamodelmetadatacollector:
+
+metadata_collector
+------------------
+
+.. automodule:: data_model.metadata_collector
+   :members:
+
 .. _datamodelmetadatamodel:
 
 metadata_model
@@ -28,12 +44,4 @@ validate_data
 -------------
 
 .. automodule:: data_model.validate_data
-   :members:
-
-.. _datamodelvalidateschema:
-
-metadata_collector
-------------------
-
-.. automodule:: data_model.metadata_collector
    :members:

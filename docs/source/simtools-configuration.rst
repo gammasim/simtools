@@ -6,11 +6,11 @@ Configuration
 Applications in simtools can be configured by the following four approaches, which are all equivalent:
 
 #. command line arguments;
-#. configuration file (in yaml format);
+#. configuration files (in yaml format);
 #. configuration dictionary when calling the :ref:`Configurator <configurationconfigurator>` class;
 #. environment variables.
 
-To illustrate this, e.g., set the path pointing towards the directory for all data products.
+To illustrate this, the example below sets the path pointing towards the directory for all data products.
 
 Set the output directory using a command line argument:
 
@@ -34,7 +34,7 @@ Configuration parameter read from a environmental variable:
 
 .. code-block:: console
 
-   $ EXPORT OUTPUT_PATH="<path name>"
+   $ EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 
 Configuration methods can be combined; conflicting configuration settings raise an Exception.
 Configuration parameters are generally expected in lower-case snake-make case.

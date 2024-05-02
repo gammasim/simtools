@@ -20,8 +20,8 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
     Schema for validation can be given as argument, or is determined
     from the metadata associated to the file.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     file_name: str or Path
         Name of file to be read.
     schema_file: str or Path
@@ -31,8 +31,8 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
     metadata_file: str or Path
         Name of metadata file to be read.
 
-    Returns:
-    --------
+    Returns
+    -------
     astropy Table
         Table read from file.
 
@@ -79,8 +79,8 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
     Schema for validation can be given as argument, or is determined
     from the metadata associated to the file.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     file_name: str or Path
         Name of file to be read.
     schema_file: str or Path
@@ -88,8 +88,8 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
     validate: bool
         Validate data against schema (if true).
 
-    Returns:
-    --------
+    Returns
+    -------
     astro quantity or str
         Value read from file. If units are given, return an astropy quantity, otherwise a string.
         Return None if no value is found in the file.
