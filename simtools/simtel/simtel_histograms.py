@@ -422,7 +422,7 @@ class SimtelHistogram:
             self.energy_range[0], self.energy_range[1]
         )
         # Estimate a normalization factor, which also means the fraction of computational time
-        # spared by using a different distribution. `time_economy_factor` expected to be > 1.
+        # spared by using a different distribution. time_economy_factor expected to be > 1.
         time_economy_factor = cr_energy_integrated / simulation_energy_integrated
         return time_economy_factor
 
@@ -494,7 +494,7 @@ class SimtelHistogram:
         """
         Estimates the observation time comprised by the number of events in the simulation.
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
-        and other information from the simulation configuration `self.config`.
+        and other information from the simulation configuration self.config.
 
         Returns
         -------
