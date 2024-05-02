@@ -7,7 +7,9 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_nsb
-    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_cherenkov
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_nsb.pdf
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_nsb.png
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_cherenkov.png
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_MSTN-design_cherenkov.pdf
     - OUTPUT_FILE: camera-efficiency/camera-efficiency-summary-North-MSTN-design-za20.0deg_azm000deg_validate_camera_efficiency.txt
     - OUTPUT_FILE: camera-efficiency/camera-efficiency-table-North-MSTN-design-za20.0deg_azm000deg_validate_camera_efficiency.ecsv
