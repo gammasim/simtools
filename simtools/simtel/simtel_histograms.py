@@ -392,6 +392,8 @@ class SimtelHistogram:
             correction_factor = self.get_correction_factor()
         else:
             correction_factor = 1
+        print("HERE", particle_distribution_function.normalization)
+        print(correction_factor)
         particle_distribution_function.normalization /= correction_factor
 
         return particle_distribution_function
@@ -421,7 +423,7 @@ class SimtelHistogram:
         # Estimate a normalization factor, which also means the fraction of computational time
         # spared by using a different distribution. time_economy_factor expected to be > 1.
         time_economy_factor = cr_energy_integrated / simulation_energy_integrated
-        return time_economy_factor
+        return time_economy_factor.decompose()
 
     def get_simulation_spectral_distribution(self):
         """
