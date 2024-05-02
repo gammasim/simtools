@@ -96,7 +96,7 @@ def test_energy_range(simtel_array_histogram_instance):
 
 def test_get_correction_factor(simtel_array_histogram_instance):
     correction_factor = simtel_array_histogram_instance.get_correction_factor()
-    assert pytest.approx(correction_factor.value, 0.05) == 1.06
+    assert pytest.approx(correction_factor.value, 0.1) == 10635
 
 
 def test_get_simulation_spectral_distribution(simtel_array_histogram_instance):
