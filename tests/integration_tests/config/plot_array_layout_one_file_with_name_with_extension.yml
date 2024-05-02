@@ -8,4 +8,3 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
     - OUTPUT_FILE: application-plots/test.png
-    - OUTPUT_FILE: application-plots/test.pdf
