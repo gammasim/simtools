@@ -50,8 +50,8 @@ def _parse(label):
         help="Select calibration light source positioning/setup: \
               varying distances (variable), layout positions (layout)",
         type=str,
-        choices=["variable", "layout"],
-        default="variable",
+        choices=["layout", "variable"],
+        default="layout",
     )
     config.parser.add_argument(  # remove
         "--distance_ls",
@@ -87,7 +87,7 @@ def default_le_configs(le_application):
     in the given direction.
     """
 
-    if le_application == "xyzls":
+    if le_application in ("xyzls", "ls_beam"):
         default_config = {
             "beam_shape": {
                 "len": 1,
@@ -134,13 +134,13 @@ def default_le_configs(le_application):
             "x_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 217592.2 * u.m,
+                "default": 2.75 * u.m,
                 "names": ["x_position"],
             },
             "y_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 3184479.9 * u.m,
+                "default": -587.18 * u.m,
                 "names": ["y_position"],
             },
             "z_pos_ILLN-01": {
@@ -162,7 +162,7 @@ def default_le_configs(le_application):
 def select_application(args_dict):
     if args_dict["light_source_type"] == "led":
         le_application = "xyzls"
-    if args_dict["light_source_type"] == "laser":
+    elif args_dict["light_source_type"] == "laser":
         le_application = "ls_beam"
 
     return le_application, args_dict["light_source_setup"]
@@ -244,7 +244,9 @@ def main():
                 logger.warning(msg)
 
         save_figs_to_pdf(
-            figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}.pdf"
+            figures,
+            f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}_"
+            f"{le.le_application[1]}.pdf",
         )
 
     elif args_dict["light_source_setup"] == "layout":
@@ -268,9 +270,9 @@ def main():
                 xx, yy, zz = telescope.get_coordinates(crs_name="ground")
 
         # telescope coordinates from list
-        default_le_config["x_pos"]["real"] = xx * u.m
-        default_le_config["y_pos"]["real"] = yy * u.m
-        default_le_config["z_pos"]["real"] = zz * u.m
+        default_le_config["x_pos"]["real"] = xx
+        default_le_config["y_pos"]["real"] = yy
+        default_le_config["z_pos"]["real"] = zz
 
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
