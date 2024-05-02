@@ -215,7 +215,8 @@ class SimulatorLightEmission(SimtelRunner):
         return pointing_vector.tolist()
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
-        command = f" rm {self.output_directory}/{self.le_application[0]}.simtel.gz\n"
+        command = f" rm {self.output_directory}/"
+        command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
         command += " -n 1e10"
@@ -330,7 +331,9 @@ class SimulatorLightEmission(SimtelRunner):
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
         )
         command += super()._config_option(
-            "output_file", f"{self.output_directory}/{self.le_application[0]}.simtel.gz\n"
+            "output_file",
+            f"{self.output_directory}/"
+            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n",
         )
 
         return command
@@ -339,6 +342,9 @@ class SimulatorLightEmission(SimtelRunner):
         """
         writes out post-script file using read_cta
         """
+        postscript_dir = self.output_directory.joinpath("postscripts")
+        postscript_dir.mkdir(parents=True, exist_ok=True)
+
         command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta"))
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4 --integration-window 7,3 -r 5"
@@ -347,8 +353,14 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
 
-        command += f" -p {self.output_directory}/{self.le_application[0]}.ps"
-        command += f" {self.output_directory}/{self.le_application[0]}.simtel.gz\n"
+        command += (
+            f" -p {postscript_dir}/"
+            f"{self.le_application[0]}_{self.le_application[1]}_d_{self.distance.to(u.m).value}.ps"
+        )
+        command += (
+            f" {self.output_directory}/"
+            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
+        )
         # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
@@ -364,7 +376,9 @@ class SimulatorLightEmission(SimtelRunner):
 
             return pixel_x_derot, pixel_y_derot
 
-        simtel_file = eio.SimTelFile(f"{self.output_directory}/{self.le_application[0]}.simtel.gz")
+        simtel_file = eio.SimTelFile(
+            f"{self.output_directory}/{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
+        )
         for array_event in simtel_file:
             array_event_s = array_event
             photo_electrons = array_event["photoelectrons"]
@@ -422,7 +436,10 @@ class SimulatorLightEmission(SimtelRunner):
         """
         reads in simtel file and plots reconstructed photo electrons via ctapipe
         """
-        filename = f"{self.output_directory}/{self.le_application[0]}.simtel.gz"
+        filename = (
+            f"{self.output_directory}/"
+            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
+        )
         source = EventSource(filename, max_events=1)
         event = None
         for event in source:
@@ -496,7 +513,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         self._script_dir = self.output_directory.joinpath("scripts")
         self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(f"{self.le_application[0]}-lightemission")
+        self._script_file = self._script_dir.joinpath(f"{self.le_application[0]}-lightemission.sh")
         self._logger.debug(f"Run bash script - {self._script_file}")
 
         command_le = self._make_light_emission_script()
