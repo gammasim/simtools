@@ -5,9 +5,9 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-tests
     SITE: South
     MODEL_VERSION: prod6
-    OUTPUT_FILE: make_regular_arrays
+    OUTPUT_FILE: make_regular_arrays.ecsv
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: make_regular_arrays-1LST-South.ecsv
-    - OUTPUT_FILE: make_regular_arrays-4LST-South.ecsv
-    - OUTPUT_FILE: make_regular_arrays-1MST-South.ecsv
-    - OUTPUT_FILE: make_regular_arrays-4MST-South.ecsv
+    - OUTPUT_FILE: make_regular_arrays-South-1LST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-South-4LST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-South-1MST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-South-4MST.ecsv
