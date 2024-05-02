@@ -58,6 +58,7 @@ class SimulatorLightEmission(SimtelRunner):
         default_le_config,
         le_application,
         simtel_source_path,
+        light_source_type,
         label=None,
         config_data=None,
         config_file=None,
@@ -73,11 +74,6 @@ class SimulatorLightEmission(SimtelRunner):
         self._simtel_source_path = simtel_source_path
 
         self._telescope_model = telescope_model
-
-        # TODO: Use real coordinates from telescope
-        # self._telescope_model.add_parameter("x_pos", 217659.6, is_file=False, is_applicable=True)
-        # self._telescope_model.add_parameter("y_pos", 3184995.1, is_file=False, is_applicable=True)
-        # self._telescope_model.add_parameter("z_pos", 2185.0, is_file=False, is_applicable=True)
 
         self.label = label if label is not None else self._telescope_model.label
 
@@ -108,7 +104,7 @@ class SimulatorLightEmission(SimtelRunner):
             + self.default_le_config["y_pos"]["default"] ** 2
             + self.default_le_config["z_pos"]["default"] ** 2
         )
-
+        self.light_source_type = light_source_type
         self._telescope_model.export_config_file()
 
     @classmethod
@@ -136,6 +132,7 @@ class SimulatorLightEmission(SimtelRunner):
                 "le_application",
                 "simtel_source_path",
                 "label",
+                "light_source_type",
             ],
             **kwargs,
         )
@@ -195,15 +192,21 @@ class SimulatorLightEmission(SimtelRunner):
         Returns:
         list: The pointing vector from the calibration device to the telescope.
         """
+        # x_cal = self._calibration_model.get_parameter_value("x_pos")
+        # y_cal = self._calibration_model.get_parameter_value("y_pos")
+        # z_cal = self._calibration_model.get_parameter_value("z_pos")
+        x_cal = self.default_le_config["x_pos_ILLN-01"]["default"]
+        y_cal = self.default_le_config["y_pos_ILLN-01"]["default"]
+        z_cal = self.default_le_config["z_pos_ILLN-01"]["default"]
 
-        x_cal = self._calibration_model.get_parameter_value("x_pos")
-        y_cal = self._calibration_model.get_parameter_value("y_pos")
-        z_cal = self._calibration_model.get_parameter_value("z_pos")
         cal_vect = np.array([x_cal, y_cal, z_cal])
 
-        x_tel = self._telescope_model.get_parameter_value("x_pos")
-        y_tel = self._telescope_model.get_parameter_value("y_pos")
-        z_tel = self._telescope_model.get_parameter_value("z_pos")
+        # x_tel = self._telescope_model.get_parameter_value("x_pos")
+        # y_tel = self._telescope_model.get_parameter_value("y_pos")
+        # z_tel = self._telescope_model.get_parameter_value("z_pos")
+        x_tel = self.default_le_config["x_pos"]["real"]
+        y_tel = self.default_le_config["y_pos"]["real"]
+        z_tel = self.default_le_config["z_pos"]["real"]
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
         direction_vector = cal_vect - tel_vect
@@ -212,29 +215,58 @@ class SimulatorLightEmission(SimtelRunner):
         return pointing_vector.tolist()
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
-        command = f" rm {self.output_directory}/{self.le_application}.simtel.gz\n"
+        command = f" rm {self.output_directory}/{self.le_application[0]}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
-        command += f"/{self.le_application}"
-        # command += f" -a {self._calibration_model.get_parameter_value('beam_shape').value}"
-        # command += f"{self._calibration_model.get_parameter_value('beam_width').value}"
-        # command += f" -p {self._calibration_model.get_parameter_value('pulse_shape').value}"
-        # command += f" {self._calibration_model.get_parameter_value('pulse_width').value}"
-        command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
-        # command += f" -n 1e10"
+        command += f"/{self.le_application[0]}"
+        command += " -n 1e10"
 
         command += f" -x {self.default_le_config['x_pos']['default'].value}"
         command += f" -y {self.default_le_config['y_pos']['default'].value}"
         command += f" -z {self.default_le_config['z_pos']['default'].value}"
+        if self.le_application[1] == "variable":
+            command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
+        elif self.le_application[1] == "static":
+            command += f" -d {','.join(map(str, self.calibration_pointing_direction()))}"
 
-        command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
-        # command += f" -d {','.join(map(str, calibration_pointing_direction())}"
-        #
-        command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
+        if self.light_source_type == "led":
+            command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+
+            # currently we use the same wavelength
+            command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
+
+            # pulse
+            command += (
+                f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
+            )
+            # {self._calibration_model.get_parameter_value('led_pulse_offset')}"
+            # TODO further parameters require different application
+
+            # command += f" -s {self._calibration_model.get_parameter_value('led_var_photons')}"
+            # command += f" -s {self._calibration_model.get_parameter_value('pedestal_events')}"
+
+        elif self.light_source_type == "laser":
+            command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+
+            command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
+            command += f" -N {self._calibration_model.get_parameter_value('laser_events')}"
+            # command += (
+            #    f" -s {self._calibration_model.get_parameter_value('laser_external_trigger')}"
+            # )
+            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_exptime')}"
+            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_offset')}"
+            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+            command += f" -p {self._calibration_model.get_parameter_value('laser_pulse_twidth')}"
+
+            # command += f" -a {self._calibration_model.get_parameter_value('beam_shape').value}"
+            # command += f"{self._calibration_model.get_parameter_value('beam_width').value}"
+            # command += f" -p {self._calibration_model.get_parameter_value('pulse_shape').value}"
+            # command += f" {self._calibration_model.get_parameter_value('pulse_width').value}"
+
         command += f" -A {self.output_directory}/model/"
-
         command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
-        command += f" -o {self.output_directory}/{self.le_application}.iact.gz"
+        command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
+
         return command
 
     def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
@@ -243,24 +275,26 @@ class SimulatorLightEmission(SimtelRunner):
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
+        # command += " -c /workdir/sim_telarray/sim_telarray/cfg/CTA/CTA-ULTRA6-MST-NectarCam.cfg"
 
-        # def remove_line_from_config(file_path, line_prefix):
-        #     with open(file_path, 'r') as file:
-        #         lines = file.readlines()
+        def remove_line_from_config(file_path, line_prefix):
+            with open(file_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
 
-        #     with open(file_path, 'w') as file:
-        #         for line in lines:
-        #             if not line.startswith(line_prefix):
-        #                 file.write(line)
-        # remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
+            with open(file_path, "w", encoding="utf-8") as file:
+                for line in lines:
+                    if not line.startswith(line_prefix):
+                        file.write(line)
+
+        remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
 
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
-        # command += super()._config_option(
-        #    "altitude", self._site_model.get_parameter_value("corsika_observation_level")
-        # )
-        command += super()._config_option("maximum_telescopes", "1")
+        command += super()._config_option(
+            "altitude", self._site_model.get_parameter_value("corsika_observation_level")
+        )
+        # command += super()._config_option("maximum_telescopes", "1")
         # command += super()._config_option("trigger_telescopes", "1")
         command += super()._config_option(
             "atmospheric_transmission",
@@ -269,8 +303,17 @@ class SimulatorLightEmission(SimtelRunner):
         # command += super()._config_option("trigger_current_limit", "1e10")
         command += super()._config_option("show", "all")
         # command += super()._config_option("random_state", "none")
-        command += super()._config_option("ONLY_TRIGGERED_TELESCOPES", "0")
-        command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
+        # command += super()._config_option("ONLY_TRIGGERED_TELESCOPES", "0")
+        # command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
+        command += super()._config_option("TRIGGER_CURRENT_LIMIT", "20")
+        command += super()._config_option("TRIGGER_TELESCOPES", "1")
+        # command += super()._config_option("ARRAY_TRIGGER", "None")
+        command += super()._config_option("TELTRIG_MIN_SIGSUM", "7.8")
+
+        command += super()._config_option("PULSE_ANALYSIS", "-30")
+        command += super()._config_option("SUM_BEFORE_PEAK", "-30")
+        command += super()._config_option("DEFAULT_TRIGGER", "AnalogSum")
+
         # command += super()._config_option("ARRAY_WINDOW", "1000")
         # command += super()._config_option("FAKE_TRIGGER", "1")
 
@@ -282,12 +325,12 @@ class SimulatorLightEmission(SimtelRunner):
         command += super()._config_option("telescope_theta", "0")
         command += super()._config_option("telescope_phi", "0")
         command += super()._config_option("power_law", "2.68")
-        # command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins)))
+        # command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins))) #in config
         command += super()._config_option(
-            "input_file", f"{self.output_directory}/{self.le_application}.iact.gz"
+            "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
         )
         command += super()._config_option(
-            "output_file", f"{self.output_directory}/{self.le_application}.simtel.gz\n"
+            "output_file", f"{self.output_directory}/{self.le_application[0]}.simtel.gz\n"
         )
 
         return command
@@ -304,8 +347,8 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
 
-        command += f" -p {self.output_directory}/{self.le_application}.ps"
-        command += f" {self.output_directory}/{self.le_application}.simtel.gz\n"
+        command += f" -p {self.output_directory}/{self.le_application[0]}.ps"
+        command += f" {self.output_directory}/{self.le_application[0]}.simtel.gz\n"
         # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
@@ -321,7 +364,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             return pixel_x_derot, pixel_y_derot
 
-        simtel_file = eio.SimTelFile(f"{self.output_directory}/{self.le_application}.simtel.gz")
+        simtel_file = eio.SimTelFile(f"{self.output_directory}/{self.le_application[0]}.simtel.gz")
         for array_event in simtel_file:
             array_event_s = array_event
             photo_electrons = array_event["photoelectrons"]
@@ -373,13 +416,13 @@ class SimulatorLightEmission(SimtelRunner):
 
         ax.set_axis_off()
         ax.set_aspect("equal")
-        fig.savefig(f"{self.output_directory}/{self.le_application}_test.pdf")
+        fig.savefig(f"{self.output_directory}/{self.le_application[0]}_test.pdf")
 
     def plot_simtel_ctapipe(self, return_cleaned=0):
         """
         reads in simtel file and plots reconstructed photo electrons via ctapipe
         """
-        filename = f"{self.output_directory}/{self.le_application}.simtel.gz"
+        filename = f"{self.output_directory}/{self.le_application[0]}.simtel.gz"
         source = EventSource(filename, max_events=1)
         event = None
         for event in source:
@@ -453,7 +496,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         self._script_dir = self.output_directory.joinpath("scripts")
         self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(f"{self.le_application}-lightemission")
+        self._script_file = self._script_dir.joinpath(f"{self.le_application[0]}-lightemission")
         self._logger.debug(f"Run bash script - {self._script_file}")
 
         command_le = self._make_light_emission_script()

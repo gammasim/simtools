@@ -7,6 +7,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
+from simtools.layout.array_layout import ArrayLayout
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -29,6 +30,7 @@ def _parse(label):
         help="Off axis angle for light source direction",
         type=float,
         default=0.0,
+        required=False,
     )
     config.parser.add_argument(
         "--plot",
@@ -37,16 +39,19 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--light_source_type",
-        help="Select calibration light source type: laser (1), led (2)",
-        type=int,
-        default=1,
+        help="Select calibration light source type: led or laser",
+        type=str,
+        default="led",
+        choices=["led", "laser"],
+        required=False,
     )
     config.parser.add_argument(
         "--light_source_setup",
         help="Select calibration light source positioning/setup: \
-              varying distances (1), layout positions (2)",
-        type=int,
-        default=1,
+              varying distances (variable), layout positions (layout)",
+        type=str,
+        choices=["variable", "layout"],
+        default="variable",
     )
     config.parser.add_argument(  # remove
         "--distance_ls",
@@ -59,6 +64,13 @@ def _parse(label):
         type=str,
         default=None,
     )
+    config.parser.add_argument(
+        "--telescope_file",
+        help="Telescope position file (temporary)",
+        type=str,
+        default=None,
+    )
+
     return config.initialize(
         db_config=True,
         simulation_model="telescope",
@@ -148,34 +160,37 @@ def default_le_configs(le_application):
 
 
 def select_application(args_dict):
-    if args_dict["light_source_type"] == 1 or args_dict["light_source_type"] == 2:
+    if args_dict["light_source_type"] == "led":
         le_application = "xyzls"
+    if args_dict["light_source_type"] == "laser":
+        le_application = "ls_beam"
 
-    return le_application
+    return le_application, args_dict["light_source_setup"]
 
 
 def main():
     """
     Run the application in the command line.
+    There are two ways how this can be run:
+    1. Illuminator at varying distances
+    2. Illuminator and telscopes at fixed positions as defined in the layout
+
     Example:
     simtools-simulate-light-emission --telescope MSTN-design --site North \
-      --illuminator ILLN-design --light_source_setup 2 --model_version prod6
+      --illuminator ILLN-design --light_source_setup variable --model_version prod6
+
+      simtools-simulate-light-emission --telescope MSTN-04 --site North  \
+        --illuminator ILLN-01 --light_source_setup layout --model_version prod6 \
+        --telescope_file\
+        /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv
     """
 
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     le_application = select_application(args_dict)
-    default_le_config = default_le_configs(le_application)
+    default_le_config = default_le_configs(le_application[0])
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    if args_dict["distance_ls"] is not None:
-        default_le_config["z_pos"]["default"] = [
-            100 * int(dist) for dist in args_dict["distance_ls"]
-        ] * u.cm
-
-    if args_dict["illuminator"] is not None:
-        pass
 
     # Create telescope model
     telescope_model = TelescopeModel(
@@ -204,7 +219,7 @@ def main():
         label=label,
     )
 
-    if args_dict["light_source_setup"] == 1:
+    if args_dict["light_source_setup"] == "variable":
         figures = []
         for distance in default_le_config["z_pos"]["default"]:
             le_config = default_le_config.copy()
@@ -216,7 +231,7 @@ def main():
                 default_le_config=le_config,
                 le_application=le_application,
                 simtel_source_path=args_dict["simtel_path"],
-                label=label,
+                light_source_type=args_dict["light_source_type"],
             )
             run_script = le.prepare_script(generate_postscript=True)
             subprocess.run(run_script, shell=False, check=False)
@@ -229,18 +244,33 @@ def main():
                 logger.warning(msg)
 
         save_figs_to_pdf(
-            figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application}.pdf"
+            figures, f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}.pdf"
         )
 
-    elif args_dict["light_source_setup"] == 2:
-        # TODO: here we use hardcoded coordinates, change as soon as coordinates are in DB.
-        # i.e. calibration_model.coordinate
+    elif args_dict["light_source_setup"] == "layout":
 
-        # illuminator  coordinates
-        default_le_config["x_pos"]["real"] = 200 * u.m
-        default_le_config["y_pos"]["real"] = 200 * u.m
-        default_le_config["z_pos"]["real"] = 200 * u.m
-        print("photons_per_run", calibration_model.get_parameter_value("laser_wavelength"))
+        # TODO: Here we use coordinates from the telescope list, change as soon as
+        # coordinates are in DB i.e. calibration_model.coordinate, telescope_model.coordinate
+        layout = ArrayLayout(
+            mongo_db_config=db_config,
+            model_version=args_dict["model_version"],
+            collection="telescopes",
+            site=args_dict["site"],
+            telescope_list_file=args_dict["telescope_file"],
+            # telescope_list_metadata_file=args_dict["input_meta"],
+            # validate=not args_dict["skip_input_validation"],
+        )
+        layout.convert_coordinates()
+        layout.select_assets(args_dict["telescope"])
+
+        for telescope in layout._telescope_list:  # pylint: disable=protected-access
+            if telescope.name == args_dict["telescope"]:
+                xx, yy, zz = telescope.get_coordinates(crs_name="ground")
+
+        # telescope coordinates from list
+        default_le_config["x_pos"]["real"] = xx * u.m
+        default_le_config["y_pos"]["real"] = yy * u.m
+        default_le_config["z_pos"]["real"] = zz * u.m
 
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
@@ -249,7 +279,7 @@ def main():
             default_le_config=default_le_config,
             le_application=le_application,
             simtel_source_path=args_dict["simtel_path"],
-            label=label,
+            light_source_type=args_dict["light_source_type"],
         )
         run_script = le.prepare_script(generate_postscript=True)
         subprocess.run(run_script, shell=False, check=False)
