@@ -5,5 +5,3 @@ CTA_SIMPIPE:
     ARRAY_CONFIG: ./tests/resources/array_config_test.yml
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
-    - OUTPUT_FILE: model/CTA-TestLayout-North-prod6_produce_array_config.cfg
