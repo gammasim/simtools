@@ -2,13 +2,14 @@ CTA_SIMPIPE:
   APPLICATION: simtools-production
   TEST_NAME: showers_only
   CONFIGURATION:
-    PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
+    SIMULATION_CONFIGURATION: ./tests/resources/prod_config_test.yml
     MODEL_VERSION: prod6
     TASK: simulate
     SHOWERS_ONLY: true
     SUBMIT_COMMAND: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+    LOG_LEVEL: debug
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
         corsika-data/North/proton/data/run000001/corsika_run000001_proton_za020deg_azm000deg_North_
