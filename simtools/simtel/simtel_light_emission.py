@@ -99,11 +99,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         self.le_application = le_application
         self.default_le_config = default_le_config
-        self.distance = np.sqrt(
-            self.default_le_config["x_pos"]["default"] ** 2
-            + self.default_le_config["y_pos"]["default"] ** 2
-            + self.default_le_config["z_pos"]["default"] ** 2
-        )
+        self.distance = self.telescope_calibration_device_distance()
         self.light_source_type = light_source_type
         self._telescope_model.export_config_file()
 
@@ -195,24 +191,61 @@ class SimulatorLightEmission(SimtelRunner):
         # x_cal = self._calibration_model.get_parameter_value("x_pos")
         # y_cal = self._calibration_model.get_parameter_value("y_pos")
         # z_cal = self._calibration_model.get_parameter_value("z_pos")
-        x_cal = self.default_le_config["x_pos_ILLN-01"]["default"]
-        y_cal = self.default_le_config["y_pos_ILLN-01"]["default"]
-        z_cal = self.default_le_config["z_pos_ILLN-01"]["default"]
+        x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
+        y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
+        z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
 
         cal_vect = np.array([x_cal, y_cal, z_cal])
-
+        print("cal_vect", cal_vect)
         # x_tel = self._telescope_model.get_parameter_value("x_pos")
         # y_tel = self._telescope_model.get_parameter_value("y_pos")
         # z_tel = self._telescope_model.get_parameter_value("z_pos")
-        x_tel = self.default_le_config["x_pos"]["real"]
-        y_tel = self.default_le_config["y_pos"]["real"]
-        z_tel = self.default_le_config["z_pos"]["real"]
+        x_tel = self.default_le_config["x_pos"]["real"].to(u.m).value
+        y_tel = self.default_le_config["y_pos"]["real"].to(u.m).value
+        z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
         direction_vector = cal_vect - tel_vect
         pointing_vector = direction_vector / np.linalg.norm(direction_vector)
 
-        return pointing_vector.tolist()
+        # Calculate telescope theta and phi angles
+        tel_theta = np.arccos(tel_vect[2] / np.linalg.norm(tel_vect))
+        tel_phi = np.arctan2(tel_vect[1], tel_vect[0])
+
+        # Calculate laser beam theta and phi angles
+        laser_theta = np.arccos(pointing_vector[2])
+        laser_phi = np.arctan2(pointing_vector[1], pointing_vector[0])
+        return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
+
+    def telescope_calibration_device_distance(self):
+        """
+        Calculate the distance between the telescope and the calibration device.
+
+        Returns:
+        astropy Quantity: The distance between the telescope and the calibration device.
+        """
+
+        if self.default_le_config["x_pos"]["real"] != u.Quantity(0, u.m):
+            x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
+            y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
+            z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
+
+            x_tel = self.default_le_config["x_pos"]["real"].to(u.m).value
+            y_tel = self.default_le_config["y_pos"]["real"].to(u.m).value
+            z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value
+
+        else:
+            x_tel = self.default_le_config["x_pos"]["default"].to(u.m).value
+            y_tel = self.default_le_config["y_pos"]["default"].to(u.m).value
+            z_tel = self.default_le_config["z_pos"]["default"].to(u.m).value
+
+            x_cal, y_cal, z_cal = 0, 0, 0
+
+        tel_vect = np.array([x_tel, y_tel, z_tel])
+        cal_vect = np.array([x_cal, y_cal, z_cal])
+        distance = np.linalg.norm(cal_vect - tel_vect)
+
+        return distance * u.m
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
         command = f" rm {self.output_directory}/"
@@ -226,8 +259,8 @@ class SimulatorLightEmission(SimtelRunner):
         command += f" -z {self.default_le_config['z_pos']['default'].value}"
         if self.le_application[1] == "variable":
             command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
-        elif self.le_application[1] == "static":
-            command += f" -d {','.join(map(str, self.calibration_pointing_direction()))}"
+        elif self.le_application[1] == "layout":
+            command += f" -d {','.join(map(str, self.calibration_pointing_direction()[0]))}"
 
         if self.light_source_type == "led":
             command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
@@ -246,6 +279,12 @@ class SimulatorLightEmission(SimtelRunner):
             # command += f" -s {self._calibration_model.get_parameter_value('pedestal_events')}"
 
         elif self.light_source_type == "laser":
+            _, angles = self.calibration_pointing_direction()
+            command += super()._config_option("tel_theta", angles[0])
+            command += super()._config_option("tel_phi", angles[1])
+            command += super()._config_option("laser_theta", angles[2])
+            command += super()._config_option("laser_phi", angles[3])
+
             command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
 
             command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
@@ -302,7 +341,7 @@ class SimulatorLightEmission(SimtelRunner):
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
         # command += super()._config_option("trigger_current_limit", "1e10")
-        command += super()._config_option("show", "all")
+        # command += super()._config_option("show", "all") # for debugging
         # command += super()._config_option("random_state", "none")
         # command += super()._config_option("ONLY_TRIGGERED_TELESCOPES", "0")
         # command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
@@ -352,10 +391,10 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
-
         command += (
             f" -p {postscript_dir}/"
-            f"{self.le_application[0]}_{self.le_application[1]}_d_{self.distance.to(u.m).value}.ps"
+            f"{self.le_application[0]}_{self.le_application[1]}_"
+            f"d_{int(self.distance.to(u.m).value)}.ps"
         )
         command += (
             f" {self.output_directory}/"
