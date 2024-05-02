@@ -4,3 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     FILE_NAME: mirror_CTA-S-LST_v2020-04-07.dat
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: mirror_CTA-S-LST_v2020-04-07.dat
