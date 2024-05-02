@@ -7,3 +7,8 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
     LOG_LEVEL: debug
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_SSTS-design_nsb
+    - OUTPUT_FILE: application-plots/validate_camera_efficiency_SSTS-design_cherenkov
+    - OUTPUT_FILE: camera-efficiency/camera-efficiency-summary-South-SSTS-design-za20.0deg_azm000deg_validate_camera_efficiency.txt
+    - OUTPUT_FILE: camera-efficiency/camera-efficiency-table-South-SSTS-design-za20.0deg_azm000deg_validate_camera_efficiency.ecsv
