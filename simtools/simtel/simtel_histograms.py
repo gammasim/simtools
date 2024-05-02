@@ -182,7 +182,6 @@ class SimtelHistogram:
         raise HistogramIdNotFound
 
     @property
-    @u.quantity_input(energy=u.deg)
     def view_cone(self):
         """
         View cone used in the simulation.
@@ -197,7 +196,6 @@ class SimtelHistogram:
         return self._view_cone
 
     @property
-    @u.quantity_input(energy=u.cm**2)
     def total_area(self):
         """
         Total area covered by the simulated events (original CORSIKA CSCAT).
@@ -216,7 +214,6 @@ class SimtelHistogram:
         return self._total_area
 
     @property
-    @u.quantity_input(energy=u.TeV)
     def energy_range(self):
         """
         Energy range used in the simulation.
