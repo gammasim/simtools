@@ -5,3 +5,6 @@ CTA_SIMPIPE:
     TELESCOPE_LIST: data/layout/telescope_positions-North-TestLayout.ecsv
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.png
+    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.pdf

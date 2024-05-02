@@ -7,3 +7,6 @@ CTA_SIMPIPE:
     ARRAY_LAYOUT: North-4LST
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.pdf
+    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.png

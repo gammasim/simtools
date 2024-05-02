@@ -6,3 +6,5 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     FIGURE_NAME: test.png
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/test.png
