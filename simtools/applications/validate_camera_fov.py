@@ -58,6 +58,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
+from simtools.visualization import plot_camera
 
 
 def main():
@@ -130,7 +131,7 @@ def main():
                 f"The value provided to --print_pixels_id ({args_dict['print_pixels_id']}) "
                 "should be an integer or All"
             ) from exc
-    fig = camera.plot_pixel_layout(args_dict["camera_in_sky_coor"], pixel_ids_to_print)
+    fig = plot_camera.plot_pixel_layout(camera, args_dict["camera_in_sky_coor"], pixel_ids_to_print)
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     for suffix in ["pdf", "png"]:
         file_name = f"{str(plot_file_prefix)}.{suffix}"

@@ -1,7 +1,7 @@
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.coordinates.errors import UnitsError
+from astropy.units import UnitsError
 
 import simtools.utils.geometry as transf
 
