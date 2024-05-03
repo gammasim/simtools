@@ -1,5 +1,4 @@
 import logging
-from copy import copy
 
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
@@ -18,8 +17,7 @@ class InvalidArrayConfigData(Exception):
 
 class ArrayModel:
     """
-    ArrayModel is an abstract representation of the MC model at the array level. It contains the\
-    list of TelescopeModels, SiteModel, and a ArrayLayout.
+    Representation of an observatory consisting of site and telescopes.
 
     Parameters
     ----------
@@ -49,16 +47,20 @@ class ArrayModel:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
         self.mongo_db_config = mongo_db_config
+        self.model_version = model_version
         self.label = label
-        self.site = None
         self.layout = None
         self.layout_name = None
-        self.model_version = model_version
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
-        self._load_array_data(collect_data_from_file_or_dict(array_config_file, array_config_data))
+
+        self._array_config_data, site = self._load_array_data(
+            collect_data_from_file_or_dict(array_config_file, array_config_data)
+        )
         self._set_config_file_directory()
-        self._build_array_model()
+
+        self.site_model, self.telescope_model = self._build_array_model(site=site)
+
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
@@ -72,43 +74,69 @@ class ArrayModel:
         int
             Number of telescopes.
         """
-        return self.layout.get_number_of_telescopes()
+        return len(self.telescope_model)
+
+    @property
+    def site(self):
+        """
+        Return site.
+
+        Returns
+        -------
+        str
+            Site name.
+        """
+        return self.site_model.site
 
     def _load_array_data(self, array_config_data):
-        """Load parameters from array_data.
+        """
+        Load parameters from array configuration file.
 
         Parameters
         ----------
         array_config_data: dict
+            Dict with the array config data.
+
+        Returns
+        -------
+        dict
+            Dict with updated array configuration data.
+        str
+            Site name.
         """
 
-        # Validating array_config_data
-        # Keys 'site', 'layout_name' and 'default' are mandatory.
-        # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
         self._validate_array_data(array_config_data)
-
-        self.site = names.validate_site_name(array_config_data["site"])
+        site = names.validate_site_name(array_config_data["site"])
 
         self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
         self.layout = ArrayLayout.from_array_layout_name(
             mongo_db_config=self.mongo_db_config,
-            array_layout_name=self.site + "-" + self.layout_name,
+            array_layout_name=site + "-" + self.layout_name,
             model_version=self.model_version,
             label=self.label,
         )
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
-        self._array_config_data = {
+        return {
             k: v
             for (k, v) in array_config_data.items()
             if k not in ["site", "layout_name", "model_version"]
-        }
+        }, site
 
     def _validate_array_data(self, array_config_data):
         """
         Validate array_data by checking the existence of the relevant keys.
 
-         Searching for the keys: 'site', 'array'
+        Parameters
+        ----------
+        array_config_data: dict
+            Dict with the array config data.
+
+        Raises
+        ------
+        InvalidArrayConfigData
+            If the array configuration data is invalid.
+
         """
 
         def run_over_pars(pars, data, parent=None):
@@ -127,79 +155,65 @@ class ArrayModel:
         run_over_pars(["site", "layout_name"], array_config_data)
 
     def _set_config_file_directory(self):
-        """Define the variable _config_file_directory and create directories, if needed"""
+        """
+        Define and create config file directory.
+
+        """
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
         if not self._config_file_directory.exists():
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
             self._logger.info(f"Creating directory {self._config_file_directory}")
 
-    def _build_array_model(self):
+    def _build_array_model(self, site):
         """
-        Build the site parameters and the list of telescope models,
-        including reading the parameters from the DB.
+        Build the constituents of the array model (site, telescopes, etc).
+        Includes reading of all model parameters from the DB.
+
+        Parameters
+        ----------
+        site: str
+            Site name.
+
+        Returns
+        -------
+        SiteModel
+            Site model.
 
         """
 
-        # Getting site parameters from DB
-        self._logger.debug("Getting site parameters from DB")
-        self._site_model = SiteModel(
-            site=self.site,
+        self._logger.debug(f"Getting site parameters from DB ({site})")
+        site_model = SiteModel(
+            site=site,
             mongo_db_config=self.mongo_db_config,
             model_version=self.model_version,
             label=self.label,
         )
 
-        # Building telescope models
-        self._telescope_model = []  # List of telescope models
-        _all_telescope_names = []  # List of telescope names without repetition
+        telescope_model = {}
         _all_pars_to_change = {}
-        for tel in self.layout:
+        for tel in self.layout:  # TODO - layout
+            tel_name = tel.name  # TODO - layout
             # Collecting pars to change from array_config_data
-            tel_name = tel.name
             pars_to_change = self._get_single_telescope_info_from_array_config(tel_name)
             if len(pars_to_change) > 0:
                 _all_pars_to_change[tel.name] = pars_to_change
 
-            # Building the basic models - no pars to change yet
-            if tel_name not in _all_telescope_names:
-                # First time a telescope name is built
-                _all_telescope_names.append(tel_name)
-                tel_model = TelescopeModel(
-                    site=self.site,
-                    telescope_model_name=tel_name,
-                    model_version=self.model_version,
-                    mongo_db_config=self.mongo_db_config,
-                    label=self.label,
-                )
-            else:
-                # Telescope name already exists.
-                # Finding the TelescopeModel and copying it.
-                for tel_now in self._telescope_model:
-                    if tel_now.name != tel_name:
-                        continue
-                    tel_model = copy(tel_now)
-                    break
-
-            self._telescope_model.append(tel_model)
-
-        # Checking whether the size of the telescope list and the layout match
-        if len(self._telescope_model) != len(self.layout):
-            self._logger.warning(
-                "Number of telescopes in the list of telescope models does "
-                "not match the number of telescopes in the ArrayLayout - something is wrong!"
+            telescope_model[tel_name] = TelescopeModel(
+                site=site_model.site,
+                telescope_model_name=tel_name,
+                model_version=self.model_version,
+                mongo_db_config=self.mongo_db_config,
+                label=self.label,
             )
 
-        # Changing parameters, if there are any in all_pars_to_change
-        if len(_all_pars_to_change) > 0:
-            for tel_data, tel_model in zip(self.layout, self._telescope_model):
-                if tel_data.name not in _all_pars_to_change:
-                    continue
-                self._logger.debug(
-                    f"Changing {len(_all_pars_to_change[tel_data.name])} pars of a "
-                    f"{tel_data.name}: {*_all_pars_to_change[tel_data.name], }, ..."
-                )
-                tel_model.change_multiple_parameters(**_all_pars_to_change[tel_data.name])
-                tel_model.set_extra_label(tel_data.name)
+        for tel_name, par_to_change in _all_pars_to_change.items():
+            self._logger.debug(
+                f"Changing {len(par_to_change)} pars of a " f"{tel_name}: {*par_to_change, }, ..."
+            )
+            telescope_model[tel_name].change_multiple_parameters(**par_to_change)
+            telescope_model[tel_name].set_extra_label(tel_name)
+
+        return site_model, telescope_model
 
     def _get_single_telescope_info_from_array_config(self, tel_name):
         """
@@ -247,48 +261,55 @@ class ArrayModel:
         return {}
 
     def print_telescope_list(self):
-        """Print out the list of telescopes for quick inspection."""
+        """
+        Print list of telescopes
 
-        for tel_data, tel_model in zip(self.layout, self._telescope_model):
-            print(f"Name: {tel_data.name}\t Model: {tel_model.name}")
+        """
+
+        for tel_name, data in self.telescope_model.items():
+            print(f"Name: {tel_name}\t Model: {data.name}")
 
     def export_simtel_telescope_config_files(self):
         """
-        Export sim_telarray config files for all the telescopes into the output model directory.
+        Export sim_telarray configuration files for all telescopes into the model directory.
+
         """
 
         exported_models = []
-        for tel_model in self._telescope_model:
+        for _, tel_model in self.telescope_model.items():
             name = tel_model.name + (
                 "_" + tel_model.extra_label if tel_model.extra_label != "" else ""
             )
             if name not in exported_models:
-                self._logger.debug(f"Exporting config file for tel {name}")
+                self._logger.debug(f"Exporting configuration file for telescope {name}")
                 tel_model.export_config_file()
                 exported_models.append(name)
             else:
-                self._logger.debug(f"Config file for tel {name} already exists - skipping")
+                self._logger.debug(
+                    f"Configuration file for telescope {name} already exists - skipping"
+                )
 
         self._telescope_model_files_exported = True
 
     def export_simtel_array_config_file(self):
         """
-        Export sim_telarray config file for the array into the output model directory.
+        Export sim_telarray configuration file for the array into the model directory.
+
         """
 
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
             array_name=self.layout_name,
-            site=self.site,
+            site=self.site_model.site,
             model_version=self.model_version,
             label=self.label,
         )
         self._config_file_path = self._config_file_directory.joinpath(config_file_name)
 
         # Writing parameters to the file
-        self._logger.info(f"Writing array config file into {self._config_file_path}")
+        self._logger.info(f"Writing array configuration file into {self._config_file_path}")
         simtel_writer = SimtelConfigWriter(
-            site=self.site,
+            site=self.site_model.site,
             layout_name=self.layout_name,
             model_version=self.model_version,
             label=self.label,
@@ -296,8 +317,8 @@ class ArrayModel:
         simtel_writer.write_array_config_file(
             config_file_path=self._config_file_path,
             layout=self.layout,
-            telescope_model=self._telescope_model,
-            site_model=self._site_model,
+            telescope_model=list(self.telescope_model.values()),
+            site_model=self.site_model,
         )
         self._array_model_file_exported = True
 
