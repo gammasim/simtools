@@ -248,7 +248,7 @@ def validate_application_output(config):
             # First check if the output is in the data directory (simtel_array related),
             # Then check if the file is in the output directory (remaining tools).
             logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
-            logger.info(f"File{integration_test['OUTPUT_FILE']}")
+            logger.info(f"File {integration_test['OUTPUT_FILE']}")
             try:
                 assert (
                     Path(config["CONFIGURATION"]["DATA_DIRECTORY"])

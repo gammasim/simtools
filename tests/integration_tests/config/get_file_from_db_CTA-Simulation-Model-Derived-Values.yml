@@ -4,3 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     FILE_NAME: ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
