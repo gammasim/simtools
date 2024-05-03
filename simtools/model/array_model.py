@@ -2,7 +2,6 @@ import logging
 
 from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
-from simtools.layout.array_layout import ArrayLayout
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -49,7 +48,6 @@ class ArrayModel:
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout = None
         self.layout_name = None
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
@@ -118,14 +116,7 @@ class ArrayModel:
             telescope_positions = self._load_telescope_positions_from_file(
                 array_config_data["layout_name"], site
             )
-
-        self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
-        self.layout = ArrayLayout.from_array_layout_name(
-            mongo_db_config=self.mongo_db_config,
-            array_layout_name=site + "-" + self.layout_name,
-            model_version=self.model_version,
-            label=self.label,
-        )
+            self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
         return (
@@ -336,8 +327,7 @@ class ArrayModel:
         )
         simtel_writer.write_array_config_file(
             config_file_path=self._config_file_path,
-            layout=self.layout,
-            telescope_model=list(self.telescope_model.values()),
+            telescope_model=self.telescope_model,
             site_model=self.site_model,
         )
         self._array_model_file_exported = True
