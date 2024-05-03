@@ -100,6 +100,7 @@ autodoc_mock_imports = [
     "cycler",
     "eventio",
     "ctapipe",
+    "ctao-dpps-cosmic-ray-spectra",
 ]
 
 # Change the look of autodoc classes

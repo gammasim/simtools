@@ -392,8 +392,6 @@ class SimtelHistogram:
             correction_factor = self.get_correction_factor()
         else:
             correction_factor = 1
-        print("HERE", particle_distribution_function.normalization)
-        print(correction_factor)
         particle_distribution_function.normalization /= correction_factor
 
         return particle_distribution_function
@@ -449,7 +447,6 @@ class SimtelHistogram:
             energy_min=self.energy_range[0],
             energy_max=self.energy_range[1],
         )
-
         factor = self.total_num_simulated_events / non_norm_simulated_events_rate.value
         norm_simulated_power_law_function = PowerLaw(
             normalization=factor * norm_unit,
@@ -620,7 +617,6 @@ class SimtelHistograms:
 
             obs_time = simtel_hist_instance.estimate_observation_time()
             logging.info(f"Estimated equivalent observation time: {obs_time.value} s")
-
             sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
             sim_event_rates.append(sim_event_rate)
             logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
