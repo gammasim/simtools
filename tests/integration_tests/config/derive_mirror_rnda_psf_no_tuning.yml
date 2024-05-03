@@ -13,3 +13,5 @@ CTA_SIMPIPE:
     RNDA: 0.0063
     TEST: true
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: TEST.ecsv

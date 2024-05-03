@@ -5,3 +5,9 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-tests
     SITE: North
     MODEL_VERSION: prod6
+    OUTPUT_FILE: make_regular_arrays.ecsv
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: make_regular_arrays-North-1LST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-North-4LST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-North-1MST.ecsv
+    - OUTPUT_FILE: make_regular_arrays-North-4MST.ecsv

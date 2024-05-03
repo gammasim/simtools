@@ -13,3 +13,10 @@ CTA_SIMPIPE:
     NSHOW: 5
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        test-production-North/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.simtel.zst
+    - OUTPUT_FILE: |
+        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.log.gz
+    - OUTPUT_FILE: |
+        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.hdata.zst
