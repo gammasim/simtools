@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g3800478 Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+g7bed4b3 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=e200cd52"></script>
+    <script src="../../_static/documentation_options.js?v=92d5c944"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3800478 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7bed4b3 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -335,18 +335,10 @@ document.write(`
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mlp</span>
-<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span> <span class="k">as</span> <span class="n">KDTree</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
 
-<span class="kn">import</span> <span class="nn">simtools.visualization.legend_handlers</span> <span class="k">as</span> <span class="nn">leg_h</span>
-<span class="kn">from</span> <span class="nn">simtools.model.model_utils</span> <span class="kn">import</span> <span class="n">is_two_mirror_telescope</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span> <span class="nn">simtools.utils.geometry</span> <span class="kn">import</span> <span class="n">rotate</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Camera&quot;</span><span class="p">]</span>
@@ -383,16 +375,16 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_camera_config_file</span> <span class="o">=</span> <span class="n">camera_config_file</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span> <span class="o">=</span> <span class="n">focal_length</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_length</span> <span class="o">=</span> <span class="n">focal_length</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">focal_length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The focal length must be larger than zero&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_pixel_list</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_pixel_list</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">)</span>
 
-        <span class="c1"># Initialize an empty list of neighbours, to be calculated only when necessary.</span>
+        <span class="c1"># Initialize an empty list of neighbors, to be calculated only when necessary.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Initialize an empty list of edge pixels, to be calculated only when necessary.</span>
@@ -529,7 +521,7 @@ document.write(`
 <span class="sd">            number of pixels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_pixel_diameter">
@@ -544,7 +536,7 @@ document.write(`
 <span class="sd">            Pixel diameter (usually in cm).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_pixel_active_solid_angle">
@@ -563,7 +555,7 @@ document.write(`
         <span class="c1"># In case we have hexagonal pixels:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
             <span class="n">pixel_area</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="k">return</span> <span class="n">pixel_area</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">pixel_area</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_length</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_pixel_shape">
@@ -578,7 +570,7 @@ document.write(`
 <span class="sd">        int (1, 2 or 3)</span>
 <span class="sd">            Pixel shape.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_lightguide_efficiency_angle_file_name">
@@ -593,7 +585,7 @@ document.write(`
 <span class="sd">            File name of the light guide efficiency as a function of incidence angle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_lightguide_efficiency_wavelength_file_name">
@@ -607,7 +599,7 @@ document.write(`
 <span class="sd">        str</span>
 <span class="sd">            File name of the light guide efficiency as a function of wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Camera.get_camera_fill_factor">
@@ -622,12 +614,12 @@ document.write(`
 <span class="sd">            The camera fill factor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">9999</span><span class="p">:</span>
-            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">9999</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
             <span class="n">pixel_distances</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">pixel_distances</span><span class="p">[</span><span class="n">pixel_distances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">pixel_distances</span><span class="p">[</span><span class="n">pixel_distances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span></div>
 
 
 <div class="viewcode-block" id="Camera.calc_fov">
@@ -651,10 +643,10 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating the FoV&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_fov</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">get_edge_pixels</span><span class="p">(),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">focal_length</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -839,7 +831,7 @@ document.write(`
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span>
+                <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_neighbour_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span></div>
@@ -899,337 +891,12 @@ document.write(`
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span>
+                <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>
             <span class="k">if</span> <span class="n">neighbours</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbour_pixels</span><span class="p">()</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_edge_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span></div>
-
-
-    <span class="k">def</span> <span class="nf">_plot_axes_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot three axes definitions on the pyplot.plt instance provided. The three axes are Alt/Az,\</span>
-<span class="sd">        the camera coordinate system and the original coordinate system the pixel list was provided.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        plot: pyplot.plt instance</span>
-<span class="sd">            A pyplot.plt instance where to add the axes definitions.</span>
-<span class="sd">        rotate_angle: float</span>
-<span class="sd">            The rotation angle applied</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">invert_yaxis</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">x_left</span> <span class="o">=</span> <span class="mf">0.7</span>  <span class="c1"># Position of the left most axis</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">):</span>
-            <span class="n">invert_yaxis</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">x_left</span> <span class="o">=</span> <span class="mf">0.8</span>
-
-        <span class="n">x_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$x_{\!pix}$&quot;</span>
-        <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$y_{\!pix}$&quot;</span>
-        <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">)</span>
-        <span class="c1"># The rotation of LST (above 100 degrees) raises the axes.</span>
-        <span class="c1"># In this case, lower the starting point.</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">rotate_angle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
-            <span class="n">y_pos</span> <span class="o">-=</span> <span class="mf">0.09</span>
-            <span class="n">x_pos</span> <span class="o">-=</span> <span class="mf">0.05</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
-            <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
-            <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
-            <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
-            <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="n">rotate_angle</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-            <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="n">x_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$x_{\!cam}$&quot;</span>
-        <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$y_{\!cam}$&quot;</span>
-        <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span> <span class="o">+</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">)</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
-            <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
-            <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
-            <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
-            <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-            <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="n">x_title</span> <span class="o">=</span> <span class="s2">&quot;Alt&quot;</span>
-        <span class="n">y_title</span> <span class="o">=</span> <span class="s2">&quot;Az&quot;</span>
-        <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_left</span> <span class="o">+</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;x_title&quot;</span><span class="p">:</span> <span class="n">x_title</span><span class="p">,</span>
-            <span class="s2">&quot;y_title&quot;</span><span class="p">:</span> <span class="n">y_title</span><span class="p">,</span>
-            <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="n">x_pos</span><span class="p">,</span>
-            <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="n">y_pos</span><span class="p">,</span>
-            <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-            <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;invert_yaxis&quot;</span><span class="p">:</span> <span class="n">invert_yaxis</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_plot_one_axis_def</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot an axis on the pyplot.plt instance provided.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        plot: pyplot.plt instance</span>
-<span class="sd">            A pyplot.plt instance where to add the axes definitions.</span>
-<span class="sd">        **kwargs: dict</span>
-<span class="sd">             x_title: str</span>
-<span class="sd">                x-axis title</span>
-<span class="sd">             y_title: str</span>
-<span class="sd">                y-axis title,</span>
-<span class="sd">             x_pos: float</span>
-<span class="sd">                x position of the axis to draw</span>
-<span class="sd">             y_pos: float</span>
-<span class="sd">                y position of the axis to draw</span>
-<span class="sd">             rotate_angle: float</span>
-<span class="sd">                rotation angle of the axis in radians</span>
-<span class="sd">             fc: str</span>
-<span class="sd">                face colour of the axis</span>
-<span class="sd">             ec: str</span>
-<span class="sd">                edge colour of the axis</span>
-<span class="sd">             invert_yaxis: bool</span>
-<span class="sd">                Flag to invert the y-axis (for dual mirror telescopes).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">x_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;x_title&quot;</span><span class="p">]</span>
-        <span class="n">y_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_title&quot;</span><span class="p">]</span>
-        <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">])</span>
-
-        <span class="n">r</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># size of arrow</span>
-        <span class="n">sign</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;invert_yaxis&quot;</span><span class="p">]:</span>
-            <span class="n">sign</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.0</span>
-        <span class="n">x_text1</span> <span class="o">=</span> <span class="n">x_pos</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
-        <span class="n">y_text1</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
-        <span class="n">x_text2</span> <span class="o">=</span> <span class="n">x_pos</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
-        <span class="n">y_text2</span> <span class="o">=</span> <span class="n">y_pos</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
-
-        <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
-            <span class="n">x_title</span><span class="p">,</span>
-            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">),</span>
-            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">x_text1</span><span class="p">,</span> <span class="n">y_text1</span><span class="p">),</span>
-            <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;axes fraction&quot;</span><span class="p">,</span>
-            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="s2">&quot;xx-large&quot;</span><span class="p">,</span>
-            <span class="n">arrowprops</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;arrowstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;|-&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;shrinkA&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">&quot;shrinkB&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;fc&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ec&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">)</span>
-
-        <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
-            <span class="n">y_title</span><span class="p">,</span>
-            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">),</span>
-            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">x_text2</span><span class="p">,</span> <span class="n">y_text2</span><span class="p">),</span>
-            <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;axes fraction&quot;</span><span class="p">,</span>
-            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="s2">&quot;xx-large&quot;</span><span class="p">,</span>
-            <span class="n">arrowprops</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;arrowstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;|-&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;shrinkA&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">&quot;shrinkB&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;fc&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ec&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">)</span>
-
-<div class="viewcode-block" id="Camera.plot_pixel_layout">
-<a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.plot_pixel_layout">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_pixel_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">camera_in_sky_coor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pixels_id_to_print</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot the pixel layout for an observer facing the camera. Including in the plot edge pixels,\</span>
-<span class="sd">        off pixels, pixel ID for the first 50 pixels, coordinate systems, FOV, focal length and the\</span>
-<span class="sd">        average edge radius.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        fig: plt.figure instance</span>
-<span class="sd">            Figure with the pixel layout.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2"> camera&quot;</span><span class="p">)</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">camera_in_sky_coor</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">y_val</span> <span class="k">for</span> <span class="n">y_val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span>
-
-        <span class="n">on_pixels</span><span class="p">,</span> <span class="n">edge_pixels</span><span class="p">,</span> <span class="n">off_pixels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">xy_pix_pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="n">hexagon</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                    <span class="n">numVertices</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                    <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
-                    <span class="n">orientation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;orientation&quot;</span><span class="p">]),</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_neighbour_pixels</span><span class="p">()[</span><span class="n">i_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
-                        <span class="n">edge_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hexagon</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">on_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hexagon</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">off_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hexagon</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">square</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
-                    <span class="p">(</span>
-                        <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span>
-                        <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span>
-                    <span class="p">),</span>
-                    <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
-                    <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_neighbour_pixels</span><span class="p">()[</span><span class="n">i_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
-                        <span class="n">edge_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">on_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">off_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pixels_id_to_print</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">font_size</span> <span class="o">=</span> <span class="mi">4</span>
-                <span class="k">if</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span>
-                <span class="p">):</span>
-                    <span class="n">font_size</span> <span class="o">=</span> <span class="mi">2</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-                    <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                    <span class="n">xy_pix_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">],</span>
-                    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                    <span class="n">fontsize</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
-                <span class="p">)</span>
-
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
-            <span class="n">PatchCollection</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
-            <span class="n">PatchCollection</span><span class="p">(</span>
-                <span class="n">edge_pixels</span><span class="p">,</span>
-                <span class="n">facecolor</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;brown&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,),</span>
-                <span class="n">edgecolor</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
-                <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
-            <span class="n">PatchCollection</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="n">legend_objects</span> <span class="o">=</span> <span class="p">[</span><span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">(),</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">()]</span>
-        <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Pixel&quot;</span><span class="p">,</span> <span class="s2">&quot;Edge pixel&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mlp</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">):</span>
-            <span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexPixelHandler</span><span class="p">(),</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexEdgePixelHandler</span><span class="p">(),</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">HexOffPixelHandler</span><span class="p">(),</span>
-            <span class="p">}</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mlp</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">):</span>
-            <span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">PixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquarePixelHandler</span><span class="p">(),</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">EdgePixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareEdgePixelHandler</span><span class="p">(),</span>
-                <span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">:</span> <span class="n">leg_h</span><span class="o">.</span><span class="n">SquareOffPixelHandler</span><span class="p">(),</span>
-            <span class="p">}</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">off_pixels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">legend_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">OffPixelObject</span><span class="p">())</span>
-            <span class="n">legend_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Disabled pixel&quot;</span><span class="p">)</span>
-
-        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span>
-                <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span>
-                <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1.42</span><span class="p">,</span>
-                <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1.42</span><span class="p">,</span>
-            <span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Horizontal scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Vertical scale [cm]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Pixels layout in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="si">:</span><span class="s2">s</span><span class="si">}</span><span class="s2"> camera&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
-            <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_axes_def</span><span class="p">(</span><span class="n">plt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span>
-        <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;For an observer facing the camera&quot;</span>
-        <span class="k">if</span> <span class="n">camera_in_sky_coor</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">):</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;For an observer behind the camera looking through&quot;</span>
-        <span class="k">if</span> <span class="n">is_two_mirror_telescope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="p">):</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;For an observer looking from secondary to camera&quot;</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="mf">0.02</span><span class="p">,</span>
-            <span class="mf">0.02</span><span class="p">,</span>
-            <span class="n">description</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">fov</span><span class="p">,</span> <span class="n">r_edge_avg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_fov</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="mf">0.02</span><span class="p">,</span>
-            <span class="mf">0.96</span><span class="p">,</span>
-            <span class="sa">r</span><span class="s2">&quot;$f_{\mathrm</span><span class="si">{eff}</span><span class="s2">}$ = &quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_focal_length</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> cm&quot;</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="mf">0.02</span><span class="p">,</span>
-            <span class="mf">0.92</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;Avg. edge radius = </span><span class="si">{</span><span class="n">r_edge_avg</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> cm&quot;</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="mf">0.02</span><span class="p">,</span>
-            <span class="mf">0.88</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;FoV = </span><span class="si">{</span><span class="n">fov</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-            <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
-            <span class="n">legend_objects</span><span class="p">,</span>
-            <span class="n">legend_labels</span><span class="p">,</span>
-            <span class="n">handler_map</span><span class="o">=</span><span class="n">legend_handler_map</span><span class="p">,</span>
-            <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">},</span>
-            <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="s2">&quot;datalim&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">fig</span></div>
 </div>
 
 </pre></div>
