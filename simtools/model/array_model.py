@@ -1,12 +1,12 @@
 import logging
 
+from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.layout.array_layout import ArrayLayout
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils import names
-from simtools.utils.general import collect_data_from_file_or_dict
+from simtools.utils import general, names
 
 __all__ = ["ArrayModel", "InvalidArrayConfigData"]
 
@@ -30,7 +30,7 @@ class ArrayModel:
     array_config_data: dict
         Dict with the array config data.
     label: str
-        Instance label. Important for output file naming.
+        Instance label. Used for output file naming.
     """
 
     def __init__(
@@ -54,12 +54,15 @@ class ArrayModel:
         self._config_file_path = None
         self.io_handler = io_handler.IOHandler()
 
-        self._array_config_data, site = self._load_array_data(
-            collect_data_from_file_or_dict(array_config_file, array_config_data)
+        self._array_config_data, site, telescopes = self._load_array_data(
+            general.collect_data_from_file_or_dict(array_config_file, array_config_data)
         )
         self._set_config_file_directory()
 
-        self.site_model, self.telescope_model = self._build_array_model(site=site)
+        self.site_model, self.telescope_model = self._build_array_model(
+            site=site,
+            telescopes=telescopes,
+        )
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
@@ -103,10 +106,18 @@ class ArrayModel:
             Dict with updated array configuration data.
         str
             Site name.
+        dict
+            Dict with telescope positions from file
+            (if configured in the array config data).
         """
 
         self._validate_array_data(array_config_data)
         site = names.validate_site_name(array_config_data["site"])
+
+        if array_config_data.get("layout_name") is not None:
+            telescope_positions = self._load_telescope_positions_from_file(
+                array_config_data["layout_name"], site
+            )
 
         self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
         self.layout = ArrayLayout.from_array_layout_name(
@@ -117,11 +128,15 @@ class ArrayModel:
         )
 
         # Removing keys that were stored in attributes and keeping the remaining as a dict
-        return {
-            k: v
-            for (k, v) in array_config_data.items()
-            if k not in ["site", "layout_name", "model_version"]
-        }, site
+        return (
+            {
+                k: v
+                for (k, v) in array_config_data.items()
+                if k not in ["site", "layout_name", "model_version"]
+            },
+            site,
+            telescope_positions,
+        )
 
     def _validate_array_data(self, array_config_data):
         """
@@ -164,15 +179,19 @@ class ArrayModel:
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
             self._logger.info(f"Creating directory {self._config_file_directory}")
 
-    def _build_array_model(self, site):
+    def _build_array_model(self, site, telescopes):
         """
         Build the constituents of the array model (site, telescopes, etc).
         Includes reading of all model parameters from the DB.
+        The array is define in the telescopes dictionary. Positions
+        are read from the database if no values are given in this dictionary.
 
         Parameters
         ----------
         site: str
             Site name.
+        telescopes: dict
+            Dict with telescopes forming this array (values optional).
 
         Returns
         -------
@@ -190,14 +209,7 @@ class ArrayModel:
         )
 
         telescope_model = {}
-        _all_pars_to_change = {}
-        for tel in self.layout:  # TODO - layout
-            tel_name = tel.name  # TODO - layout
-            # Collecting pars to change from array_config_data
-            pars_to_change = self._get_single_telescope_info_from_array_config(tel_name)
-            if len(pars_to_change) > 0:
-                _all_pars_to_change[tel.name] = pars_to_change
-
+        for tel_name, position in telescopes.items():
             telescope_model[tel_name] = TelescopeModel(
                 site=site_model.site,
                 telescope_model_name=tel_name,
@@ -205,13 +217,21 @@ class ArrayModel:
                 mongo_db_config=self.mongo_db_config,
                 label=self.label,
             )
-
-        for tel_name, par_to_change in _all_pars_to_change.items():
-            self._logger.debug(
-                f"Changing {len(par_to_change)} pars of a " f"{tel_name}: {*par_to_change, }, ..."
-            )
-            telescope_model[tel_name].change_multiple_parameters(**par_to_change)
-            telescope_model[tel_name].set_extra_label(tel_name)
+            # Collecting parameters to change from array_config_data
+            pars_to_change = self._get_single_telescope_info_from_array_config(tel_name)
+            if len(position) > 0:
+                pars_to_change[position["parameter"]] = position
+            if len(pars_to_change) > 0:
+                self._logger.debug(
+                    f"Changing {len(pars_to_change)} parameters of "
+                    f"{tel_name}: "
+                    f"{*pars_to_change, }, ..."
+                )
+                telescope_model[tel_name].change_multiple_parameters(**pars_to_change)
+                telescope_model[tel_name].set_extra_label(tel_name)
+                # TODO TMP add position manually (not in DB yet)
+                # pylint: disable=protected-access
+                telescope_model[tel_name]._parameters[position["parameter"]] = position
 
         return site_model, telescope_model
 
@@ -357,3 +377,75 @@ class ArrayModel:
             Path of the config directory path for sim_telarray.
         """
         return self._config_file_directory
+
+    def _load_telescope_positions_from_file(self, layout_name, site):
+        """
+        Load telescope positions from a file.
+
+        Parameters
+        ----------
+        layout_name: str
+            Name of the layout.
+        site: str
+            Site name.
+
+        Returns
+        -------
+        dict
+            Dict with telescope positions.
+
+        """
+
+        array_layout_name = (
+            names.validate_site_name(site) + "-" + names.validate_array_layout_name(layout_name)
+        )
+        telescope_list_file = io_handler.IOHandler().get_input_data_file(
+            "layout", f"telescope_positions-{array_layout_name}.ecsv"
+        )
+        table = data_reader.read_table_from_file(file_name=telescope_list_file)
+
+        telescope_positions = {}
+        for row in table:
+            telescope_name = row["telescope_name"]
+            telescope_positions[telescope_name] = self._get_telescope_position_parameter(
+                telescope_name, site, row["position_x"], row["position_y"], row["position_z"]
+            )
+        return telescope_positions
+
+    def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
+        """
+        Return dictionary with telescope position parameters.
+
+
+        Parameters
+        ----------
+        telescope_name: str
+            Name of the telescope.
+        site: str
+            Site name.
+        x: astropy.Quantity
+            X position.
+        y: astropy.Quantity
+            Y position.
+        z: astropy.Quantity
+            Z position.
+
+        Returns
+        -------
+        dict
+            Dict with telescope position parameters.
+        """
+
+        return {
+            "parameter": "array_element_position_ground",
+            "instrument": telescope_name,
+            "site": site,
+            "version": self.model_version,
+            "value": general.convert_list_to_string(
+                [x.to("m").value, y.to("m").value, z.to("m").value]
+            ),
+            "unit": "m",
+            "type": "float64",
+            "application": True,
+            "file:": False,
+        }
