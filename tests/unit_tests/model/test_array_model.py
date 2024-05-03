@@ -31,6 +31,11 @@ def test_input_validation(array_model):
     assert am.number_of_telescopes == 13
 
 
+def test_load_array_data(array_model):
+    am = array_model
+    assert am._array_config_data == {}
+
+
 def test_get_single_telescope_info_from_array_config(db_config, model_version):
     array_config_data = {
         "site": "North",
