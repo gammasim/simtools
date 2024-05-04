@@ -122,7 +122,7 @@ def main():
         label=args_dict["label"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
-        array_config_file=args_dict["array_config"],
+        array_config_data=gen.collect_data_from_file_or_dict(args_dict["array_config"], None),
     )
 
     # Printing list of telescope for quick inspection.
