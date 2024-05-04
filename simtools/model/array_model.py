@@ -383,7 +383,6 @@ class ArrayModel:
         -------
         dict
             Dict with telescope positions.
-
         """
 
         array_layout_name = (
@@ -394,18 +393,16 @@ class ArrayModel:
         )
         table = data_reader.read_table_from_file(file_name=telescope_list_file)
 
-        telescope_positions = {}
-        for row in table:
-            telescope_name = row["telescope_name"]
-            telescope_positions[telescope_name] = self._get_telescope_position_parameter(
-                telescope_name, site, row["position_x"], row["position_y"], row["position_z"]
+        return {
+            row["telescope_name"]: self._get_telescope_position_parameter(
+                row["telescope_name"], site, row["position_x"], row["position_y"], row["position_z"]
             )
-        return telescope_positions
+            for row in table
+        }
 
     def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
         """
-        Return dictionary with telescope position parameters.
-
+        Return dictionary with telescope position parameters (following DB model database format)
 
         Parameters
         ----------
@@ -414,11 +411,11 @@ class ArrayModel:
         site: str
             Site name.
         x: astropy.Quantity
-            X position.
+            X ground position.
         y: astropy.Quantity
-            Y position.
+            Y ground position.
         z: astropy.Quantity
-            Z position.
+            Z ground position.
 
         Returns
         -------
