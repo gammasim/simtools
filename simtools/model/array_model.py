@@ -472,6 +472,6 @@ class ArrayModel:
             ),
             "unit": "m",
             "type": "float64",
-            "application": True,
-            "file:": False,
+            "applicable": True,
+            "file": False,
         }
