@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """
-    This application adds all parameters found in a repository to the DB.
+    This application adds all parameters found in a repository to a new database.
 
-    Generates a new data with all required collections.
+    Generates a new database with all required collections.
     Follows the structure of the CTAO gitlab model parameters repository.
     file as input.
 
