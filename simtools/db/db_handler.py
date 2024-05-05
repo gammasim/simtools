@@ -113,6 +113,9 @@ class DatabaseHandler:
     ):
         """
         Get parameters from either MongoDB or simulation model repository for a specific telescope.
+        Read parameters for design and for the specified telescope (if necessary). This allows to
+        overwrite design parameters with specific telescope parameters without having to copy
+        the all model parameters when changing only a few.
 
         Parameters
         ----------
@@ -135,34 +138,41 @@ class DatabaseHandler:
             site, telescope_model_name, model_version
         )
 
-        _array_elements_cache_key = self._parameter_cache_key(
-            site, telescope_model_name, model_version
+        # ensure that the design model is always the first in the list
+        telescope_list = (
+            [_telescope_model_name]
+            if "-design" in _telescope_model_name
+            else [
+                names.get_telescope_type_from_telescope_name(telescope_model_name) + "-design",
+                _telescope_model_name,
+            ]
         )
-        try:
-            return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
-        except KeyError:
-            pass
+        pars = {}
+        for telescope in telescope_list:
+            _array_elements_cache_key = self._parameter_cache_key(site, telescope, model_version)
+            try:
+                pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
+            except KeyError:
+                pars.update(
+                    self._get_model_parameters_mongo_db(
+                        self.mongo_db_config.get("db_simulation_model", None),
+                        telescope,
+                        _model_version,
+                        only_applicable,
+                    )
+                )
+                if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+                    pars = db_from_repo_handler.update_model_parameters_from_repo(
+                        parameters=pars,
+                        site=_site,
+                        parameter_collection="telescopes",
+                        telescope_name=telescope,
+                        model_version=_model_version,
+                        db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url"),
+                    )
+            DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
 
-        _pars = self._get_model_parameters_mongo_db(
-            self.mongo_db_config.get("db_simulation_model", None),
-            _telescope_model_name,
-            _model_version,
-            only_applicable,
-        )
-
-        # update using simulation model repository
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=_pars,
-                site=_site,
-                parameter_collection="telescopes",
-                telescope_name=_telescope_model_name,
-                model_version=_model_version,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-
-        DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = _pars
-        return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
+        return pars
 
     def export_file_db(self, db_name, dest, file_name):
         """
