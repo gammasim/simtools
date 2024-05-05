@@ -138,15 +138,7 @@ class DatabaseHandler:
             site, telescope_model_name, model_version
         )
 
-        # ensure that the design model is always the first in the list
-        telescope_list = (
-            [_telescope_model_name]
-            if "-design" in _telescope_model_name
-            else [
-                names.get_telescope_type_from_telescope_name(telescope_model_name) + "-design",
-                _telescope_model_name,
-            ]
-        )
+        telescope_list = self.get_telescope_list_for_db_query(_telescope_model_name, model_version)
         pars = {}
         for telescope in telescope_list:
             _array_elements_cache_key = self._parameter_cache_key(site, telescope, model_version)
@@ -266,29 +258,15 @@ class DatabaseHandler:
 
         """
 
-        _which_tel_labels = [
-            self.get_telescope_db_name(
-                telescope_name=telescope_model_name,
-                model_version=model_version,
-            )
-        ]
-
-        _pars = {}
-        for _tel in _which_tel_labels:
-            self._logger.debug(f"Getting {_tel} parameters from MongoDB")
-
-            _pars.update(
-                self.read_mongo_db(
-                    db_name,
-                    _tel,
-                    model_version,
-                    run_location=None,
-                    write_files=False,
-                    only_applicable=only_applicable,
-                )
-            )
-
-        return _pars
+        self._logger.debug(f"Getting {telescope_model_name} parameters from MongoDB")
+        return self.read_mongo_db(
+            db_name,
+            telescope_model_name,
+            model_version,
+            run_location=None,
+            write_files=False,
+            only_applicable=only_applicable,
+        )
 
     def read_mongo_db(
         self,
@@ -1174,6 +1152,41 @@ class DatabaseHandler:
         _all_available_telescopes = collection.find(query).distinct("instrument")
 
         return _all_available_telescopes
+
+    def get_telescope_list_for_db_query(self, telescope_model_name, model_version):
+        """
+        Returns a list of telescope names to be used for querying the database.
+        The first entry of the list is the design telescope (if it exists in the DB),
+        followed by the actual telescope model name.
+
+        Parameters
+        ----------
+        telescope_model_name: str
+            Name of the telescope model (e.g. MSTN-01).
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        list
+            List of telescope model names as used in the DB.
+
+        """
+
+        if "-design" in telescope_model_name:
+            return [telescope_model_name]
+        try:
+            return [
+                self.get_telescope_db_name(
+                    names.get_telescope_type_from_telescope_name(telescope_model_name) + "-design",
+                    model_version,
+                ),
+                self.get_telescope_db_name(telescope_model_name, model_version),
+            ]
+        except ValueError:  # e.g., no design model defined for this telescope type
+            return [
+                self.get_telescope_db_name(telescope_model_name, model_version),
+            ]
 
     def get_telescope_db_name(self, telescope_name, model_version):
         """
