@@ -238,7 +238,8 @@ class ArrayModel:
         )
 
         telescope_model = {}
-        for element_name, position in self.array_elements.items():
+        # TODO - check if this is the correct way to define an array
+        for element_name, _ in self.array_elements.items():
             collection = names.get_collection_name_from_array_element_name(element_name)
             if collection == "telescopes":
                 telescope_model[element_name] = TelescopeModel(
@@ -252,8 +253,6 @@ class ArrayModel:
             pars_to_change = self._get_single_telescope_info_from_array_config(
                 element_name, array_config_data
             )
-            if len(position) > 0:
-                pars_to_change[position["parameter"]] = position
             if len(pars_to_change) > 0:
                 self._logger.debug(
                     f"Changing {len(pars_to_change)} parameters of "
@@ -263,9 +262,6 @@ class ArrayModel:
                 if element_name in telescope_model:
                     telescope_model[element_name].change_multiple_parameters(**pars_to_change)
                     telescope_model[element_name].set_extra_label(element_name)
-                    # TODO TMP add position manually (not in DB yet)
-                    # pylint: disable=protected-access
-                    telescope_model[element_name]._parameters[position["parameter"]] = position
 
         return site_model, telescope_model
 
