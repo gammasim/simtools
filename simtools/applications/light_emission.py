@@ -87,7 +87,7 @@ def default_le_configs(le_application):
     in the given direction.
     """
 
-    if le_application in ("xyzls", "ls_beam"):
+    if le_application in ("xyzls", "ls-beam"):
         default_config = {
             "beam_shape": {
                 "len": 1,
@@ -122,7 +122,7 @@ def default_le_configs(le_application):
             "y_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
-                "default": 0 * u.m,
+                "default": 0 * u.cm,
                 "names": ["y_position"],
             },
             "z_pos": {
@@ -134,19 +134,19 @@ def default_le_configs(le_application):
             "x_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 2.75 * u.m,
+                "default": -58718 * u.cm,
                 "names": ["x_position"],
             },
             "y_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": -587.18 * u.m,
+                "default": 275 * u.cm,
                 "names": ["y_position"],
             },
             "z_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 2295 * u.m,
+                "default": 229500 * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -163,7 +163,7 @@ def select_application(args_dict):
     if args_dict["light_source_type"] == "led":
         le_application = "xyzls"
     elif args_dict["light_source_type"] == "laser":
-        le_application = "ls_beam"
+        le_application = "ls-beam"
 
     return le_application, args_dict["light_source_setup"]
 
@@ -176,13 +176,15 @@ def main():
     2. Illuminator and telscopes at fixed positions as defined in the layout
 
     Example:
-    simtools-simulate-light-emission --telescope MSTN-design --site North \
-      --illuminator ILLN-design --light_source_setup variable --model_version prod6
+    simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        --illuminator ILLN-01 --light_source_setup variable \
+        --model_version prod6 --light_source_type led
 
-      simtools-simulate-light-emission --telescope MSTN-04 --site North  \
-        --illuminator ILLN-01 --light_source_setup layout --model_version prod6 \
-        --telescope_file\
-        /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv
+      simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        --illuminator ILLN-01 --light_source_setup variable \
+        --model_version prod6 --telescope_file \
+        /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv\
+        --light_source_type led
     """
 
     label = Path(__file__).stem
@@ -200,8 +202,6 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-    # TODO: Use real coordinates from calibration_model or instance
-    # we use now ILLN-01 coordinates in the default configuration
 
     # Create calibration model
     calibration_model = CalibrationModel(
@@ -259,8 +259,6 @@ def main():
             collection="telescopes",
             site=args_dict["site"],
             telescope_list_file=args_dict["telescope_file"],
-            # telescope_list_metadata_file=args_dict["input_meta"],
-            # validate=not args_dict["skip_input_validation"],
         )
         layout.convert_coordinates()
         layout.select_assets(args_dict["telescope"])
@@ -269,7 +267,6 @@ def main():
             if telescope.name == args_dict["telescope"]:
                 xx, yy, zz = telescope.get_coordinates(crs_name="ground")
 
-        # telescope coordinates from list
         default_le_config["x_pos"]["real"] = xx
         default_le_config["y_pos"]["real"] = yy
         default_le_config["z_pos"]["real"] = zz
