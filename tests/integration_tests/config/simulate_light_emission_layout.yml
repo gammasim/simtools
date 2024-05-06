@@ -1,11 +1,12 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-light-emission
-  TEST_NAME: run
+  TEST_NAME: run-layout
   CONFIGURATION:
     SITE: North
     TELESCOPE: MSTN-04
     ILLUMINATOR: ILLN-01
     LIGHT_SOURCE_SETUP: layout
     MODEL_VERSION: prod6
-    LIGHT_SOURCE_TYPE: LED
+    LIGHT_SOURCE_TYPE: led
     OUTPUT_PATH: simtools-tests
+    TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
