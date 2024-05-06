@@ -16,7 +16,7 @@ class InvalidArrayConfigData(Exception):
 
 class ArrayModel:
     """
-    Representation of an observatory consisting of site and telescopes.
+    Representation of an observatory consisting of site, telescopes, and further devices.
 
     Parameters
     ----------
