@@ -193,3 +193,8 @@ intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
 }
+
+nitpick_ignore = {
+    ("py:obj", "Unit"),
+    ("py:obj", "UnitBase"),
+}

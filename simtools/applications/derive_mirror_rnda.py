@@ -114,7 +114,7 @@
 
     Runtime about 4 min.
 
-    The output is saved in `simtools-output/derive_mirror_rnda`.
+    The output is saved in simtools-output/derive_mirror_rnda.
     Use the parameter ``--output_path`` to change the output directory.
 
     Expected final print-out message:
