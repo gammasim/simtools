@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.11
-  - astropy=6.0
+  - astropy
   - boost-histogram
   - ctapipe
   - eventio
