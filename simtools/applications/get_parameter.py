@@ -87,7 +87,10 @@ def main():
         )
     elif args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
-            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+            args_dict["site"],
+            args_dict["telescope"],
+            args_dict["model_version"],
+            collection="telescopes",
         )
     else:
         pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])

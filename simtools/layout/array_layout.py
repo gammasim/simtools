@@ -54,7 +54,6 @@ class ArrayLayout:
         mongo_db_config,
         site,
         model_version,
-        collection,
         label=None,
         name=None,
         telescope_list_file=None,
@@ -77,7 +76,6 @@ class ArrayLayout:
             else None
         )
         self.model_version = model_version
-        self.collection = collection
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
@@ -98,9 +96,7 @@ class ArrayLayout:
         )
 
     @classmethod
-    def from_array_layout_name(
-        cls, mongo_db_config, array_layout_name, model_version, collection, label=None
-    ):
+    def from_array_layout_name(cls, mongo_db_config, array_layout_name, model_version, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
         Layout definitions are given in the `data/layout` path.
@@ -136,7 +132,6 @@ class ArrayLayout:
             mongo_db_config=mongo_db_config,
             name=valid_array_layout_name,
             model_version=model_version,
-            collection=collection,
             label=label,
             telescope_list_file=telescope_list_file,
         )
@@ -443,7 +438,7 @@ class ArrayLayout:
             _telescope_model_name = self.db.get_telescope_db_name(
                 telescope_name=telescope.name,
                 model_version=self.model_version,
-                collection=self.collection,
+                collection="telescopes",
             )
             self._logger.debug(
                 f"Reading auxiliary telescope parameters for {telescope.name}"
