@@ -48,6 +48,11 @@ add_value_from_json_to_db
 .. automodule:: add_value_from_json_to_db
    :members:
 
+calculate_trigger_rate
+======================
+
+.. automodule:: calculate_trigger_rate
+   :members:
 
 compare_cumulative_psf
 ======================
