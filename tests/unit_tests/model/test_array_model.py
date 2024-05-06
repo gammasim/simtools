@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from astropy import units as u
 
 from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
 
@@ -119,3 +120,26 @@ def test_exporting_config_files(db_config, io_handler, model_version):
 
         logger.info("Checking file: %s", model_file)
         assert Path(am.get_config_directory()).joinpath(model_file).exists()
+
+
+def test_load_array_element_positions_from_file(array_model, io_handler, telescope_north_test_file):
+    am = array_model
+    telescopes = am._load_array_element_positions_from_file(telescope_north_test_file, "North")
+    assert len(telescopes) > 0
+
+
+def test_get_telescope_position_parameter(array_model, io_handler):
+    am = array_model
+    assert am._get_telescope_position_parameter(
+        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m
+    ) == {
+        "parameter": "array_element_position_ground",
+        "instrument": "LSTN-01",
+        "site": "North",
+        "version": "2024-02-01",
+        "value": "10.0 2.0 30.0",
+        "unit": "m",
+        "type": "float64",
+        "applicable": True,
+        "file": False,
+    }
