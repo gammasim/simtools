@@ -334,7 +334,6 @@ class DatabaseHandler:
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
             if _parameters[par_now]["file"] and write_files:
                 file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
-
                 self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
         return _parameters

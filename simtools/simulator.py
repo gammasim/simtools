@@ -193,7 +193,8 @@ class Simulator:
 
         """
 
-        self._corsika_config_data = copy(config_data)
+        self._corsika_config_data = copy(config_data["common"])
+        self._corsika_config_data.update(copy(config_data["showers"]))
         self.runs = self._validate_run_list_and_range(
             self._corsika_config_data.pop("run_list", None),
             self._corsika_config_data.pop("run_range", None),
@@ -223,7 +224,10 @@ class Simulator:
             Configuration for array simulations.
 
         """
-        _array_model_config, _rest_config = self._collect_array_model_parameters(config_data)
+        _merged_config = copy(config_data["common"])
+        if "array" in config_data:
+            _merged_config.update(copy(config_data["array"]))
+        _array_model_config, _rest_config = self._collect_array_model_parameters(_merged_config)
 
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
