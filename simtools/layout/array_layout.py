@@ -596,32 +596,6 @@ class ArrayLayout:
         """
         return len(self._telescope_list)
 
-    def get_corsika_input_list(self):
-        """
-        Get a string with the piece of text to be added to the CORSIKA input file.
-
-        Returns
-        -------
-        str
-            Piece of text to be added to the CORSIKA input file.
-        """
-
-        corsika_list = ""
-        for tel in self._telescope_list:
-            pos_x, pos_y, pos_z = tel.get_coordinates("ground")
-            pos_z = tel.convert_telescope_altitude_to_corsika_system(
-                pos_z,
-                self._corsika_observation_level,
-                tel.get_axis_height(),
-            )
-            corsika_list += "TELESCOPE"
-            for pos in [pos_x, pos_y, pos_z]:
-                corsika_list += f"\t {pos.value:.3f}E2"
-            corsika_list += f"\t {tel.get_sphere_radius().value:.3f}E2"
-            corsika_list += f"\t # {tel.name}\n"
-
-        return corsika_list
-
     def print_telescope_list(self, crs_name):
         """
         Print list of telescopes.
