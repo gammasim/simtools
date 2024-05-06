@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from simtools.model.array_model import ArrayModel
+from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -31,12 +31,26 @@ def test_input_validation(array_model):
     assert am.number_of_telescopes == 13
 
 
+def test_site(array_model):
+    am = array_model
+    assert am.site == "North"
+
+
 def test_load_array_data(array_model):
     am = array_model
-    assert am._array_config_data == {}
+
+    with pytest.raises(InvalidArrayConfigData):
+        assert am._load_array_data({}) == {}
+
+    _config, site, layout_file = am._load_array_data(
+        {"site": "North", "layout_name": "test-layout"}
+    )
+    assert _config == {}
+    assert site == "North"
+    assert str(layout_file).find("North-TestLayout.ecsv") > 0
 
 
-def test_get_single_telescope_info_from_array_config(db_config, model_version):
+def test_get_single_telescope_info_from_array_config(db_config, model_version, io_handler):
     array_config_data = {
         "site": "North",
         "layout_name": "test-layout",
@@ -52,8 +66,10 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version):
         model_version=model_version,
     )
 
-    assert am._get_single_telescope_info_from_array_config("LSTN-01") == {}
-    assert am._get_single_telescope_info_from_array_config("MSTN-05") == {
+    _config, _, _ = am._load_array_data(array_config_data)
+
+    assert am._get_single_telescope_info_from_array_config("LSTN-01", _config) == {}
+    assert am._get_single_telescope_info_from_array_config("MSTN-05", _config) == {
         "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
     }
 
