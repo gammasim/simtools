@@ -1,7 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-  "astropy<6.1",
   "setuptools>=65",
   "setuptools_scm[toml]>=6.2",
 ]
