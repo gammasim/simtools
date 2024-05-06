@@ -157,7 +157,6 @@ class CorsikaRunner:
                 site=self.site,
                 label=self.label,
                 layout_name=self.layout_name,
-                layout=None if self.array_model is None else self.array_model.layout,
                 corsika_config_data=self._corsika_config_data,
                 simtel_source_path=self._simtel_source_path,
                 corsika_parameters_file=self._corsika_parameters_file,
