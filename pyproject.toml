@@ -58,8 +58,8 @@ dependencies = [
 "doc" = [
   "numpydoc",
   "sphinx",
+  "sphinx-automodapi",
   "sphinx-book-theme",
-  "sphinx_automodapi",
 ]
 "tests" = [
   "pytest",
