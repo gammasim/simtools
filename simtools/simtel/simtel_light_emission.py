@@ -196,7 +196,6 @@ class SimulatorLightEmission(SimtelRunner):
         z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
 
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        print("cal_vect", cal_vect)
         # x_tel = self._telescope_model.get_parameter_value("x_pos")
         # y_tel = self._telescope_model.get_parameter_value("y_pos")
         # z_tel = self._telescope_model.get_parameter_value("z_pos")
@@ -205,16 +204,20 @@ class SimulatorLightEmission(SimtelRunner):
         z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
-        direction_vector = cal_vect - tel_vect
-        pointing_vector = direction_vector / np.linalg.norm(direction_vector)
+        direction_vector = tel_vect - cal_vect
+        # pointing vector from calibration device to telescope
 
+        pointing_vector = direction_vector / np.linalg.norm(direction_vector)
+        pointing_vector[0] = pointing_vector[0]
+        pointing_vector[1] = pointing_vector[1]
+        pointing_vector[2] = pointing_vector[2]
         # Calculate telescope theta and phi angles
-        tel_theta = np.arccos(tel_vect[2] / np.linalg.norm(tel_vect))
-        tel_phi = np.arctan2(tel_vect[1], tel_vect[0])
+        tel_theta = np.rad2deg(np.arccos(direction_vector[2] / np.linalg.norm(direction_vector)))
+        tel_phi = np.rad2deg(np.arctan2(direction_vector[1], direction_vector[0]))
 
         # Calculate laser beam theta and phi angles
-        laser_theta = np.arccos(pointing_vector[2])
-        laser_phi = np.arctan2(pointing_vector[1], pointing_vector[0])
+        laser_theta = np.rad2deg(np.arccos(pointing_vector[2]))
+        laser_phi = np.rad2deg(np.arctan2(pointing_vector[1], pointing_vector[0]))
         return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
 
     def telescope_calibration_device_distance(self):
@@ -225,7 +228,7 @@ class SimulatorLightEmission(SimtelRunner):
         astropy Quantity: The distance between the telescope and the calibration device.
         """
 
-        if self.default_le_config["x_pos"]["real"] != u.Quantity(0, u.m):
+        if "real" in self.default_le_config["x_pos"]:
             x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
             y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
             z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
@@ -252,58 +255,96 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
-        command += " -n 1e10"
-
-        command += f" -x {self.default_le_config['x_pos']['default'].value}"
-        command += f" -y {self.default_le_config['y_pos']['default'].value}"
-        command += f" -z {self.default_le_config['z_pos']['default'].value}"
-        if self.le_application[1] == "variable":
-            command += f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
-        elif self.le_application[1] == "layout":
-            command += f" -d {','.join(map(str, self.calibration_pointing_direction()[0]))}"
 
         if self.light_source_type == "led":
-            command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+            command += " -n 1e10"
 
-            # currently we use the same wavelength
-            command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
+            if self.le_application[1] == "variable":
+                command += f" -x {self.default_le_config['x_pos']['default'].to(u.cm).value}"
+                command += f" -y {self.default_le_config['y_pos']['default'].to(u.cm).value}"
+                command += f" -z {self.default_le_config['z_pos']['default'].to(u.cm).value}"
+                command += (
+                    f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
+                )
+            elif self.le_application[1] == "layout":
+                x_origin = (
+                    self.default_le_config["x_pos_ILLN-01"]["default"]
+                    - self.default_le_config["x_pos"]["real"]
+                )
+                y_origin = (
+                    self.default_le_config["y_pos_ILLN-01"]["default"]
+                    - self.default_le_config["y_pos"]["real"]
+                )
+                z_origin = (
+                    self.default_le_config["z_pos_ILLN-01"]["default"]
+                    - self.default_le_config["z_pos"]["real"]
+                )
+                # light_source coordinates relative to telescope
+                command += f" -x {x_origin.to(u.cm).value}"
+                command += f" -y {y_origin.to(u.cm).value}"
+                command += f" -z {z_origin.to(u.cm).value}"
+                pointing_vector = self.calibration_pointing_direction()[0]
+                command += f" -d {','.join(map(str, pointing_vector))}"
 
-            # pulse
-            command += (
-                f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
-            )
-            # {self._calibration_model.get_parameter_value('led_pulse_offset')}"
-            # TODO further parameters require different application
+                command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
 
-            # command += f" -s {self._calibration_model.get_parameter_value('led_var_photons')}"
-            # command += f" -s {self._calibration_model.get_parameter_value('pedestal_events')}"
+                # same wavelength as for laser
+                command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
 
+                # pulse
+                command += (
+                    f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
+                )
+                command += " -a isotropic"  # angular distribution
+                # {self._calibration_model.get_parameter_value('led_pulse_offset')}"
+                # TODO further parameters require modification of application
+
+                # command += f" -s {self._calibration_model.get_parameter_value('led_var_photons')}"
+                # command += f" -s {self._calibration_model.get_parameter_value('pedestal_events')}"
+            command += f" -A {self.output_directory}/model/"
+            command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         elif self.light_source_type == "laser":
+            # TODO: this application requires the atmospheric profiles in the include directory,
+            # or adjusting the application to use a path
+            command += "--events 1"
+            command += "--bunches 2500000"
+            command += "--step 0.1"
+            command += "--bunchsize 1"
+            command += (
+                f" --spectrum {self._calibration_model.get_parameter_value('laser_wavelength')}"
+            )
+            command += f" --lightpulse Gauss:\
+                {self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+            # command += " --angular-distribution Gauss:0.1" # specify laser angular distribution
+
+            x_origin = (
+                self.default_le_config["x_pos_ILLN-01"]["default"]
+                - self.default_le_config["x_pos"]["real"]
+            )
+            y_origin = (
+                self.default_le_config["y_pos_ILLN-01"]["default"]
+                - self.default_le_config["y_pos"]["real"]
+            )
+            z_origin = (
+                self.default_le_config["z_pos_ILLN-01"]["default"]
+                - self.default_le_config["z_pos"]["real"]
+            )
             _, angles = self.calibration_pointing_direction()
-            command += super()._config_option("tel_theta", angles[0])
-            command += super()._config_option("tel_phi", angles[1])
-            command += super()._config_option("laser_theta", angles[2])
-            command += super()._config_option("laser_phi", angles[3])
+            angle_theta = 180 - angles[0]
+            angle_phi = 180 - angles[1]
+            command += f" --laser-position '{x_origin.value},{y_origin.value},{z_origin.value}'"
 
-            command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+            command += f" --telescope-theta {angle_theta}"
+            command += f" --telescope-phi {angle_phi}"
+            command += f" --laser-theta {90-angles[2]}"
+            command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
 
-            command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
-            command += f" -N {self._calibration_model.get_parameter_value('laser_events')}"
-            # command += (
-            #    f" -s {self._calibration_model.get_parameter_value('laser_external_trigger')}"
-            # )
-            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_exptime')}"
-            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_offset')}"
-            command += f" -s {self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
-            command += f" -p {self._calibration_model.get_parameter_value('laser_pulse_twidth')}"
+            # further optional properties not used here:
+            # 'laser_external_trigger', 'laser_pulse_exptime',
+            # 'laser_pulse_offset' 'laser_pulse_twidth'
 
-            # command += f" -a {self._calibration_model.get_parameter_value('beam_shape').value}"
-            # command += f"{self._calibration_model.get_parameter_value('beam_width').value}"
-            # command += f" -p {self._calibration_model.get_parameter_value('pulse_shape').value}"
-            # command += f" {self._calibration_model.get_parameter_value('pulse_width').value}"
-
-        command += f" -A {self.output_directory}/model/"
-        command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
+            command += f" --atmosphere {self.output_directory}/model/"
+            command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
 
@@ -347,25 +388,26 @@ class SimulatorLightEmission(SimtelRunner):
         # command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
         command += super()._config_option("TRIGGER_CURRENT_LIMIT", "20")
         command += super()._config_option("TRIGGER_TELESCOPES", "1")
-        # command += super()._config_option("ARRAY_TRIGGER", "None")
+        # command += super()._config_option("ARRAY_TRIGGER", "NONE")
         command += super()._config_option("TELTRIG_MIN_SIGSUM", "7.8")
 
         command += super()._config_option("PULSE_ANALYSIS", "-30")
-        command += super()._config_option("SUM_BEFORE_PEAK", "-30")
-        command += super()._config_option("DEFAULT_TRIGGER", "AnalogSum")
-
+        # command += super()._config_option("SUM_BEFORE_PEAK", "-30")
         # command += super()._config_option("ARRAY_WINDOW", "1000")
         # command += super()._config_option("FAKE_TRIGGER", "1")
 
-        # from light_emission_default config
-        # command += super()._config_option(
-        #    "telescope_theta",
-        #    self.config.zenith_angle + self.config.off_axis_angle,
-        # )
-        command += super()._config_option("telescope_theta", "0")
-        command += super()._config_option("telescope_phi", "0")
+        if "real" in self.default_le_config["x_pos"]:
+            _, angles = self.calibration_pointing_direction()
+            print("ANGLES", angles[0], angles[1])
+            angle_theta = 180 - angles[0]
+            angle_phi = 180 - angles[1]
+            command += super()._config_option("telescope_theta", f"{angle_theta}")
+            command += super()._config_option("telescope_phi", f"{angle_phi}")
+        else:
+            command += super()._config_option("telescope_theta", 0)
+            command += super()._config_option("telescope_phi", 0)
+
         command += super()._config_option("power_law", "2.68")
-        # command += super()._config_option("FADC_BINS", str(int(self.config.fadc_bins))) #in config
         command += super()._config_option(
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
         )
