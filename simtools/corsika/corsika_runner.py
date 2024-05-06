@@ -8,7 +8,6 @@ from simtools.corsika.corsika_config import (
     MissingRequiredInputInCorsikaConfigData,
 )
 from simtools.io_operations import io_handler
-from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
@@ -54,14 +53,6 @@ class CorsikaRunner:
 
     Parameters
     ----------
-    mongo_db_config: dict
-        MongoDB configuration.
-    model_version: str
-        Version of the model (e.g., prod5).
-    site: str
-        South or North.
-    layout_name: str
-        Name of the layout.
     label: str
         Instance label.
     keep_seeds: bool
@@ -78,17 +69,13 @@ class CorsikaRunner:
 
     def __init__(
         self,
-        mongo_db_config,
-        model_version,
-        site,
-        layout_name,
+        array_model,
         simtel_source_path,
         label=None,
         keep_seeds=False,
         corsika_parameters_file=None,
         corsika_config_data=None,
         corsika_config_file=None,
-        array_model=None,
         use_multipipe=False,
     ):
         """
@@ -99,10 +86,7 @@ class CorsikaRunner:
         self._logger.debug("Init CorsikaRunner")
 
         self.label = label
-        self.site = names.validate_site_name(site)
-        self.layout_name = names.validate_array_layout_name(layout_name)
         self.array_model = array_model
-        self.model_version = model_version
 
         self._keep_seeds = keep_seeds
 
@@ -117,7 +101,7 @@ class CorsikaRunner:
             corsika_config_file, corsika_config_data
         )
         self._load_corsika_config_data(corsika_config_data)
-        self._define_corsika_config(mongo_db_config, use_multipipe)
+        self._define_corsika_config(use_multipipe)
 
         self._load_corsika_data_directories()
 
@@ -144,7 +128,7 @@ class CorsikaRunner:
         self._corsika_config_data = copy(corsika_config_data)
         self._corsika_config_data.pop("data_directory", None)
 
-    def _define_corsika_config(self, mongo_db_config, use_multipipe=False):
+    def _define_corsika_config(self, use_multipipe=False):
         """
         Create the CORSIKA config instance.
         This validates the input given in corsika_config_data as well.
@@ -152,11 +136,8 @@ class CorsikaRunner:
 
         try:
             self.corsika_config = CorsikaConfig(
-                mongo_db_config=mongo_db_config,
-                model_version=self.model_version,
-                site=self.site,
                 label=self.label,
-                layout_name=self.layout_name,
+                array_model=self.array_model,
                 corsika_config_data=self._corsika_config_data,
                 simtel_source_path=self._simtel_source_path,
                 corsika_parameters_file=self._corsika_parameters_file,
@@ -170,7 +151,7 @@ class CorsikaRunner:
 
     def _load_corsika_data_directories(self):
         """Create CORSIKA directories for data, log and input."""
-        corsika_base_dir = self._corsika_data_directory.joinpath(self.site)
+        corsika_base_dir = self._corsika_data_directory.joinpath(self.array_model.site)
         corsika_base_dir = corsika_base_dir.joinpath(self.corsika_config.primary)
         corsika_base_dir = corsika_base_dir.absolute()
 
@@ -302,8 +283,8 @@ class CorsikaRunner:
         return {
             "run": run_number,
             "primary": self.corsika_config.primary,
-            "array_name": self.layout_name,
-            "site": self.site,
+            "array_name": self.array_model.layout_name,
+            "site": self.array_model.site,
             "label": self.label,
         }
 
