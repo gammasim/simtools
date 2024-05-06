@@ -168,7 +168,7 @@ def _parse(label):
               varying distances (variable), layout positions (layout)",
         type=str,
         choices=["layout", "variable"],
-        default="layout",
+        default=None,
     )
     config.parser.add_argument(  # remove
         "--distance_ls",
