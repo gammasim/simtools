@@ -1,0 +1,11 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-simulate-light-emission
+  TEST_NAME: run
+  CONFIGURATION:
+    SITE: North
+    TELESCOPE: MSTN-04
+    ILLUMINATOR: ILLN-01
+    LIGHT_SOURCE_SETUP: variable
+    MODEL_VERSION: prod6
+    LIGHT_SOURCE_TYPE: LED
+    OUTPUT_PATH: simtools-tests
