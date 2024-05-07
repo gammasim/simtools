@@ -3,19 +3,20 @@
 """
 Summary
 -------
-This application calculates the trigger rate from a histogram or a list of histograms.
+This application calculates the trigger rate from a simtel_array output file or a list of
+simtel_array output files.
 
 Command line arguments
 ----------------------
-histogram_files (str or list):
-    Path to the histogram file or a list of histogram files.
+simtel_array_files (str or list):
+    Path to the simtel_array file or a list of simtel_array output files.
 
 Example
 -------
 .. code-block:: console
 
-    simtools-calculate-trigger-rate --hist_file_names tests/resources/run201_proton_za20deg_azm0deg
-    _North_TestLayout_test-prod.simtel.zst --livetime 100
+    simtools-calculate-trigger-rate --simtel_file_names tests/resources/
+    run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst --livetime 100
 """
 
 import logging
@@ -46,9 +47,9 @@ def _parse(label, description):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--hist_file_names",
-        help="Name of the histogram files to be calculate the trigger rate from  or the text file "
-        "containing the list of histogram files.",
+        "--simtel_file_names",
+        help="Name of the simtel_array output files to be calculate the trigger rate from  or the "
+        "text file containing the list of simtel_array output files.",
         nargs="+",
         required=True,
         type=str,
@@ -62,7 +63,7 @@ def _parse(label, description):
 def main():
     label = Path(__file__).stem
     description = (
-        "Calculates the simulated and triggered event rate based on simtel array histograms."
+        "Calculates the simulated and triggered event rate based on simtel_array output files."
     )
     config_parser = _parse(label, description)
 
@@ -70,12 +71,12 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
 
-    histogram_files = config_parser["hist_file_names"]
+    simtel_array_files = config_parser["simtel_file_names"]
 
-    if isinstance(histogram_files, str):
-        histogram_files = [histogram_files]
+    if isinstance(simtel_array_files, str):
+        simtel_array_files = [simtel_array_files]
 
-    histograms = SimtelHistograms(histogram_files)
+    histograms = SimtelHistograms(simtel_array_files)
 
     logger.info("Calculating simulated and triggered event rate")
     histograms.calculate_event_rates()

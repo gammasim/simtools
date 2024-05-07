@@ -92,21 +92,6 @@ autosectionlabel_prefix_document = True
 # Display todos by setting to True
 todo_include_todos = True
 
-"""autodoc_mock_imports = [
-    "matplotlib",
-    "yaml",
-    #    "numpy",
-    "astropy",
-    "bson",
-    "pymongo",
-    "gridfs",
-    "scipy",
-    "cycler",
-    "eventio",
-    "ctapipe",
-    "ctao-dpps-cosmic-ray-spectra",
-]"""
-
 # Change the look of autodoc classes
 numpydoc_show_class_members = False
 
