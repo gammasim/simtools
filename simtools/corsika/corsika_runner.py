@@ -8,7 +8,6 @@ from simtools.corsika.corsika_config import (
     MissingRequiredInputInCorsikaConfigData,
 )
 from simtools.io_operations import io_handler
-from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
 
@@ -53,18 +52,20 @@ class CorsikaRunner:
 
     Parameters
     ----------
+    array_model: ArrayModel
+        Array model instance.
+    simtel_source_path: str or Path
+        Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
     keep_seeds: bool
         Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
-    simtel_source_path: str or Path
-        Location of source of the sim_telarray/CORSIKA package.
-    corsika_config_data: dict
-        Dict with CORSIKA config data.
-    corsika_config_file: str or Path
-        Path to yaml file containing CORSIKA config data.
     corsika_parameters_file: str or Path
         Path to yaml file containing CORSIKA parameters.
+    corsika_config_data: dict
+        Dict with CORSIKA config data.
+    use_multipipe: bool
+        Use multipipe to run CORSIKA and sim_telarray.
     """
 
     def __init__(
@@ -75,7 +76,6 @@ class CorsikaRunner:
         keep_seeds=False,
         corsika_parameters_file=None,
         corsika_config_data=None,
-        corsika_config_file=None,
         use_multipipe=False,
     ):
         """
@@ -97,9 +97,6 @@ class CorsikaRunner:
         self._logger.debug(f"Creating output dir {self._output_directory}, if needed,")
 
         self._corsika_parameters_file = corsika_parameters_file
-        corsika_config_data = collect_data_from_file_or_dict(
-            corsika_config_file, corsika_config_data
-        )
         self._load_corsika_config_data(corsika_config_data)
         self._define_corsika_config(use_multipipe)
 

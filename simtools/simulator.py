@@ -174,11 +174,13 @@ class Simulator:
 
         """
         self._load_corsika_config_and_model(config_data)
-        config_arrays = self._load_sim_tel_config_and_model(config_data)
+        self._load_sim_tel_config_and_model(config_data)
 
         self.array_model = ArrayModel(
             label=self.label,
-            array_config_data=config_arrays,
+            site=config_data["common"]["site"],
+            layout_name=config_data["common"]["layout_name"],
+            parameters_to_change=config_data,
             mongo_db_config=self._mongo_db_config,
             model_version=self._model_version,
         )
@@ -220,21 +222,14 @@ class Simulator:
         config_data: dict
             Simulator configuration data.
 
-        Returns
-        -------
-        dict
-            Configuration for array simulations.
-
         """
-        _array_model_config, _rest_config = self._collect_array_model_parameters(config_data)
+        _rest_config = self._collect_array_model_parameters(config_data)
 
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
-
-        return _array_model_config
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
@@ -296,17 +291,7 @@ class Simulator:
         _merged_config = copy(config_data["common"])
         if "array" in config_data:
             _merged_config.update(copy(config_data["array"]))
-        _array_model_data = {}
         _rest_data = copy(_merged_config)
-
-        try:
-            _array_model_data["site"] = names.validate_site_name(_rest_data.pop("site"))
-            _array_model_data["layout_name"] = names.validate_array_layout_name(
-                _rest_data.pop("layout_name")
-            )
-        except KeyError:
-            self._logger.error("Missing parameter in simulation configuration data")
-            raise
 
         # Reading telescope keys
         tel_keys = []
@@ -316,10 +301,7 @@ class Simulator:
                 tel_keys.append(key)
             except ValueError:
                 pass
-        for key in tel_keys:
-            _array_model_data[key] = _rest_data.pop(key)
-
-        return _array_model_data, _rest_data
+        return _rest_data
 
     def _set_simulation_runner(self):
         """
