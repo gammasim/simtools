@@ -286,6 +286,7 @@ class SimtelHistogram:
             events_histogram["n_bins_x"] + 1,
             endpoint=True,
         )
+
         energy_axis = np.logspace(
             events_histogram["lower_y"],
             events_histogram["upper_y"],
@@ -545,7 +546,6 @@ class SimtelHistogram:
         triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
             events_histogram, triggered_events_histogram
         )
-
         radius_axis, energy_axis = self._initialize_histogram_axes(events_histogram)
         # Radial distribution of trigger probability per E integrated in area at each radius
         # (gives a trigger probability per E)
@@ -564,6 +564,25 @@ class SimtelHistogram:
         system_trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
 
         return system_trigger_rate, system_trigger_rate_uncertainty
+
+    def print_info(self):
+        """
+        Print information on the geometry and input parameters.
+
+        Returns
+        -------
+        dict:
+            Dictionary with the information, e.g., view angle, energy range, etc.
+        """
+        info_dict = {
+            "view_cone": self.view_cone,
+            "total_area": self.total_area,
+            "energy_range": self.energy_range,
+            "total_num_simulated_events": self.total_num_simulated_events,
+            "total_num_triggered_events": self.total_num_triggered_events,
+        }
+        print(info_dict)
+        return info_dict
 
 
 class SimtelHistograms:
@@ -594,9 +613,15 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.__meta_dict = None
 
-    def calculate_event_rates(self):
+    def calculate_event_rates(self, print_info=False):
         """
         Calculate the triggered and simulated event rate for the histograms in each file.
+
+        Parameters
+        ----------
+        print_info: bool
+            if True, prints out the information about the histograms such as energy range, area,
+            etc.
 
         Returns
         -------
@@ -609,6 +634,8 @@ class SimtelHistograms:
         sim_event_rates = []
         for i_file, file in enumerate(self.histogram_files):
             simtel_hist_instance = SimtelHistogram(file)
+            if print_info:
+                simtel_hist_instance.print_info()
 
             logging.info(f"Histogram {i_file + 1}:")
             logging.info(
