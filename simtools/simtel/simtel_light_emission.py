@@ -267,6 +267,8 @@ class SimulatorLightEmission(SimtelRunner):
                 command += (
                     f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
                 )
+                command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+
             elif self.le_application[1] == "layout":
                 x_origin = (
                     self.default_le_config["x_pos_ILLN-01"]["default"]
