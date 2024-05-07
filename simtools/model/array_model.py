@@ -24,14 +24,16 @@ class ArrayModel:
         MongoDB configuration.
     model_version: str
         Version of the model (e.g., prod5).
-    array_config_data: dict
-        Dict with the array config data.
-    site: str
-        Site name.
-    array_elements_file: str
-        Path to the file with the array element positions.
     label: str
         Instance label. Used for output file naming.
+    site: str
+        Site name.
+    layout_name: str
+        Layout name.
+    array_elements_file: str
+        Path to the file with the array element positions.
+    parameters_to_change: dict
+        Dict with the parameters to be changed with respect to the DB model.
     """
 
     def __init__(
@@ -39,9 +41,10 @@ class ArrayModel:
         mongo_db_config,
         model_version,
         label=None,
-        array_config_data=None,
         site=None,
+        layout_name=None,
         array_elements_file=None,
+        parameters_to_change=None,
     ):
         """
         Initialize ArrayModel.
@@ -51,30 +54,30 @@ class ArrayModel:
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout_name = None
+        self.layout_name = layout_name
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
 
         self.array_elements, self.site_model, self.telescope_model = self._initialize(
-            array_config_data, site, array_elements_file
+            site, array_elements_file, parameters_to_change
         )
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def _initialize(self, array_config_data, site, array_elements_file):
+    def _initialize(self, site, array_elements_file, parameters_to_change):
         """
         Initialize ArrayModel taking different configuration options into account.
 
         Parameters
         ----------
-        array_config_data: dict
-            Dict with the array config data.
         site: str
             Site name.
         array_elements_file: str
             Path to the file with the array element positions.
+        parameters_to_change: dict
+            Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
@@ -87,15 +90,24 @@ class ArrayModel:
 
         """
 
-        if array_config_data is not None:
-            array_config_data, site, array_elements_file = self._load_array_data(array_config_data)
+        if self.layout_name is not None and array_elements_file is None:
+            array_elements_file = io_handler.IOHandler().get_input_data_file(
+                "layout",
+                "telescope_positions-"
+                f"{names.validate_site_name(site)}-"
+                f"{names.validate_array_layout_name(self.layout_name)}"
+                ".ecsv",
+            )
+
         self.array_elements = (
             None
             if array_elements_file is None
             else self._load_array_element_positions_from_file(array_elements_file, site)
         )
         self._set_config_file_directory()
-        site_model, telescope_model = self._build_array_model(site, array_config_data)
+        site_model, telescope_model = self._build_array_model(
+            names.validate_site_name(site), parameters_to_change
+        )
 
         return self.array_elements, site_model, telescope_model
 
@@ -123,81 +135,6 @@ class ArrayModel:
         """
         return self.site_model.site
 
-    def _load_array_data(self, array_config_data):
-        """
-        Load parameters from array configuration file.
-
-        Parameters
-        ----------
-        array_config_data: dict
-            Dict with the array config data.
-
-        Returns
-        -------
-        dict
-            Dict with updated array configuration data.
-        str
-            Site name.
-        dict
-            Dict with telescope positions from file
-            (if configured in the array config data).
-        """
-
-        self._validate_array_data(array_config_data)
-        site = names.validate_site_name(array_config_data["site"])
-
-        if array_config_data.get("layout_name") is not None:
-            array_elements_file = io_handler.IOHandler().get_input_data_file(
-                "layout",
-                "telescope_positions-"
-                f"{names.validate_site_name(site)}-"
-                f"{names.validate_array_layout_name(array_config_data['layout_name'])}"
-                ".ecsv",
-            )
-            self.layout_name = names.validate_array_layout_name(array_config_data["layout_name"])
-
-        # Removing keys that were stored in attributes and keeping the remaining as a dict
-        return (
-            {
-                k: v
-                for (k, v) in array_config_data.items()
-                if k not in ["site", "layout_name", "model_version"]
-            },
-            site,
-            array_elements_file,
-        )
-
-    def _validate_array_data(self, array_config_data):
-        """
-        Validate array_data by checking the existence of the relevant keys.
-
-        Parameters
-        ----------
-        array_config_data: dict
-            Dict with the array config data.
-
-        Raises
-        ------
-        InvalidArrayConfigData
-            If the array configuration data is invalid.
-
-        """
-
-        def run_over_pars(pars, data, parent=None):
-            """Run over pars and validate it."""
-            all_keys = data.keys() if parent is None else data[parent].keys()
-            for pp in pars:
-                if pp not in all_keys:
-                    key = pp if parent is None else parent + "." + pp
-                    msg = (
-                        f"Key {key} was not found in array_config_data "
-                        + "- impossible to build array model"
-                    )
-                    self._logger.error(msg)
-                    raise InvalidArrayConfigData(msg)
-
-        run_over_pars(["site", "layout_name"], array_config_data)
-
     def _set_config_file_directory(self):
         """
         Define and create config file directory.
@@ -208,7 +145,7 @@ class ArrayModel:
             self._config_file_directory.mkdir(parents=True, exist_ok=True)
             self._logger.info(f"Creating directory {self._config_file_directory}")
 
-    def _build_array_model(self, site, array_config_data=None):
+    def _build_array_model(self, site, parameters_to_change=None):
         """
         Build the constituents of the array model (site, telescopes, etc).
         Includes reading of all model parameters from the DB.
@@ -219,8 +156,8 @@ class ArrayModel:
         ----------
         site: str
             Site name.
-        array_config_data: dict
-            Dict with the array config data.
+        parameters_to_change: dict
+            Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
@@ -251,7 +188,7 @@ class ArrayModel:
                 )
             # Collecting parameters to change from array_config_data
             pars_to_change = self._get_single_telescope_info_from_array_config(
-                element_name, array_config_data
+                element_name, parameters_to_change
             )
             if len(pars_to_change) > 0:
                 self._logger.debug(
