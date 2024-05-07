@@ -543,7 +543,6 @@ class SimulatorLightEmission(SimtelRunner):
                 geometry, image, picture_thresh=7, boundary_thresh=5, min_number_picture_neighbors=0
             )
             cleaned[~mask] = 0
-
         fig, ax = plt.subplots(1, 1, dpi=300)
         title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
         disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
