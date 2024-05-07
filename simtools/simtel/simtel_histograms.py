@@ -32,7 +32,7 @@ class HistogramIdNotFound(Exception):
 
 class SimtelHistogram:
     """
-    This class handles a single histogram file.
+    This class handles a single histogram (or simtel_array output) file.
     """
 
     def __init__(self, histogram_file):
@@ -566,6 +566,7 @@ class SimtelHistograms:
     """
     This class handles sim_telarray histograms. Histogram files are handled by using eventio
     library.
+    Input files may either be histogram (.hdata.zst) or simtel_array output (.simtel) files.
 
     Parameters
     ----------
