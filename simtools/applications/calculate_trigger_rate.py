@@ -79,7 +79,7 @@ def main():
     histograms = SimtelHistograms(simtel_array_files)
 
     logger.info("Calculating simulated and triggered event rate")
-    histograms.calculate_event_rates()
+    histograms.calculate_event_rates(print_info=True)
 
 
 if __name__ == "__main__":
