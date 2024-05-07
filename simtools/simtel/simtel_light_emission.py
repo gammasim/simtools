@@ -38,16 +38,18 @@ class SimulatorLightEmission(SimtelRunner):
     le_application: str
         Name of the application. Default sim_telarray application running
         the sim_telarray LightEmission package is xyzls.
-    output_directory: str or Path
-        Simtools light-emission output directory.
     simtel_source_path: str or Path
         Location of sim_telarray installation.
+    light_source_type: str
+        The light source type.
+    label: str
+        Label for output directory.
     config_data: dict
         Dict containing the configurable parameters.
     config_file: str or Path
         Path of the yaml file containing the configurable parameters.
-    force_simulate: bool
-        Remove existing files and force re-running of the light emission simulation.
+    test: bool
+        Test flag.
     """
 
     def __init__(
@@ -208,16 +210,17 @@ class SimulatorLightEmission(SimtelRunner):
         # pointing vector from calibration device to telescope
 
         pointing_vector = direction_vector / np.linalg.norm(direction_vector)
-        pointing_vector[0] = pointing_vector[0]
-        pointing_vector[1] = pointing_vector[1]
-        pointing_vector[2] = pointing_vector[2]
+
         # Calculate telescope theta and phi angles
         tel_theta = np.rad2deg(np.arccos(direction_vector[2] / np.linalg.norm(direction_vector)))
         tel_phi = np.rad2deg(np.arctan2(direction_vector[1], direction_vector[0]))
 
         # Calculate laser beam theta and phi angles
-        laser_theta = np.rad2deg(np.arccos(pointing_vector[2]))
-        laser_phi = np.rad2deg(np.arctan2(pointing_vector[1], pointing_vector[0]))
+        direction_vector_inv = direction_vector * -1
+        laser_theta = np.rad2deg(
+            np.arccos(direction_vector_inv[2] / np.linalg.norm(direction_vector_inv))
+        )
+        laser_phi = np.rad2deg(np.arctan2(direction_vector_inv[1], direction_vector_inv[0]))
         return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
 
     def telescope_calibration_device_distance(self):
@@ -257,8 +260,6 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"/{self.le_application[0]}"
 
         if self.light_source_type == "led":
-            command += " -n 1e10"
-
             if self.le_application[1] == "variable":
                 command += f" -x {self.default_le_config['x_pos']['default'].to(u.cm).value}"
                 command += f" -y {self.default_le_config['y_pos']['default'].to(u.cm).value}"
