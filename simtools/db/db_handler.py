@@ -1224,7 +1224,7 @@ class DatabaseHandler:
         if _design_name in self._available_telescopes:
             return _design_name
 
-        self._logger.error("Telescope %s not found in the database.", telescope_name)
+        self._logger.debug("Telescope %s not found in the database.", telescope_name)
         raise ValueError
 
     def _parameter_cache_key(self, site, telescope, model_version):
