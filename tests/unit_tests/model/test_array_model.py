@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
+from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -14,13 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def array_model(db_config, io_handler, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
-    }
     return ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -37,24 +34,8 @@ def test_site(array_model):
     assert am.site == "North"
 
 
-def test_load_array_data(array_model):
-    am = array_model
-
-    with pytest.raises(InvalidArrayConfigData):
-        assert am._load_array_data({}) == {}
-
-    _config, site, layout_file = am._load_array_data(
-        {"site": "North", "layout_name": "test-layout"}
-    )
-    assert _config == {}
-    assert site == "North"
-    assert str(layout_file).find("North-TestLayout.ecsv") > 0
-
-
 def test_get_single_telescope_info_from_array_config(db_config, model_version, io_handler):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
+    parameters_to_change = {
         "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
             "name": "MSTN-05",
             "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
@@ -62,28 +43,24 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     }
     am = ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
+        parameters_to_change=parameters_to_change,
         mongo_db_config=db_config,
         model_version=model_version,
     )
 
-    _config, _, _ = am._load_array_data(array_config_data)
-
-    assert am._get_single_telescope_info_from_array_config("LSTN-01", _config) == {}
-    assert am._get_single_telescope_info_from_array_config("MSTN-05", _config) == {
+    assert am._get_single_telescope_info_from_array_config("LSTN-01", parameters_to_change) == {}
+    assert am._get_single_telescope_info_from_array_config("MSTN-05", parameters_to_change) == {
         "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
     }
 
 
 def test_exporting_config_files(db_config, io_handler, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
-        "default": {"LSTN": "01", "MSTN": "design"},
-    }
     am = ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -95,7 +72,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
         "CTA-North-LSTN-01-" + model_version + "_test.cfg",
         "CTA-North-MSTN-01-" + model_version + "_test.cfg",
-        "CTA-TestLayout-North-" + model_version + "_test.cfg",
+        "CTA-test-layout-North-" + model_version + "_test.cfg",
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
