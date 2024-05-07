@@ -1,5 +1,6 @@
 import copy
 import logging
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -40,6 +41,9 @@ class SimtelHistogram:
         Initialize SimtelHistogram class.
         """
         self.histogram_file = histogram_file
+        if not Path(histogram_file).exists():
+            msg = f"File {histogram_file} does not exist."
+            raise FileNotFoundError(msg)
         self._config = None
         self._view_cone = None
         self._total_area = None
