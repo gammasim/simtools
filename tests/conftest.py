@@ -384,6 +384,16 @@ def simulator_config_data_north(tmp_test_directory):
 
 
 @pytest.fixture
+def array_config_data(simulator_config_data):
+    return simulator_config_data["common"] | simulator_config_data["array"]
+
+
+@pytest.fixture
+def shower_config_data_north(simulator_config_data_north):
+    return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
+
+
+@pytest.fixture
 def simulator_config_data_south(tmp_test_directory):
     return {
         "common": {
