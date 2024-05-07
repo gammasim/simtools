@@ -47,12 +47,8 @@ class CorsikaConfig:
 
     Parameters
     ----------
-    mongo_db_config: dict
-        MongoDB configuration.
-    site: str
-        North or South.
-    layout_name: str
-        Name of the layout.
+    array_model: ArrayModel
+        Array model.
     label: str
         Instance label.
     corsika_config_data: dict
