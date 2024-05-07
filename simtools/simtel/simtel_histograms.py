@@ -342,14 +342,15 @@ class SimtelHistogram:
         float:
             energy-integrated event ratio distribution, i.e., the system trigger probability.
         """
-        # Get the particle distribution for the specified energy axis and re_weight flag
+        # Get the particle distribution for the specified energy axis (the re_weight flag in this
+        # case does not matter)
         particle_distribution = self.get_particle_distribution(energy_axis, re_weight=re_weight)
 
-        normalized_pdf = particle_distribution / np.sum(particle_distribution)
+        normalized_pdf = particle_distribution[:-1] / np.sum(particle_distribution[:-1])
 
         # Trigger probability per E integrated in E according to the given energy distribution
         # (gives a trigger probability, i.e. a normalization)
-        trigger_probability = np.sum(events_array * normalized_pdf[:-1] * np.diff(energy_axis))
+        trigger_probability = np.sum(events_array * normalized_pdf * np.diff(energy_axis))
         logging.debug(f"System trigger probability: {trigger_probability}.")
         return trigger_probability
 
