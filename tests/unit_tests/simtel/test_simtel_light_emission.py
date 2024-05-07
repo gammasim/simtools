@@ -448,7 +448,6 @@ def test_prepare_script(
     mock_os_system.assert_called_once_with(f"chmod ug+x {script_path}")
     mock_make_light_emission_script.assert_called_once()  # Ensure this mock is called
     mock_make_simtel_script.assert_called_once()  # Ensure this mock is called
-    # mock_open.assert_called_once_with(script_path, "w", encoding="utf-8")
 
     # Check file write calls
     expected_calls = [
@@ -459,7 +458,6 @@ def test_prepare_script(
         "postscript_command\n\n",
         "# End\n\n",
     ]
-    # assert mock_file.write.call_count == len(expected_calls)
     for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
         assert call_args[0][0] == expected_content
     print(mock_simulator._script_dir)
