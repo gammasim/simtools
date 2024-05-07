@@ -269,7 +269,7 @@ def default_le_configs(le_application):
             "direction": {
                 "len": 3,
                 "unit": u.dimensionless_unscaled,
-                "default": [0, 0.0, -1],
+                "default": [0, 0, -1],
                 "names": ["direction", "cx,cy,cz"],
             },
         }

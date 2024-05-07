@@ -82,7 +82,7 @@ def default_config():
         "direction": {
             "len": 3,
             "unit": u.dimensionless_unscaled,
-            "default": [0, 0.0, -1],
+            "default": [0, 0, -1],
             "names": ["direction", "cx,cy,cz"],
         },
     }
@@ -123,6 +123,43 @@ def mock_simulator(
         config_data={},
     )
     return mock_simulator
+
+
+@pytest.fixture
+def mock_simulator_variable(
+    db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
+):
+    simtel_source_path = simtel_path
+    telescope_model = TelescopeModel(
+        site="North",
+        telescope_model_name="LSTN-01",
+        model_version=model_version,
+        label="test-simtel-light-emission",
+        mongo_db_config=db_config,
+    )
+    calibration_model = CalibrationModel(
+        site="North",
+        calibration_device_model_name="ILLN-01",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        label="test-simtel-light-emission",
+    )
+
+    # default_le_config = default_config
+    le_application = "xyzls", "variable"
+    light_source_type = "led"
+    mock_simulator_variable = SimulatorLightEmission(
+        telescope_model,
+        calibration_model,
+        site_model_north,
+        default_config,
+        le_application,
+        simtel_source_path,
+        light_source_type,
+        label,
+        config_data={},
+    )
+    return mock_simulator_variable
 
 
 @pytest.fixture
@@ -255,6 +292,35 @@ def test_make_light_emission_script(
     mock_simulator.default_le_config["z_pos"]["real"] = zz
 
     command = mock_simulator._make_light_emission_script()
+
+    assert command == expected_command
+
+
+def test_make_light_emission_script_variable(
+    mock_simulator_variable,
+    telescope_model_lst,
+    array_layout_model,
+    simtel_path,
+    mock_output_path,
+    io_handler,
+):
+    """layout coordinate vector between LST and ILLN"""
+    expected_command = (
+        f" rm {mock_output_path}/xyzls_variable.simtel.gz\n"
+        f"sim_telarray/LightEmission/xyzls"
+        " -x 0.0"
+        " -y 0.0"
+        " -z 100000.0"
+        " -d 0,0,-1"
+        " -n 10000000000.0"
+        f" -A {mock_output_path}/model/"
+        f"{telescope_model_lst.get_parameter_value('atmospheric_profile')}"
+        f" -o {mock_output_path}/xyzls.iact.gz\n"
+    )
+    assert mock_simulator_variable.le_application[0] == "xyzls"
+    assert mock_simulator_variable.le_application[1] == "variable"
+
+    command = mock_simulator_variable._make_light_emission_script()
 
     assert command == expected_command
 
