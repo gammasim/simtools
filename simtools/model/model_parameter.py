@@ -170,7 +170,7 @@ class ModelParameter:
 
         """
         _parameter = self._get_parameter_dict(par_name)
-        _value = self.get_parameter_value(None, _parameter)
+        _value = self.get_parameter_value(par_name, _parameter)
         try:
             return _value * u.Unit(_parameter.get("unit"))
         except (KeyError, TypeError):
