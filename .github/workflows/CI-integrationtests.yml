@@ -7,7 +7,7 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL: "sandbox_20240422"
+  SIMTOOLS_DB_SIMULATION_MODEL: "Staging-CTA-Simulation-Model-v0-2-0"
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
