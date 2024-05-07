@@ -323,7 +323,7 @@ class SimtelHistogram:
             )
         return integrated_event_ratio_per_energy
 
-    def _integrate_array_in_energy(self, energy_axis, events_array, re_weight=True):
+    def _integrate_array_in_energy(self, energy_axis, events_array):
         """
         Integrate the event ratio distribution in energy.
 
@@ -334,8 +334,6 @@ class SimtelHistogram:
         events_array: numpy.array
             Array with the area-integrated trigger to simulated event ratio distribution as
             function of energy.
-        re_weight: bool
-            if True, re-weights the particle spectral distribution to correct to the expected one.
 
         Returns
         -------
@@ -344,7 +342,7 @@ class SimtelHistogram:
         """
         # Get the particle distribution for the specified energy axis (the re_weight flag in this
         # case does not matter)
-        particle_distribution = self.get_particle_distribution(energy_axis, re_weight=re_weight)
+        particle_distribution = self.get_particle_distribution(energy_axis)
 
         normalized_pdf = particle_distribution[:-1] / np.sum(particle_distribution[:-1])
 
@@ -419,7 +417,9 @@ class SimtelHistogram:
         cr_energy_integrated = IRFDOC_PROTON_SPECTRUM.integrate_energy(
             self.energy_range[0], self.energy_range[1]
         )
-        # Simulated integrated flux (differs from above due to optimization of computational time)
+        # Simulated integrated flux (differs from above due to the fact that the energy
+        # distribution of the simulation is not necessarily the same as the distribution
+        # from the cosmic rays).
         simulation_energy_integrated = simulation_energy_distribution.integrate_energy(
             self.energy_range[0], self.energy_range[1]
         )
@@ -554,7 +554,8 @@ class SimtelHistogram:
         )
 
         trigger_probability = self._integrate_array_in_energy(
-            energy_axis, triggered_to_sim_fraction_per_energy, re_weight=re_weight
+            energy_axis,
+            triggered_to_sim_fraction_per_energy,
         )
         system_trigger_rate = self._calculate_system_trigger_rate(
             trigger_probability,
