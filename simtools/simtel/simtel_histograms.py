@@ -316,8 +316,7 @@ class SimtelHistogram:
         """
         energy_axis_size = np.size(events_histogram["data"], axis=0)
         integrated_event_ratio_per_energy = np.zeros(energy_axis_size)
-        areas = radius_axis[:-1] * np.diff(radius_axis)
-
+        areas = 2 * np.pi * radius_axis[1:] * np.diff(radius_axis)
         for i_energy in range(energy_axis_size - 1):
             integrated_event_ratio_per_energy[i_energy] = np.sum(
                 events_histogram["data"][i_energy] * areas
@@ -546,7 +545,7 @@ class SimtelHistogram:
         triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
             events_histogram, triggered_events_histogram
         )
-        radius_axis, energy_axis = self._initialize_histogram_axes(events_histogram)
+        radius_axis, energy_axis = self._initialize_histogram_axes(triggered_events_histogram)
         # Radial distribution of trigger probability per E integrated in area at each radius
         # (gives a trigger probability per E)
         triggered_to_sim_fraction_per_energy = self._integrate_hist_in_area(
