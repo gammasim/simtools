@@ -118,11 +118,15 @@ def main():
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    array_config_data = gen.collect_data_from_file_or_dict(args_dict["array_config"], None)
+
     array_model = ArrayModel(
         label=args_dict["label"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
-        array_config_data=gen.collect_data_from_file_or_dict(args_dict["array_config"], None),
+        site=array_config_data["common"].get("site"),
+        layout_name=array_config_data["common"].get("layout_name"),
+        parameters_to_change=array_config_data.get("array"),
     )
 
     # Printing list of telescope for quick inspection.
