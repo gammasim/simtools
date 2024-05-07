@@ -376,6 +376,7 @@ class CorsikaRunner:
 
         info_for_file_name = self.get_info_for_file_name(run_number)
         run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
+        self._logger.debug(f"Checking if {run_sub_file} exists")
         return Path(run_sub_file).is_file()
 
     def get_resources(self, run_number=None):

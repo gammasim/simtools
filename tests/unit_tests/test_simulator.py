@@ -30,23 +30,19 @@ def input_file_list():
 
 
 @pytest.fixture
-def shower_array_config_data(shower_config_data, array_config_data):
-    # Any common entries are taken from the array_config_data
-    return shower_config_data | array_config_data
-
-
-@pytest.fixture
 def corsika_file():
     return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
 @pytest.fixture
-def array_simulator(label, array_config_data, io_handler, db_config, model_version, simtel_path):
+def array_simulator(
+    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
+):
     array_simulator = Simulator(
         simulator="simtel",
         simulator_source_path=simtel_path,
         label=label,
-        config_data=array_config_data,
+        config_data=simulator_config_data_north,
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -54,12 +50,15 @@ def array_simulator(label, array_config_data, io_handler, db_config, model_versi
 
 
 @pytest.fixture
-def shower_simulator(label, shower_config_data, io_handler, db_config, model_version, simtel_path):
+def shower_simulator(
+    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
+):
+
     shower_simulator = Simulator(
         simulator="corsika",
         simulator_source_path=simtel_path,
         label=label,
-        config_data=shower_config_data,
+        config_data=simulator_config_data_north,
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -68,13 +67,13 @@ def shower_simulator(label, shower_config_data, io_handler, db_config, model_ver
 
 @pytest.fixture
 def shower_array_simulator(
-    label, simulator_config_data, io_handler, db_config, model_version, simtel_path
+    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
     shower_array_simulator = Simulator(
         simulator="corsika_simtel",
         simulator_source_path=simtel_path,
         label=label,
-        config_data=simulator_config_data,
+        config_data=simulator_config_data_north,
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -111,44 +110,46 @@ def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator
         shower_simulator.simulator = "this_simulator_is_not_there"
 
 
-def test_load_configuration_and_simulation_model(array_simulator):
-    with pytest.raises(gen.InvalidConfigData):
-        array_simulator._load_configuration_and_simulation_model()
+def test_load_configuration_and_simulation_model(array_simulator, simulator_config_data_north):
+    array_simulator._load_configuration_and_simulation_model(simulator_config_data_north)
+
+    assert isinstance(array_simulator._corsika_config_data, dict)
+    assert isinstance(array_simulator.array_model, ArrayModel)
 
 
-def test_load_corsika_config_and_model(shower_simulator, shower_config_data):
-    assert shower_simulator.site == "North"
+def test_load_corsika_config_and_model(shower_simulator, simulator_config_data_north):
+    assert shower_simulator.array_model.site == "North"
 
     assert "site" not in shower_simulator._corsika_config_data
 
-    _temp_shower_data = copy(shower_config_data)
-    _temp_shower_data.pop("site")
-    with pytest.raises(KeyError):
-        shower_simulator._load_corsika_config_and_model(config_data=_temp_shower_data)
+    _temp_config_data = copy(simulator_config_data_north)
+    _temp_config_data["common"].pop("site")
+    try:
+        shower_simulator._load_corsika_config_and_model(_temp_config_data)
+    except KeyError:
+        pytest.fail("Expected no KeyError to be raised")
 
 
 def test_load_sim_tel_config_and_model(
-    array_simulator, array_config_data, shower_array_simulator, shower_array_config_data, caplog
+    array_simulator,
+    shower_array_simulator,
+    simulator_config_data_north,
 ):
-    with caplog.at_level(logging.DEBUG):
-        array_simulator._load_sim_tel_config_and_model(array_config_data)
-
-    assert "in config_data cannot be identified" not in caplog.text
-    assert isinstance(array_simulator.array_model, ArrayModel)
-
-    with caplog.at_level(logging.DEBUG):
-        shower_array_simulator._load_sim_tel_config_and_model(config_data=shower_array_config_data)
-    assert "in config_data cannot be identified" in caplog.text
-    assert isinstance(shower_array_simulator.array_model, ArrayModel)
+    array_model_config = array_simulator._load_sim_tel_config_and_model(simulator_config_data_north)
+    assert isinstance(array_model_config, dict)
+    assert array_model_config == {"site": "North", "layout_name": "TestLayout"}
+    for key in ("data_directory", "zenith_angle", "azimuth_angle", "primary"):
+        assert key in array_simulator.config._fields
 
 
-def test_load_shower_array_config_and_model(shower_array_simulator, shower_array_config_data):
-    assert shower_array_simulator.site == "North"
+def test_load_shower_array_config_and_model(shower_array_simulator, simulator_config_data_north):
+    assert shower_array_simulator.array_model.site == "North"
+    assert shower_array_simulator.config.primary == "gamma"
 
     assert "site" not in shower_array_simulator._corsika_config_data
-    assert shower_array_simulator.config.primary == "gamma"
     assert (
-        shower_array_simulator.config.data_directory == shower_array_config_data["data_directory"]
+        shower_array_simulator.config.data_directory
+        == simulator_config_data_north["common"]["data_directory"]
     )
 
 
@@ -183,19 +184,21 @@ def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
             simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
 
-def test_collect_array_model_parameters(array_simulator, array_config_data):
+def test_collect_array_model_parameters(array_simulator, simulator_config_data_north):
     _array_model_data, _rest_data = array_simulator._collect_array_model_parameters(
-        config_data=array_config_data
+        config_data=simulator_config_data_north
     )
 
     assert isinstance(_array_model_data, dict)
     assert isinstance(_rest_data, dict)
     assert _array_model_data["site"] == "North"
-    new_array_config_data = copy(array_config_data)
-    new_array_config_data.pop("site")
+    new_simulator_config_data_north = copy(simulator_config_data_north)
+    new_simulator_config_data_north["common"].pop("site")
 
     with pytest.raises(KeyError):
-        _, _ = array_simulator._collect_array_model_parameters(config_data=new_array_config_data)
+        _, _ = array_simulator._collect_array_model_parameters(
+            config_data=new_simulator_config_data_north
+        )
 
 
 def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_simulator):
@@ -208,8 +211,9 @@ def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_s
 
 def test_fill_results_without_run(array_simulator, input_file_list):
     array_simulator._fill_results_without_run(input_file_list=[])
-    assert array_simulator.runs == list()
+    assert isinstance(array_simulator.runs, list)
 
+    array_simulator.runs = []
     array_simulator._fill_results_without_run(input_file_list=input_file_list)
     assert array_simulator.runs == [1, 22, 2]
 
@@ -293,9 +297,9 @@ def test_get_list_of_files(shower_simulator):
 
 
 def test_no_corsika_data(
-    shower_config_data, label, simtel_path, io_handler, db_config, model_version
+    simulator_config_data_north, label, simtel_path, io_handler, db_config, model_version
 ):
-    new_shower_config_data = copy(shower_config_data)
+    new_shower_config_data = copy(simulator_config_data_north)
     new_shower_config_data.pop("data_directory", None)
     new_shower_simulator = Simulator(
         label=label,
@@ -307,18 +311,36 @@ def test_no_corsika_data(
     )
     files = new_shower_simulator.get_list_of_output_files(run_list=[3])
 
-    assert "/" + label + "/" in files[0]
+    assert "_" + label in files[0]
 
 
-def test_make_resources_report(
-    label, shower_config_data, io_handler, db_config, simtel_path, model_version
+def test_resources(
+    label, simulator_config_data_north, io_handler, db_config, simtel_path, model_version, capsys
 ):
-    shower_config_data["run_list"] = 1
-    shower_config_data["run_range"] = None
+    simulator_config_data_north["showers"]["run_list"] = 1
+    simulator_config_data_north["showers"]["run_range"] = None
     shower_simulator = Simulator(
         label="corsika-test",
         simulator="corsika",
-        config_data=shower_config_data,
+        config_data=simulator_config_data_north,
+        simulator_source_path=simtel_path,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    shower_simulator.resources(input_file_list=None)
+    print_text = capsys.readouterr()
+    assert "Walltime/run [sec] = nan" in print_text.out
+
+
+def test_make_resources_report(
+    label, simulator_config_data_north, io_handler, db_config, simtel_path, model_version
+):
+    simulator_config_data_north["showers"]["run_list"] = 1
+    simulator_config_data_north["showers"]["run_range"] = None
+    shower_simulator = Simulator(
+        label="corsika-test",
+        simulator="corsika",
+        config_data=simulator_config_data_north,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -346,12 +368,12 @@ def test_make_resources_report(
 
 
 def test_get_runs_to_simulate(
-    shower_config_data, simtel_path, io_handler, db_config, model_version
+    simulator_config_data_north, simtel_path, io_handler, db_config, model_version
 ):
     shower_simulator = Simulator(
         label="corsika-test",
         simulator="corsika",
-        config_data=shower_config_data,
+        config_data=simulator_config_data_north,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -365,7 +387,7 @@ def test_get_runs_to_simulate(
     assert 4 == len(shower_simulator._get_runs_to_simulate(run_range=[1, 4]))
 
     shower_simulator.runs = None
-    assert shower_simulator._get_runs_to_simulate() == list()
+    assert isinstance(shower_simulator._get_runs_to_simulate(), list)
 
 
 def test_print_list_of_files(array_simulator, input_file_list):

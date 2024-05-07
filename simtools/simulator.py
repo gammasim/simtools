@@ -75,21 +75,23 @@ class Simulator:
 
     Parameters
     ----------
-    simulator: choices: [simtel, corsika]
-        implemented are sim_telarray and CORSIKA
+    simulator: str
+        Simulation software to be used (choices: [corsika, simtel, corsika_simtel])
     simulator_source_path: str or Path
         Location of executables for simulation software \
             (e.g. path with CORSIKA or sim_telarray)
     label: str
         Instance label.
     config_data: dict
-        Dict with shower or array model configuration data.
+        Simulator configuration data.
     submit_command: str
         Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command,
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Simulation model version.
     test: bool
         If True, no jobs are submitted; only run scripts are prepared
     """
@@ -98,8 +100,8 @@ class Simulator:
         self,
         simulator,
         simulator_source_path,
+        config_data,
         label=None,
-        config_data=None,
         submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
@@ -161,14 +163,14 @@ class Simulator:
             raise gen.InvalidConfigData
         self._simulator = simulator.lower()
 
-    def _load_configuration_and_simulation_model(self, config_data=None):
+    def _load_configuration_and_simulation_model(self, config_data):
         """
         Load configuration data and initialize simulation models.
 
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
+            Simulator configuration data.
 
         """
         self._load_corsika_config_and_model(config_data)
@@ -189,7 +191,7 @@ class Simulator:
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
+            Simulator configuration data.
 
         """
 
@@ -216,7 +218,7 @@ class Simulator:
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
+            Simulator configuration data.
 
         Returns
         -------
@@ -224,10 +226,7 @@ class Simulator:
             Configuration for array simulations.
 
         """
-        _merged_config = copy(config_data["common"])
-        if "array" in config_data:
-            _merged_config.update(copy(config_data["array"]))
-        _array_model_config, _rest_config = self._collect_array_model_parameters(_merged_config)
+        _array_model_config, _rest_config = self._collect_array_model_parameters(config_data)
 
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
@@ -291,11 +290,14 @@ class Simulator:
         Parameters
         ----------
         config_data: dict
-            Dict with configuration data.
+
 
         """
+        _merged_config = copy(config_data["common"])
+        if "array" in config_data:
+            _merged_config.update(copy(config_data["array"]))
         _array_model_data = {}
-        _rest_data = copy(config_data)
+        _rest_data = copy(_merged_config)
 
         try:
             _array_model_data["site"] = names.validate_site_name(_rest_data.pop("site"))
@@ -501,6 +503,11 @@ class Simulator:
         ----------
         file: Path
             Simulation file name
+
+        Returns
+        -------
+        int
+            Run number
 
         """
         file_name = str(Path(file).name)
