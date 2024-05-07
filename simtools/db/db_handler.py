@@ -318,7 +318,8 @@ class DatabaseHandler:
             "version": self._convert_version_to_tagged(model_version),
         }
 
-        self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
+        # TODO - check queries
+        # self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
         if only_applicable:
             query["applicable"] = True
         if collection.count_documents(query) < 1:

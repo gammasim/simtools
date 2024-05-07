@@ -72,7 +72,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
         "CTA-North-LSTN-01-" + model_version + "_test.cfg",
         "CTA-North-MSTN-01-" + model_version + "_test.cfg",
-        "CTA-test-layout-North-" + model_version + "_test.cfg",
+        "CTA-TestLayout-North-" + model_version + "_test.cfg",
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",

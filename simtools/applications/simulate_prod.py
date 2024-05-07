@@ -137,6 +137,7 @@ def _parse(description=None):
         type=str,
         choices=["corsika", "simtel", "corsika_simtel"],
         required=True,
+        default="corsika_simtel",
     )
     config.parser.add_argument(
         "--primary",
