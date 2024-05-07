@@ -7,7 +7,6 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
 logger = logging.getLogger()
@@ -15,30 +14,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def array_config_data():
-    return {
-        "site": "North",
-        "layout_name": "1LST",
-        "model_version": "Prod5",
-        "default": {"LSTN": "1"},
-    }
-
-
-@pytest.fixture
-def array_model(array_config_data, io_handler, db_config, model_version):
-    array_model = ArrayModel(
-        label="test-lst-array",
-        array_config_data=array_config_data,
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-    return array_model
-
-
-@pytest.fixture
-def simtel_runner(array_model, simtel_path):
+def simtel_runner(array_model_north, simtel_path):
     simtel_runner = SimtelRunnerArray(
-        array_model=array_model,
+        array_model=array_model_north,
         simtel_source_path=simtel_path,
         config_data={
             "primary": "proton",

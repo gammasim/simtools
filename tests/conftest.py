@@ -13,6 +13,7 @@ import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
@@ -206,6 +207,30 @@ def model_version():
 
 
 @pytest.fixture
+def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
+    array_model = ArrayModel(
+        label="test-lst-array",
+        site=simulator_config_data_north["common"]["site"],
+        layout_name=simulator_config_data_north["common"]["layout_name"],
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    return array_model
+
+
+@pytest.fixture
+def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
+    array_model = ArrayModel(
+        label="test-lst-array",
+        site=simulator_config_data_south["common"]["site"],
+        layout_name=simulator_config_data_south["common"]["layout_name"],
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    return array_model
+
+
+@pytest.fixture
 def site_model_south(db_config, model_version):
     return SiteModel(
         site="South",
@@ -335,7 +360,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture
-def simulator_config_data(tmp_test_directory, model_version):
+def simulator_config_data_north(tmp_test_directory):
     return {
         "common": {
             "site": "North",
@@ -359,13 +384,27 @@ def simulator_config_data(tmp_test_directory, model_version):
 
 
 @pytest.fixture
-def array_config_data(simulator_config_data):
-    return simulator_config_data["common"] | simulator_config_data["array"]
-
-
-@pytest.fixture
-def shower_config_data(simulator_config_data):
-    return simulator_config_data["common"] | simulator_config_data["showers"]
+def simulator_config_data_south(tmp_test_directory):
+    return {
+        "common": {
+            "site": "South",
+            "layout_name": "test-layout",
+            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "zenith": 20 * u.deg,
+            "azimuth": 0 * u.deg,
+            "primary": "gamma",
+        },
+        "showers": {
+            "eslope": -2.5,
+            "viewcone": [0 * u.deg, 0 * u.deg],
+            "nshow": 10,
+            "erange": [100 * u.GeV, 1 * u.TeV],
+            "cscat": [10, 1400 * u.m, 0],
+            "run_list": [3, 4],
+            "run_range": [6, 10],
+        },
+        "array": {},
+    }
 
 
 @pytest.fixture

@@ -135,9 +135,7 @@ def test_load_sim_tel_config_and_model(
     shower_array_simulator,
     simulator_config_data_north,
 ):
-    array_model_config = array_simulator._load_sim_tel_config_and_model(simulator_config_data_north)
-    assert isinstance(array_model_config, dict)
-    assert array_model_config == {"site": "North", "layout_name": "TestLayout"}
+    array_simulator._load_sim_tel_config_and_model(simulator_config_data_north)
     for key in ("data_directory", "zenith_angle", "azimuth_angle", "primary"):
         assert key in array_simulator.config._fields
 
@@ -185,20 +183,10 @@ def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
 
 
 def test_collect_array_model_parameters(array_simulator, simulator_config_data_north):
-    _array_model_data, _rest_data = array_simulator._collect_array_model_parameters(
+    _rest_data = array_simulator._collect_array_model_parameters(
         config_data=simulator_config_data_north
     )
-
-    assert isinstance(_array_model_data, dict)
     assert isinstance(_rest_data, dict)
-    assert _array_model_data["site"] == "North"
-    new_simulator_config_data_north = copy(simulator_config_data_north)
-    new_simulator_config_data_north["common"].pop("site")
-
-    with pytest.raises(KeyError):
-        _, _ = array_simulator._collect_array_model_parameters(
-            config_data=new_simulator_config_data_north
-        )
 
 
 def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_simulator):
