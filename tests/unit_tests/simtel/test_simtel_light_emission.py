@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, call, mock_open, patch
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -370,6 +370,65 @@ def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
     mock_simulator.output_directory = "./tests/resources/"
     fig = mock_simulator.plot_simtel_ctapipe(return_cleaned=0)
     assert isinstance(fig, plt.Figure)  # Check if fig is an instance of matplotlib figure
+
+
+def test_make_simtel_script(mock_simulator):
+    # Create a mock file content
+    mock_file_content = "Sample content of config file"
+
+    # Patch the built-in open function to return a mock file
+    with patch("builtins.open", mock_open(read_data=mock_file_content)) as mock_file:
+        # Reset the mock's call count to zero
+        mock_file.reset_mock()
+
+        # Mock the necessary attributes and methods used within _make_simtel_script
+        mock_simulator._simtel_source_path = MagicMock()
+        mock_simulator._telescope_model = MagicMock()
+        mock_simulator._site_model = MagicMock()
+
+        mock_simulator._simtel_source_path.joinpath.return_value = (
+            "/path/to/sim_telarray/bin/sim_telarray/"
+        )
+        mock_simulator._telescope_model.get_config_file.return_value = "/path/to/config.cfg"
+        mock_simulator._telescope_model.get_parameter_value.side_effect = lambda param: (
+            "atm_test" if param == "atmospheric_transmission" else MagicMock()
+        )
+        mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
+            "999" if param == "corsika_observation_level" else MagicMock()
+        )
+
+        mock_simulator.output_directory = "/directory"
+
+        # Define the expected command based on the method's behavior
+        expected_command = (
+            "/path/to/sim_telarray/bin/sim_telarray/ -c /path/to/config.cfg "
+            "-DNUM_TELESCOPES=1 -I../cfg/CTAiobuf_maximum=1000000000 "
+            "-C altitude=999 -C atmospheric_transmission=atm_test "
+            "-C TRIGGER_CURRENT_LIMIT=20 -C TRIGGER_TELESCOPES=1 "
+            "-C TELTRIG_MIN_SIGSUM=7.8 -C PULSE_ANALYSIS=-30 "
+            "-C telescope_theta=0 -C telescope_phi=0 "
+            "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
+            "-C output_file=/directory/xyzls_layout.simtel.gz\n"
+        )
+
+        # Call the method under test
+        command = mock_simulator._make_simtel_script()
+
+        mock_file.assert_has_calls(
+            [
+                call("/path/to/config.cfg", "r", encoding="utf-8"),
+                call().__enter__(),
+                call().readlines(),
+                call().__exit__(None, None, None),
+                call("/path/to/config.cfg", "w", encoding="utf-8"),
+                call().__enter__(),
+                call().write("Sample content of config file"),
+                call().__exit__(None, None, None),
+            ],
+            any_order=False,
+        )
+
+        assert command == expected_command
 
 
 @patch("os.system")
