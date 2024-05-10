@@ -399,7 +399,6 @@ def test_make_simtel_script(mock_simulator):
 
         mock_simulator.output_directory = "/directory"
 
-        # Define the expected command based on the method's behavior
         expected_command = (
             "/path/to/sim_telarray/bin/sim_telarray/ -c /path/to/config.cfg "
             "-DNUM_TELESCOPES=1 -I../cfg/CTAiobuf_maximum=1000000000 "

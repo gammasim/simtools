@@ -2,15 +2,12 @@ import logging
 import os
 
 import astropy.units as u
-import eventio as eio
-import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 from ctapipe.calib import CameraCalibrator
 from ctapipe.image import tailcuts_clean
 from ctapipe.io import EventSource
 from ctapipe.visualization import CameraDisplay
-from matplotlib.colors import LinearSegmentedColormap
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
@@ -448,73 +445,6 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
-
-    def plot_simtel(self):
-        """
-        plot true p.e. in camera frame using eventio
-        """
-
-        def camera_rotation(pixel_x, pixel_y, cam_rot):
-            pixel_x_derot = pixel_x * np.cos(cam_rot) - pixel_y * np.sin(cam_rot)
-            pixel_y_derot = pixel_x * np.sin(cam_rot) + pixel_y * np.cos(cam_rot)
-
-            return pixel_x_derot, pixel_y_derot
-
-        simtel_file = eio.SimTelFile(
-            f"{self.output_directory}/{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
-        )
-        for array_event in simtel_file:
-            array_event_s = array_event
-            photo_electrons = array_event["photoelectrons"]
-
-        pixel_x = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_x"]
-        pixel_y = simtel_file.telescope_descriptions[1]["camera_settings"]["pixel_y"]
-        cam_rot = simtel_file.telescope_descriptions[1]["camera_settings"]["cam_rot"]
-        n_pixels = simtel_file.telescope_descriptions[1]["camera_settings"]["n_pixels"]
-
-        n_pe = photo_electrons[0]["photoelectrons"]
-
-        pixels_clean = array_event_s["telescope_events"][1]["pixel_lists"][1]["pixels"]
-        tel_name = simtel_file.telescope_meta[1][b"CAMERA_CONFIG_NAME"].decode("utf-8")
-
-        pixel_x_derot, pixel_y_derot = camera_rotation(pixel_x, pixel_y, cam_rot)
-
-        palette = ["#1B1A1D", "#69809F", "#B3C4D5", "#F45B3B", "#ff0000"]
-        cmap = LinearSegmentedColormap.from_list("camera", palette, N=200)
-        cmap.set_bad("#4f4f4f")
-        norm = matplotlib.colors.LogNorm(vmin=0.1, vmax=200)
-
-        fig, ax = plt.subplots(1, dpi=300)
-        ax.scatter(
-            pixel_y_derot,
-            pixel_x_derot,
-            color=cmap(norm(n_pe)),
-            marker=(6, 0, -np.rad2deg(cam_rot)),
-            edgecolor="grey",
-            linewidths=0.5,
-        )
-
-        ax.text(-1, 1.45, f"(from .. of {photo_electrons[0]['n_pe']} true p.e.)", size="xx-small")
-        plt.title(f"Simulation of {tel_name}", pad=35)
-
-        ax.text(
-            -1,
-            1.35,
-            f"Number of pixels after cleaning {pixels_clean}",
-            horizontalalignment="left",
-            size="xx-small",
-        )
-        ax.text(
-            -1,
-            1.25,
-            f"$N_{{\\mathrm{{pixels}}}}=$ {n_pixels}",
-            horizontalalignment="left",
-            size="xx-small",
-        )
-
-        ax.set_axis_off()
-        ax.set_aspect("equal")
-        fig.savefig(f"{self.output_directory}/{self.le_application[0]}_test.pdf")
 
     def plot_simtel_ctapipe(self, return_cleaned=0):
         """
