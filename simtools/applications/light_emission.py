@@ -335,7 +335,7 @@ def main():
             )
             run_script = le.prepare_script(generate_postscript=True)
             subprocess.run(run_script, shell=False, check=False)
-            # le.plot_simtel() #custom plots using eventio
+
             try:
                 fig = le.plot_simtel_ctapipe()
                 figures.append(fig)
