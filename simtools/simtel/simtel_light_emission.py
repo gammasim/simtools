@@ -206,18 +206,24 @@ class SimulatorLightEmission(SimtelRunner):
         direction_vector = tel_vect - cal_vect
         # pointing vector from calibration device to telescope
 
-        pointing_vector = direction_vector / np.linalg.norm(direction_vector)
+        pointing_vector = np.round(direction_vector / np.linalg.norm(direction_vector), 6)
 
         # Calculate telescope theta and phi angles
-        tel_theta = np.rad2deg(np.arccos(direction_vector[2] / np.linalg.norm(direction_vector)))
-        tel_phi = np.rad2deg(np.arctan2(direction_vector[1], direction_vector[0]))
+        tel_theta = 180 - np.round(
+            np.rad2deg(np.arccos(direction_vector[2] / np.linalg.norm(direction_vector))), 6
+        )
+        tel_phi = 180 - np.round(
+            np.rad2deg(np.arctan2(direction_vector[1], direction_vector[0])), 6
+        )
 
         # Calculate laser beam theta and phi angles
         direction_vector_inv = direction_vector * -1
-        laser_theta = np.rad2deg(
-            np.arccos(direction_vector_inv[2] / np.linalg.norm(direction_vector_inv))
+        laser_theta = np.round(
+            np.rad2deg(np.arccos(direction_vector_inv[2] / np.linalg.norm(direction_vector_inv))), 6
         )
-        laser_phi = np.rad2deg(np.arctan2(direction_vector_inv[1], direction_vector_inv[0]))
+        laser_phi = np.round(
+            np.rad2deg(np.arctan2(direction_vector_inv[1], direction_vector_inv[0])), 6
+        )
         return pointing_vector.tolist(), [tel_theta, tel_phi, laser_theta, laser_phi]
 
     def telescope_calibration_device_distance(self):
@@ -304,17 +310,17 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" -A {self.output_directory}/model/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         elif self.light_source_type == "laser":
-            # TODO: this application requires the atmospheric profiles in the include directory,
+            # TODO: this option requires the atmospheric profiles in the include directory,
             # or adjusting the application to use a path
-            command += "--events 1"
-            command += "--bunches 2500000"
-            command += "--step 0.1"
-            command += "--bunchsize 1"
+            command += " --events 1"
+            command += " --bunches 2500000"
+            command += " --step 0.1"
+            command += " --bunchsize 1"
             command += (
                 f" --spectrum {self._calibration_model.get_parameter_value('laser_wavelength')}"
             )
-            command += f" --lightpulse Gauss:\
-                {self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+            command += " --lightpulse Gauss:"
+            command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
             # command += " --angular-distribution Gauss:0.1" # specify laser angular distribution
 
             x_origin = (
@@ -330,8 +336,8 @@ class SimulatorLightEmission(SimtelRunner):
                 - self.default_le_config["z_pos"]["real"]
             )
             _, angles = self.calibration_pointing_direction()
-            angle_theta = 180 - angles[0]
-            angle_phi = 180 - angles[1]
+            angle_theta = angles[0]
+            angle_phi = angles[1]
             command += f" --laser-position '{x_origin.value},{y_origin.value},{z_origin.value}'"
 
             command += f" --telescope-theta {angle_theta}"
@@ -356,7 +362,6 @@ class SimulatorLightEmission(SimtelRunner):
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
-        # command += " -c /workdir/sim_telarray/sim_telarray/cfg/CTA/CTA-ULTRA6-MST-NectarCam.cfg"
 
         def remove_line_from_config(file_path, line_prefix):
             with open(file_path, "r", encoding="utf-8") as file:
@@ -394,11 +399,9 @@ class SimulatorLightEmission(SimtelRunner):
         command += super()._config_option("PULSE_ANALYSIS", "-30")
         # command += super()._config_option("SUM_BEFORE_PEAK", "-30")
         # command += super()._config_option("ARRAY_WINDOW", "1000")
-        # command += super()._config_option("FAKE_TRIGGER", "1")
 
         if "real" in self.default_le_config["x_pos"]:
             _, angles = self.calibration_pointing_direction()
-            print("ANGLES", angles[0], angles[1])
             angle_theta = 180 - angles[0]
             angle_phi = 180 - angles[1]
             command += super()._config_option("telescope_theta", f"{angle_theta}")
@@ -432,7 +435,6 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
         # command += f" --plot-with-title 'tel {self._telescope_model.name}"
-        # command += "dist: {self.default_le_config['z_pos']['default'].value/100}'"
         command += (
             f" -p {postscript_dir}/"
             f"{self.le_application[0]}_{self.le_application[1]}_"
@@ -442,6 +444,7 @@ class SimulatorLightEmission(SimtelRunner):
             f" {self.output_directory}/"
             f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         )
+        # ps2pdf required, now only store postscripts
         # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
