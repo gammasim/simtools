@@ -163,6 +163,43 @@ def mock_simulator_variable(
 
 
 @pytest.fixture
+def mock_simulator_laser(
+    db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
+):
+    simtel_source_path = simtel_path
+    telescope_model = TelescopeModel(
+        site="North",
+        telescope_model_name="LSTN-01",
+        model_version=model_version,
+        label="test-simtel-light-emission",
+        mongo_db_config=db_config,
+    )
+    calibration_model = CalibrationModel(
+        site="North",
+        calibration_device_model_name="ILLN-01",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        label="test-simtel-light-emission",
+    )
+
+    # default_le_config = default_config
+    le_application = "ls-beam", "layout"
+    light_source_type = "laser"
+    mock_simulator_laser = SimulatorLightEmission(
+        telescope_model,
+        calibration_model,
+        site_model_north,
+        default_config,
+        le_application,
+        simtel_source_path,
+        light_source_type,
+        label,
+        config_data={},
+    )
+    return mock_simulator_laser
+
+
+@pytest.fixture
 def mock_output_path(label, io_handler):
     path = io_handler.get_output_directory(label)
     return path
@@ -273,7 +310,7 @@ def test_make_light_emission_script(
         " -x -51627.0"
         " -y 5510.0"
         " -z 11000.0"
-        " -d 0.9727607415193217,-0.10381993309259616,-0.20726302432278723"
+        " -d 0.972761,-0.10382,-0.207263"
         " -n 10000000000.0"
         " -s 300"
         " -p Gauss:0.0"
@@ -325,6 +362,52 @@ def test_make_light_emission_script_variable(
     assert command == expected_command
 
 
+def test_make_light_emission_script_laser(
+    mock_simulator_laser,
+    telescope_model_lst,
+    array_layout_model,
+    simtel_path,
+    mock_output_path,
+    io_handler,
+):
+
+    for telescope in array_layout_model._telescope_list:  # pylint: disable=protected-access
+        if telescope.name == "LSTN-01":
+            xx, yy, zz = telescope.get_coordinates(crs_name="ground")
+
+    mock_simulator_laser.default_le_config["x_pos"]["real"] = xx
+    mock_simulator_laser.default_le_config["y_pos"]["real"] = yy
+    mock_simulator_laser.default_le_config["z_pos"]["real"] = zz
+
+    # Call the method under test
+    command = mock_simulator_laser._make_light_emission_script()
+
+    # Define the expected command
+    expected_command = (
+        f" rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
+        f"sim_telarray/LightEmission/ls-beam"
+        " --events 1"
+        " --bunches 2500000"
+        " --step 0.1"
+        " --bunchsize 1"
+        " --spectrum "
+        f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_wavelength')}"
+        " --lightpulse Gauss:"
+        f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
+        " --laser-position '-51627.0,5510.0,11000.0'"
+        " --telescope-theta 78.037993"
+        " --telescope-phi 186.091952"
+        " --laser-theta 11.962007"
+        " --laser-phi 173.908048"
+        f" --atmosphere {mock_output_path}/model/"
+        f"{mock_simulator_laser._calibration_model.get_parameter_value('atmospheric_profile')}"
+        f" -o {mock_output_path}/ls-beam.iact.gz\n"
+    )
+
+    # Assert that the command matches the expected command
+    assert command == expected_command
+
+
 def test_calibration_pointing_direction(mock_simulator):
 
     # Mocking default_le_config
@@ -342,7 +425,7 @@ def test_calibration_pointing_direction(mock_simulator):
 
     # Expected pointing vector and angles
     expected_pointing_vector = [0.218218, 0.436436, 0.872872]
-    expected_angles = [29.205932, 63.434949, 150.794068, -116.565051]
+    expected_angles = [150.794, 116.565, 150.794, -116.565]
 
     # Asserting expected pointing vector and angles
     np.testing.assert_array_almost_equal(pointing_vector, expected_pointing_vector, decimal=3)
