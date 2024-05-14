@@ -88,14 +88,14 @@ def mock_simulator(
     le_application = "xyzls", "layout"
     light_source_type = "led"
     mock_simulator = SimulatorLightEmission(
-        telescope_model,
-        calibration_model,
-        site_model_north,
-        default_config,
-        le_application,
-        simtel_source_path,
-        light_source_type,
-        label,
+        telescope_model=telescope_model,
+        calibration_model=calibration_model,
+        site_model=site_model_north,
+        default_config=default_config,
+        le_application=le_application,
+        simtel_source_path=simtel_source_path,
+        light_source_type=light_source_type,
+        label=label,
         config_data={},
     )
     return mock_simulator
@@ -125,14 +125,14 @@ def mock_simulator_variable(
     le_application = "xyzls", "variable"
     light_source_type = "led"
     mock_simulator_variable = SimulatorLightEmission(
-        telescope_model,
-        calibration_model,
-        site_model_north,
-        default_config,
-        le_application,
-        simtel_source_path,
-        light_source_type,
-        label,
+        telescope_model=telescope_model,
+        calibration_model=calibration_model,
+        site_model=site_model_north,
+        default_config=default_config,
+        le_application=le_application,
+        simtel_source_path=simtel_source_path,
+        light_source_type=light_source_type,
+        label=label,
         config_data={},
     )
     return mock_simulator_variable
@@ -162,14 +162,14 @@ def mock_simulator_laser(
     le_application = "ls-beam", "layout"
     light_source_type = "laser"
     mock_simulator_laser = SimulatorLightEmission(
-        telescope_model,
-        calibration_model,
-        site_model_north,
-        default_config,
-        le_application,
-        simtel_source_path,
-        light_source_type,
-        label,
+        telescope_model=telescope_model,
+        calibration_model=calibration_model,
+        site_model=site_model_north,
+        default_config=default_config,
+        le_application=le_application,
+        simtel_source_path=simtel_source_path,
+        light_source_type=light_source_type,
+        label=label,
         config_data={},
     )
     return mock_simulator_laser
@@ -205,7 +205,7 @@ def test_runs(mock_simulator):
 
 
 def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == 1e10
+    assert mock_simulator.photons_per_run == pytest.approx(1e10)
 
 
 def test_from_kwargs_with_all_args(
