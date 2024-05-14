@@ -19,17 +19,18 @@ __all__ = ["SimulatorLightEmission"]
 class SimulatorLightEmission(SimtelRunner):
     """
     SimulatorLightEmission is the interface with sim_telarray to perform
-    light emission package simulations.
+    light emission package simulations. The light emission package is used to
+    simulate a artificial light source, used for calibration.
 
 
     Parameters
     ----------
     telescope_model:
-        TelescopeModel instance to define site, telescope model etc.
+        Instance of the TelescopeModel class.
     calibration_model:
-        CalibrationModel instance to define calibration device
+        CalibrationModel instance to define calibration device.
     site_model:
-        SiteModel instance to define the site specific parameters
+        SiteModel instance to define the site specific parameters.
     default_le_config: dict
         defines parameters for running the sim_telarray light emission application.
     le_application: str
@@ -131,7 +132,6 @@ class SimulatorLightEmission(SimtelRunner):
             ],
             **kwargs,
         )
-        print("args", args)
 
         return cls(**args, config_data=config_data)
 
@@ -184,8 +184,10 @@ class SimulatorLightEmission(SimtelRunner):
         """
         Calculate the pointing of the calibration device towards the telescope.
 
-        Returns:
-        list: The pointing vector from the calibration device to the telescope.
+        Returns
+        -------
+        list
+            The pointing vector from the calibration device to the telescope.
         """
         # x_cal = self._calibration_model.get_parameter_value("x_pos")
         # y_cal = self._calibration_model.get_parameter_value("y_pos")
@@ -230,8 +232,10 @@ class SimulatorLightEmission(SimtelRunner):
         """
         Calculate the distance between the telescope and the calibration device.
 
-        Returns:
-        astropy Quantity: The distance between the telescope and the calibration device.
+        Returns
+        -------
+        astropy Quantity
+            The distance between the telescope and the calibration device.
         """
 
         if "real" in self.default_le_config["x_pos"]:
@@ -257,6 +261,16 @@ class SimulatorLightEmission(SimtelRunner):
         return distance * u.m
 
     def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
+        """
+        Creates the light emission script to run the light emission package with the
+        specified pre-compiled light emission package application
+        in the sim_telarray/LightEmission/ path.
+
+        Returns
+        -------
+        str
+            The commands to run the Light Emission package
+        """
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
@@ -357,7 +371,14 @@ class SimulatorLightEmission(SimtelRunner):
         return command
 
     def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
-        """Return the command to run simtel_array."""
+        """
+        Return the command to run simtel_array using the output from the previous step.
+
+        Returns
+        -------
+        str
+            The command to run simtel_array
+        """
 
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
@@ -422,7 +443,12 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _create_postscript(self, **kwargs):  # pylint: disable=unused-argument
         """
-        writes out post-script file using read_cta
+        writes out post-script file using read_cta in hessioxxx/bin/read_cta
+
+        Returns
+        ------
+        str
+            Command to create the postscript file
         """
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
@@ -447,9 +473,14 @@ class SimulatorLightEmission(SimtelRunner):
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
 
-    def plot_simtel_ctapipe(self, return_cleaned=0):
+    def plot_simtel_ctapipe(self, cleaning_args, return_cleaned=False):
         """
         reads in simtel file and plots reconstructed photo electrons via ctapipe
+
+        Returns
+        -------
+        fig: matplotlib.figure
+            The matplotlib figure containing the plot.
         """
         filename = (
             f"{self.output_directory}/"
@@ -470,8 +501,22 @@ class SimulatorLightEmission(SimtelRunner):
         cleaned = image.copy()
 
         if return_cleaned:
+            if cleaning_args is None:
+                cleaning_level = {
+                    "CHEC": (2, 4, 2),
+                    "LSTCam": (3.5, 7, 2),
+                    "FlashCam": (3.5, 7, 2),
+                    "NectarCam": (4, 8, 2),
+                }
+                boundary, picture, min_neighbors = cleaning_level[geometry.name]
+            else:
+                boundary, picture, min_neighbors = cleaning_args
             mask = tailcuts_clean(
-                geometry, image, picture_thresh=7, boundary_thresh=5, min_number_picture_neighbors=0
+                geometry,
+                image,
+                picture_thresh=picture,
+                boundary_thresh=boundary,
+                min_number_picture_neighbors=min_neighbors,
             )
             cleaned[~mask] = 0
         fig, ax = plt.subplots(1, 1, dpi=300)
