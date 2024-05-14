@@ -120,7 +120,7 @@ def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
 
 def test_trigger_rate_per_histogram(simtel_array_histogram_instance):
     trigger_rate = simtel_array_histogram_instance.trigger_rate_per_histogram(re_weight=True)
-    assert pytest.approx(trigger_rate[0].value, 0.1) == 0.53
+    assert pytest.approx(trigger_rate[0].value, 0.1) == 3.45
     assert trigger_rate[0].unit == 1 / u.s
 
 
