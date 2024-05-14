@@ -34,6 +34,8 @@ import json
 import logging
 from pathlib import Path
 
+import astropy.table
+
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
@@ -69,19 +71,75 @@ def _parse(label=None, description=None):
         type=Path,
         required=False,
     )
+    config.parser.add_argument(
+        "--coordinate_system",
+        help="Coordinate system of array element positions (utm or ground).",
+        default="ground",
+        required=False,
+        type=str,
+        choices=["ground", "utm"],
+    )
 
     return config.initialize(db_config=True, simulation_model="site")
 
 
-def main():
-    """Application main."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label, description="Add array element positions to model parameter repository"
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def write_utm_array_elements_to_repository(args_dict, db_config, logger):
+    """
+    Write UTM position of array elements to model repository.
+    Read array element positions from file.
 
+    Parameters
+    ----------
+    args_dict : dict
+        Command line arguments.
+    db_config : dict
+        Database configuration.
+    logger : Logger
+        Logger object.
+
+    """
+
+    array_elements = astropy.table.Table.read(args_dict["input"])
+    for row in array_elements:
+        data = {
+            "parameter": "array_element_position_utm",
+            "instrument": f"{row['asset_code']}-{row['sequence_number']}",
+            "site": args_dict["site"],
+            "version": args_dict["model_version"],
+            "value": f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
+            "unit": "m",
+            "type": "float64",
+            "applicable": True,
+            "file": False,
+        }
+        output_path = Path(args_dict["repository_path"]) / f"{data['instrument']}"
+        output_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Writing array element positions (utm) to {output_path}")
+        with open(output_path / "array_element_position_utm.json", "w", encoding="utf-8") as file:
+            json.dump(
+                data,
+                file,
+                indent=4,
+                sort_keys=False,
+                cls=JsonNumpyEncoder,
+            )
+            file.write("\n")
+
+
+def write_ground_array_elements_to_repository(args_dict, db_config, logger):
+    """
+    Write ground position of array elements to model repository.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Command line arguments.
+    db_config : dict
+        Database configuration.
+    logger : Logger
+        Logger object.
+
+    """
     array_model = ArrayModel(
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
@@ -91,7 +149,7 @@ def main():
     for element_name, data in array_model.array_elements.items():
         output_path = Path(args_dict["repository_path"]) / f"{element_name}"
         output_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing array element positions to {output_path}")
+        logger.info(f"Writing array element positions (ground) to {output_path}")
         with open(
             output_path / "array_element_position_ground.json", "w", encoding="utf-8"
         ) as file:
@@ -103,6 +161,21 @@ def main():
                 cls=JsonNumpyEncoder,
             )
             file.write("\n")
+
+
+def main():
+    """Application main."""
+    label = Path(__file__).stem
+    args_dict, db_config = _parse(
+        label, description="Add array element positions to model parameter repository"
+    )
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    if args_dict["coordinate_system"] == "utm":
+        write_utm_array_elements_to_repository(args_dict, db_config, logger)
+    else:
+        write_ground_array_elements_to_repository(args_dict, db_config, logger)
 
 
 if __name__ == "__main__":
