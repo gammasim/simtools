@@ -30,7 +30,7 @@
     Command Line Arguments
     ----------------------
     --telescope (str, required)
-        Telescope model name (e.g. LSTN-01, SST-D, ...)
+        Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
 
     --site (str, required)
         Site name (North or South).
@@ -41,7 +41,7 @@
     --light_source_setup (str, optional)
         Select calibration light source positioning/setup:
         - "variable" for varying distances.
-        - "layout" for fixed positions according to the layout.
+        - "layout" for actual telescope positions.
 
     --model_version (str, optional)
         Version of the simulation model.
@@ -170,10 +170,11 @@ def _parse(label):
         choices=["layout", "variable"],
         default=None,
     )
-    config.parser.add_argument(  # remove
-        "--distance_ls",
-        help="Light source distance in m (Example --distance_ls 800 1200)",
+    config.parser.add_argument(
+        "--distances_ls",
+        help="Light source distance in m (Example --distances_ls 800 1200)",
         nargs="+",
+        required=False,
     )
     config.parser.add_argument(
         "--illuminator",
@@ -193,6 +194,14 @@ def _parse(label):
         simulation_model="telescope",
         require_command_line=False,
     )
+
+
+def distance_list(arg):
+    try:
+        values = [float(x) * u.m for x in arg]
+        return values
+    except ValueError as exc:
+        raise ValueError("Distances must be numeric values") from exc
 
 
 def default_le_configs(le_application):
@@ -320,6 +329,9 @@ def main():
     )
 
     if args_dict["light_source_setup"] == "variable":
+        if args_dict["distances_ls"] is not None:
+            default_le_config["z_pos"]["default"] = distance_list(args_dict["distances_ls"])
+        print(f"Simulating for distances of {default_le_config['z_pos']['default']}")
         figures = []
         for distance in default_le_config["z_pos"]["default"]:
             le_config = default_le_config.copy()
