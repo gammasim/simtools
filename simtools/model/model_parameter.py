@@ -315,7 +315,6 @@ class ModelParameter:
                     self.name,
                     self.model_version,
                 )
-
             except ValueError:
                 self._logger.warning(
                     f"No sim_telarray configuration parameters found for {self.site}, {self.name}"
