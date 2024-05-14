@@ -649,7 +649,10 @@ class SimtelHistograms:
             )
 
             obs_time = simtel_hist_instance.estimate_observation_time()
-            logging.info(f"Estimated equivalent observation time: {obs_time.value} s")
+            logging.info(
+                f"Estimated equivalent observation time corresponding to the number of"
+                f"events simulated: {obs_time.value} s"
+            )
             sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
             sim_event_rates.append(sim_event_rate)
             logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
