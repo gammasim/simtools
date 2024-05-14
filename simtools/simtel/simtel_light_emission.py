@@ -260,7 +260,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         return distance * u.m
 
-    def _make_light_emission_script(self, **kwargs):  # pylint: disable=unused-argument
+    def _make_light_emission_script(self):
         """
         Creates the light emission script to run the light emission package with the
         specified pre-compiled light emission package application
@@ -370,7 +370,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         return command
 
-    def _make_simtel_script(self, **kwargs):  # pylint: disable=unused-argument
+    def _make_simtel_script(self):
         """
         Return the command to run simtel_array using the output from the previous step.
 
@@ -441,7 +441,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         return command
 
-    def _create_postscript(self, **kwargs):  # pylint: disable=unused-argument
+    def _create_postscript(self):
         """
         writes out post-script file using read_cta in hessioxxx/bin/read_cta
 
