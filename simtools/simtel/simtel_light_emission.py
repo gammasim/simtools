@@ -402,10 +402,8 @@ class SimulatorLightEmission(SimtelRunner):
 
         if "real" in self.default_le_config["x_pos"]:
             _, angles = self.calibration_pointing_direction()
-            angle_theta = 180 - angles[0]
-            angle_phi = 180 - angles[1]
-            command += super()._config_option("telescope_theta", f"{angle_theta}")
-            command += super()._config_option("telescope_phi", f"{angle_phi}")
+            command += super()._config_option("telescope_theta", f"{angles[0]}")
+            command += super()._config_option("telescope_phi", f"{angles[1]}")
         else:
             command += super()._config_option("telescope_theta", 0)
             command += super()._config_option("telescope_phi", 0)
