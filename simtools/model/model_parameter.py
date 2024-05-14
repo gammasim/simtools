@@ -314,7 +314,6 @@ class ModelParameter:
                     self.site,
                     self.name,
                     self.model_version,
-                    self.collection,
                 )
 
             except ValueError:

@@ -494,9 +494,7 @@ class DatabaseHandler:
             write_files=False,
         )
 
-    def get_sim_telarray_configuration_parameters(
-        self, site, telescope_model_name, model_version, collection="configuration_sim_telarray"
-    ):
+    def get_sim_telarray_configuration_parameters(self, site, telescope_model_name, model_version):
         """
         Get sim_telarray configuration parameters from the DB for a specific telescope.
 
@@ -511,7 +509,7 @@ class DatabaseHandler:
                 _telescope_model_name,
                 _model_version,
                 run_location=None,
-                collection_name=collection,
+                collection_name="configuration_sim_telarray",
                 write_files=False,
             )
         except ValueError:
@@ -520,7 +518,7 @@ class DatabaseHandler:
                 names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
                 _model_version,
                 run_location=None,
-                collection_name=collection,
+                collection_name="configuration_sim_telarray",
                 write_files=False,
             )
 
