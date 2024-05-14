@@ -11,13 +11,13 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
 
-@pytest.fixture
-def label():
+@pytest.fixture(name="label")
+def label_fixture():
     return "test-simtel-light-emission"
 
 
-@pytest.fixture
-def default_config():
+@pytest.fixture(name="default_config")
+def default_config_fixture():
     return {
         "x_pos": {
             "len": 1,
