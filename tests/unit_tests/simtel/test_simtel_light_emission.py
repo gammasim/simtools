@@ -231,7 +231,6 @@ def test_from_kwargs_with_all_args(
     assert simulator.label == "test_label"
     assert simulator._simtel_source_path == simtel_path
     assert simulator.light_source_type == "layout"
-    # assert simulator.config == {"beam_shape": "Gauss"}
 
 
 def test_from_kwargs_with_minimal_args(

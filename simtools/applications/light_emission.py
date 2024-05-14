@@ -188,7 +188,35 @@ def _parse(label):
         type=str,
         default=None,
     )
-
+    config.parser.add_argument(
+        "--return_cleaned",
+        help="ctapipe, if image should be cleaned, \
+              notice as well image cleaning parameters",
+        type=str,
+        default=False,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--picture_thresh",
+        help="ctapipe, threshold above which all pixels are retained",
+        type=int,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--boundary_thresh",
+        help="ctapipe, threshold above which pixels are retained if\
+              they have a neighbor already above the picture_thresh",
+        type=int,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--min_neighbors",
+        help="ctapipe, A picture pixel survives cleaning only if it has at\
+              least this number of picture neighbors. This has no effect in\
+              case keep_isolated_pixels is True",
+        type=int,
+        required=False,
+    )
     return config.initialize(
         db_config=True,
         simulation_model="telescope",
@@ -323,7 +351,14 @@ def main():
             subprocess.run(run_script, shell=False, check=False)
 
             try:
-                fig = le.plot_simtel_ctapipe()
+                fig = le.plot_simtel_ctapipe(
+                    cleaning_args=[
+                        args_dict["boundary_thresh"],
+                        args_dict["picture_thresh"],
+                        args_dict["min_neighbors"],
+                    ],
+                    return_cleaned=args_dict["return_cleaned"],
+                )
                 figures.append(fig)
             except AttributeError:
                 msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
@@ -366,6 +401,23 @@ def main():
         )
         run_script = le.prepare_script(generate_postscript=True)
         subprocess.run(run_script, shell=False, check=False)
+        try:
+            fig = le.plot_simtel_ctapipe(
+                cleaning_args=[
+                    args_dict["boundary_thresh"],
+                    args_dict["picture_thresh"],
+                    args_dict["min_neighbors"],
+                ],
+                return_cleaned=args_dict["return_cleaned"],
+            )
+        except AttributeError:
+            msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
+            logger.warning(msg)
+        save_figs_to_pdf(
+            [fig],
+            f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}_"
+            f"{le.le_application[1]}.pdf",
+        )
 
 
 if __name__ == "__main__":
