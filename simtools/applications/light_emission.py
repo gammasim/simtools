@@ -215,30 +215,6 @@ def default_le_configs(le_application):
 
     if le_application in ("xyzls", "ls-beam"):
         default_config = {
-            "beam_shape": {
-                "len": 1,
-                "unit": str,
-                "default": "Gauss",
-                "names": ["beam_shape", "angular_distribution"],
-            },
-            "beam_width": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 0.5 * u.deg,
-                "names": ["rms"],
-            },
-            "pulse_shape": {
-                "len": 1,
-                "unit": str,
-                "default": "Gauss",
-                "names": ["pulse_shape"],
-            },
-            "pulse_width": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 5 * u.ns,
-                "names": ["rms"],
-            },
             "x_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
