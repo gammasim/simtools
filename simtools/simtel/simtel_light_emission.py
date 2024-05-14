@@ -424,7 +424,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _create_postscript(self, **kwargs):  # pylint: disable=unused-argument
         """
-        writes out post-script file using read_cta
+        Writes out post-script file using read_cta.
         """
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
@@ -451,7 +451,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def plot_simtel_ctapipe(self, return_cleaned=0):
         """
-        reads in simtel file and plots reconstructed photo electrons via ctapipe
+        Reads in simtel file and plots reconstructed photo electrons via ctapipe.
         """
         filename = (
             f"{self.output_directory}/"
