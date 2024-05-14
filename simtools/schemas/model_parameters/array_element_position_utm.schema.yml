@@ -12,10 +12,10 @@ short_description: UTM coordinate position of an array element.
 data:
   - type: double
     unit: m
-    description: Array element position in UTM North.
+    description: Array element position in UTM East.
   - type: double
     unit: m
-    description: Array element position in UTM East.
+    description: Array element position in UTM North.
   - type: double
     unit: m
     description: Array element altitude above sea level.
