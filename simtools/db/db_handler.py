@@ -109,7 +109,7 @@ class DatabaseHandler:
         site,
         telescope_model_name,
         model_version,
-        collection,
+        collection="telescope",
         only_applicable=False,
     ):
         """
@@ -135,9 +135,7 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-        # TODO: temp. fix model version for calibration_devices here
-        if collection == "calibration_devices":
-            model_version = "2024-02-01"
+
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
