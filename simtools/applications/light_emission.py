@@ -279,7 +279,6 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Create telescope model
     telescope_model = TelescopeModel(
         site=args_dict["site"],
         telescope_model_name=args_dict["telescope"],
@@ -288,7 +287,6 @@ def main():
         label=label,
     )
 
-    # Create calibration model
     calibration_model = CalibrationModel(
         site=args_dict["site"],
         calibration_device_model_name=args_dict["illuminator"],

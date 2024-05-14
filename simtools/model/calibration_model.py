@@ -8,7 +8,7 @@ __all__ = ["CalibrationModel"]
 class CalibrationModel(ModelParameter):
     """
     CalibrationModel represents the MC model of an individual calibration device. \
-    It contains the list of parameters that can be read from the DB.
+    It provides functionality to read the required parameters from the DB.
 
     Parameters
     ----------
