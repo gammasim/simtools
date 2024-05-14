@@ -47,6 +47,7 @@ class DatabaseHandler:
     db_client = None
     site_parameters_cached = {}
     model_parameters_cached = {}
+    sim_telarray_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -318,8 +319,6 @@ class DatabaseHandler:
             "version": self._convert_version_to_tagged(model_version),
         }
 
-        # TODO - check queries
-        # self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
         if only_applicable:
             query["applicable"] = True
         if collection.count_documents(query) < 1:
@@ -483,8 +482,18 @@ class DatabaseHandler:
         _, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
+        _array_elements_cache_key = self._parameter_cache_key(
+            site, telescope_model_name, model_version
+        )
         try:
-            return self.read_mongo_db(
+            return DatabaseHandler.sim_telarray_configuration_parameters_cached[
+                _array_elements_cache_key
+            ]
+        except KeyError:
+            pass
+        pars = {}
+        try:
+            pars = self.read_mongo_db(
                 self._get_db_name(),
                 _telescope_model_name,
                 _model_version,
@@ -493,7 +502,7 @@ class DatabaseHandler:
                 write_files=False,
             )
         except ValueError:
-            return self.read_mongo_db(
+            pars = self.read_mongo_db(
                 self._get_db_name(),
                 names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
                 _model_version,
@@ -501,6 +510,10 @@ class DatabaseHandler:
                 collection_name="configuration_sim_telarray",
                 write_files=False,
             )
+        DatabaseHandler.sim_telarray_configuration_parameters_cached[_array_elements_cache_key] = (
+            pars
+        )
+        return pars
 
     def _validate_model_input(self, site, telescope_model_name, model_version):
         """
