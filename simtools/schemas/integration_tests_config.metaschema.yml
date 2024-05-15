@@ -66,9 +66,9 @@ definitions:
         type: string
       REFERENCE_OUTPUT_FILE:
         description: |
-          "Reference file used for comparision."
+          "Reference file used for comparison."
         type: string
       TOLERANCE:
-        description: "Allowed tolerance for floating point comparision."
+        description: "Allowed tolerance for floating point comparison."
         type: number
     title: IntegrationTest
