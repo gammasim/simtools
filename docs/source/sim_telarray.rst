@@ -5,6 +5,14 @@ sim_telarray
 
 Support modules for running sim_telarray.
 
+simtel_config_reader
+--------------------
+
+.. _simtel_config_reader:
+
+.. automodule:: simtel.simtel_config_reader
+   :members:
+
 simtel_config_writer
 --------------------
 
@@ -43,6 +51,14 @@ simtel_runner_array
 .. _simtel_runner_array:
 
 .. automodule:: simtel.simtel_runner_array
+   :members:
+
+simtel_runner_camera_efficiency
+-------------------------------
+
+.. _simtel_runner_camera_efficiency:
+
+.. automodule:: simtel.simtel_runner_camera_efficiency
    :members:
 
 simtel_runner_ray_tracing

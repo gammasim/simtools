@@ -99,8 +99,6 @@ import shutil
 import tarfile
 from pathlib import Path
 
-from astropy.io.misc import yaml
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -218,8 +216,9 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     try:
-        with open(args_dict["production_config"], encoding="utf-8") as file:
-            config_data = yaml.load(file)
+        config_data = gen.collect_data_from_file_or_dict(
+            file_name=args_dict["production_config"], in_dict=None
+        )
     except FileNotFoundError:
         logger.error(
             f"Error loading simulation configuration file from {args_dict['production_config']}"
@@ -256,8 +255,8 @@ def main():
     logger.info(
         f"Production run is complete for primary {config_data['showers']['primary']} showers "
         f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
-        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
-        f"using the {config_data['array']['model_version']} telescope model."
+        f"{config_data['common']['zenith']} at the {args_dict['site']} site,"
+        f"using the {args_dict['model_version']} telescope model."
     )
 
     if args_dict["pack_for_grid_register"]:

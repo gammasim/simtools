@@ -12,3 +12,5 @@ CTA_SIMPIPE:
     TEST: true
     OUTPUT_PATH: simtools-tests
     LOG_LEVEL: DEBUG
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: TEST.ecsv

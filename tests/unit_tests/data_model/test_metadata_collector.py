@@ -4,6 +4,8 @@ import copy
 import getpass
 import json
 import logging
+from importlib.resources import files
+from pathlib import Path
 
 import pytest
 
@@ -45,9 +47,9 @@ def test_get_data_model_schema_file_name():
     # from data model_name
     _collector.data_model_name = "array_coordinates"
     schema_file = _collector.get_data_model_schema_file_name()
-    url = "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/"
-    url += "model_parameters/-/raw/main/schema/array_coordinates.schema.yml"
-    assert schema_file == url
+    assert Path(schema_file) == (
+        files("simtools") / "schemas/model_parameters" / "array_coordinates.schema.yml"
+    )
 
     # from input metadata
     _collector.input_metadata = {
