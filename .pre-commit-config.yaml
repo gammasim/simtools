@@ -4,7 +4,6 @@ repos:
     rev: v0.4.4
     hooks:
       - id: ruff
-        args: [ --fix ]
       - id: ruff-format
   # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
   - repo: https://github.com/pycqa/isort
