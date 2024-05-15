@@ -260,9 +260,8 @@ class RayTracing:
         cm_to_deg = 180.0 / pi / focal_length
 
         self._psf_images = {}
-        if do_analyze:
-            _rows = []
-        else:
+        _rows = []
+        if not do_analyze:
             self._read_results()
 
         all_mirrors = self._mirror_numbers if self.config.single_mirror_mode else [0]
