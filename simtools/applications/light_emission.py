@@ -240,7 +240,7 @@ def default_le_configs(le_application):
     (in units of the vacuum speed of light), it is handled as a moving source,
     in the given direction.
     """
-
+    default_config = {}
     if le_application in ("xyzls", "ls-beam"):
         default_config = {
             "x_pos": {
@@ -290,6 +290,7 @@ def default_le_configs(le_application):
 
 
 def select_application(args_dict):
+    le_application = None
     if args_dict["light_source_type"] == "led":
         le_application = "xyzls"
     elif args_dict["light_source_type"] == "laser":

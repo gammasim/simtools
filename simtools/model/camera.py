@@ -262,11 +262,13 @@ class Camera:
         float
             The camera fill factor.
         """
-
         if self._pixels["pixel_spacing"] == 9999:
             points = np.array([self._pixels["x"], self._pixels["y"]]).T
             pixel_distances = distance.cdist(points, points, "euclidean")
-            self._pixels["pixel_spacing"] = np.min(pixel_distances[pixel_distances > 0])
+            # pylint: disable=unsubscriptable-object
+            pixel_distances = pixel_distances[pixel_distances > 0]
+            pixel_spacing = np.min(pixel_distances)
+            self._pixels["pixel_spacing"] = pixel_spacing
 
         return (self._pixels["pixel_diameter"] / self._pixels["pixel_spacing"]) ** 2
 
@@ -769,6 +771,7 @@ class Camera:
 
         legend_objects = [leg_h.PixelObject(), leg_h.EdgePixelObject()]
         legend_labels = ["Pixel", "Edge pixel"]
+        legend_handler_map = None
         if isinstance(on_pixels[0], mlp.patches.RegularPolygon):
             legend_handler_map = {
                 leg_h.PixelObject: leg_h.HexPixelHandler(),
