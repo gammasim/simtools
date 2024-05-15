@@ -6,3 +6,6 @@ CTA_SIMPIPE:
     TELESCOPE: MSTN-design
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/validate_camera_fov_MSTN-design_pixel_layout.pdf
+    - OUTPUT_FILE: application-plots/validate_camera_fov_MSTN-design_pixel_layout.png

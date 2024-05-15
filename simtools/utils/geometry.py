@@ -6,7 +6,7 @@ import logging
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates.errors import UnitsError
+from astropy.units import UnitsError
 
 __all__ = [
     "convert_2d_to_radial_distr",

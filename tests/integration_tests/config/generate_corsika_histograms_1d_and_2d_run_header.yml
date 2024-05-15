@@ -13,3 +13,8 @@ CTA_SIMPIPE:
     EVENT_1D_HISTOGRAMS: total_energy
     OUTPUT_PATH: simtools-tests
     TEST: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/test_file_1d_and_2d_run_header.pdf
+    - OUTPUT_FILE: application-plots/test_file_1d_and_2d_run_header.hdf5
+    - OUTPUT_FILE: application-plots/test_file_1d_and_2d_run_header.hdf5_event_1d_histograms.pdf
+    - OUTPUT_FILE: application-plots/test_file_1d_and_2d_run_header.hdf5_event_2d_histograms.pdf

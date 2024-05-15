@@ -7,3 +7,5 @@ CTA_SIMPIPE:
     SCHEMA: ./tests/resources/MST_mirror_2f_measurements.schema.yml
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.ecsv
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: test.ecsv

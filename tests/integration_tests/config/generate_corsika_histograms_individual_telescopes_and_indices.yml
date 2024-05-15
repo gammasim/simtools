@@ -11,3 +11,6 @@ CTA_SIMPIPE:
     INDIVIDUAL_TELESCOPES: true
     OUTPUT_PATH: simtools-tests
     TEST: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/test_file_individual_telescopes_and_indices.hdf5
+    - OUTPUT_FILE: application-plots/test_file_individual_telescopes_and_indices.pdf
