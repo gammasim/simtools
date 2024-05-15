@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+gba0820f Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+g7ce5045 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=a9951ea6"></script>
+    <script src="_static/documentation_options.js?v=d8154674"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7ce5045 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -419,7 +419,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
@@ -685,21 +685,22 @@ from telescope LSTN-01.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_available_telescopes">
-<span class="sig-name descname"><span class="pre">get_all_available_telescopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_telescopes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes" title="Link to this definition">#</a></dt>
-<dd><p>Get all available telescope names in the collection “telescopes” in the DB.</p>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_available_array_elements">
+<span class="sig-name descname"><span class="pre">get_all_available_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_all_available_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements" title="Link to this definition">#</a></dt>
+<dd><p>Get all available array element names in the specified collection in the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the telescopes of</p>
+<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the array elements of</p>
 </dd>
-</dl>
+<dt><strong>collection_name: str</strong></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>all_available_telescopes: list</dt><dd><p>List of all telescope names found</p>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd></dd>
+<dt><strong>_available_array_elements: list</strong></dt><dd><p>List of all array element names found in collection</p>
 </dd>
 </dl>
 </dd>
@@ -765,8 +766,9 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameters">
-<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get parameters from either MongoDB or simulation model repository for a specific telescope.</p>
+<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescope'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get parameters from either MongoDB or simulation model repository for a specific
+array element, i.e. telescopes, calibration_device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -775,6 +777,8 @@ this argument sets which site parameter get the versions of</p>
 <dt><strong>telescope_model_name: str</strong></dt><dd><p>Name of the telescope model (e.g. LSTN-01, MSTS-design)</p>
 </dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>collection of array element (e.g. telescopes, calibration_devices)</p>
 </dd>
 <dt><strong>only_applicable: bool</strong></dt><dd><p>If True, only applicable parameters will be read.</p>
 </dd>
@@ -819,7 +823,7 @@ this argument sets which site parameter get the versions of</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_telescope_db_name">
-<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_telescope_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.get_telescope_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_telescope_db_name" title="Link to this definition">#</a></dt>
 <dd><p>Translate telescope name to the name used in the DB. This is required,
 as not all telescopes are defined in the database yet. In these cases,
 use the “design” telescope.</p>
@@ -875,7 +879,7 @@ mostly these are unnecessary though.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_mongo_db">
-<span class="sig-name descname"><span class="pre">read_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.read_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_mongo_db" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">read_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.read_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_mongo_db" title="Link to this definition">#</a></dt>
 <dd><p>Build and execute query to Read the MongoDB for a specific telescope.
 Also writes the files listed in the parameter values into the sim_telarray run location</p>
 <dl class="field-list simple">
@@ -1046,7 +1050,7 @@ Existing entries will be updated, new entries will be added.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_telescopes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_telescopes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>

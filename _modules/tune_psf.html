@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tune_psf &#8212; simtools v0.1.dev1+gba0820f Manual</title>
+    <title>tune_psf &#8212; simtools v0.1.dev1+g7ce5045 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=a9951ea6"></script>
+    <script src="../_static/documentation_options.js?v=d8154674"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7ce5045 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -618,8 +618,11 @@ document.write(`
         <span class="n">im</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">images</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">d80</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_psf</span><span class="p">()</span>
 
-        <span class="c1"># Simulated cumulative PSF</span>
-        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_cumulative_data</span><span class="p">(</span><span class="n">radius</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Simulated cumulative PSF</span>
+            <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">get_cumulative_data</span><span class="p">(</span><span class="n">radius</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Radius data is not available.&quot;</span><span class="p">)</span>
 
         <span class="n">rmsd</span> <span class="o">=</span> <span class="n">calculate_rmsd</span><span class="p">(</span>
             <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">],</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">][</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">]</span>

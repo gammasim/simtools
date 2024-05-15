@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+gba0820f Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g7ce5045 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=a9951ea6"></script>
+    <script src="../../_static/documentation_options.js?v=d8154674"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7ce5045 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -373,6 +373,9 @@ document.write(`
 <span class="sd">        Site name (e.g., South or North).</span>
 <span class="sd">    telescope_model_name: str</span>
 <span class="sd">        Telescope model name (e.g., LSTN-01, LSTN-design).</span>
+<span class="sd">    collection: str</span>
+<span class="sd">        instrument class (e.g. telescopes, calibration_devices)</span>
+<span class="sd">        as stored under collection in the DB.</span>
 <span class="sd">    mongo_db_config: dict</span>
 <span class="sd">        MongoDB configuration.</span>
 <span class="sd">    label: str</span>
@@ -386,6 +389,7 @@ document.write(`
         <span class="n">model_version</span><span class="p">,</span>
         <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
         <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -405,11 +409,11 @@ document.write(`
             <span class="k">if</span> <span class="n">telescope_model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">collection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_parameters_from_db</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="o">=</span> <span class="kc">None</span>
@@ -653,15 +657,17 @@ document.write(`
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Reading telescope parameters from DB &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Reading array element parameters from DB &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_sim_telarray_configuration_parameters</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>

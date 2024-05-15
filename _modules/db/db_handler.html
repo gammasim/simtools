@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gba0820f Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g7ce5045 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=a9951ea6"></script>
+    <script src="../../_static/documentation_options.js?v=d8154674"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7ce5045 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -399,7 +399,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_available_telescopes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
 
@@ -447,10 +447,12 @@ document.write(`
         <span class="n">site</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="p">,</span>
         <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span>
         <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get parameters from either MongoDB or simulation model repository for a specific telescope.</span>
+<span class="sd">        Get parameters from either MongoDB or simulation model repository for a specific</span>
+<span class="sd">        array element, i.e. telescopes, calibration_device.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -460,6 +462,9 @@ document.write(`
 <span class="sd">            Name of the telescope model (e.g. LSTN-01, MSTS-design)</span>
 <span class="sd">        model_version: str</span>
 <span class="sd">            Version of the model.</span>
+<span class="sd">        collection: str</span>
+<span class="sd">            collection of array element (e.g. telescopes, calibration_devices)</span>
+
 <span class="sd">        only_applicable: bool</span>
 <span class="sd">            If True, only applicable parameters will be read.</span>
 
@@ -472,7 +477,6 @@ document.write(`
         <span class="n">_site</span><span class="p">,</span> <span class="n">_telescope_model_name</span><span class="p">,</span> <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_model_input</span><span class="p">(</span>
             <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span>
         <span class="p">)</span>
-
         <span class="n">_array_elements_cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_cache_key</span><span class="p">(</span>
             <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span>
         <span class="p">)</span>
@@ -480,11 +484,11 @@ document.write(`
             <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">_array_elements_cache_key</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
-
         <span class="n">_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_parameters_mongo_db</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">_telescope_model_name</span><span class="p">,</span>
             <span class="n">_model_version</span><span class="p">,</span>
+            <span class="n">collection</span><span class="p">,</span>
             <span class="n">only_applicable</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -493,7 +497,7 @@ document.write(`
             <span class="n">_pars</span> <span class="o">=</span> <span class="n">db_from_repo_handler</span><span class="o">.</span><span class="n">update_model_parameters_from_repo</span><span class="p">(</span>
                 <span class="n">parameters</span><span class="o">=</span><span class="n">_pars</span><span class="p">,</span>
                 <span class="n">site</span><span class="o">=</span><span class="n">_site</span><span class="p">,</span>
-                <span class="n">parameter_collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+                <span class="n">parameter_collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
                 <span class="n">telescope_name</span><span class="o">=</span><span class="n">_telescope_model_name</span><span class="p">,</span>
                 <span class="n">model_version</span><span class="o">=</span><span class="n">_model_version</span><span class="p">,</span>
                 <span class="n">db_simulation_model_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
@@ -579,7 +583,7 @@ document.write(`
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">ext</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">ALLOWED_FILE_EXTENSIONS</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_model_parameters_mongo_db</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get parameters from MongoDB for a specific telescope.</span>
@@ -592,6 +596,8 @@ document.write(`
 <span class="sd">            Name of the telescope model (e.g. MST-FlashCam-D ...)</span>
 <span class="sd">        model_version: str</span>
 <span class="sd">            Version of the model.</span>
+<span class="sd">        collection: str</span>
+
 <span class="sd">        only_applicable: bool</span>
 <span class="sd">            If True, only applicable parameters will be read.</span>
 
@@ -605,6 +611,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">get_telescope_db_name</span><span class="p">(</span>
                 <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope_model_name</span><span class="p">,</span>
                 <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">]</span>
 
@@ -617,6 +624,7 @@ document.write(`
                     <span class="n">db_name</span><span class="p">,</span>
                     <span class="n">_tel</span><span class="p">,</span>
                     <span class="n">model_version</span><span class="p">,</span>
+                    <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
                     <span class="n">run_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">write_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">only_applicable</span><span class="o">=</span><span class="n">only_applicable</span><span class="p">,</span>
@@ -633,7 +641,7 @@ document.write(`
         <span class="n">telescope_model_name</span><span class="p">,</span>
         <span class="n">model_version</span><span class="p">,</span>
         <span class="n">run_location</span><span class="p">,</span>
-        <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+        <span class="n">collection_name</span><span class="p">,</span>
         <span class="n">write_files</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">only_applicable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -883,7 +891,6 @@ document.write(`
 <span class="sd">            Version of the model.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">),</span>
             <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">telescope_model_name</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
@@ -1516,42 +1523,48 @@ document.write(`
         <span class="k">return</span> <span class="n">_all_versions</span></div>
 
 
-<div class="viewcode-block" id="DatabaseHandler.get_all_available_telescopes">
-<a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.get_all_available_telescopes">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_all_available_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.get_all_available_array_elements">
+<a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.get_all_available_array_elements">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_available_array_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get all available telescope names in the collection &quot;telescopes&quot; in the DB.</span>
+<span class="sd">        Get all available array element names in the specified collection in the DB.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        db_name: str</span>
 <span class="sd">            the name of the DB</span>
 <span class="sd">        model_version: str</span>
-<span class="sd">            Which version to get the telescopes of</span>
-
+<span class="sd">            Which version to get the array elements of</span>
+<span class="sd">        collection_name: str</span>
+<span class="sd">            Which collection to get the array elements from:</span>
+<span class="sd">            i.e. telescopes, calibration_devices</span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        all_available_telescopes: list</span>
-<span class="sd">            List of all telescope names found</span>
+<span class="sd">        _available_array_elements: list</span>
+<span class="sd">            List of all array element names found in collection</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
             <span class="p">),</span>
         <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_all_available_array_elements</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Query for collection name </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2"> not implemented.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
-        <span class="n">_all_available_telescopes</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">_all_available_telescopes</span></div>
+        <span class="k">return</span> <span class="n">_all_available_array_elements</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_telescope_db_name">
 <a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.get_telescope_db_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_telescope_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_telescope_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Translate telescope name to the name used in the DB. This is required,</span>
 <span class="sd">        as not all telescopes are defined in the database yet. In these cases,</span>
@@ -1576,16 +1589,17 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_telescopes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_available_telescopes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_available_telescopes</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
-
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_available_array_elements</span><span class="p">(</span>
+                <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span>
+            <span class="p">)</span>
         <span class="n">_telescope_name_validated</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_telescope_name_validated</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_telescopes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_telescope_name_validated</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_telescope_name_validated</span>
         <span class="n">_design_name</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">_telescope_name_validated</span><span class="p">)</span><span class="si">}</span><span class="s2">-design&quot;</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">_design_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_telescopes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_design_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_design_name</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Telescope </span><span class="si">%s</span><span class="s2"> not found in the database.&quot;</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">)</span>

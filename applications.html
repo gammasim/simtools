@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools Applications &#8212; simtools v0.1.dev1+gba0820f Manual</title>
+    <title>simtools Applications &#8212; simtools v0.1.dev1+g7ce5045 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=a9951ea6"></script>
+    <script src="_static/documentation_options.js?v=d8154674"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7ce5045 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -483,94 +483,101 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-get_parameter">get_parameter</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Raises</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Raises</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-light_emission">light_emission</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Command Line Arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-make_regular_arrays">make_regular_arrays</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-print_array_elements">print_array_elements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Description</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Description</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-produce_array_config">produce_array_config</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production">production</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-sim_showers_for_trigger_rates">sim_showers_for_trigger_rates</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simulate_prod">simulate_prod</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-submit_data_from_external">submit_data_from_external</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id56">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id56">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id57">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id58">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-tune_psf">tune_psf</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id57">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id58">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id59">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id59">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tune_psf.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_camera_efficiency">validate_camera_efficiency</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id64">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_camera_fov">validate_camera_fov</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id64">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_file_using_schema">validate_file_using_schema</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Raises</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id69">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id69">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id70">Raises</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_optics">validate_optics</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id70">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id73">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id74">Example</a></li>
 </ul>
 </li>
 </ul>
@@ -1356,14 +1363,11 @@ Default it $CWD.</p>
 </section>
 <section id="module-get_parameter">
 <span id="get-parameter"></span><h2>get_parameter<a class="headerlink" href="#module-get_parameter" title="Link to this heading">#</a></h2>
-<section id="id28">
-<h3>Summary<a class="headerlink" href="#id28" title="Link to this heading">#</a></h3>
 <p>Get a parameter entry from DB for a specific telescope or a site.
 The application receives a parameter name, a site, a telescope (if applicable) and     optionally a version. It then prints out the parameter entry.
 If no version is provided, the value of the released model is printed..</p>
-</section>
-<section id="id29">
-<h3>Command line arguments<a class="headerlink" href="#id29" title="Link to this heading">#</a></h3>
+<section id="id28">
+<h3>Command line arguments<a class="headerlink" href="#id28" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>parameter (str, required)</dt><dd><p>Parameter name</p>
 </dd>
@@ -1375,12 +1379,12 @@ If no version is provided, the value of the released model is printed..</p>
 </dd>
 </dl>
 </section>
-<section id="id30">
-<h3>Raises<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
+<section id="id29">
+<h3>Raises<a class="headerlink" href="#id29" title="Link to this heading">#</a></h3>
 <p>KeyError in case the parameter requested does not exist in the model parameters.</p>
 </section>
-<section id="id31">
-<h3>Example<a class="headerlink" href="#id31" title="Link to this heading">#</a></h3>
+<section id="id30">
+<h3>Example<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
 <p>Get the mirror_list parameter from the DB.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-parameter --parameter mirror_list --site North --telescope LST-1         --model_version prod5</span>
 </pre></div>
@@ -1397,17 +1401,134 @@ If no version is provided, the value of the released model is printed..</p>
 </div>
 </section>
 </section>
+<section id="module-light_emission">
+<span id="light-emission"></span><h2>light_emission<a class="headerlink" href="#module-light_emission" title="Link to this heading">#</a></h2>
+<section id="id31">
+<h3>Summary<a class="headerlink" href="#id31" title="Link to this heading">#</a></h3>
+<p>Simulate calibration devices using the light emission package.
+Run the application in the command line.
+There are two ways this application can be executed:</p>
+<ol class="arabic simple">
+<li><p>Illuminator at varying distances.</p></li>
+<li><p>Illuminator and telescopes at fixed positions as defined in the layout.</p></li>
+</ol>
+</section>
+<section id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p>Simulate light emission with varying distances:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup variable             --model_version prod6 --light_source_type led</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Simulate light emission with telescopes at fixed positions according to the layout:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup variable             --model_version prod6 --telescope_file             /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv            --light_source_type led</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="id32">
+<h3>Command Line Arguments<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
+<dl class="simple">
+<dt>–telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, …)</p>
+</dd>
+<dt>–site (str, required)</dt><dd><p>Site name (North or South).</p>
+</dd>
+<dt>–illuminator (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
+</dd>
+<dt>–light_source_setup (str, optional)</dt><dd><p>Select calibration light source positioning/setup:
+- “variable” for varying distances.
+- “layout” for actual telescope positions.</p>
+</dd>
+<dt>–model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
+</dd>
+<dt>–light_source_type (str, optional)</dt><dd><p>Select calibration light source type: led (default) or laser.
+This changes the pre-compiled (simtel_array) application that is used to run the
+light emission package with. Currently we use xyzls (laser), and ls-beam can be
+accessed by using the laser option.</p>
+</dd>
+<dt>–telescope_file (str, optional)</dt><dd><p>Telescope position file. Required when using the –light_source_setup layout option.</p>
+</dd>
+<dt>–off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
+</dd>
+<dt>–plot (flag, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Example<a class="headerlink" href="#id33" title="Link to this heading">#</a></h3>
+<p>Simulate isotropic light source at different distances for the MSTN-04:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North         --illuminator ILLN-01 --light_source_setup variable         --model_version prod6 --light_source_type led    ```</span>
+</pre></div>
+</div>
+<p>Expected Output:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">light-emission package stage:</span>
+<span class="go">File &#39;/workdir/external/simtools/simtools-output/light_emission/model/</span>
+<span class="go">    atmprof_ecmwf_north_winter_fixed.dat&#39; registered for atmospheric profile 99.</span>
+<span class="go">Atmospheric profile 99 to be read from file &#39;/workdir/external/simtools/</span>
+<span class="go">    simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat&#39;.</span>
+<span class="go">Atmospheric profile 99 with 55 levels read from file /workdir/external/</span>
+<span class="go">    simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat</span>
+<span class="go">Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.</span>
+<span class="go">IACT control parameter line: print_events 999 10 100 1000 0</span>
+<span class="go">Case 1: 1 event with 1e+10 photons.</span>
+<span class="go">Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999</span>
+<span class="go">Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz</span>
+<span class="go">    not yet created.</span>
+<span class="go">Telescope output file: &#39;/workdir/external/simtools/simtools-output/</span>
+<span class="go">    light_emission/xyzls.iact.gz&#39;</span>
+<span class="go">....</span>
+<span class="go">....</span>
+<span class="go">Sim_telarray stage:</span>
+<span class="go">Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105</span>
+<span class="go">Event end data has been found.</span>
+<span class="go">Shower of 0.0000 TeV energy was seen in 1 of 1 cases.</span>
+<span class="go">Photon statistics:</span>
+<span class="go">All photons:               928518</span>
+<span class="go">Used photons:              928518</span>
+<span class="go">Not absorbed/max. Q.E.:    189560</span>
+<span class="go">Reflected on mirror:        26815</span>
+<span class="go">Camera hit:                 25574</span>
+<span class="go">Pixel hit:                  25574</span>
+<span class="go">Detected:                   20998</span>
+<span class="go">Trigger statistics:</span>
+<span class="go">Tel. triggered:             1</span>
+<span class="go">Tel. + array:               1</span>
+<span class="go">Early readout:              0</span>
+<span class="go">Late readout:               0</span>
+<span class="go">Finish data conversion ...</span>
+<span class="go">Writing 13 histograms to output file.</span>
+</pre></div>
+</div>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="light_emission.default_le_configs">
+<span class="sig-prename descclassname"><span class="pre">light_emission.</span></span><span class="sig-name descname"><span class="pre">default_le_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/light_emission.html#default_le_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#light_emission.default_le_configs" title="Link to this definition">#</a></dt>
+<dd><p>Predefined angular distribution names not requiring to read any table are
+“Isotropic”, “Gauss:&lt;rms&gt;”, “Rayleigh”, “Cone:&lt;angle&gt;”, and “FilledCone:&lt;angle&gt;”, “Parallel”,
+with all angles given in degrees, all with respect to the given direction vector
+(vertically downwards if missing). If the light source has a non-zero length and velocity
+(in units of the vacuum speed of light), it is handled as a moving source,
+in the given direction.</p>
+</dd></dl>
+
+</section>
 <section id="module-make_regular_arrays">
 <span id="make-regular-arrays"></span><h2>make_regular_arrays<a class="headerlink" href="#module-make_regular_arrays" title="Link to this heading">#</a></h2>
-<section id="id32">
-<h3>Summary<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
+<section id="id34">
+<h3>Summary<a class="headerlink" href="#id34" title="Link to this heading">#</a></h3>
 <p>This application creates the layout array files (ECSV) of regular arrays
 with one telescope at the center of the array and with 4 telescopes
 in a square grid. These arrays are used for trigger rate simulations.</p>
 <p>The array layout files created should be available at the data/layout directory.</p>
 </section>
-<section id="id33">
-<h3>Command line arguments<a class="headerlink" href="#id33" title="Link to this heading">#</a></h3>
+<section id="id35">
+<h3>Command line arguments<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>observatory site (e.g., North or South).</p>
 </dd>
@@ -1417,8 +1538,8 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 </dd>
 </dl>
 </section>
-<section id="id34">
-<h3>Example<a class="headerlink" href="#id34" title="Link to this heading">#</a></h3>
+<section id="id36">
+<h3>Example<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
 <p>Runtime &lt; 10 s.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-make-regular-arrays --site=North</span>
 </pre></div>
@@ -1427,8 +1548,8 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
 </section>
 <section id="module-plot_array_layout">
 <span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading">#</a></h2>
-<section id="id35">
-<h3>Summary<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
+<section id="id37">
+<h3>Summary<a class="headerlink" href="#id37" title="Link to this heading">#</a></h3>
 <p>This application plots the layout array and saves into disk.</p>
 <p>It accepts as input the telescope list file, the name of the layout, a sequence of arguments
 with the telescope files or a sequence of arguments with the layout names.</p>
@@ -1436,8 +1557,8 @@ with the telescope files or a sequence of arguments with the layout names.</p>
 A sequence of arguments for the rotation angle is also permitted, in which case all of them
 are plotted and saved separately.</p>
 </section>
-<section id="id36">
-<h3>Command line arguments<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
+<section id="id38">
+<h3>Command line arguments<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>figure_name (str, optional)</dt><dd><p>File name for the pdf output.</p>
 </dd>
@@ -1453,8 +1574,8 @@ are plotted and saved separately.</p>
 </dd>
 </dl>
 </section>
-<section id="id37">
-<h3>Example<a class="headerlink" href="#id37" title="Link to this heading">#</a></h3>
+<section id="id39">
+<h3>Example<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha         --array_layout_name North-TestLayout</span>
 </pre></div>
 </div>
@@ -1462,12 +1583,12 @@ are plotted and saved separately.</p>
 </section>
 <section id="module-print_array_elements">
 <span id="print-array-elements"></span><h2>print_array_elements<a class="headerlink" href="#module-print_array_elements" title="Link to this heading">#</a></h2>
-<section id="id38">
-<h3>Summary<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
+<section id="id40">
+<h3>Summary<a class="headerlink" href="#id40" title="Link to this heading">#</a></h3>
 <p>Convert and print a list of array element positions in different coordinate     systems relevant for CTAO.</p>
 </section>
-<section id="id39">
-<h3>Description<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
+<section id="id41">
+<h3>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
 <p>This application converts a list of array element positions in different CTAO     coordinate systems.</p>
 <p>Available coordinate systems are:</p>
 <ol class="arabic simple">
@@ -1476,8 +1597,8 @@ are plotted and saved separately.</p>
 <li><p>Mercator system</p></li>
 </ol>
 </section>
-<section id="id40">
-<h3>Command line arguments<a class="headerlink" href="#id40" title="Link to this heading">#</a></h3>
+<section id="id42">
+<h3>Command line arguments<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>input (str)</dt><dd><p>File name with list of array element positions</p>
 </dd>
@@ -1489,8 +1610,8 @@ are plotted and saved separately.</p>
 </dd>
 </dl>
 </section>
-<section id="id41">
-<h3>Example<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
+<section id="id43">
+<h3>Example<a class="headerlink" href="#id43" title="Link to this heading">#</a></h3>
 <p>Print a list of array elements using a list of telescope positions in UTM coordinates.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-print-array-elements \</span>
 <span class="go">    --input tests/resources/telescope_positions-North-utm.ecsv \</span>
@@ -1510,8 +1631,8 @@ are plotted and saved separately.</p>
 </section>
 <section id="module-produce_array_config">
 <span id="produce-array-config"></span><h2>produce_array_config<a class="headerlink" href="#module-produce_array_config" title="Link to this heading">#</a></h2>
-<section id="id42">
-<h3>Summary<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
+<section id="id44">
+<h3>Summary<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
 <p>This application is an example of how to produce sim_telarray config     files for a given array.</p>
 <p>All the input required has to be given as a yaml file by the command     line argument array_config.</p>
 <p>The required entries in the array_config file are:</p>
@@ -1548,8 +1669,8 @@ Ex.:</p>
 </pre></div>
 </div>
 </section>
-<section id="id43">
-<h3>Command line arguments<a class="headerlink" href="#id43" title="Link to this heading">#</a></h3>
+<section id="id45">
+<h3>Command line arguments<a class="headerlink" href="#id45" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>label (str, optional)</dt><dd><p>Label to identify the output files/directories.</p>
 </dd>
@@ -1559,8 +1680,8 @@ Ex.:</p>
 </dd>
 </dl>
 </section>
-<section id="id44">
-<h3>Example<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
+<section id="id46">
+<h3>Example<a class="headerlink" href="#id46" title="Link to this heading">#</a></h3>
 <p>North - Prod5, simple example</p>
 <p>Get the array configuration from DB:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name array_config_test.yml</span>
@@ -1579,8 +1700,8 @@ Ex.:</p>
 </section>
 <section id="module-production">
 <span id="production"></span><h2>production<a class="headerlink" href="#module-production" title="Link to this heading">#</a></h2>
-<section id="id45">
-<h3>Summary<a class="headerlink" href="#id45" title="Link to this heading">#</a></h3>
+<section id="id47">
+<h3>Summary<a class="headerlink" href="#id47" title="Link to this heading">#</a></h3>
 <p>This application perform array simulations.</p>
 <p>The simulations are split into two stages: showers and array.
 Shower simulations are performed with CORSIKA and array simulations     with sim_telarray. Note that either shower or array simulations are     submitted (so typically you first run shower simulations, and then the     array simulations).</p>
@@ -1590,8 +1711,8 @@ can be set to a different location via the option –data_directory.</p>
 <p>A configuration file is required.</p>
 <p>The workload management system used is given in the configuration file.     Allowed systems are qsub (using gridengine), condor_submit     (using HTcondor), and local (running the script locally).</p>
 </section>
-<section id="id46">
-<h3>Command line arguments<a class="headerlink" href="#id46" title="Link to this heading">#</a></h3>
+<section id="id48">
+<h3>Command line arguments<a class="headerlink" href="#id48" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>simulation_configuration (str, required)</dt><dd><p>Path to the simulation configuration file.</p>
 </dd>
@@ -1623,8 +1744,8 @@ This option should only be used in combination with the <code class="xref py py-
 </dd>
 </dl>
 </section>
-<section id="id47">
-<h3>Example<a class="headerlink" href="#id47" title="Link to this heading">#</a></h3>
+<section id="id49">
+<h3>Example<a class="headerlink" href="#id49" title="Link to this heading">#</a></h3>
 <p>Testing a mini-prod5 simulation.</p>
 <p>Get the configuration file from the DB</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name prod_config_test.yml</span>
@@ -1644,16 +1765,16 @@ This option should only be used in combination with the <code class="xref py py-
 </section>
 <section id="module-sim_showers_for_trigger_rates">
 <span id="sim-showers-for-trigger-rates"></span><h2>sim_showers_for_trigger_rates<a class="headerlink" href="#module-sim_showers_for_trigger_rates" title="Link to this heading">#</a></h2>
-<section id="id48">
-<h3>Summary<a class="headerlink" href="#id48" title="Link to this heading">#</a></h3>
+<section id="id50">
+<h3>Summary<a class="headerlink" href="#id50" title="Link to this heading">#</a></h3>
 <p>This application simulates showers to be used in trigger rate calculations.
 Arrays with one (1MST) or four telescopes (4LST) can be used, in case of     mono or stereo trigger configurations, respectively.</p>
 <p>Simulations are managed by the Simulator module.
 Each run is simulated in a job. Each job is submitted by using the submission     command from the global config settings. The config entry extra_commands can be used     to extra commands to be ran in each job, before the actual simulation.</p>
 <p>At the moment, the shower simulations are performed by CORSIKA, which requires     the zstd package. Please, make sure that the command to set your zstd path is     properly set by the extra_commands in the command line configuration.</p>
 </section>
-<section id="id49">
-<h3>Command line arguments<a class="headerlink" href="#id49" title="Link to this heading">#</a></h3>
+<section id="id51">
+<h3>Command line arguments<a class="headerlink" href="#id51" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>array (str, required)</dt><dd><p>Name of the array (1MST, 4LST …).</p>
 </dd>
@@ -1679,8 +1800,8 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </dd>
 </dl>
 </section>
-<section id="id50">
-<h3>Example<a class="headerlink" href="#id50" title="Link to this heading">#</a></h3>
+<section id="id52">
+<h3>Example<a class="headerlink" href="#id52" title="Link to this heading">#</a></h3>
 <p>Producing a set of proton showers for trigger rate simulations of LST.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary         proton --nruns 2 --nevents 10000 --test --submit_command local</span>
 </pre></div>
@@ -1695,8 +1816,8 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </section>
 <section id="module-simulate_prod">
 <span id="simulate-prod"></span><h2>simulate_prod<a class="headerlink" href="#module-simulate_prod" title="Link to this heading">#</a></h2>
-<section id="id51">
-<h3>Summary<a class="headerlink" href="#id51" title="Link to this heading">#</a></h3>
+<section id="id53">
+<h3>Summary<a class="headerlink" href="#id53" title="Link to this heading">#</a></h3>
 <p>This application is used to run simulations for productions (typically on the grid).
 It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
 with the provided “prod_tag” simulation configuration (e.g., Prod6)
@@ -1710,8 +1831,8 @@ The multipipe scripts will be produced as part of this script.</p>
 in simtools since it is meant to be executed on a grid node
 (distributed to it by the workload management system).</p>
 </section>
-<section id="id52">
-<h3>Command line arguments<a class="headerlink" href="#id52" title="Link to this heading">#</a></h3>
+<section id="id54">
+<h3>Command line arguments<a class="headerlink" href="#id54" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>production_config (str, Path, required)</dt><dd><p>Simulation configuration file
 (contains the default setup which can be overwritten by the command line options).</p>
@@ -1751,8 +1872,8 @@ The files are written to the <code class="xref py py-obj docutils literal notran
 </dd>
 </dl>
 </section>
-<section id="id53">
-<h3>Example<a class="headerlink" href="#id53" title="Link to this heading">#</a></h3>
+<section id="id55">
+<h3>Example<a class="headerlink" href="#id55" title="Link to this heading">#</a></h3>
 <p>Run the application:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod         --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5         --site north --primary gamma --azimuth_angle north --zenith_angle 20         --start_run 0 --run 1</span>
 </pre></div>
@@ -1783,14 +1904,14 @@ will be written to <code class="xref py py-obj docutils literal notranslate"><sp
 </section>
 <section id="module-submit_data_from_external">
 <span id="submit-data-from-external"></span><h2>submit_data_from_external<a class="headerlink" href="#module-submit_data_from_external" title="Link to this heading">#</a></h2>
-<section id="id54">
-<h3>Summary<a class="headerlink" href="#id54" title="Link to this heading">#</a></h3>
+<section id="id56">
+<h3>Summary<a class="headerlink" href="#id56" title="Link to this heading">#</a></h3>
 <p>Submit model parameter (value, table) through the command line.</p>
 <p>Input data and metadata is validated, and if necessary enriched
 and converted following a pre-described schema.</p>
 </section>
-<section id="id55">
-<h3>Command line arguments<a class="headerlink" href="#id55" title="Link to this heading">#</a></h3>
+<section id="id57">
+<h3>Command line arguments<a class="headerlink" href="#id57" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>input_meta (str, optional)</dt><dd><p>input meta data file (yml format)</p>
 </dd>
@@ -1800,8 +1921,8 @@ and converted following a pre-described schema.</p>
 </dd>
 </dl>
 </section>
-<section id="id56">
-<h3>Example<a class="headerlink" href="#id56" title="Link to this heading">#</a></h3>
+<section id="id58">
+<h3>Example<a class="headerlink" href="#id58" title="Link to this heading">#</a></h3>
 <p>Submit mirror measurements with associated metadata:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-data-from-external             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml             --input ./tests/resources/MLTdata-preproduction.ecsv             --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml             --output_file TEST-submit_data_from_external.ecsv</span>
 </pre></div>
@@ -1814,8 +1935,8 @@ and converted following a pre-described schema.</p>
 </section>
 <section id="module-tune_psf">
 <span id="tune-psf"></span><h2>tune_psf<a class="headerlink" href="#module-tune_psf" title="Link to this heading">#</a></h2>
-<section id="id57">
-<h3>Summary<a class="headerlink" href="#id57" title="Link to this heading">#</a></h3>
+<section id="id59">
+<h3>Summary<a class="headerlink" href="#id59" title="Link to this heading">#</a></h3>
 <p>This applications tunes the parameters mirror_reflection_random_angle,     mirror_align_random_horizontal and mirror_align_random_vertical using     cumulative PSF measurement.</p>
 <p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contain 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
@@ -1829,8 +1950,8 @@ and converted following a pre-described schema.</p>
 <a class="reference internal image-reference" href="_images/tune_psf.png" id="tune-psf-plot"><img alt="_images/tune_psf.png" id="tune-psf-plot" src="_images/tune_psf.png" style="width: 49%;" />
 </a>
 </section>
-<section id="id58">
-<h3>Command line arguments<a class="headerlink" href="#id58" title="Link to this heading">#</a></h3>
+<section id="id60">
+<h3>Command line arguments<a class="headerlink" href="#id60" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1854,8 +1975,8 @@ and converted following a pre-described schema.</p>
 </dd>
 </dl>
 </section>
-<section id="id59">
-<h3>Example<a class="headerlink" href="#id59" title="Link to this heading">#</a></h3>
+<section id="id61">
+<h3>Example<a class="headerlink" href="#id61" title="Link to this heading">#</a></h3>
 <p>LST-1 Prod5</p>
 <p>Runtime &lt; 3 min.</p>
 <p>Get PSF data from the DB:</p>
@@ -1892,8 +2013,8 @@ and converted following a pre-described schema.</p>
 </section>
 <section id="module-validate_camera_efficiency">
 <span id="validate-camera-efficiency"></span><h2>validate_camera_efficiency<a class="headerlink" href="#module-validate_camera_efficiency" title="Link to this heading">#</a></h2>
-<section id="id60">
-<h3>Summary<a class="headerlink" href="#id60" title="Link to this heading">#</a></h3>
+<section id="id62">
+<h3>Summary<a class="headerlink" href="#id62" title="Link to this heading">#</a></h3>
 <p>This application validate the camera efficiency by simulating it using     the testeff program provided by sim_telarray.</p>
 <p>The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function    of wavelength are plotted. See examples below.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" id="validate-camera-eff-plot" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png" style="width: 49%;" />
@@ -1901,8 +2022,8 @@ and converted following a pre-described schema.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png"><img alt="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" src="_images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png" style="width: 49%;" />
 </a>
 </section>
-<section id="id61">
-<h3>Command line arguments<a class="headerlink" href="#id61" title="Link to this heading">#</a></h3>
+<section id="id63">
+<h3>Command line arguments<a class="headerlink" href="#id63" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1926,8 +2047,8 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </dd>
 </dl>
 </section>
-<section id="id62">
-<h3>Example<a class="headerlink" href="#id62" title="Link to this heading">#</a></h3>
+<section id="id64">
+<h3>Example<a class="headerlink" href="#id64" title="Link to this heading">#</a></h3>
 <p>MST-NectarCam - Prod5</p>
 <p>Runtime &lt; 1 min.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-efficiency --site North             --azimuth_angle 0 --zenith_angle 20             --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt             --telescope MST-NectarCam-D --model_version prod5</span>
@@ -1942,15 +2063,15 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </section>
 <section id="module-validate_camera_fov">
 <span id="validate-camera-fov"></span><h2>validate_camera_fov<a class="headerlink" href="#module-validate_camera_fov" title="Link to this heading">#</a></h2>
-<section id="id63">
-<h3>Summary<a class="headerlink" href="#id63" title="Link to this heading">#</a></h3>
+<section id="id65">
+<h3>Summary<a class="headerlink" href="#id65" title="Link to this heading">#</a></h3>
 <p>This application calculate the camera FoV of the telescope requested and plot the camera     as seen for an observer facing the camera.</p>
 <p>An example of the camera plot can be found below.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot"><img alt="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot" src="_images/validate_camera_fov_North-LST-1_pixelLayout.png" style="width: 50%;" />
 </a>
 </section>
-<section id="id64">
-<h3>Command line arguments<a class="headerlink" href="#id64" title="Link to this heading">#</a></h3>
+<section id="id66">
+<h3>Command line arguments<a class="headerlink" href="#id66" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -1966,8 +2087,8 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </dd>
 </dl>
 </section>
-<section id="id65">
-<h3>Example<a class="headerlink" href="#id65" title="Link to this heading">#</a></h3>
+<section id="id67">
+<h3>Example<a class="headerlink" href="#id67" title="Link to this heading">#</a></h3>
 <p>LST - Prod5</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North             --telescope LST-1 --model_version prod5</span>
 </pre></div>
@@ -1981,13 +2102,13 @@ and the second is ignored (native sim_telarray behaviour).</p>
 </section>
 <section id="module-validate_file_using_schema">
 <span id="validate-file-using-schema"></span><h2>validate_file_using_schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading">#</a></h2>
-<section id="id66">
-<h3>Summary<a class="headerlink" href="#id66" title="Link to this heading">#</a></h3>
+<section id="id68">
+<h3>Summary<a class="headerlink" href="#id68" title="Link to this heading">#</a></h3>
 <p>Validate a file using a schema.
 Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</p>
 </section>
-<section id="id67">
-<h3>Command line arguments<a class="headerlink" href="#id67" title="Link to this heading">#</a></h3>
+<section id="id69">
+<h3>Command line arguments<a class="headerlink" href="#id69" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>file_name (str)</dt><dd><p>input file to be validated</p>
 </dd>
@@ -1997,15 +2118,15 @@ Input files can be metadata, schema, or data files in yaml, json, or ecsv format
 </dd>
 </dl>
 </section>
-<section id="id68">
-<h3>Raises<a class="headerlink" href="#id68" title="Link to this heading">#</a></h3>
+<section id="id70">
+<h3>Raises<a class="headerlink" href="#id70" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>FileNotFoundError</dt><dd><p>if file to be validated is not found</p>
 </dd>
 </dl>
 </section>
-<section id="id69">
-<h3>Example<a class="headerlink" href="#id69" title="Link to this heading">#</a></h3>
+<section id="id71">
+<h3>Example<a class="headerlink" href="#id71" title="Link to this heading">#</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema          --file_name tests/resources/MLTdata-preproduction.meta.yml          --schema simtools/schemas/metadata.metaschema.yml          --data_type metadata</span>
 </pre></div>
 </div>
@@ -2033,8 +2154,8 @@ the metadata section of the data dictionary.</p>
 </section>
 <section id="module-validate_optics">
 <span id="validate-optics"></span><h2>validate_optics<a class="headerlink" href="#module-validate_optics" title="Link to this heading">#</a></h2>
-<section id="id70">
-<h3>Summary<a class="headerlink" href="#id70" title="Link to this heading">#</a></h3>
+<section id="id72">
+<h3>Summary<a class="headerlink" href="#id72" title="Link to this heading">#</a></h3>
 <p>This application validates the optical model parameters through ray tracing simulations     of the whole telescope, assuming a point-like light source. The output includes PSF (D80),     effective mirror area and effective focal length as a function of the off-axis angle. 
 The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>Examples of the plots generated by this application are shown below. On the top, the D80     vs off-axis is shown in cm (left) and deg (right). On the bottom, the effective mirror     area (left) and the effective focal length (right) vs off-axis angle are shown.</p>
@@ -2047,8 +2168,8 @@ The telescope zenith angle and the source distance can be set by command line ar
 <a class="reference internal image-reference" href="_images/validate_optics_North-LST-1_eff_flen.png"><img alt="_images/validate_optics_North-LST-1_eff_flen.png" src="_images/validate_optics_North-LST-1_eff_flen.png" style="width: 49%;" />
 </a>
 </section>
-<section id="id71">
-<h3>Command line arguments<a class="headerlink" href="#id71" title="Link to this heading">#</a></h3>
+<section id="id73">
+<h3>Command line arguments<a class="headerlink" href="#id73" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
@@ -2072,8 +2193,8 @@ The telescope zenith angle and the source distance can be set by command line ar
 </dd>
 </dl>
 </section>
-<section id="id72">
-<h3>Example<a class="headerlink" href="#id72" title="Link to this heading">#</a></h3>
+<section id="id74">
+<h3>Example<a class="headerlink" href="#id74" title="Link to this heading">#</a></h3>
 <p>LST-1 Prod5</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0         --zenith 20 --src_distance 10 --test</span>
 </pre></div>
@@ -2206,94 +2327,101 @@ The telescope zenith angle and the source distance can be set by command line ar
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-get_parameter">get_parameter</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Raises</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Raises</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-light_emission">light_emission</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Command Line Arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-make_regular_arrays">make_regular_arrays</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-print_array_elements">print_array_elements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Description</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Description</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-produce_array_config">produce_array_config</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production">production</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-sim_showers_for_trigger_rates">sim_showers_for_trigger_rates</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simulate_prod">simulate_prod</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-submit_data_from_external">submit_data_from_external</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id56">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id56">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id57">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id58">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-tune_psf">tune_psf</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id57">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id58">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id59">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id59">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tune_psf.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_camera_efficiency">validate_camera_efficiency</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id64">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_camera_fov">validate_camera_fov</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id64">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_file_using_schema">validate_file_using_schema</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Raises</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id69">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id69">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id70">Raises</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-validate_optics">validate_optics</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id70">Summary</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Command line arguments</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id73">Command line arguments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id74">Example</a></li>
 </ul>
 </li>
 </ul>
