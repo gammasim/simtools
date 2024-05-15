@@ -33,10 +33,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Pre-commit
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: --files $(git diff origin/main --name-only)
 
       - name: Check for non-ASCII characters
         run: |
@@ -90,6 +86,11 @@ jobs:
         run: |
           pip install -e '.[tests,dev,doc]'
           pip install pylint
+
+      - name: Pre-commit
+        uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --all-files
 
       - name: pylint
         run: |
