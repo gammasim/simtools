@@ -34,6 +34,9 @@ class ModelParameter:
         Site name (e.g., South or North).
     telescope_name: str
         Telescope name (e.g., LSTN-01, LSTN-design).
+    collection: str
+        instrument class (e.g. telescopes, calibration_devices)
+        as stored under collection in the DB.
     mongo_db_config: dict
         MongoDB configuration.
     label: str
@@ -47,6 +50,7 @@ class ModelParameter:
         model_version,
         site=None,
         telescope_name=None,
+        collection="telescopes",
         db=None,
         label=None,
     ):
@@ -60,6 +64,7 @@ class ModelParameter:
         self._parameters = {}
         self._config_parameters = {}
         self._derived = None
+        self.collection = collection
         self.label = label
         self.model_version = names.validate_model_version_name(model_version)
         self.site = names.validate_site_name(site) if site is not None else None
@@ -74,7 +79,6 @@ class ModelParameter:
         )
         self._config_file_directory = None
         self._config_file_path = None
-
         self._load_parameters_from_db()
 
         self.simtel_config_writer = None
@@ -303,15 +307,17 @@ class ModelParameter:
 
         if self.name is not None:
             self._logger.debug(
-                f"Reading telescope parameters from DB "
-                f"({self.name}, {self.model_version}, {self.site})"
+                f"Reading array element parameters from DB "
+                f"({self.name}, {self.model_version}, {self.site}, {self.collection})"
             )
             self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.model_version, only_applicable=True
+                self.site, self.name, self.model_version, self.collection, only_applicable=True
             )
             try:
                 self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
-                    self.site, self.name, self.model_version
+                    self.site,
+                    self.name,
+                    self.model_version,
                 )
             except ValueError:
                 self._logger.warning(

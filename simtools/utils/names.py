@@ -44,7 +44,7 @@ site_names = {
     "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
 }
 
-model_version_names = {
+all_model_version_names = {
     "2015-07-21": [""],
     "2015-10-20-p1": [""],
     "prod4-v0.0": [""],
@@ -150,7 +150,7 @@ def validate_model_version_name(name):
     str
         Validated name.
     """
-    return _validate_name(name, model_version_names)
+    return _validate_name(name, all_model_version_names)
 
 
 def validate_site_name(name):
