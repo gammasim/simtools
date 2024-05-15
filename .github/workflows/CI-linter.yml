@@ -89,7 +89,7 @@ jobs:
 
       - name: Pre-commit
         run: |
-          pre-commit run --all-files
+          pre-commit run --all-files --verbose
 
       - name: pylint
         run: |
