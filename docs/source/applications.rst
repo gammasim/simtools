@@ -105,6 +105,11 @@ get_parameter
 .. automodule:: get_parameter
    :members:
 
+light_emission
+==============
+
+.. automodule:: light_emission
+   :members:
 
 make_regular_arrays
 ===================

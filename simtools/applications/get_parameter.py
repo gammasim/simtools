@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
     Get a parameter entry from DB for a specific telescope or a site.
     The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
@@ -87,7 +85,10 @@ def main():
         )
     elif args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
-            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+            args_dict["site"],
+            args_dict["telescope"],
+            args_dict["model_version"],
+            collection="telescopes",
         )
     else:
         pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])

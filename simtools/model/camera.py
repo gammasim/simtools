@@ -254,7 +254,6 @@ class Camera:
         float
             The camera fill factor.
         """
-
         if self.pixels["pixel_spacing"] == 9999:
             points = np.array([self.pixels["x"], self.pixels["y"]]).T
             pixel_distances = distance.cdist(points, points, "euclidean")
