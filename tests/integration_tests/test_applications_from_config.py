@@ -351,7 +351,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         model_version_requested = request.config.getoption("--model_version")
         if "MODEL_VERSION_USE_CURRENT" in config["CONFIGURATION"]:
             model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
-            if model_version_requested == model_version_config:
+            if model_version_requested != model_version_config:
                 return True
 
         config_file, config_string, config_file_model_version = prepare_configuration(
