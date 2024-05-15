@@ -117,6 +117,7 @@ def load_data(data_file):
     return data
 
 
+# pylint: disable=too-many-statements
 def main():
     config = configurator.Configurator(
         description=(
@@ -237,6 +238,7 @@ def main():
 
     # Loading measured cumulative PSF
     data_to_plot = OrderedDict()
+    radius = None
     if args_dict["data"] is not None:
         data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
         data_to_plot["measured"] = load_data(data_file)
@@ -259,7 +261,10 @@ def main():
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
-        tel_model.change_multiple_parameters(**pars)
+        if pars is not None:
+            tel_model.change_multiple_parameters(**pars)
+        else:
+            raise ValueError("No best parameters found")
 
         ray = RayTracing.from_kwargs(
             telescope_model=tel_model,
@@ -313,15 +318,14 @@ def main():
     # Running the tuning for all parameters in all_parameters
     # and storing the best parameters in best_pars
     min_rmsd = 100
+    best_pars = None
     for pars in all_parameters:
         _, rmsd = run_pars(pars, plot=args_dict["plot_all"])
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars
-
     # Rerunning and plotting the best pars
     run_pars(best_pars, plot=True)
-
     plt.close()
     pdf_pages.close()
 
