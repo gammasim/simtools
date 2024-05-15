@@ -254,7 +254,7 @@ def site_model_north(db_config, model_version):
 def telescope_model_lst(db_config, io_handler, model_version):
     telescope_model_LST = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
@@ -266,7 +266,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
 def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
         site="South",
-        telescope_model_name="MSTS-design",
+        telescope_name="MSTS-design",
         model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
@@ -279,7 +279,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
 def telescope_model_sst(db_config, io_handler, model_version):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SSTS-design",
+        telescope_name="SSTS-design",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
@@ -292,7 +292,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
 def telescope_model_sst_prod5(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SSTS-design",
+        telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
