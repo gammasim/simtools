@@ -741,6 +741,7 @@ class CorsikaHistograms:
 
         x_bin_edges, y_bin_edges, hist_values = [], [], []
         for i_telescope in range(num_telescopes_to_fill):
+            mini_hist = None
             if label == "counts":
                 mini_hist = self.hist_position[i_telescope][:, :, sum]
                 hist_values.append(mini_hist.view().T)
@@ -874,6 +875,7 @@ class CorsikaHistograms:
 
         x_bin_edges_list, hist_1d_list = [], []
         for i_hist, _ in enumerate(self.hist_position):
+            mini_hist = None
             if label == "wavelength":
                 mini_hist = self.hist_position[i_hist][sum, sum, :]
             elif label == "time":

@@ -154,7 +154,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     matplotlib.use("Agg")
-
+    telescope_file = None
     if args_dict["telescope_list"] is not None:
         logger.info("Plotting array from telescope list file(s).")
         telescope_file = args_dict["telescope_list"]
