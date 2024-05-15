@@ -1,29 +1,29 @@
 #!/usr/bin/python3
 
 """
-Summary
--------
-This application adds a new parameter / value to a collection in the DB using a json
-file as input.
+    Summary
+    -------
+    This application adds a new parameter / value to a collection in the DB using a json
+    file as input.
 
-Command line arguments
-----------------------
-file_name (str, required)
-Name of the file to upload including the full path.
-db_collection (str, required)
-The DB collection to which to add the file.
-db (str)
-The DB to insert the files to. \
+    Command line arguments
+    ----------------------
+    file_name (str, required)
+        Name of the file to upload including the full path.
+    db_collection (str, required)
+        The DB collection to which to add the file.
+    db (str)
+        The DB to insert the files to. \
         The choices are either the default CTA simulation DB or a sandbox for testing.
 
-Example
--------
+    Example
+    -------
 
-Upload a file to sites collection:
+    Upload a file to sites collection:
 
-.. code-block:: console
+    .. code-block:: console
 
-simtools-add-value-from-json-to-db \
+        simtools-add-value-from-json-to-db \
             --file_name new_value.json --db_collection sites
 
 
