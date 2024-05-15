@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
   TEST_NAME: gamma_20_deg_pack_for_grid
   CONFIGURATION:
-    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test.yml
+    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
     MODEL_VERSION: prod6
     SITE: North
     PRIMARY: gamma
@@ -14,3 +14,8 @@ CTA_SIMPIPE:
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.log_hist.tar.gz
+    - OUTPUT_FILE: |
+        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.simtel.zst

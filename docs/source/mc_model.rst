@@ -38,12 +38,29 @@ mirrors
    :members:
 
 
+model_parameter
+---------------
+
+.. _modelparameters:
+
+.. automodule:: model.model_parameter
+   :members:
+
+
 model utilities
 ---------------
 
 .. _model_utils:
 
 .. automodule:: model.model_utils
+   :members:
+
+site_model
+----------
+
+.. _site_model:
+
+.. automodule:: model.site_model
    :members:
 
 telescope_model

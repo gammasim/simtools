@@ -20,14 +20,12 @@ license = { file="LICENSE" }
 authors = [
   { name="simtools developers", email="simtools-developer@desy.de" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 classifiers = [
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Astronomy",
@@ -59,7 +57,7 @@ dependencies = [
 "doc" = [
   "numpydoc",
   "sphinx",
-  "sphinx_rtd_theme",
+  "sphinx-book-theme",
 ]
 "tests" = [
   "pytest",
@@ -128,6 +126,8 @@ disable = [
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
 generated-members = ["gist_heat_r"]
+# see https://stackoverflow.com/questions/49846940/incorrect-pylint-errors-on-astropy-in-vscode
+ignored-classes=["astropy.units"]
 
 # Maximum number of characters on a single line.
 max-line-length = 100

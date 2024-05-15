@@ -2,6 +2,7 @@
 
 import json
 import logging
+from importlib.resources import files
 
 import astropy.units as u
 import jsonschema
@@ -97,11 +98,8 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
         assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
-    schema_file = (
-        "https://gitlab.cta-observatory.org/cta-science/simulations/"
-        "simulation-model/model_parameters/-/raw/main/"
-        "schema/reference_point_altitude.schema.yml"
-    )
+    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
+    schema_file = str(schema_dir) + "/reference_point_altitude.schema.yml"
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
             "tests/resources/reference_point_altitude.json",

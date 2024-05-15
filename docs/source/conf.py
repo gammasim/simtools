@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-#
-# simtools configuration for sphinx
-# This file does only contain a selection of the most common options. For a
-#
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
-
+# Configuration files for the Sphinx documentation build for simtools.
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -60,7 +53,7 @@ def get_python_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
-copyright = "2023, gammasim-tools, simtools developers"
+copyright = "2024, gammasim-tools, simtools developers"
 author = get_authors_from_citation_file()
 rst_epilog = f"""
 .. |author| replace:: {author}
@@ -110,7 +103,6 @@ autodoc_mock_imports = [
 ]
 
 # Change the look of autodoc classes
-# napoleon_use_ivar = True
 numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -118,7 +110,6 @@ templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
 source_suffix = [".rst"]
 
 # The master toctree document.
@@ -145,9 +136,7 @@ default_role = "py:obj"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = "sphinx_rtd_theme"
-# html_theme = "bizstyle"
-html_theme = "alabaster"
+html_theme = "sphinx_book_theme"
 
 html_title = f"{project} v{version} Manual"
 
@@ -155,44 +144,38 @@ html_title = f"{project} v{version} Manual"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "description": f"Simulation Tools for CTA v{version}",
-    "github_user": "gammasim",
-    "github_repo": "simtools",
-    "fixed_sidebar": True,
-    "show_powered_by": False,
+    "path_to_docs": "docs",
+    "repository_url": "https://github.com/gammasim/simtools",
+    "repository_branch": "main",
+    "use_issues_button": True,
+    "show_toc_level": 1,
+    "announcement": (
+        "simtools is under rapid development with continuous changes. "
+        "Please contact the developers before using it."
+    ),
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/gammasim/simtools",
+            "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/gammasimtools/",
+            "icon": "https://badge.fury.io/py/gammasimtools.svg",
+            "type": "url",
+        },
+    ],
+    "home_page_in_toc": True,
+    "use_source_button": True,
+    "use_download_button": True,
+    "navigation_with_keys": False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
-
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-        "sourcelink.html",
-    ]
-}
-html_css_files = ["simtools.css"]
-html_file_suffix = ".html"
-
-# -- Options for HTMLHelp output ---------------------------------------------
-# "<project> v<release> documentation".
-html_title = f"{project} v{release}"
-
-html_show_copyright = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "simtoolsdoc"

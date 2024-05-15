@@ -7,3 +7,5 @@ CTA_SIMPIPE:
     PDF: true
     OUTPUT_PATH: simtools-tests
     TEST: true
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
