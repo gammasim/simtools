@@ -6,7 +6,6 @@ from astropy.table import QTable
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
-from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -66,18 +65,10 @@ class ArrayLayout:
 
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = mongo_db_config
-        # TODO - consider the usage of db_handler:
-        # this is the only place in simtools where the db_handler is called
-        # from outside the model_parameter module
-        self.db = (
-            db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
-            if mongo_db_config is not None
-            else None
-        )
         self.model_version = model_version
         self.label = label
         self.name = name
+        self.mongo_db_config = mongo_db_config
         self.site = None if site is None else names.validate_site_name(site)
         self.site_model = None
         self.io_handler = io_handler.IOHandler()
@@ -87,7 +78,6 @@ class ArrayLayout:
         self._corsika_observation_level = None
         self._reference_position_dict = {}
         self._array_center = None
-        self._auxiliary_parameters = {}
 
         self._initialize_array_layout(
             telescope_list_file=telescope_list_file,
@@ -435,29 +425,21 @@ class ArrayLayout:
         """
 
         if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
-            _telescope_model_name = self.db.get_telescope_db_name(
-                telescope_name=telescope.name, model_version=self.model_version
-            )
             self._logger.debug(
                 f"Reading auxiliary telescope parameters for {telescope.name}"
-                f" (telescope model {_telescope_model_name}, version {self.model_version})"
+                f" (model version {self.model_version})"
             )
-            if _telescope_model_name not in self._auxiliary_parameters:
-                tel_model = TelescopeModel(
-                    site=self.site,
-                    telescope_model_name=_telescope_model_name,
-                    model_version=self.model_version,
-                    mongo_db_config=self.mongo_db_config,
-                    label=self.label,
+            tel_model = TelescopeModel(
+                site=self.site,
+                telescope_name=telescope.name,
+                model_version=self.model_version,
+                mongo_db_config=self.mongo_db_config,
+                label=self.label,
+            )
+            for para in ("telescope_axis_height", "telescope_sphere_radius"):
+                telescope.set_auxiliary_parameter(
+                    para, tel_model.get_parameter_value_with_unit(para)
                 )
-                self._auxiliary_parameters[_telescope_model_name] = {}
-                for para in ("telescope_axis_height", "telescope_sphere_radius"):
-                    self._auxiliary_parameters[_telescope_model_name][para] = (
-                        tel_model.get_parameter_value_with_unit(para)
-                    )
-
-            for key, value in self._auxiliary_parameters[_telescope_model_name].items():
-                telescope.set_auxiliary_parameter(key, value)
 
     def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
         """
