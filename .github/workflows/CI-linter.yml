@@ -87,13 +87,13 @@ jobs:
           pip install -e '.[tests,dev,doc]'
           pip install pylint
 
-      - name: Pre-commit
-        run: |
-          pre-commit run --all-files --verbose
-
       - name: pylint
         run: |
           pylint "$(git ls-files 'simtools/*.py')"
+
+      - name: Pre-commit
+        run: |
+          pre-commit run --all-files --verbose
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v6
