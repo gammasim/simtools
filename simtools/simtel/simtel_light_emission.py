@@ -463,7 +463,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             Command to create the postscript file
         """
-        print("['integration_window'][0]", kwargs)
+
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
 
@@ -471,7 +471,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4"
         command += " --integration-window "
-        command += f"{kwargs['integration_window'][0]} {kwargs['integration_window'][1]}"
+        command += f"{kwargs['integration_window'][0]},{kwargs['integration_window'][1]}"
         command += f" -r {kwargs['level']}"
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
