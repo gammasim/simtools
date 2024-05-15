@@ -38,7 +38,7 @@ jobs:
 
       - name: Set PATH
         run: |
-          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> $GITHUB_ENV
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
       - name: Run integration tests
         shell: bash -l {0}
