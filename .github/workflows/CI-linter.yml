@@ -34,7 +34,7 @@ jobs:
           python-version: "3.11"
 
       - name: Pre-commit
-        uses: pre-commit/action@v3
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: --files $(git diff origin/main --name-only)
 
@@ -94,7 +94,6 @@ jobs:
       - name: pylint
         run: |
           pylint $(git ls-files 'simtools/*.py')
-
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v6
