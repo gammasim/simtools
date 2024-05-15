@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>astropy.units &#8212; simtools v0.1.dev1+g7bed4b3 Manual</title>
+    <title>astropy.units &#8212; simtools v0.1.dev1+gba0820f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=92d5c944"></script>
+    <script src="../../_static/documentation_options.js?v=a9951ea6"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7bed4b3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -344,45 +344,57 @@ document.write(`
 <span class="sd">code under a BSD license.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="c1"># Import order matters here -- circular dependencies abound!</span>
-<span class="c1"># Lots of things to import - go from more basic to advanced, so that</span>
-<span class="c1"># whatever advanced ones need generally has been imported already;</span>
-<span class="c1"># this also makes it easier to understand where most time is spent</span>
-<span class="c1"># (e.g., using python -X importtime).</span>
-
-<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">set_enabled_units</span>
-
-<span class="c1"># isort: off</span>
-<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.quantity</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">astrophys</span><span class="p">,</span> <span class="n">cgs</span><span class="p">,</span> <span class="n">misc</span><span class="p">,</span> <span class="n">photometric</span><span class="p">,</span> <span class="n">si</span>
-<span class="kn">from</span> <span class="nn">.function</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">function_units</span>
-
-<span class="kn">from</span> <span class="nn">.si</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">astrophys</span><span class="p">,</span>
+    <span class="n">cgs</span><span class="p">,</span>
+    <span class="n">core</span><span class="p">,</span>
+    <span class="n">decorators</span><span class="p">,</span>
+    <span class="n">misc</span><span class="p">,</span>
+    <span class="n">photometric</span><span class="p">,</span>
+    <span class="n">physical</span><span class="p">,</span>
+    <span class="n">quantity</span><span class="p">,</span>
+    <span class="n">si</span><span class="p">,</span>
+    <span class="n">structured</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.astrophys</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.photometric</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.cgs</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.physical</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.function.units</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="kn">from</span> <span class="nn">.equivalencies</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="kn">from</span> <span class="nn">.function.core</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.function.logarithmic</span> <span class="kn">import</span> <span class="o">*</span>
-
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">set_enabled_units</span>
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.photometric</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.physical</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.quantity</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.si</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.structured</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="c1"># isort: on</span>
+<span class="c1"># Import order matters here -- circular dependencies abound!</span>
+<span class="c1"># isort: split</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">equivalencies</span><span class="p">,</span> <span class="n">function</span>
+<span class="kn">from</span> <span class="nn">.equivalencies</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.function</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="k">del</span> <span class="n">bases</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">core</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">quantity</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">decorators</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">structured</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">si</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">cgs</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">astrophys</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">physical</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">misc</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">photometric</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">structured</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">equivalencies</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">function</span><span class="o">.</span><span class="n">__all__</span>
+<span class="c1"># We sort `__all__` for the docs. We use `globals` to avoid confusing any static</span>
+<span class="c1"># analysis tools.</span>
+<span class="nb">globals</span><span class="p">()[</span><span class="s2">&quot;__all__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
 <span class="c1"># Enable the set of default units.  This notably does *not* include</span>
 <span class="c1"># Imperial units.</span>
-
-<span class="n">set_enabled_units</span><span class="p">([</span><span class="n">si</span><span class="p">,</span> <span class="n">cgs</span><span class="p">,</span> <span class="n">astrophys</span><span class="p">,</span> <span class="n">function_units</span><span class="p">,</span> <span class="n">misc</span><span class="p">,</span> <span class="n">photometric</span><span class="p">])</span>
+<span class="n">set_enabled_units</span><span class="p">([</span><span class="n">si</span><span class="p">,</span> <span class="n">cgs</span><span class="p">,</span> <span class="n">astrophys</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">misc</span><span class="p">,</span> <span class="n">photometric</span><span class="p">])</span>
 </pre></div>
 
                 </article>

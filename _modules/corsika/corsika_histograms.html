@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+g7bed4b3 Manual</title>
+    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+gba0820f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=92d5c944"></script>
+    <script src="../../_static/documentation_options.js?v=a9951ea6"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7bed4b3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -1089,6 +1089,7 @@ document.write(`
 
         <span class="n">x_bin_edges</span><span class="p">,</span> <span class="n">y_bin_edges</span><span class="p">,</span> <span class="n">hist_values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i_telescope</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_telescopes_to_fill</span><span class="p">):</span>
+            <span class="n">mini_hist</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;counts&quot;</span><span class="p">:</span>
                 <span class="n">mini_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_position</span><span class="p">[</span><span class="n">i_telescope</span><span class="p">][:,</span> <span class="p">:,</span> <span class="nb">sum</span><span class="p">]</span>
                 <span class="n">hist_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mini_hist</span><span class="o">.</span><span class="n">view</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
@@ -1237,6 +1238,7 @@ document.write(`
 
         <span class="n">x_bin_edges_list</span><span class="p">,</span> <span class="n">hist_1d_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i_hist</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hist_position</span><span class="p">):</span>
+            <span class="n">mini_hist</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;wavelength&quot;</span><span class="p">:</span>
                 <span class="n">mini_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_position</span><span class="p">[</span><span class="n">i_hist</span><span class="p">][</span><span class="nb">sum</span><span class="p">,</span> <span class="nb">sum</span><span class="p">,</span> <span class="p">:]</span>
             <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span>

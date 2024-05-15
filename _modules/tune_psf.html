@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tune_psf &#8212; simtools v0.1.dev1+g7bed4b3 Manual</title>
+    <title>tune_psf &#8212; simtools v0.1.dev1+gba0820f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=92d5c944"></script>
+    <script src="../_static/documentation_options.js?v=a9951ea6"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7bed4b3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -454,6 +454,7 @@ document.write(`
 
 
 
+<span class="c1"># pylint: disable=too-many-statements</span>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
@@ -574,6 +575,7 @@ document.write(`
 
     <span class="c1"># Loading measured cumulative PSF</span>
     <span class="n">data_to_plot</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">data_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_path&quot;</span><span class="p">])</span>
         <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span>
@@ -596,7 +598,10 @@ document.write(`
 <span class="sd">        Runs the tuning for one set of parameters, add a plot to the pdfPages</span>
 <span class="sd">        (if plot=True) and returns the RMSD and the D80.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No best parameters found&quot;</span><span class="p">)</span>
 
         <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="o">.</span><span class="n">from_kwargs</span><span class="p">(</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
@@ -650,15 +655,14 @@ document.write(`
     <span class="c1"># Running the tuning for all parameters in all_parameters</span>
     <span class="c1"># and storing the best parameters in best_pars</span>
     <span class="n">min_rmsd</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">best_pars</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="n">all_parameters</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">rmsd</span> <span class="o">=</span> <span class="n">run_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_all&quot;</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">rmsd</span> <span class="o">&lt;</span> <span class="n">min_rmsd</span><span class="p">:</span>
             <span class="n">min_rmsd</span> <span class="o">=</span> <span class="n">rmsd</span>
             <span class="n">best_pars</span> <span class="o">=</span> <span class="n">pars</span>
-
     <span class="c1"># Rerunning and plotting the best pars</span>
     <span class="n">run_pars</span><span class="p">(</span><span class="n">best_pars</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 

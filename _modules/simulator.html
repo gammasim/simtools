@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g7bed4b3 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+gba0820f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=92d5c944"></script>
+    <script src="../_static/documentation_options.js?v=a9951ea6"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7bed4b3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gba0820f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -710,6 +710,7 @@ document.write(`
             <span class="s2">&quot;corsika_parameters_file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters_file</span><span class="p">,</span>
             <span class="s2">&quot;corsika_config_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="p">,</span>
         <span class="p">}</span>
+        <span class="n">simtel_args</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
             <span class="n">simtel_args</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;array_model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="p">,</span>
@@ -720,6 +721,7 @@ document.write(`
                     <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">azimuth_angle</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
                 <span class="p">},</span>
             <span class="p">}</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">==</span> <span class="s2">&quot;corsika&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_corsika_runner</span><span class="p">(</span><span class="n">common_args</span> <span class="o">|</span> <span class="n">corsika_args</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">==</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span>
