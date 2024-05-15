@@ -1142,7 +1142,7 @@ class DatabaseHandler:
 
         return _all_versions
 
-    def get_all_available_array_elements(self, model_version, collection_name, db_name=None):
+    def get_all_available_array_elements(self, model_version, collection, db_name=None):
         """
         Get all available array element names in the specified collection in the DB.
 
@@ -1152,7 +1152,7 @@ class DatabaseHandler:
             the name of the DB
         model_version: str
             Which version to get the array elements of
-        collection_name: str
+        collection: str
             Which collection to get the array elements from:
             i.e. telescopes, calibration_devices
         Returns
@@ -1162,7 +1162,7 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = DatabaseHandler.db_client[db_name][collection]
 
         query = {
             "version": self._convert_version_to_tagged(
@@ -1172,9 +1172,7 @@ class DatabaseHandler:
         try:
             _all_available_array_elements = collection.find(query).distinct("instrument")
         except ValueError as exc:
-            raise ValueError(
-                f"Query for collection name {collection_name} not implemented."
-            ) from exc
+            raise ValueError(f"Query for collection name {collection} not implemented.") from exc
 
         return _all_available_array_elements
 

@@ -71,7 +71,9 @@ class ModelParameter:
         self.name = (
             names.validate_telescope_name(
                 self.db.get_telescope_db_name(
-                    telescope_name=telescope_name, model_version=self.model_version
+                    telescope_name=telescope_name,
+                    model_version=self.model_version,
+                    collection=self.collection,
                 )
             )
             if telescope_name is not None
