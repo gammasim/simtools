@@ -29,7 +29,7 @@ repos:
         entry: pylint
         language: system
         types: [python]
-        exclude: ^tests/|^simtools/applications/db_development_tools/
+        exclude: ^tests/|^simtools/applications/db_development_tools/|docs/source/conf.py
         args:
           [
             "-rn",  # Only display messages
