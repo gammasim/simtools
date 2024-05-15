@@ -117,6 +117,7 @@ def load_data(data_file):
     return data
 
 
+# pylint: disable=too-many-statements
 def main():
     config = configurator.Configurator(
         description=(
@@ -237,6 +238,7 @@ def main():
 
     # Loading measured cumulative PSF
     data_to_plot = OrderedDict()
+    radius = None
     if args_dict["data"] is not None:
         data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
         data_to_plot["measured"] = load_data(data_file)
@@ -276,8 +278,11 @@ def main():
         im = ray.images()[0]
         d80 = im.get_psf()
 
-        # Simulated cumulative PSF
-        data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
+        if radius is not None:
+            # Simulated cumulative PSF
+            data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
+        else:
+            raise ValueError("Radius data is not available.")
 
         rmsd = calculate_rmsd(
             data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
@@ -313,22 +318,24 @@ def main():
     # Running the tuning for all parameters in all_parameters
     # and storing the best parameters in best_pars
     min_rmsd = 100
+    best_pars = None
     for pars in all_parameters:
         _, rmsd = run_pars(pars, plot=args_dict["plot_all"])
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars
+    if best_pars is not None:
+        # Rerunning and plotting the best pars
+        run_pars(best_pars, plot=True)
+        plt.close()
+        pdf_pages.close()
 
-    # Rerunning and plotting the best pars
-    run_pars(best_pars, plot=True)
-
-    plt.close()
-    pdf_pages.close()
-
-    # Printing the results
-    print("Best parameters:")
-    for par, value in best_pars.items():
-        print(f"{par} = {value}")
+        # Printing the results
+        print("Best parameters:")
+        for par, value in best_pars.items():
+            print(f"{par} = {value}")
+    else:
+        raise ValueError("No best parameters found")
 
 
 if __name__ == "__main__":
