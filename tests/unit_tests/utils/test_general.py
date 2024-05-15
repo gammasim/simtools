@@ -782,7 +782,6 @@ def test_user_confirm_no(mock_input):
 
 
 def test_validate_data_type():
-
     test_cases = [
         # Test exact data type match
         ("int", 5, None, False, True),
@@ -791,11 +790,11 @@ def test_validate_data_type():
         ("str", "hello", None, False, True),
         ("bool", True, None, False, True),
         ("bool", 1, None, False, False),
-        ("int", None, type(5), False, True),
-        ("float", None, type(3.14), False, True),
-        ("str", None, type("hello"), False, True),
-        ("bool", None, type(True), False, True),
-        ("bool", None, type(True), False, True),
+        ("int", None, int, False, True),
+        ("float", None, float, False, True),
+        ("str", None, str, False, True),
+        ("bool", None, bool, False, True),
+        ("bool", None, bool, False, True),
         # Test allow_subtypes=True
         ("float", 5, None, True, True),
         ("float", [1, 2, 3], None, True, True),
@@ -827,7 +826,6 @@ def test_validate_data_type():
 
 
 def test_convert_list_to_string():
-
     assert gen.convert_list_to_string(None) is None
     assert gen.convert_list_to_string("a") == "a"
     assert gen.convert_list_to_string(5) == 5
@@ -837,7 +835,6 @@ def test_convert_list_to_string():
 
 
 def test_convert_string_to_list():
-
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
     assert pytest.approx(t_1[1]) == 2.0

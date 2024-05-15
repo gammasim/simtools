@@ -89,7 +89,6 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
     namedtuple:
         Containing the validated config data entries.
     """
-
     # Dict to be filled and returned
     out_data = {}
 
@@ -169,7 +168,6 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         validated and converted input data
 
     """
-
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     # Checking if values have unit and raising error, if so.
@@ -208,7 +206,6 @@ def _check_value_entry_length(value, par_name, par_info):
         state of input list
 
     """
-
     # Checking the entry length
     value_length = len(value)
     _logger.debug(f"Value len of {par_name}: {value_length}")
@@ -246,7 +243,6 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         validated and converted input data
 
     """
-
     value_length, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     par_unit = copy_as_list(par_info["unit"])
@@ -296,7 +292,6 @@ def _validate_and_convert_value(par_name, par_info, value_in):
     Validate input user parameter and convert it to the right units, if needed.
     Returns the validated arguments in a list.
     """
-
     if isinstance(value_in, dict):
         value = [d for (k, d) in value_in.items()]
         value_keys = [k for (k, d) in value_in.items()]
@@ -349,7 +344,6 @@ def is_url(url):
         True if url is a valid URL.
 
     """
-
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
@@ -380,7 +374,6 @@ def collect_data_from_http(url):
         If downloading the yaml file fails.
 
     """
-
     try:
         with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
@@ -429,7 +422,6 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     data: dict or list
         Data as dict or list.
     """
-
     if file_name is not None:
         if in_dict is not None:
             _logger.warning("Both in_dict and file_name were given - file_name will be used")
@@ -471,6 +463,7 @@ def collect_kwargs(label, in_kwargs):
         Label to be collected in kwargs.
     in_kwargs: dict
         kwargs.
+
     Returns
     -------
     dict
@@ -577,7 +570,6 @@ def get_log_level_from_user(log_level):
     logging.LEVEL
         The requested logging level to be used as input to logging.setLevel().
     """
-
     possible_levels = {
         "info": logging.INFO,
         "debug": logging.DEBUG,
@@ -695,7 +687,6 @@ def find_file(name, loc):
     FileNotFoundError
         If the desired file is not found.
     """
-
     all_locations = copy.copy(loc)
     all_locations = [all_locations] if not isinstance(all_locations, list) else all_locations
 
@@ -750,7 +741,6 @@ def get_log_excerpt(log_file, n_last_lines=30):
     str
         Excerpt from log file with header/footer
     """
-
     return (
         "\n\nRuntime error - See below the relevant part of the log/err file.\n\n"
         f"{log_file}\n"
@@ -787,7 +777,6 @@ def change_dict_keys_case(data_dict, lower_case=True):
     lower_case: bool
         Change keys to lower (upper) case if True (False).
     """
-
     _return_dict = {}
     try:
         for key in data_dict.keys():
@@ -861,12 +850,12 @@ def sort_arrays(*args):
     ----------
     *args
         Arguments to be sorted.
+
     Returns
     -------
     list
         Sorted args.
     """
-
     if len(args) == 0:
         return args
     order_array = copy.copy(args[0])
@@ -917,7 +906,6 @@ def get_value_unit_type(value, unit_str=None):
         Value, unit in string representation (to_string())),
         and string representation of the type of the value.
     """
-
     base_unit = None
     if isinstance(value, (str, u.Quantity)):
         try:
@@ -1102,7 +1090,6 @@ def convert_string_to_list(data_string, is_float=True):
         Return data_string if conversion fails.
 
     """
-
     try:
         if is_float:
             return [float(v) for v in data_string.split()]

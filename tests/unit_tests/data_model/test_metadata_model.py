@@ -121,7 +121,6 @@ def test_resolve_references():
 
 
 def test_add_array_elements():
-
     test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
     test_dict_added = metadata_model._add_array_elements("InstrumentTypeElement", test_dict_1)
     assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2

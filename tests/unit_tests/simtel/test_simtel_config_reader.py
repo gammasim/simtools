@@ -13,22 +13,22 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_config_file():
     return "tests/resources/simtel_config_test_la_palma.cfg"
 
 
-@pytest.fixture
+@pytest.fixture()
 def schema_num_gains():
     return "tests/resources/num_gains.schema.yml"
 
 
-@pytest.fixture
+@pytest.fixture()
 def schema_telescope_transmission():
     return "tests/resources/telescope_transmission.schema.yml"
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_reader_num_gains(simtel_config_file, schema_num_gains):
     return SimtelConfigReader(
         schema_file=schema_num_gains,
@@ -37,7 +37,7 @@ def config_reader_num_gains(simtel_config_file, schema_num_gains):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_reader_telescope_transmission(simtel_config_file, schema_telescope_transmission):
     return SimtelConfigReader(
         schema_file=schema_telescope_transmission,
@@ -69,7 +69,6 @@ def test_simtel_config_reader_num_gains(config_reader_num_gains):
 def test_simtel_config_reader_telescope_transmission(
     config_reader_telescope_transmission, simtel_config_file, schema_telescope_transmission
 ):
-
     _config = config_reader_telescope_transmission
     assert isinstance(_config.parameter_dict, dict)
     assert _config.parameter_name == "telescope_transmission"
@@ -85,7 +84,6 @@ def test_simtel_config_reader_telescope_transmission(
 
 
 def test_get_validated_parameter_dict(config_reader_num_gains):
-
     _config = config_reader_num_gains
     assert _config.get_validated_parameter_dict(telescope_name="MSTN-01", model_version="Test") == {
         "parameter": "num_gains",
@@ -101,7 +99,6 @@ def test_get_validated_parameter_dict(config_reader_num_gains):
 
 
 def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gains):
-
     _config = config_reader_num_gains
     _json_file = tmp_test_directory / "num_gains.json"
     _config.export_parameter_dict_to_json(
@@ -115,7 +112,6 @@ def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gai
 def test_compare_simtel_config_with_schema(
     config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
-
     _config_ng = config_reader_num_gains
 
     # no differences; should result in no output
@@ -155,7 +151,6 @@ def test_compare_simtel_config_with_schema(
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
-
     _config_ng = config_reader_num_gains
 
     with pytest.raises(FileNotFoundError):
@@ -175,7 +170,6 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, ca
 
 
 def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
-
     _config = copy.deepcopy(config_reader_num_gains)
 
     assert _config._get_type_and_dimension_from_simtel_cfg(["Int", "1"]) == ("int64", 1)
@@ -192,7 +186,6 @@ def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
 
 
 def test_resolve_all_in_column(config_reader_num_gains):
-
     _config = config_reader_num_gains
 
     # empty
@@ -211,7 +204,6 @@ def test_resolve_all_in_column(config_reader_num_gains):
 
 
 def test_add_value_from_simtel_cfg(config_reader_num_gains):
-
     _config = config_reader_num_gains
 
     # None
@@ -249,7 +241,6 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
 
 def test_get_simtel_parameter_name(config_reader_num_gains):
-
     _config = copy.deepcopy(config_reader_num_gains)
     assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
     assert _config._get_simtel_parameter_name("telescope_transmission") == "TELESCOPE_TRANSMISSION"
@@ -260,7 +251,6 @@ def test_get_simtel_parameter_name(config_reader_num_gains):
 
 
 def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
-
     _config = SimtelConfigReader(
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
@@ -283,7 +273,6 @@ def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
 
 
 def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
-
     _config = SimtelConfigReader(
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
@@ -303,7 +292,6 @@ def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
 
 
 def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
-
     _config = SimtelConfigReader(
         schema_file=schema_num_gains,
         simtel_config_file=simtel_config_file,
@@ -323,7 +311,6 @@ def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
 
 
 def test_validate_parameter_dict(config_reader_num_gains, caplog):
-
     _config = config_reader_num_gains
 
     _temp_dict = {
@@ -346,7 +333,6 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
 
 
 def test_jsonnumpy_encoder():
-
     encoder = JsonNumpyEncoder()
     assert isinstance(encoder.default(np.float64(3.14)), float)
     assert isinstance(encoder.default(np.int64(3.14)), int)

@@ -38,7 +38,6 @@ def db_cleanup_file_sandbox(db_no_config_file, random_id):
 
 
 def test_reading_db_lst_without_simulation_repo(db, model_version):
-
     db_copy = copy.deepcopy(db)
     db_copy.mongo_db_config["db_simulation_model_url"] = None
     pars = db.get_model_parameters("North", "LSTN-01", model_version)
@@ -100,7 +99,6 @@ def test_get_derived_values(db, model_version):
 
 
 def test_get_sim_telarray_configuration_parameters(db, model_version):
-
     _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-01", model_version)
     assert "min_photoelectrons" in _pars
 
@@ -156,7 +154,6 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
 
 
 def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version):
-
     db.add_tagged_version(
         db_name=f"sandbox_{random_id}",
         released_version="2020-06-28",
@@ -486,13 +483,11 @@ def test_get_telescope_db_name(db):
 
 
 def test_parameter_cache_key(db):
-
     assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
     assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
 
 
 def test_get_tagged_version(db):
-
     with pytest.raises(ValueError):
         db._get_tagged_version(version="NotReleased")
 

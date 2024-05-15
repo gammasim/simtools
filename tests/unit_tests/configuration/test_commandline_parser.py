@@ -104,7 +104,6 @@ def test_azimuth_angle(caplog):
 
 
 def test_initialize_default_arguments():
-
     # default arguments
     _parser_1 = parser.CommandLineParser()
     _parser_1.initialize_default_arguments()

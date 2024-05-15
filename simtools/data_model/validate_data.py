@@ -47,7 +47,6 @@ class DataValidator:
         Initialize validation class and read required reference data columns
 
         """
-
         self._logger = logging.getLogger(__name__)
 
         self.data_file_name = data_file
@@ -77,7 +76,6 @@ class DataValidator:
             if no data or data table is available
 
         """
-
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
@@ -98,7 +96,6 @@ class DataValidator:
         file validation).
 
         """
-
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data_dict = gen.collect_data_from_file_or_dict(self.data_file_name, None)
@@ -114,7 +111,6 @@ class DataValidator:
         Validate that file name and key 'parameter_name' in data dict are the same.
 
         """
-
         if not self.data_dict.get("parameter") == Path(self.data_file_name).stem:
             self._logger.error(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
@@ -133,7 +129,6 @@ class DataValidator:
             if data dict does not contain a 'name' or 'parameter' key.
 
         """
-
         if not (_name := self.data_dict.get("name") or self.data_dict.get("parameter")):
             raise KeyError("Data dict does not contain a 'name' or 'parameter' key.")
         self._data_description = self._read_validation_schema(self.schema_file_name, _name)
@@ -167,7 +162,6 @@ class DataValidator:
         Validate tabulated data.
 
         """
-
         try:
             self._data_description = self._read_validation_schema(self.schema_file_name)[0].get(
                 "table_columns", None
@@ -191,7 +185,6 @@ class DataValidator:
         This is not applied to columns of type 'string'.
 
         """
-
         self._check_required_columns()
 
         for col_name in self.data_table.colnames:
@@ -216,7 +209,6 @@ class DataValidator:
             if a required data column is missing
 
         """
-
         for entry in self._data_description:
             if entry.get("required", False):
                 if entry["name"] in self.data_table.columns:
@@ -235,7 +227,6 @@ class DataValidator:
             if no table is defined for sorting
 
         """
-
         _columns_by_which_to_sort = []
         _columns_by_which_to_reverse_sort = []
         for entry in self._data_description:
@@ -270,7 +261,6 @@ class DataValidator:
             checked for unique values.
 
         """
-
         _column_with_unique_requirement = self._get_unique_column_requirement()
         if len(_column_with_unique_requirement) == 0:
             self._logger.debug("No data columns with unique value requirement")
@@ -303,7 +293,6 @@ class DataValidator:
             list of data column with unique value requirement
 
         """
-
         _unique_required_column = []
 
         for entry in self._data_description:
@@ -334,7 +323,6 @@ class DataValidator:
             if column name is not found in reference data columns
 
         """
-
         reference_unit = self._get_data_description(column_name).get("unit", None)
         if reference_unit in ("dimensionless", None, ""):
             return u.dimensionless_unscaled
@@ -358,7 +346,6 @@ class DataValidator:
             if data type is not correct
 
         """
-
         reference_dtype = self._get_data_description(column_name).get("type", None)
         if not gen.validate_data_type(
             reference_dtype=reference_dtype,
@@ -446,7 +433,6 @@ class DataValidator:
             If unit conversions fails
 
         """
-
         self._logger.debug(f"Checking data column '{col_name}'")
 
         reference_unit = self._get_reference_unit(col_name)
@@ -525,7 +511,7 @@ class DataValidator:
         try:
             if not self._interval_check(
                 (col_min, col_max),
-                (_entry[range_type].get("min", np.NINF), _entry[range_type].get("max", np.Inf)),
+                (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
                 range_type,
             ):
                 raise ValueError
@@ -533,8 +519,8 @@ class DataValidator:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
-                f"[{_entry[range_type].get('min', np.NINF)}, "
-                f"{_entry[range_type].get('max', np.Inf)}])"
+                f"[{_entry[range_type].get('min', -np.inf)}, "
+                f"{_entry[range_type].get('max', np.inf)}])"
             )
             raise
 
@@ -561,7 +547,6 @@ class DataValidator:
             True if range test is passed
 
         """
-
         if range_type == "allowed_range":
             if data[0] >= axis_range[0] and data[1] <= axis_range[1]:
                 return True
@@ -596,7 +581,6 @@ class DataValidator:
             if 'data' can not be read from dict in schema file
 
         """
-
         try:
             if Path(schema_file).is_dir():
                 return gen.collect_data_from_file_or_dict(
@@ -636,7 +620,6 @@ class DataValidator:
             If data column is not found.
 
         """
-
         self._logger.debug(
             f"Getting reference data column {column_name} " f"from schema {self._data_description}"
         )

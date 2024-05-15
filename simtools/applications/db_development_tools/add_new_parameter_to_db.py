@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to add a new parameter to the sites collection in the DB.
+Summary
+-------
+This application is used to add a new parameter to the sites collection in the DB.
 
-    This application should not be used by anyone but expert users and not often.
-    Therefore, no additional documentation about this applications will be given.
+This application should not be used by anyone but expert users and not often.
+Therefore, no additional documentation about this applications will be given.
 
 """
 

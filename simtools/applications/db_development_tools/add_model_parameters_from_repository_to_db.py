@@ -17,7 +17,6 @@
 
     Examples
     --------
-
     Upload a repository to the DB:
 
     .. code-block:: console
@@ -52,7 +51,6 @@ def _parse(label=None, description=None):
     CommandLineParser
         Command line parser object.
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input_path",

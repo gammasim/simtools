@@ -139,7 +139,6 @@ def _add_unit(title, array):
     str
         Title with units.
     """
-
     unit = ""
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
@@ -187,7 +186,6 @@ def set_style(palette="default", big_plot=False):
     KeyError
         if provided palette does not exist.
     """
-
     if palette not in COLORS:
         raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
@@ -238,7 +236,6 @@ def get_colors(palette="default"):
     KeyError
         if provided palette does not exist.
     """
-
     if palette not in COLORS:
         raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
@@ -254,7 +251,6 @@ def get_markers():
     list
         List with markers.
     """
-
     return MARKERS
 
 
@@ -267,7 +263,6 @@ def get_lines():
     list
         List with line styles.
     """
-
     return LINES
 
 
@@ -318,7 +313,6 @@ def plot_1d(data, **kwargs):
     ValueError
         if asked to plot a ratio or difference with just one set of data
     """
-
     palette = kwargs.get("palette", "default")
     kwargs.pop("palette", None)
     big_plot = kwargs.get("big_plot", False)
@@ -471,7 +465,6 @@ def plot_table(table, y_title, **kwargs):
     ValueError
         if table has less than two columns.
     """
-
     if len(table.keys()) < 2:
         raise ValueError("Table has to have at least two columns")
 
@@ -502,7 +495,6 @@ def plot_hist_2d(data, **kwargs):
         Instance of pyplot.figure in which the plot was produced.
 
     """
-
     cmap = plt.cm.gist_heat_r
     if "title" in kwargs:
         title = kwargs["title"]
@@ -620,7 +612,6 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
         Instance of plt.figure with the array of telescopes plotted.
 
     """
-
     fig, ax = plt.subplots(1)
     legend_objects = []
     legend_labels = []

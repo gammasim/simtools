@@ -409,7 +409,6 @@ def plot_photon_per_event_distr(histograms_instance, log_y=True):
         List of figures for the given telescopes.
 
     """
-
     return _kernel_plot_1d_photons(histograms_instance, "num_photons_per_event", log_y=log_y)
 
 
@@ -430,7 +429,6 @@ def plot_photon_per_telescope_distr(histograms_instance, log_y=True):
         List of figures for the given telescopes.
 
     """
-
     return _kernel_plot_1d_photons(histograms_instance, "num_photons_per_telescope", log_y=log_y)
 
 

@@ -86,7 +86,6 @@ class CorsikaConfig:
         """
         Initialize CorsikaConfig.
         """
-
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
 
@@ -150,7 +149,6 @@ class CorsikaConfig:
         corsika_parameters: dict
             Dictionary with CORSIKA parameters.
         """
-
         logger = logging.getLogger(__name__)
         logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
         corsika_parameters = gen.collect_data_from_file_or_dict(
@@ -189,7 +187,6 @@ class CorsikaConfig:
         MissingRequiredInputInCorsikaConfigData
             If any required user parameter is missing.
         """
-
         self._logger.debug("Setting user parameters from corsika_config_data")
         self._user_parameters = {}
 
@@ -252,7 +249,6 @@ class CorsikaConfig:
         value_args_in: list
             List of values for the parameter.
         """
-
         # Turning value_args into a list, if it is not.
         value_args = self._convert_to_quantities(value_args_in)
 
@@ -373,7 +369,6 @@ class CorsikaConfig:
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray or not.
         """
-
         sub_dir = "corsika_simtel" if use_multipipe else "corsika"
         self._set_output_file_and_directory(sub_dir)
         self._logger.debug(f"Exporting CORSIKA input file to {self.config_file_path}")
@@ -486,7 +481,6 @@ class CorsikaConfig:
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
-
         file_label = f"_{self.label}" if self.label is not None else ""
         view_cone = ""
         if self._user_parameters["VIEWCONE"][0] != 0 or self._user_parameters["VIEWCONE"][1] != 0:
@@ -570,12 +564,12 @@ class CorsikaConfig:
         ----------
         value_args: list
             List of value/unit pairs (e.g., ["10 m", "20 m"])
+
         Returns
         -------
         list
             List of astropy quantities (or strings)
         """
-
         if isinstance(value_args, str):
             return [value_args]
         if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:

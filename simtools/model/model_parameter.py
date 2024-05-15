@@ -135,7 +135,6 @@ class ModelParameter:
         KeyError
             If par_name does not match any parameter in this model.
         """
-
         parameter_dict = parameter_dict if parameter_dict else self._get_parameter_dict(par_name)
         try:
             _parameter = parameter_dict["value"]
@@ -247,7 +246,6 @@ class ModelParameter:
 
     def _export_derived_files(self):
         """Write to disk a file from the derived values DB."""
-
         for par_now in self.derived.values():
             if par_now.get("File") or par_now.get("file"):
                 self.db.export_file_db(
@@ -266,7 +264,6 @@ class ModelParameter:
         Set and create the directory and the name of the config file.
 
         """
-
         if self.name is None:
             return
 
@@ -293,7 +290,6 @@ class ModelParameter:
         Read parameters from DB and store them in _parameters.
 
         """
-
         if self.db is None:
             return
 
@@ -337,7 +333,6 @@ class ModelParameter:
         extra_label: str
             Extra label to be appended to the original label.
         """
-
         self._extra_label = extra_label
         self._set_config_file_directory_and_name()
 
@@ -466,7 +461,6 @@ class ModelParameter:
 
     def export_model_files(self):
         """Exports the model files into the config file directory."""
-
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
         if self._added_parameter_files is not None:
@@ -478,7 +472,6 @@ class ModelParameter:
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""
-
         # Exporting model file
         if not self._is_exported_model_files_up_to_date:
             self.export_model_files()

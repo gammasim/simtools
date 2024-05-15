@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model(db_config, io_handler, model_version):
     array_config_data = {
         "site": "North",
@@ -95,6 +95,5 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     ]
 
     for model_file in list_of_export_files:
-
         logger.info("Checking file: %s", model_file)
         assert Path(am.get_config_directory()).joinpath(model_file).exists()

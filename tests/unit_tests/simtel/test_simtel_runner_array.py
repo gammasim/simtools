@@ -14,7 +14,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_config_data():
     return {
         "site": "North",
@@ -24,7 +24,7 @@ def array_config_data():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model(array_config_data, io_handler, db_config, model_version):
     array_model = ArrayModel(
         label="test-lst-array",
@@ -35,7 +35,7 @@ def array_model(array_config_data, io_handler, db_config, model_version):
     return array_model
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_runner(array_model, simtel_path):
     simtel_runner = SimtelRunnerArray(
         array_model=array_model,
@@ -49,7 +49,7 @@ def simtel_runner(array_model, simtel_path):
     return simtel_runner
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_file(io_handler):
     corsika_file = io_handler.get_input_data_file(
         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True

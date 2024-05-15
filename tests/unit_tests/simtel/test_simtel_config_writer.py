@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_config_writer():
     simtel_config_writer = SimtelConfigWriter(
         site="North",
@@ -22,7 +22,7 @@ def simtel_config_writer():
     return simtel_config_writer
 
 
-@pytest.fixture
+@pytest.fixture()
 def layout(io_handler, db_config, model_version):
     layout = ArrayLayout.from_array_layout_name(
         mongo_db_config=db_config, model_version=model_version, array_layout_name="South-4LST"
@@ -55,7 +55,6 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
 
 
 def test_get_simtel_metadata(simtel_config_writer):
-
     _tel = simtel_config_writer._get_simtel_metadata("telescope")
     assert len(_tel) == 8
     assert _tel["camera_config_name"] == simtel_config_writer._telescope_model_name

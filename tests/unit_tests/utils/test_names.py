@@ -171,7 +171,6 @@ def test_get_telescope_type_from_telescope_name():
 
 
 def test_generate_file_name_camera_efficiency():
-
     site = "South"
     telescope_model_name = "LSTS-01"
     zenith_angle = 20

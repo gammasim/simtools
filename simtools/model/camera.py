@@ -36,7 +36,6 @@ class Camera:
         Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,
         calculating FoV and plotting the camera.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self.telescope_model_name = telescope_model_name
@@ -76,7 +75,6 @@ class Camera:
         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
         clockwise by 30 degrees with respect to those denoted as 1.
         """
-
         pixels = {}
         pixels["pixel_diameter"] = 9999
         pixels["pixel_shape"] = 9999
@@ -89,7 +87,7 @@ class Camera:
         pixels["pix_id"] = []
         pixels["pix_on"] = []
 
-        with open(camera_config_file, "r", encoding="utf-8") as dat_file:
+        with open(camera_config_file, encoding="utf-8") as dat_file:
             for line in dat_file:
                 pix_info = line.split()
                 if line.startswith("PixType"):
@@ -144,7 +142,6 @@ class Camera:
             The pixels orientation for plotting is added to the dictionary in pixels['orientation'].
             The orientation is determined by the pixel shape (see read_pixel_list for details).
         """
-
         rotate_angle = pixels["rotate_angle"] * u.rad  # So not to change the original angle
         # The original pixel list is given such that
         # x -> North, y -> West, z -> Up in the ground system.
@@ -179,7 +176,6 @@ class Camera:
         int
             number of pixels.
         """
-
         return len(self.pixels["x"])
 
     def get_pixel_diameter(self):
@@ -191,7 +187,6 @@ class Camera:
         float
             Pixel diameter (usually in cm).
         """
-
         return self.pixels["pixel_diameter"]
 
     def get_pixel_active_solid_angle(self):
@@ -203,7 +198,6 @@ class Camera:
         float
             active solid angle of a pixel in sr.
         """
-
         pixel_area = self.get_pixel_diameter() ** 2
         # In case we have hexagonal pixels:
         if self.get_pixel_shape() == 1 or self.get_pixel_shape() == 3:
@@ -231,7 +225,6 @@ class Camera:
         str
             File name of the light guide efficiency as a function of incidence angle.
         """
-
         return self.pixels["lightguide_efficiency_angle_file"]
 
     def get_lightguide_efficiency_wavelength_file_name(self):
@@ -254,7 +247,6 @@ class Camera:
         float
             The camera fill factor.
         """
-
         if self.pixels["pixel_spacing"] == 9999:
             points = np.array([self.pixels["x"], self.pixels["y"]]).T
             pixel_distances = distance.cdist(points, points, "euclidean")
@@ -280,7 +272,6 @@ class Camera:
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         """
-
         self._logger.debug("Calculating the FoV")
 
         return self._calc_fov(
@@ -317,7 +308,6 @@ class Camera:
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         """
-
         self._logger.debug("Calculating the FoV")
 
         average_edge_distance = 0
@@ -350,7 +340,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each e.g., pixel.
         """
-
         points = np.array([x_pos, y_pos]).T
         indices = np.arange(len(x_pos))
         kdtree = KDTree(points)
@@ -384,7 +373,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
-
         # First find the neighbours with the usual method and the original radius
         # which does not allow for diagonal neighbours.
         neighbours = self._find_neighbours(x_pos, y_pos, radius)
@@ -427,7 +415,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
-
         self._logger.debug("Searching for neighbour pixels")
 
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
@@ -466,7 +453,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel.
         """
-
         if self._neighbours is None:
             if pixels is None:
                 pixels = self.pixels
@@ -490,7 +476,6 @@ class Camera:
         edge_pixel_indices: numpy.array_like
             Array of edge pixel indices.
         """
-
         self._logger.debug("Searching for edge pixels")
 
         edge_pixel_indices = []
@@ -523,7 +508,6 @@ class Camera:
         edge_pixel_indices: numpy.array_like
             Array of edge pixel indices.
         """
-
         if self._edge_pixel_indices is None:
             if pixels is None:
                 pixels = self.pixels

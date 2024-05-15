@@ -113,6 +113,8 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
     with open(tmp_test_directory / "test_read_value_from_file_1.json", "w", encoding="utf-8") as f:
         json.dump(test_dict_1, f)
     with pytest.raises(jsonschema.exceptions.ValidationError):
-        data_reader.read_value_from_file(
-            tmp_test_directory / "test_read_value_from_file_1.json", validate=True
-        ),
+        (
+            data_reader.read_value_from_file(
+                tmp_test_directory / "test_read_value_from_file_1.json", validate=True
+            ),
+        )

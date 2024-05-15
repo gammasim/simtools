@@ -6,7 +6,6 @@ from simtools.model import model_utils
 
 
 def test_is_two_mirror_telescope():
-
     assert not model_utils.is_two_mirror_telescope("LSTN-01")
     assert not model_utils.is_two_mirror_telescope("MSTN-01")
     assert not model_utils.is_two_mirror_telescope("MSTS-01")
@@ -15,7 +14,6 @@ def test_is_two_mirror_telescope():
 
 
 def test_compute_telescope_transmission():
-
     pars = [0.8, 0, 0.0, 0.0, 0.0]
     off_axis = 0.0
     assert pytest.approx(model_utils.compute_telescope_transmission(pars, off_axis)) == pars[0]

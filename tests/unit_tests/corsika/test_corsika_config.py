@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config_data():
     return {
         "nshow": 100,
@@ -31,7 +31,7 @@ def corsika_config_data():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config(io_handler, db_config, corsika_config_data, model_version):
     corsika_config = CorsikaConfig(
         mongo_db_config=db_config,
@@ -70,7 +70,7 @@ def test_export_input_file(corsika_config):
     corsika_config.export_input_file()
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
 
@@ -79,7 +79,7 @@ def test_export_input_file_multipipe(corsika_config):
     corsika_config.export_input_file(use_multipipe=True)
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" in f.read()
 
 
@@ -226,7 +226,6 @@ def test_get_file_name(corsika_config, io_handler):
 
 
 def test_convert_to_quantities(corsika_config):
-
     assert corsika_config._convert_to_quantities("10 m") == [10 * u.m]
     assert corsika_config._convert_to_quantities("simple_string") == ["simple_string"]
     assert corsika_config._convert_to_quantities({"value": 10, "unit": "m"}) == [10 * u.m]

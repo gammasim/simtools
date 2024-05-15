@@ -196,14 +196,14 @@ def assert_file_type(file_type, file_name):
 
     if file_type == "json":
         try:
-            with open(file_name, "r", encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 json.load(file)
             return True
         except (json.JSONDecodeError, FileNotFoundError):
             return False
     if file_type == "yaml" or file_type == "yml":
         try:
-            with open(file_name, "r", encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 yaml.safe_load(file)
             return True
         except (yaml.YAMLError, FileNotFoundError):

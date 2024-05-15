@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def common_args(simtel_path):
     return {
         "label": "test-corsika-simtel-runner",
@@ -20,7 +20,7 @@ def common_args(simtel_path):
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model(array_config_data, io_handler, db_config, common_args, model_version):
     return ArrayModel(
         label=common_args["label"],
@@ -30,7 +30,7 @@ def array_model(array_config_data, io_handler, db_config, common_args, model_ver
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_args(array_model, shower_config_data, db_config, array_config_data, model_version):
     # Remove the keys which are not necessary for general CORSIKA configuration
     for key_to_pop in ["site", "run_list", "run_range", "layout_name"]:
@@ -45,7 +45,7 @@ def corsika_args(array_model, shower_config_data, db_config, array_config_data, 
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_config_data(tmp_test_directory, array_config_data):
     return {
         "simtel_data_directory": str(tmp_test_directory) + "/test-output",
@@ -55,12 +55,12 @@ def simtel_config_data(tmp_test_directory, array_config_data):
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_args(array_model, simtel_config_data):
     return {"array_model": array_model, "config_data": simtel_config_data}
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_simtel_runner(common_args, corsika_args, simtel_args):
     corsika_simtel_runner = CorsikaSimtelRunner(
         common_args=common_args, corsika_args=corsika_args, simtel_args=simtel_args
@@ -74,7 +74,7 @@ def test_prepare_run_script(corsika_simtel_runner):
     script = corsika_simtel_runner.prepare_run_script()
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
@@ -85,7 +85,7 @@ def test_prepare_run_script(corsika_simtel_runner):
     script = corsika_simtel_runner.prepare_run_script(run_number=run_number)
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
@@ -106,7 +106,7 @@ def test_export_multipipe_script(corsika_simtel_runner):
     )
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "bin/sim_telarray" in script_content
         assert "-C telescope_theta=20" in script_content
@@ -125,7 +125,7 @@ def test_export_multipipe_executable(corsika_simtel_runner):
     )
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "bin/multipipe_corsika" in script_content
         assert f"-c {multipipe_file}" in script_content

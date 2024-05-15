@@ -92,7 +92,6 @@ def _parse(label=None, description=None):
         command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--array",

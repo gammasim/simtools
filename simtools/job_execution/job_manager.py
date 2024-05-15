@@ -58,7 +58,6 @@ class JobManager:
         MissingWorkloadManager
             if workflow manager is not found.
         """
-
         if self.submit_command is None:
             return
         if self.submit_command.find("qsub") >= 0:
@@ -115,7 +114,6 @@ class JobManager:
             The log file of the actual simulator (CORSIKA or sim_telarray).
             Provided in order to print the log excerpt in case of run time error.
         """
-
         self._logger.info("Running script locally")
 
         shell_command = f"{self.run_script} > {self.run_out_file}.out 2> {self.run_out_file}.err"
@@ -137,7 +135,6 @@ class JobManager:
         Submit a job described by a shell script to HTcondor
 
         """
-
         _condor_file = self.run_script + ".condor"
         self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
@@ -161,7 +158,6 @@ class JobManager:
         Submit a job described by a shell script to gridengine
 
         """
-
         this_sub_cmd = copy(self.submit_command)
         this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
         this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"

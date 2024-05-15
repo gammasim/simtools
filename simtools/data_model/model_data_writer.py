@@ -29,7 +29,6 @@ class ModelDataWriter:
         """
         Initialize model data writer.
         """
-
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         if args_dict is not None:
@@ -66,7 +65,6 @@ class ModelDataWriter:
             Schema file used in validation of output data.
 
         """
-
         writer = ModelDataWriter(
             product_data_file=(
                 args_dict.get("output_file", None) if output_file is None else output_file
@@ -94,7 +92,6 @@ class ModelDataWriter:
             Schema file used in validation of output data.
 
         """
-
         _validator = validate_data.DataValidator(
             schema_file=validate_schema_file,
             data_table=product_data,
@@ -118,7 +115,6 @@ class ModelDataWriter:
             if data writing was not successful.
 
         """
-
         if product_data is None:
             return
 
@@ -159,7 +155,6 @@ class ModelDataWriter:
         TypeError
             If yml_file is not defined.
         """
-
         try:
             yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
             with open(yml_file, "w", encoding="UTF-8") as file:
@@ -191,7 +186,6 @@ class ModelDataWriter:
             format identifier
 
         """
-
         if product_data_format == "ecsv":
             product_data_format = "ascii.ecsv"
         return product_data_format

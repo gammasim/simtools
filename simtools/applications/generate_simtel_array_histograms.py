@@ -1,50 +1,50 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application allows to write sim_telarray histograms into pdf and hdf5 files.
-    It accepts multiple lists of histograms files, a single list or a histogram file.
-    Each histogram is plotted in a page of the pdf file if the --pdf option is activated.
+Summary
+-------
+This application allows to write sim_telarray histograms into pdf and hdf5 files.
+It accepts multiple lists of histograms files, a single list or a histogram file.
+Each histogram is plotted in a page of the pdf file if the --pdf option is activated.
 
 
-    Command line arguments
-    ----------------------
-    hist_file_names (str, optional)
-        Name of the histogram files to be plotted.
-        It can be given as the histogram file names (more than one option allowed) or as a text
-        file with the names of the histogram files in it.
-    figure_name (str, required)
-        File name for the pdf output (without extension).
-    pdf (bool, optional)
-        If set, histograms are saved into pdf files.
-        One pdf file contains all the histograms found in the file.
-        The name of the file is controlled via `output_file_name`.
-    hdf5: bool
-        If true, histograms are saved into hdf5 files.
-        At least one of `pdf` and `hdf5` has to be activated.
-    output_file_name (str, optional)
-        The name of the output hdf5 (and/or pdf) files (without the path).
-        If not given, `output_file_name` takes the name from the (first) input file
-        (`hist_file_names`).
-        If the output `output_file_name.hdf5` file already exists and `hdf5` is set, the tables
-        associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
-        untouched.
-    verbosity (str, optional)
-        Log level to print.
+Command line arguments
+----------------------
+hist_file_names (str, optional)
+    Name of the histogram files to be plotted.
+    It can be given as the histogram file names (more than one option allowed) or as a text
+    file with the names of the histogram files in it.
+figure_name (str, required)
+    File name for the pdf output (without extension).
+pdf (bool, optional)
+    If set, histograms are saved into pdf files.
+    One pdf file contains all the histograms found in the file.
+    The name of the file is controlled via `output_file_name`.
+hdf5: bool
+    If true, histograms are saved into hdf5 files.
+    At least one of `pdf` and `hdf5` has to be activated.
+output_file_name (str, optional)
+    The name of the output hdf5 (and/or pdf) files (without the path).
+    If not given, `output_file_name` takes the name from the (first) input file
+    (`hist_file_names`).
+    If the output `output_file_name.hdf5` file already exists and `hdf5` is set, the tables
+    associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
+    untouched.
+verbosity (str, optional)
+    Log level to print.
 
-    Raises
-    ------
-    TypeError:
-        if argument passed through `hist_file_names` is not a file.
+Raises
+------
+TypeError:
+    if argument passed through `hist_file_names` is not a file.
 
-    Example
-    -------
-    .. code-block:: console
+Example
+-------
+.. code-block:: console
 
-        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/
-            run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
-            --output_file_name test_hist_hdata --hdf5 --pdf
+    simtools-generate-simtel-array-histograms --hist_file_names tests/resources/
+        run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
+        --output_file_name test_hist_hdata --hdf5 --pdf
 
 """
 

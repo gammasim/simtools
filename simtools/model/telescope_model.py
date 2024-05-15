@@ -213,7 +213,7 @@ class TelescopeModel(ModelParameter):
             return False
 
         file = self.config_file_directory.joinpath(file_name)
-        with open(file, "r", encoding="utf-8") as f:
+        with open(file, encoding="utf-8") as f:
             is_2d = "@RPOL@" in f.read()
         return is_2d
 
@@ -233,11 +233,10 @@ class TelescopeModel(ModelParameter):
         dict:
             dict of three arrays, wavelength, degrees, z.
         """
-
         _file = self.config_file_directory.joinpath(file_name)
         self._logger.debug("Reading two dimensional distribution from %s", _file)
         line_to_start_from = 0
-        with open(_file, "r", encoding="utf-8") as f:
+        with open(_file, encoding="utf-8") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
                     degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
@@ -254,7 +253,6 @@ class TelescopeModel(ModelParameter):
 
     def get_on_axis_eff_optical_area(self):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
-
         ray_tracing_data = astropy.io.ascii.read(
             self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
         )
@@ -280,7 +278,6 @@ class TelescopeModel(ModelParameter):
         incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution.
         """
-
         self._logger.debug(
             "Reading incidence angle distribution from %s",
             self.config_file_directory.joinpath(incidence_angle_dist_file),
@@ -311,7 +308,6 @@ class TelescopeModel(ModelParameter):
         average_curve: astropy.table.Table
             Instance of astropy.table.Table with the averaged curve.
         """
-
         weights = []
         for angle_now in curves["Angle"]:
             weights.append(
@@ -343,7 +339,6 @@ class TelescopeModel(ModelParameter):
         Path:
             Path to the file exported.
         """
-
         file_to_write_to = self._config_file_directory.joinpath(file_name)
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()

@@ -58,7 +58,6 @@ def test_validate_data_file(caplog):
 
 
 def test_validate_parameter_and_file_name():
-
     data_validator = validate_data.DataValidator()
     data_validator.data_file_name = "tests/resources/num_gains.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
@@ -498,7 +497,6 @@ def test_read_validation_schema(tmp_test_directory):
 
 # incomplete test
 def test_validate_data_dict():
-
     schema_dir = files("simtools").joinpath("schemas/model_parameters/")
 
     # parameter with unit

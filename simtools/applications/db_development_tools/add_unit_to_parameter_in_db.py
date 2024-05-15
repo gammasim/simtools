@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to add a unit to parameters in the DB.
+Summary
+-------
+This application is used to add a unit to parameters in the DB.
 
-    This application should not be used by anyone but expert users and only in unusual cases.
-    Therefore, no additional documentation about this applications will be given.
+This application should not be used by anyone but expert users and only in unusual cases.
+Therefore, no additional documentation about this applications will be given.
 
 """
 
