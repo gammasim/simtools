@@ -93,7 +93,7 @@ jobs:
 
       - name: pylint
         run: |
-          pylint $(git ls-files 'simtools/*.py')
+          pylint "$(git ls-files 'simtools/*.py')"
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v6
