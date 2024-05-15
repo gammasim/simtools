@@ -344,7 +344,6 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     except KeyError as exc:
         logger.error(f"No application defined in config file {config}.")
         raise exc
-
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
