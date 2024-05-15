@@ -116,8 +116,8 @@ class DatabaseHandler:
         """
         Get parameters from MongoDB or simulation model repository for an array element.
         An array element can be e.g., a telescope or a calibration device.
-        Read parameters for design and for the specified array element (if necessary). This allows to
-        overwrite design parameters with specific telescope parameters without having to copy
+        Read parameters for design and for the specified array element (if necessary). This allows
+        to overwrite design parameters with specific telescope parameters without having to copy
         the all model parameters when changing only a few.
 
         Parameters
@@ -130,7 +130,6 @@ class DatabaseHandler:
             Version of the model.
         collection: str
             collection of array element (e.g. telescopes, calibration_devices)
-
         only_applicable: bool
             If True, only applicable parameters will be read.
 
@@ -143,8 +142,6 @@ class DatabaseHandler:
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
-<<<<<<< HEAD
-        # TODO change to array element
         telescope_list = self.get_telescope_list_for_db_query(_telescope_model_name, model_version)
         pars = {}
         for telescope in telescope_list:
@@ -1181,9 +1178,6 @@ class DatabaseHandler:
 
         return _all_available_array_elements
 
-<<<<<<< HEAD
-        return _all_available_telescopes
-
     def get_telescope_list_for_db_query(self, telescope_model_name, model_version):
         """
         Returns a list of telescope names to be used for querying the database.
@@ -1219,7 +1213,7 @@ class DatabaseHandler:
                 self.get_telescope_db_name(telescope_model_name, model_version),
             ]
 
-    def get_telescope_db_name(self, telescope_name, model_version, collection):
+    def get_telescope_db_name(self, telescope_name, model_version, collection="telescopes"):
         """
         Translate telescope name to the name used in the DB. This is required,
         as not all telescopes are defined in the database yet. In these cases,
@@ -1231,6 +1225,8 @@ class DatabaseHandler:
             Name of the telescope model (e.g. MSTN-01)
         model_version: str
             Which version to get the telescopes
+        collection: str
+            collection of array element (e.g. telescopes, calibration_devices)
 
         Returns
         -------
