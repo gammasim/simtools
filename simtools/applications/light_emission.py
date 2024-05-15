@@ -58,9 +58,6 @@
     --plot (flag, optional)
         Produce a multiple pages pdf file with the image plots.
 
-    Raises
-    ------
-
 
     Example
     -------
