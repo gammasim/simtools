@@ -457,7 +457,7 @@ def test_get_all_versions(db):
 
 def test_get_all_available_array_elements(db, model_version):
     available_telescopes = db.get_all_available_array_elements(
-        model_version=model_version, collection_name="telescopes"
+        model_version=model_version, collection="telescopes"
     )
 
     expected_telescope_names = [
