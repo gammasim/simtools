@@ -89,7 +89,7 @@ jobs:
 
       - name: pylint
         run: |
-          pylint "$(git ls-files 'simtools/*.py')"
+          pylint $(git ls-files 'simtools/*.py')
 
       - name: Pre-commit
         run: |
