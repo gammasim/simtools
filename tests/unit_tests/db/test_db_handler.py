@@ -41,13 +41,13 @@ def test_reading_db_lst_without_simulation_repo(db, model_version):
 
     db_copy = copy.deepcopy(db)
     db_copy.mongo_db_config["db_simulation_model_url"] = None
-    pars = db.get_model_parameters("North", "LSTN-01", model_version)
+    pars = db.get_model_parameters("North", "LSTN-01", model_version, collection="telescopes")
     assert pars["parabolic_dish"]["value"] == 1
 
 
 def test_reading_db_lst(db, model_version):
     logger.info("----Testing reading LST-North-----")
-    pars = db.get_model_parameters("North", "LSTN-01", model_version)
+    pars = db.get_model_parameters("North", "LSTN-01", model_version, collection="telescopes")
     if db.mongo_db_config:
         assert pars["parabolic_dish"]["value"] == 1
         assert pars["camera_pixels"]["value"] == 1855
@@ -58,7 +58,7 @@ def test_reading_db_lst(db, model_version):
 
 def test_reading_db_mst_nc(db, model_version):
     logger.info("----Testing reading MST-North-----")
-    pars = db.get_model_parameters("North", "MSTN-design", model_version)
+    pars = db.get_model_parameters("North", "MSTN-design", model_version, collection="telescopes")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 1855
     else:
@@ -67,7 +67,7 @@ def test_reading_db_mst_nc(db, model_version):
 
 def test_reading_db_mst_fc(db, model_version):
     logger.info("----Testing reading MST-South-----")
-    pars = db.get_model_parameters("South", "MSTS-design", model_version)
+    pars = db.get_model_parameters("South", "MSTS-design", model_version, collection="telescopes")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 1764
     else:
@@ -76,7 +76,7 @@ def test_reading_db_mst_fc(db, model_version):
 
 def test_reading_db_sst(db, model_version):
     logger.info("----Testing reading SST-----")
-    pars = db.get_model_parameters("South", "SSTS-design", model_version)
+    pars = db.get_model_parameters("South", "SSTS-design", model_version, collection="telescopes")
     if db.mongo_db_config:
         assert pars["camera_pixels"]["value"] == 2048
     else:
@@ -381,7 +381,7 @@ def test_reading_db_sites(db, db_config, simulation_model_url, model_version):
 
 def test_separating_get_and_write(db, io_handler, model_version):
     logger.info("----Testing getting parameters and exporting model files-----")
-    pars = db.get_model_parameters("North", "LSTN-01", model_version)
+    pars = db.get_model_parameters("North", "LSTN-01", model_version, collection="telescopes")
 
     file_list = list()
     for par_now in pars.values():
@@ -455,8 +455,10 @@ def test_get_all_versions(db):
     assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
 
 
-def test_get_all_available_telescopes(db, model_version):
-    available_telescopes = db.get_all_available_telescopes(model_version=model_version)
+def test_get_all_available_array_elements(db, model_version):
+    available_telescopes = db.get_all_available_array_elements(
+        model_version=model_version, collection_name="telescopes"
+    )
 
     expected_telescope_names = [
         "LSTN-01",
@@ -472,17 +474,35 @@ def test_get_all_available_telescopes(db, model_version):
 
 
 def test_get_telescope_db_name(db):
-    assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTN-02", model_version="Prod5") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
-    assert db.get_telescope_db_name("SSTS-01", model_version="Prod5") == "SSTS-design"
-    assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
+    assert (
+        db.get_telescope_db_name("LSTN-01", model_version="Prod5", collection="telescopes")
+        == "LSTN-01"
+    )
+    assert (
+        db.get_telescope_db_name("LSTN-02", model_version="Prod5", collection="telescopes")
+        == "LSTN-design"
+    )
+    assert (
+        db.get_telescope_db_name("LSTN-design", model_version="Prod5", collection="telescopes")
+        == "LSTN-design"
+    )
+    assert (
+        db.get_telescope_db_name("LSTS-design", model_version="Prod5", collection="telescopes")
+        == "LSTS-design"
+    )
+    assert (
+        db.get_telescope_db_name("SSTS-01", model_version="Prod5", collection="telescopes")
+        == "SSTS-design"
+    )
+    assert (
+        db.get_telescope_db_name("SSTS-design", model_version="Prod5", collection="telescopes")
+        == "SSTS-design"
+    )
     with pytest.raises(ValueError):
-        db.get_telescope_db_name("SSTN-05", model_version="Prod5")
+        db.get_telescope_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
 
     with pytest.raises(ValueError):
-        db.get_telescope_db_name("ILLN-01", model_version="Prod5")
+        db.get_telescope_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
 
 
 def test_parameter_cache_key(db):
