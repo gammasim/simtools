@@ -1,4 +1,10 @@
 repos:
+  # Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+      - id: ruff-format
   # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -6,7 +12,7 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
-    rev: 24.4.0
+    rev: 24.4.2
     hooks:
       - id: black
         args: ["--line-length=100"]
@@ -22,33 +28,20 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        exclude: ^tests/|^simtools/applications/db_development_tools/
-        args:
-          [
-            "-rn",  # Only display messages
-            "-sn",  # Don't display the score
-          ]
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
-    rev: v2.3.1  # most recent docstr-coverage release or commit sha
+    rev: v2.3.2  # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # gitup action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.6.27
+    rev: v1.7.0
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "1.7.0"
+    rev: "2.1.1"
     hooks:
       - id: pyproject-fmt
   # codespell
