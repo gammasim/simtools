@@ -382,8 +382,6 @@ class Simulator:
                     "azimuth_angle": self.config.azimuth_angle * u.deg,
                 },
             }
-        else:
-            raise ValueError("Simtel args couldn't be read.")
 
         if self.simulator == "corsika":
             self._set_corsika_runner(common_args | corsika_args)
