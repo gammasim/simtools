@@ -1,4 +1,4 @@
-""" Module to handle interaction with DB. """
+"""Module to handle interaction with DB."""
 
 import logging
 from pathlib import Path
@@ -130,7 +130,6 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
@@ -212,7 +211,6 @@ class DatabaseHandler:
             if a file in parameters.values is not found
 
         """
-
         if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
@@ -255,7 +253,6 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-
         _which_tel_labels = [
             self.get_telescope_db_name(
                 telescope_name=telescope_model_name,
@@ -321,7 +318,6 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-
         collection = DatabaseHandler.db_client[db_name][collection_name]
         _parameters = {}
 
@@ -431,7 +427,6 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-
         collection = DatabaseHandler.db_client[db_name].sites
         _parameters = {}
 
@@ -491,7 +486,6 @@ class DatabaseHandler:
         Get sim_telarray configuration parameters from the DB for a specific telescope.
 
         """
-
         _, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
@@ -526,7 +520,6 @@ class DatabaseHandler:
             Version of the model.
 
         """
-
         return (
             names.validate_site_name(site),
             names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
@@ -556,7 +549,6 @@ class DatabaseHandler:
             If the desired file is not found.
 
         """
-
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
         if file_system.exists({"filename": file_name}):
@@ -578,7 +570,6 @@ class DatabaseHandler:
         file: GridOut
             A file instance returned by GridFS find_one
         """
-
         db = DatabaseHandler.db_client[db_name]
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
@@ -621,7 +612,6 @@ class DatabaseHandler:
         BulkWriteError
 
         """
-
         db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
             db_to_copy_to = db_name
@@ -730,7 +720,6 @@ class DatabaseHandler:
                 }
 
         """
-
         _collection = DatabaseHandler.db_client[db_name][collection]
 
         if "version" in query:
@@ -785,7 +774,6 @@ class DatabaseHandler:
             if field not in allowed fields
 
         """
-
         db_name = self._get_db_name(db_name)
         allowed_fields = ["applicable", "unit", "type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
@@ -887,7 +875,6 @@ class DatabaseHandler:
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
 
         """
-
         db_name = self._get_db_name(db_name)
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
@@ -1024,7 +1011,6 @@ class DatabaseHandler:
             if version not valid. Valid versions are: 'Released' and 'Latest'.
 
         """
-
         if version not in ["Released", "Latest"]:
             raise ValueError('The only default versions are "Released" or "Latest"')
 
@@ -1112,7 +1098,6 @@ class DatabaseHandler:
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
 
         """
-
         collection = DatabaseHandler.db_client[self._get_db_name()][collection_name]
 
         query = {
@@ -1189,7 +1174,6 @@ class DatabaseHandler:
             If the telescope name is not found in the database.
 
         """
-
         if self._available_telescopes is None:
             self._available_telescopes = self.get_all_available_telescopes(model_version)
 

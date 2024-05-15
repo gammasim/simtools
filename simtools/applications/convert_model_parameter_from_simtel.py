@@ -63,7 +63,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
@@ -91,7 +90,6 @@ def _parse(label=None, description=None):
 
 
 def main():
-
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Convert simulation model parameter from sim_telarray to simtools format.",

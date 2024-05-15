@@ -103,7 +103,6 @@ def _parse(description=None):
         command line parser object
 
     """
-
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
         "--simulation_configuration",
@@ -189,7 +188,6 @@ def _process_simulation_config_file(config_file, primary_config, logger):
         configuration of array simulations
 
     """
-
     try:
         config_data = gen.collect_data_from_file_or_dict(file_name=config_file, in_dict=None)
     except FileNotFoundError:

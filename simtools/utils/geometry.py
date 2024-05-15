@@ -41,7 +41,6 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
         The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
-
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2d array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
@@ -126,7 +125,6 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     UnitsError:
         If the unit of x and y are different.
     """
-
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
     if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")

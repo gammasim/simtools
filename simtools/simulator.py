@@ -162,7 +162,6 @@ class Simulator:
         gen.InvalidConfigData
 
         """
-
         if simulator not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigData
         self._simulator = simulator.lower()
@@ -202,7 +201,6 @@ class Simulator:
             Dict with simulator configuration data.
 
         """
-
         self._corsika_config_data = copy(config_data)
 
         try:
@@ -265,7 +263,6 @@ class Simulator:
             Configuration of array simulations.
 
         """
-
         common = copy(config_data.pop("common", {}))
         config_showers = copy(config_data.pop("showers", {})) | common
         config_arrays = copy(config_data.pop("array", {})) | common
@@ -439,7 +436,6 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-
         self._logger.info(f"Submission command: {self._submit_command}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
@@ -479,7 +475,6 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
@@ -507,7 +502,6 @@ class Simulator:
             file name as value
 
         """
-
         _runs_and_files = {}
 
         if self.simulator == "simtel":
@@ -566,7 +560,6 @@ class Simulator:
             run number
 
         """
-
         info_for_file_name = self._simulation_runner.get_info_for_file_name(run)
         self._results["output"].append(
             str(self._simulation_runner.get_file_name(file_type="output", **info_for_file_name))
@@ -709,7 +702,6 @@ class Simulator:
            Dictionary with reports on computing resources
 
         """
-
         if len(self._results["sub_out"]) == 0:
             if input_file_list is None:
                 return {"Walltime/run [sec]": np.nan}
@@ -790,7 +782,6 @@ class Simulator:
             file type (e.g., log)
 
         """
-
         if which not in self._results:
             self._logger.error(f"Invalid file type {which}")
             raise KeyError

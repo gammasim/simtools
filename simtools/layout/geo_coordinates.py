@@ -17,7 +17,6 @@ class GeoCoordinates:
         Initialize GeoCoordinates
 
         """
-
         self._logger = logging.getLogger(__name__)
 
     def crs_utm(self, epsg):
@@ -146,7 +145,6 @@ class GeoCoordinates:
             If reference_point does not have a valid center or UTM system is not defined.
 
         """
-
         try:
             _center_lat, _, _centre_altitude = reference_point.get_coordinates("mercator")
         except AttributeError:
@@ -183,7 +181,6 @@ class GeoCoordinates:
             Ellipsoid radius at given latitude.
 
         """
-
         _lat_rad = np.deg2rad(latitude)
         _numerator = (semi_major_axis**2 * np.cos(_lat_rad)) ** 2 + (
             semi_minor_axis**2 * np.sin(_lat_rad)

@@ -152,7 +152,6 @@ def _parse(label):
     """
     Parse command line configuration
     """
-
     config = configurator.Configurator(
         description="Derive mirror random reflection angle.", label=label
     )
@@ -238,7 +237,6 @@ def _define_telescope_model(label, args_dict, db_config):
         telescope model
 
     """
-
     tel = TelescopeModel(
         site=args_dict["site"],
         telescope_model_name=args_dict["telescope"],
@@ -264,7 +262,6 @@ def _print_and_write_results(
     in the requested format
 
     """
-
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
@@ -315,7 +312,6 @@ def _get_psf_containment(logger, args_dict):
     from file and return mean and sigma
 
     """
-
     # If this is a test, read just the first few lines since we only simulate those mirrors
     data_end = args_dict["number_of_mirrors_to_test"] + 1 if args_dict["test"] else None
     _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end)

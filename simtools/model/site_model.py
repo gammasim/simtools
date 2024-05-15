@@ -53,7 +53,6 @@ class SiteModel(ModelParameter):
         dict
             Reference point coordinates as dict
         """
-
         return {
             "center_altitude": self.get_parameter_value_with_unit("reference_point_altitude"),
             "center_northing": self.get_parameter_value_with_unit("reference_point_utm_north"),
@@ -77,7 +76,6 @@ class SiteModel(ModelParameter):
             Site-related CORSIKA parameters as dict
 
         """
-
         # backwards compatibility to `corsika_parameters.yml` (temporary TODO)
         if config_file_style:
             _atmosphere_id = 26 if self.site == "North" else 36

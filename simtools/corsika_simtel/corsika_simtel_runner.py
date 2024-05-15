@@ -79,7 +79,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         Path:
             Full path of the run script file.
         """
-
         kwargs = {
             "run_number": None,
             **kwargs,
@@ -106,7 +105,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         multipipe_file: str or Path
             The name of the multipipe file which contains all of the multipipe commands.
         """
-
         multipipe_executable = Path(self.corsika_config.config_file_path.parent).joinpath(
             "run_cta_multipipe"
         )
@@ -135,7 +133,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
                     run number
 
         """
-
         info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
         weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
@@ -167,7 +164,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         Get a CORSIKA or sim_telarray style file name for various file types.
         See the implementations in CorsikaRunner and SimtelRunnerArray for details.
         """
-
         if file_type in ["output", "log", "histogram"]:
             return SimtelRunnerArray.get_file_name(self, file_type=file_type, **kwargs)
         return CorsikaRunner.get_file_name(

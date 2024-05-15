@@ -80,7 +80,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
@@ -120,7 +119,6 @@ def get_list_of_parameters_and_schema_files(schema_directory):
         List of schema files found in schema file directory.
 
     """
-
     schema_files = sorted(list(Path(schema_directory).rglob("*.schema.yml")))
     parameters = []
     for schema_file in schema_files:
@@ -146,9 +144,8 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
         List of parameters found in simtel configuration file.
 
     """
-
     simtel_parameter_set = set()
-    with open(simtel_config_file, "r", encoding="utf-8") as file:
+    with open(simtel_config_file, encoding="utf-8") as file:
         for line in file:
             parts_of_lines = re.split(r",\s*|\s+", line.strip())
             simtel_parameter_set.add(parts_of_lines[1].lower())
@@ -172,7 +169,6 @@ def read_simtel_config_file(args_dict, logger, schema_file, camera_pixels=None):
         Number of camera pixels.
 
     """
-
     simtel_config_reader = SimtelConfigReader(
         schema_file=schema_file,
         simtel_config_file=args_dict["simtel_cfg_file"],
@@ -205,7 +201,6 @@ def get_number_of_camera_pixel(args_dict, logger):
         Number of camera pixels (None if file is not found)
 
     """
-
     try:
         simtel_config_reader = SimtelConfigReader(
             schema_file=Path(args_dict["schema_directory"]) / "camera_pixels.schema.yml",
@@ -244,7 +239,6 @@ def read_and_export_parameters(args_dict, logger):
         List of simtools parameter not found in simtel configuration file.
 
     """
-
     _parameters, _schema_files = get_list_of_parameters_and_schema_files(
         args_dict["schema_directory"]
     )
@@ -258,7 +252,6 @@ def read_and_export_parameters(args_dict, logger):
     _parameters_not_in_simtel = []
 
     for _parameter, _schema_file in zip(_parameters, _schema_files):
-
         logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
         simtel_config_reader = read_simtel_config_file(
             args_dict, logger, _schema_file, _camera_pixel
@@ -308,7 +301,6 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
         Logger object
 
     """
-
     logger.info(
         f"Parameters not found in simtools schema files ({len(_parameters_not_in_simtel)}):"
     )
@@ -356,7 +348,6 @@ def print_list_of_files(args_dict, logger):
         Logger object
 
     """
-
     model_files = sorted(list(Path(args_dict["output_path"]).rglob("*.json")))
     for file in model_files:
         model_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
@@ -365,7 +356,6 @@ def print_list_of_files(args_dict, logger):
 
 
 def main():
-
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Convert simulation model parameters from sim_telarray to simtools format.",

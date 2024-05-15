@@ -81,7 +81,6 @@ class ArrayModel:
         ----------
         array_config_data: dict
         """
-
         # Validating array_config_data
         # Keys 'site', 'layout_name' and 'default' are mandatory.
         # 'default' must have 'LST', 'MST' and 'SST' (for South site) keys.
@@ -139,7 +138,6 @@ class ArrayModel:
         including reading the parameters from the DB.
 
         """
-
         # Getting site parameters from DB
         self._logger.debug("Getting site parameters from DB")
         self._site_model = SiteModel(
@@ -221,7 +219,6 @@ class ArrayModel:
             data: dict or str
                 Piece of the array_config_data for one specific telescope.
             """
-
             if isinstance(data, dict):
                 # Case 0: data is dict
                 if "name" not in data.keys():
@@ -248,7 +245,6 @@ class ArrayModel:
 
     def print_telescope_list(self):
         """Print out the list of telescopes for quick inspection."""
-
         for tel_data, tel_model in zip(self.layout, self._telescope_model):
             print(f"Name: {tel_data.name}\t Model: {tel_model.name}")
 
@@ -256,7 +252,6 @@ class ArrayModel:
         """
         Export sim_telarray config files for all the telescopes into the output model directory.
         """
-
         exported_models = []
         for tel_model in self._telescope_model:
             name = tel_model.name + (
@@ -275,7 +270,6 @@ class ArrayModel:
         """
         Export sim_telarray config file for the array into the output model directory.
         """
-
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
             array_name=self.layout_name,
@@ -306,7 +300,6 @@ class ArrayModel:
         Export sim_telarray config file for the array and for each individual telescope into the \
         output model directory.
         """
-
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
@@ -322,7 +315,6 @@ class ArrayModel:
         Path
             Path of the exported config file for sim_telarray.
         """
-
         self.export_all_simtel_config_files()
         return self._config_file_path
 

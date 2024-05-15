@@ -14,8 +14,8 @@
     data_type (str)
         type of input data (allowed types: metadata, schema, data)
 
-    Raises
-    ------
+Raises
+------
     FileNotFoundError
       if file to be validated is not found
 
@@ -56,7 +56,6 @@ def _parse(label, description):
         application configuration
 
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
     config.parser.add_argument("--schema", help="json schema file", required=False)
@@ -91,7 +90,6 @@ def _get_schema_file_name(args_dict, data_dict=None):
         schema file name
 
     """
-
     schema_file = args_dict.get("schema")
     if schema_file is None and data_dict is not None:
         schema_file = data_dict.get("meta_schema_url")
@@ -110,7 +108,6 @@ def validate_schema(args_dict, logger):
     the metadata section of the data dictionary.
 
     """
-
     try:
         data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
     except FileNotFoundError as exc:

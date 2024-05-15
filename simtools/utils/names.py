@@ -1,7 +1,7 @@
 import glob
 import logging
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 import yaml
@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-@lru_cache(maxsize=None)
+@cache
 def array_elements():
     """
     Load array elements from reference files and keep in cache.
@@ -35,7 +35,7 @@ def array_elements():
         Array elements.
     """
     base_path = Path(__file__).parent
-    with open(base_path / "../schemas/array_elements.yml", "r", encoding="utf-8") as file:
+    with open(base_path / "../schemas/array_elements.yml", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
 
 
@@ -80,12 +80,12 @@ array_layout_names = {
 }
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_model_parameters(class_key_list):
     model_parameters = {}
     schema_files = glob.glob(str(Path(__file__).parent / "../schemas/model_parameters") + "/*.yml")
     for schema_file in schema_files:
-        with open(schema_file, "r", encoding="utf-8") as f:
+        with open(schema_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         try:
             if data["instrument"]["class"] in class_key_list:
@@ -125,7 +125,6 @@ def validate_telescope_id_name(name):
     ValueError
         If name is not valid.
     """
-
     if isinstance(name, int) or name.isdigit():
         return f"{int(name):02d}"
     if name.lower() in ("design", "test"):
@@ -198,6 +197,7 @@ def _validate_name(name, all_names):
         Name to validate.
     all_names: dict
         Dictionary with valid names.
+
     Returns
     -------
     str
@@ -208,7 +208,6 @@ def _validate_name(name, all_names):
     ValueError
         If name is not valid.
     """
-
     for key in all_names.keys():
         if isinstance(all_names[key], list) and name.lower() in [
             item.lower() for item in all_names[key]
@@ -339,7 +338,6 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-
     return array_elements()[get_telescope_type_from_telescope_name(name)]["collection"]
 
 
@@ -370,7 +368,6 @@ def get_simulation_software_name_from_parameter_name(
     str
         Simtel parameter name.
     """
-
     _parameter_names = {}
     if search_telescope_parameters:
         _parameter_names.update(telescope_parameters())
@@ -407,7 +404,6 @@ def get_parameter_name_from_simtel_name(simtel_name):
     str
         Model parameter name.
     """
-
     _parameters = {**telescope_parameters(), **site_parameters()}
 
     for par_name, par_info in _parameters.items():
@@ -599,7 +595,6 @@ def sanitize_name(name):
     ValueError:
         if the string `name` can not be sanitized.
     """
-
     # Convert to lowercase
     sanitized = name.lower()
 

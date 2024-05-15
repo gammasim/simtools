@@ -63,7 +63,6 @@ class ArrayLayout:
         """
         Initialize ArrayLayout.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self.mongo_db_config = mongo_db_config
@@ -117,7 +116,6 @@ class ArrayLayout:
         ArrayLayout
             Instance of the ArrayLayout.
         """
-
         split_name = array_layout_name.split("-")
         site_name = names.validate_site_name(split_name[0])
         array_name = names.validate_array_layout_name(split_name[1])
@@ -184,7 +182,6 @@ class ArrayLayout:
             invalid array center definition.
 
         """
-
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
         self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m)
@@ -286,7 +283,6 @@ class ArrayLayout:
             in case neither telescope name or asset_code / sequence number are given.
 
         """
-
         tel = TelescopePosition()
         try:
             tel.name = row["telescope_name"]
@@ -392,7 +388,6 @@ class ArrayLayout:
         astropy.table.QTable
             Table with the telescope layout information.
         """
-
         self._logger.debug("Initializing array (site and telescope parameters)")
         self._initialize_site_parameters_from_db()
         self._initialize_coordinate_systems()
@@ -433,7 +428,6 @@ class ArrayLayout:
             Instance of TelescopePosition.
 
         """
-
         if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
             _telescope_model_name = self.db.get_telescope_db_name(
                 telescope_name=telescope.name, model_version=self.model_version
@@ -479,7 +473,6 @@ class ArrayLayout:
             CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
             center).
         """
-
         tel = TelescopePosition(name=telescope_name)
         self._set_telescope_auxiliary_parameters(tel)
         tel.set_coordinates(crs_name, xx, yy)
@@ -504,7 +497,6 @@ class ArrayLayout:
             Metadata header for array element list export.
 
         """
-
         _meta = {}
         if self._array_center:
             (
@@ -534,7 +526,6 @@ class ArrayLayout:
             Astropy table with the telescope layout information.
 
         """
-
         table = QTable(meta=self._get_export_metadata())
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
@@ -605,7 +596,6 @@ class ArrayLayout:
         str
             Piece of text to be added to the CORSIKA input file.
         """
-
         corsika_list = ""
         for tel in self._telescope_list:
             pos_x, pos_y, pos_z = tel.get_coordinates("ground")
@@ -632,7 +622,6 @@ class ArrayLayout:
             Name of coordinate system to be used for export.
 
         """
-
         for tel in self._telescope_list:
             tel.print_compact_format(
                 crs_name=crs_name,
@@ -644,7 +633,6 @@ class ArrayLayout:
 
     def convert_coordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""
-
         self._logger.info("Converting telescope coordinates")
 
         crs_wgs84 = self.geo_coordinates.crs_wgs84()
@@ -673,7 +661,6 @@ class ArrayLayout:
             If the asset list is empty.
 
         """
-
         _n_telescopes = len(self._telescope_list)
         try:
             if len(asset_list) > 0:

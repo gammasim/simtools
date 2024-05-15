@@ -115,7 +115,8 @@ class SimtelHistograms:
     @property
     def combined_hists(self):
         """Add the values of the same type of histogram from the various lists into a single
-        histogram list."""
+        histogram list.
+        """
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
@@ -230,7 +231,6 @@ class SimtelHistograms:
         hists: list
             List with the final trigger rate for each histogram.
         """
-
         list_of_integrated_hists = []
         for _, hist in enumerate(hists):
             energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
@@ -268,7 +268,6 @@ class SimtelHistograms:
         ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
-
         hist = self.combined_hists[i_hist]
         ax.set_title(hist["title"])
 
@@ -350,7 +349,6 @@ class SimtelHistograms:
         dict
             Meta dictionary for the hdf5 files with the histograms.
         """
-
         if self.__meta_dict is None:
             self.__meta_dict = {
                 "simtools_version": version.__version__,

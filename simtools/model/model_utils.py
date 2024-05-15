@@ -27,7 +27,6 @@ def compute_telescope_transmission(pars, off_axis):
     float
         Telescope transmission.
     """
-
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
@@ -50,7 +49,6 @@ def is_two_mirror_telescope(telescope_model_name):
     bool
         True if the telescope is a two mirror one.
     """
-
     tel_type = names.get_telescope_type_from_telescope_name(telescope_model_name)
     if "SST" in tel_type or "SCT" in tel_type:
         return True

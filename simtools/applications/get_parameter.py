@@ -22,8 +22,8 @@
     log_level (str, optional)
         Log level to print.
 
-    Raises
-    ------
+Raises
+------
     KeyError in case the parameter requested does not exist in the model parameters.
 
     Example

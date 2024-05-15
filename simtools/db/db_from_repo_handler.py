@@ -46,7 +46,6 @@ def update_model_parameters_from_repo(
         Updated dictionary with parameters.
 
     """
-
     logger.info(
         "Updating model parameters from repository for site: %s, telescope: %s",
         site,

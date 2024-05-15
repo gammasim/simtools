@@ -33,8 +33,8 @@
     verbosity (str, optional)
         Log level to print.
 
-    Raises
-    ------
+Raises
+------
     TypeError:
         if argument passed through `hist_file_names` is not a file.
 

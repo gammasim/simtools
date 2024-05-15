@@ -52,7 +52,6 @@ class CommandLineParser(argparse.ArgumentParser):
         job_submission: bool
             Add job submission configuration parameters to list of args.
         """
-
         self.initialize_simulation_model_arguments(simulation_model)
         if job_submission:
             self.initialize_job_submission_arguments()
@@ -70,7 +69,6 @@ class CommandLineParser(argparse.ArgumentParser):
         Initialize configuration files.
 
         """
-
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
             "--config",
@@ -130,7 +128,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize application output files(s)
         """
-
         _job_group = self.add_argument_group("output")
         _job_group.add_argument(
             "--output_file",
@@ -157,7 +154,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize application execution arguments.
         """
-
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
             "--test",
@@ -185,7 +181,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize DB configuration parameters.
         """
-
         _job_group = self.add_argument_group("MongoDB configuration")
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
@@ -249,7 +244,6 @@ class CommandLineParser(argparse.ArgumentParser):
         model_options: list
             Options to be set: "telescope", "site"
         """
-
         if model_options is not None:
             _job_group = self.add_argument_group("simulation model")
             if "site" in model_options or "telescope" in model_options:
@@ -290,7 +284,6 @@ class CommandLineParser(argparse.ArgumentParser):
             for invalid sites
 
         """
-
         names.validate_site_name(str(value))
         return str(value)
 
@@ -315,7 +308,6 @@ class CommandLineParser(argparse.ArgumentParser):
             for invalid telescope
 
         """
-
         names.validate_telescope_name(str(value))
         return str(value)
 
@@ -373,7 +365,6 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-
         logger = logging.getLogger(__name__)
 
         try:
@@ -418,7 +409,6 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-
         logger = logging.getLogger(__name__)
         try:
             fangle = float(angle)

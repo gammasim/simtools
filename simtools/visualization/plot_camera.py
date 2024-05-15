@@ -34,7 +34,6 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     fig: plt.figure instance
         Figure with the pixel layout.
     """
-
     logger.info(f"Plotting the {camera.telescope_model_name} camera")
 
     fig, ax = plt.subplots()
@@ -213,7 +212,6 @@ def _plot_axes_def(camera, plot, rotate_angle):
     rotate_angle: float
         The rotation angle applied
     """
-
     invert_yaxis = False
     x_left = 0.7  # Position of the left most axis
     if not is_two_mirror_telescope(camera.telescope_model_name):
@@ -297,7 +295,6 @@ def _plot_one_axis_def(plot, **kwargs):
             invert_yaxis: bool
             Flag to invert the y-axis (for dual mirror telescopes).
     """
-
     x_title = kwargs["x_title"]
     y_title = kwargs["y_title"]
     x_pos, y_pos = (kwargs["x_pos"], kwargs["y_pos"])

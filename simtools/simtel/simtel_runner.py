@@ -37,7 +37,6 @@ class SimtelRunner:
         """
         Initialize SimtelRunner.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = Path(simtel_source_path)
@@ -206,7 +205,6 @@ class SimtelRunner:
         ------
         SimtelExecutionError
         """
-
         if hasattr(self, "_log_file"):
             msg = gen.get_log_excerpt(self._log_file)
         else:

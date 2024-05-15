@@ -61,7 +61,6 @@ class RayTracing:
         """
         Initialize RayTracing class.
         """
-
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing RayTracing class")
 
@@ -247,7 +246,6 @@ class RayTracing:
             Containment fraction for PSF containment calculation. Allowed values are in the
             interval [0,1]
         """
-
         do_analyze = not self._file_results.exists() or force
 
         focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
@@ -353,7 +351,6 @@ class RayTracing:
         (containment_diameter_cm, x_mean, y_mean, eff_area)
 
         """
-
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
@@ -411,7 +408,6 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
         try:

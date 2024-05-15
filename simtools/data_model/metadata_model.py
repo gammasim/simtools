@@ -45,7 +45,6 @@ def validate_schema(data, schema_file):
         if validation fails
 
     """
-
     schema, schema_file = _load_schema(schema_file)
 
     try:
@@ -77,7 +76,6 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
 
     """
-
     schema, _ = _load_schema(schema_file)
     return _fill_defaults(schema["definitions"], observatory)
 
@@ -100,7 +98,6 @@ def _load_schema(schema_file=None):
         if schema file is not found
 
     """
-
     if schema_file is None:
         schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
@@ -133,7 +130,6 @@ def _add_array_elements(key, schema):
         Schema dictionary with added array elements.
 
     """
-
     _list_of_array_elements = sorted(list(names.array_elements().keys()))
 
     def recursive_search(sub_schema, key):
@@ -214,7 +210,6 @@ def _fill_defaults(schema, observatory="CTA"):
         Dictionary with default values.
 
     """
-
     defaults = {observatory: {}}
 
     schema = _resolve_references(schema[observatory])

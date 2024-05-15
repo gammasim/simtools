@@ -136,7 +136,6 @@ class CorsikaHistograms:
         float:
             The version of CORSIKA used to produce the CORSIKA IACT file given by `self.input_file`.
         """
-
         if self._corsika_version is None:
             all_corsika_versions = list(run_header.run_header_types.keys())
             header = list(self.iact_file.header)
@@ -196,7 +195,6 @@ class CorsikaHistograms:
         For the remaining information (such as px, py, pz), use this function.
 
         """
-
         if self.event_information is None:
             with IACTFile(self.input_file) as self.iact_file:
                 self.telescope_positions = np.array(self.iact_file.telescope_positions)
@@ -246,7 +244,6 @@ class CorsikaHistograms:
         dict:
             A dictionary with the astropy units.
         """
-
         # Build a dictionary with astropy units for the unit of the event's (header's) parameters.
         all_event_astropy_units = {}
         for key in parameters[1:]:  # starting at the second
@@ -292,7 +289,6 @@ class CorsikaHistograms:
         TypeError:
             if the indices passed through telescope_index are not of type int.
         """
-
         if telescope_new_indices is None:
             self._telescope_indices = np.arange(self.num_telescopes)
         else:
@@ -356,7 +352,6 @@ class CorsikaHistograms:
             Name of the output file, in which to save the histogram configuration.
 
         """
-
         if file_name is None:
             file_name = "hist_config"
         file_name = Path(file_name).with_suffix(".yml")
@@ -387,7 +382,6 @@ class CorsikaHistograms:
         dict:
             Dictionary with the configuration parameters to create the histograms.
         """
-
         if self.individual_telescopes is False:
             xy_maximum = 1000 * u.m
             xy_bin = 100
@@ -567,7 +561,6 @@ class CorsikaHistograms:
         IndexError:
             If the index or indices passed though telescope_index are out of range.
         """
-
         hist_num = 0
         for i_tel_info, photons_info in np.array(
             list(zip(self.telescope_positions, photons)), dtype=object
@@ -680,7 +673,6 @@ class CorsikaHistograms:
             if False, the histograms are supposed to be filled for all telescopes.
             if True, one histogram is set for each telescope sepparately.
         """
-
         if new_individual_telescopes is None:
             self._individual_telescopes = False
         else:
@@ -695,7 +687,6 @@ class CorsikaHistograms:
         HistogramNotCreated:
             if the histogram was not previously created.
         """
-
         for histogram in self._allowed_histograms:
             if not hasattr(self, histogram) or getattr(self, histogram) is None:
                 msg = (
@@ -728,7 +719,6 @@ class CorsikaHistograms:
         ValueError:
             if label is not valid.
         """
-
         if label not in self._allowed_2d_labels:
             msg = f"label is not valid. Valid entries are {self._allowed_2d_labels}"
             self._logger.error(msg)
@@ -866,7 +856,6 @@ class CorsikaHistograms:
         ValueError:
             if label is not valid.
         """
-
         if label not in self._allowed_1d_labels:
             msg = f"{label} is not valid. Valid entries are {self._allowed_1d_labels}"
             self._logger.error(msg)
@@ -940,7 +929,6 @@ class CorsikaHistograms:
             The bin edges of the 1D histogram in meters with size = int(max_dist/bin_size) + 1,
             usually in meter.
         """
-
         bins, max_dist = self._get_bins_max_dist(bins=bins, max_dist=max_dist)
         bin_edges_1d_list, hist_1d_list = [], []
 
@@ -1111,7 +1099,6 @@ class CorsikaHistograms:
         numpy.array
             Number of photons per telescope.
         """
-
         hist, bin_edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         return hist.reshape(1, bins), bin_edges.reshape(1, bins + 1)
 
@@ -1137,7 +1124,6 @@ class CorsikaHistograms:
         dict
             Meta dictionary for the hdf5 files with the histograms.
         """
-
         if self.__meta_dict is None:
             self.__meta_dict = {
                 "corsika_version": self.corsika_version,
@@ -1221,7 +1207,6 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-
         for _, function_dict in self.dict_1d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             function = getattr(self, function_dict["function"])
@@ -1398,7 +1383,6 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
-
         hist, bin_edges = self.event_1d_histogram(
             event_header_element, bins=bins, hist_range=hist_range
         )
@@ -1650,7 +1634,6 @@ class CorsikaHistograms:
         KeyError:
             If parameter is not valid.
         """
-
         if parameter not in self.all_event_keys:
             msg = f"`key` is not valid. Valid entries are {self.all_event_keys}"
             self._logger.error(msg)

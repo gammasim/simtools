@@ -92,7 +92,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
         TypeError
             raised for errors while creating directory name
         """
-
         if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
@@ -173,7 +172,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if data_path is not set
 
         """
-
         if test:
             file_prefix = Path("tests/resources/")
         elif self.data_path is not None:
