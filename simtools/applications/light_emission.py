@@ -12,20 +12,22 @@
     Example Usage
     -------------
     1. Simulate light emission with varying distances:
-       ```
+
+    .. code-block:: console
+
        simtools-simulate-light-emission --telescope MSTN-04 --site North \
        --illuminator ILLN-01 --light_source_setup variable \
        --model_version prod6 --light_source_type led
-       ```
 
     2. Simulate light emission with telescopes at fixed positions according to the layout:
-       ```
+
+    .. code-block:: console
+
        simtools-simulate-light-emission --telescope MSTN-04 --site North \
        --illuminator ILLN-01 --light_source_setup variable \
        --model_version prod6 --telescope_file \
        /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv\
        --light_source_type led
-       ```
 
     Command Line Arguments
     ----------------------
@@ -62,52 +64,54 @@
     Example
     -------
     Simulate isotropic light source at different distances for the MSTN-04:
-    ```
-    simtools-simulate-light-emission --telescope MSTN-04 --site North \
-       --illuminator ILLN-01 --light_source_setup variable \
-       --model_version prod6 --light_source_type led    ```
+
+    .. code-block:: console
+
+        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        --illuminator ILLN-01 --light_source_setup variable \
+        --model_version prod6 --light_source_type led    ```
 
     Expected Output:
-    ```
-    light-emission package stage:
-    File '/workdir/external/simtools/simtools-output/light_emission/model/
-        atmprof_ecmwf_north_winter_fixed.dat' registered for atmospheric profile 99.
-    Atmospheric profile 99 to be read from file '/workdir/external/simtools/
-        simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat'.
-    Atmospheric profile 99 with 55 levels read from file /workdir/external/
-        simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat
-    Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
-    IACT control parameter line: print_events 999 10 100 1000 0
-    Case 1: 1 event with 1e+10 photons.
-    Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999
-    Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz
-        not yet created.
-    Telescope output file: '/workdir/external/simtools/simtools-output/
-        light_emission/xyzls.iact.gz'
-    ....
-    ....
-    Sim_telarray stage:
-    Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105
-    Event end data has been found.
-    Shower of 0.0000 TeV energy was seen in 1 of 1 cases.
-    Photon statistics:
-    All photons:               928518
-    Used photons:              928518
-    Not absorbed/max. Q.E.:    189560
-    Reflected on mirror:        26815
-    Camera hit:                 25574
-    Pixel hit:                  25574
-    Detected:                   20998
-    Trigger statistics:
-    Tel. triggered:             1
-    Tel. + array:               1
-    Early readout:              0
-    Late readout:               0
-    Finish data conversion ...
-    Writing 13 histograms to output file.
-    ...
 
-    ```
+    .. code-block:: console
+
+        light-emission package stage:
+        File '/workdir/external/simtools/simtools-output/light_emission/model/
+            atmprof_ecmwf_north_winter_fixed.dat' registered for atmospheric profile 99.
+        Atmospheric profile 99 to be read from file '/workdir/external/simtools/
+            simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat'.
+        Atmospheric profile 99 with 55 levels read from file /workdir/external/
+            simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat
+        Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
+        IACT control parameter line: print_events 999 10 100 1000 0
+        Case 1: 1 event with 1e+10 photons.
+        Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999
+        Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz
+            not yet created.
+        Telescope output file: '/workdir/external/simtools/simtools-output/
+            light_emission/xyzls.iact.gz'
+        ....
+        ....
+        Sim_telarray stage:
+        Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105
+        Event end data has been found.
+        Shower of 0.0000 TeV energy was seen in 1 of 1 cases.
+        Photon statistics:
+        All photons:               928518
+        Used photons:              928518
+        Not absorbed/max. Q.E.:    189560
+        Reflected on mirror:        26815
+        Camera hit:                 25574
+        Pixel hit:                  25574
+        Detected:                   20998
+        Trigger statistics:
+        Tel. triggered:             1
+        Tel. + array:               1
+        Early readout:              0
+        Late readout:               0
+        Finish data conversion ...
+        Writing 13 histograms to output file.
+
 
 """
 
