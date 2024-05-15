@@ -53,7 +53,10 @@
         Version of the simulation model.
 
     --light_source_type (str, optional)
-        Select calibration light source type: led or laser.
+        Select calibration light source type: led (default) or laser.
+        This changes the pre-compiled (simtel_array) application that is used to run the
+        light emission package with. Currently we use xyzls (laser), and ls-beam can be
+        accessed by using the laser option.
 
     --telescope_file (str, optional)
         Telescope position file. Required when using the --light_source_setup layout option.
