@@ -22,6 +22,8 @@ class SimulatorLightEmission(SimtelRunner):
     light emission package simulations. The light emission package is used to
     simulate a artificial light source, used for calibration.
 
+    The angle and pointing vector calculations use the convention north (x) towards
+    east (-y).
 
     Parameters
     ----------
@@ -401,25 +403,15 @@ class SimulatorLightEmission(SimtelRunner):
         command += super()._config_option(
             "altitude", self._site_model.get_parameter_value("corsika_observation_level")
         )
-        # command += super()._config_option("maximum_telescopes", "1")
-        # command += super()._config_option("trigger_telescopes", "1")
         command += super()._config_option(
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        # command += super()._config_option("trigger_current_limit", "1e10")
         # command += super()._config_option("show", "all") # for debugging
-        # command += super()._config_option("random_state", "none")
-        # command += super()._config_option("ONLY_TRIGGERED_TELESCOPES", "0")
-        # command += super()._config_option("ONLY_TRIGGERED_ARRAYS", "0")
         command += super()._config_option("TRIGGER_CURRENT_LIMIT", "20")
         command += super()._config_option("TRIGGER_TELESCOPES", "1")
-        # command += super()._config_option("ARRAY_TRIGGER", "NONE")
         command += super()._config_option("TELTRIG_MIN_SIGSUM", "7.8")
-
         command += super()._config_option("PULSE_ANALYSIS", "-30")
-        # command += super()._config_option("SUM_BEFORE_PEAK", "-30")
-        # command += super()._config_option("ARRAY_WINDOW", "1000")
 
         if "real" in self.default_le_config["x_pos"]:
             _, angles = self.calibration_pointing_direction()
