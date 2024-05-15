@@ -349,10 +349,10 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     if "CONFIGURATION" in config:
         model_version_requested = request.config.getoption("--model_version")
-        if "MODEL_VERSION_USE_CURRENT" in config["CONFIGURATION"]:
+        if "MODEL_VERSION_USE_CURRENT" in config:
             model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
             if model_version_requested != model_version_config:
-                return True
+                pytest.skip("Wrong model version for test")
 
         config_file, config_string, config_file_model_version = prepare_configuration(
             config["CONFIGURATION"],
