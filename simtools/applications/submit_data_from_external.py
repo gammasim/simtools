@@ -1,39 +1,39 @@
 #!/usr/bin/python3
 """
-    Summary
-    -------
-    Submit model parameter (value, table) through the command line.
+Summary
+-------
+Submit model parameter (value, table) through the command line.
 
-    Input data and metadata is validated, and if necessary enriched
-    and converted following a pre-described schema.
+Input data and metadata is validated, and if necessary enriched
+and converted following a pre-described schema.
 
-    Command line arguments
-    ----------------------
-    input_meta (str, optional)
-        input meta data file (yml format)
-    input (str, optional)
-        input data file
-    schema (str, optional)
-        Schema describing the input data
+Command line arguments
+----------------------
+input_meta (str, optional)
+input meta data file (yml format)
+input (str, optional)
+input data file
+schema (str, optional)
+Schema describing the input data
 
-    Example
-    -------
+Example
+-------
 
-    Submit mirror measurements with associated metadata:
+Submit mirror measurements with associated metadata:
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-submit-data-from-external \
+simtools-submit-data-from-external \
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \
             --input ./tests/resources/MLTdata-preproduction.ecsv \
             --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
             --output_file TEST-submit_data_from_external.ecsv
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        INFO::model_data_writer(l70)::write_data::Writing data to \
+INFO::model_data_writer(l70)::write_data::Writing data to \
             /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv
 
 """
@@ -65,7 +65,6 @@ def _parse(label, description):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(

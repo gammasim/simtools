@@ -1,28 +1,27 @@
 #!/usr/bin/python3
 """
-    This application adds all parameters found in a repository to the DB.
+This application adds all parameters found in a repository to the DB.
 
-    Generates a new data with all required collections.
-    Follows the structure of the CTAO gitlab model parameters repository.
-    file as input.
+Generates a new data with all required collections.
+Follows the structure of the CTAO gitlab model parameters repository.
+file as input.
 
-    This is an application for experts and should not be used by the general user.
+This is an application for experts and should not be used by the general user.
 
-    Command line arguments
+Command line arguments
 
-    input_path (str, required)
-        Path of local copy of model parameter repository.
-    db_name (str, required)
-        Name of new DB to be created.
+input_path (str, required)
+Path of local copy of model parameter repository.
+db_name (str, required)
+Name of new DB to be created.
 
-    Examples
-    --------
-
+Examples
+--------
     Upload a repository to the DB:
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-add_model-parameters-from-repository-to-db \
+simtools-add_model-parameters-from-repository-to-db \
             --input_path /path/to/repository \
             --db_name new_db_name
 """
@@ -52,7 +51,6 @@ def _parse(label=None, description=None):
     CommandLineParser
         Command line parser object.
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input_path",

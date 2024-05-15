@@ -45,7 +45,6 @@ class Mirrors:
         Read the mirror lists from disk and store the data. Allow reading of mirror lists in \
         sim_telarray and ecsv format
         """
-
         if str(self._mirror_list_file).find("ecsv") > 0:
             self._read_mirror_list_from_ecsv()
         else:
@@ -60,7 +59,6 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
 
@@ -130,7 +128,6 @@ class Mirrors:
         InvalidMirrorListFile
             If number of mirrors is 0.
         """
-
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
         try:
@@ -195,7 +192,6 @@ class Mirrors:
         (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float
             X, Y positions, mirror_diameter, focal length and shape_type.
         """
-
         mask = self.mirror_table["mirror_panel_id"] == number
         if not np.any(mask):
             self._logger.debug(f"Mirror id{number} not in table, using first mirror instead")

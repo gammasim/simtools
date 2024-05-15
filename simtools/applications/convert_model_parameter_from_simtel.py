@@ -1,34 +1,34 @@
 #!/usr/bin/python3
 """
-    Summary
-    -------
-    Convert simulation model parameter from sim_telarray format using the corresponding
-    schema file. Check value, type, and range and write a json file
-    ready to be submitted to the model database.
+Summary
+-------
+Convert simulation model parameter from sim_telarray format using the corresponding
+schema file. Check value, type, and range and write a json file
+ready to be submitted to the model database.
 
-    Command line arguments
-    ----------------------
-    parameter (str, required)
-        Parameter name (as used in simtools)
+Command line arguments
+----------------------
+parameter (str, required)
+Parameter name (as used in simtools)
 
-    simtel_cfg_file (str)
-        File name of sim_telarray configuration file containing all simulation model parameters.
+simtel_cfg_file (str)
+File name of sim_telarray configuration file containing all simulation model parameters.
 
-    simtel_telescope_name (str)
-        Name of the telescope in the sim_telarray configuration file.
+simtel_telescope_name (str)
+Name of the telescope in the sim_telarray configuration file.
 
-    telescope (str, optional)
-        Telescope model name (e.g. LST-1, SST-D, ...)
+telescope (str, optional)
+Telescope model name (e.g. LST-1, SST-D, ...)
 
-    Example
-    -------
+Example
+-------
 
-    Extract the num_gains parameter from a sim_telarray configuration file for LSTN-01
-    and write a json file in the same format as the model parameter database:
+Extract the num_gains parameter from a sim_telarray configuration file for LSTN-01
+and write a json file in the same format as the model parameter database:
 
-    .. code-block:: console
+.. code-block:: console
 
-       simtools-convert-model-parameter-from-simtel \\
+simtools-convert-model-parameter-from-simtel \\
           --simtel_telescope_name CT1 \\
           --telescope LSTN-01 \\
           --schema tests/resources/num_gains.schema.yml \\
@@ -63,7 +63,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
@@ -91,7 +90,6 @@ def _parse(label=None, description=None):
 
 
 def main():
-
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Convert simulation model parameter from sim_telarray to simtools format.",

@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to modify all non-optics parameters \
+Summary
+-------
+This application is used to modify all non-optics parameters \
     in the MST-Structure entries in the DB to non-applicable.
 
-    This application should not be used anymore by anyone.
+This application should not be used anymore by anyone.
 
-    Therefore, no additional documentation about this applications will be given.
+Therefore, no additional documentation about this applications will be given.
 
 """
 
@@ -44,7 +44,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    with open(args_dict["sections"], "r", encoding="utf-8") as stream:
+    with open(args_dict["sections"], encoding="utf-8") as stream:
         parameter_catogeries = yaml.safe_load(stream)
 
     non_optic_catagories = [

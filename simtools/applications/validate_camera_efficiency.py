@@ -1,63 +1,63 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application validate the camera efficiency by simulating it using \
+Summary
+-------
+This application validate the camera efficiency by simulating it using \
     the testeff program provided by sim_telarray.
 
-    The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
+The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.
 
-    .. _validate_camera_eff_plot:
-    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
-      :width: 49 %
-    .. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
-      :width: 49 %
+.. _validate_camera_eff_plot:
+.. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_cherenkov.png
+:width: 49 %
+.. image:: images/validate_camera_efficiency_North-MST-NectarCam-D_nsb.png
+:width: 49 %
 
-    Command line arguments
-    ----------------------
-    site (str, required)
-        North or South.
-    telescope (str, required)
-        Telescope model name (e.g. LST-1, SST-D, ...)
-    model_version (str, optional)
-        Model version (default='Released')
-    zenith_angle (float, optional)
-        Zenith angle in degrees (between 0 and 180).
-    azimuth_angle (float, optional)
-        Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
-        one of north, south, east or west (case insensitive). Note that North is 0 degrees
-        and the azimuth grows clockwise, so East is 90 degrees.
-    nsb_spectrum (str, optional)
-        File with NSB spectrum to use for the efficiency simulation.
-        The expected format is two columns with wavelength in nm and
-        NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
-        If the file has more than two columns, the first and third are used,
-        and the second is ignored (native sim_telarray behaviour).
-    verbosity (str, optional)
-        Log level to print
+Command line arguments
+----------------------
+site (str, required)
+North or South.
+telescope (str, required)
+Telescope model name (e.g. LST-1, SST-D, ...)
+model_version (str, optional)
+Model version (default='Released')
+zenith_angle (float, optional)
+Zenith angle in degrees (between 0 and 180).
+azimuth_angle (float, optional)
+Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or
+one of north, south, east or west (case insensitive). Note that North is 0 degrees
+and the azimuth grows clockwise, so East is 90 degrees.
+nsb_spectrum (str, optional)
+File with NSB spectrum to use for the efficiency simulation.
+The expected format is two columns with wavelength in nm and
+NSB flux with the units: [1e9 * ph/m2/s/sr/nm].
+If the file has more than two columns, the first and third are used,
+and the second is ignored (native sim_telarray behaviour).
+verbosity (str, optional)
+Log level to print
 
-    Example
-    -------
-    MST-NectarCam - Prod5
+Example
+-------
+MST-NectarCam - Prod5
 
-    Runtime < 1 min.
+Runtime < 1 min.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-validate-camera-efficiency --site North \
+simtools-validate-camera-efficiency --site North \
             --azimuth_angle 0 --zenith_angle 20 \
             --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \
             --telescope MST-NectarCam-D --model_version prod5
 
-    The output is saved in simtools-output/validate_camera_efficiency.
+The output is saved in simtools-output/validate_camera_efficiency.
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/\
+INFO::validate_camera_efficiency(l118)::main::Plotted NSB efficiency in /workdir/external/\
         simtools/simtools-output/validate_camera_efficiency/application-plots/validate_camera\
         _efficiency_MST-NectarCam-D_nsb
 

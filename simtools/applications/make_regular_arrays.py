@@ -1,31 +1,31 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
+Summary
+-------
 
-    This application creates the layout array files (ECSV) of regular arrays
-    with one telescope at the center of the array and with 4 telescopes
-    in a square grid. These arrays are used for trigger rate simulations.
+This application creates the layout array files (ECSV) of regular arrays
+with one telescope at the center of the array and with 4 telescopes
+in a square grid. These arrays are used for trigger rate simulations.
 
-    The array layout files created should be available at the data/layout directory.
+The array layout files created should be available at the data/layout directory.
 
-    Command line arguments
-    ----------------------
-    site (str, required)
-        observatory site (e.g., North or South).
-    model_version (str, optional)
-        Model version to use (e.g., prod6). If not provided, the latest version is used.
-    verbosity (str, optional)
-        Log level to print.
+Command line arguments
+----------------------
+site (str, required)
+observatory site (e.g., North or South).
+model_version (str, optional)
+Model version to use (e.g., prod6). If not provided, the latest version is used.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    Runtime < 10 s.
+Example
+-------
+Runtime < 10 s.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-make-regular-arrays --site=North
+simtools-make-regular-arrays --site=North
 
 """
 

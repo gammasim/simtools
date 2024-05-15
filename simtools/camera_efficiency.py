@@ -51,7 +51,6 @@ class CameraEfficiency:
         """
         Initialize the CameraEfficiency class.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = simtel_source_path
@@ -119,6 +118,7 @@ class CameraEfficiency:
         ----------
         tel: TelescopeModel
             An assumed instance of the TelescopeModel class.
+
         Raises
         ------
         ValueError
@@ -227,7 +227,7 @@ class CameraEfficiency:
 
         # Search for at least 5 consecutive numbers to see that we are in the table
         re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._file["simtel"], "r", encoding="utf-8") as file:
+        with open(self._file["simtel"], encoding="utf-8") as file:
             for line in file:
                 if re_table.match(line):
                     words = line.split()
@@ -331,7 +331,6 @@ class CameraEfficiency:
         tel_efficiency: float
             Telescope efficiency
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -353,7 +352,6 @@ class CameraEfficiency:
         cam_efficiency: float
             Wavelength-averaged camera efficiency
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -383,7 +381,6 @@ class CameraEfficiency:
         Float
             Telescope total efficiency including gaps
         """
-
         # Sum(N1) from 300 - 550 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
@@ -405,7 +402,6 @@ class CameraEfficiency:
         Float
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -428,7 +424,6 @@ class CameraEfficiency:
             NSB pixel rate in p.e./ns for reference conditions
             (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
-
         nsb_rate_provided_spectrum = (
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()

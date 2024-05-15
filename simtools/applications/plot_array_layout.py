@@ -1,38 +1,38 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application plots the layout array and saves into disk.
+Summary
+-------
+This application plots the layout array and saves into disk.
 
-    It accepts as input the telescope list file, the name of the layout, a sequence of arguments
-    with the telescope files or a sequence of arguments with the layout names.
+It accepts as input the telescope list file, the name of the layout, a sequence of arguments
+with the telescope files or a sequence of arguments with the layout names.
 
-    A rotation angle in degrees can be passed in case the array should be rotated before plotting.
-    A sequence of arguments for the rotation angle is also permitted, in which case all of them
-    are plotted and saved separately.
+A rotation angle in degrees can be passed in case the array should be rotated before plotting.
+A sequence of arguments for the rotation angle is also permitted, in which case all of them
+are plotted and saved separately.
 
 
-    Command line arguments
-    ----------------------
-    figure_name (str, optional)
-        File name for the pdf output.
-    telescope_list (str, optional)
-        The telescopes file (.ecsv) with the array information.
-    array_layout_name (str, optional)
-        Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
-    rotate_angle (float, optional)
-        Angle to rotate the array before plotting (in degrees).
-    show_tel_label (bool, optional)
-        Shows the telescope labels in the plot.
-    verbosity (str, optional)
-        Log level to print.
+Command line arguments
+----------------------
+figure_name (str, optional)
+File name for the pdf output.
+telescope_list (str, optional)
+The telescopes file (.ecsv) with the array information.
+array_layout_name (str, optional)
+Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
+rotate_angle (float, optional)
+Angle to rotate the array before plotting (in degrees).
+show_tel_label (bool, optional)
+Shows the telescope labels in the plot.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    .. code-block:: console
+Example
+-------
+.. code-block:: console
 
-        simtools-plot-layout-array --figure_name northern_array_alpha \
+simtools-plot-layout-array --figure_name northern_array_alpha \
         --array_layout_name North-TestLayout
 
 """
@@ -180,7 +180,7 @@ def main():
             if args_dict["figure_name"] is None:
                 plot_file_name = (
                     f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
-                    f"{str((round((one_angle.to(u.deg).value))))}deg"
+                    f"{str(round(one_angle.to(u.deg).value))}deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]

@@ -31,7 +31,6 @@ class TelescopePosition:
         """
         Initialize TelescopePosition.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self.name = name
@@ -91,7 +90,6 @@ class TelescopePosition:
         InvalidCoordSystem
            if coordinate system is not defined.
         """
-
         try:
             _zz = self.crs[crs_name]["zz"]["value"]
             _zz_header = self.crs[crs_name]["zz"]["name"]
@@ -184,7 +182,6 @@ class TelescopePosition:
         ii) return input value without change, if no unit is given
 
         """
-
         if isinstance(value, u.Quantity):
             try:
                 return value.to(unit).value
@@ -215,7 +212,6 @@ class TelescopePosition:
             If coordinate system is not known.
 
         """
-
         try:
             self.crs[crs_name]["xx"]["value"] = self._get_coordinate_value(
                 xx, self.crs[crs_name]["xx"]["unit"]
@@ -256,7 +252,6 @@ class TelescopePosition:
         ----------
         tel_altitude: astropy.Quantity
         """
-
         for _crs in self.crs.values():
             try:
                 _crs["zz"]["value"] = self._get_coordinate_value(tel_altitude, _crs["zz"]["unit"])
@@ -317,7 +312,6 @@ class TelescopePosition:
             Project of coordinate system
 
         """
-
         for _crs_name, _crs in self.crs.items():
             if self.has_coordinates(_crs_name, crs_check=True):
                 return _crs_name, _crs
@@ -473,7 +467,6 @@ class TelescopePosition:
         astropy.units.m
             Z-position of a telescope in CORSIKA system.
         """
-
         return (tel_altitude - corsika_observation_level + telescope_axis_height).to(u.m)
 
     @staticmethod
@@ -514,7 +507,6 @@ class TelescopePosition:
             Pyproj CRS of the utm coordinate system.
 
         """
-
         self._set_coordinate_system("ground", crs_local)
         self._set_coordinate_system("utm", crs_utm)
         self._set_coordinate_system("mercator", crs_wgs84)
@@ -593,7 +585,6 @@ class TelescopePosition:
            coordinate system definition
 
         """
-
         return {
             "ground": {
                 "crs": None,

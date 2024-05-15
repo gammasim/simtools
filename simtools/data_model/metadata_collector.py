@@ -48,7 +48,6 @@ class MetadataCollector:
         Initialize metadata collector.
 
         """
-
         self._logger = logging.getLogger(__name__)
         self.observatory = "cta"
         self.io_handler = io_handler.IOHandler()
@@ -70,7 +69,6 @@ class MetadataCollector:
         Collect and verify product metadata from different sources.
 
         """
-
         self._fill_contact_meta(self.top_level_meta[self.observatory]["contact"])
         self._fill_product_meta(self.top_level_meta[self.observatory]["product"])
         self._fill_activity_meta(self.top_level_meta[self.observatory]["activity"])
@@ -93,7 +91,6 @@ class MetadataCollector:
             Name of schema file.
 
         """
-
         # from command line
         try:
             if self.args_dict["schema"]:
@@ -141,7 +138,6 @@ class MetadataCollector:
             Data model schema dictionary.
 
         """
-
         try:
             return gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
         except gen.InvalidConfigData:
@@ -185,7 +181,6 @@ class MetadataCollector:
             Dictionary for contact metadata fields.
 
         """
-
         if contact_dict.get("name", None) is None:
             contact_dict["name"] = getpass.getuser()
 
@@ -244,7 +239,6 @@ class MetadataCollector:
             if corresponding fields cannot by accessed in the top-level or metadata dictionaries.
 
         """
-
         try:
             self._merge_config_dicts(context_dict, self.input_metadata[self.observatory]["context"])
             for key in ("document", "associated_elements", "associated_data"):
@@ -285,7 +279,6 @@ class MetadataCollector:
             if metadata does not exist
 
         """
-
         metadata_file_name = (
             self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
             if metadata_file_name is None
@@ -357,7 +350,6 @@ class MetadataCollector:
             if relevant fields are not defined in top level metadata dictionary.
 
         """
-
         self.schema_file = self.get_data_model_schema_file_name()
         self.schema_dict = self.get_data_model_schema_dict()
 
@@ -393,7 +385,6 @@ class MetadataCollector:
             Dictionary for process metadata fields.
 
         """
-
         process_dict["type"] = "simulation"
 
     def _fill_activity_meta(self, activity_dict):
@@ -406,7 +397,6 @@ class MetadataCollector:
             Dictionary for top-level activity metadata.
 
         """
-
         activity_dict["name"] = self.args_dict.get("label", None)
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
@@ -430,7 +420,6 @@ class MetadataCollector:
             If true: add fields from dict_low to dict_high, if they don't exist in dict_high
 
         """
-
         if dict_high is None and dict_low:
             dict_high = dict_low
             return
@@ -471,7 +460,6 @@ class MetadataCollector:
             Updated meta list.
 
         """
-
         if len(new_entry_dict) == 0:
             return []
         try:
@@ -499,7 +487,6 @@ class MetadataCollector:
             Metadata dictionary.
 
         """
-
         meta_dict = gen.change_dict_keys_case(meta_dict, True)
         try:
             meta_dict[self.observatory]["product"]["description"] = self._remove_line_feed(
@@ -525,7 +512,6 @@ class MetadataCollector:
         str
             with line feeds removed
         """
-
         return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
 
     def _copy_list_type_metadata(self, context_dict, _input_metadata, key):
@@ -543,7 +529,6 @@ class MetadataCollector:
             Key for metadata entry.
 
         """
-
         try:
             for document in _input_metadata["context"][key]:
                 self._fill_context_sim_list(context_dict[key], document)
@@ -565,7 +550,6 @@ class MetadataCollector:
             True if all entries are None, False otherwise.
 
         """
-
         if not isinstance(input_dict, dict):
             return input_dict is None
 

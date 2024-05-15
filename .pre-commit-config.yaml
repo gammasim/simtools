@@ -1,4 +1,13 @@
 repos:
+  # Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      # Run the linter.
+      - id: ruff
+      # Run the formatter.
+      - id: ruff-format
+        exclude: pyproject.toml
   # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -22,19 +31,6 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        exclude: ^tests/|^simtools/applications/db_development_tools/
-        args:
-          [
-            "-rn",  # Only display messages
-            "-sn",  # Don't display the score
-          ]
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
     rev: v2.3.2  # most recent docstr-coverage release or commit sha

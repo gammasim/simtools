@@ -1,109 +1,109 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    Derive the simulation model parameter **mirror_reflection_random_angle**
-    (sometimes called mirror roughness) to match the measured containment diameter
-    of the optical point-spread function (PSF) of individual mirror panels.
+Summary
+-------
+Derive the simulation model parameter **mirror_reflection_random_angle**
+(sometimes called mirror roughness) to match the measured containment diameter
+of the optical point-spread function (PSF) of individual mirror panels.
 
-    Description
-    -----------
+Description
+-----------
 
-    This application derives the value of the simulation model parameter
-    *mirror_reflection_random_angle* using measurements of the focal length
-    and PSF of individual mirror panels.
+This application derives the value of the simulation model parameter
+*mirror_reflection_random_angle* using measurements of the focal length
+and PSF of individual mirror panels.
 
-    PSF measurements are provided by one of the following options:
+PSF measurements are provided by one of the following options:
 
-        * mean and sigma value obtained from the measurement of containment diameters of a number of
-          mirror panels in cm (``--psf_measurement_containment_mean`` and
-          ``--psf_measurement_containment_sigma``)
-        * file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
+* mean and sigma value obtained from the measurement of containment diameters of a number of
+mirror panels in cm (``--psf_measurement_containment_mean`` and
+``--psf_measurement_containment_sigma``)
+* file (table) with measured PSF for each mirror panel spot size (``--psf_measurement``)
 
-    The containment fraction used for the PSF diameter calculation is set through
-    the argument ``--containment_fraction`` (typically 0.8 = 80%).
+The containment fraction used for the PSF diameter calculation is set through
+the argument ``--containment_fraction`` (typically 0.8 = 80%).
 
-    Mirror panels are simulated individually, using one of the following options to set the
-    mirror panel focal length:
+Mirror panels are simulated individually, using one of the following options to set the
+mirror panel focal length:
 
-        * file (table) with measured focal lengths per mirror panel
-          (provided through ``--mirror_list``)
-        * randomly generated focal lengths using an expected spread (value given through
-          ``--random_flen``) around the mean focal length (provided through the
-          :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
+* file (table) with measured focal lengths per mirror panel
+(provided through ``--mirror_list``)
+* randomly generated focal lengths using an expected spread (value given through
+``--random_flen``) around the mean focal length (provided through the
+:ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
 
-    The tuning algorithm requires a starting value for the random reflection angle. This is either
-    taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
+The tuning algorithm requires a starting value for the random reflection angle. This is either
+taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
 
-    Ray-tracing simulations are performed for single mirror configurations for each
-    mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
-    is compared with the mean measured containment diameter. The algorithm defines a new value for
-    the random reflection angle based on the sign of the difference between measured and simulated
-    containment diameters and a new set of simulations is performed. This process is repeated
-    until the sign of the difference changes, meaning that the two final values of the random
-    reflection angle brackets the optimal. These two values are used to find the optimal one by
-    a linear interpolation. Finally, simulations are performed by using the interpolated value,
-    which is defined as the desired optimal.
+Ray-tracing simulations are performed for single mirror configurations for each
+mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
+is compared with the mean measured containment diameter. The algorithm defines a new value for
+the random reflection angle based on the sign of the difference between measured and simulated
+containment diameters and a new set of simulations is performed. This process is repeated
+until the sign of the difference changes, meaning that the two final values of the random
+reflection angle brackets the optimal. These two values are used to find the optimal one by
+a linear interpolation. Finally, simulations are performed by using the interpolated value,
+which is defined as the desired optimal.
 
-    The option ``--no_tuning`` can be used if one only wants to simulate one value for the random
-    reflection angle and compare the results with the measured ones.
+The option ``--no_tuning`` can be used if one only wants to simulate one value for the random
+reflection angle and compare the results with the measured ones.
 
-    Results of the tuning are plotted. See examples of the PSF containment diameter
-    D80 vs random reflection angle plot, on the left, and the D80 distributions
-    (per mirror panel), on the right.
+Results of the tuning are plotted. See examples of the PSF containment diameter
+D80 vs random reflection angle plot, on the left, and the D80 distributions
+(per mirror panel), on the right.
 
-    .. _derive_rnda_plot:
-    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
-      :width: 49 %
-    .. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
-      :width: 49 %
+.. _derive_rnda_plot:
+.. image:: images/derive_mirror_rnda_North-MST-FlashCam-D.png
+:width: 49 %
+.. image:: images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png
+:width: 49 %
 
-    This application uses the following :ref:`SimulationSoftware` tools:
+This application uses the following :ref:`SimulationSoftware` tools:
 
-        - sim_telarray/bin/sim_telarray
-        - sim_telarray/bin/rx (optional)
+- sim_telarray/bin/sim_telarray
+- sim_telarray/bin/rx (optional)
 
-    Command line arguments
-    ----------------------
-    telescope (str, required)
-        Telescope name (e.g. North-LST-1, South-SST-D, ...)
-    model_version (str, optional)
-        Model version
-    psf_measurement (str, optional)
-        Table with results from PSF measurements for each mirror panel spot size
-    psf_measurement_containment_mean (float, required)
-        Mean of measured containment diameter [cm]
-    psf_measurement_containment_sigma (float, optional)
-        Std dev of measured containment diameter [cm]
-    containment_fraction (float, required)
-        Containment fraction for diameter calculation
-    rnda (float, optional)
-        Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the
-        default model is read from the simulation model database.
-    mirror_list (file, optional)
-        Table with mirror ID and panel radius.
-    use_random_flen (activation mode, optional)
-        Use random focal lengths, instead of the measured ones. The argument random_flen can be
-        used to replace the default random_focal_length from the model.
-    random_flen (float, optional)
-        Value of the random focal lengths to replace the default random_focal_length. Only used if
-         use_random_flen is activated.
-    no_tuning (activation mode, optional)
-        Turn off the tuning - A single case will be simulated and plotted.
-    test (activation mode, optional)
-        If activated, application will be faster by simulating only few mirrors.
-    verbosity (str, optional)
-        Log level to print.
+Command line arguments
+----------------------
+telescope (str, required)
+Telescope name (e.g. North-LST-1, South-SST-D, ...)
+model_version (str, optional)
+Model version
+psf_measurement (str, optional)
+Table with results from PSF measurements for each mirror panel spot size
+psf_measurement_containment_mean (float, required)
+Mean of measured containment diameter [cm]
+psf_measurement_containment_sigma (float, optional)
+Std dev of measured containment diameter [cm]
+containment_fraction (float, required)
+Containment fraction for diameter calculation
+rnda (float, optional)
+Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the
+default model is read from the simulation model database.
+mirror_list (file, optional)
+Table with mirror ID and panel radius.
+use_random_flen (activation mode, optional)
+Use random focal lengths, instead of the measured ones. The argument random_flen can be
+used to replace the default random_focal_length from the model.
+random_flen (float, optional)
+Value of the random focal lengths to replace the default random_focal_length. Only used if
+use_random_flen is activated.
+no_tuning (activation mode, optional)
+Turn off the tuning - A single case will be simulated and plotted.
+test (activation mode, optional)
+If activated, application will be faster by simulating only few mirrors.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    Derive mirror random reflection angle for a mid-sized telescope (MST),
-    simulation production Prod5.
+Example
+-------
+Derive mirror random reflection angle for a mid-sized telescope (MST),
+simulation production Prod5.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-derive-mirror-rnda \\
+simtools-derive-mirror-rnda \\
             --site South \\
             --telescope MSTS-design \\
             --containment_fraction 0.8 \\
@@ -112,24 +112,24 @@
             --rnda 0.0063 \\
             --test
 
-    Runtime about 4 min.
+Runtime about 4 min.
 
-    The output is saved in `simtools-output/derive_mirror_rnda`.
-    Use the parameter ``--output_path`` to change the output directory.
+The output is saved in `simtools-output/derive_mirror_rnda`.
+Use the parameter ``--output_path`` to change the output directory.
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        Measured D80:
-        Mean = 1.403 cm, StdDev = 0.163 cm
+Measured D80:
+Mean = 1.403 cm, StdDev = 0.163 cm
 
-        Simulated D80:
-        Mean = 1.404 cm, StdDev = 0.608 cm
+Simulated D80:
+Mean = 1.404 cm, StdDev = 0.608 cm
 
-        mirror_random_reflection_angle
-        Previous value = 0.006300
-        New value = 0.004975
+mirror_random_reflection_angle
+Previous value = 0.006300
+New value = 0.004975
 
 """
 
@@ -152,7 +152,6 @@ def _parse(label):
     """
     Parse command line configuration
     """
-
     config = configurator.Configurator(
         description="Derive mirror random reflection angle.", label=label
     )
@@ -238,7 +237,6 @@ def _define_telescope_model(label, args_dict, db_config):
         telescope model
 
     """
-
     tel = TelescopeModel(
         site=args_dict["site"],
         telescope_model_name=args_dict["telescope"],
@@ -264,7 +262,6 @@ def _print_and_write_results(
     in the requested format
 
     """
-
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
@@ -315,7 +312,6 @@ def _get_psf_containment(logger, args_dict):
     from file and return mean and sigma
 
     """
-
     # If this is a test, read just the first few lines since we only simulate those mirrors
     data_end = args_dict["number_of_mirrors_to_test"] + 1 if args_dict["test"] else None
     _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end)

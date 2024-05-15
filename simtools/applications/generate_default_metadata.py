@@ -1,27 +1,27 @@
 #!/usr/bin/python3
 """
-    Summary
-    -------
-    Generate a default simtools metadata file from a json schema.
+Summary
+-------
+Generate a default simtools metadata file from a json schema.
 
-    Command line arguments
-    ----------------------
-    schema (str, optional)
-        Schema file describing the input data
-        (default: simtools/schemas/metadata.metaschema.yml)
-    output_file (str, optional)
-        Output file name.
+Command line arguments
+----------------------
+schema (str, optional)
+Schema file describing the input data
+(default: simtools/schemas/metadata.metaschema.yml)
+output_file (str, optional)
+Output file name.
 
-    Example
-    -------
-    .. code-block:: console
+Example
+-------
+.. code-block:: console
 
-        simtools-generate-default-metadata
-            --schema simtools/schemas/metadata.metaschema.yml
-            --output_file default_metadata.yml
+simtools-generate-default-metadata
+--schema simtools/schemas/metadata.metaschema.yml
+--output_file default_metadata.yml
 
 
-    """
+"""
 
 import json
 import logging
@@ -52,7 +52,6 @@ def _parse(label, description):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(

@@ -1,82 +1,82 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application perform array simulations.
+Summary
+-------
+This application perform array simulations.
 
-    The simulations are split into two stages: showers and array.
-    Shower simulations are performed with CORSIKA and array simulations \
+The simulations are split into two stages: showers and array.
+Shower simulations are performed with CORSIKA and array simulations \
     with sim_telarray. Note that either shower or array simulations are \
     submitted (so typically you first run shower simulations, and then the \
     array simulations).
 
-    By default the configuration is saved in simtools-output/test-production
-    and the output in corsika-data and simtel-data. The location of the latter directories
-    can be set to a different location via the option --data_directory.
+By default the configuration is saved in simtools-output/test-production
+and the output in corsika-data and simtel-data. The location of the latter directories
+can be set to a different location via the option --data_directory.
 
-    A configuration file is required.
+A configuration file is required.
 
-    The workload management system used is given in the configuration file. \
+The workload management system used is given in the configuration file. \
     Allowed systems are qsub (using gridengine), condor_submit \
     (using HTcondor), and local (running the script locally).
 
-    Command line arguments
-    ----------------------
-    simulation_configuration (str, required)
-        Path to the simulation configuration file.
-    primary (str)
-        Name of the primary to be selected from the configuration file. In case it \
+Command line arguments
+----------------------
+simulation_configuration (str, required)
+Path to the simulation configuration file.
+primary (str)
+Name of the primary to be selected from the configuration file. In case it \
         is not given, all the primaries listed in the configuration file will be simulated.
-        The choices are: gamma, electron, proton, helium, nitrogen, silicon, and iron.
-    task (str)
-        What task to execute. Options:
-            simulate (perform simulations),
-            file_list (print list of output files)
-            inspect (plot sim_telarray histograms for quick inspection)
-            resources (print quick look into used computational resources)
-    array_only (activation mode)
-        Simulates only array detector (no showers).
-    showers_only (activation mode)
-        Simulates only showers (no array detector).
-    test (activation mode, optional)
-        If activated, no job will be submitted, but all configuration files \
+The choices are: gamma, electron, proton, helium, nitrogen, silicon, and iron.
+task (str)
+What task to execute. Options:
+simulate (perform simulations),
+file_list (print list of output files)
+inspect (plot sim_telarray histograms for quick inspection)
+resources (print quick look into used computational resources)
+array_only (activation mode)
+Simulates only array detector (no showers).
+showers_only (activation mode)
+Simulates only showers (no array detector).
+test (activation mode, optional)
+If activated, no job will be submitted, but all configuration files \
         and run scripts will be created.
-    data_directory (str, optional)
-        The location of the output directories corsika-data and simtel-data.
-    corsika_files (str, optional)
-        The CORSIKA files to pass to simtel_array.
-        If it is provided, these CORSIKA files are used and the application does not search for them
-        in the data directory.
-        This option should only be used in combination with the `showers_only` option.
-    verbosity (str, optional)
-        Log level to print.
+data_directory (str, optional)
+The location of the output directories corsika-data and simtel-data.
+corsika_files (str, optional)
+The CORSIKA files to pass to simtel_array.
+If it is provided, these CORSIKA files are used and the application does not search for them
+in the data directory.
+This option should only be used in combination with the `showers_only` option.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    Testing a mini-prod5 simulation.
+Example
+-------
+Testing a mini-prod5 simulation.
 
-    Get the configuration file from the DB
+Get the configuration file from the DB
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-get-file-from-db --file_name prod_config_test.yml
+simtools-get-file-from-db --file_name prod_config_test.yml
 
-    Run the application:
+Run the application:
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-production --task simulate --simulation_configuration prod_config_test.yml \
+simtools-production --task simulate --simulation_configuration prod_config_test.yml \
         --test --showers_only --submit_command local
 
-    The output is saved in simtools-output/test-production.
+The output is saved in simtools-output/test-production.
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        INFO::job_manager(l124)::_submit_local::Running script locally
-        INFO::job_manager(l133)::_submit_local::Testing (local)
+INFO::job_manager(l124)::_submit_local::Running script locally
+INFO::job_manager(l133)::_submit_local::Testing (local)
 """
 
 import logging
@@ -103,7 +103,6 @@ def _parse(description=None):
         command line parser object
 
     """
-
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
         "--simulation_configuration",
@@ -189,7 +188,6 @@ def _process_simulation_config_file(config_file, primary_config, logger):
         configuration of array simulations
 
     """
-
     try:
         config_data = gen.collect_data_from_file_or_dict(file_name=config_file, in_dict=None)
     except FileNotFoundError:

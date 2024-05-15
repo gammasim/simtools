@@ -1,61 +1,61 @@
 #!/usr/bin/python3
 """
-    Summary
-    -------
-    Convert and print a list of array element positions in different coordinate \
+Summary
+-------
+Convert and print a list of array element positions in different coordinate \
     systems relevant for CTAO.
 
-    Description
-    -----------
+Description
+-----------
 
-    This application converts a list of array element positions in different CTAO \
+This application converts a list of array element positions in different CTAO \
     coordinate systems.
 
-    Available coordinate systems are:
+Available coordinate systems are:
 
-    1. UTM system
-    2. ground system (similar to sim_telarray system with x-axis pointing toward \
+1. UTM system
+2. ground system (similar to sim_telarray system with x-axis pointing toward \
         geographic north and y-axis pointing towards the west); altitude relative \
         to the CORSIKA observation level.
-    3. Mercator system
+3. Mercator system
 
-    Command line arguments
-    ----------------------
-    input (str)
-        File name with list of array element positions
-    print (str)
-        Print requested coordinate system; possible are ground, utm, mercator
-    export (str)
-        Export array element list to file in requested coordinate system; \
+Command line arguments
+----------------------
+input (str)
+File name with list of array element positions
+print (str)
+Print requested coordinate system; possible are ground, utm, mercator
+export (str)
+Export array element list to file in requested coordinate system; \
             possible are ground, utm, mercator
-    select_assets (str)
-        Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
+select_assets (str)
+Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
 
-    Example
-    -------
-    Print a list of array elements using a list of telescope positions in UTM coordinates.
+Example
+-------
+Print a list of array elements using a list of telescope positions in UTM coordinates.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-print-array-elements \\
+simtools-print-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
             --print ground
 
-    The converted list of telescope positions in ground coordinates is printed to the screen.
+The converted list of telescope positions in ground coordinates is printed to the screen.
 
-    The following example converts a list of telescope positions in UTM coordinates \
+The following example converts a list of telescope positions in UTM coordinates \
     and writes the output to a file in ground (sim_telarray) coordinates. Also selects \
     only a subset of the array elements (telescopes; ignore calibration devices):
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-print-array-elements \\
+simtools-print-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
             --export ground \\
             --select_assets LSTN
 
-    Expected output is a ecsv file in the directory printed to the screen.
+Expected output is a ecsv file in the directory printed to the screen.
 
 """
 
@@ -86,7 +86,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(

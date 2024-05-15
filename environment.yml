@@ -25,6 +25,7 @@ dependencies:
   - pytest-xdist
   - python-dotenv
   - pyyaml
+  - ruff
   - scipy
   - sphinx
   - sphinx-book-theme

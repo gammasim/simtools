@@ -1,66 +1,66 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application simulates showers to be used in trigger rate calculations.
-    Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
+Summary
+-------
+This application simulates showers to be used in trigger rate calculations.
+Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
     mono or stereo trigger configurations, respectively.
 
-    Simulations are managed by the Simulator module.
-    Each run is simulated in a job. Each job is submitted by using the submission \
+Simulations are managed by the Simulator module.
+Each run is simulated in a job. Each job is submitted by using the submission \
     command from the global config settings. The config entry extra_commands can be used \
     to extra commands to be ran in each job, before the actual simulation.
 
-    At the moment, the shower simulations are performed by CORSIKA, which requires \
+At the moment, the shower simulations are performed by CORSIKA, which requires \
     the zstd package. Please, make sure that the command to set your zstd path is \
     properly set by the extra_commands in the command line configuration.
 
-    Command line arguments
-    ----------------------
-    array (str, required)
-        Name of the array (1MST, 4LST ...).
-    site (str, required)
-        South or North.
-    primary (str, required)
-        Name of the primary particle (proton, helium ...).
-    nruns (int, optional)
-        Number of runs to be simulated.
-    nevents (int, optional)
-        Number of events simulated per run.
-    zenith (float, optional)
-        Zenith angle in deg.
-    azimuth (float, optional)
-        Azimuth angle in deg.
-    data_directory (str, optional)
-        The location of the output directories corsika-data.
-        the label is added to the data_directory, such that the output
-        will be written to `data_directory/label/corsika-data`.
-    test (activation mode, optional)
-        If activated, no job will be submitted. Instead, an example of the \
+Command line arguments
+----------------------
+array (str, required)
+Name of the array (1MST, 4LST ...).
+site (str, required)
+South or North.
+primary (str, required)
+Name of the primary particle (proton, helium ...).
+nruns (int, optional)
+Number of runs to be simulated.
+nevents (int, optional)
+Number of events simulated per run.
+zenith (float, optional)
+Zenith angle in deg.
+azimuth (float, optional)
+Azimuth angle in deg.
+data_directory (str, optional)
+The location of the output directories corsika-data.
+the label is added to the data_directory, such that the output
+will be written to `data_directory/label/corsika-data`.
+test (activation mode, optional)
+If activated, no job will be submitted. Instead, an example of the \
         run script will be printed.
-    verbosity (str, optional)
-        Log level to print.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    Producing a set of proton showers for trigger rate simulations of LST.
+Example
+-------
+Producing a set of proton showers for trigger rate simulations of LST.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary \
+simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary \
         proton --nruns 2 --nevents 10000 --test --submit_command local
 
-    The output is saved in simtools-output/sim_showers_for_trigger_rates.
+The output is saved in simtools-output/sim_showers_for_trigger_rates.
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to \
+INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to \
         /workdir/external/simtools/simtools-output/sim_showers_for_trigger_rates/application-\
         plots/log_files_proton.list
-        INFO::simulator(l646)::get_list_of_log_files::Getting list of log files
+INFO::simulator(l646)::get_list_of_log_files::Getting list of log files
 
 """
 
@@ -92,7 +92,6 @@ def _parse(label=None, description=None):
         command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--array",

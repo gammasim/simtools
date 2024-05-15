@@ -1,51 +1,51 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    Get a parameter entry from DB for a specific telescope or a site.
-    The application receives a parameter name, a site, a telescope (if applicable) and \
+Summary
+-------
+Get a parameter entry from DB for a specific telescope or a site.
+The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
-    If no version is provided, the value of the released model is printed..
+If no version is provided, the value of the released model is printed..
 
-    Command line arguments
-    ----------------------
-    parameter (str, required)
-        Parameter name
+Command line arguments
+----------------------
+parameter (str, required)
+Parameter name
 
-    site (str, required)
-        South or North.
+site (str, required)
+South or North.
 
-    telescope (str, optional)
-        Telescope model name (e.g. LST-1, SST-D, ...)
+telescope (str, optional)
+Telescope model name (e.g. LST-1, SST-D, ...)
 
-    log_level (str, optional)
-        Log level to print.
+log_level (str, optional)
+Log level to print.
 
-    Raises
-    ------
-    KeyError in case the parameter requested does not exist in the model parameters.
+Raises
+------
+KeyError in case the parameter requested does not exist in the model parameters.
 
-    Example
-    -------
-    Get the mirror_list parameter from the DB.
+Example
+-------
+Get the mirror_list parameter from the DB.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-get-parameter --parameter mirror_list --site North --telescope LST-1\
+simtools-get-parameter --parameter mirror_list --site North --telescope LST-1\
          --model_version prod5
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        {'Applicable': True,
-         'File': True,
-         'Type': 'str',
-         'Value': 'mirror_CTA-N-LST1_v2019-03-31.dat',
-         'Version': '2020-06-28',
-         '_id': ObjectId('608834f257df2db2531b8e78'),
-         'entry_date': datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=<bson.tz_util.FixedOffset \
+{'Applicable': True,
+'File': True,
+'Type': 'str',
+'Value': 'mirror_CTA-N-LST1_v2019-03-31.dat',
+'Version': '2020-06-28',
+'_id': ObjectId('608834f257df2db2531b8e78'),
+'entry_date': datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=<bson.tz_util.FixedOffset \
           object at 0x7f601dd51d80>)}
 
 """

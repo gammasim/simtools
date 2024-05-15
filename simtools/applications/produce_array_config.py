@@ -1,95 +1,95 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is an example of how to produce sim_telarray config \
+Summary
+-------
+This application is an example of how to produce sim_telarray config \
     files for a given array.
 
-    All the input required has to be given as a yaml file by the command \
+All the input required has to be given as a yaml file by the command \
     line argument array_config.
 
-    The required entries in the array_config file are:
+The required entries in the array_config file are:
 
-    'site': South or North
+'site': South or North
 
-    'layout_name': name of a valid layout array.
+'layout_name': name of a valid layout array.
 
-    'model_version': name of a valid model version.
+'model_version': name of a valid model version.
 
-    'default': telescope model names to be assigned to each telescope size by default. \
+'default': telescope model names to be assigned to each telescope size by default. \
 
-    As optional data, specific telescope models can be assigned to individual telescopes. \
+As optional data, specific telescope models can be assigned to individual telescopes. \
     This is done by the entries with the name of the telescope (as used by the layout \
     definition, ex. LSTN-01, MSTN-05, SSTS-10).
 
-    Each telescope model can be set in two ways.
+Each telescope model can be set in two ways.
 
-    a) A single str with the name of telescope model.
-    Ex. 'MSTN-05': 'NectarCam-D'
+a) A single str with the name of telescope model.
+Ex. 'MSTN-05': 'NectarCam-D'
 
-    b) A dict containing a 'name' key with the name of the telescope model and further keys \
+b) A dict containing a 'name' key with the name of the telescope model and further keys \
     with model parameters to be changed from the original model.
-    Ex.:
+Ex.:
 
-    .. code-block:: python
+.. code-block:: python
 
-        'MSTN-05': {
-                'name': 'design',
-                'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
-                'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
-            }
+'MSTN-05': {
+'name': 'design',
+'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
+'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
+}
 
-    This is an example of the content of an array_config file.
+This is an example of the content of an array_config file.
 
-    .. code-block:: python
+.. code-block:: python
 
-        site: North,
-        layout_name: Prod5
-        model_version: Prod5
-        default:
-            LST: 'D234'  # Design model for the LSTs
-            MST: FlashCam-D  # Design model for the MST-FlashCam
-        LST-01: '1'  # Model of LST-01 in the LaPalma site.
-        MST-05:
-            name: NectarCam-D
-            # Parameters to be changed
-            fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-            discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+site: North,
+layout_name: Prod5
+model_version: Prod5
+default:
+LST: 'D234'  # Design model for the LSTs
+MST: FlashCam-D  # Design model for the MST-FlashCam
+LST-01: '1'  # Model of LST-01 in the LaPalma site.
+MST-05:
+name: NectarCam-D
+# Parameters to be changed
+fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
 
-    Command line arguments
-    ----------------------
-    label (str, optional)
-        Label to identify the output files/directories.
-    array_config (str, required)
-        Path to a yaml file with the array config data.
-    verbosity (str, optional)
-        Log level to print.
+Command line arguments
+----------------------
+label (str, optional)
+Label to identify the output files/directories.
+array_config (str, required)
+Path to a yaml file with the array config data.
+verbosity (str, optional)
+Log level to print.
 
-    Example
-    -------
-    North - Prod5, simple example
+Example
+-------
+North - Prod5, simple example
 
-    Get the array configuration from DB:
+Get the array configuration from DB:
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-get-file-from-db --file_name array_config_test.yml
+simtools-get-file-from-db --file_name array_config_test.yml
 
-    Run the application. Runtime < 1 min.
+Run the application. Runtime < 1 min.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-produce-array-config --label test --array_config \
+simtools-produce-array-config --label test --array_config \
         array_config_test.yml
 
-    The output is saved in simtools-output/test/model.
+The output is saved in simtools-output/test/model.
 
-    Expected final print-out message:
+Expected final print-out message:
 
-    .. code-block:: console
+.. code-block:: console
 
-        INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into \
+INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into \
         /workdir/external/simtools/simtools-output/test/model/CTA-TestLayout-North-2020-06-\
         28_test.cfg
 """
