@@ -441,24 +441,40 @@ class SimulatorLightEmission(SimtelRunner):
 
         return command
 
-    def _create_postscript(self):
+    def _create_postscript(self, **kwargs):
         """
         writes out post-script file using read_cta in hessioxxx/bin/read_cta
+
+        parts from the documentation
+        -r level        (Use 10/5 tail-cut image cleaning and redo reconstruction.)
+                level >= 1: show parameters from sim_hessarray.
+                level >= 2: redo shower reconstruction
+                level >= 3: redo image cleaning (and shower reconstruction
+                            with new image parameters)
+                level >= 4: redo amplitude summation
+                level >= 5: PostScript file includes original and
+                            new shower reconstruction.
+        --integration-window w,o[,ps] *(Set integration window width and offset.)
+            For some integration schemes there is a pulse shaping option.
+
 
         Returns
         ------
         str
             Command to create the postscript file
         """
+        print("['integration_window'][0]", kwargs)
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
 
         command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta"))
         command += " --min-tel 1 --min-trg-tel 1"
-        command += " -q --integration-scheme 4 --integration-window 7,3 -r 5"
+        command += " -q --integration-scheme 4"
+        command += " --integration-window "
+        command += f"{kwargs['integration_window'][0]} {kwargs['integration_window'][1]}"
+        command += f" -r {kwargs['level']}"
         command += " --plot-with-sum-only"
         command += " --plot-with-pixel-amp --plot-with-pixel-id"
-        # command += f" --plot-with-title 'tel {self._telescope_model.name}"
         command += (
             f" -p {postscript_dir}/"
             f"{self.le_application[0]}_{self.le_application[1]}_"
@@ -550,7 +566,7 @@ class SimulatorLightEmission(SimtelRunner):
         fig.tight_layout()
         return fig
 
-    def prepare_script(self, generate_postscript=False):
+    def prepare_script(self, generate_postscript=False, **kwargs):
         """
         Builds and returns the full path of the bash run script
         containing the light-emission command.
@@ -586,7 +602,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             if generate_postscript:
                 self._logger.debug("Write out postscript file")
-                command_plot = self._create_postscript()
+                command_plot = self._create_postscript(**kwargs)
                 file.write("# Generate postscript\n\n")
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")

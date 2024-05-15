@@ -223,6 +223,22 @@ def _parse(label):
         type=int,
         required=False,
     )
+    config.parser.add_argument(
+        "--level",
+        help="read 5",
+        type=int,
+        default=5,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--integration_window",
+        help="ctapipe, A picture pixel survives cleaning only if it has at\
+              least this number of picture neighbors. This has no effect in\
+              case keep_isolated_pixels is True",
+        nargs="*",
+        default=["7", "3"],
+        required=False,
+    )
     return config.initialize(
         db_config=True,
         simulation_model="telescope",
@@ -355,7 +371,7 @@ def main():
                 simtel_source_path=args_dict["simtel_path"],
                 light_source_type=args_dict["light_source_type"],
             )
-            run_script = le.prepare_script(generate_postscript=True)
+            run_script = le.prepare_script(generate_postscript=True, **args_dict)
             subprocess.run(run_script, shell=False, check=False)
 
             try:
@@ -407,7 +423,7 @@ def main():
             simtel_source_path=args_dict["simtel_path"],
             light_source_type=args_dict["light_source_type"],
         )
-        run_script = le.prepare_script(generate_postscript=True)
+        run_script = le.prepare_script(generate_postscript=True, **args_dict)
         subprocess.run(run_script, shell=False, check=False)
         try:
             fig = le.plot_simtel_ctapipe(
