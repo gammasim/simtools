@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-production
   TEST_NAME: array_only
   CONFIGURATION:
-    PRODUCTIONCONFIG: ./tests/resources/prod_config_test.yml
+    SIMULATION_CONFIG: ./tests/resources/prod_config_test.yml
     TASK: simulate
     ARRAY_ONLY: true
     SUBMIT_COMMAND: local

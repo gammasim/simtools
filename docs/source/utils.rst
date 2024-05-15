@@ -17,6 +17,15 @@ general
 .. automodule:: utils.general
    :members:
 
+
+.. _utilsgeometry:
+
+geometry
+--------
+
+.. automodule:: utils.geometry
+   :members:
+
 .. _utilsnames:
 
 names

@@ -9,6 +9,7 @@ implementation of the metadata model.
 import datetime
 import getpass
 import logging
+from importlib.resources import files
 from pathlib import Path
 
 from astropy.table import Table
@@ -115,7 +116,7 @@ class MetadataCollector:
         # from data model name
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return f"{simtools.constants.SCHEMA_URL}{self.data_model_name}.schema.yml"
+            return f"{files('simtools')}/schemas/model_parameters/{self.data_model_name}.schema.yml"
 
         # from input metadata
         try:

@@ -3,7 +3,7 @@
 import logging
 import shutil
 import sys
-from pathlib import Path
+from importlib.resources import files
 
 import numpy as np
 import pytest
@@ -499,7 +499,7 @@ def test_read_validation_schema(tmp_test_directory):
 # incomplete test
 def test_validate_data_dict():
 
-    schema_dir = Path(__file__).parent / "../../../simtools/schemas/model_parameters/"
+    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
 
     # parameter with unit
     data_validator = validate_data.DataValidator(

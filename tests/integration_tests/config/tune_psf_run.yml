@@ -9,3 +9,5 @@ CTA_SIMPIPE:
     ZENITH: 20
     TEST: true
     OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: ray-tracing/results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_tune_psf.ecsv
