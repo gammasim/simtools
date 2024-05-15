@@ -136,7 +136,7 @@ def main():
 
     tel_model = TelescopeModel(
         site=args_dict["site"],
-        telescope_model_name=args_dict["telescope"],
+        telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
         label=label,
         mongo_db_config=db_config,
