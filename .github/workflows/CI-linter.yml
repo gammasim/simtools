@@ -88,9 +88,8 @@ jobs:
           pip install pylint
 
       - name: Pre-commit
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: --all-files
+        run: |
+          pre-commit run --all-files
 
       - name: pylint
         run: |
