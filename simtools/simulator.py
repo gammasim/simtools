@@ -317,6 +317,7 @@ class Simulator:
             "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
+        simtel_args = {}
         if self.simulator in ["simtel", "corsika_simtel"]:
             simtel_args = {
                 "config_data": {
@@ -326,6 +327,7 @@ class Simulator:
                     "azimuth_angle": self.config.azimuth_angle * u.deg,
                 },
             }
+
         if self.simulator == "corsika":
             self._set_corsika_runner(common_args | corsika_args)
         if self.simulator == "simtel":
