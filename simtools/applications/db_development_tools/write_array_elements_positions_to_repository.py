@@ -83,7 +83,7 @@ def _parse(label=None, description=None):
     return config.initialize(db_config=True, simulation_model="site")
 
 
-def write_utm_array_elements_to_repository(args_dict, db_config, logger):
+def write_utm_array_elements_to_repository(args_dict, logger):
     """
     Write UTM position of array elements to model repository.
     Read array element positions from file.
@@ -92,8 +92,6 @@ def write_utm_array_elements_to_repository(args_dict, db_config, logger):
     ----------
     args_dict : dict
         Command line arguments.
-    db_config : dict
-        Database configuration.
     logger : Logger
         Logger object.
 
@@ -173,7 +171,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     if args_dict["coordinate_system"] == "utm":
-        write_utm_array_elements_to_repository(args_dict, db_config, logger)
+        write_utm_array_elements_to_repository(args_dict, logger)
     else:
         write_ground_array_elements_to_repository(args_dict, db_config, logger)
 
