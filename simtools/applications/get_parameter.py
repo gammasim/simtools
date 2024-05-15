@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
     Get a parameter entry from DB for a specific telescope or a site.
     The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
