@@ -418,7 +418,7 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
         f" {mock_output_path}/xyzls_layout.simtel.gz\n"
     )
 
-    command = mock_simulator._create_postscript()
+    command = mock_simulator._create_postscript(integration_window=["7", "3"], level="5")
 
     assert command == expected_command
 
@@ -507,7 +507,9 @@ def test_prepare_script(
     mock_make_simtel_script.return_value = "simtel_script_command"
 
     # Execute the method
-    script_path = mock_simulator.prepare_script(generate_postscript=True)
+    script_path = mock_simulator.prepare_script(
+        generate_postscript=True, integration_window=["7", "3"], level="5"
+    )
 
     # Assertions
     mock_os_system.assert_called_once_with(f"chmod ug+x {script_path}")
