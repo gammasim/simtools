@@ -261,7 +261,10 @@ def main():
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
-        tel_model.change_multiple_parameters(**pars)
+        if pars is not None:
+            tel_model.change_multiple_parameters(**pars)
+        else:
+            raise ValueError("No best parameters found")
 
         ray = RayTracing.from_kwargs(
             telescope_model=tel_model,
@@ -324,18 +327,15 @@ def main():
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars
-    if best_pars is not None:
-        # Rerunning and plotting the best pars
-        run_pars(best_pars, plot=True)
-        plt.close()
-        pdf_pages.close()
+    # Rerunning and plotting the best pars
+    run_pars(best_pars, plot=True)
+    plt.close()
+    pdf_pages.close()
 
-        # Printing the results
-        print("Best parameters:")
-        for par, value in best_pars.items():
-            print(f"{par} = {value}")
-    else:
-        raise ValueError("No best parameters found")
+    # Printing the results
+    print("Best parameters:")
+    for par, value in best_pars.items():
+        print(f"{par} = {value}")
 
 
 if __name__ == "__main__":
