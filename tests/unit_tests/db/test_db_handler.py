@@ -473,7 +473,7 @@ def test_get_all_available_telescopes(db, model_version):
 
 def test_get_telescope_db_name(db):
     assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTN-02", model_version="Prod5") == "LSTN-design"
+    assert db.get_telescope_db_name("LSTS-02", model_version="Prod5") == "LSTS-design"
     assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
     assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
     assert db.get_telescope_db_name("SSTS-01", model_version="Prod5") == "SSTS-design"

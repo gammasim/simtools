@@ -241,7 +241,7 @@ def _define_telescope_model(label, args_dict, db_config):
 
     tel = TelescopeModel(
         site=args_dict["site"],
-        telescope_model_name=args_dict["telescope"],
+        telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         label=label,

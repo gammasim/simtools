@@ -181,7 +181,7 @@ class ArrayModel:
             if collection == "telescopes":
                 telescope_model[element_name] = TelescopeModel(
                     site=site_model.site,
-                    telescope_model_name=element_name,
+                    telescope_name=element_name,
                     model_version=self.model_version,
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
