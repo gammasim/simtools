@@ -3,9 +3,12 @@
 import logging
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
+from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
+from ctao_cr_spectra.spectral import PowerLaw
 from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
@@ -77,9 +80,82 @@ def test_fill_event_histogram_dicts(simtel_array_histogram_instance):
     assert triggered_events_histogram["content_inside"] == 1.0
 
 
+def test_produce_triggered_to_sim_fraction_hist(simtel_array_histogram_instance):
+    events_histogram = {"data": np.array([[10, 20, 30], [40, 50, 60]])}
+    triggered_events_histogram = {"data": np.array([[5, 10, 15], [20, 25, 30]])}
+
+    result = simtel_array_histogram_instance._produce_triggered_to_sim_fraction_hist(
+        events_histogram, triggered_events_histogram
+    )
+    expected_result = np.array([0.5, 0.5])
+
+    assert result == pytest.approx(expected_result, 0.01)
+
+    # Additional assertions
+    assert np.all(result >= 0)  # Check if all values are non-negative
+    assert np.all(result <= 1)  # Check if all values are less than or equal to 1
+
+
+def test_initialize_histogram_axes(simtel_array_histogram_instance):
+    events_histogram = {
+        "lower_x": 0,
+        "upper_x": 10,
+        "n_bins_x": 5,
+        "lower_y": 1,
+        "upper_y": 3,
+        "n_bins_y": 4,
+    }
+    radius_axis, energy_axis = simtel_array_histogram_instance._initialize_histogram_axes(
+        events_histogram
+    )
+    expected_radius_axis = np.linspace(0, 10, 6)
+    expected_energy_axis = np.logspace(1, 3, 5)
+    assert np.array_equal(radius_axis, expected_radius_axis)
+    assert np.array_equal(energy_axis, expected_energy_axis)
+
+
+def test_get_particle_distribution_function(simtel_array_histogram_instance):
+    # Test reference distribution function
+    reference_function = simtel_array_histogram_instance.get_particle_distribution_function(
+        label="reference"
+    )
+    assert isinstance(
+        reference_function, PowerLaw
+    )  # Assuming PowerLaw is the expected type for the reference function
+
+    # Test simulation distribution function
+    simulation_function = simtel_array_histogram_instance.get_particle_distribution_function(
+        label="simulation"
+    )
+    assert simulation_function.index == -2.0
+
+    # Test invalid label
+    with pytest.raises(ValueError):
+        simtel_array_histogram_instance.get_particle_distribution_function(label="invalid_label")
+
+
+def test_integrate_in_energy_bin(simtel_array_histogram_instance):
+    result = simtel_array_histogram_instance._integrate_in_energy_bin(
+        IRFDOC_PROTON_SPECTRUM, np.array([1, 10])
+    )
+    assert pytest.approx(result.value, 0.1) == 5.9e-06
+
+
 def test_view_cone(simtel_array_histogram_instance):
     view_cone = simtel_array_histogram_instance.view_cone
     assert (view_cone == [0, 10] * u.deg).all()
+
+
+def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
+    from astropy import units as u
+
+    assert simtel_array_histogram_instance.trigger_rate is None
+    assert simtel_array_histogram_instance.trigger_rate_uncertainty is None
+    assert simtel_array_histogram_instance.trigger_rate_per_energy_bin is None
+    simtel_array_histogram_instance.compute_system_trigger_rate()
+    assert simtel_array_histogram_instance.trigger_rate == 9006.432335543419 / u.s
+    assert simtel_array_histogram_instance.trigger_rate_uncertainty == 10635.461663664897 / u.s
+    assert len(simtel_array_histogram_instance.trigger_rate_per_energy_bin.value) == 120
 
 
 def test_total_area(simtel_array_histogram_instance):
@@ -92,6 +168,11 @@ def test_energy_range(simtel_array_histogram_instance):
     energy_range = simtel_array_histogram_instance.energy_range
     assert energy_range[0].unit == u.TeV
     assert energy_range[1].value > energy_range[0].value
+
+
+def test_solid_angle(simtel_array_histogram_instance):
+    solid_angle = simtel_array_histogram_instance.solid_angle
+    assert pytest.approx(solid_angle.value, 0.1) == 0.095
 
 
 def test_estimate_observation_time(simtel_array_histogram_instance):

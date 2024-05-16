@@ -37,6 +37,8 @@ class SimtelHistogram:
     This class handles a single histogram (or simtel_array output) file.
     """
 
+    trigger_rate: None
+
     def __init__(self, histogram_file):
         """
         Initialize SimtelHistogram class.
@@ -59,7 +61,7 @@ class SimtelHistogram:
         self._initialize_histogram()
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
-        self.trigger_ratio_per_energy_bin = None
+        self.trigger_rate_per_energy_bin = None
 
     def _initialize_histogram(self):
         """
@@ -268,9 +270,11 @@ class SimtelHistogram:
         Parameters
         ----------
         events_histogram:
-            A 2D histogram (impact distance x energy) for the simulated events.
+            A dictionary with "data" corresponding to a 2D histogram (impact distance x energy)
+            for the simulated events.
         triggered_events_histogram:
-            A 2D histogram (impact distance x energy) for the triggered events.
+            A dictionary with "data" corresponding to a 2D histogram (impact distance x energy)
+            for the triggered events.
 
         Returns
         -------
@@ -279,10 +283,11 @@ class SimtelHistogram:
         """
 
         simulated_events_per_energy_bin = np.sum(events_histogram["data"], axis=1)
-        triggered_events_per_energy_bin = np.sum(triggered_events_histogram["data"], axis=1)
-        ratio_per_energy_bin = np.zeros_like(triggered_events_per_energy_bin)
-        non_zero_indices = np.argwhere(simulated_events_per_energy_bin != 0)[:, 0]
 
+        triggered_events_per_energy_bin = np.sum(triggered_events_histogram["data"], axis=1)
+        ratio_per_energy_bin = np.zeros_like(triggered_events_per_energy_bin, dtype=float)
+
+        non_zero_indices = np.nonzero(simulated_events_per_energy_bin)[0]
         ratio_per_energy_bin[non_zero_indices] = (
             triggered_events_per_energy_bin[non_zero_indices]
             / simulated_events_per_energy_bin[non_zero_indices]
@@ -316,7 +321,7 @@ class SimtelHistogram:
             )
 
             # Derive the trigger rate per energy bin
-            self.trigger_ratio_per_energy_bin = (
+            self.trigger_rate_per_energy_bin = (
                 triggered_to_sim_fraction_hist
                 * flux_per_energy_bin
                 * self.total_area
@@ -324,14 +329,14 @@ class SimtelHistogram:
             )
 
             # Derive the system trigger rate
-            self.trigger_rate = np.sum(self.trigger_ratio_per_energy_bin)
+            self.trigger_rate = np.sum(self.trigger_rate_per_energy_bin)
 
             # Derive the uncertainty in the system trigger rate estimate
             self.trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
 
         return self.trigger_rate, self.trigger_rate_uncertainty
 
-    def trigger_info_in_table(self, energy_axis, trigger_ratio_per_energy_bin):
+    def trigger_info_in_table(self, energy_axis, trigger_rate_per_energy_bin):
         """
         Provide the trigger rate per energy bin in tabulated form.
 
@@ -340,7 +345,7 @@ class SimtelHistogram:
         energy_axis: numpy.array
             The array with the simulated particle energies.
 
-        trigger_ratio_per_energy_bin: numpy.array
+        trigger_rate_per_energy_bin: numpy.array
             The array with the trigger rate per energy bin.
 
         Returns
@@ -349,12 +354,12 @@ class SimtelHistogram:
             The QTable instance with the trigger rate per energy bin.
         """
         meta = self.produce_trigger_meta_data()
-        trigger_ratio_per_energy_bin_table = QTable(
-            [energy_axis * u.TeV, (trigger_ratio_per_energy_bin.to(u.Hz))],
+        trigger_rate_per_energy_bin_table = QTable(
+            [energy_axis * u.TeV, (trigger_rate_per_energy_bin.to(u.Hz))],
             names=("Energy (TeV)", "Trigger rate (Hz)"),
             meta=meta,
         )
-        return trigger_ratio_per_energy_bin_table
+        return trigger_rate_per_energy_bin_table
 
     def produce_trigger_meta_data(self):
         """
