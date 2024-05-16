@@ -25,6 +25,7 @@ def db_cleanup(db, random_id):
     db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["calibration_devices_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
     db.db_client[f"sandbox_{random_id}"]["sites_" + random_id].drop()
 
 
@@ -184,6 +185,10 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
     )
+    db.add_tagged_version(
+        db_name=f"sandbox_{random_id}",
+        tags={"test": {"Value": "test"}},
+    )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         telescope="LSTN-test",
@@ -328,6 +333,10 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
+    )
+    db.add_tagged_version(
+        db_name=f"sandbox_{random_id}",
+        tags={"test": {"Value": "test"}, "Released": {"Value": "2020-06-28"}},
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
@@ -522,15 +531,18 @@ def test_parameter_cache_key(db):
     assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
 
 
-def test_model_version(db):
+def test_model_version(db, caplog):
 
     assert db.model_version(version="Released") == "2020-06-28"
     assert db.model_version(version="Latest") == "2020-06-28"
     assert db.model_version(version="2024-02-01") == "2024-02-01"
+    assert db.model_version(version="Prod6") == "2024-02-01"
+    assert db.model_version(version="prod6") == "2024-02-01"
 
-    # TODO add error for non-existing versionu
-    with pytest.raises(ValueError, match="Invalid name test"):
-        db.model_version(version="test")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            db.model_version(version="test")
+        assert "Invalid model version test" in caplog.text
 
 
 def test_get_collections(db):

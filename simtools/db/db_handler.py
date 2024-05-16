@@ -337,7 +337,7 @@ class DatabaseHandler:
 
         query = {
             "instrument": telescope_model_name,
-            "version": self.model_version(model_version),
+            "version": self.model_version(model_version, db_name),
         }
 
         self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
@@ -801,7 +801,7 @@ class DatabaseHandler:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        _model_version = self.model_version(version)
+        _model_version = self.model_version(version, db_name)
 
         query = {
             "version": _model_version,
@@ -948,7 +948,7 @@ class DatabaseHandler:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(site, telescope, version)
+        self._reset_parameter_cache(site, telescope, version, db_name)
 
     def add_tagged_version(
         self,
@@ -969,6 +969,7 @@ class DatabaseHandler:
 
         """
         collection = DatabaseHandler.db_client[self._get_db_name(db_name)]["metadata"]
+        self._logger.debug(f"Adding tags {tags} to DB {self._get_db_name(db_name)}")
         collection.insert_one({"Entry": "Simulation-Model-Tags", "Tags": tags})
 
     def _get_db_name(self, db_name=None):
@@ -1020,11 +1021,16 @@ class DatabaseHandler:
         query = {"Entry": "Simulation-Model-Tags"}
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
-        try:
-            return tags["Tags"][version]["Value"]
-        except KeyError:
-            self._logger.warning(f"Temporary fix for model version {version}")
-        return names.validate_model_version_name(version)
+        # case insensitive search
+        for key in tags["Tags"]:
+            if version.lower() == key.lower():
+                return tags["Tags"][key]["Value"]
+
+        self._logger.error(
+            f"Invalid model version {version} in DB {self._get_db_name(db_name)} "
+            f"(allowed are {_all_versions})"
+        )
+        raise ValueError
 
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
@@ -1118,6 +1124,7 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
+            self._logger.debug(f"Getting all versions from {_cache_key}")
             db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
             DatabaseHandler.model_versions_cached[_cache_key] = list(
                 set(post["version"] for post in db_collection.find(query))
@@ -1202,24 +1209,24 @@ class DatabaseHandler:
         self._logger.error("Telescope %s not found in the database.", telescope_name)
         raise ValueError
 
-    def _parameter_cache_key(self, site, telescope, model_version):
+    def _parameter_cache_key(self, site, telescope, model_version, db_name=None):
         """
         Create a cache key for the parameter cache dictionaries.
 
         """
-        _model_version = self.model_version(model_version)
+        _model_version = self.model_version(model_version, db_name=db_name)
 
         if telescope is None:
             return f"{site}-{_model_version}"
         return f"{site}-{telescope}-{_model_version}"
 
-    def _reset_parameter_cache(self, site, telescope, model_version):
+    def _reset_parameter_cache(self, site, telescope, model_version, db_name=None):
         """
         Reset the cache for the parameters.
 
         """
         self._logger.debug(f"Resetting cache for {site} {telescope} {model_version}")
-        _cache_key = self._parameter_cache_key(site, telescope, model_version)
+        _cache_key = self._parameter_cache_key(site, telescope, model_version, db_name)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
 

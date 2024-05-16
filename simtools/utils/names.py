@@ -17,7 +17,6 @@ __all__ = [
     "simtel_single_mirror_list_file_name",
     "simtel_config_file_name",
     "validate_array_layout_name",
-    "validate_model_version_name",
     "validate_site_name",
     "validate_telescope_id_name",
     "validate_telescope_name",
@@ -44,29 +43,6 @@ site_names = {
     "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
 }
 
-all_model_version_names = {
-    "2015-07-21": [""],
-    "2015-10-20-p1": [""],
-    "prod4-v0.0": [""],
-    "prod4-v0.1": [""],
-    "2018-02-16": [""],
-    "prod3_compatible": ["p3", "prod3", "prod3b"],
-    "prod4": ["p4"],
-    "post_prod3_updates": [""],
-    "2016-12-20": [""],
-    "2018-11-07": [""],
-    "2019-02-22": [""],
-    "2019-05-13": [""],
-    "2019-11-20": [""],
-    "2019-12-30": [""],
-    "2020-02-26": [""],
-    "2020-06-28": ["prod5"],
-    "2024-02-01": ["prod6"],
-    "prod4-prototype": [""],
-    "default": [],
-    "Released": [],
-    "Latest": [],
-}
 
 array_layout_names = {
     "4LST": ["4-lst", "4lst"],
@@ -134,23 +110,6 @@ def validate_telescope_id_name(name):
     msg = f"Invalid telescope ID name {name}"
     _logger.error(msg)
     raise ValueError(msg)
-
-
-def validate_model_version_name(name):
-    """
-    Validate model version name.
-
-    Parameters
-    ----------
-    name: str
-        Model version name.
-
-    Returns
-    -------
-    str
-        Validated name.
-    """
-    return _validate_name(name, all_model_version_names)
 
 
 def validate_site_name(name):
