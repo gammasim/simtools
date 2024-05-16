@@ -138,15 +138,6 @@ def test_get_class_from_telescope_name():
         names.get_site_from_telescope_name("SATW")
 
 
-def test_validate_model_version_name():
-    model_version = names.validate_model_version_name("p4")
-
-    assert model_version == "prod4"
-
-    with pytest.raises(ValueError):
-        names.validate_model_version_name("p0")
-
-
 def test_sanitize_name():
     assert names.sanitize_name("y_edges unit") == "y_edges_unit"
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
