@@ -281,8 +281,11 @@ def main():
         im = ray.images()[0]
         d80 = im.get_psf()
 
-        # Simulated cumulative PSF
-        data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
+        if radius is not None:
+            # Simulated cumulative PSF
+            data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
+        else:
+            raise ValueError("Radius data is not available.")
 
         rmsd = calculate_rmsd(
             data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
