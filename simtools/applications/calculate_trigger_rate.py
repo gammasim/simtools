@@ -86,8 +86,20 @@ def main():
     histograms = SimtelHistograms(simtel_array_files)
 
     logger.info("Calculating simulated and triggered event rate")
-    _, _, trigger_rate_in_tables = histograms.calculate_trigger_rates(print_info=True)
+    (
+        sim_event_rates,
+        triggered_event_rates,
+        triggered_event_rate_uncertainties,
+        trigger_rate_in_tables,
+    ) = histograms.calculate_trigger_rates(print_info=True)
 
+    # Print out results
+    for i_hist, _ in enumerate(sim_event_rates):
+        print(f"\nFile {histograms.histogram_files[i_hist]}\n")
+        print(
+            f"System trigger rate (Hz): {triggered_event_rates[i_hist].value:.4e} \u00B1 "
+            f"{triggered_event_rate_uncertainties[i_hist].value:.4e} Hz"
+        )
     if config_parser["save_tables"]:
         io_handler_instance = io_handler.IOHandler()
         output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
