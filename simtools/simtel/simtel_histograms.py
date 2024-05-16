@@ -189,11 +189,10 @@ class SimtelHistogram:
                 triggered_events_histogram = hist
                 found_two = True
             if found_one * found_two:
-                break
-
-        if "triggered_events_histogram" in locals():
-            return events_histogram, triggered_events_histogram
+                if "triggered_events_histogram" in locals():
+                    return events_histogram, triggered_events_histogram
         msg = "Histograms ids not found. Please check your files."
+
         self._logger.error(msg)
         raise HistogramIdNotFound
 
