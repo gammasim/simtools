@@ -175,7 +175,6 @@ class ArrayModel:
         )
 
         telescope_model = {}
-        # TODO - check if this is the correct way to define an array
         for element_name, _ in self.array_elements.items():
             collection = names.get_collection_name_from_array_element_name(element_name)
             if collection == "telescopes":
