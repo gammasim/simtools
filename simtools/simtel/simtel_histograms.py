@@ -59,6 +59,7 @@ class SimtelHistogram:
         self._initialize_histogram()
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
+        self.trigger_ratio_per_energy_bin = None
 
     def _initialize_histogram(self):
         """
@@ -292,50 +293,80 @@ class SimtelHistogram:
         """
         Compute the system trigger rate and its uncertainty, which are saved as class attributes.
         """
-        # Get the simulated and triggered 2D histograms from the simtel_array output file
-        events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
-        # Calculate triggered/simulated event 1D histogram (energy dependent)
-        triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
-            events_histogram, triggered_events_histogram
-        )
-        _, energy_axis = self._initialize_histogram_axes(triggered_events_histogram)
+        if self.trigger_rate is None:
+            # Get the simulated and triggered 2D histograms from the simtel_array output file
+            events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
-        # Getting the particle distribution function according to the CTAO reference
-        particle_distribution_function = self.get_particle_distribution_function(label="reference")
+            # Calculate triggered/simulated event 1D histogram (energy dependent)
+            triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
+                events_histogram, triggered_events_histogram
+            )
+            _, energy_axis = self._initialize_histogram_axes(triggered_events_histogram)
 
-        # Integrating the flux between the consecutive energy bins. Preliminary result given in
-        # cm-2s-1sr-1
-        flux_per_energy_bin = self._integrate_in_energy_bin(
-            particle_distribution_function, energy_axis
-        )
+            # Getting the particle distribution function according to the CTAO reference
+            particle_distribution_function = self.get_particle_distribution_function(
+                label="reference"
+            )
 
-        # Derive the trigger rate per energy bin
-        trigger_ratio_per_energy_bin = (
-            triggered_to_sim_fraction_hist
-            * flux_per_energy_bin
-            * self.total_area
-            * self.solid_angle
-        )
+            # Integrating the flux between the consecutive energy bins. Preliminary result given in
+            # cm-2s-1sr-1
+            flux_per_energy_bin = self._integrate_in_energy_bin(
+                particle_distribution_function, energy_axis
+            )
 
-        # Derive the system trigger rate
-        self.trigger_rate = np.sum(trigger_ratio_per_energy_bin)
+            # Derive the trigger rate per energy bin
+            self.trigger_ratio_per_energy_bin = (
+                triggered_to_sim_fraction_hist
+                * flux_per_energy_bin
+                * self.total_area
+                * self.solid_angle
+            )
 
-        # Derive the uncertainty in the system trigger rate estimate
-        self.trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
+            # Derive the system trigger rate
+            self.trigger_rate = np.sum(self.trigger_ratio_per_energy_bin)
+
+            # Derive the uncertainty in the system trigger rate estimate
+            self.trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
 
         return self.trigger_rate, self.trigger_rate_uncertainty
 
     def trigger_info_in_table(self, energy_axis, trigger_ratio_per_energy_bin):
+        """
+        Provide the trigger rate per energy bin in tabulated form.
+
+        Parameters
+        ----------
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+
+        trigger_ratio_per_energy_bin: numpy.array
+            The array with the trigger rate per energy bin.
+
+        Returns
+        -------
+        astropy.QTable:
+            The QTable instance with the trigger rate per energy bin.
+        """
         meta = self.produce_trigger_meta_data()
         trigger_ratio_per_energy_bin_table = QTable(
-            [energy_axis, (trigger_ratio_per_energy_bin.to(u.Hz)).value],
+            [energy_axis * u.TeV, (trigger_ratio_per_energy_bin.to(u.Hz))],
             names=("Energy (TeV)", "Trigger rate (Hz)"),
             meta=meta,
         )
         return trigger_ratio_per_energy_bin_table
 
     def produce_trigger_meta_data(self):
+        """
+        Produce the meta data to include in the tabulated form of the trigger rate per energy bin.
+        It shows some information from the input file (simtel_array file) and the final estimate
+        system trigger rate.
+
+        Returns
+        -------
+        dict:
+            dictionary with the metadata.
+        """
         return {
             "simtel_array_file": self.histogram_file,
             "simulation_input": self.print_info(mode="silent"),
@@ -344,6 +375,22 @@ class SimtelHistogram:
         }
 
     def _integrate_in_energy_bin(self, particle_distribution_function, energy_axis):
+        """
+        Helper function to integrate the particle distribution function between the consecutive
+        energy bins given by the energy_axis array.
+
+        Parameters
+        ----------
+        particle_distribution_function: ctao_cr_spectra.spectral.PowerLaw
+            The function describing the spectral distribution.
+        energy_axis: numpy.array
+            The array with the simulated particle energies.
+
+        Returns
+        -------
+        astropy.Quantity:
+            the array with the energy integrated flux.
+        """
         unit = None
         flux_per_energy_bin = []
         for i_energy, _ in enumerate(energy_axis[:-1]):
