@@ -10,6 +10,7 @@ env:
   SIMTOOLS_DB_SIMULATION_MODEL: "Staging-CTA-Simulation-Model-v0-2-0"
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
   schedule:
@@ -79,7 +80,7 @@ jobs:
         name: Fix Python PATH on macOS
         # from https://github.com/cta-observatory/ctapipe/blob/cfacbe1eeb2d9a4634980e5f1ef39b944bca6a7a/.github/workflows/ci.yml#L100
         run: |
-          tee -a ~/.bash_profile <<<'export PATH="$pythonLocation/bin:$PATH"'
+          tee -a "$HOME/.bash_profile" <<< "export PATH=$pythonLocation/bin:$PATH"
 
       - name: Python dependencies (pip)
         if: matrix.install-method == 'pip'
