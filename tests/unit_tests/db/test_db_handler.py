@@ -165,10 +165,8 @@ def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version
         latest_label="Prod26",
     )
 
-    assert (
-        db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
-    )
-    assert db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
     db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
@@ -435,11 +433,21 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
 
 
 def test_get_all_versions(db):
+    # not specifying a telescope model name and parameter
+    all_versions = db.get_all_versions(
+        telescope_model_name=None,
+        site="North",
+        parameter=None,
+        collection="telescopes",
+    )
+    assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+
+    # using a specific parameter
     all_versions = db.get_all_versions(
         telescope_model_name="LSTN-01",
         site="North",
         parameter="camera_config_file",
-        collection_name="telescopes",
+        collection="telescopes",
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
@@ -448,7 +456,7 @@ def test_get_all_versions(db):
     all_versions = db.get_all_versions(
         site="North",
         parameter="corsika_observation_level",
-        collection_name="sites",
+        collection="sites",
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
@@ -507,14 +515,27 @@ def test_get_telescope_db_name(db):
 
 def test_parameter_cache_key(db):
 
-    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
-    assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
+    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-2020-06-28"
+    assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
 
 
-def test_get_tagged_version(db):
+def test_model_version(db):
 
-    with pytest.raises(ValueError):
-        db._get_tagged_version(version="NotReleased")
+    assert db.model_version(version="Released") == "2020-06-28"
+    assert db.model_version(version="Latest") == "2020-06-28"
+    assert db.model_version(version="2024-02-01") == "2024-02-01"
 
-    assert db._get_tagged_version(version="Released") == "2020-06-28"
-    assert db._get_tagged_version(version="Latest") == "2020-06-28"
+    # TODO add error for non-existing versionu
+    with pytest.raises(ValueError, match="Invalid name test"):
+        db.model_version(version="test")
+
+
+def test_get_collections(db):
+
+    collections = db.get_collections()
+    assert isinstance(collections, list)
+    assert "telescopes" in collections
+
+    collections_from_name = db.get_collections("CTA-Simulation-Model")
+    assert isinstance(collections_from_name, list)
+    assert "telescopes" in collections_from_name

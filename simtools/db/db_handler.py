@@ -47,6 +47,7 @@ class DatabaseHandler:
     db_client = None
     site_parameters_cached = {}
     model_parameters_cached = {}
+    model_versions_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -64,6 +65,7 @@ class DatabaseHandler:
         self.mongo_db_config = mongo_db_config
         self.io_handler = io_handler.IOHandler()
         self._available_array_elements = None
+        self.list_of_collections = {}
 
         self._set_up_connection()
 
@@ -335,7 +337,7 @@ class DatabaseHandler:
 
         query = {
             "instrument": telescope_model_name,
-            "version": self._convert_version_to_tagged(model_version),
+            "version": self.model_version(model_version),
         }
 
         self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
@@ -537,7 +539,7 @@ class DatabaseHandler:
         return (
             names.validate_site_name(site),
             names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
-            names.validate_model_version_name(self._convert_version_to_tagged(model_version)),
+            self.model_version(model_version),
         )
 
     @staticmethod
@@ -644,7 +646,7 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
         db_entries = []
 
-        _version_to_copy = self._convert_version_to_tagged(version_to_copy)
+        _version_to_copy = self.model_version(version_to_copy)
 
         query = {
             "instrument": tel_to_copy,
@@ -741,7 +743,7 @@ class DatabaseHandler:
         _collection = DatabaseHandler.db_client[db_name][collection]
 
         if "version" in query:
-            query["version"] = self._convert_version_to_tagged(query["version"])
+            query["version"] = self.model_version(query["version"])
 
         self._logger.info(f"Deleting {_collection.count_documents(query)} entries from {db_name}")
 
@@ -799,7 +801,7 @@ class DatabaseHandler:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        _model_version = self._convert_version_to_tagged(version)
+        _model_version = self.model_version(version)
 
         query = {
             "version": _model_version,
@@ -948,13 +950,6 @@ class DatabaseHandler:
 
         self._reset_parameter_cache(site, telescope, version)
 
-    def _convert_version_to_tagged(self, model_version):
-        """Convert to tagged version, if needed."""
-        if model_version in ["Released", "Latest"]:
-            return self._get_tagged_version(model_version)
-
-        return model_version
-
     def add_tagged_version(
         self,
         released_version,
@@ -1007,23 +1002,23 @@ class DatabaseHandler:
         """
         return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
 
-    def _get_tagged_version(self, version="Released", db_name=None):
+    def model_version(self, version="Released", db_name=None):
         """
-        Get the tag of the "Released" or "Latest" version of the MC Model.
-        The "Released" is the latest stable MC Model,
-        the latest is the latest tag (not necessarily stable, but can be equivalent to "Released").
+        Return the model version for the requested tag.
+
+        Resolve the "Released" or "Latest" tag to the actual version name.
 
         Parameters
         ----------
-        version: str
-            Can be "Released" or "Latest" (default: "Released").
-        db_name: str
-            Database name
+        version : str
+            Model version.
+        db_name : str
+            Database name.
 
         Returns
         -------
         str
-            The version name in the Simulation DB of the requested tag
+            Model version.
 
         Raises
         ------
@@ -1032,15 +1027,19 @@ class DatabaseHandler:
 
         """
 
-        if version not in ["Released", "Latest"]:
-            raise ValueError('The only default versions are "Released" or "Latest"')
+        _all_versions = self.get_all_versions()
+        if version in _all_versions:
+            return version
 
         collection = DatabaseHandler.db_client[self._get_db_name(db_name)].metadata
         query = {"Entry": "Simulation-Model-Tags"}
 
         tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
-
-        return tags["Tags"][version]["Value"]
+        try:
+            return tags["Tags"][version]["Value"]
+        except KeyError:
+            self._logger.warning(f"Temporary fix for model version {version}")
+        return names.validate_model_version_name(version)
 
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
@@ -1087,13 +1086,13 @@ class DatabaseHandler:
 
     def get_all_versions(
         self,
-        parameter,
+        parameter=None,
         telescope_model_name=None,
         site=None,
-        collection_name="telescopes",
+        collection="telescopes",
     ):
         """
-        Get all version entries in the DB of a telescope or site for a specific parameter.
+        Get all version entries in the DB of collection and/or a specific parameter.
 
         Parameters
         ----------
@@ -1120,27 +1119,30 @@ class DatabaseHandler:
 
         """
 
-        collection = DatabaseHandler.db_client[self._get_db_name()][collection_name]
+        _cache_key = f"model_versions_{self._get_db_name()}-{collection}"
 
-        query = {
-            "parameter": parameter,
-        }
+        query = {}
+        if parameter is not None:
+            query["parameter"] = parameter
+            _cache_key = f"{_cache_key}-{parameter}"
+        if collection == "telescopes" and telescope_model_name is not None:
+            query["instrument"] = names.validate_telescope_name(telescope_model_name)
+            _cache_key = f"{_cache_key}-{query['instrument']}"
+        elif collection == "sites" and site is not None:
+            query["site"] = names.validate_site_name(site)
+            _cache_key = f"{_cache_key}-{query['site']}"
 
-        _site_validated = names.validate_site_name(site)
-        if collection_name == "telescopes":
-            _tel_model_name_validated = names.validate_telescope_name(telescope_model_name)
-            query["instrument"] = _tel_model_name_validated
-        elif collection_name == "sites":
-            query["site"] = _site_validated
-        else:
-            raise ValueError("Can only get versions of the telescopes and sites collections.")
+        if _cache_key not in DatabaseHandler.model_versions_cached:
+            db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
+            DatabaseHandler.model_versions_cached[_cache_key] = list(
+                set(post["version"] for post in db_collection.find(query))
+            )
+            if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
+                self._logger.warning(
+                    f"The query {query} did not return any results. No versions found"
+                )
 
-        _all_versions = [post["version"] for post in collection.find(query)]
-
-        if len(_all_versions) == 0:
-            self._logger.warning(f"The query {query} did not return any results. No versions found")
-
-        return _all_versions
+        return DatabaseHandler.model_versions_cached[_cache_key]
 
     def get_all_available_array_elements(self, model_version, collection_name, db_name=None):
         """
@@ -1164,11 +1166,7 @@ class DatabaseHandler:
         db_name = self._get_db_name(db_name)
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
-        query = {
-            "version": self._convert_version_to_tagged(
-                names.validate_model_version_name(model_version)
-            ),
-        }
+        query = {"version": self.model_version(model_version)}
         try:
             _all_available_array_elements = collection.find(query).distinct("instrument")
         except ValueError as exc:
@@ -1224,7 +1222,7 @@ class DatabaseHandler:
         Create a cache key for the parameter cache dictionaries.
 
         """
-        _model_version = self._convert_version_to_tagged(model_version)
+        _model_version = self.model_version(model_version)
 
         if telescope is None:
             return f"{site}-{_model_version}"
@@ -1239,3 +1237,20 @@ class DatabaseHandler:
         _cache_key = self._parameter_cache_key(site, telescope, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
+
+    def get_collections(self, db_name=None):
+        """
+        List of collections in the DB.
+
+        Returns
+        -------
+        list
+            List of collection names
+
+        """
+        db_name = self._get_db_name() if db_name is None else db_name
+        if db_name not in self.list_of_collections:
+            self.list_of_collections[db_name] = DatabaseHandler.db_client[
+                db_name
+            ].list_collection_names()
+        return self.list_of_collections[db_name]
