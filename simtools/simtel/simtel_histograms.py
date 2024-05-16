@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 from astropy import units as u
+from astropy.table import QTable
 from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import cone_solid_angle
 from ctapipe.io import write_table
@@ -40,10 +41,12 @@ class SimtelHistogram:
         """
         Initialize SimtelHistogram class.
         """
+        self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
         if not Path(histogram_file).exists():
             msg = f"File {histogram_file} does not exist."
-            raise FileNotFoundError(msg)
+            self._logger.error(msg)
+            raise FileNotFoundError
         self._config = None
         self._view_cone = None
         self._total_area = None
@@ -54,6 +57,8 @@ class SimtelHistogram:
         self._histogram = None
         self._histogram_file = None
         self._initialize_histogram()
+        self.trigger_rate = None
+        self.trigger_rate_uncertainty = None
 
     def _initialize_histogram(self):
         """
@@ -184,7 +189,7 @@ class SimtelHistogram:
         if "triggered_events_histogram" in locals():
             return events_histogram, triggered_events_histogram
         msg = "Histograms ids not found. Please check your files."
-        logging.error(msg)
+        self._logger.error(msg)
         raise HistogramIdNotFound
 
     @property
@@ -283,11 +288,14 @@ class SimtelHistogram:
         )
         return ratio_per_energy_bin
 
-    def new_trigger_rate(self):
-
+    def compute_system_trigger_rate(self):
+        """
+        Compute the system trigger rate and its uncertainty, which are saved as class attributes.
+        """
+        # Get the simulated and triggered 2D histograms from the simtel_array output file
         events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
-        # Produce triggered/simulated event histogram
+        # Calculate triggered/simulated event 1D histogram (energy dependent)
         triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
             events_histogram, triggered_events_histogram
         )
@@ -295,9 +303,49 @@ class SimtelHistogram:
 
         # Getting the particle distribution function according to the CTAO reference
         particle_distribution_function = self.get_particle_distribution_function(label="reference")
+
+        # Integrating the flux between the consecutive energy bins. Preliminary result given in
+        # cm-2s-1sr-1
+        flux_per_energy_bin = self._integrate_in_energy_bin(
+            particle_distribution_function, energy_axis
+        )
+
+        # Derive the trigger rate per energy bin
+        trigger_ratio_per_energy_bin = (
+            triggered_to_sim_fraction_hist
+            * flux_per_energy_bin
+            * self.total_area
+            * self.solid_angle
+        )
+
+        # Derive the system trigger rate
+        self.trigger_rate = np.sum(trigger_ratio_per_energy_bin)
+
+        # Derive the uncertainty in the system trigger rate estimate
+        self.trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
+
+        return self.trigger_rate, self.trigger_rate_uncertainty
+
+    def trigger_info_in_table(self, energy_axis, trigger_ratio_per_energy_bin):
+        meta = self.produce_trigger_meta_data()
+        trigger_ratio_per_energy_bin_table = QTable(
+            [energy_axis, (trigger_ratio_per_energy_bin.to(u.Hz)).value],
+            names=("Energy (TeV)", "Trigger rate (Hz)"),
+            meta=meta,
+        )
+        return trigger_ratio_per_energy_bin_table
+
+    def produce_trigger_meta_data(self):
+        return {
+            "simtel_array_file": self.histogram_file,
+            "simulation_input": self.print_info(mode="silent"),
+            # pylint: disable=E1101
+            "system_trigger_rate (Hz)": self.trigger_rate.value,
+        }
+
+    def _integrate_in_energy_bin(self, particle_distribution_function, energy_axis):
         unit = None
         flux_per_energy_bin = []
-        # Integrating the flux between the consecutive energy bins. Result given in cm-2s-1sr-1
         for i_energy, _ in enumerate(energy_axis[:-1]):
             integrated_flux = particle_distribution_function.integrate_energy(
                 energy_axis[i_energy] * u.TeV, energy_axis[i_energy + 1] * u.TeV
@@ -307,21 +355,7 @@ class SimtelHistogram:
 
             flux_per_energy_bin.append(integrated_flux.value)
 
-        flux_per_energy_bin = np.array(flux_per_energy_bin) * unit
-
-        # Derive the trigger rate per energy bin
-        trigger_ratio_per_energy_bin = (
-            triggered_to_sim_fraction_hist
-            * flux_per_energy_bin
-            * self.total_area
-            * self.solid_angle
-        )
-        # Derive the system trigger rate
-        system_trigger_rate = np.sum(trigger_ratio_per_energy_bin).astype(u.Quantity)
-        # Derive the uncertainty in the system trigger rate estimate
-        system_trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
-
-        return system_trigger_rate, system_trigger_rate_uncertainty
+        return np.array(flux_per_energy_bin) * unit
 
     def _initialize_histogram_axes(self, events_histogram):
         """
@@ -380,7 +414,8 @@ class SimtelHistogram:
             particle_distribution_function = self._get_simulation_spectral_distribution_function()
         else:
             msg = f"label {label} is not valid. Please use either 'reference' or 'simulation'."
-            raise ValueError(msg)
+            self._logger.error(msg)
+            raise ValueError
         return particle_distribution_function
 
     def _get_simulation_spectral_distribution_function(self):
@@ -430,7 +465,7 @@ class SimtelHistogram:
         """
         return np.sqrt(self.total_num_triggered_events) / self.estimate_observation_time()
 
-    def print_info(self):
+    def print_info(self, mode=None):
         """
         Print information on the geometry and input parameters.
 
@@ -447,7 +482,8 @@ class SimtelHistogram:
             "total_num_simulated_events": self.total_num_simulated_events,
             "total_num_triggered_events": self.total_num_triggered_events,
         }
-        print(info_dict)
+        if mode != "silent":
+            print(info_dict)
         return info_dict
 
 
@@ -525,7 +561,7 @@ class SimtelHistograms:
             (
                 triggered_event_rate,
                 triggered_event_rate_uncertainty,
-            ) = simtel_hist_instance.new_trigger_rate()
+            ) = simtel_hist_instance.compute_system_trigger_rate()
             triggered_event_rates.append(triggered_event_rate)
             logging.info(
                 f"System trigger event rate: "
@@ -567,7 +603,7 @@ class SimtelHistograms:
             if first_hist_file[key_to_test] != second_hist_file[key_to_test]:
                 msg = "Trying to add histograms with inconsistent dimensions"
                 self._logger.error(msg)
-                raise InconsistentHistogramFormat(msg)
+                raise InconsistentHistogramFormat
 
     @property
     def list_of_histograms(self):
