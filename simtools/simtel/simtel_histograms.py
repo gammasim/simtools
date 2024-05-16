@@ -576,6 +576,7 @@ class SimtelHistograms:
         triggered_event_rates = []
         sim_event_rates = []
         trigger_rate_in_tables = []
+        triggered_event_rate_uncertainties = []
         for i_file, file in enumerate(self.histogram_files):
             simtel_hist_instance = SimtelHistogram(file)
             if print_info:
@@ -604,7 +605,6 @@ class SimtelHistograms:
                 triggered_event_rate,
                 triggered_event_rate_uncertainty,
             ) = simtel_hist_instance.compute_system_trigger_rate()
-            triggered_event_rates.append(triggered_event_rate)
             logging.info(
                 f"System trigger event rate: "
                 # pylint: disable=E1101
@@ -612,8 +612,15 @@ class SimtelHistograms:
                 # pylint: disable=E1101
                 f"{triggered_event_rate_uncertainty.value:.4e} Hz"
             )
+            triggered_event_rates.append(triggered_event_rate)
+            triggered_event_rate_uncertainties.append(triggered_event_rate_uncertainty)
             trigger_rate_in_tables.append(simtel_hist_instance.trigger_info_in_table())
-        return sim_event_rates, triggered_event_rates, trigger_rate_in_tables
+        return (
+            sim_event_rates,
+            triggered_event_rates,
+            triggered_event_rate_uncertainties,
+            trigger_rate_in_tables,
+        )
 
     @property
     def number_of_files(self):
