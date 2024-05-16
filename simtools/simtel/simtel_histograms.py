@@ -407,15 +407,13 @@ class SimtelHistogram:
         float: astropy.Quantity[time]
             Estimated observation time based on the total number of particles simulated.
         """
-        first_estimate = (
-            self._get_simulation_spectral_distribution_function().compute_number_events(
-                self.view_cone[0],
-                self.view_cone[1],
-                1 * u.s,
-                self.total_area,
-                self.energy_range[0],
-                self.energy_range[1],
-            )
+        first_estimate = IRFDOC_PROTON_SPECTRUM.compute_number_events(
+            self.view_cone[0],
+            self.view_cone[1],
+            1 * u.s,
+            self.total_area,
+            self.energy_range[0],
+            self.energy_range[1],
         )
         obs_time = (self.total_num_simulated_events / first_estimate) * u.s
         return obs_time
