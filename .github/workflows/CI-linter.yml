@@ -34,6 +34,7 @@ jobs:
         with:
           python-version: "3.11"
 
+
       - name: Check for non-ASCII characters
         run: |
           output=$(find . -type f \
@@ -89,8 +90,11 @@ jobs:
 
       - name: pylint
         run: |
-          pylint $(git ls-files 'simtools/*.py')
+          git ls-files 'simtools/*.py' | xargs pylint -v
 
+      - name: Pre-commit
+        run: |
+          pre-commit run --all-files --verbose
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v6

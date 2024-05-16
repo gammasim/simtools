@@ -49,7 +49,7 @@ jobs:
       - name: Get current date
         shell: bash -l {0}
         id: date
-        run: echo "date=$(date -u +'%Y%m%dT%H%MZ')" >> $GITHUB_ENV
+        run: echo "date=$(date -u +'%Y%m%dT%H%MZ')" >> "$GITHUB_ENV"
 
       - name: Upload backup to Sync & Share
         shell: bash -l {0}
