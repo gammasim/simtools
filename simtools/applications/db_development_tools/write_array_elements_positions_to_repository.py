@@ -3,17 +3,24 @@
     Read array element positions from file and add them to model repository.
 
     This is an application for experts and should not be used by the general user.
+    Reading of input is fine-tuned to the array element files as provided by CTAO.
 
     Command line arguments
 
-    input (str, required)
+    input : str
         List of array element positions.
 
-    output_path (str, required)
+    output_path : str
         Path of local copy of model parameter repository.
 
-    model_version (str, required)
+    model_version : str
         Model version.
+
+    site : str
+        Observatory site.
+
+    coordinate_system : str
+        Coordinate system of array element positions (ground or utm).
 
     Examples
     --------
@@ -26,6 +33,7 @@
             --input /path/to/positions.txt \
             --repository_path /path/to/repository \
             --model_version 1.0.0 \
+            --coordinate_system ground \
             --site North
 
 """
