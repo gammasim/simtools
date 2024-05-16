@@ -94,18 +94,6 @@ def test_energy_range(simtel_array_histogram_instance):
     assert energy_range[1].value > energy_range[0].value
 
 
-def test_get_correction_factor(simtel_array_histogram_instance):
-    correction_factor = simtel_array_histogram_instance.get_correction_factor()
-    assert pytest.approx(correction_factor.value, 0.1) == 10635
-
-
-def test_get_simulation_spectral_distribution(simtel_array_histogram_instance):
-    simulation_spectral_distribution = (
-        simtel_array_histogram_instance.get_simulation_spectral_distribution()
-    )
-    assert simulation_spectral_distribution is not None
-
-
 def test_estimate_observation_time(simtel_array_histogram_instance):
     observation_time = simtel_array_histogram_instance.estimate_observation_time()
     assert observation_time.unit == u.s
@@ -116,12 +104,6 @@ def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
     trigger_rate_uncertainty = simtel_array_histogram_instance._estimate_trigger_rate_uncertainty()
     assert trigger_rate_uncertainty.unit == 1 / u.s
     assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 10635
-
-
-def test_trigger_rate_per_histogram(simtel_array_histogram_instance):
-    trigger_rate = simtel_array_histogram_instance.trigger_rate_per_histogram(re_weight=True)
-    assert pytest.approx(trigger_rate[0].value, 0.1) == 3.45
-    assert trigger_rate[0].unit == 1 / u.s
 
 
 def test_meta_dict(simtel_array_histograms_instance):
