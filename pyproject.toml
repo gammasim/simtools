@@ -80,6 +80,7 @@ scripts.simtools-print-array-elements = "simtools.applications.print_array_eleme
 scripts.simtools-produce-array-config = "simtools.applications.produce_array_config:main"
 scripts.simtools-production = "simtools.applications.production:main"
 scripts.simtools-sim-showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
+scripts.simtools-simulate-light-emission = "simtools.applications.light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-tune-psf = "simtools.applications.tune_psf:main"
