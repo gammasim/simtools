@@ -11,6 +11,7 @@ env:
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
   schedule:
