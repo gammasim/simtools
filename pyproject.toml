@@ -2,23 +2,16 @@
 build-backend = "setuptools.build_meta"
 requires = [
   "setuptools>=65",
-  "setuptools_scm[toml]>=6.2",
+  "setuptools-scm[toml]>=6.2",
 ]
-
-[tool.setuptools]
-packages=["simtools"]
-include-package-data = true
-
-[tool.setuptools_scm]
-write_to = "simtools/_version.py"
 
 [project]
 name = "gammasimtools"
 description = "Tools for the Simulation System of the CTA Observatory"
 readme = "README.rst"
-license = { file="LICENSE" }
+license = { file = "LICENSE" }
 authors = [
-  { name="simtools developers", email="simtools-developer@desy.de" }
+  { name = "simtools developers", email = "simtools-developer@desy.de" },
 ]
 requires-python = ">=3.11"
 classifiers = [
@@ -49,19 +42,18 @@ dependencies = [
   "scipy",
   "toml",
 ]
-[project.optional-dependencies]
-"dev" = [
+optional-dependencies."dev" = [
   "flake8",
   "pre-commit",
   "pylint",
 ]
-"doc" = [
+optional-dependencies."doc" = [
   "numpydoc",
   "sphinx",
   "sphinx-automodapi",
   "sphinx-book-theme",
 ]
-"tests" = [
+optional-dependencies."tests" = [
   "pytest",
   "pytest-cov",
   "pytest-profiling",
@@ -69,68 +61,120 @@ dependencies = [
   "pytest-repeat",
   "pytest-xdist",
 ]
-[project.urls]
-"bug tracker" = "https://github.com/gammasim/simtools/issues"
-"documentation" = "https://gammasim.github.io/simtools/"
-"repository" = "https://github.com/gammasim/simtools"
-[project.scripts]
-simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
-simtools-add-value-from-json-to-db = "simtools.applications.add_value_from_json_to_db:main"
-simtools-calculate-trigger-rate = "simtools.applications.calculate_trigger_rate:main"
-simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
-simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
-simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
-simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
-simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
-simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
-simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
-simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
-simtools-get-parameter = "simtools.applications.get_parameter:main"
-simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
-simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
-simtools-print-array-elements = "simtools.applications.print_array_elements:main"
-simtools-produce-array-config = "simtools.applications.produce_array_config:main"
-simtools-production = "simtools.applications.production:main"
-simtools-sim-showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
-simtools-simulate-light-emission = "simtools.applications.light_emission:main"
-simtools-simulate-prod = "simtools.applications.simulate_prod:main"
-simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
-simtools-tune-psf = "simtools.applications.tune_psf:main"
-simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
-simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
-simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
-simtools-validate-optics = "simtools.applications.validate_optics:main"
+urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
+urls."documentation" = "https://gammasim.github.io/simtools/"
+urls."repository" = "https://github.com/gammasim/simtools"
+scripts.simtools-add-file-to-db = "simtools.applications.add_file_to_db:main"
+scripts.simtools-add-value-from-json-to-db = "simtools.applications.add_value_from_json_to_db:main"
+scripts.simtools-calculate-trigger-rate = "simtools.applications.calculate_trigger_rate:main"
+scripts.simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
+scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
+scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
+scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
+scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
+scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
+scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
+scripts.simtools-get-file-from-db = "simtools.applications.get_file_from_db:main"
+scripts.simtools-get-parameter = "simtools.applications.get_parameter:main"
+scripts.simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
+scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:main"
+scripts.simtools-print-array-elements = "simtools.applications.print_array_elements:main"
+scripts.simtools-produce-array-config = "simtools.applications.produce_array_config:main"
+scripts.simtools-production = "simtools.applications.production:main"
+scripts.simtools-sim-showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
+scripts.simtools-simulate-light-emission = "simtools.applications.light_emission:main"
+scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
+scripts.simtools-tune-psf = "simtools.applications.tune_psf:main"
+scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
+scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
+scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
+scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
+
+[tool.setuptools]
+packages = [
+  "simtools",
+]
+include-package-data = true
+
+[tool.setuptools_scm]
+write_to = "simtools/_version.py"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.
 good-names = [
-    "e", "i", "j", "k", "x", "y", "n", "f", "r", "ex", "db", "im", "sh", "ax", "ce", "xx", "yy", "zz",
-    "C1", "C2", "C3", "C4", "C4x", "N1", "N2", "N3", "N4", "N4x",
-    "lst", "mst", "sst", "sct", "hess", "magic", "veritas",
-    ]
+  "e",
+  "i",
+  "j",
+  "k",
+  "x",
+  "y",
+  "n",
+  "f",
+  "r",
+  "ex",
+  "db",
+  "im",
+  "sh",
+  "ax",
+  "ce",
+  "xx",
+  "yy",
+  "zz",
+  "C1",
+  "C2",
+  "C3",
+  "C4",
+  "C4x",
+  "N1",
+  "N2",
+  "N3",
+  "N4",
+  "N4x",
+  "lst",
+  "mst",
+  "sst",
+  "sct",
+  "hess",
+  "magic",
+  "veritas",
+]
 # Ignore files
 ignore = [
-    "__init__.py", "scm_version.py", "_version.py",
-    "legend_handlers.py",
-    "version.py",
+  "__init__.py",
+  "scm_version.py",
+  "_version.py",
+  "legend_handlers.py",
+  "version.py",
 ]
 
 # See discussion in issue 521
 # Agreed to not have module docstring (missing-module-docstring)
 # Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
 disable = [
-    "missing-module-docstring",
-    "unpacking-non-sequence",
-    "logging-format-interpolation",
-    "fixme",
-    "missing-function-docstring",
-    "R0801",   # duplications
-    "logging-fstring-interpolation",
+  "missing-module-docstring",
+  "unpacking-non-sequence",
+  "logging-format-interpolation",
+  "fixme",
+  "missing-function-docstring",
+  "R0801",                         # duplications
+  "logging-fstring-interpolation",
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
-generated-members = ["gist_heat_r"]
+generated-members = [
+  "gist_heat_r",
+]
 # see https://stackoverflow.com/questions/49846940/incorrect-pylint-errors-on-astropy-in-vscode
-ignored-classes=["astropy.units"]
+ignored-classes = [
+  "astropy.units",
+]
 
 # Maximum number of characters on a single line.
 max-line-length = 100
@@ -149,19 +193,17 @@ max-statements = 80
 # Maximum number of public methods for a class (see R0904). (default=20)
 max-public-methods = 50
 
-[tool.black]
-line-length = 100
-
-[tool.isort]
-profile = "black"
-
-[tool.pytest.ini_options]
-minversion="6.0"
-norecursedirs=["build", "docs/_build", "simtools/applications"]
-addopts="-v --cov=simtools --cov-report=xml --cov-report=term"
-testpaths="tests/unit_tests/"
-# Ignore the warning about fontTools.misc.py23
-filterwarnings="ignore:The py23 module has been deprecated:DeprecationWarning"
-
 [tool.codespell]
 ignore-words = ".codespell-ignores"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+norecursedirs = [
+  "build",
+  "docs/_build",
+  "simtools/applications",
+]
+addopts = "-v --cov=simtools --cov-report=xml --cov-report=term"
+testpaths = "tests/unit_tests/"
+# Ignore the warning about fontTools.misc.py23
+filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
