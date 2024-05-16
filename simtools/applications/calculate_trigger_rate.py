@@ -96,7 +96,7 @@ def main():
                 str(output_path.joinpath(Path(simtel_array_files[i_table]).stem)) + ".ecsv"
             )
             logger.info(f"Writing table {i_table + 1} to {output_file}")
-            table.write(output_file)
+            table.write(output_file, overwrite=True)
 
 
 if __name__ == "__main__":
