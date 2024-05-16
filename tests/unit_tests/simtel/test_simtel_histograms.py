@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_histograms import (
+    HistogramIdNotFound,
     InconsistentHistogramFormat,
     SimtelHistogram,
     SimtelHistograms,
@@ -44,6 +46,13 @@ def simtel_array_histogram_instance(simtel_array_histograms_file):
     return instance
 
 
+def test_file_does_not_exist(caplog):
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(FileNotFoundError):
+            _ = SimtelHistogram(histogram_file="non_existent_file.simtel.zst")
+    assert "does not exist." in caplog.text
+
+
 def test_number_of_histogram_types(simtel_array_histogram_instance):
     assert simtel_array_histogram_instance.number_of_histogram_types == 10
 
@@ -69,7 +78,7 @@ def test_total_num_triggered_events(simtel_array_histogram_instance):
     assert total_num_triggered_events == 1.0
 
 
-def test_fill_event_histogram_dicts(simtel_array_histogram_instance):
+def test_fill_event_histogram_dicts(simtel_array_histogram_instance, caplog):
     (
         events_histogram,
         triggered_events_histogram,
@@ -78,6 +87,18 @@ def test_fill_event_histogram_dicts(simtel_array_histogram_instance):
     assert events_histogram["content_inside"] == 2000.0
     assert triggered_events_histogram is not None
     assert triggered_events_histogram["content_inside"] == 1.0
+
+    # Test defect histograms
+    new_instance = copy.copy(simtel_array_histogram_instance)
+    for i_hist, hist in enumerate(new_instance.histogram):  # altering intentionally the ids
+        if hist["id"] == 1:
+            new_instance.histogram[i_hist]["id"] = 99
+        if hist["id"] == 2:
+            new_instance.histogram[i_hist]["id"] = 99
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(HistogramIdNotFound):
+            new_instance.fill_event_histogram_dicts()
+    assert "Histograms ids not found. Please check your files." in caplog.text
 
 
 def test_produce_triggered_to_sim_fraction_hist(simtel_array_histogram_instance):
@@ -216,6 +237,41 @@ def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
     trigger_rate_uncertainty = simtel_array_histogram_instance._estimate_trigger_rate_uncertainty()
     assert trigger_rate_uncertainty.unit == 1 / u.s
     assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 10635
+
+
+def test_calculate_trigger_rates(simtel_array_histograms_instance, caplog):
+    import astropy.units as u
+
+    with caplog.at_level(logging.INFO):
+        sim_event_rates, triggered_event_rates, trigger_rate_in_tables = (
+            simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
+        )
+        assert pytest.approx(sim_event_rates[0].value, 0.1) == 21270923
+        assert sim_event_rates[0].unit == 1 / u.s
+        assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
+    assert "Histogram" in caplog.text
+    assert "Total number of simulated events" in caplog.text
+    assert "Total number of triggered events" in caplog.text
+    assert "Estimated equivalent observation time corresponding to the number of" in caplog.text
+    assert "System trigger event rate" in caplog.text
+
+
+def test_number_of_files(simtel_array_histograms_instance):
+    assert simtel_array_histograms_instance.number_of_files == 2
+
+
+def test_check_consistency(simtel_array_histograms_instance):
+    first_hist_file = {"lower_x": 0, "upper_x": 10, "n_bins_x": 5, "title": "Histogram 1"}
+    second_hist_file = {
+        "lower_x": 0,
+        "upper_x": 20,  # Different upper_x
+        "n_bins_x": 5,
+        "title": "Histogram 2",
+    }
+
+    # Test if the method raises InconsistentHistogramFormat exception
+    with pytest.raises(InconsistentHistogramFormat):
+        simtel_array_histograms_instance._check_consistency(first_hist_file, second_hist_file)
 
 
 def test_meta_dict(simtel_array_histograms_instance):
