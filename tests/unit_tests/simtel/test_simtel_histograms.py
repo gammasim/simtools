@@ -105,13 +105,11 @@ def test_initialize_histogram_axes(simtel_array_histogram_instance):
         "upper_y": 3,
         "n_bins_y": 4,
     }
-    radius_axis, energy_axis = simtel_array_histogram_instance._initialize_histogram_axes(
-        events_histogram
-    )
+    simtel_array_histogram_instance._initialize_histogram_axes(events_histogram)
     expected_radius_axis = np.linspace(0, 10, 6)
     expected_energy_axis = np.logspace(1, 3, 5)
-    assert np.array_equal(radius_axis, expected_radius_axis)
-    assert np.array_equal(energy_axis, expected_energy_axis)
+    assert np.array_equal(simtel_array_histogram_instance.radius_axis, expected_radius_axis)
+    assert np.array_equal(simtel_array_histogram_instance.energy_axis, expected_energy_axis)
 
 
 def test_get_particle_distribution_function(simtel_array_histogram_instance):
@@ -163,6 +161,32 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
     simtel_array_histogram_instance._initialize_histogram_axes(events_histogram)
     table = simtel_array_histogram_instance.trigger_info_in_table()
     assert table["Energy (TeV)"].value[0] == 1.00000000e-03
+
+
+def test_produce_trigger_meta_data(simtel_array_histogram_instance, simtel_array_histograms_file):
+    from astropy import units as u
+
+    trigger_rate = 1000  # Hz
+
+    simtel_array_histogram_instance.histogram_file = simtel_array_histograms_file
+    simtel_array_histogram_instance.trigger_rate = (
+        trigger_rate * u.Hz
+    )  # Convert to astropy Quantity
+
+    result = simtel_array_histogram_instance.produce_trigger_meta_data()
+
+    expected_result = {
+        "simtel_array_file": simtel_array_histograms_file,
+        "simulation_input": simtel_array_histogram_instance.print_info(mode="silent"),
+        "system_trigger_rate (Hz)": trigger_rate,
+    }
+    assert result == expected_result
+
+
+def test_print_info(simtel_array_histogram_instance):
+    info_dict = simtel_array_histogram_instance.print_info(mode=None)
+    assert "view_cone" in info_dict
+    assert "energy_range" in info_dict
 
 
 def test_total_area(simtel_array_histogram_instance):
