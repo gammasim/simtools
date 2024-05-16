@@ -72,7 +72,7 @@ class ModelParameter:
         )
         self.collection = collection
         self.label = label
-        self.model_version = names.validate_model_version_name(model_version)
+        self.model_version = self.db.model_version(model_version)
         self._config_file_directory = None
         self._config_file_path = None
         self._load_parameters_from_db()
