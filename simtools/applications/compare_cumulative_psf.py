@@ -168,13 +168,17 @@ def main():
     # Plotting cumulative PSF
     # Measured cumulative PSF
     data_to_plot = OrderedDict()
+    radius = None
     if args_dict.get("data", None):
         data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
         data_to_plot["measured"] = load_data(data_file)
         radius = data_to_plot["measured"]["Radius [cm]"]
 
     # Simulated cumulative PSF
-    data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
+    if radius is not None:
+        data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
+    else:
+        raise ValueError("Radius data is not available. Cannot compute cumulative PSF.")
 
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
