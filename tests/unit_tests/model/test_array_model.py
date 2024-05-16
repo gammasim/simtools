@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-from simtools.model.array_model import ArrayModel
+from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -54,6 +54,52 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     assert am._get_single_telescope_info_from_array_config("MSTN-05", parameters_to_change) == {
         "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
     }
+
+    parameters_missing_name = {
+        "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
+            "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
+        },
+    }
+    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has no name for a telescope"):
+        ArrayModel(
+            label="test",
+            site="North",
+            layout_name="test-layout",
+            parameters_to_change=parameters_missing_name,
+            mongo_db_config=db_config,
+            model_version=model_version,
+        )
+
+    parameters_with_string = {
+        "MSTN-05": "a string",
+    }
+    am_with_string = ArrayModel(
+        label="test",
+        site="North",
+        layout_name="test-layout",
+        parameters_to_change=parameters_with_string,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    assert (
+        am_with_string._get_single_telescope_info_from_array_config(
+            "MSTN-05", parameters_with_string
+        )
+        == {}
+    )
+
+    invalid_parameters = {
+        "MSTN-05": 5.0,
+    }
+    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has wrong input for a telescope"):
+        ArrayModel(
+            label="test",
+            site="North",
+            layout_name="test-layout",
+            parameters_to_change=invalid_parameters,
+            mongo_db_config=db_config,
+            model_version=model_version,
+        )
 
 
 def test_exporting_config_files(db_config, io_handler, model_version):
@@ -120,3 +166,10 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "applicable": True,
         "file": False,
     }
+
+
+def test_set_config_file_directory(array_model, io_handler):
+    am = array_model
+    _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
+    am._set_config_file_directory()
+    assert _config_dir_1.is_dir()

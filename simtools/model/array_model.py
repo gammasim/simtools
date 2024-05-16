@@ -141,9 +141,6 @@ class ArrayModel:
 
         """
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
-        if not self._config_file_directory.exists():
-            self._config_file_directory.mkdir(parents=True, exist_ok=True)
-            self._logger.info(f"Creating directory {self._config_file_directory}")
 
     def _build_array_model(self, site, parameters_to_change=None):
         """
