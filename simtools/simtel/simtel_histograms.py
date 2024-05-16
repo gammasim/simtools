@@ -441,6 +441,7 @@ class SimtelHistogram:
         """
         info_dict = {
             "view_cone": self.view_cone,
+            "solid_angle": self.solid_angle,
             "total_area": self.total_area,
             "energy_range": self.energy_range,
             "total_num_simulated_events": self.total_num_simulated_events,
