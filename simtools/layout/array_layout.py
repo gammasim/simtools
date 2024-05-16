@@ -436,7 +436,9 @@ class ArrayLayout:
 
         if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
             _telescope_model_name = self.db.get_telescope_db_name(
-                telescope_name=telescope.name, model_version=self.model_version
+                telescope_name=telescope.name,
+                model_version=self.model_version,
+                collection="telescopes",
             )
             self._logger.debug(
                 f"Reading auxiliary telescope parameters for {telescope.name}"

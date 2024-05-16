@@ -90,6 +90,7 @@ def main():
                 telescope_model_name=f"{site}-MST-Structure-D",
                 model_version=version_now,
                 run_location="",
+                collection_name="telescope",
                 write_files=False,
                 only_applicable=False,
             )
