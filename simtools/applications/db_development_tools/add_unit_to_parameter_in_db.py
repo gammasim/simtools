@@ -37,7 +37,7 @@ def main():
             all_versions = db.get_all_versions(
                 site=site,
                 parameter=par_now,
-                collection_name="sites",
+                collection="sites",
             )
             for version_now in all_versions:
                 db.update_parameter_field(
