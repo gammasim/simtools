@@ -24,6 +24,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.simtel.simtel_histograms import SimtelHistograms
 
 
@@ -55,6 +56,12 @@ def _parse(label, description):
         type=str,
     )
 
+    config.parser.add_argument(
+        "--save_tables",
+        help="If true, saves the trigger rates per energy bin into ECSV files.",
+        action="store_true",
+    )
+
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
@@ -79,7 +86,17 @@ def main():
     histograms = SimtelHistograms(simtel_array_files)
 
     logger.info("Calculating simulated and triggered event rate")
-    histograms.calculate_event_rates(print_info=True)
+    _, _, trigger_rate_in_tables = histograms.calculate_trigger_rates(print_info=True)
+
+    if config_parser["save_tables"]:
+        io_handler_instance = io_handler.IOHandler()
+        output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
+        for i_table, table in enumerate(trigger_rate_in_tables):
+            output_file = (
+                str(output_path.joinpath(Path(simtel_array_files[i_table]).stem)) + ".ecsv"
+            )
+            logger.info(f"Writing table {i_table + 1} to {output_file}")
+            table.write(output_file)
 
 
 if __name__ == "__main__":

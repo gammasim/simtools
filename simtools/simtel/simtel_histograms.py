@@ -553,9 +553,11 @@ class SimtelHistograms:
         self._list_of_histograms = None
         self.__meta_dict = None
 
-    def calculate_event_rates(self, print_info=False):
+    def calculate_trigger_rates(self, print_info=False):
         """
-        Calculate the triggered and simulated event rate for the histograms in each file.
+        Calculate the triggered and simulated event rate considering the histograms in each file.
+        It returns also a list with the tables where the energy dependent trigger rate for each
+        file can be found.
 
         Parameters
         ----------
@@ -569,9 +571,12 @@ class SimtelHistograms:
             The simulated event rates.
         triggered_event_rates: list of astropy.Quantity[1/time]
             The triggered event rates.
+        trigger_rate_in_tables: list of astropy.QTable
+            The energy dependent trigger rates.
         """
         triggered_event_rates = []
         sim_event_rates = []
+        trigger_rate_in_tables = []
         for i_file, file in enumerate(self.histogram_files):
             simtel_hist_instance = SimtelHistogram(file)
             if print_info:
@@ -608,7 +613,8 @@ class SimtelHistograms:
                 # pylint: disable=E1101
                 f"{triggered_event_rate_uncertainty.value:.4e} Hz"
             )
-        return sim_event_rates, triggered_event_rates
+            trigger_rate_in_tables.append(simtel_hist_instance.trigger_info_in_table())
+        return sim_event_rates, triggered_event_rates, trigger_rate_in_tables
 
     @property
     def number_of_files(self):
