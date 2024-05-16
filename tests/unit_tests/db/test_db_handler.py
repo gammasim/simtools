@@ -157,12 +157,15 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
 
 def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version):
 
+    tags = {
+        "Released": {"Value": "2020-06-28"},
+        "Latest": {"Value": "2024-02-01"},
+        "Prod25": {"Value": "2020-06-28"},
+        "Prod26": {"Value": "2024-02-01"},
+    }
     db.add_tagged_version(
         db_name=f"sandbox_{random_id}",
-        released_version="2020-06-28",
-        released_label="Prod25",
-        latest_version="2024-02-01",
-        latest_label="Prod26",
+        tags=tags,
     )
 
     assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"

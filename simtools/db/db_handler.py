@@ -952,10 +952,7 @@ class DatabaseHandler:
 
     def add_tagged_version(
         self,
-        released_version,
-        released_label,
-        latest_version,
-        latest_label,
+        tags,
         db_name=None,
     ):
         """
@@ -965,26 +962,14 @@ class DatabaseHandler:
         ----------
         released_version: str
             The version name to set as "Released"
-        released_label: str
-            The released version name as label.
-        latest_version: str
-            The version name to set as "Latest"
-        latest_label: str
-            The latest version name as label.
+        tags: dict
+            The version tags consisting of tag name and version name.
         db_name: str
             Database name
 
         """
-        db_name = self._get_db_name(db_name)
-
-        collection = DatabaseHandler.db_client[db_name]["metadata"]
-        db_entry = {}
-        db_entry["Entry"] = "Simulation-Model-Tags"
-        db_entry["Tags"] = {
-            "Released": {"Value": released_version, "Label": released_label},
-            "Latest": {"Value": latest_version, "Label": latest_label},
-        }
-        collection.insert_one(db_entry)
+        collection = DatabaseHandler.db_client[self._get_db_name(db_name)]["metadata"]
+        collection.insert_one({"Entry": "Simulation-Model-Tags", "Tags": tags})
 
     def _get_db_name(self, db_name=None):
         """
