@@ -166,9 +166,11 @@ class SimtelHistogram:
         HistogramIdNotFound:
             if histogram ids not found. Problem with the file.
         """
-        # Save the appropriate histograms to dictionaries
+        # Save the appropriate histograms to variables
         found_one = False
         found_two = False
+        events_histogram = None
+        triggered_events_histogram = None
         for hist in self.histogram:
             if hist["id"] == 1:
                 events_histogram = hist
