@@ -157,6 +157,13 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
     assert simtel_array_histogram_instance.trigger_rate_uncertainty == 10635.461663664897 / u.s
     assert len(simtel_array_histogram_instance.trigger_rate_per_energy_bin.value) == 120
 
+    events_histogram, triggered_events_histogram = (
+        simtel_array_histogram_instance.fill_event_histogram_dicts()
+    )
+    simtel_array_histogram_instance._initialize_histogram_axes(events_histogram)
+    table = simtel_array_histogram_instance.trigger_info_in_table()
+    assert table["Energy (TeV)"].value[0] == 1.00000000e-03
+
 
 def test_total_area(simtel_array_histogram_instance):
     total_area = simtel_array_histogram_instance.total_area

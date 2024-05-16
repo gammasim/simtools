@@ -62,6 +62,8 @@ class SimtelHistogram:
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
         self.trigger_rate_per_energy_bin = None
+        self.energy_axis = None
+        self.radius_axis = None
 
     def _initialize_histogram(self):
         """
@@ -307,7 +309,7 @@ class SimtelHistogram:
             triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
                 events_histogram, triggered_events_histogram
             )
-            _, energy_axis = self._initialize_histogram_axes(triggered_events_histogram)
+            self._initialize_histogram_axes(triggered_events_histogram)
 
             # Getting the particle distribution function according to the CTAO reference
             particle_distribution_function = self.get_particle_distribution_function(
@@ -317,7 +319,7 @@ class SimtelHistogram:
             # Integrating the flux between the consecutive energy bins. Preliminary result given in
             # cm-2s-1sr-1
             flux_per_energy_bin = self._integrate_in_energy_bin(
-                particle_distribution_function, energy_axis
+                particle_distribution_function, self.energy_axis
             )
 
             # Derive the trigger rate per energy bin
@@ -336,17 +338,9 @@ class SimtelHistogram:
 
         return self.trigger_rate, self.trigger_rate_uncertainty
 
-    def trigger_info_in_table(self, energy_axis, trigger_rate_per_energy_bin):
+    def trigger_info_in_table(self):
         """
         Provide the trigger rate per energy bin in tabulated form.
-
-        Parameters
-        ----------
-        energy_axis: numpy.array
-            The array with the simulated particle energies.
-
-        trigger_rate_per_energy_bin: numpy.array
-            The array with the trigger rate per energy bin.
 
         Returns
         -------
@@ -355,7 +349,7 @@ class SimtelHistogram:
         """
         meta = self.produce_trigger_meta_data()
         trigger_rate_per_energy_bin_table = QTable(
-            [energy_axis * u.TeV, (trigger_rate_per_energy_bin.to(u.Hz))],
+            [self.energy_axis[:-1] * u.TeV, (self.trigger_rate_per_energy_bin.to(u.Hz))],
             names=("Energy (TeV)", "Trigger rate (Hz)"),
             meta=meta,
         )
@@ -417,28 +411,20 @@ class SimtelHistogram:
         ----------
         events_histogram:
             A single histogram from where to extract axis information.
-
-        Returns
-        -------
-        radius_axis: numpy.array
-            The array with the impact distance.
-        energy_axis: numpy.array
-            The array with the simulated particle energies.
         """
-        radius_axis = np.linspace(
+        self.radius_axis = np.linspace(
             events_histogram["lower_x"],
             events_histogram["upper_x"],
             events_histogram["n_bins_x"] + 1,
             endpoint=True,
         )
 
-        energy_axis = np.logspace(
+        self.energy_axis = np.logspace(
             events_histogram["lower_y"],
             events_histogram["upper_y"],
             events_histogram["n_bins_y"] + 1,
             endpoint=True,
         )
-        return radius_axis, energy_axis
 
     def get_particle_distribution_function(self, label="reference"):
         """
