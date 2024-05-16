@@ -344,15 +344,22 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     except KeyError as exc:
         logger.error(f"No application defined in config file {config}.")
         raise exc
-
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     if "CONFIGURATION" in config:
+        model_version_requested = request.config.getoption("--model_version")
+        if "MODEL_VERSION_USE_CURRENT" in config:
+            model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
+            if model_version_requested != model_version_config:
+                pytest.skip(
+                    "Model version requested {model_version_requested} not supported for this test"
+                )
+
         config_file, config_string, config_file_model_version = prepare_configuration(
             config["CONFIGURATION"],
             output_path=tmp_output_path,
-            model_version=request.config.getoption("--model_version"),
+            model_version=model_version_requested,
         )
     else:
         config_file = None
