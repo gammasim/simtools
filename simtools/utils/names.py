@@ -52,8 +52,9 @@ def site_names():
     dict
         Site names.
     """
-    _sites = set(entry["site"] for entry in array_elements().values())
-    return {site: site.lower() for site in _sites}
+    _array_elements = array_elements()
+    _sites = set(entry["site"] for entry in _array_elements.values())
+    return {site: [site.lower()] for site in _sites}
 
 
 all_model_version_names = {
@@ -179,7 +180,7 @@ def validate_site_name(name):
     str
         Validated name.
     """
-    return _validate_name(name, site_names)
+    return _validate_name(name, site_names())
 
 
 def validate_array_layout_name(name):

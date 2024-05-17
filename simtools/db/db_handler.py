@@ -808,7 +808,7 @@ class DatabaseHandler:
         if telescope is not None:
             query["instrument"] = telescope
             logger_info = f"instrument {telescope}"
-        elif site is not None and site in names.site_names:
+        elif site is not None and site in names.site_names():
             query["site"] = site
             logger_info = f"site {site}"
         else:
