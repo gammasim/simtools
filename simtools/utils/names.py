@@ -42,7 +42,8 @@ def array_elements():
 @lru_cache(maxsize=None)
 def site_names():
     """
-    Site names from reference files.
+    Site names from reference file.
+
     The list of sites is derived from location of available array elements
     Return a dictionary for compatibility with the validation routines.
 
@@ -51,8 +52,7 @@ def site_names():
     dict
         Site names.
     """
-    _array_elements = array_elements()
-    _sites = set(entry["site"] for entry in _array_elements.values())
+    _sites = set(entry["site"] for entry in array_elements().values())
     return {site: site.lower() for site in _sites}
 
 
