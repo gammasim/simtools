@@ -36,7 +36,7 @@ def corsika_config(io_handler, db_config, corsika_config_data, model_version):
     corsika_config = CorsikaConfig(
         mongo_db_config=db_config,
         model_version=model_version,
-        site="Paranal",
+        site="South",
         layout_name="4LST",
         label="test-corsika-config",
         corsika_config_data=corsika_config_data,
@@ -91,7 +91,7 @@ def test_wrong_par_in_config_data(corsika_config, corsika_config_data, db_config
         corsika_test_Config = CorsikaConfig(
             mongo_db_config=db_config,
             model_version=model_version,
-            site="LaPalma",
+            site="North",
             layout_name="1LST",
             label="test-corsika-config",
             corsika_config_data=new_config_data,
@@ -107,7 +107,7 @@ def test_units_of_config_data(corsika_config, corsika_config_data, db_config, mo
         corsika_test_Config = CorsikaConfig(
             mongo_db_config=db_config,
             model_version=model_version,
-            site="LaPalma",
+            site="North",
             layout_name="1LST",
             label="test-corsika-config",
             corsika_config_data=new_config_data,
@@ -123,7 +123,7 @@ def test_len_of_config_data(corsika_config, corsika_config_data, db_config, mode
         corsika_test_Config = CorsikaConfig(
             mongo_db_config=db_config,
             model_version=model_version,
-            site="LaPalma",
+            site="North",
             layout_name="1LST",
             label="test-corsika-config",
             corsika_config_data=new_config_data,
@@ -139,7 +139,7 @@ def test_wrong_primary_name(corsika_config, corsika_config_data, db_config, mode
         corsika_test_Config = CorsikaConfig(
             mongo_db_config=db_config,
             model_version=model_version,
-            site="LaPalma",
+            site="North",
             layout_name="1LST",
             label="test-corsika-config",
             corsika_config_data=new_config_data,
@@ -155,7 +155,7 @@ def test_missing_input(corsika_config, corsika_config_data, db_config, model_ver
         corsika_test_Config = CorsikaConfig(
             mongo_db_config=db_config,
             model_version=model_version,
-            site="LaPalma",
+            site="North",
             layout_name="1LST",
             label="test-corsika-config",
             corsika_config_data=new_config_data,
@@ -178,7 +178,7 @@ def test_config_data_from_yaml_file(io_handler, db_config, model_version):
     cc = CorsikaConfig(
         mongo_db_config=db_config,
         model_version=model_version,
-        site="Paranal",
+        site="South",
         layout_name="4LST",
         label="test-corsika-config",
         corsika_config_file="tests/resources/corsikaConfigTest.yml",
