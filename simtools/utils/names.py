@@ -39,10 +39,22 @@ def array_elements():
         return yaml.safe_load(file)["data"]
 
 
-site_names = {
-    "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
-    "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
-}
+@lru_cache(maxsize=None)
+def site_names():
+    """
+    Site names from reference files.
+    The list of sites is derived from location of available array elements
+    Return a dictionary for compatibility with the validation routines.
+
+    Returns
+    -------
+    dict
+        Site names.
+    """
+    _array_elements = array_elements()
+    _sites = set(entry["site"] for entry in _array_elements.values())
+    return {site: site.lower() for site in _sites}
+
 
 all_model_version_names = {
     "2015-07-21": [""],
