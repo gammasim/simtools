@@ -35,6 +35,16 @@ class HistogramIdNotFound(Exception):
 class SimtelHistogram:
     """
     This class handles a single histogram (or simtel_array output) file.
+
+    Parameters
+    ----------
+    histogram_file: str
+        The histogram (.hdata.zst) or simtel_array (.simtel.zst) file.
+    rht: bool
+        If true, the area thrown in the trigger rate calculation is estimated exactly as in the
+        hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+        the simulation configuration.
+
     """
 
     trigger_rate: None
@@ -42,6 +52,7 @@ class SimtelHistogram:
     def __init__(self, histogram_file, rht=False):
         """
         Initialize SimtelHistogram class.
+
         """
         self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
@@ -64,7 +75,7 @@ class SimtelHistogram:
         self.trigger_rate_per_energy_bin = None
         self.energy_axis = None
         self.radius_axis = None
-        self.rht = rht  # If true, area thrown is estimated exactly as in the hessio rht.cc tool.
+        self.rht = rht
 
     def _initialize_histogram(self):
         """
