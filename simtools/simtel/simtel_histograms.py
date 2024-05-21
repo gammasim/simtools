@@ -226,10 +226,17 @@ class SimtelHistogram:
             )
         return self._solid_angle
 
-    @property
-    def total_area(self):
+    def total_area(self, rht=False):
         """
-        Total area covered by the simulated events (original CORSIKA CSCAT).
+        Total area covered by the simulated events (original CORSIKA CSCAT), i.e., area thrown.
+
+        Parameters
+        ----------
+        rht: bool
+            If true, the maximum radius (area thrown) is defined exactly as in the rht.cc tool.
+            rht is a hessio tool previously used to derive trigger rate from histogram files.
+            The default is set to False, because a more precise estimate considers the input
+            parameter in the configuration file rather than estimated from the distribution.
 
         Returns
         -------
@@ -237,11 +244,24 @@ class SimtelHistogram:
             Total area covered on the ground covered by the simulation.
         """
         if self._total_area is None:
-            self._total_area = (
-                np.pi
-                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm))
-                ** 2
-            )
+
+            if rht is True:
+                events_histogram, _ = self.fill_event_histogram_dicts()
+                self._initialize_histogram_axes(events_histogram)
+                rht_max_radius = 1.5 * np.average(
+                    self.radius_axis[:-1], weights=np.sum(events_histogram["data"], axis=0)
+                )
+                self._total_area = (np.pi * (rht_max_radius * u.m) ** 2).to(u.cm**2)
+            else:
+                self._total_area = (
+                    np.pi
+                    * (
+                        ((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(
+                            u.cm
+                        )
+                    )
+                    ** 2
+                )
         return self._total_area
 
     @property
@@ -327,7 +347,7 @@ class SimtelHistogram:
                 * flux_per_energy_bin
                 * self.total_area
                 * self.solid_angle
-            )
+            ).decompose()
 
             # Derive the system trigger rate
             self.trigger_rate = np.sum(self.trigger_rate_per_energy_bin)
