@@ -62,6 +62,12 @@ def _parse(label, description):
         action="store_true",
     )
 
+    config.parser.add_argument(
+        "--rht",
+        help="If true, calculates the trigger rates exactly as in the hessio tool rht.cc.",
+        action="store_true",
+    )
+
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
@@ -83,7 +89,7 @@ def main():
     if isinstance(simtel_array_files, str):
         simtel_array_files = [simtel_array_files]
 
-    histograms = SimtelHistograms(simtel_array_files)
+    histograms = SimtelHistograms(simtel_array_files, rht=config_parser["rht"])
 
     logger.info("Calculating simulated and triggered event rate")
     (
