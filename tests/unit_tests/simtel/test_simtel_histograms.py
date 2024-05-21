@@ -210,10 +210,13 @@ def test_print_info(simtel_array_histogram_instance):
     assert "energy_range" in info_dict
 
 
-def test_total_area(simtel_array_histogram_instance):
-    total_area = simtel_array_histogram_instance.total_area
+def test_total_area(simtel_array_histogram_instance, simtel_array_histograms_file):
+    total_area = simtel_array_histogram_instance.total_area(rht=False)
     assert total_area.unit == u.cm**2
-    assert pytest.approx(total_area.value, 2) == 1.25e11
+    assert pytest.approx(total_area.value, 0.05) == 1.25e11
+    new_instance = SimtelHistogram(histogram_file=simtel_array_histograms_file)
+    total_area = new_instance.total_area(rht=True)
+    assert pytest.approx(total_area.value, 0.05) == 1.3e11
 
 
 def test_energy_range(simtel_array_histogram_instance):
