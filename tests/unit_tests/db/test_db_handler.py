@@ -347,6 +347,18 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
     )
     assert pars["camera_pixels"]["applicable"] is False
 
+    with pytest.raises(ValueError):
+        db.update_parameter_field(
+            db_name=f"sandbox_{random_id}",
+            telescope=None,
+            site=None,
+            version="2024-02-01",
+            parameter="not_important",
+            field="applicable",
+            new_value=False,
+            collection_name="site" + random_id,
+        )
+
     # make sure that cache has been emptied after updating
     assert (
         db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
