@@ -84,10 +84,22 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
 
-    simtel_array_files = config_parser["simtel_file_names"]
-
-    if isinstance(simtel_array_files, str):
-        simtel_array_files = [simtel_array_files]
+    # Building list of simtel_array files from the input files
+    simtel_array_files = []
+    for one_file in config_parser["simtel_file_names"]:
+        try:
+            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
+                simtel_array_files.append(one_file)
+            else:
+                # Collecting hist files
+                with open(one_file, encoding="utf-8") as file:
+                    for line in file:
+                        # Removing '\n' from filename, in case it is left there.
+                        simtel_array_files.append(line.replace("\n", ""))
+        except FileNotFoundError as exc:
+            msg = f"{one_file} is not a file."
+            logger.error(msg)
+            raise FileNotFoundError from exc
 
     histograms = SimtelHistograms(simtel_array_files, rht=config_parser["rht"])
 
