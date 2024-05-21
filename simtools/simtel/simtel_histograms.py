@@ -39,7 +39,7 @@ class SimtelHistogram:
 
     trigger_rate: None
 
-    def __init__(self, histogram_file):
+    def __init__(self, histogram_file, rht=False):
         """
         Initialize SimtelHistogram class.
         """
@@ -64,6 +64,7 @@ class SimtelHistogram:
         self.trigger_rate_per_energy_bin = None
         self.energy_axis = None
         self.radius_axis = None
+        self.rht = rht  # If true, area thrown is estimated exactly as in the hessio rht.cc tool.
 
     def _initialize_histogram(self):
         """
@@ -226,17 +227,10 @@ class SimtelHistogram:
             )
         return self._solid_angle
 
-    def total_area(self, rht=False):
+    @property
+    def total_area(self):
         """
         Total area covered by the simulated events (original CORSIKA CSCAT), i.e., area thrown.
-
-        Parameters
-        ----------
-        rht: bool
-            If true, the maximum radius (area thrown) is defined exactly as in the rht.cc tool.
-            rht is a hessio tool previously used to derive trigger rate from histogram files.
-            The default is set to False, because a more precise estimate considers the input
-            parameter in the configuration file rather than estimated from the distribution.
 
         Returns
         -------
@@ -245,7 +239,7 @@ class SimtelHistogram:
         """
         if self._total_area is None:
 
-            if rht is True:
+            if self.rht is True:
                 events_histogram, _ = self.fill_event_histogram_dicts()
                 self._initialize_histogram_axes(events_histogram)
                 rht_max_radius = 1.5 * np.average(
