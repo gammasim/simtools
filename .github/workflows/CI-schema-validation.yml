@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'simtools/schemas/model_parameters/*'
+      - 'tests/integration_tests/config/*'
 
 jobs:
 
@@ -28,14 +29,28 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Model parameter schema validation
+      - name: Installation
         run: |
           pip install -e .
+
+      - name: Model parameter schema validation
+        run: |
           for file in simtools/schemas/model_parameters/*.yml; do
             echo "Testing schema $file"
             python simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
             --schema model_parameter_and_data_schema.metaschema.yml \
+            --data_type "schema" \
+            --log_level DEBUG
+          done
+
+      - name: Integration config file validation
+        run: |
+          for file in tests/integration_tests/config/*.yml; do
+            echo "Testing config file $file"
+            python simtools/applications/validate_file_using_schema.py \
+            --file_name "$file" \
+            --schema integration_tests_config.metaschema.yml \
             --data_type "schema" \
             --log_level DEBUG
           done
