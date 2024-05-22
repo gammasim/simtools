@@ -531,7 +531,7 @@ class SimtelHistogram:
             Uncertainty in the trigger rate estimate.
         """
         return (
-            np.sqrt(self.total_num_triggered_events / self.estimate_observation_time().value) * u.s
+            np.sqrt(self.total_num_triggered_events / self.estimate_observation_time().value) / u.s
         )
 
     def print_info(self, mode=None):
