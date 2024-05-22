@@ -81,9 +81,6 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "sphinx.ext.autosummary",
-    "sphinx_automodapi.automodapi",
-    "sphinx_automodapi.smart_resolver",
     "numpydoc",
 ]
 
@@ -177,9 +174,4 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "astropy": ("https://docs.astropy.org/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
-}
-
-nitpick_ignore = {
-    ("py:obj", "Unit"),
-    ("py:obj", "UnitBase"),
 }
