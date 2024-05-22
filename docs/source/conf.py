@@ -80,6 +80,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
+    "myst_parser",
     "numpydoc",
 ]
 
@@ -188,3 +189,6 @@ intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
 }
+
+# myst (markdown options)
+myst_heading_anchors = 3
