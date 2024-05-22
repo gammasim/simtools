@@ -44,6 +44,11 @@ class SimtelHistogram:
         If true, the area thrown in the trigger rate calculation is estimated exactly as in the
         hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
         the simulation configuration.
+        Note: The expected shape of the distribution of events as function of the core distance is
+        triangular up to the maximum distance.The weighted mean radius of the triangular
+        distribution is 2/3 times the upper edge. Thus when using the ``rht`` flag, the mean
+        distance times 3/2, returns just the position of the upper edge in the triangle
+        distribution with little impact of the binning.
 
     """
 
@@ -95,13 +100,13 @@ class SimtelHistogram:
         """Returns number of histograms."""
         return len(self.histogram)
 
-    def get_histogram_type_title(self, i_hist):
+    def get_histogram_type_title(self, histogram_index):
         """
-        Returns the title of the histogram with index i_hist.
+        Returns the title of the histogram with index histogram_index.
 
         Parameters
         ----------
-        i_hist: int
+        histogram_index: int
             Histogram index.
 
         Returns
@@ -109,7 +114,7 @@ class SimtelHistogram:
         str
             Histogram title.
         """
-        return self.histogram[i_hist]["title"]
+        return self.histogram[histogram_index]["title"]
 
     @property
     def config(self):
@@ -145,8 +150,7 @@ class SimtelHistogram:
                 f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}"
             )
             logging.debug(
-                "Number of times each simulated shower is used (CORSIKA NUSE): "
-                f"{self.config['n_use']}"
+                "Number of times each simulated shower is used: " f"{self.config['n_use']}"
             )
             self._total_num_simulated_events = self.config["n_showers"] * self.config["n_use"]
             logging.debug(f"Number of total simulated showers: {self._total_num_simulated_events}")
@@ -158,7 +162,7 @@ class SimtelHistogram:
         Returns the total number of triggered events.
         Please note that this value is not supposed to match the trigger rate x estimated
         observation time, as the simulation is optimized for computational time and the energy
-        distribution assumed is not necessarily the CTAO reference cosmic-ray spectra.
+        distribution assumed is not necessarily the reference cosmic-ray spectra.
 
         Returns
         -------
@@ -169,7 +173,7 @@ class SimtelHistogram:
         if self._total_num_triggered_events is None:
             _, triggered_hist = self.fill_event_histogram_dicts()
             self._total_num_triggered_events = np.round(np.sum(triggered_hist["data"]))
-            logging.debug(f"Number of triggered showers: {self._total_num_triggered_events}")
+            logging.debug(f"Number of triggered events: {self._total_num_triggered_events}")
         return self._total_num_triggered_events
 
     def fill_event_histogram_dicts(self):
@@ -189,18 +193,18 @@ class SimtelHistogram:
             if histogram ids not found. Problem with the file.
         """
         # Save the appropriate histograms to variables
-        found_one = False
-        found_two = False
+        found_simulated_events_hist = False
+        found_triggered_events_hist = False
         events_histogram = None
         triggered_events_histogram = None
         for hist in self.histogram:
             if hist["id"] == 1:
                 events_histogram = hist
-                found_one = True
+                found_simulated_events_hist = True
             elif hist["id"] == 2:
                 triggered_events_histogram = hist
-                found_two = True
-            if found_one * found_two:
+                found_triggered_events_hist = True
+            if found_simulated_events_hist * found_triggered_events_hist:
                 if "triggered_events_histogram" in locals():
                     return events_histogram, triggered_events_histogram
         msg = "Histograms ids not found. Please check your files."
@@ -335,12 +339,12 @@ class SimtelHistogram:
             )
             self._initialize_histogram_axes(triggered_events_histogram)
 
-            # Getting the particle distribution function according to the CTAO reference
+            # Getting the particle distribution function according to the reference
             particle_distribution_function = self.get_particle_distribution_function(
                 label="reference"
             )
 
-            # Integrating the flux between the consecutive energy bins. Preliminary result given in
+            # Integrating the flux between the consecutive energy bins. The result given in
             # cm-2s-1sr-1
             flux_per_energy_bin = self._integrate_in_energy_bin(
                 particle_distribution_function, self.energy_axis
@@ -412,7 +416,7 @@ class SimtelHistogram:
         Returns
         -------
         astropy.Quantity:
-            the array with the energy integrated flux.
+            astropy.Quantity of a numpy array with the energy integrated flux.
         """
         unit = None
         flux_per_energy_bin = []
@@ -429,7 +433,8 @@ class SimtelHistogram:
 
     def _initialize_histogram_axes(self, events_histogram):
         """
-        Initialize the two axes of a histogram.
+        Initialize the two axes of a histogram: the array with the edges of the bins in core
+        distance and the edges of the array with the energy bins.
 
         Parameters
         ----------
@@ -495,13 +500,13 @@ class SimtelHistogram:
 
     def estimate_observation_time(self):
         """
-        Estimates the observation time comprised by the number of events in the simulation.
+        Estimates the observation time corresponding to the simulated number of events.
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
         and other information from the simulation configuration self.config.
 
         Returns
         -------
-        float: astropy.Quantity[time]
+        astropy.Quantity[time]
             Estimated observation time based on the total number of particles simulated.
         """
         first_estimate = IRFDOC_PROTON_SPECTRUM.compute_number_events(
@@ -525,7 +530,7 @@ class SimtelHistogram:
         astropy.Quantity[1/time]
             Uncertainty in the trigger rate estimate.
         """
-        return np.sqrt(self.total_num_triggered_events) / self.estimate_observation_time()
+        return np.sqrt(self.total_num_triggered_events / self.estimate_observation_time())
 
     def print_info(self, mode=None):
         """
@@ -624,7 +629,7 @@ class SimtelHistograms:
 
             obs_time = simtel_hist_instance.estimate_observation_time()
             logging.info(
-                f"Estimated equivalent observation time corresponding to the number of"
+                f"Estimated equivalent observation time corresponding to the number of "
                 f"events simulated: {obs_time.value} s"
             )
             sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
@@ -711,8 +716,8 @@ class SimtelHistograms:
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
-            for i_hist, hists_one_file in enumerate(self.list_of_histograms):
-                if i_hist == 0:
+            for histogram_index, hists_one_file in enumerate(self.list_of_histograms):
+                if histogram_index == 0:
                     # First file
                     self._combined_hists = copy.copy(hists_one_file)
 
@@ -739,19 +744,19 @@ class SimtelHistograms:
         """
         self._combined_hists = new_combined_hists
 
-    def plot_one_histogram(self, i_hist, ax):
+    def plot_one_histogram(self, histogram_index, ax):
         """
-        Plot a single histogram referent to the index i_hist.
+        Plot a single histogram referent to the index histogram_index.
 
         Parameters
         ----------
-        i_hist: int
+        histogram_index: int
             Index of the histogram to be plotted.
         ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
 
-        hist = self.combined_hists[i_hist]
+        hist = self.combined_hists[histogram_index]
         ax.set_title(hist["title"])
 
         def _get_bins(hist, axis=0):

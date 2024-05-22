@@ -28,7 +28,6 @@ dependencies:
   - scipy
   - sphinx
   - sphinx-book-theme
-  - sphinx-automodapi
   - toml
   - pip:
       - ctao-dpps-cosmic-ray-spectra

@@ -58,7 +58,7 @@ def test_number_of_histogram_types(simtel_array_histogram_instance):
 
 
 def test_get_histogram_type_title(simtel_array_histogram_instance):
-    title = simtel_array_histogram_instance.get_histogram_type_title(i_hist=0)
+    title = simtel_array_histogram_instance.get_histogram_type_title(histogram_index=0)
     assert title == "Events, without weights (Ra, log10(E))"
 
 
@@ -90,11 +90,13 @@ def test_fill_event_histogram_dicts(simtel_array_histogram_instance, caplog):
 
     # Test defect histograms
     new_instance = copy.copy(simtel_array_histogram_instance)
-    for i_hist, hist in enumerate(new_instance.histogram):  # altering intentionally the ids
+    for histogram_index, hist in enumerate(
+        new_instance.histogram
+    ):  # altering intentionally the ids
         if hist["id"] == 1:
-            new_instance.histogram[i_hist]["id"] = 99
+            new_instance.histogram[histogram_index]["id"] = 99
         if hist["id"] == 2:
-            new_instance.histogram[i_hist]["id"] = 99
+            new_instance.histogram[histogram_index]["id"] = 99
     with caplog.at_level(logging.ERROR):
         with pytest.raises(HistogramIdNotFound):
             new_instance.fill_event_histogram_dicts()

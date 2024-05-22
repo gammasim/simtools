@@ -3,20 +3,32 @@
 """
 Summary
 -------
-This application calculates the trigger rate from a simtel_array output file or a list of
-simtel_array output files.
+This application calculates the trigger rate from a simtel_array output file, a list of
+simtel_array output files ou from a file containing a list of simtel_array files.
+
 
 Command line arguments
 ----------------------
-simtel_array_files (str or list):
+simtel_file_names (str or list):
     Path to the simtel_array file or a list of simtel_array output files.
+save_tables (bool):
+    If true, save the tables with the energy-dependent trigger rate to a ecsv file.
+rht (bool):
+    If true, the area thrown in the trigger rate calculation is estimated exactly as in the
+    hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+    the simulation configuration.
+    Note: The expected shape of the distribution of events as function of the core distance is
+    triangular up to the maximum distance.The weighted mean radius of the triangular
+    distribution is 2/3 times the upper edge. Thus when using the ``rht`` flag, the mean
+    distance times 3/2, returns just the position of the upper edge in the triangle
+    distribution with little impact of the binning.
 
 Example
 -------
 .. code-block:: console
 
     simtools-calculate-trigger-rate --simtel_file_names tests/resources/
-    run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst --livetime 100
+    run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst
 """
 
 import logging
@@ -82,7 +94,6 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
-    logger.info("Starting the application.")
 
     # Building list of simtel_array files from the input files
     simtel_array_files = []
