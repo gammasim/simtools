@@ -1,5 +1,5 @@
 # A conda environment with all useful package for simtools developers
-name: simtools-dev
+name: simtools-dev-311
 channels:
   - conda-forge
 dependencies:
@@ -11,6 +11,7 @@ dependencies:
   - flake8
   - jsonschema
   - matplotlib-base
+  - myst-parser
   - numpy
   - numpydoc
   - pip
