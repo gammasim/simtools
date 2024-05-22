@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-calculate-trigger-rate
-  TEST_NAME: more_files_save_tables
+  TEST_NAME: more_files
   CONFIGURATION:
     SIMTEL_FILE_NAMES:
       - './tests/resources/simtel_output_files.txt'
