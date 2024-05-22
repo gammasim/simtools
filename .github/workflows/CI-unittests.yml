@@ -102,7 +102,7 @@ jobs:
           pytest --durations=10 --color=yes -n auto --dist loadscope
 
       - name: Random order
-        if: github.event_name == 'workflow_dispatch' && contains(matrix.extra-args, 'random-order')
+        if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
         shell: bash -l {0}
         run: |
           pytest --color=yes -n auto --dist loadscope --count 5 --random-order
