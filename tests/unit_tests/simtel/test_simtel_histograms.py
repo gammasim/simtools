@@ -175,7 +175,7 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
     assert simtel_array_histogram_instance.trigger_rate_per_energy_bin is None
     simtel_array_histogram_instance.compute_system_trigger_rate()
     assert simtel_array_histogram_instance.trigger_rate == 9006.432335543419 / u.s
-    assert simtel_array_histogram_instance.trigger_rate_uncertainty == 10635.461663664897 / u.s
+    assert simtel_array_histogram_instance.trigger_rate_uncertainty == 103.12837468 / u.s
     assert len(simtel_array_histogram_instance.trigger_rate_per_energy_bin.value) == 120
 
     events_histogram, triggered_events_histogram = (
@@ -255,7 +255,7 @@ def test_calculate_trigger_rates(simtel_array_histograms_instance, caplog):
         ) = simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
         assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
         assert sim_event_rates[0].unit == 1 / u.s
-        assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 10635
+        assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 103
         assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
     assert "Histogram" in caplog.text
     assert "Total number of simulated events" in caplog.text

@@ -530,7 +530,9 @@ class SimtelHistogram:
         astropy.Quantity[1/time]
             Uncertainty in the trigger rate estimate.
         """
-        return np.sqrt(self.total_num_triggered_events / self.estimate_observation_time())
+        return (
+            np.sqrt(self.total_num_triggered_events / self.estimate_observation_time().value) * u.s
+        )
 
     def print_info(self, mode=None):
         """
