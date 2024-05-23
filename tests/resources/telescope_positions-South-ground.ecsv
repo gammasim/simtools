@@ -54,6 +54,10 @@
 #     REFERENCE: {VERSION: 1.0.0}
 # schema: astropy-2.0
 telescope_name position_x position_y position_z geo_code
+LSTS-01     -20.63     -64.84      34.00  A1A
+LSTS-02      80.04      -0.77      29.00  B0A
+LSTS-03     -19.39      65.22      31.00  A3A
+LSTS-04    -105.06       1.15      33.00  Y0B
 MSTS-01      -0.00      -0.00      24.00  A0A
 MSTS-02       1.45     151.07      25.00  A4A
 MSTS-03      -1.45    -151.07      31.00  A3A
@@ -105,3 +109,8 @@ SSTS-34    -811.16     656.15      10.25  Q4A
 SSTS-35    -823.61    -640.46      74.25  Q3A
 SSTS-36     790.37      -7.58       4.25  M0A
 SSTS-37     744.83    -374.35      15.25  M1A
+SSTS-38     751.88     359.99       6.25  M2A
+SSTS-39     810.17    -656.14      41.25  M3A
+SSTS-40     822.61     640.47      18.75  M4A
+SSTS-41       9.12     950.45      28.25  A4B
+SSTS-42      -9.12    -950.45      75.25  A1B

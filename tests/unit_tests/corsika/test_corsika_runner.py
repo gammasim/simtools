@@ -28,15 +28,12 @@ def corsika_config_data(tmp_test_directory):
 
 
 @pytest.fixture
-def corsika_runner(corsika_config_data, io_handler, simtel_path, db_config, model_version):
+def corsika_runner(corsika_config_data, io_handler, simtel_path, array_model_south):
     corsika_runner = CorsikaRunner(
-        mongo_db_config=db_config,
-        model_version=model_version,
-        site="south",
-        layout_name="test-layout",
         simtel_source_path=simtel_path,
         label="test-corsika-runner",
         corsika_config_data=corsika_config_data,
+        array_model=array_model_south,
     )
     return corsika_runner
 
@@ -158,7 +155,7 @@ def test_get_file_name(corsika_runner, io_handler):
 def test_has_file(corsika_runner, corsika_file):
     # Copying the corsika file to the expected location and
     # changing its name for the sake of this test.
-    # This should not affect the efficacy of this test.
+    # This should not affect the efficiency of this test.
     output_directory = corsika_runner._corsika_data_dir.joinpath(
         corsika_runner._get_run_directory(1)
     )
