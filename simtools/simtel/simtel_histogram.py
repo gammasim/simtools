@@ -49,8 +49,6 @@ class SimtelHistogram:
 
     """
 
-    trigger_rate: None
-
     def __init__(self, histogram_file, area_from_distribution=False):
         """
         Initialize SimtelHistogram class.
@@ -521,17 +519,20 @@ class SimtelHistogram:
 
     def _estimate_trigger_rate_uncertainty(self):
         """
-        Estimate the trigger rate uncertainty, based on the number of simulated events.
-        Poisson statistics are assumed.
+        Estimate the trigger rate uncertainty, based on the number of simulated and triggered
+        events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation
+        of the individual uncertainties.
 
         Returns
         -------
         astropy.Quantity[1/time]
             Uncertainty in the trigger rate estimate.
         """
+        # pylint: disable=E1101
         return (
-            np.sqrt(self.total_num_triggered_events / self.estimate_observation_time().value) / u.s
-        )
+            self.trigger_rate.value
+            * np.sqrt(1 / self.total_num_triggered_events + 1 / self.total_num_simulated_events)
+        ) * self.trigger_rate.unit
 
     def print_info(self, mode=None):
         """

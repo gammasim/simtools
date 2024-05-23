@@ -53,7 +53,7 @@ def test_calculate_trigger_rates(simtel_array_histograms_instance, caplog):
         ) = simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
         assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
         assert sim_event_rates[0].unit == 1 / u.s
-        assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 103
+        assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 9008
         assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
     assert "Histogram" in caplog.text
     assert "Total number of simulated events" in caplog.text
