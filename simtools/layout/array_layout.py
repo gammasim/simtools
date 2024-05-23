@@ -99,7 +99,7 @@ class ArrayLayout:
     def from_array_layout_name(cls, mongo_db_config, array_layout_name, model_version, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
-        Layout definitions are given in the `data/layout` path.
+        Layout definitions are given in the data/layout path.
 
         Parameters
         ----------

@@ -597,7 +597,7 @@ def sanitize_name(name):
     Raises
     ------
     ValueError:
-        if the string `name` can not be sanitized.
+        if the string name can not be sanitized.
     """
 
     # Convert to lowercase
