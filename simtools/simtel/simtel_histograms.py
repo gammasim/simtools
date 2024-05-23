@@ -212,7 +212,7 @@ class SimtelHistograms:
             triggered_event_rate, stacked_num_simulated_events, stacked_num_triggered_events
         )
         logging.info(
-            f"System trigger event rate: "
+            f"System trigger event rate for stacked files: "
             # pylint: disable=E1101
             f"{triggered_event_rate.value:.4e} \u00B1 "
             # pylint: disable=E1101
@@ -258,7 +258,9 @@ class SimtelHistograms:
                 f"{simtel_hist_instance.total_num_triggered_events} events"
             )
 
-            obs_time = simtel_hist_instance.estimate_observation_time()
+            obs_time = simtel_hist_instance.estimate_observation_time(
+                simtel_hist_instance.total_num_simulated_events
+            )
             logging.info(
                 f"Estimated equivalent observation time corresponding to the number of "
                 f"events simulated: {obs_time.value} s"
