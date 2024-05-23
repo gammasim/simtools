@@ -31,6 +31,7 @@ dependencies:
   - sphinx-book-theme
   - toml
   - pip:
+      - ctao-dpps-cosmic-ray-spectra
       - pytest-random-order
 
 # cheatsheet

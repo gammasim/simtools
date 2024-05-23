@@ -4,6 +4,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+# pylint: skip-file
 import os
 import sys
 from pathlib import Path
@@ -88,20 +89,6 @@ autosectionlabel_prefix_document = True
 
 # Display todos by setting to True
 todo_include_todos = True
-
-autodoc_mock_imports = [
-    "matplotlib",
-    "yaml",
-    #    "numpy",
-    "astropy",
-    "bson",
-    "pymongo",
-    "gridfs",
-    "scipy",
-    "cycler",
-    "eventio",
-    "ctapipe",
-]
 
 # Change the look of autodoc classes
 numpydoc_show_class_members = False
