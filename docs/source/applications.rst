@@ -142,13 +142,6 @@ produce_array_config
    :members:
 
 
-production
-==========
-
-.. automodule:: production
-   :members:
-
-
 sim_showers_for_trigger_rates
 =============================
 .. automodule:: sim_showers_for_trigger_rates
