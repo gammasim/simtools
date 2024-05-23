@@ -134,7 +134,7 @@ class CorsikaHistograms:
         Returns
         -------
         float:
-            The version of CORSIKA used to produce the CORSIKA IACT file given by `self.input_file`.
+            The version of CORSIKA used to produce the CORSIKA IACT file given by self.input_file.
         """
 
         if self._corsika_version is None:
@@ -335,7 +335,7 @@ class CorsikaHistograms:
         ----------
         input_config: str, Path, dict or NoneType
             yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring at `_create_histogram_default_config`.
+            format, please look at the docstring at _create_histogram_default_config.
             Alternatively, it can be a dictionary with the configuration parameters to create
             the histograms.
         """
@@ -545,7 +545,7 @@ class CorsikaHistograms:
              cy: direction cosine in the y direction, i.e., the cosine of the angle between the
              incoming direction and the y axis,
              time: time of arrival of the photon in ns. The clock starts when the particle crosses
-             the top of the atmosphere (CORSIKA-defined) if `self.event_first_interaction_heights`
+             the top of the atmosphere (CORSIKA-defined) if self.event_first_interaction_heights
              is positive or at first interaction if otherwise.
              zem: altitude where the photon was generated in cm,
              photons: number of photons associated to this bunch,
@@ -615,7 +615,7 @@ class CorsikaHistograms:
             if True, one histogram is set for each telescope separately.
         hist_config:
             yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring of `_create_histogram_default_config`.
+            format, please look at the docstring of _create_histogram_default_config.
             Alternatively, it can be a dictionary with the configuration parameters to create
             the histograms.
 
@@ -671,7 +671,7 @@ class CorsikaHistograms:
     @individual_telescopes.setter
     def individual_telescopes(self, new_individual_telescopes: bool):
         """
-        The following lines allow `individual_telescopes` to be defined before using this function
+        The following lines allow individual_telescopes to be defined before using this function
         but if any parameter is passed in this function, it overwrites the class attribute.
 
         Parameters
@@ -699,7 +699,7 @@ class CorsikaHistograms:
         for histogram in self._allowed_histograms:
             if not hasattr(self, histogram) or getattr(self, histogram) is None:
                 msg = (
-                    "The histograms were not created. Please, use `create_histograms` to create "
+                    "The histograms were not created. Please, use create_histograms to create "
                     "histograms from the CORSIKA output file."
                 )
                 self._logger.error(msg)
@@ -824,7 +824,7 @@ class CorsikaHistograms:
     def get_2d_num_photons_distr(self):
         """
         Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
-        accounting for the events from the telescopes given by `self.telescope_indices`.
+        accounting for the events from the telescopes given by self.telescope_indices.
 
         Returns
         -------
@@ -1014,7 +1014,7 @@ class CorsikaHistograms:
         """
         Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the
          particle crosses the top of the atmosphere (CORSIKA-defined) if
-         `self.event_first_interaction_heights` is positive or at first interaction if otherwise.
+         self.event_first_interaction_heights is positive or at first interaction if otherwise.
 
         Returns
         -------
@@ -1062,7 +1062,7 @@ class CorsikaHistograms:
     def num_photons_per_event(self):
         """
         Get the distribution of the number of photons amongst the events,
-         including the telescopes indicated by `self.telescope_indices`.
+         including the telescopes indicated by self.telescope_indices.
 
         Returns
         -------
@@ -1511,7 +1511,7 @@ class CorsikaHistograms:
     def telescope_positions(self):
         """
         The telescope positions found in the CORSIKA output file.
-        It does not depend on the `telescope_indices` attribute.
+        It does not depend on the telescope_indices attribute.
 
         Returns
         -------
@@ -1536,7 +1536,7 @@ class CorsikaHistograms:
 
     # In the next five functions, we provide dedicated functions to retrieve specific information
     # about the runs, i.e. zenith, azimuth, total energy, interaction height and Earth magnetic
-    # field defined for the run. For other information, please use the `get_event_parameter_info`
+    # field defined for the run. For other information, please use the get_event_parameter_info
     # function.
     @property
     def event_zenith_angles(self):
@@ -1630,7 +1630,7 @@ class CorsikaHistograms:
     def get_event_parameter_info(self, parameter):
         """
         Get specific information (i.e. any parameter) of the events. The parameter is passed through
-        the key word `parameter`. Available options are to be found under `self.all_event_keys`.
+        the key word parameter. Available options are to be found under self.all_event_keys.
         The unit of the parameter, if any, is given according to the CORSIKA version
         (please see user guide in this case).
 
@@ -1638,7 +1638,7 @@ class CorsikaHistograms:
         ----------
         parameter: str
             The parameter of interest. Available options are to be found under
-            `self.all_event_keys`.
+            self.all_event_keys.
 
         Returns
         -------
@@ -1652,7 +1652,7 @@ class CorsikaHistograms:
         """
 
         if parameter not in self.all_event_keys:
-            msg = f"`key` is not valid. Valid entries are {self.all_event_keys}"
+            msg = f"key is not valid. Valid entries are {self.all_event_keys}"
             self._logger.error(msg)
             raise KeyError
         return self.event_information[parameter]
@@ -1660,7 +1660,7 @@ class CorsikaHistograms:
     def get_run_info(self, parameter):
         """
         Get specific information (i.e. any parameter) of the run. The parameter is passed through
-        the key word `parameter`. Available options are to be found under `self.all_run_keys`.
+        the key word parameter. Available options are to be found under self.all_run_keys.
         The unit of the parameter, if any, is given according to the CORSIKA version
         (please see user guide in this case).
 
@@ -1668,7 +1668,7 @@ class CorsikaHistograms:
         ----------
         parameter: str
             The parameter of interest. Available options are to be found under
-            `self.all_run_keys`.
+            self.all_run_keys.
 
         Raises
         ------
@@ -1676,15 +1676,15 @@ class CorsikaHistograms:
             If parameter is not valid.
         """
         if parameter not in self.all_run_keys:
-            msg = f"`key` is not valid. Valid entries are {self.all_run_keys}"
+            msg = f"key is not valid. Valid entries are {self.all_run_keys}"
             self._logger.error(msg)
             raise KeyError
         return self.header[parameter]
 
     def event_1d_histogram(self, key, bins=50, hist_range=None):
         """
-        Create a histogram for the all events using `key` as parameter.
-        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
+        Create a histogram for the all events using key as parameter.
+        Valid keys are stored in self.all_event_keys (CORSIKA defined).
 
         Parameters
         ----------
@@ -1710,7 +1710,7 @@ class CorsikaHistograms:
             If key is not valid.
         """
         if key not in self.all_event_keys:
-            msg = f"`key` is not valid. Valid entries are {self.all_event_keys}"
+            msg = f"key is not valid. Valid entries are {self.all_event_keys}"
             self._logger.error(msg)
             raise KeyError
         hist, bin_edges = np.histogram(
@@ -1722,8 +1722,8 @@ class CorsikaHistograms:
 
     def event_2d_histogram(self, key_1, key_2, bins=50, hist_range=None):
         """
-        Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.
-        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).
+        Create a 2D histogram for the all events using key_1 and key_2 as parameters.
+        Valid keys are stored in self.all_event_keys (CORSIKA defined).
 
         Parameters
         ----------
