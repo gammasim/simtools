@@ -226,8 +226,8 @@ def test_estimate_observation_time(simtel_array_histogram_instance):
     assert pytest.approx(observation_time.value, 0.1) == 9.4e-5
 
 
-def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
+def testestimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
     simtel_array_histogram_instance.compute_system_trigger_rate()
-    trigger_rate_uncertainty = simtel_array_histogram_instance._estimate_trigger_rate_uncertainty()
+    trigger_rate_uncertainty = simtel_array_histogram_instance.estimate_trigger_rate_uncertainty()
     assert trigger_rate_uncertainty.unit == 1 / u.s
     assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 9008
