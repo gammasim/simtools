@@ -34,12 +34,21 @@ class SimtelHistogram:
     ----------
     histogram_file: str
         The histogram (.hdata.zst) or simtel_array (.simtel.zst) file.
+    rht: bool
+        If true, the area thrown in the trigger rate calculation is estimated exactly as in the
+        hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+        the simulation configuration.
+        Note: The expected shape of the distribution of events as function of the core distance is
+        triangular up to the maximum distance.The weighted mean radius of the triangular
+        distribution is 2/3 times the upper edge. Thus when using the ``rht`` flag, the mean
+        distance times 3/2, returns just the position of the upper edge in the triangle
+        distribution with little impact of the binning.
 
     """
 
     trigger_rate: None
 
-    def __init__(self, histogram_file):
+    def __init__(self, histogram_file, rht=False):
         """
         Initialize SimtelHistogram class.
 
@@ -65,6 +74,7 @@ class SimtelHistogram:
         self.trigger_rate_per_energy_bin = None
         self.energy_axis = None
         self.radius_axis = None
+        self.rht = rht
 
     def _initialize_histogram(self):
         """
@@ -238,11 +248,23 @@ class SimtelHistogram:
         """
         if self._total_area is None:
 
-            self._total_area = (
-                np.pi
-                * (((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(u.cm))
-                ** 2
-            )
+            if self.rht is True:
+                events_histogram, _ = self.fill_event_histogram_dicts()
+                self._initialize_histogram_axes(events_histogram)
+                rht_max_radius = 1.5 * np.average(
+                    self.radius_axis[:-1], weights=np.sum(events_histogram["data"], axis=0)
+                )
+                self._total_area = (np.pi * (rht_max_radius * u.m) ** 2).to(u.cm**2)
+            else:
+                self._total_area = (
+                    np.pi
+                    * (
+                        ((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(
+                            u.cm
+                        )
+                    )
+                    ** 2
+                )
         return self._total_area
 
     @property
