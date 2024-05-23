@@ -20,7 +20,7 @@ Some applications require one or multiple file names as input in the command lin
 first search on main simtools directory for these files, and in case it is not found, it will
 search into the directories given by the config parameter *model_path*.
 
-Output files of applications are written to `$output_path/$label`, where
+Output files of applications are written to ``$output_path/$label``, where
 *output_path* is a config parameter and *label* is the name of the application. The plots
 produced directly by the application are stored in the sub-directory *application-plots*.
 High-level data produced intermediately (e.g PSF tables) can be found in the sub-directories relative to
@@ -48,6 +48,11 @@ add_value_from_json_to_db
 .. automodule:: add_value_from_json_to_db
    :members:
 
+calculate_trigger_rate
+======================
+
+.. automodule:: calculate_trigger_rate
+   :members:
 
 compare_cumulative_psf
 ======================
