@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+g547674e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=3fa232ac"></script>
+    <script src="../../_static/documentation_options.js?v=fc7b7712"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g547674e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -340,7 +340,6 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">data_reader</span>
-<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.layout.geo_coordinates</span> <span class="kn">import</span> <span class="n">GeoCoordinates</span>
 <span class="kn">from</span> <span class="nn">simtools.layout.telescope_position</span> <span class="kn">import</span> <span class="n">TelescopePosition</span>
@@ -405,18 +404,10 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
-        <span class="c1"># TODO - consider the usage of db_handler:</span>
-        <span class="c1"># this is the only place in simtools where the db_handler is called</span>
-        <span class="c1"># from outside the model_parameter module</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">model_version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
@@ -426,7 +417,6 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reference_position_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_center</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_layout</span><span class="p">(</span>
             <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">,</span>
@@ -777,31 +767,21 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
-            <span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_telescope_db_name</span><span class="p">(</span>
-                <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-                <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Reading auxiliary telescope parameters for </span><span class="si">{</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; (telescope model </span><span class="si">{</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2">, version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">_telescope_model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span><span class="p">:</span>
-                <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
-                    <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-                    <span class="n">telescope_model_name</span><span class="o">=</span><span class="n">_telescope_model_name</span><span class="p">,</span>
-                    <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-                    <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
-                    <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">):</span>
+                <span class="n">telescope</span><span class="o">.</span><span class="n">set_auxiliary_parameter</span><span class="p">(</span>
+                    <span class="n">para</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="n">para</span><span class="p">)</span>
                 <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span><span class="p">[</span><span class="n">_telescope_model_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span><span class="p">[</span><span class="n">_telescope_model_name</span><span class="p">][</span><span class="n">para</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="n">para</span><span class="p">)</span>
-                    <span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auxiliary_parameters</span><span class="p">[</span><span class="n">_telescope_model_name</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">telescope</span><span class="o">.</span><span class="n">set_auxiliary_parameter</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ArrayLayout.add_telescope">
 <a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.add_telescope">[docs]</a>
@@ -947,35 +927,6 @@ document.write(`
 <span class="sd">            Number of telescopes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="ArrayLayout.get_corsika_input_list">
-<a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.get_corsika_input_list">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_corsika_input_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a string with the piece of text to be added to the CORSIKA input file.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Piece of text to be added to the CORSIKA input file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">corsika_list</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span><span class="p">:</span>
-            <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span> <span class="o">=</span> <span class="n">tel</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">)</span>
-            <span class="n">pos_z</span> <span class="o">=</span> <span class="n">tel</span><span class="o">.</span><span class="n">convert_telescope_altitude_to_corsika_system</span><span class="p">(</span>
-                <span class="n">pos_z</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_observation_level</span><span class="p">,</span>
-                <span class="n">tel</span><span class="o">.</span><span class="n">get_axis_height</span><span class="p">(),</span>
-            <span class="p">)</span>
-            <span class="n">corsika_list</span> <span class="o">+=</span> <span class="s2">&quot;TELESCOPE&quot;</span>
-            <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="p">[</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span><span class="p">]:</span>
-                <span class="n">corsika_list</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">{</span><span class="n">pos</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">E2&quot;</span>
-            <span class="n">corsika_list</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">{</span><span class="n">tel</span><span class="o">.</span><span class="n">get_sphere_radius</span><span class="p">()</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">E2&quot;</span>
-            <span class="n">corsika_list</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> # </span><span class="si">{</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-        <span class="k">return</span> <span class="n">corsika_list</span></div>
 
 
 <div class="viewcode-block" id="ArrayLayout.print_telescope_list">

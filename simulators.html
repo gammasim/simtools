@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulator &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
+    <title>Simulator &#8212; simtools v0.1.dev1+g547674e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=3fa232ac"></script>
+    <script src="_static/documentation_options.js?v=fc7b7712"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g547674e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -453,7 +453,7 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simulator.Simulator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition">#</a></dt>
 <dd><p>Simulator is responsible for managing simulation of showers and array of telescopes.     It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.</p>
 <p>The configuration is set as a dict config_data or a yaml     file config_file.</p>
 <p>Example of config_data for shower simulations:</p>
@@ -494,21 +494,21 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>simulator: choices: [simtel, corsika]</strong></dt><dd><p>implemented are sim_telarray and CORSIKA</p>
+<dt><strong>simulator: str</strong></dt><dd><p>Simulation software to be used (choices: [corsika, simtel, corsika_simtel])</p>
 </dd>
 <dt><strong>simulator_source_path: str or Path</strong></dt><dd><p>Location of executables for simulation software             (e.g. path with CORSIKA or sim_telarray)</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
-<dt><strong>config_data: dict</strong></dt><dd><p>Dict with shower or array model configuration data.</p>
-</dd>
-<dt><strong>config_file: str or Path</strong></dt><dd><p>Path to yaml file containing configurable data.</p>
+<dt><strong>config_data: dict</strong></dt><dd><p>Simulator configuration data.</p>
 </dd>
 <dt><strong>submit_command: str</strong></dt><dd><p>Job submission command.</p>
 </dd>
 <dt><strong>extra_commands: str or list of str</strong></dt><dd><p>Extra commands to be added to the run script before the run command,</p>
 </dd>
 <dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Simulation model version.</p>
 </dd>
 <dt><strong>test: bool</strong></dt><dd><p>If True, no jobs are submitted; only run scripts are prepared</p>
 </dd>

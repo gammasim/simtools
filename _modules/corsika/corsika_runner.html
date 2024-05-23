@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g547674e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=3fa232ac"></script>
+    <script src="../../_static/documentation_options.js?v=fc7b7712"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g547674e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -342,8 +342,6 @@ document.write(`
     <span class="n">MissingRequiredInputInCorsikaConfigData</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
-<span class="kn">from</span> <span class="nn">simtools.utils.general</span> <span class="kn">import</span> <span class="n">collect_data_from_file_or_dict</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CorsikaRunner&quot;</span><span class="p">,</span> <span class="s2">&quot;MissingRequiredEntryInCorsikaConfig&quot;</span><span class="p">]</span>
 
@@ -393,41 +391,30 @@ document.write(`
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        MongoDB configuration.</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Version of the model (e.g., prod5).</span>
-<span class="sd">    site: str</span>
-<span class="sd">        South or North.</span>
-<span class="sd">    layout_name: str</span>
-<span class="sd">        Name of the layout.</span>
+<span class="sd">    array_model: ArrayModel</span>
+<span class="sd">        Array model instance.</span>
+<span class="sd">    simtel_source_path: str or Path</span>
+<span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label.</span>
 <span class="sd">    keep_seeds: bool</span>
 <span class="sd">        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.</span>
-<span class="sd">    simtel_source_path: str or Path</span>
-<span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
-<span class="sd">    corsika_config_data: dict</span>
-<span class="sd">        Dict with CORSIKA config data.</span>
-<span class="sd">    corsika_config_file: str or Path</span>
-<span class="sd">        Path to yaml file containing CORSIKA config data.</span>
 <span class="sd">    corsika_parameters_file: str or Path</span>
 <span class="sd">        Path to yaml file containing CORSIKA parameters.</span>
+<span class="sd">    corsika_config_data: dict</span>
+<span class="sd">        Dict with CORSIKA config data.</span>
+<span class="sd">    use_multipipe: bool</span>
+<span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">,</span>
-        <span class="n">site</span><span class="p">,</span>
-        <span class="n">layout_name</span><span class="p">,</span>
+        <span class="n">array_model</span><span class="p">,</span>
         <span class="n">simtel_source_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">keep_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">corsika_parameters_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">corsika_config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">corsika_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">array_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -438,10 +425,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CorsikaRunner&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_layout_name</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="o">=</span> <span class="n">array_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">model_version</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_keep_seeds</span> <span class="o">=</span> <span class="n">keep_seeds</span>
 
@@ -452,11 +436,8 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating output dir </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_directory</span><span class="si">}</span><span class="s2">, if needed,&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters_file</span> <span class="o">=</span> <span class="n">corsika_parameters_file</span>
-        <span class="n">corsika_config_data</span> <span class="o">=</span> <span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-            <span class="n">corsika_config_file</span><span class="p">,</span> <span class="n">corsika_config_data</span>
-        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_corsika_config_data</span><span class="p">(</span><span class="n">corsika_config_data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_define_corsika_config</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_define_corsika_config</span><span class="p">(</span><span class="n">use_multipipe</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_corsika_data_directories</span><span class="p">()</span>
 
@@ -483,7 +464,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">corsika_config_data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;data_directory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_define_corsika_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_define_corsika_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the CORSIKA config instance.</span>
 <span class="sd">        This validates the input given in corsika_config_data as well.</span>
@@ -491,12 +472,8 @@ document.write(`
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span> <span class="o">=</span> <span class="n">CorsikaConfig</span><span class="p">(</span>
-                <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-                <span class="n">layout_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
-                <span class="n">layout</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
+                <span class="n">array_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="p">,</span>
                 <span class="n">corsika_config_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="p">,</span>
                 <span class="n">simtel_source_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="p">,</span>
                 <span class="n">corsika_parameters_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters_file</span><span class="p">,</span>
@@ -510,7 +487,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_load_corsika_data_directories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create CORSIKA directories for data, log and input.&quot;&quot;&quot;</span>
-        <span class="n">corsika_base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_data_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">)</span>
+        <span class="n">corsika_base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_data_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="p">)</span>
         <span class="n">corsika_base_dir</span> <span class="o">=</span> <span class="n">corsika_base_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary</span><span class="p">)</span>
         <span class="n">corsika_base_dir</span> <span class="o">=</span> <span class="n">corsika_base_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
 
@@ -647,8 +624,8 @@ document.write(`
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;run&quot;</span><span class="p">:</span> <span class="n">run_number</span><span class="p">,</span>
             <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span>
-            <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
-            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
         <span class="p">}</span></div>
 
@@ -746,6 +723,7 @@ document.write(`
 
         <span class="n">info_for_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
         <span class="n">run_sub_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">info_for_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking if </span><span class="si">{</span><span class="n">run_sub_file</span><span class="si">}</span><span class="s2"> exists&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_sub_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span></div>
 
 

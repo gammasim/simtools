@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g547674e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=3fa232ac"></script>
+    <script src="_static/documentation_options.js?v=fc7b7712"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g547674e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -419,6 +419,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.InvalidArrayConfigData"><code class="docutils literal notranslate"><span class="pre">InvalidArrayConfigData</span></code></a></li>
@@ -527,8 +528,8 @@ document.write(`
 <h2>array_model<a class="headerlink" href="#array-model" title="Link to this heading">#</a></h2>
 <span class="target" id="module-model.array_model"><span id="id1"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">ArrayModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel" title="Link to this definition">#</a></dt>
-<dd><p>ArrayModel is an abstract representation of the MC model at the array level. It contains the    list of TelescopeModels, SiteModel, and a ArrayLayout.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">ArrayModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_elements_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_to_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel" title="Link to this definition">#</a></dt>
+<dd><p>Representation of an observatory consisting of site, telescopes, and further devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -536,11 +537,15 @@ document.write(`
 </dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Version of the model (e.g., prod5).</p>
 </dd>
-<dt><strong>array_config_file: str</strong></dt><dd><p>Path to a yaml file with the array config data.</p>
+<dt><strong>label: str</strong></dt><dd><p>Instance label. Used for output file naming.</p>
 </dd>
-<dt><strong>array_config_data: dict</strong></dt><dd><p>Dict with the array config data.</p>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
 </dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+<dt><strong>layout_name: str</strong></dt><dd><p>Layout name.</p>
+</dd>
+<dt><strong>array_elements_file: str</strong></dt><dd><p>Path to the file with the array element positions.</p>
+</dd>
+<dt><strong>parameters_to_change: dict</strong></dt><dd><p>Dict with the parameters to be changed with respect to the DB model.</p>
 </dd>
 </dl>
 </dd>
@@ -554,13 +559,13 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.export_simtel_array_config_file">
 <span class="sig-name descname"><span class="pre">export_simtel_array_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_simtel_array_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_simtel_array_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Export sim_telarray config file for the array into the output model directory.</p>
+<dd><p>Export sim_telarray configuration file for the array into the model directory.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.export_simtel_telescope_config_files">
 <span class="sig-name descname"><span class="pre">export_simtel_telescope_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_simtel_telescope_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files" title="Link to this definition">#</a></dt>
-<dd><p>Export sim_telarray config files for all the telescopes into the output model directory.</p>
+<dd><p>Export sim_telarray configuration files for all telescopes into the model directory.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -608,7 +613,21 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.print_telescope_list">
 <span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.print_telescope_list" title="Link to this definition">#</a></dt>
-<dd><p>Print out the list of telescopes for quick inspection.</p>
+<dd><p>Print list of telescopes</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.site">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site</span></span><a class="headerlink" href="#model.array_model.ArrayModel.site" title="Link to this definition">#</a></dt>
+<dd><p>Return site.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>Site name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -883,7 +902,7 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">ModelParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">ModelParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter" title="Link to this definition">#</a></dt>
 <dd><p>Base class for model parameters.
 Provides methods to read and manipulate parameters from DB.</p>
 <dl class="field-list simple">
@@ -895,7 +914,7 @@ Provides methods to read and manipulate parameters from DB.</p>
 </dd>
 <dt><strong>site: str</strong></dt><dd><p>Site name (e.g., South or North).</p>
 </dd>
-<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name (e.g., LSTN-01, LSTN-design).</p>
+<dt><strong>telescope_name: str</strong></dt><dd><p>Telescope name (e.g., LSTN-01, LSTN-design).</p>
 </dd>
 <dt><strong>collection: str</strong></dt><dd><p>instrument class (e.g. telescopes, calibration_devices)
 as stored under collection in the DB.</p>
@@ -1263,14 +1282,15 @@ Parameters are returned with units wherever possible.</p>
 <h2>telescope_model<a class="headerlink" href="#telescope-model" title="Link to this heading">#</a></h2>
 <span class="target" id="module-model.telescope_model"><span id="id5"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
-<dd><p>TelescopeModel represents the MC model of an individual telescope. It contains the list of     parameters that can be read from the DB.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
+<dd><p>TelescopeModel represents the MC model of an individual telescope.</p>
+<p>TelescopeModel contains parameter names and values for a specific telescope model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>site: str</strong></dt><dd><p>Site name (e.g., South or North).</p>
 </dd>
-<dt><strong>telescope_model_name: str</strong></dt><dd><p>Telescope model name (ex. LSTN-01, LSTN-design, …).</p>
+<dt><strong>telescope_name: str</strong></dt><dd><p>Telescope name (ex. LSTN-01, LSTN-design, …).</p>
 </dd>
 <dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
 </dd>
@@ -1525,6 +1545,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.InvalidArrayConfigData"><code class="docutils literal notranslate"><span class="pre">InvalidArrayConfigData</span></code></a></li>
