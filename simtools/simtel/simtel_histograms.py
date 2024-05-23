@@ -9,6 +9,7 @@ from eventio.search_utils import yield_toplevel_of_type
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
 from simtools.simtel.simtel_histogram import (
+    HistogramIdNotFound,
     InconsistentHistogramFormat,
     SimtelHistogram,
 )
@@ -61,7 +62,7 @@ class SimtelHistograms:
         self.__meta_dict = None
         self.area_from_distribution = area_from_distribution
 
-    def calculate_trigger_rates(self, print_info=False):
+    def calculate_trigger_rates(self, print_info=False, stack_files=False):
         """
         Calculate the triggered and simulated event rate considering the histograms in each file.
         It returns also a list with the tables where the energy dependent trigger rate for each
@@ -72,6 +73,9 @@ class SimtelHistograms:
         print_info: bool
             if True, prints out the information about the histograms such as energy range, area,
             etc.
+        stack_files: bool
+            if True, stack the histograms from the different files into single histograms.
+            Useful to increase event statistics when calculating the trigger rate.
 
         Returns
         -------
@@ -79,8 +83,159 @@ class SimtelHistograms:
             The simulated event rates.
         triggered_event_rates: list of astropy.Quantity[1/time]
             The triggered event rates.
+        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]
+            The uncertainties in the triggered event rates.
         trigger_rate_in_tables: list of astropy.QTable
             The energy dependent trigger rates.
+            Only filled if stack_files is False.
+        """
+        if stack_files:
+            (
+                sim_event_rates,
+                triggered_event_rates,
+                triggered_event_rate_uncertainties,
+            ) = self._rates_for_stacked_files()
+            trigger_rate_in_tables = []
+        else:
+            (
+                sim_event_rates,
+                triggered_event_rates,
+                triggered_event_rate_uncertainties,
+                trigger_rate_in_tables,
+            ) = self._rates_for_each_file(print_info)
+
+        return (
+            sim_event_rates,
+            triggered_event_rates,
+            triggered_event_rate_uncertainties,
+            trigger_rate_in_tables,
+        )
+
+    def _fill_stacked_events(self):
+        """
+        Helper function to retrieve the simulated and triggered event histograms from the stacked
+        histograms instead of individually.
+
+        Returns
+        -------
+        first_hist_file: dict
+            The simulated 2D event histogram.
+        second_hist_file: dict
+            The triggered 2D event histogram.
+
+        Raises
+        ------
+        HistogramIdNotFound:
+            if histogram ids not found. Problem with the file.
+        """
+        sim_hist = None
+        trig_hist = None
+        for _, one_hist in enumerate(self.combined_hists):
+            if one_hist["id"] == 1:
+                sim_hist = one_hist
+            elif one_hist["id"] == 2:
+                trig_hist = one_hist
+
+        if sim_hist is None or trig_hist is None:
+            msg = (
+                "Simulated and triggered histograms were not found in the stacked histograms."
+                " Please check your simtel_array files!"
+            )
+            self._logger.error(msg)
+            raise HistogramIdNotFound
+
+        return sim_hist, trig_hist
+
+    def get_stacked_num_events(self):
+        """
+        Returns the stacked number of simulated events and triggered events.
+
+        Returns
+        -------
+        int:
+            total number of simulated events for the stacked dataset.
+        int:
+            total number of triggered events for the stacked dataset.
+        """
+        stacked_num_simulated_events = 0
+        stacked_num_triggered_events = 0
+        for _, file in enumerate(self.histogram_files):
+            simtel_hist_instance = SimtelHistogram(
+                file, area_from_distribution=self.area_from_distribution
+            )
+            stacked_num_simulated_events += simtel_hist_instance.total_num_simulated_events
+            stacked_num_triggered_events += simtel_hist_instance.total_num_triggered_events
+        return stacked_num_simulated_events, stacked_num_triggered_events
+
+    def _rates_for_stacked_files(self):
+        """
+        Helper function to calculate the trigger rate for the stacked case.
+
+        Returns
+        -------
+        sim_event_rates: list of astropy.Quantity[1/time]
+            The simulated event rates.
+        triggered_event_rates: list of astropy.Quantity[1/time]
+            The triggered event rates.
+        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]
+            The uncertainties in the triggered event rates.
+        trigger_rate_in_tables: list of astropy.QTable
+            The energy dependent trigger rates.
+            Only filled if stack_files is False.
+        """
+
+        logging.info("Estimates for the stacked histograms:")
+        sim_hist, trig_hist = self._fill_stacked_events()
+        # Using a dummy instance of SimtelHistogram to calculate the trigger rate for the
+        # stacked files
+        simtel_hist_instance = SimtelHistogram(
+            self.histogram_files[0], area_from_distribution=self.area_from_distribution
+        )
+
+        stacked_num_simulated_events, stacked_num_triggered_events = self.get_stacked_num_events()
+        logging.info("Total number of simulated events: " f"{stacked_num_simulated_events} events")
+        logging.info("Total number of triggered events: " f"{stacked_num_triggered_events} events")
+        obs_time = simtel_hist_instance.estimate_observation_time(stacked_num_simulated_events)
+        logging.info(
+            "Estimated equivalent observation time corresponding to the number of"
+            f"events simulated: {obs_time.value} s"
+        )
+        sim_event_rate = stacked_num_simulated_events / obs_time
+        logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
+        (
+            triggered_event_rate,
+            _,
+        ) = simtel_hist_instance.compute_system_trigger_rate(
+            events_histogram=sim_hist, triggered_events_histogram=trig_hist
+        )
+        triggered_event_rate_uncertainty = simtel_hist_instance.estimate_trigger_rate_uncertainty(
+            triggered_event_rate, stacked_num_simulated_events, stacked_num_triggered_events
+        )
+        logging.info(
+            f"System trigger event rate: "
+            # pylint: disable=E1101
+            f"{triggered_event_rate.value:.4e} \u00B1 "
+            # pylint: disable=E1101
+            f"{triggered_event_rate_uncertainty.value:.4e} Hz"
+        )
+        return (
+            [sim_event_rate],
+            [triggered_event_rate],
+            [triggered_event_rate_uncertainty],
+        )
+
+    def _rates_for_each_file(self, print_info=False):
+        """
+        Helper function to calculate the trigger rate for each file.
+
+        Returns
+        -------
+        sim_event_rates: list of astropy.Quantity[1/time]
+            The simulated event rates.
+        triggered_event_rates: list of astropy.Quantity[1/time]
+            The triggered event rates.
+        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]
+            The uncertainties in the triggered event rates.
         """
         triggered_event_rates = []
         sim_event_rates = []
