@@ -118,7 +118,7 @@ class DatabaseHandler:
         An array element can be e.g., a telescope or a calibration device.
         Read parameters for design and for the specified array element (if necessary). This allows
         to overwrite design parameters with specific telescope parameters without having to copy
-        the all model parameters when changing only a few.
+        all model parameters when changing only a few.
 
         Parameters
         ----------
@@ -150,12 +150,14 @@ class DatabaseHandler:
                 pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
             except KeyError:
                 pars.update(
-                    self._get_model_parameters_mongo_db(
+                    self.read_mongo_db(
                         self.mongo_db_config.get("db_simulation_model", None),
-                        telescope,
-                        _model_version,
-                        collection,
-                        only_applicable,
+                        telescope_model_name=telescope,
+                        model_version=_model_version,
+                        collection_name=collection,
+                        run_location=None,
+                        write_files=False,
+                        only_applicable=only_applicable,
                     )
                 )
                 if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
@@ -239,42 +241,6 @@ class DatabaseHandler:
     def _is_file(value):
         """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
-
-    def _get_model_parameters_mongo_db(
-        self, db_name, telescope_model_name, model_version, collection, only_applicable=False
-    ):
-        """
-        Get parameters from MongoDB for a specific telescope.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB
-        telescope_model_name: str
-            Name of the telescope model (e.g. MST-FlashCam-D ...)
-        model_version: str
-            Version of the model.
-        collection: str
-
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-
-        self._logger.debug(f"Getting {telescope_model_name} parameters from MongoDB")
-        return self.read_mongo_db(
-            db_name,
-            telescope_model_name,
-            model_version,
-            collection_name=collection,
-            run_location=None,
-            write_files=False,
-            only_applicable=only_applicable,
-        )
 
     def read_mongo_db(
         self,
@@ -1251,7 +1217,6 @@ class DatabaseHandler:
         if _design_name in self._available_array_elements:
             return _design_name
 
-        self._logger.debug("Telescope %s not found in the database.", telescope_name)
         raise ValueError
 
     def _parameter_cache_key(self, site, telescope, model_version):

@@ -582,16 +582,16 @@ class CorsikaConfig:
             Piece of text to be added to the CORSIKA input file.
         """
 
-        corsika_list = ""
+        corsika_input_list = ""
         for telescope_name, telescope in self.array_model.telescope_model.items():
             positions = telescope.get_parameter_value_with_unit("array_element_position_ground")
-            corsika_list += "TELESCOPE"
+            corsika_input_list += "TELESCOPE"
             for pos in positions:
-                corsika_list += f"\t {pos.to('cm').value:.3f}"
+                corsika_input_list += f"\t {pos.to('cm').value:.3f}"
             sphere_radius = telescope.get_parameter_value_with_unit("telescope_sphere_radius").to(
                 "cm"
             )
-            corsika_list += f"\t {sphere_radius:.3f}"
-            corsika_list += f"\t # {telescope_name}\n"
+            corsika_input_list += f"\t {sphere_radius:.3f}"
+            corsika_input_list += f"\t # {telescope_name}\n"
 
-        return corsika_list
+        return corsika_input_list
