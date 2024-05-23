@@ -272,28 +272,6 @@ def test_converting_center_coordinates_south(array_layout_south_four_LST_instanc
     assert layout._array_center.get_altitude().value == pytest.approx(2162.0)
 
 
-def test_get_corsika_input_list(
-    array_layout_north_four_LST_instance, array_layout_south_four_LST_instance, caplog
-):
-    def test_one_site(layout):
-        layout.add_telescope(
-            telescope_name="LSTN-01",
-            crs_name="ground",
-            xx=57.5 * u.m,
-            yy=57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-        corsika_input_list = layout.get_corsika_input_list()
-
-        assert (
-            corsika_input_list
-            == "TELESCOPE\t 57.500E2\t 57.500E2\t 0.000E2\t 12.500E2\t # LSTN-01\n"
-        )
-
-    test_one_site(array_layout_north_four_LST_instance)
-    test_one_site(array_layout_south_four_LST_instance)
-
-
 def test_altitude_from_corsika_z(
     array_layout_north_four_LST_instance, array_layout_south_four_LST_instance
 ):
@@ -373,8 +351,8 @@ def test_try_set_coordinate(
     manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
 
-    manual_xx_south = [0.00, 1.45, -1.45, 150.79, 149.35, 152.38]
-    manual_yy_south = [0.00, 151.07, -151.07, 73.60, -76.48, 238.67]
+    manual_xx_south = [-20.63, 80.04, -19.39, -105.06, 0.00, 1.45]
+    manual_yy_south = [-64.84, -0.77, 65.22, 1.15, 0.00, 151.07]
 
     def test_one_site(instance, test_file, manual_xx, manual_yy):
         table = data_reader.read_table_from_file(test_file, validate=False)

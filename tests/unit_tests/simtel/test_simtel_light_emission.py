@@ -71,7 +71,7 @@ def mock_simulator(
     simtel_source_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version=model_version,
         label="test-simtel-light-emission",
         mongo_db_config=db_config,
@@ -108,7 +108,7 @@ def mock_simulator_variable(
     simtel_source_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version=model_version,
         label="test-simtel-light-emission",
         mongo_db_config=db_config,
@@ -145,7 +145,7 @@ def mock_simulator_laser(
     simtel_source_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version=model_version,
         label="test-simtel-light-emission",
         mongo_db_config=db_config,
