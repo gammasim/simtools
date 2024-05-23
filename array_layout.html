@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+gb340405 Manual</title>
+    <title>Layout &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=2ca45f02"></script>
+    <script src="_static/documentation_options.js?v=3fa232ac"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb340405 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -554,7 +554,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.from_array_layout_name">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array_layout_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.from_array_layout_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.from_array_layout_name" title="Link to this definition">#</a></dt>
 <dd><p>Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, …).
-Layout definitions are given in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">data/layout</span></code> path.</p>
+Layout definitions are given in the data/layout path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -690,7 +690,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_from_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_corsika_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.convert_telescope_altitude_from_corsika_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_from_corsika_system" title="Link to this definition">#</a></dt>
 <dd><p>Convert Corsika (pos_z) to altitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -714,7 +714,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_telescope_altitude_to_corsika_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_observation_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_axis_height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.convert_telescope_altitude_to_corsika_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system" title="Link to this definition">#</a></dt>
 <dd><p>Convert telescope altitude to CORSIKA system (pos_z).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

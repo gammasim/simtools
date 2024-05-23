@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.visualize &#8212; simtools v0.1.dev1+gb340405 Manual</title>
+    <title>visualization.visualize &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=2ca45f02"></script>
+    <script src="../../_static/documentation_options.js?v=3fa232ac"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb340405 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -895,6 +895,8 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="get_telescope_patch">
+<a class="viewcode-back" href="../../visualization.html#visualization.visualize.get_telescope_patch">[docs]</a>
 <span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">get_telescope_patch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -941,9 +943,12 @@ document.write(`
             <span class="n">fill</span><span class="o">=</span><span class="n">fill_flag</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">tel_obj</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">valid_name</span><span class="p">],</span>
         <span class="p">)</span>
-    <span class="k">return</span> <span class="n">patch</span>
+    <span class="k">return</span> <span class="n">patch</span></div>
 
 
+
+<div class="viewcode-block" id="plot_array">
+<a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_array">[docs]</a>
 <span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">rotate_angle</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">plot_array</span><span class="p">(</span><span class="n">telescopes</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show_tel_label</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1054,7 +1059,8 @@ document.write(`
 
     <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">fig</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
 </pre></div>
 
                 </article>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+gb340405 Manual</title>
+    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=2ca45f02"></script>
+    <script src="../../_static/documentation_options.js?v=3fa232ac"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb340405 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -473,7 +473,7 @@ document.write(`
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        float:</span>
-<span class="sd">            The version of CORSIKA used to produce the CORSIKA IACT file given by `self.input_file`.</span>
+<span class="sd">            The version of CORSIKA used to produce the CORSIKA IACT file given by self.input_file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -677,7 +677,7 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        input_config: str, Path, dict or NoneType</span>
 <span class="sd">            yaml file with the configuration parameters to create the histograms. For the correct</span>
-<span class="sd">            format, please look at the docstring at `_create_histogram_default_config`.</span>
+<span class="sd">            format, please look at the docstring at _create_histogram_default_config.</span>
 <span class="sd">            Alternatively, it can be a dictionary with the configuration parameters to create</span>
 <span class="sd">            the histograms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -890,7 +890,7 @@ document.write(`
 <span class="sd">             cy: direction cosine in the y direction, i.e., the cosine of the angle between the</span>
 <span class="sd">             incoming direction and the y axis,</span>
 <span class="sd">             time: time of arrival of the photon in ns. The clock starts when the particle crosses</span>
-<span class="sd">             the top of the atmosphere (CORSIKA-defined) if `self.event_first_interaction_heights`</span>
+<span class="sd">             the top of the atmosphere (CORSIKA-defined) if self.event_first_interaction_heights</span>
 <span class="sd">             is positive or at first interaction if otherwise.</span>
 <span class="sd">             zem: altitude where the photon was generated in cm,</span>
 <span class="sd">             photons: number of photons associated to this bunch,</span>
@@ -962,7 +962,7 @@ document.write(`
 <span class="sd">            if True, one histogram is set for each telescope separately.</span>
 <span class="sd">        hist_config:</span>
 <span class="sd">            yaml file with the configuration parameters to create the histograms. For the correct</span>
-<span class="sd">            format, please look at the docstring of `_create_histogram_default_config`.</span>
+<span class="sd">            format, please look at the docstring of _create_histogram_default_config.</span>
 <span class="sd">            Alternatively, it can be a dictionary with the configuration parameters to create</span>
 <span class="sd">            the histograms.</span>
 
@@ -1019,7 +1019,7 @@ document.write(`
     <span class="nd">@individual_telescopes</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">individual_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_individual_telescopes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The following lines allow `individual_telescopes` to be defined before using this function</span>
+<span class="sd">        The following lines allow individual_telescopes to be defined before using this function</span>
 <span class="sd">        but if any parameter is passed in this function, it overwrites the class attribute.</span>
 
 <span class="sd">        Parameters</span>
@@ -1047,7 +1047,7 @@ document.write(`
         <span class="k">for</span> <span class="n">histogram</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allowed_histograms</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;The histograms were not created. Please, use `create_histograms` to create &quot;</span>
+                    <span class="s2">&quot;The histograms were not created. Please, use create_histograms to create &quot;</span>
                     <span class="s2">&quot;histograms from the CORSIKA output file.&quot;</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1186,7 +1186,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_2d_num_photons_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array</span>
-<span class="sd">        accounting for the events from the telescopes given by `self.telescope_indices`.</span>
+<span class="sd">        accounting for the events from the telescopes given by self.telescope_indices.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1388,7 +1388,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the</span>
 <span class="sd">         particle crosses the top of the atmosphere (CORSIKA-defined) if</span>
-<span class="sd">         `self.event_first_interaction_heights` is positive or at first interaction if otherwise.</span>
+<span class="sd">         self.event_first_interaction_heights is positive or at first interaction if otherwise.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1440,7 +1440,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">num_photons_per_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the distribution of the number of photons amongst the events,</span>
-<span class="sd">         including the telescopes indicated by `self.telescope_indices`.</span>
+<span class="sd">         including the telescopes indicated by self.telescope_indices.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1904,7 +1904,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">telescope_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The telescope positions found in the CORSIKA output file.</span>
-<span class="sd">        It does not depend on the `telescope_indices` attribute.</span>
+<span class="sd">        It does not depend on the telescope_indices attribute.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1929,7 +1929,7 @@ document.write(`
 
     <span class="c1"># In the next five functions, we provide dedicated functions to retrieve specific information</span>
     <span class="c1"># about the runs, i.e. zenith, azimuth, total energy, interaction height and Earth magnetic</span>
-    <span class="c1"># field defined for the run. For other information, please use the `get_event_parameter_info`</span>
+    <span class="c1"># field defined for the run. For other information, please use the get_event_parameter_info</span>
     <span class="c1"># function.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">event_zenith_angles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2025,7 +2025,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_event_parameter_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get specific information (i.e. any parameter) of the events. The parameter is passed through</span>
-<span class="sd">        the key word `parameter`. Available options are to be found under `self.all_event_keys`.</span>
+<span class="sd">        the key word parameter. Available options are to be found under self.all_event_keys.</span>
 <span class="sd">        The unit of the parameter, if any, is given according to the CORSIKA version</span>
 <span class="sd">        (please see user guide in this case).</span>
 
@@ -2033,7 +2033,7 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        parameter: str</span>
 <span class="sd">            The parameter of interest. Available options are to be found under</span>
-<span class="sd">            `self.all_event_keys`.</span>
+<span class="sd">            self.all_event_keys.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2047,7 +2047,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">parameter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;`key` is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;key is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_information</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span></div>
@@ -2058,7 +2058,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get specific information (i.e. any parameter) of the run. The parameter is passed through</span>
-<span class="sd">        the key word `parameter`. Available options are to be found under `self.all_run_keys`.</span>
+<span class="sd">        the key word parameter. Available options are to be found under self.all_run_keys.</span>
 <span class="sd">        The unit of the parameter, if any, is given according to the CORSIKA version</span>
 <span class="sd">        (please see user guide in this case).</span>
 
@@ -2066,7 +2066,7 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        parameter: str</span>
 <span class="sd">            The parameter of interest. Available options are to be found under</span>
-<span class="sd">            `self.all_run_keys`.</span>
+<span class="sd">            self.all_run_keys.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -2074,7 +2074,7 @@ document.write(`
 <span class="sd">            If parameter is not valid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">parameter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_run_keys</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;`key` is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_run_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;key is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_run_keys</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span></div>
@@ -2084,8 +2084,8 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram">[docs]</a>
     <span class="k">def</span> <span class="nf">event_1d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a histogram for the all events using `key` as parameter.</span>
-<span class="sd">        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).</span>
+<span class="sd">        Create a histogram for the all events using key as parameter.</span>
+<span class="sd">        Valid keys are stored in self.all_event_keys (CORSIKA defined).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2111,7 +2111,7 @@ document.write(`
 <span class="sd">            If key is not valid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;`key` is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;key is not valid. Valid entries are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">all_event_keys</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span>
         <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
@@ -2126,8 +2126,8 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_2d_histogram">[docs]</a>
     <span class="k">def</span> <span class="nf">event_2d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_1</span><span class="p">,</span> <span class="n">key_2</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a 2D histogram for the all events using `key_1` and `key_2` as parameters.</span>
-<span class="sd">        Valid keys are stored in `self.all_event_keys` (CORSIKA defined).</span>
+<span class="sd">        Create a 2D histogram for the all events using key_1 and key_2 as parameters.</span>
+<span class="sd">        Valid keys are stored in self.all_event_keys (CORSIKA defined).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

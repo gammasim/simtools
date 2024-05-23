@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+gb340405 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+gf91e7a7 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=2ca45f02"></script>
+    <script src="_static/documentation_options.js?v=3fa232ac"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb340405 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf91e7a7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -417,6 +417,15 @@ document.write(`
 </li>
       <li><a href="camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tot_efficiency">calc_tot_efficiency() (camera_efficiency.CameraEfficiency method)</a>
 </li>
+      <li>
+    calculate_trigger_rate
+
+      <ul>
+        <li><a href="applications.html#module-calculate_trigger_rate">module</a>
+</li>
+      </ul></li>
+      <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates">calculate_trigger_rates() (simtel.simtel_histograms.SimtelHistograms method)</a>
+</li>
       <li><a href="mc_model.html#model.camera.Camera">Camera (class in model.camera)</a>
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel.camera">camera (model.telescope_model.TelescopeModel property)</a>
@@ -457,7 +466,11 @@ document.write(`
       </ul></li>
       <li><a href="sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate">compute_system_trigger_rate() (simtel.simtel_histogram.SimtelHistogram method)</a>
+</li>
       <li><a href="mc_model.html#model.model_utils.compute_telescope_transmission">compute_telescope_transmission() (in module model.model_utils)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.config">config (simtel.simtel_histogram.SimtelHistogram property)</a>
 </li>
       <li><a href="mc_model.html#model.model_parameter.ModelParameter.config_file_directory">config_file_directory (model.model_parameter.ModelParameter property)</a>
 </li>
@@ -477,12 +490,12 @@ document.write(`
         <li><a href="configuration_module.html#module-configuration.configurator">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="configuration_module.html#configuration.configurator.Configurator">Configurator (class in configuration.configurator)</a>
 </li>
       <li><a href="utils.html#utils.geometry.convert_2d_to_radial_distr">convert_2d_to_radial_distr() (in module utils.geometry)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="array_layout.html#layout.telescope_position.TelescopePosition.convert_all">convert_all() (layout.telescope_position.TelescopePosition method)</a>
 </li>
       <li>
@@ -665,9 +678,13 @@ document.write(`
 </li>
       <li><a href="configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">efficiency_interval() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.energy_range">energy_range (simtel.simtel_histogram.SimtelHistogram property)</a>
+</li>
       <li><a href="corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.energy_range_for_primary">energy_range_for_primary() (corsika.corsika_default_config.CorsikaDefaultConfig method)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.energy_slope">energy_slope (corsika.corsika_default_config.CorsikaDefaultConfig property)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time">estimate_observation_time() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram">event_1d_histogram() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
@@ -689,10 +706,10 @@ document.write(`
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.export_event_header_2d_histogram">export_event_header_2d_histogram() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
-      <li><a href="db_handler.html#db.db_handler.DatabaseHandler.export_file_db">export_file_db() (db.db_handler.DatabaseHandler method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="db_handler.html#db.db_handler.DatabaseHandler.export_file_db">export_file_db() (db.db_handler.DatabaseHandler method)</a>
+</li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.export_histograms">export_histograms() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 
       <ul>
@@ -736,6 +753,8 @@ document.write(`
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="simulators.html#simulator.Simulator.file_list">file_list() (simulator.Simulator method)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.fill_event_histogram_dicts">fill_event_histogram_dicts() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li><a href="io_operations.html#io_operations.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module io_operations.hdf5_handler)</a>
 </li>
@@ -849,7 +868,7 @@ document.write(`
         <li><a href="sim_telarray.html#simtel.simtel_runner_array.SimtelRunnerArray.get_file_name">(simtel.simtel_runner_array.SimtelRunnerArray method)</a>
 </li>
       </ul></li>
-      <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.get_histogram_title">get_histogram_title() (simtel.simtel_histograms.SimtelHistograms method)</a>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.get_histogram_type_title">get_histogram_type_title() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li><a href="psf_analysis.html#psf_analysis.PSFImage.get_image_data">get_image_data() (psf_analysis.PSFImage method)</a>
 </li>
@@ -875,10 +894,10 @@ document.write(`
 </li>
       <li><a href="simulators.html#simulator.Simulator.get_list_of_input_files">get_list_of_input_files() (simulator.Simulator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="simulators.html#simulator.Simulator.get_list_of_log_files">get_list_of_log_files() (simulator.Simulator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="simulators.html#simulator.Simulator.get_list_of_output_files">get_list_of_output_files() (simulator.Simulator method)</a>
 </li>
       <li><a href="applications.html#convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files">get_list_of_parameters_and_schema_files() (in module convert_all_model_parameters_from_simtel)</a>
@@ -927,6 +946,8 @@ document.write(`
       <li><a href="mc_model.html#model.model_parameter.ModelParameter.get_parameter_value">get_parameter_value() (model.model_parameter.ModelParameter method)</a>
 </li>
       <li><a href="mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">get_parameter_value_with_unit() (model.model_parameter.ModelParameter method)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.get_particle_distribution_function">get_particle_distribution_function() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_photon_altitude_distr">get_photon_altitude_distr() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
@@ -1018,6 +1039,8 @@ document.write(`
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.hist_config_to_yaml">hist_config_to_yaml() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.HistogramIdNotFound">HistogramIdNotFound</a>
+</li>
       <li><a href="corsika.html#corsika.corsika_histograms.HistogramNotCreated">HistogramNotCreated</a>
 </li>
   </ul></td>
@@ -1028,7 +1051,7 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ray_tracing.html#ray_tracing.RayTracing.images">images() (ray_tracing.RayTracing method)</a>
 </li>
-      <li><a href="sim_telarray.html#simtel.simtel_histograms.InconsistentHistogramFormat">InconsistentHistogramFormat</a>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.InconsistentHistogramFormat">InconsistentHistogramFormat</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_events.InconsistentInputFile">InconsistentInputFile</a>
 </li>
@@ -1273,6 +1296,8 @@ document.write(`
 </li>
         <li><a href="applications.html#module-add_value_from_json_to_db">add_value_from_json_to_db</a>
 </li>
+        <li><a href="applications.html#module-calculate_trigger_rate">calculate_trigger_rate</a>
+</li>
         <li><a href="camera_efficiency.html#module-camera_efficiency">camera_efficiency</a>
 </li>
         <li><a href="applications.html#module-compare_cumulative_psf">compare_cumulative_psf</a>
@@ -1373,6 +1398,8 @@ document.write(`
 </li>
         <li><a href="sim_telarray.html#module-simtel.simtel_events">simtel.simtel_events</a>
 </li>
+        <li><a href="sim_telarray.html#module-simtel.simtel_histogram">simtel.simtel_histogram</a>
+</li>
         <li><a href="sim_telarray.html#module-simtel.simtel_histograms">simtel.simtel_histograms</a>
 </li>
         <li><a href="sim_telarray.html#module-simtel.simtel_runner">simtel.simtel_runner</a>
@@ -1433,8 +1460,12 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sim_telarray.html#simtel.simtel_events.SimtelEvents.number_of_files">number_of_files (simtel.simtel_events.SimtelEvents property)</a>
+
+      <ul>
+        <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.number_of_files">(simtel.simtel_histograms.SimtelHistograms property)</a>
 </li>
-      <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.number_of_histograms">number_of_histograms (simtel.simtel_histograms.SimtelHistograms property)</a>
+      </ul></li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.number_of_histogram_types">number_of_histogram_types (simtel.simtel_histogram.SimtelHistogram property)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.number_of_showers_for_primary">number_of_showers_for_primary() (corsika.corsika_default_config.CorsikaDefaultConfig method)</a>
 </li>
@@ -1509,10 +1540,10 @@ document.write(`
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr">plot_photon_per_telescope_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="visualization.html#visualization.visualize.plot_table">plot_table() (in module visualization.visualize)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="corsika.html#corsika.corsika_histograms_visualize.plot_time_distr">plot_time_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_histograms_visualize.plot_wavelength_distr">plot_wavelength_distr() (in module corsika.corsika_histograms_visualize)</a>
@@ -1535,6 +1566,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="array_layout.html#layout.telescope_position.TelescopePosition.print_compact_format">print_compact_format() (layout.telescope_position.TelescopePosition method)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.print_info">print_info() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li><a href="applications.html#convert_all_model_parameters_from_simtel.print_list_of_files">print_list_of_files() (in module convert_all_model_parameters_from_simtel)</a>
 </li>
@@ -1565,6 +1598,8 @@ document.write(`
         <li><a href="applications.html#module-produce_array_config">module</a>
 </li>
       </ul></li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.produce_trigger_meta_data">produce_trigger_meta_data() (simtel.simtel_histogram.SimtelHistogram method)</a>
+</li>
       <li>
     production
 
@@ -1703,6 +1738,13 @@ document.write(`
 </li>
       </ul></li>
       <li>
+    simtel.simtel_histogram
+
+      <ul>
+        <li><a href="sim_telarray.html#module-simtel.simtel_histogram">module</a>
+</li>
+      </ul></li>
+      <li>
     simtel.simtel_histograms
 
       <ul>
@@ -1751,6 +1793,8 @@ document.write(`
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
 </li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram">SimtelHistogram (class in simtel.simtel_histogram)</a>
+</li>
       <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms">SimtelHistograms (class in simtel.simtel_histograms)</a>
 </li>
       <li><a href="sim_telarray.html#simtel.simtel_runner.SimtelRunner">SimtelRunner (class in simtel.simtel_runner)</a>
@@ -1791,6 +1835,8 @@ document.write(`
 </li>
       <li><a href="mc_model.html#model.site_model.SiteModel">SiteModel (class in model.site_model)</a>
 </li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.solid_angle">solid_angle (simtel.simtel_histogram.SimtelHistogram property)</a>
+</li>
       <li><a href="utils.html#utils.general.sort_arrays">sort_arrays() (in module utils.general)</a>
 </li>
       <li><a href="visualization.html#visualization.legend_handlers.SquareEdgePixelHandler">SquareEdgePixelHandler (class in visualization.legend_handlers)</a>
@@ -1828,15 +1874,21 @@ document.write(`
 </li>
       <li><a href="mc_model.html#model.telescope_model.TelescopeModel">TelescopeModel (class in model.telescope_model)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="array_layout.html#layout.telescope_position.TelescopePosition">TelescopePosition (class in layout.telescope_position)</a>
 </li>
       <li><a href="job_execution.html#job_execution.job_manager.JobManager.test_submission_system">test_submission_system() (job_execution.job_manager.JobManager method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.total_area">total_area (simtel.simtel_histogram.SimtelHistogram property)</a>
+</li>
       <li><a href="corsika.html#corsika.corsika_histograms.CorsikaHistograms.total_num_photons">total_num_photons (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
-      <li><a href="sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.trigger_rate_per_histogram">trigger_rate_per_histogram() (simtel.simtel_histograms.SimtelHistograms method)</a>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.total_num_simulated_events">total_num_simulated_events (simtel.simtel_histogram.SimtelHistogram property)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.total_num_triggered_events">total_num_triggered_events (simtel.simtel_histogram.SimtelHistogram property)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.trigger_info_in_table">trigger_info_in_table() (simtel.simtel_histogram.SimtelHistogram method)</a>
 </li>
       <li>
     tune_psf
@@ -1925,10 +1977,10 @@ document.write(`
       </ul></li>
       <li><a href="applications.html#validate_file_using_schema.validate_metadata">validate_metadata() (in module validate_file_using_schema)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils.html#utils.names.validate_model_version_name">validate_model_version_name() (in module utils.names)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     validate_optics
 
@@ -1949,6 +2001,8 @@ document.write(`
       <li><a href="utils.html#utils.names.validate_telescope_id_name">validate_telescope_id_name() (in module utils.names)</a>
 </li>
       <li><a href="utils.html#utils.names.validate_telescope_name">validate_telescope_name() (in module utils.names)</a>
+</li>
+      <li><a href="sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.view_cone">view_cone (simtel.simtel_histogram.SimtelHistogram property)</a>
 </li>
       <li><a href="corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig.view_cone_for_primary">view_cone_for_primary() (corsika.corsika_default_config.CorsikaDefaultConfig method)</a>
 </li>
