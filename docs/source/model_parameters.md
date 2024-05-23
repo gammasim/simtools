@@ -1,7 +1,8 @@
 # Simulation model parameters
 
-Simulation model parameters describe all relevant site and telescope properties.
-This includes the atmospheric models (profile, transmission) or geomagnetic field properties for the site,
+Simulation model parameters describe properties of all relevant elements of the observatory including site,
+telescopes, and calibration devices.
+Examples are the atmospheric models (profile, transmission) or geomagnetic field characteristics for the site,
 details on optical and mechanical properties of the telescope, plus camera, readout and trigger parameters.
 
 For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
@@ -19,15 +20,14 @@ The most important features of the simulation model are:
 
 - handled by the `model_parameters` module.
 
-## Schema files for a complete description of simulation model parameter
+## Schema files to describe simulation model parameter
 
 Schema files describing all simulation model parameters are part of [simtools](https://github.com/gammasim/simtools) and can be found in [simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
 These files describe the simulation model parameters including (among others fields) name, type, format, applicable telescopes, and parameter description.
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
 
-The files are in human readable yaml format and follow a fixed [json-schema](https://json-schema.org/).
-The full description of the schema is in [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml) (found in simtools schema directory).
+The files are in human readable yaml format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
 
 ### Example
 
@@ -127,6 +127,10 @@ data:
 
 Input processing in form of sorting, removing of duplicates, etc. can be specified using the `input_processing` field.
 
+:::{Warning}
+The `data_table` field is not yet implemented in the simtools schema and parameter files.
+:::
+
 #### Instrument description
 
 - `class`: Instrument class. Allow values are *Camera*, *Site*, *Structure*, *Telescope*
@@ -136,6 +140,10 @@ Input processing in form of sorting, removing of duplicates, etc. can be specifi
 ### Activity description
 
 Describes setting and validation activities. Each activity corresponds to a workflow as described in the [simtools workflows repository](https://github.com/gammasim/workflows).
+
+:::{Warning}
+The implementation of activities and workflows is incomplete and in progress.
+:::
 
 ### Data source description
 
@@ -163,7 +171,22 @@ simulation_software:
 
 ## Export simulation model from model repository to model database
 
-TO BE ADDED
+:::{Danger}
+This is for experts only.
+:::
+
+The application `add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
+model repository to the model database for a given model versions.
+
+Example:
+
+```bash
+simtools-add_model-parameters-from-repository-to-db \
+      --input_path /path/to/repository \
+      --db_name new_db_name
+```
+
+TODO: this is incomplete
 
 ## Export simulation model parameters from sim_telarray
 
