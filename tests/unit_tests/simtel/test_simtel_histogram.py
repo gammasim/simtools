@@ -151,7 +151,6 @@ def test_view_cone(simtel_array_histogram_instance):
 
 
 def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
-    from astropy import units as u
 
     assert simtel_array_histogram_instance.trigger_rate is None
     assert simtel_array_histogram_instance.trigger_rate_uncertainty is None
@@ -174,7 +173,6 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
 
 
 def test_compute_system_trigger_rate_with_input(simtel_array_histogram_instance):
-    from astropy import units as u
 
     new_instance = copy.copy(simtel_array_histogram_instance)
     events_histogram, triggered_events_histogram = new_instance.fill_event_histogram_dicts()
@@ -190,7 +188,6 @@ def test_compute_system_trigger_rate_with_input(simtel_array_histogram_instance)
 
 
 def test_produce_trigger_meta_data(simtel_array_histogram_instance, simtel_array_histograms_file):
-    from astropy import units as u
 
     trigger_rate = 1000  # Hz
 
@@ -248,7 +245,6 @@ def test_estimate_observation_time(simtel_array_histogram_instance):
 
 
 def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
-    from astropy import units as u
 
     simtel_array_histogram_instance.compute_system_trigger_rate()
     trigger_rate_uncertainty = simtel_array_histogram_instance.estimate_trigger_rate_uncertainty(
