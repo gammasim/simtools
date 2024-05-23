@@ -33,9 +33,13 @@ class SimtelHistograms:
     test: bool
         If True, only a fraction of the histograms will be processed, leading to a much shorter\
          runtime.
+    rht: bool
+        If true, the area thrown in the trigger rate calculation is estimated exactly as in the
+        hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+        the simulation configuration.
     """
 
-    def __init__(self, histogram_files, test=False):
+    def __init__(self, histogram_files, test=False, rht=False):
         """
         Initialize SimtelHistograms
         """
@@ -47,6 +51,7 @@ class SimtelHistograms:
         self._combined_hists = None
         self._list_of_histograms = None
         self.__meta_dict = None
+        self.rht = rht
 
     def calculate_trigger_rates(self, print_info=False):
         """
@@ -74,7 +79,7 @@ class SimtelHistograms:
         trigger_rate_in_tables = []
         triggered_event_rate_uncertainties = []
         for i_file, file in enumerate(self.histogram_files):
-            simtel_hist_instance = SimtelHistogram(file)
+            simtel_hist_instance = SimtelHistogram(file, rht=self.rht)
             if print_info:
                 simtel_hist_instance.print_info()
 
