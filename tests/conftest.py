@@ -13,6 +13,7 @@ import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
 from simtools.layout.array_layout import ArrayLayout
+from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 
@@ -206,6 +207,30 @@ def model_version():
 
 
 @pytest.fixture
+def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
+    array_model = ArrayModel(
+        label="test-lst-array",
+        site=simulator_config_data_north["common"]["site"],
+        layout_name=simulator_config_data_north["common"]["layout_name"],
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    return array_model
+
+
+@pytest.fixture
+def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
+    array_model = ArrayModel(
+        label="test-lst-array",
+        site=simulator_config_data_south["common"]["site"],
+        layout_name=simulator_config_data_south["common"]["layout_name"],
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    return array_model
+
+
+@pytest.fixture
 def site_model_south(db_config, model_version):
     return SiteModel(
         site="South",
@@ -229,7 +254,7 @@ def site_model_north(db_config, model_version):
 def telescope_model_lst(db_config, io_handler, model_version):
     telescope_model_LST = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
@@ -241,7 +266,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
 def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
         site="South",
-        telescope_model_name="MSTS-design",
+        telescope_name="MSTS-design",
         model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
@@ -254,7 +279,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
 def telescope_model_sst(db_config, io_handler, model_version):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SSTS-design",
+        telescope_name="SSTS-design",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
@@ -267,7 +292,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
 def telescope_model_sst_prod5(db_config, io_handler):
     telescope_model_SST = TelescopeModel(
         site="South",
-        telescope_model_name="SSTS-design",
+        telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
@@ -335,7 +360,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture
-def simulator_config_data(tmp_test_directory, model_version):
+def simulator_config_data_north(tmp_test_directory):
     return {
         "common": {
             "site": "North",
@@ -364,8 +389,32 @@ def array_config_data(simulator_config_data):
 
 
 @pytest.fixture
-def shower_config_data(simulator_config_data):
-    return simulator_config_data["common"] | simulator_config_data["showers"]
+def shower_config_data_north(simulator_config_data_north):
+    return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
+
+
+@pytest.fixture
+def simulator_config_data_south(tmp_test_directory):
+    return {
+        "common": {
+            "site": "South",
+            "layout_name": "test-layout",
+            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "zenith": 20 * u.deg,
+            "azimuth": 0 * u.deg,
+            "primary": "gamma",
+        },
+        "showers": {
+            "eslope": -2.5,
+            "viewcone": [0 * u.deg, 0 * u.deg],
+            "nshow": 10,
+            "erange": [100 * u.GeV, 1 * u.TeV],
+            "cscat": [10, 1400 * u.m, 0],
+            "run_list": [3, 4],
+            "run_range": [6, 10],
+        },
+        "array": {},
+    }
 
 
 @pytest.fixture
