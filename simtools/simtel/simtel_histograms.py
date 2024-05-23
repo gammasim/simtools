@@ -33,13 +33,21 @@ class SimtelHistograms:
     test: bool
         If True, only a fraction of the histograms will be processed, leading to a much shorter\
          runtime.
-    rht: bool
-        If true, the area thrown in the trigger rate calculation is estimated exactly as in the
-        hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+    area_from_distribution: bool
+        If true, the area thrown (the area in which the simulated events are distributed)
+        in the trigger rate calculation is estimated based on the event distribution.
+        The expected shape of the distribution of events as function of the core distance is
+        triangular up to the maximum distance. The weighted mean radius of the triangular
+        distribution is 2/3 times the upper edge. Therefore, when using the
+        ``area_from_distribution`` flag, the mean distance times 3/2, returns just the position of
+        the upper edge in the triangle distribution with little impact of the binning and little
+        dependence on the scatter area defined in the simulation. This is special useful when
+        calculating trigger rate for individual telescopes.
+        If false, the area thrown is estimated based on the maximum distance as given in
         the simulation configuration.
     """
 
-    def __init__(self, histogram_files, test=False, rht=False):
+    def __init__(self, histogram_files, test=False, area_from_distribution=False):
         """
         Initialize SimtelHistograms
         """
@@ -51,7 +59,7 @@ class SimtelHistograms:
         self._combined_hists = None
         self._list_of_histograms = None
         self.__meta_dict = None
-        self.rht = rht
+        self.area_from_distribution = area_from_distribution
 
     def calculate_trigger_rates(self, print_info=False):
         """
@@ -79,7 +87,9 @@ class SimtelHistograms:
         trigger_rate_in_tables = []
         triggered_event_rate_uncertainties = []
         for i_file, file in enumerate(self.histogram_files):
-            simtel_hist_instance = SimtelHistogram(file, rht=self.rht)
+            simtel_hist_instance = SimtelHistogram(
+                file, area_from_distribution=self.area_from_distribution
+            )
             if print_info:
                 simtel_hist_instance.print_info()
 
