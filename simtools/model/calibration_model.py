@@ -40,7 +40,7 @@ class CalibrationModel(ModelParameter):
         ModelParameter.__init__(
             self,
             site=site,
-            telescope_model_name=calibration_device_model_name,
+            telescope_name=calibration_device_model_name,
             collection="calibration_devices",
             mongo_db_config=mongo_db_config,
             model_version=model_version,
