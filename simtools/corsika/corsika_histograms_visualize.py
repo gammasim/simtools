@@ -15,7 +15,7 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     The next functions below are used by the the CorsikaHistograms class to plot all sort of
     information from the Cherenkov photons saved.
 
-    Create the figure of a 2D plot. The parameter `name` indicate which plot.
+    Create the figure of a 2D plot. The parameter name indicate which plot.
     Choices are "counts", "density", "direction", "time_altitude", and "num_photons_per_telescope".
 
     Parameters
@@ -36,7 +36,7 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     Raises
     ------
     ValueError
-        if `property` is not allowed.
+        if property is not allowed.
     """
     if property_name not in histograms_instance.dict_2d_distributions:
         msg = (
@@ -215,7 +215,7 @@ def plot_2d_num_photons_per_telescope(histograms_instance, log_z=True):
 
 def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
     """
-    Create the figure of a 1D plot. The parameter `property` indicate which plot.
+    Create the figure of a 1D plot. The parameter property indicate which plot.
 
     Parameters
     ----------
@@ -236,7 +236,7 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
     Raises
     ------
     ValueError
-        if `property` is not allowed.
+        if property is not allowed.
     """
     if property_name not in histograms_instance.dict_1d_distributions:
         msg = (
@@ -563,7 +563,7 @@ def save_figs_to_pdf(figs, pdf_file_name):
     Parameters
     ----------
     figs: list or numpy.array
-        List with the figures output by `corsika_output_visualize.py`.
+        List with the figures output by corsika_output_visualize.py.
     pdf_file_name: str or Path
         Name of the pdf file.
     """

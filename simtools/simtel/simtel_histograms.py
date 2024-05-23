@@ -2,25 +2,29 @@ import copy
 import logging
 
 import numpy as np
-from astropy import units as u
 from ctapipe.io import write_table
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
 
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
+from simtools.simtel.simtel_histogram import (
+    InconsistentHistogramFormat,
+    SimtelHistogram,
+)
 from simtools.utils.names import sanitize_name
 
-__all__ = ["InconsistentHistogramFormat", "SimtelHistograms"]
-
-
-class InconsistentHistogramFormat(Exception):
-    """Exception for bad histogram format."""
+__all__ = [
+    "SimtelHistograms",
+]
 
 
 class SimtelHistograms:
     """
-    This class handle sim_telarray histograms. Histogram files are handled by using eventio library.
+    This class handles sim_telarray files (both the .hdata.zst histogram and the .simtel.zst output
+    file).
+    It uses the SimtelHistogram class to deal with individual files.
+    Histogram files are ultimately handled by using eventio library.
 
     Parameters
     ----------
@@ -29,60 +33,110 @@ class SimtelHistograms:
     test: bool
         If True, only a fraction of the histograms will be processed, leading to a much shorter\
          runtime.
+    area_from_distribution: bool
+        If true, the area thrown (the area in which the simulated events are distributed)
+        in the trigger rate calculation is estimated based on the event distribution.
+        The expected shape of the distribution of events as function of the core distance is
+        triangular up to the maximum distance. The weighted mean radius of the triangular
+        distribution is 2/3 times the upper edge. Therefore, when using the
+        ``area_from_distribution`` flag, the mean distance times 3/2, returns just the position of
+        the upper edge in the triangle distribution with little impact of the binning and little
+        dependence on the scatter area defined in the simulation. This is special useful when
+        calculating trigger rate for individual telescopes.
+        If false, the area thrown is estimated based on the maximum distance as given in
+        the simulation configuration.
     """
 
-    def __init__(self, histogram_files, test=False):
+    def __init__(self, histogram_files, test=False, area_from_distribution=False):
         """
         Initialize SimtelHistograms
         """
         self._logger = logging.getLogger(__name__)
         if not isinstance(histogram_files, list):
             histogram_files = [histogram_files]
-        self._histogram_files = histogram_files
+        self.histogram_files = histogram_files
         self._is_test = test
-        self._list_of_histograms = None
         self._combined_hists = None
+        self._list_of_histograms = None
         self.__meta_dict = None
+        self.area_from_distribution = area_from_distribution
 
-    @property
-    def number_of_histograms(self):
-        """Returns number of histograms."""
-        return len(self.combined_hists)
-
-    def get_histogram_title(self, i_hist):
+    def calculate_trigger_rates(self, print_info=False):
         """
-        Returns the title of the histogram with index i_hist.
+        Calculate the triggered and simulated event rate considering the histograms in each file.
+        It returns also a list with the tables where the energy dependent trigger rate for each
+        file can be found.
 
         Parameters
         ----------
-        i_hist: int
-            Histogram index.
+        print_info: bool
+            if True, prints out the information about the histograms such as energy range, area,
+            etc.
 
         Returns
         -------
-        str
-            Histogram title.
+        sim_event_rates: list of astropy.Quantity[1/time]
+            The simulated event rates.
+        triggered_event_rates: list of astropy.Quantity[1/time]
+            The triggered event rates.
+        trigger_rate_in_tables: list of astropy.QTable
+            The energy dependent trigger rates.
         """
-        return self.combined_hists[i_hist]["title"]
+        triggered_event_rates = []
+        sim_event_rates = []
+        trigger_rate_in_tables = []
+        triggered_event_rate_uncertainties = []
+        for i_file, file in enumerate(self.histogram_files):
+            simtel_hist_instance = SimtelHistogram(
+                file, area_from_distribution=self.area_from_distribution
+            )
+            if print_info:
+                simtel_hist_instance.print_info()
+
+            logging.info(f"Histogram {i_file + 1}:")
+            logging.info(
+                "Total number of simulated events: "
+                f"{simtel_hist_instance.total_num_simulated_events} events"
+            )
+            logging.info(
+                "Total number of triggered events: "
+                f"{simtel_hist_instance.total_num_triggered_events} events"
+            )
+
+            obs_time = simtel_hist_instance.estimate_observation_time()
+            logging.info(
+                f"Estimated equivalent observation time corresponding to the number of "
+                f"events simulated: {obs_time.value} s"
+            )
+            sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
+            sim_event_rates.append(sim_event_rate)
+            logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
+
+            (
+                triggered_event_rate,
+                triggered_event_rate_uncertainty,
+            ) = simtel_hist_instance.compute_system_trigger_rate()
+            logging.info(
+                f"System trigger event rate: "
+                # pylint: disable=E1101
+                f"{triggered_event_rate.value:.4e} \u00B1 "
+                # pylint: disable=E1101
+                f"{triggered_event_rate_uncertainty.value:.4e} Hz"
+            )
+            triggered_event_rates.append(triggered_event_rate)
+            triggered_event_rate_uncertainties.append(triggered_event_rate_uncertainty)
+            trigger_rate_in_tables.append(simtel_hist_instance.trigger_info_in_table())
+        return (
+            sim_event_rates,
+            triggered_event_rates,
+            triggered_event_rate_uncertainties,
+            trigger_rate_in_tables,
+        )
 
     @property
-    def list_of_histograms(self):
-        """
-        Returns a list with the histograms for each file.
-
-        Returns
-        -------
-        list:
-            List of histograms.
-        """
-        if self._list_of_histograms is None:
-            self._list_of_histograms = []
-            for file in self._histogram_files:
-                with EventIOFile(file) as f:
-                    for o in yield_toplevel_of_type(f, Histograms):
-                        hists = o.parse()
-                        self._list_of_histograms.append(hists)
-        return self._list_of_histograms
+    def number_of_files(self):
+        """Returns number of histograms."""
+        return len(self.histogram_files)
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
@@ -110,7 +164,26 @@ class SimtelHistograms:
             if first_hist_file[key_to_test] != second_hist_file[key_to_test]:
                 msg = "Trying to add histograms with inconsistent dimensions"
                 self._logger.error(msg)
-                raise InconsistentHistogramFormat(msg)
+                raise InconsistentHistogramFormat
+
+    @property
+    def list_of_histograms(self):
+        """
+        Returns a list with the histograms for each file.
+
+        Returns
+        -------
+        list:
+            List of histograms.
+        """
+        if self._list_of_histograms is None:
+            self._list_of_histograms = []
+            for file in self.histogram_files:
+                with EventIOFile(file) as f:
+                    for o in yield_toplevel_of_type(f, Histograms):
+                        hists = o.parse()
+                        self._list_of_histograms.append(hists)
+        return self._list_of_histograms
 
     @property
     def combined_hists(self):
@@ -119,8 +192,8 @@ class SimtelHistograms:
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
-            for i_hist, hists_one_file in enumerate(self.list_of_histograms):
-                if i_hist == 0:
+            for histogram_index, hists_one_file in enumerate(self.list_of_histograms):
+                if histogram_index == 0:
                     # First file
                     self._combined_hists = copy.copy(hists_one_file)
 
@@ -132,7 +205,7 @@ class SimtelHistograms:
                             this_combined_hist["data"], hist["data"]
                         )
 
-            self._logger.debug(f"End of reading {len(self.list_of_histograms)} files")
+            self._logger.debug(f"End of reading {len(self.histogram_files)} files")
         return self._combined_hists
 
     @combined_hists.setter
@@ -147,129 +220,19 @@ class SimtelHistograms:
         """
         self._combined_hists = new_combined_hists
 
-    def _derive_trigger_rate_histograms(self, livetime):
+    def plot_one_histogram(self, histogram_index, ax):
         """
-        Calculates the trigger rate histograms, i.e., the ratio in which the events
-        are triggered in each bin of impact distance and log energy for each histogram file for
-        the livetime defined by `livetime`.
-        The livetime gives the amount of time used in a small production to produce the histograms
-        used. It is assumed that the livetime is the same for all the histogram files used and that
-        the radius (x-axis in the histograms) is given in meters.
+        Plot a single histogram referent to the index histogram_index.
 
         Parameters
         ----------
-        livetime: astropy.Quantity
-            Time used in the simulation that produced the histograms. E.g., 1*u.h.
-
-        Returns
-        -------
-        list:
-            List with the trigger rate histograms for each file.
-        """
-        if isinstance(livetime, u.Quantity):
-            livetime = livetime.to(u.s)
-        else:
-            livetime = livetime * u.s
-        events_histogram = {}
-        trigged_events_histogram = {}
-        # Save the appropriate histograms to a dictionary
-        for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            for hist in hists_one_file:
-                if hist["id"] == 1:
-                    events_histogram[i_file] = hist
-
-                elif hist["id"] == 2:
-                    trigged_events_histogram[i_file] = hist
-
-        list_of_trigger_rate_hists = []
-        # Calculate the event rate histograms
-        for i_file, hists_one_file in enumerate(self.list_of_histograms):
-            event_rate_histogram = copy.copy(events_histogram[i_file])
-            area_dict = np.pi * (
-                (events_histogram[i_file]["upper_x"]) ** 2
-                - (events_histogram[i_file]["lower_x"]) ** 2
-            )
-
-            event_rate_histogram["data"] = (
-                np.zeros_like(trigged_events_histogram[i_file]["data"]) / livetime.unit
-            )
-            bins_with_events = events_histogram[i_file]["data"] != 0
-            event_rate_histogram["data"][bins_with_events] = (
-                trigged_events_histogram[i_file]["data"][bins_with_events]
-                / events_histogram[i_file]["data"][bins_with_events]
-                * area_dict
-                / livetime
-            )
-
-            # Keeping only the necessary information for proceeding with integration
-            keys_to_keep = [
-                "data",
-                "lower_x",
-                "lower_y",
-                "upper_x",
-                "upper_y",
-                "entries",
-                "n_bins_x",
-                "n_bins_y",
-            ]
-            event_rate_histogram = {
-                key: event_rate_histogram[key]
-                for key in keys_to_keep
-                if key in event_rate_histogram
-            }
-
-            list_of_trigger_rate_hists.append(event_rate_histogram)
-        return list_of_trigger_rate_hists
-
-    def _integrate_trigger_rate_histograms(self, hists):
-        """
-        Integrates in energy the trigger rate histogram based on the histogram bin edges.
-
-        Parameters
-        ----------
-        hists: list
-            List with the final trigger rate for each histogram.
-        """
-
-        list_of_integrated_hists = []
-        for _, hist in enumerate(hists):
-            energy_axis = np.logspace(hist["lower_y"], hist["upper_y"], hist["n_bins_y"])
-            radius_axis = np.linspace(hist["lower_x"], hist["upper_x"], hist["n_bins_x"])
-            integrated_hist = np.zeros_like(radius_axis)
-            for i_radius, _ in enumerate(radius_axis):
-                integrated_hist[i_radius] = np.sum(
-                    hist["data"][:-1, i_radius].value * np.diff(energy_axis)
-                )
-
-            list_of_integrated_hists.append(np.sum(integrated_hist) * hist["data"][0, 0].unit)
-        return list_of_integrated_hists
-
-    def trigger_rate_per_histogram(self, livetime):
-        """
-        Estimates the trigger rate for each histogram passed.
-
-        Parameters
-        ----------
-        livetime: astropy.Quantity
-            Time used in the simulation that produced the histograms.
-        """
-        hists = self._derive_trigger_rate_histograms(livetime=livetime)
-        trigger_rates = self._integrate_trigger_rate_histograms(hists)
-        return trigger_rates
-
-    def plot_one_histogram(self, i_hist, ax):
-        """
-        Plot a single histogram referent to the index i_hist.
-
-        Parameters
-        ----------
-        i_hist: int
+        histogram_index: int
             Index of the histogram to be plotted.
         ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
 
-        hist = self.combined_hists[i_hist]
+        hist = self.combined_hists[histogram_index]
         ax.set_title(hist["title"])
 
         def _get_bins(hist, axis=0):

@@ -21,37 +21,37 @@ def common_args(simtel_path):
 
 
 @pytest.fixture
-def array_model(array_config_data, io_handler, db_config, common_args, model_version):
+def array_model(simulator_config_data_north, io_handler, db_config, common_args, model_version):
     return ArrayModel(
         label=common_args["label"],
-        array_config_data=array_config_data,
+        site=simulator_config_data_north["common"]["site"],
+        layout_name=simulator_config_data_north["common"]["layout_name"],
         mongo_db_config=db_config,
         model_version=model_version,
     )
 
 
 @pytest.fixture
-def corsika_args(array_model, shower_config_data, db_config, array_config_data, model_version):
+def corsika_args(
+    array_model,
+    shower_config_data_north,
+):
     # Remove the keys which are not necessary for general CORSIKA configuration
     for key_to_pop in ["site", "run_list", "run_range", "layout_name"]:
-        shower_config_data.pop(key_to_pop, None)
+        shower_config_data_north.pop(key_to_pop, None)
     return {
-        "mongo_db_config": db_config,
-        "model_version": model_version,
-        "site": "North",
-        "layout_name": array_config_data["layout_name"],
         "array_model": array_model,
-        "corsika_config_data": shower_config_data,
+        "corsika_config_data": shower_config_data_north,
     }
 
 
 @pytest.fixture
-def simtel_config_data(tmp_test_directory, array_config_data):
+def simtel_config_data(tmp_test_directory, simulator_config_data_north):
     return {
         "simtel_data_directory": str(tmp_test_directory) + "/test-output",
-        "primary": array_config_data["primary"],
-        "zenith_angle": array_config_data["zenith"],
-        "azimuth_angle": array_config_data["azimuth"],
+        "primary": simulator_config_data_north["common"]["primary"],
+        "zenith_angle": simulator_config_data_north["common"]["zenith"],
+        "azimuth_angle": simulator_config_data_north["common"]["azimuth"],
     }
 
 

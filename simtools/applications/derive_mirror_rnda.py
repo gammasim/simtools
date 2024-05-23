@@ -114,7 +114,7 @@
 
     Runtime about 4 min.
 
-    The output is saved in `simtools-output/derive_mirror_rnda`.
+    The output is saved in ``simtools-output/derive_mirror_rnda``.
     Use the parameter ``--output_path`` to change the output directory.
 
     Expected final print-out message:
@@ -241,7 +241,7 @@ def _define_telescope_model(label, args_dict, db_config):
 
     tel = TelescopeModel(
         site=args_dict["site"],
-        telescope_model_name=args_dict["telescope"],
+        telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         label=label,

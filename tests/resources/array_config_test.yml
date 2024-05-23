@@ -1,18 +1,20 @@
-site: North
-layout_name: test-layout
-model_version: Prod5
-default:
-    LSTN: 'design'
-    MSTN: 'design'
-LSTN-01:
-    name: "01"
-LSTN-02:
-    name: "02"
-LSTN-03:
-    name: "03"
-LSTN-04:
-    name: "04"
-MSTN-05:
-    name: 'design'
-    fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-    discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+common:
+  site: North
+  layout_name: test-layout
+array:
+  model_version: Prod5
+  default:
+      LSTN: 'design'
+      MSTN: 'design'
+  LSTN-01:
+      name: "01"
+  LSTN-02:
+      name: "02"
+  LSTN-03:
+      name: "03"
+  LSTN-04:
+      name: "04"
+  MSTN-05:
+      name: 'design'
+      fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+      discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
