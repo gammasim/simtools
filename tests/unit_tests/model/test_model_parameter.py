@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import pytest
@@ -31,7 +32,7 @@ def test_get_parameter_dict(telescope_model_lst):
 
 
 def test_get_parameter_value(telescope_model_lst):
-    tel_model = telescope_model_lst
+    tel_model = copy.deepcopy(telescope_model_lst)
     assert isinstance(tel_model.get_parameter_value("num_gains"), int)
 
     _par_dict_value_missing = {"unit": "m", "type": "float"}

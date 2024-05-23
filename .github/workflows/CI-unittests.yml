@@ -30,7 +30,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
-            extra-args: ["codecov"]
+            extra-args: ["codecov", "random-order"]
 
           - os: ubuntu-latest
             python-version: "3.11"
@@ -100,6 +100,12 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --durations=10 --color=yes -n auto --dist loadscope
+
+      - name: Random order
+        if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
+        shell: bash -l {0}
+        run: |
+          pytest --color=yes -n auto --dist loadscope --count 5 --random-order
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v4
