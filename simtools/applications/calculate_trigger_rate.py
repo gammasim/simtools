@@ -82,6 +82,12 @@ def _parse(label, description):
         action="store_true",
     )
 
+    config.parser.add_argument(
+        "--stack_files",
+        help="If true, stacks all the histograms.",
+        action="store_true",
+    )
+
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
@@ -124,7 +130,9 @@ def main():
         triggered_event_rates,
         triggered_event_rate_uncertainties,
         trigger_rate_in_tables,
-    ) = histograms.calculate_trigger_rates(print_info=True)
+    ) = histograms.calculate_trigger_rates(
+        print_info=True, stack_files=config_parser["stack_files"]
+    )
 
     # Print out results
     for i_hist, _ in enumerate(sim_event_rates):
