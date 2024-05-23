@@ -1,4 +1,4 @@
-# Simulation model parameters
+# Simulation model
 
 Simulation model parameters describe properties of all relevant elements of the observatory including site,
 telescopes, and calibration devices.
@@ -19,6 +19,8 @@ The definition, derivation, verification, and validation of the simulation model
 The most important features of the simulation model are:
 
 - handled by the `model_parameters` module.
+
+TODO - copy from model_parameters repository
 
 ## Schema files to describe simulation model parameter
 
@@ -169,14 +171,24 @@ simulation_software:
     internal_parameter_name: secondary_ref_radius
 ```
 
-## Export simulation model from model repository to model database
+## Updating the model database
 
 :::{Danger}
-This is for experts only.
+This is for experts only and might impact the simulation model database for all users.
+Tests should be done before applying this to the production databases.
 :::
+
+### Update a single model parameter
+
+New model parameter defined in the simtools database format (json file) can be uploaded to the database using the {ref}`simtools-add-value-from-json-to-db <add_value_from_json_to_db>` application.
+
+New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_db>`.
+
+### Upload a complete simulation model from model repository to model database
 
 The application `add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
 model repository to the model database for a given model versions.
+See the [database](#Databases)  section for implementation details on databases in simtools.
 
 Example:
 
@@ -186,13 +198,20 @@ simtools-add_model-parameters-from-repository-to-db \
       --db_name new_db_name
 ```
 
-TODO: this is incomplete
+This application loops over all subdirectories in `input_path` and uploads all json files to the database `new_db_name` (or updates an existing database with the same name):
 
-## Export simulation model parameters from sim_telarray
+- subdirectories starting with `OBS` are uploaded to the `sites` collection
+- json files from the subdirectory `configuration_sim_telarray` are uploaded to the `configuration_sim_telarray` collection
+- `Files` are added to the `files` collection
+- all other json files are uploaded to the `telescopes` collection
 
-All model parameters can be extracted from `sim_telarray` using the following commands.
+TODO - check what happens with illuminator data.
 
-### Prod6
+## Import simulation model parameters
+
+### Import Prod6 model parameters
+
+Prod6 model parameters can be extracted from `sim_telarray` using the following commands.
 
 ```bash
 ./sim_telarray/bin/sim_telarray \
@@ -212,7 +231,9 @@ All model parameters can be extracted from `sim_telarray` using the following co
    /dev/null 2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal.cfg
 ```
 
-### Prod5
+### Import Prod5 model parameters
+
+Prod5 model parameters can be extracted from `sim_telarray` using the following commands.
 
 ```bash
 ./sim_telarray/bin/sim_telarray \
@@ -231,3 +252,7 @@ All model parameters can be extracted from `sim_telarray` using the following co
    -DNECTARCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=120 \
    /dev/null 2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal_prod5.cfg
 ```
+
+### Import telescope positions
+
+TODO: this is incomplete.
