@@ -48,7 +48,7 @@
         The CORSIKA files to pass to simtel_array.
         If it is provided, these CORSIKA files are used and the application does not search for them
         in the data directory.
-        This option should only be used in combination with the `showers_only` option.
+        This option should only be used in combination with the showers_only option.
     verbosity (str, optional)
         Log level to print.
 
@@ -247,7 +247,7 @@ def main():
         args_dict["label"] = label
 
     if args_dict["corsika_files"] is not None and args_dict["array_only"] is False:
-        msg = "`--corsika_files` option should be used only with `--array_only` argument."
+        msg = "--corsika_files option should be used only with --array_only argument."
         logger.error(msg)
         raise ValueError
 
@@ -297,9 +297,9 @@ def main():
                 if not Path(corsika_file).exists():
                     msg = (
                         f"CORSIKA file {corsika_file} does not exist. Please run the "
-                        "production with the `--showers_only` option first or point the "
+                        "production with the --showers_only option first or point the "
                         "tool to the correct path to the corsika files with "
-                        "`--corsika_directory`."
+                        "--corsika_directory."
                     )
                     logger.error(msg)
                     raise FileNotFoundError
