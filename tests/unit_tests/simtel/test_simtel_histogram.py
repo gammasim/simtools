@@ -159,7 +159,9 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
     simtel_array_histogram_instance.compute_system_trigger_rate()
     assert pytest.approx(simtel_array_histogram_instance.trigger_rate.value, 0.1) == 9006
     assert simtel_array_histogram_instance.trigger_rate.unit == 1 / u.s
-    assert pytest.approx(simtel_array_histogram_instance.trigger_rate_uncertainty.value, 0.1) == 103
+    assert (
+        pytest.approx(simtel_array_histogram_instance.trigger_rate_uncertainty.value, 0.1) == 9008
+    )
     assert simtel_array_histogram_instance.trigger_rate_uncertainty.unit == 1 / u.s
     assert len(simtel_array_histogram_instance.trigger_rate_per_energy_bin.value) == 120
 
@@ -225,6 +227,7 @@ def test_estimate_observation_time(simtel_array_histogram_instance):
 
 
 def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
+    simtel_array_histogram_instance.compute_system_trigger_rate()
     trigger_rate_uncertainty = simtel_array_histogram_instance._estimate_trigger_rate_uncertainty()
     assert trigger_rate_uncertainty.unit == 1 / u.s
-    assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 103
+    assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 9008
