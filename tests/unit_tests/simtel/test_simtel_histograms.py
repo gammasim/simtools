@@ -1,14 +1,17 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 from astropy.table import Table
 from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_histogram import (
+    HistogramIdNotFound,
     InconsistentHistogramFormat,
     SimtelHistogram,
 )
@@ -19,9 +22,17 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def simtel_array_histograms_file(io_handler, corsika_output_file_name):
+def simtel_array_histograms_file(io_handler):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+        test=True,
+    )
+
+
+@pytest.fixture
+def simtel_array_histograms_file_list(io_handler):
+    return io_handler.get_input_data_file(
+        file_name="simtel_output_files.txt",
         test=True,
     )
 
@@ -34,6 +45,12 @@ def simtel_array_histograms_instance(simtel_array_histograms_file):
     return instance
 
 
+@pytest.fixture
+def simtel_array_histograms_instance_file_list(simtel_array_histograms_file_list):
+    instance = SimtelHistograms(histogram_files=simtel_array_histograms_file_list, test=True)
+    return instance
+
+
 def test_file_does_not_exist(caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(FileNotFoundError):
@@ -41,7 +58,9 @@ def test_file_does_not_exist(caplog):
     assert "does not exist." in caplog.text
 
 
-def test_calculate_trigger_rates(simtel_array_histograms_instance, caplog):
+def test_calculate_trigger_rates(
+    simtel_array_histograms_instance, simtel_array_histograms_instance_file_list, caplog
+):
     import astropy.units as u
 
     with caplog.at_level(logging.INFO):
@@ -60,6 +79,58 @@ def test_calculate_trigger_rates(simtel_array_histograms_instance, caplog):
     assert "Total number of triggered events" in caplog.text
     assert "Estimated equivalent observation time corresponding to the number of" in caplog.text
     assert "System trigger event rate" in caplog.text
+
+    with caplog.at_level(logging.INFO):
+        (
+            sim_event_rates,
+            _,
+            _,
+            trigger_rate_in_tables,
+        ) = simtel_array_histograms_instance.calculate_trigger_rates(
+            print_info=False, stack_files=True
+        )
+        second_sim_event_rates, _, _, _ = simtel_array_histograms_instance._rates_for_each_file()
+        assert second_sim_event_rates == [sim_event_rates, sim_event_rates]
+    assert "System trigger event rate for stacked files" in caplog.text
+
+
+def test_rates_for_each_file(simtel_array_histograms_instance):
+    (
+        sim_event_rate,
+        triggered_event_rate,
+        triggered_event_rate_uncertainty,
+    ) = simtel_array_histograms_instance._rates_for_stacked_files()
+    assert isinstance(sim_event_rate, list)
+    assert pytest.approx(triggered_event_rate_uncertainty[0].value, 0.1) == 6370  # uncertainty
+    # decreased by stacking files
+
+
+def test_fill_stacked_events(simtel_array_histograms_instance, caplog):
+    new_instance = copy.copy(simtel_array_histograms_instance)
+    new_instance.combined_hists
+    # Test defect histograms
+    for histogram_index, hist in enumerate(
+        new_instance.combined_hists
+    ):  # altering intentionally the ids
+        if hist["id"] == 1:
+            new_instance.combined_hists[histogram_index]["id"] = 99
+        if hist["id"] == 2:
+            new_instance.combined_hists[histogram_index]["id"] = 99
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(HistogramIdNotFound):
+            new_instance._fill_stacked_events()
+
+
+def test_get_stacked_num_events(simtel_array_histograms_instance):
+    ref_n_sim, ref_n_tri = simtel_array_histograms_instance.get_stacked_num_events()
+    n_sim, n_tri = 0, 0
+    for _, hist in enumerate(simtel_array_histograms_instance.combined_hists):
+        if hist["id"] == 1:
+            n_sim += np.sum(hist["data"])
+        if hist["id"] == 2:
+            n_tri += np.sum(hist["data"])
+    assert ref_n_sim == n_sim
+    assert ref_n_tri == n_tri
 
 
 def test_number_of_files(simtel_array_histograms_instance):
@@ -127,7 +198,7 @@ def test_combine_histogram_files(simtel_array_histograms_file, caplog):
         assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 
-def test_plot_one_histogram(simtel_array_histograms_instance):
+def test_plot_one_histogram(simtel_array_histograms_instance_file_list):
     fig, ax = plt.subplots()
     simtel_array_histograms_instance.plot_one_histogram(0, ax)
     quadmesh = ax.collections[0]
