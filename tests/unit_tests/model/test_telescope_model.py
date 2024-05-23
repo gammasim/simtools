@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import numpy as np
@@ -81,10 +82,10 @@ def test_export_table_to_model_directory(telescope_model_sst_prod5):
 
 
 def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_model_sst_prod5):
-    tel_model_lst = telescope_model_lst
+    tel_model_lst = copy.deepcopy(telescope_model_lst)
     assert tel_model_lst.get_telescope_effective_focal_length("m") == pytest.approx(29.237)
 
-    tel_model_sst = telescope_model_sst_prod5
+    tel_model_sst = copy.deepcopy(telescope_model_sst_prod5)
     assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(2.15191)
 
     # test zero case
