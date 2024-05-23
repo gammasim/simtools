@@ -189,8 +189,8 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         return {
             "run": run_number,
             "primary": self.corsika_config.primary,
-            "array_name": self.layout_name,
-            "site": self.site,
+            "array_name": self.array_model.layout_name,
+            "site": self.array_model.site,
             "label": self.label,
             "zenith": self.config.zenith_angle,
             "azimuth": self.config.azimuth_angle,
