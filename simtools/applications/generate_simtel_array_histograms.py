@@ -19,16 +19,16 @@
     pdf (bool, optional)
         If set, histograms are saved into pdf files.
         One pdf file contains all the histograms found in the file.
-        The name of the file is controlled via `output_file_name`.
+        The name of the file is controlled via output_file_name.
     hdf5: bool
         If true, histograms are saved into hdf5 files.
-        At least one of `pdf` and `hdf5` has to be activated.
+        At least one of pdf and hdf5 has to be activated.
     output_file_name (str, optional)
         The name of the output hdf5 (and/or pdf) files (without the path).
-        If not given, `output_file_name` takes the name from the (first) input file
-        (`hist_file_names`).
-        If the output `output_file_name.hdf5` file already exists and `hdf5` is set, the tables
-        associated to `hdf5` will be overwritten. The remaining tables, if any, will stay
+        If not given, output_file_name takes the name from the (first) input file
+        (hist_file_names).
+        If the output output_file_name.hdf5 file already exists and hdf5 is set, the tables
+        associated to hdf5 will be overwritten. The remaining tables, if any, will stay
         untouched.
     verbosity (str, optional)
         Log level to print.
@@ -36,7 +36,7 @@
     Raises
     ------
     TypeError:
-        if argument passed through `hist_file_names` is not a file.
+        if argument passed through hist_file_names is not a file.
 
     Example
     -------
@@ -107,7 +107,7 @@ def _parse(label, description):
     config_parser, _ = config.initialize(db_config=False, paths=True)
     if not config_parser["pdf"]:
         if not config_parser["hdf5"]:
-            config.parser.error("At least one argument is required: `--pdf` or `--hdf5`.")
+            config.parser.error("At least one argument is required: --pdf or --hdf5.")
 
     return config_parser
 
@@ -165,12 +165,11 @@ def main():
         if config_parser["test"]:
             number_of_histograms = 2
         else:
-            number_of_histograms = simtel_histograms.number_of_histograms
+            number_of_histograms = len(simtel_histograms.combined_hists)
 
         for i_hist in range(number_of_histograms):
-            title = simtel_histograms.get_histogram_title(i_hist)
 
-            logger.debug(f"Processing: {title}")
+            logger.debug(f"Processing: {i_hist + 1} histogram.")
 
             fig, ax = plt.subplots(1, 1, figsize=(6, 6))
             simtel_histograms.plot_one_histogram(i_hist, ax)

@@ -35,7 +35,7 @@
     data_directory (str, optional)
         The location of the output directories corsika-data.
         the label is added to the data_directory, such that the output
-        will be written to `data_directory/label/corsika-data`.
+        will be written to data_directory/label/corsika-data.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
         run script will be printed.
@@ -115,7 +115,7 @@ def _parse(label=None, description=None):
         help=(
             "The directory where to save the corsika-data output directories."
             "the label is added to the data_directory, such that the output"
-            "will be written to `data_directory/label/corsika-data`."
+            "will be written to data_directory/label/corsika-data."
         ),
         type=str.lower,
         required=False,
@@ -137,18 +137,22 @@ def main():
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
     shower_config_data = {
-        "data_directory": Path(args_dict["data_directory"]) / label,
-        "site": args_dict["site"],
-        "layout_name": args_dict["array"],
-        "run_range": [1, args_dict["nruns"] + 1],
-        "nshow": args_dict["nevents"],
-        "primary": args_dict["primary"],
-        "erange": [10 * u.GeV, 300 * u.TeV],
-        "eslope": -2,
-        "zenith": args_dict["zenith"] * u.deg,
-        "azimuth": args_dict["azimuth"] * u.deg,
-        "viewcone": 10 * u.deg,
-        "cscat": [20, 1500 * u.m, 0],
+        "common": {
+            "data_directory": Path(args_dict["data_directory"]) / label,
+            "site": args_dict["site"],
+            "layout_name": args_dict["array"],
+            "run_range": [1, args_dict["nruns"] + 1],
+            "nshow": args_dict["nevents"],
+            "primary": args_dict["primary"],
+            "zenith": args_dict["zenith"] * u.deg,
+            "azimuth": args_dict["azimuth"] * u.deg,
+        },
+        "showers": {
+            "erange": [10 * u.GeV, 300 * u.TeV],
+            "eslope": -2,
+            "viewcone": 10 * u.deg,
+            "cscat": [20, 1500 * u.m, 0],
+        },
     }
 
     shower_simulator = Simulator(

@@ -4,8 +4,9 @@ import logging
 from pathlib import Path
 
 import pytest
+from astropy import units as u
 
-from simtools.model.array_model import ArrayModel
+from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -13,13 +14,10 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def array_model(db_config, io_handler, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
-    }
     return ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -31,10 +29,13 @@ def test_input_validation(array_model):
     assert am.number_of_telescopes == 13
 
 
-def test_get_single_telescope_info_from_array_config(db_config, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
+def test_site(array_model):
+    am = array_model
+    assert am.site == "North"
+
+
+def test_get_single_telescope_info_from_array_config(db_config, model_version, io_handler):
+    parameters_to_change = {
         "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
             "name": "MSTN-05",
             "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
@@ -42,26 +43,70 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version):
     }
     am = ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
+        parameters_to_change=parameters_to_change,
         mongo_db_config=db_config,
         model_version=model_version,
     )
 
-    assert am._get_single_telescope_info_from_array_config("LSTN-01") == {}
-    assert am._get_single_telescope_info_from_array_config("MSTN-05") == {
+    assert am._get_single_telescope_info_from_array_config("LSTN-01", parameters_to_change) == {}
+    assert am._get_single_telescope_info_from_array_config("MSTN-05", parameters_to_change) == {
         "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
     }
 
+    parameters_missing_name = {
+        "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
+            "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
+        },
+    }
+    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has no name for a telescope"):
+        ArrayModel(
+            label="test",
+            site="North",
+            layout_name="test-layout",
+            parameters_to_change=parameters_missing_name,
+            mongo_db_config=db_config,
+            model_version=model_version,
+        )
+
+    parameters_with_string = {
+        "MSTN-05": "a string",
+    }
+    am_with_string = ArrayModel(
+        label="test",
+        site="North",
+        layout_name="test-layout",
+        parameters_to_change=parameters_with_string,
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+    assert (
+        am_with_string._get_single_telescope_info_from_array_config(
+            "MSTN-05", parameters_with_string
+        )
+        == {}
+    )
+
+    invalid_parameters = {
+        "MSTN-05": 5.0,
+    }
+    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has wrong input for a telescope"):
+        ArrayModel(
+            label="test",
+            site="North",
+            layout_name="test-layout",
+            parameters_to_change=invalid_parameters,
+            mongo_db_config=db_config,
+            model_version=model_version,
+        )
+
 
 def test_exporting_config_files(db_config, io_handler, model_version):
-    array_config_data = {
-        "site": "North",
-        "layout_name": "test-layout",
-        "default": {"LSTN": "01", "MSTN": "design"},
-    }
     am = ArrayModel(
         label="test",
-        array_config_data=array_config_data,
+        site="North",
+        layout_name="test-layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -98,3 +143,33 @@ def test_exporting_config_files(db_config, io_handler, model_version):
 
         logger.info("Checking file: %s", model_file)
         assert Path(am.get_config_directory()).joinpath(model_file).exists()
+
+
+def test_load_array_element_positions_from_file(array_model, io_handler, telescope_north_test_file):
+    am = array_model
+    telescopes = am._load_array_element_positions_from_file(telescope_north_test_file, "North")
+    assert len(telescopes) > 0
+
+
+def test_get_telescope_position_parameter(array_model, io_handler):
+    am = array_model
+    assert am._get_telescope_position_parameter(
+        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m
+    ) == {
+        "parameter": "array_element_position_ground",
+        "instrument": "LSTN-01",
+        "site": "North",
+        "version": "2024-02-01",
+        "value": "10.0 2.0 30.0",
+        "unit": "m",
+        "type": "float64",
+        "applicable": True,
+        "file": False,
+    }
+
+
+def test_set_config_file_directory(array_model, io_handler):
+    am = array_model
+    _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
+    am._set_config_file_directory()
+    assert _config_dir_1.is_dir()
