@@ -321,14 +321,29 @@ class SimtelHistogram:
         )
         return ratio_per_energy_bin
 
-    def compute_system_trigger_rate(self):
+    def compute_system_trigger_rate(self, events_histogram=None, triggered_events_histogram=None):
         """
         Compute the system trigger rate and its uncertainty, which are saved as class attributes.
+        If events_histogram and triggered_events_histogram are passed, they are used to calculate
+        the trigger rate and trigger rate uncertainty, instead of the histograms from the file.
+        This is specially useful when calculating the trigger rate for stacked files, in which case
+        one can pass the histograms resulted from stacking the files to this function.
+        Default is filling from the file.
+
+        Parameters
+        ----------
+        events_histogram:
+            A dictionary with "data" corresponding to a 2D histogram (core distance x energy)
+            for the simulated events.
+        triggered_events_histogram:
+            A dictionary with "data" corresponding to a 2D histogram (core distance x energy)
+            for the triggered events.
         """
 
         if self.trigger_rate is None:
             # Get the simulated and triggered 2D histograms from the simtel_array output file
-            events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
+            if events_histogram is None and triggered_events_histogram is None:
+                events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
 
             # Calculate triggered/simulated event 1D histogram (energy dependent)
             triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
@@ -359,7 +374,11 @@ class SimtelHistogram:
             self.trigger_rate = np.sum(self.trigger_rate_per_energy_bin)
 
             # Derive the uncertainty in the system trigger rate estimate
-            self.trigger_rate_uncertainty = self._estimate_trigger_rate_uncertainty()
+            self.trigger_rate_uncertainty = self.estimate_trigger_rate_uncertainty(
+                self.trigger_rate,
+                np.sum(events_histogram["data"]),
+                np.sum(triggered_events_histogram["data"]),
+            )
 
         return self.trigger_rate, self.trigger_rate_uncertainty
 
@@ -495,11 +514,18 @@ class SimtelHistogram:
         spectral_distribution.index = self.config["spectral_index"]
         return spectral_distribution
 
-    def estimate_observation_time(self):
+    def estimate_observation_time(self, stacked_num_simulated_events=None):
         """
         Estimates the observation time corresponding to the simulated number of events.
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
         and other information from the simulation configuration self.config.
+        If stacked_num_simulated_events is given, the observation time is estimated from it instead
+        of from the simulation configuration (useful for the stacked trigger rate estimate).
+
+        Parameters
+        ----------
+        stacked_num_simulated_events: int
+            total number of simulated events for the stacked dataset.
 
         Returns
         -------
@@ -514,14 +540,29 @@ class SimtelHistogram:
             self.energy_range[0],
             self.energy_range[1],
         )
-        obs_time = (self.total_num_simulated_events / first_estimate) * u.s
-        return obs_time
+        if stacked_num_simulated_events is None:
+            return (self.total_num_simulated_events / first_estimate) * u.s
+        return (stacked_num_simulated_events / first_estimate) * u.s
 
-    def _estimate_trigger_rate_uncertainty(self):
+    def estimate_trigger_rate_uncertainty(
+        self, trigger_rate_estimate, num_simulated_events, num_triggered_events
+    ):
         """
         Estimate the trigger rate uncertainty, based on the number of simulated and triggered
         events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation
         of the individual uncertainties.
+        If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead
+        of based on the total number of trigger events from the simulation configuration
+        (useful for the stacked trigger rate estimate).
+
+        Parameters
+        ----------
+        trigger_rate_estimate: astropy.Quantity[1/time]
+            The already estimated the trigger rate.
+        num_simulated_events: int
+            Total number of simulated events.
+        num_triggered_events: int
+            Total number of triggered events.
 
         Returns
         -------
@@ -530,9 +571,9 @@ class SimtelHistogram:
         """
         # pylint: disable=E1101
         return (
-            self.trigger_rate.value
-            * np.sqrt(1 / self.total_num_triggered_events + 1 / self.total_num_simulated_events)
-        ) * self.trigger_rate.unit
+            trigger_rate_estimate.value
+            * np.sqrt(1 / num_triggered_events + 1 / num_simulated_events)
+        ) * trigger_rate_estimate.unit
 
     def print_info(self, mode=None):
         """
