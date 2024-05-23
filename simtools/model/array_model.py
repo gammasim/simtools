@@ -146,7 +146,7 @@ class ArrayModel:
         """
         Build the constituents of the array model (site, telescopes, etc).
         Includes reading of all model parameters from the DB.
-        The array is define in the telescopes dictionary. Positions
+        The array is defined in the telescopes dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
 
         Parameters
@@ -158,8 +158,8 @@ class ArrayModel:
 
         Returns
         -------
-        SiteModel
-            Site model.
+        SiteModel, TelescopeModel
+            Site and telescope model.
 
         """
 
@@ -200,10 +200,10 @@ class ArrayModel:
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
-        array_config_data contains the default telescope models for each telescope type and the \
-        list of specific telescopes. For each case, the data can be given only as a name or as a \
-        dict with 'name' and parameters to change. This function has to identify these two cases\
-        and collect the telescope name and the dict with the parameters to change.
+        array_config_data contains the name of default telescope models for each telescope type
+        and the list of specific telescopes. For each case, the data can be given only as a name \
+        or as a dict with 'name' and parameters to change. This function has to identify these \
+        two cases and collect the telescope name and the dict with the parameters to change.
 
         Parameters
         ----------
@@ -344,12 +344,12 @@ class ArrayModel:
 
     def _load_array_element_positions_from_file(self, array_elements_file, site):
         """
-        Load telescope positions from a file.
+        Load array element (e.g. telescope) positions from a file.
 
         Parameters
         ----------
         array_elements_file: str
-            Path to the file with the telescope positions.
+            Path to the file with the array element positions.
         site: str
             Site name.
 

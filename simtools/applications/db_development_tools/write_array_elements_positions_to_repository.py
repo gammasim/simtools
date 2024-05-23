@@ -8,17 +8,13 @@
     Command line arguments
 
     input : str
-        List of array element positions.
-
-    output_path : str
+        File containing a table of array element positions.
+    repository_path : str
         Path of local copy of model parameter repository.
-
     model_version : str
         Model version.
-
     site : str
         Observatory site.
-
     coordinate_system : str
         Coordinate system of array element positions (ground or utm).
 
@@ -70,7 +66,7 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input",
-        help="list of array element positions",
+        help="File containing a table of array element positions.",
         required=False,
     )
     config.parser.add_argument(
@@ -180,8 +176,11 @@ def main():
 
     if args_dict["coordinate_system"] == "utm":
         write_utm_array_elements_to_repository(args_dict, logger)
-    else:
+    elif args_dict["coordinate_system"] == "ground":
         write_ground_array_elements_to_repository(args_dict, db_config, logger)
+    else:
+        logger.error("Invalid coordinate system. Allowed are 'utm' and 'ground'.")
+        raise ValueError
 
 
 if __name__ == "__main__":
