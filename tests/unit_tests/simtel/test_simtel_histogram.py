@@ -201,7 +201,9 @@ def test_total_area(simtel_array_histogram_instance, simtel_array_histograms_fil
     total_area = simtel_array_histogram_instance.total_area
     assert total_area.unit == u.cm**2
     assert pytest.approx(total_area.value, 0.05) == 1.25e11
-    new_instance = SimtelHistogram(histogram_file=simtel_array_histograms_file, rht=True)
+    new_instance = SimtelHistogram(
+        histogram_file=simtel_array_histograms_file, area_from_distribution=True
+    )
     assert pytest.approx(new_instance.total_area.value, 0.05) == 1.3e11
 
 

@@ -13,15 +13,17 @@ simtel_file_names (str or list):
     Path to the simtel_array file or a list of simtel_array output files.
 save_tables (bool):
     If true, save the tables with the energy-dependent trigger rate to a ecsv file.
-rht (bool):
-    If true, the area thrown in the trigger rate calculation is estimated exactly as in the
-    hessio rht.cc tool. If false, it is estimated based on the maximum distance as given in
+area_from_distribution (bool):
+    If true, the area thrown (the area in which the simulated events are distributed)
+    in the trigger rate calculation is estimated based on the event distribution.
+    The expected shape of the distribution of events as function of the core distance is triangular
+    up to the maximum distance. The weighted mean radius of the triangular distribution is 2/3 times
+    the upper edge. Therefore, when using the ``area_from_distribution`` flag, the mean distance
+    times 3/2, returns just the position of the upper edge in the triangle distribution with little
+    impact of the binning and little dependence on the scatter area defined in the simulation.
+    This is special useful when calculating trigger rate for individual telescopes.
+    If false, the area thrown is estimated based on the maximum distance as given in
     the simulation configuration.
-    Note: The expected shape of the distribution of events as function of the core distance is
-    triangular up to the maximum distance.The weighted mean radius of the triangular
-    distribution is 2/3 times the upper edge. Thus when using the ``rht`` flag, the mean
-    distance times 3/2, returns just the position of the upper edge in the triangle
-    distribution with little impact of the binning.
 
 Example
 -------
@@ -75,8 +77,8 @@ def _parse(label, description):
     )
 
     config.parser.add_argument(
-        "--rht",
-        help="If true, calculates the trigger rates exactly as in the hessio tool rht.cc.",
+        "--area_from_distribution",
+        help="If true, calculates the trigger rates using the event distribution.",
         action="store_true",
     )
 
@@ -112,7 +114,9 @@ def main():
             logger.error(msg)
             raise FileNotFoundError from exc
 
-    histograms = SimtelHistograms(simtel_array_files, rht=config_parser["rht"])
+    histograms = SimtelHistograms(
+        simtel_array_files, area_from_distribution=config_parser["area_from_distribution"]
+    )
 
     logger.info("Calculating simulated and triggered event rate")
     (
