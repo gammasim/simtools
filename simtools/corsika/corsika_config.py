@@ -7,8 +7,6 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
-from simtools.layout.array_layout import ArrayLayout
-from simtools.utils import names
 from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = [
@@ -49,14 +47,8 @@ class CorsikaConfig:
 
     Parameters
     ----------
-    mongo_db_config: dict
-        MongoDB configuration.
-    site: str
-        North or South.
-    layout_name: str
-        Name of the layout.
-    model_version: str
-        Version of the model (e.g., prod5).
+    array_model: ArrayModel
+        Array model.
     label: str
         Instance label.
     corsika_config_data: dict
@@ -72,11 +64,7 @@ class CorsikaConfig:
 
     def __init__(
         self,
-        mongo_db_config,
-        site,
-        layout_name,
-        model_version,
-        layout=None,
+        array_model,
         label=None,
         corsika_config_data=None,
         corsika_config_file=None,
@@ -91,7 +79,6 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.site = names.validate_site_name(site)
         self.primary = None
         self.eslope = None
         self.config_file_path = None
@@ -100,19 +87,8 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
 
-        self.layout_name = names.validate_array_layout_name(layout_name)
-        self._logger.debug(f"Building ArrayLayout {self.layout_name}")
-        self.layout = (
-            ArrayLayout.from_array_layout_name(
-                mongo_db_config=mongo_db_config,
-                model_version=model_version,
-                array_layout_name=f"{self.site}-{self.layout_name}",
-                label=self.label,
-            )
-            if layout is None
-            else layout
-        )
-        self.site_model = self.layout.site_model
+        self.array_model = array_model
+        self._logger.debug(f"Building ArrayLayout {self.array_model.layout_name}")
 
         # Load parameters
         if corsika_parameters_file is None:
@@ -131,7 +107,8 @@ class CorsikaConfig:
     def __repr__(self):
         text = (
             f"<class {self.__class__.__name__}> "
-            f"(site={self.site}, layout={self.layout_name}, label={self.label})"
+            f"(site={self.array_model.site}, "
+            f"layout={self.array_model.layout_name}, label={self.label})"
         )
         return text
 
@@ -406,7 +383,7 @@ class CorsikaConfig:
 
             file.write("\n* [ SITE PARAMETERS ]\n")
             text_site_parameters = _get_text_single_line(
-                self.site_model.get_corsika_site_parameters(config_file_style=True)
+                self.array_model.site_model.get_corsika_site_parameters(config_file_style=True)
             )
             file.write(text_site_parameters)
 
@@ -420,7 +397,7 @@ class CorsikaConfig:
             self._write_seeds(file)
 
             file.write("\n* [ TELESCOPES ]\n")
-            telescope_list_text = self.layout.get_corsika_input_list()
+            telescope_list_text = self.get_corsika_input_list()
             file.write(telescope_list_text)
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
@@ -495,7 +472,7 @@ class CorsikaConfig:
                 f"{int(self._user_parameters['VIEWCONE'][1]):d}"
             )
         file_name = (
-            f"{self.primary}_{self.site}_{self.layout_name}_"
+            f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
             f"za{int(self._user_parameters['THETAP'][0]):03}-"
             f"azm{int(self._user_parameters['AZM'][0]):03}deg"
             f"{view_cone}{file_label}"
@@ -513,11 +490,11 @@ class CorsikaConfig:
                 f"corsika_runXXXXXX_"
                 f"{self.primary}_za{int(self._user_parameters['THETAP'][0]):03}deg_"
                 f"azm{int(self._user_parameters['AZM'][0]):03}deg"
-                f"_{self.site}_{self.layout_name}{file_label}.zst"
+                f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
             return file_name
         if file_type == "multipipe":
-            return f"multi_cta-{self.site}-{self.layout_name}.cfg"
+            return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
@@ -594,3 +571,27 @@ class CorsikaConfig:
                 for value in value_args
             ]
         return [value_args]
+
+    def get_corsika_input_list(self):
+        """
+        List of telescope positions in the format required for the CORSIKA input file.
+
+        Returns
+        -------
+        str
+            Piece of text to be added to the CORSIKA input file.
+        """
+
+        corsika_input_list = ""
+        for telescope_name, telescope in self.array_model.telescope_model.items():
+            positions = telescope.get_parameter_value_with_unit("array_element_position_ground")
+            corsika_input_list += "TELESCOPE"
+            for pos in positions:
+                corsika_input_list += f"\t {pos.to('cm').value:.3f}"
+            sphere_radius = telescope.get_parameter_value_with_unit("telescope_sphere_radius").to(
+                "cm"
+            )
+            corsika_input_list += f"\t {sphere_radius:.3f}"
+            corsika_input_list += f"\t # {telescope_name}\n"
+
+        return corsika_input_list

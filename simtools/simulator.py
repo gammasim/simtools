@@ -75,23 +75,23 @@ class Simulator:
 
     Parameters
     ----------
-    simulator: choices: [simtel, corsika]
-        implemented are sim_telarray and CORSIKA
+    simulator: str
+        Simulation software to be used (choices: [corsika, simtel, corsika_simtel])
     simulator_source_path: str or Path
         Location of executables for simulation software \
             (e.g. path with CORSIKA or sim_telarray)
     label: str
         Instance label.
     config_data: dict
-        Dict with shower or array model configuration data.
-    config_file: str or Path
-        Path to yaml file containing configurable data.
+        Simulator configuration data.
     submit_command: str
         Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command,
     mongo_db_config: dict
         MongoDB configuration.
+    model_version: str
+        Simulation model version.
     test: bool
         If True, no jobs are submitted; only run scripts are prepared
     """
@@ -100,9 +100,8 @@ class Simulator:
         self,
         simulator,
         simulator_source_path,
+        config_data,
         label=None,
-        config_data=None,
-        config_file=None,
         submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
@@ -122,8 +121,6 @@ class Simulator:
         self.test = test
 
         self._corsika_config_data = None
-        self.site = None
-        self.layout_name = None
         self._corsika_parameters_file = None
         self.config = None
         self.array_model = None
@@ -137,8 +134,7 @@ class Simulator:
         self._mongo_db_config = mongo_db_config
         self._model_version = model_version
 
-        self._load_configuration_and_simulation_model(config_data, config_file)
-
+        self._load_configuration_and_simulation_model(config_data)
         self._set_simulation_runner()
 
     @property
@@ -167,57 +163,51 @@ class Simulator:
             raise gen.InvalidConfigData
         self._simulator = simulator.lower()
 
-    def _load_configuration_and_simulation_model(self, config_data=None, config_file=None):
+    def _load_configuration_and_simulation_model(self, config_data):
         """
         Load configuration data and initialize simulation models.
 
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
-        config_file: str or Path
-            Path to yaml file containing configurable data.
+            Simulator configuration data.
 
         """
-        simulator_config_data = gen.collect_data_from_file_or_dict(config_file, config_data)
-        if self.simulator == "corsika":
-            self._load_corsika_config_and_model(simulator_config_data)
-        if self.simulator == "simtel":
-            self._load_sim_tel_config_and_model(simulator_config_data)
-        if self.simulator == "corsika_simtel":
-            config_showers, config_arrays = self._separate_corsika_and_simtel_config_data(
-                simulator_config_data
-            )
-            self._load_corsika_config_and_model(config_showers)
-            self._load_sim_tel_config_and_model(config_arrays)
+        self._load_corsika_config_and_model(config_data)
+        self._load_sim_tel_config_and_model(config_data)
+
+        self.array_model = ArrayModel(
+            label=self.label,
+            site=config_data["common"]["site"],
+            layout_name=config_data["common"]["layout_name"],
+            parameters_to_change=config_data,
+            mongo_db_config=self._mongo_db_config,
+            model_version=self._model_version,
+        )
 
     def _load_corsika_config_and_model(self, config_data):
         """
         Validate configuration data for CORSIKA shower simulation and
-        remove entries needed for CorsikaRunner.
+        remove entries not needed for CorsikaRunner.
 
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
+            Simulator configuration data.
 
         """
 
-        self._corsika_config_data = copy(config_data)
-
-        try:
-            self.site = names.validate_site_name(self._corsika_config_data.pop("site"))
-            self.layout_name = names.validate_array_layout_name(
-                self._corsika_config_data.pop("layout_name")
-            )
-        except KeyError:
-            self._logger.error("Missing parameter in simulation configuration data")
-            raise
-
+        self._corsika_config_data = copy(config_data["common"])
+        self._corsika_config_data.update(copy(config_data["showers"]))
         self.runs = self._validate_run_list_and_range(
             self._corsika_config_data.pop("run_list", None),
             self._corsika_config_data.pop("run_range", None),
         )
+        for key in ("site", "layout_name"):
+            try:
+                self._corsika_config_data.pop(key)
+            except KeyError:
+                pass
 
         self._corsika_parameters_file = self._corsika_config_data.pop(
             "corsika_parameters_file", None
@@ -225,52 +215,21 @@ class Simulator:
 
     def _load_sim_tel_config_and_model(self, config_data):
         """
-        Load array model and configuration parameters for array simulations
+        Load array model and configuration parameters for array simulations.
 
         Parameters
         ----------
         config_data: dict
-            Dict with simulator configuration data.
+            Simulator configuration data.
 
         """
-        _array_model_config, _rest_config = self._collect_array_model_parameters(config_data)
+        _rest_config = self._collect_array_model_parameters(config_data)
 
         _parameter_file = self.io_handler.get_input_data_file(
             "parameters", "array-simulator_parameters.yml"
         )
         _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
         self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
-
-        self.array_model = ArrayModel(
-            label=self.label,
-            array_config_data=_array_model_config,
-            mongo_db_config=self._mongo_db_config,
-            model_version=self._model_version,
-        )
-
-    def _separate_corsika_and_simtel_config_data(self, config_data):
-        """
-        Separate the CORSIKA and sim_telarray simulation configuration to two dictionaries.
-
-        Parameters
-        ----------
-        config_data: dict
-            Dictionary with both the CORSIKA and sim_telarray simulation configuration data.
-
-        Returns
-        -------
-        dict
-            Configuration of shower simulations.
-        dict
-            Configuration of array simulations.
-
-        """
-
-        common = copy(config_data.pop("common", {}))
-        config_showers = copy(config_data.pop("showers", {})) | common
-        config_arrays = copy(config_data.pop("array", {})) | common
-
-        return config_showers, config_arrays
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
@@ -326,20 +285,13 @@ class Simulator:
         Parameters
         ----------
         config_data: dict
-            Dict with configuration data.
+
 
         """
-        _array_model_data = {}
-        _rest_data = copy(config_data)
-
-        try:
-            _array_model_data["site"] = names.validate_site_name(_rest_data.pop("site"))
-            _array_model_data["layout_name"] = names.validate_array_layout_name(
-                _rest_data.pop("layout_name")
-            )
-        except KeyError:
-            self._logger.error("Missing parameter in simulation configuration data")
-            raise
+        _merged_config = copy(config_data["common"])
+        if "array" in config_data:
+            _merged_config.update(copy(config_data["array"]))
+        _rest_data = copy(_merged_config)
 
         # Reading telescope keys
         tel_keys = []
@@ -349,10 +301,7 @@ class Simulator:
                 tel_keys.append(key)
             except ValueError:
                 pass
-        for key in tel_keys:
-            _array_model_data[key] = _rest_data.pop(key)
-
-        return _array_model_data, _rest_data
+        return _rest_data
 
     def _set_simulation_runner(self):
         """
@@ -362,19 +311,15 @@ class Simulator:
         common_args = {
             "label": self.label,
             "simtel_source_path": self._simulator_source_path,
+            "array_model": self.array_model,
         }
         corsika_args = {
-            "mongo_db_config": self._mongo_db_config,
-            "model_version": self._model_version,
-            "site": self.site,
-            "layout_name": self.layout_name,
             "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
         simtel_args = {}
         if self.simulator in ["simtel", "corsika_simtel"]:
             simtel_args = {
-                "array_model": self.array_model,
                 "config_data": {
                     "simtel_data_directory": self.config.data_directory,
                     "primary": self.config.primary,
@@ -542,6 +487,11 @@ class Simulator:
         ----------
         file: Path
             Simulation file name
+
+        Returns
+        -------
+        int
+            Run number
 
         """
         file_name = str(Path(file).name)

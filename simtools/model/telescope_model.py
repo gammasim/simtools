@@ -15,15 +15,16 @@ __all__ = ["TelescopeModel"]
 
 class TelescopeModel(ModelParameter):
     """
-    TelescopeModel represents the MC model of an individual telescope. It contains the list of \
-    parameters that can be read from the DB.
+    TelescopeModel represents the MC model of an individual telescope.
+
+    TelescopeModel contains parameter names and values for a specific telescope model.
 
     Parameters
     ----------
     site: str
         Site name (e.g., South or North).
-    telescope_model_name: str
-        Telescope model name (ex. LSTN-01, LSTN-design, ...).
+    telescope_name: str
+        Telescope name (ex. LSTN-01, LSTN-design, ...).
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
@@ -35,7 +36,7 @@ class TelescopeModel(ModelParameter):
     def __init__(
         self,
         site,
-        telescope_model_name,
+        telescope_name,
         mongo_db_config,
         model_version,
         label=None,
@@ -44,11 +45,11 @@ class TelescopeModel(ModelParameter):
         Initialize TelescopeModel.
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init TelescopeModel %s %s", site, telescope_model_name)
+        self._logger.debug("Init TelescopeModel %s %s", site, telescope_name)
         ModelParameter.__init__(
             self,
             site=site,
-            telescope_model_name=telescope_model_name,
+            telescope_name=telescope_name,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
             db=None,

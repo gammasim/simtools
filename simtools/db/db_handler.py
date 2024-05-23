@@ -48,6 +48,7 @@ class DatabaseHandler:
     site_parameters_cached = {}
     model_parameters_cached = {}
     model_versions_cached = {}
+    sim_telarray_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -115,8 +116,11 @@ class DatabaseHandler:
         only_applicable=False,
     ):
         """
-        Get parameters from either MongoDB or simulation model repository for a specific
-        array element, i.e. telescopes, calibration_device.
+        Get parameters from MongoDB or simulation model repository for an array element.
+        An array element can be e.g., a telescope or a calibration device.
+        Read parameters for design and for the specified array element (if necessary). This allows
+        to overwrite design parameters with specific telescope parameters without having to copy
+        all model parameters when changing only a few.
 
         Parameters
         ----------
@@ -128,7 +132,6 @@ class DatabaseHandler:
             Version of the model.
         collection: str
             collection of array element (e.g. telescopes, calibration_devices)
-
         only_applicable: bool
             If True, only applicable parameters will be read.
 
@@ -141,34 +144,36 @@ class DatabaseHandler:
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
-        _array_elements_cache_key = self._parameter_cache_key(
-            site, telescope_model_name, model_version
-        )
-        try:
-            return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
-        except KeyError:
-            pass
-        _pars = self._get_model_parameters_mongo_db(
-            self.mongo_db_config.get("db_simulation_model", None),
-            _telescope_model_name,
-            _model_version,
-            collection,
-            only_applicable,
-        )
+        telescope_list = self.get_telescope_list_for_db_query(_telescope_model_name, model_version)
+        pars = {}
+        for telescope in telescope_list:
+            _array_elements_cache_key = self._parameter_cache_key(site, telescope, model_version)
+            try:
+                pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
+            except KeyError:
+                pars.update(
+                    self.read_mongo_db(
+                        self.mongo_db_config.get("db_simulation_model", None),
+                        telescope_model_name=telescope,
+                        model_version=_model_version,
+                        collection_name=collection,
+                        run_location=None,
+                        write_files=False,
+                        only_applicable=only_applicable,
+                    )
+                )
+                if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
+                    pars = db_from_repo_handler.update_model_parameters_from_repo(
+                        parameters=pars,
+                        site=_site,
+                        parameter_collection=collection,
+                        telescope_name=telescope,
+                        model_version=_model_version,
+                        db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url"),
+                    )
+            DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
 
-        # update using simulation model repository
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=_pars,
-                site=_site,
-                parameter_collection=collection,
-                telescope_name=_telescope_model_name,
-                model_version=_model_version,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-
-        DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = _pars
-        return DatabaseHandler.model_parameters_cached[_array_elements_cache_key]
+        return pars
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -239,57 +244,6 @@ class DatabaseHandler:
         """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
-    def _get_model_parameters_mongo_db(
-        self, db_name, telescope_model_name, model_version, collection, only_applicable=False
-    ):
-        """
-        Get parameters from MongoDB for a specific telescope.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB
-        telescope_model_name: str
-            Name of the telescope model (e.g. MST-FlashCam-D ...)
-        model_version: str
-            Version of the model.
-        collection: str
-
-        only_applicable: bool
-            If True, only applicable parameters will be read.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-
-        _which_tel_labels = [
-            self.get_telescope_db_name(
-                telescope_name=telescope_model_name,
-                model_version=model_version,
-                collection=collection,
-            )
-        ]
-
-        _pars = {}
-        for _tel in _which_tel_labels:
-            self._logger.debug(f"Getting {_tel} parameters from MongoDB")
-
-            _pars.update(
-                self.read_mongo_db(
-                    db_name,
-                    _tel,
-                    model_version,
-                    collection_name=collection,
-                    run_location=None,
-                    write_files=False,
-                    only_applicable=only_applicable,
-                )
-            )
-
-        return _pars
-
     def read_mongo_db(
         self,
         db_name,
@@ -340,7 +294,6 @@ class DatabaseHandler:
             "version": self.model_version(model_version, db_name),
         }
 
-        self._logger.debug(f"Trying the following query: {query} to {db_name} {collection_name}")
         if only_applicable:
             query["applicable"] = True
         if collection.count_documents(query) < 1:
@@ -356,7 +309,6 @@ class DatabaseHandler:
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
             if _parameters[par_now]["file"] and write_files:
                 file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
-
                 self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
         return _parameters
@@ -505,8 +457,18 @@ class DatabaseHandler:
         _, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
+        _array_elements_cache_key = self._parameter_cache_key(
+            site, telescope_model_name, model_version
+        )
         try:
-            return self.read_mongo_db(
+            return DatabaseHandler.sim_telarray_configuration_parameters_cached[
+                _array_elements_cache_key
+            ]
+        except KeyError:
+            pass
+        pars = {}
+        try:
+            pars = self.read_mongo_db(
                 self._get_db_name(),
                 _telescope_model_name,
                 _model_version,
@@ -515,7 +477,7 @@ class DatabaseHandler:
                 write_files=False,
             )
         except ValueError:
-            return self.read_mongo_db(
+            pars = self.read_mongo_db(
                 self._get_db_name(),
                 names.get_telescope_type_from_telescope_name(_telescope_model_name) + "-design",
                 _model_version,
@@ -523,6 +485,10 @@ class DatabaseHandler:
                 collection_name="configuration_sim_telarray",
                 write_files=False,
             )
+        DatabaseHandler.sim_telarray_configuration_parameters_cached[_array_elements_cache_key] = (
+            pars
+        )
+        return pars
 
     def _validate_model_input(self, site, telescope_model_name, model_version):
         """
@@ -1136,7 +1102,7 @@ class DatabaseHandler:
 
         return DatabaseHandler.model_versions_cached[_cache_key]
 
-    def get_all_available_array_elements(self, model_version, collection_name, db_name=None):
+    def get_all_available_array_elements(self, model_version, collection, db_name=None):
         """
         Get all available array element names in the specified collection in the DB.
 
@@ -1146,7 +1112,7 @@ class DatabaseHandler:
             the name of the DB
         model_version: str
             Which version to get the array elements of
-        collection_name: str
+        collection: str
             Which collection to get the array elements from:
             i.e. telescopes, calibration_devices
         Returns
@@ -1156,19 +1122,52 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = DatabaseHandler.db_client[db_name][collection]
 
         query = {"version": self.model_version(model_version)}
         try:
             _all_available_array_elements = collection.find(query).distinct("instrument")
         except ValueError as exc:
-            raise ValueError(
-                f"Query for collection name {collection_name} not implemented."
-            ) from exc
+            raise ValueError(f"Query for collection name {collection} not implemented.") from exc
 
         return _all_available_array_elements
 
-    def get_telescope_db_name(self, telescope_name, model_version, collection):
+    def get_telescope_list_for_db_query(self, telescope_model_name, model_version):
+        """
+        Returns a list of telescope names to be used for querying the database.
+        The first entry of the list is the design telescope (if it exists in the DB),
+        followed by the actual telescope model name.
+
+        Parameters
+        ----------
+        telescope_model_name: str
+            Name of the telescope model (e.g. MSTN-01).
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        list
+            List of telescope model names as used in the DB.
+
+        """
+
+        if "-design" in telescope_model_name:
+            return [telescope_model_name]
+        try:
+            return [
+                self.get_telescope_db_name(
+                    names.get_telescope_type_from_telescope_name(telescope_model_name) + "-design",
+                    model_version,
+                ),
+                self.get_telescope_db_name(telescope_model_name, model_version),
+            ]
+        except ValueError:  # e.g., no design model defined for this telescope type
+            return [
+                self.get_telescope_db_name(telescope_model_name, model_version),
+            ]
+
+    def get_telescope_db_name(self, telescope_name, model_version, collection="telescopes"):
         """
         Translate telescope name to the name used in the DB. This is required,
         as not all telescopes are defined in the database yet. In these cases,
@@ -1180,6 +1179,8 @@ class DatabaseHandler:
             Name of the telescope model (e.g. MSTN-01)
         model_version: str
             Which version to get the telescopes
+        collection: str
+            collection of array element (e.g. telescopes, calibration_devices)
 
         Returns
         -------
@@ -1206,7 +1207,6 @@ class DatabaseHandler:
         if _design_name in self._available_array_elements:
             return _design_name
 
-        self._logger.error("Telescope %s not found in the database.", telescope_name)
         raise ValueError
 
     def _parameter_cache_key(self, site, telescope, model_version, db_name=None):
