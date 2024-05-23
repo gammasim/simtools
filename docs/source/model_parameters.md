@@ -1,8 +1,15 @@
 # Simulation model parameters
 
-Simulation model parameters describe all relevant site and telescope properties. This includes the atmospheric models (profile, transmission) or geomagnetic field properties for the site, details on optical and mechanical properties of the telescope, plus camera, readout and trigger parameters.
+Simulation model parameters describe all relevant site and telescope properties.
+This includes the atmospheric models (profile, transmission) or geomagnetic field properties for the site,
+details on optical and mechanical properties of the telescope, plus camera, readout and trigger parameters.
 
-For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values (e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms (e.g., the telescope trigger algorithm). Parameters might be fixed in time (e.g., the number of mirrors on a certain telescope), or variable on different time scales (e.g., compare the degradation of the mirror reflectivity over several months with the nightly variability of the atmospheric parameters).
+For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
+(e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms
+(e.g., the telescope trigger algorithm).
+Parameters might be fixed in time (e.g., the number of mirrors on a certain telescope), or variable
+on different time scales (e.g., compare the degradation of the mirror reflectivity over several months
+with the nightly variability of the atmospheric parameters).
 
 The definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
 
@@ -156,7 +163,7 @@ simulation_software:
 
 ## Export simulation model from model repository to model database
 
-**TO BE ADDED**
+TO BE ADDED
 
 ## Export simulation model parameters from sim_telarray
 
