@@ -29,6 +29,14 @@ simtel_events
 .. automodule:: simtel.simtel_events
    :members:
 
+simtel_histogram
+----------------
+
+.. _simtel_histogram:
+
+.. automodule:: simtel.simtel_histogram
+   :members:
+
 simtel_histograms
 -----------------
 

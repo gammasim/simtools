@@ -50,10 +50,10 @@
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data.
         the label is added to the data_directory, such that the output
-        will be written to `data_directory/label/simtel-data`.
+        will be written to data_directory/label/simtel-data.
     pack_for_grid_register (bool, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
-        The files are written to the `output_path/directory_for_grid_upload` directory.
+        The files are written to the output_path/directory_for_grid_upload directory.
     log_level (str, optional)
         Log level to print.
 
@@ -73,7 +73,7 @@
     The location of the latter directories can be set
     to a different location via the option --data_directory,
     but the label is always added to the data_directory, such that the output
-    will be written to `data_directory/label/simtel-data`.
+    will be written to data_directory/label/simtel-data.
 
     Expected final print-out message:
 
@@ -107,12 +107,12 @@ from simtools.simulator import Simulator
 
 def _parse(description=None):
     """
-    Parse the command line configuration.
+    Parse command line configuration
 
     Parameters
     ----------
     description: str
-        Description of the application.
+        Application description.
 
     Returns
     -------
@@ -130,6 +130,14 @@ def _parse(description=None):
         ),
         type=str,
         required=True,
+    )
+    config.parser.add_argument(
+        "--simulator",
+        help="Simulation software steps.",
+        type=str,
+        choices=["corsika", "simtel", "corsika_simtel"],
+        required=True,
+        default="corsika_simtel",
     )
     config.parser.add_argument(
         "--primary",
@@ -193,7 +201,7 @@ def _parse(description=None):
         help=(
             "The directory where to save the corsika-data and simtel-data output directories."
             "the label is added to the data_directory, such that the output"
-            "will be written to `data_directory/label/simtel-data`."
+            "will be written to data_directory/label/simtel-data."
         ),
         type=str.lower,
         required=False,
@@ -241,7 +249,7 @@ def main():
 
     simulator = Simulator(
         label=label,
-        simulator="corsika_simtel",
+        simulator=args_dict["simulator"],
         simulator_source_path=args_dict["simtel_path"],
         config_data=config_data,
         submit_command="local",
@@ -255,8 +263,8 @@ def main():
     logger.info(
         f"Production run is complete for primary {config_data['showers']['primary']} showers "
         f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
-        f"{config_data['common']['zenith']} at the {args_dict['site']} site,"
-        f"using the {args_dict['model_version']} telescope model."
+        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
+        f"using the {args_dict['model_version']} simulation model."
     )
 
     if args_dict["pack_for_grid_register"]:

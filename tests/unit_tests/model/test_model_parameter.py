@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 
 import pytest
@@ -31,7 +32,7 @@ def test_get_parameter_dict(telescope_model_lst):
 
 
 def test_get_parameter_value(telescope_model_lst):
-    tel_model = telescope_model_lst
+    tel_model = copy.deepcopy(telescope_model_lst)
     assert isinstance(tel_model.get_parameter_value("num_gains"), int)
 
     _par_dict_value_missing = {"unit": "m", "type": "float"}
@@ -148,7 +149,7 @@ def test_updating_export_model_files(db_config, io_handler):
     # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version="prod6",
         label="test-telescope-model-2",
         mongo_db_config=db_config,
@@ -193,7 +194,7 @@ def test_updating_export_model_files(db_config, io_handler):
 def test_export_derived_files(io_handler, db_config):
     tel_model = TelescopeModel(
         site="North",
-        telescope_model_name="LSTN-01",
+        telescope_name="LSTN-01",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-lst",

@@ -126,7 +126,7 @@ class SimtelConfigWriter:
             raise ValueError
         return parameters
 
-    def write_array_config_file(self, config_file_path, layout, telescope_model, site_model):
+    def write_array_config_file(self, config_file_path, telescope_model, site_model):
         """
         Writes the sim_telarray config file for an array of telescopes.
 
@@ -134,10 +134,8 @@ class SimtelConfigWriter:
         ----------
         config_file_path: str or Path
             Path of the file to write on.
-        layout: ArrayLayout
-            Instance of ArrayLayout referent to the array model.
-        telescope_model: list of TelescopeModel
-            List of TelescopeModel's instances as used by the ArrayModel instance.
+        telescope_model: dict of TelescopeModel
+            Dictionary of TelescopeModel's instances as used by the ArrayModel instance.
         site_model: Site model
             Site model.
         """
@@ -164,13 +162,15 @@ class SimtelConfigWriter:
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
 
             # Default telescope - 0th tel in telescope list
-            tel_config_file = telescope_model[0].get_config_file(no_export=True).name
+            # TODO check if this is correct - probably not!
+            _, first_telescope = next(iter(telescope_model.items()))
+            tel_config_file = first_telescope.get_config_file(no_export=True).name
             file.write(f"# include <{tel_config_file}>\n\n")
 
-            # Looping over telescopes - from 1 to ...
-            for count, tel_model in enumerate(telescope_model):
+            # Looping over telescopes
+            for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
                 tel_config_file = tel_model.get_config_file(no_export=True).name
-                file.write(f"%{layout[count].name}\n")
+                file.write(f"%{tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")
