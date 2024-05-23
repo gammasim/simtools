@@ -7,7 +7,6 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
 
 logger = logging.getLogger()
@@ -15,30 +14,9 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def array_config_data():
-    return {
-        "site": "North",
-        "layout_name": "1LST",
-        "model_version": "Prod5",
-        "default": {"LSTN": "1"},
-    }
-
-
-@pytest.fixture
-def array_model(array_config_data, io_handler, db_config, model_version):
-    array_model = ArrayModel(
-        label="test-lst-array",
-        array_config_data=array_config_data,
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-    return array_model
-
-
-@pytest.fixture
-def simtel_runner(array_model, simtel_path):
+def simtel_runner(array_model_north, simtel_path):
     simtel_runner = SimtelRunnerArray(
-        array_model=array_model,
+        array_model=array_model_north,
         simtel_source_path=simtel_path,
         config_data={
             "primary": "proton",
@@ -66,7 +44,7 @@ def test_get_info_for_file_name(simtel_runner):
     info_for_file_name = simtel_runner.get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
     assert info_for_file_name["primary"] == "proton"
-    assert info_for_file_name["array_name"] == "1LST"
+    assert info_for_file_name["array_name"] == "TestLayout"
     assert info_for_file_name["site"] == "North"
     assert info_for_file_name["zenith"] == pytest.approx(20)
     assert info_for_file_name["azimuth"] == pytest.approx(0)
@@ -75,7 +53,7 @@ def test_get_info_for_file_name(simtel_runner):
 
 def test_get_file_name(simtel_runner):
     info_for_file_name = simtel_runner.get_info_for_file_name(run_number=1)
-    file_name = "run000001_proton_za020deg_azm000deg_North_1LST_test-lst-array"
+    file_name = "run000001_proton_za020deg_azm000deg_North_TestLayout_test-lst-array"
     assert simtel_runner.get_file_name(
         "log", **info_for_file_name
     ) == simtel_runner._simtel_log_dir.joinpath(f"{file_name}.log.gz")
@@ -98,11 +76,11 @@ def test_get_file_name(simtel_runner):
 def test_has_file(simtel_runner, corsika_file):
     # Copying the corsika file to the expected location and
     # changing its name for the sake of this test.
-    # This should not affect the efficacy of this test.
+    # This should not affect the efficiency of this test.
     shutil.copy(
         corsika_file,
         simtel_runner._simtel_data_dir.joinpath(
-            "run000001_proton_za020deg_azm000deg_North_1LST_test-lst-array.simtel.zst"
+            "run000001_proton_za020deg_azm000deg_North_TestLayout_test-lst-array.simtel.zst"
         ),
     )
     assert simtel_runner.has_file(file_type="output", run_number=1)

@@ -32,12 +32,9 @@ def corsika_config_data():
 
 
 @pytest.fixture
-def corsika_config(io_handler, db_config, corsika_config_data, model_version):
+def corsika_config(io_handler, corsika_config_data, array_model_south):
     corsika_config = CorsikaConfig(
-        mongo_db_config=db_config,
-        model_version=model_version,
-        site="Paranal",
-        layout_name="4LST",
+        array_model=array_model_south,
         label="test-corsika-config",
         corsika_config_data=corsika_config_data,
     )
@@ -83,80 +80,65 @@ def test_export_input_file_multipipe(corsika_config):
         assert "TELFIL |" in f.read()
 
 
-def test_wrong_par_in_config_data(corsika_config, corsika_config_data, db_config, model_version):
+def test_wrong_par_in_config_data(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["wrong_par"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site="LaPalma",
-            layout_name="1LST",
+            array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_units_of_config_data(corsika_config, corsika_config_data, db_config, model_version):
+def test_units_of_config_data(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_units_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["zenith"] = 20 * u.m
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site="LaPalma",
-            layout_name="1LST",
+            array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_len_of_config_data(corsika_config, corsika_config_data, db_config, model_version):
+def test_len_of_config_data(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_len_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["erange"] = [20 * u.TeV]
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site="LaPalma",
-            layout_name="1LST",
+            array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_wrong_primary_name(corsika_config, corsika_config_data, db_config, model_version):
+def test_wrong_primary_name(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["primary"] = "rock"
     with pytest.raises(InvalidCorsikaInput):
         corsika_test_Config = CorsikaConfig(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site="LaPalma",
-            layout_name="1LST",
+            array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
         corsika_test_Config.print_user_parameters()
 
 
-def test_missing_input(corsika_config, corsika_config_data, db_config, model_version):
+def test_missing_input(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_missing_input")
     new_config_data = copy(corsika_config_data)
     new_config_data.pop("primary")
     with pytest.raises(MissingRequiredInputInCorsikaConfigData):
         corsika_test_Config = CorsikaConfig(
-            mongo_db_config=db_config,
-            model_version=model_version,
-            site="LaPalma",
-            layout_name="1LST",
+            array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
@@ -173,13 +155,10 @@ def test_set_user_parameters(corsika_config_data, corsika_config):
     assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
 
 
-def test_config_data_from_yaml_file(io_handler, db_config, model_version):
+def test_config_data_from_yaml_file(io_handler, array_model_south):
     logger.info("test_config_data_from_yaml_file")
     cc = CorsikaConfig(
-        mongo_db_config=db_config,
-        model_version=model_version,
-        site="Paranal",
-        layout_name="4LST",
+        array_model=array_model_south,
         label="test-corsika-config",
         corsika_config_file="tests/resources/corsikaConfigTest.yml",
     )
@@ -202,7 +181,7 @@ def test_config_data_from_yaml_file(io_handler, db_config, model_version):
 
 
 def test_get_file_name(corsika_config, io_handler):
-    file_name = "proton_South_4LST_za020-azm000deg_cone0-5_test-corsika-config"
+    file_name = "proton_South_TestLayout_za020-azm000deg_cone0-5_test-corsika-config"
 
     assert (
         corsika_config.get_file_name("config_tmp", run_number=1)
@@ -218,9 +197,9 @@ def test_get_file_name(corsika_config, io_handler):
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
     assert corsika_config.get_file_name("output_generic") == (
-        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_4LST_test-corsika-config.zst"
+        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_TestLayout_test-corsika-config.zst"
     )
-    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-4LST.cfg"
+    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-TestLayout.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
 

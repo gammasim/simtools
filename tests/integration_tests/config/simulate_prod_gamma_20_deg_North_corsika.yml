@@ -1,0 +1,21 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-simulate-prod
+  TEST_NAME: gamma_20_deg_corsika
+  CONFIGURATION:
+    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
+    SIMULATOR: corsika
+    MODEL_VERSION: prod6
+    SITE: North
+    PRIMARY: gamma
+    AZIMUTH_ANGLE: North
+    ZENITH_ANGLE: 20
+    START_RUN: 0
+    RUN: 2
+    NSHOW: 5
+    DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        test-production-North/corsika-data/North/gamma/data/run000002/corsika_run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.zst
+    - OUTPUT_FILE: |
+        test-production-North/corsika-data/North/gamma/data/run000002/run2.log
