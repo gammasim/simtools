@@ -35,10 +35,15 @@ def test_write_array_config_file(
     simtel_config_writer, layout, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):
     file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", dir_type="test")
+    telescope_model = {
+        "LSTN-01": telescope_model_lst,
+        "LSTN-02": telescope_model_lst,
+        "LSTN-03": telescope_model_lst,
+        "LSTN-04": telescope_model_lst,
+    }
     simtel_config_writer.write_array_config_file(
         config_file_path=file,
-        layout=layout,
-        telescope_model=[telescope_model_lst] * 4,
+        telescope_model=telescope_model,
         site_model=site_model_north,
     )
     assert file_has_text(file, "TELESCOPE == 1")

@@ -32,8 +32,8 @@ class ModelParameter:
         Version of the model (ex. prod5).
     site: str
         Site name (e.g., South or North).
-    telescope_model_name: str
-        Telescope model name (e.g., LSTN-01, LSTN-design).
+    telescope_name: str
+        Telescope name (e.g., LSTN-01, LSTN-design).
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
         as stored under collection in the DB.
@@ -49,7 +49,7 @@ class ModelParameter:
         mongo_db_config,
         model_version,
         site=None,
-        telescope_model_name=None,
+        telescope_name=None,
         collection="telescopes",
         db=None,
         label=None,
@@ -57,22 +57,28 @@ class ModelParameter:
         self._logger = logging.getLogger(__name__)
         self._extra_label = None
         self.io_handler = io_handler.IOHandler()
-        self.db = db
-        if mongo_db_config is not None:
-            self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
+        self.db = (
+            db if db is not None else db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
+        )
 
         self._parameters = {}
         self._config_parameters = {}
         self._derived = None
-        self.site = names.validate_site_name(site) if site is not None else None
-        self.name = (
-            names.validate_telescope_name(telescope_model_name)
-            if telescope_model_name is not None
-            else None
-        )
         self.collection = collection
         self.label = label
         self.model_version = names.validate_model_version_name(model_version)
+        self.site = names.validate_site_name(site) if site is not None else None
+        self.name = (
+            names.validate_telescope_name(
+                self.db.get_telescope_db_name(
+                    telescope_name=telescope_name,
+                    model_version=self.model_version,
+                    collection=self.collection,
+                )
+            )
+            if telescope_name is not None
+            else None
+        )
         self._config_file_directory = None
         self._config_file_path = None
         self._load_parameters_from_db()
@@ -174,7 +180,7 @@ class ModelParameter:
 
         """
         _parameter = self._get_parameter_dict(par_name)
-        _value = self.get_parameter_value(None, _parameter)
+        _value = self.get_parameter_value(par_name, _parameter)
         try:
             return _value * u.Unit(_parameter.get("unit"))
         except (KeyError, TypeError):
