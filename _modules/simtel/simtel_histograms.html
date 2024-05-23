@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+g45fb968 Manual</title>
+    <title>simtel.simtel_histograms &#8212; simtools v0.1.dev1+g9b80d07 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=4cef0321"></script>
+    <script src="../../_static/documentation_options.js?v=13cedb0d"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g45fb968 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b80d07 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -344,6 +344,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools</span> <span class="kn">import</span> <span class="n">version</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations.hdf5_handler</span> <span class="kn">import</span> <span class="n">fill_hdf5_table</span>
 <span class="kn">from</span> <span class="nn">simtools.simtel.simtel_histogram</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">HistogramIdNotFound</span><span class="p">,</span>
     <span class="n">InconsistentHistogramFormat</span><span class="p">,</span>
     <span class="n">SimtelHistogram</span><span class="p">,</span>
 <span class="p">)</span>
@@ -400,7 +401,7 @@ document.write(`
 
 <div class="viewcode-block" id="SimtelHistograms.calculate_trigger_rates">
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates">[docs]</a>
-    <span class="k">def</span> <span class="nf">calculate_trigger_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calculate_trigger_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_info</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stack_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the triggered and simulated event rate considering the histograms in each file.</span>
 <span class="sd">        It returns also a list with the tables where the energy dependent trigger rate for each</span>
@@ -411,6 +412,9 @@ document.write(`
 <span class="sd">        print_info: bool</span>
 <span class="sd">            if True, prints out the information about the histograms such as energy range, area,</span>
 <span class="sd">            etc.</span>
+<span class="sd">        stack_files: bool</span>
+<span class="sd">            if True, stack the histograms from the different files into single histograms.</span>
+<span class="sd">            Useful to increase event statistics when calculating the trigger rate.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -418,8 +422,163 @@ document.write(`
 <span class="sd">            The simulated event rates.</span>
 <span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
 <span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
 <span class="sd">        trigger_rate_in_tables: list of astropy.QTable</span>
 <span class="sd">            The energy dependent trigger rates.</span>
+<span class="sd">            Only filled if stack_files is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">stack_files</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">sim_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rates_for_stacked_files</span><span class="p">()</span>
+            <span class="n">trigger_rate_in_tables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">sim_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rates</span><span class="p">,</span>
+                <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+                <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rates_for_each_file</span><span class="p">(</span><span class="n">print_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">sim_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rates</span><span class="p">,</span>
+            <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
+            <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_fill_stacked_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function to retrieve the simulated and triggered event histograms from the stacked</span>
+<span class="sd">        histograms instead of individually.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        first_hist_file: dict</span>
+<span class="sd">            The simulated 2D event histogram.</span>
+<span class="sd">        second_hist_file: dict</span>
+<span class="sd">            The triggered 2D event histogram.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        HistogramIdNotFound:</span>
+<span class="sd">            if histogram ids not found. Problem with the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sim_hist</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">trig_hist</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">one_hist</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">one_hist</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">sim_hist</span> <span class="o">=</span> <span class="n">one_hist</span>
+            <span class="k">elif</span> <span class="n">one_hist</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">trig_hist</span> <span class="o">=</span> <span class="n">one_hist</span>
+
+        <span class="k">if</span> <span class="n">sim_hist</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">trig_hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Simulated and triggered histograms were not found in the stacked histograms.&quot;</span>
+                <span class="s2">&quot; Please check your simtel_array files!&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HistogramIdNotFound</span>
+
+        <span class="k">return</span> <span class="n">sim_hist</span><span class="p">,</span> <span class="n">trig_hist</span>
+
+<div class="viewcode-block" id="SimtelHistograms.get_stacked_num_events">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histograms.SimtelHistograms.get_stacked_num_events">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_stacked_num_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the stacked number of simulated events and triggered events.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int:</span>
+<span class="sd">            total number of simulated events for the stacked dataset.</span>
+<span class="sd">        int:</span>
+<span class="sd">            total number of triggered events for the stacked dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stacked_num_simulated_events</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">):</span>
+            <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelHistogram</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span>
+            <span class="p">)</span>
+            <span class="n">stacked_num_simulated_events</span> <span class="o">+=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_simulated_events</span>
+            <span class="n">stacked_num_triggered_events</span> <span class="o">+=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_triggered_events</span>
+        <span class="k">return</span> <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_rates_for_stacked_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function to calculate the trigger rate for the stacked case.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The simulated event rates.</span>
+<span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
+<span class="sd">        trigger_rate_in_tables: list of astropy.QTable</span>
+<span class="sd">            The energy dependent trigger rates.</span>
+<span class="sd">            Only filled if stack_files is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Estimates for the stacked histograms:&quot;</span><span class="p">)</span>
+        <span class="n">sim_hist</span><span class="p">,</span> <span class="n">trig_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_stacked_events</span><span class="p">()</span>
+        <span class="c1"># Using a dummy instance of SimtelHistogram to calculate the trigger rate for the</span>
+        <span class="c1"># stacked files</span>
+        <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelHistogram</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span>
+        <span class="p">)</span>
+
+        <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stacked_num_events</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total number of simulated events: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stacked_num_simulated_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Total number of triggered events: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stacked_num_triggered_events</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+        <span class="n">obs_time</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_observation_time</span><span class="p">(</span><span class="n">stacked_num_simulated_events</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Estimated equivalent observation time corresponding to the number of&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;events simulated: </span><span class="si">{</span><span class="n">obs_time</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> s&quot;</span>
+        <span class="p">)</span>
+        <span class="n">sim_event_rate</span> <span class="o">=</span> <span class="n">stacked_num_simulated_events</span> <span class="o">/</span> <span class="n">obs_time</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulated event rate: </span><span class="si">{</span><span class="n">sim_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span><span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">triggered_event_rate</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">compute_system_trigger_rate</span><span class="p">(</span>
+            <span class="n">events_histogram</span><span class="o">=</span><span class="n">sim_hist</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="n">trig_hist</span>
+        <span class="p">)</span>
+        <span class="n">triggered_event_rate_uncertainty</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
+            <span class="n">triggered_event_rate</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span>
+        <span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;System trigger event rate for stacked files: &quot;</span>
+            <span class="c1"># pylint: disable=E1101</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> </span><span class="se">\u00B1</span><span class="s2"> &quot;</span>
+            <span class="c1"># pylint: disable=E1101</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">triggered_event_rate_uncertainty</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2"> Hz&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">sim_event_rate</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">triggered_event_rate</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">triggered_event_rate_uncertainty</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_rates_for_each_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function to calculate the trigger rate for each file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sim_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The simulated event rates.</span>
+<span class="sd">        triggered_event_rates: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The triggered event rates.</span>
+<span class="sd">        triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</span>
+<span class="sd">            The uncertainties in the triggered event rates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">triggered_event_rates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sim_event_rates</span> <span class="o">=</span> <span class="p">[]</span>
@@ -442,7 +601,9 @@ document.write(`
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_triggered_events</span><span class="si">}</span><span class="s2"> events&quot;</span>
             <span class="p">)</span>
 
-            <span class="n">obs_time</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_observation_time</span><span class="p">()</span>
+            <span class="n">obs_time</span> <span class="o">=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">estimate_observation_time</span><span class="p">(</span>
+                <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_simulated_events</span>
+            <span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Estimated equivalent observation time corresponding to the number of &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;events simulated: </span><span class="si">{</span><span class="n">obs_time</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> s&quot;</span>
@@ -470,8 +631,7 @@ document.write(`
             <span class="n">triggered_event_rates</span><span class="p">,</span>
             <span class="n">triggered_event_rate_uncertainties</span><span class="p">,</span>
             <span class="n">trigger_rate_in_tables</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g45fb968 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g9b80d07 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=4cef0321"></script>
+    <script src="_static/documentation_options.js?v=13cedb0d"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g45fb968 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b80d07 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -450,6 +450,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.config</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.energy_range"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.energy_range</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.estimate_observation_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.estimate_trigger_rate_uncertainty()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.fill_event_histogram_dicts"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.fill_event_histogram_dicts()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.get_histogram_type_title"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.get_histogram_type_title()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.get_particle_distribution_function"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.get_particle_distribution_function()</span></code></a></li>
@@ -471,6 +472,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.calculate_trigger_rates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.combined_hists"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.combined_hists</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.export_histograms"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.export_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.get_stacked_num_events"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.get_stacked_num_events()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.list_of_histograms"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.list_of_histograms</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.number_of_files"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.number_of_files</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.plot_one_histogram"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.plot_one_histogram()</span></code></a></li>
@@ -849,8 +851,25 @@ the simulation configuration.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate">
-<span class="sig-name descname"><span class="pre">compute_system_trigger_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#SimtelHistogram.compute_system_trigger_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate" title="Link to this definition">#</a></dt>
-<dd><p>Compute the system trigger rate and its uncertainty, which are saved as class attributes.</p>
+<span class="sig-name descname"><span class="pre">compute_system_trigger_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">events_histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triggered_events_histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#SimtelHistogram.compute_system_trigger_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate" title="Link to this definition">#</a></dt>
+<dd><p>Compute the system trigger rate and its uncertainty, which are saved as class attributes.
+If events_histogram and triggered_events_histogram are passed, they are used to calculate
+the trigger rate and trigger rate uncertainty, instead of the histograms from the file.
+This is specially useful when calculating the trigger rate for stacked files, in which case
+one can pass the histograms resulted from stacking the files to this function.
+Default is filling from the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>events_histogram:</strong></dt><dd><p>A dictionary with “data” corresponding to a 2D histogram (core distance x energy)
+for the simulated events.</p>
+</dd>
+<dt><strong>triggered_events_histogram:</strong></dt><dd><p>A dictionary with “data” corresponding to a 2D histogram (core distance x energy)
+for the triggered events.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -883,14 +902,51 @@ the simulation configuration.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_histogram.SimtelHistogram.estimate_observation_time">
-<span class="sig-name descname"><span class="pre">estimate_observation_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#SimtelHistogram.estimate_observation_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">estimate_observation_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stacked_num_simulated_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#SimtelHistogram.estimate_observation_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time" title="Link to this definition">#</a></dt>
 <dd><p>Estimates the observation time corresponding to the simulated number of events.
 It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
-and other information from the simulation configuration self.config.</p>
+and other information from the simulation configuration self.config.
+If stacked_num_simulated_events is given, the observation time is estimated from it instead
+of from the simulation configuration (useful for the stacked trigger rate estimate).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>stacked_num_simulated_events: int</strong></dt><dd><p>total number of simulated events for the stacked dataset.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>astropy.Quantity[time]</dt><dd><p>Estimated observation time based on the total number of particles simulated.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty">
+<span class="sig-name descname"><span class="pre">estimate_trigger_rate_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trigger_rate_estimate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_simulated_events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_triggered_events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#SimtelHistogram.estimate_trigger_rate_uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the trigger rate uncertainty, based on the number of simulated and triggered
+events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation
+of the individual uncertainties.
+If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead
+of based on the total number of trigger events from the simulation configuration
+(useful for the stacked trigger rate estimate).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>trigger_rate_estimate: astropy.Quantity[1/time]</strong></dt><dd><p>The already estimated the trigger rate.</p>
+</dd>
+<dt><strong>num_simulated_events: int</strong></dt><dd><p>Total number of simulated events.</p>
+</dd>
+<dt><strong>num_triggered_events: int</strong></dt><dd><p>Total number of triggered events.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.Quantity[1/time]</dt><dd><p>Uncertainty in the trigger rate estimate.</p>
 </dd>
 </dl>
 </dd>
@@ -1124,7 +1180,7 @@ the simulation configuration.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates">
-<span class="sig-name descname"><span class="pre">calculate_trigger_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histograms.html#SimtelHistograms.calculate_trigger_rates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calculate_trigger_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histograms.html#SimtelHistograms.calculate_trigger_rates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the triggered and simulated event rate considering the histograms in each file.
 It returns also a list with the tables where the energy dependent trigger rate for each
 file can be found.</p>
@@ -1134,6 +1190,9 @@ file can be found.</p>
 <dt><strong>print_info: bool</strong></dt><dd><p>if True, prints out the information about the histograms such as energy range, area,
 etc.</p>
 </dd>
+<dt><strong>stack_files: bool</strong></dt><dd><p>if True, stack the histograms from the different files into single histograms.
+Useful to increase event statistics when calculating the trigger rate.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1142,7 +1201,10 @@ etc.</p>
 </dd>
 <dt>triggered_event_rates: list of astropy.Quantity[1/time]</dt><dd><p>The triggered event rates.</p>
 </dd>
-<dt>trigger_rate_in_tables: list of astropy.QTable</dt><dd><p>The energy dependent trigger rates.</p>
+<dt>triggered_event_rate_uncertainties: list of astropy.Quantity[1/time]</dt><dd><p>The uncertainties in the triggered event rates.</p>
+</dd>
+<dt>trigger_rate_in_tables: list of astropy.QTable</dt><dd><p>The energy dependent trigger rates.
+Only filled if stack_files is False.</p>
 </dd>
 </dl>
 </dd>
@@ -1166,6 +1228,22 @@ histogram list.</p>
 <dt><strong>hdf5_file_name: str</strong></dt><dd><p>Name of the file to be saved with the hdf5 tables.</p>
 </dd>
 <dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites the histograms already saved in the hdf5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_histograms.SimtelHistograms.get_stacked_num_events">
+<span class="sig-name descname"><span class="pre">get_stacked_num_events</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_histograms.html#SimtelHistograms.get_stacked_num_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histograms.SimtelHistograms.get_stacked_num_events" title="Link to this definition">#</a></dt>
+<dd><p>Returns the stacked number of simulated events and triggered events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int:</dt><dd><p>total number of simulated events for the stacked dataset.</p>
+</dd>
+<dt>int:</dt><dd><p>total number of triggered events for the stacked dataset.</p>
 </dd>
 </dl>
 </dd>
@@ -1614,6 +1692,7 @@ default: 1</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.config</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.energy_range"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.energy_range</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.estimate_observation_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.estimate_trigger_rate_uncertainty()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.fill_event_histogram_dicts"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.fill_event_histogram_dicts()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.get_histogram_type_title"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.get_histogram_type_title()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.get_particle_distribution_function"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.get_particle_distribution_function()</span></code></a></li>
@@ -1635,6 +1714,7 @@ default: 1</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.calculate_trigger_rates"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.calculate_trigger_rates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.combined_hists"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.combined_hists</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.export_histograms"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.export_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.get_stacked_num_events"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.get_stacked_num_events()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.list_of_histograms"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.list_of_histograms</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.number_of_files"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.number_of_files</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histograms.SimtelHistograms.plot_one_histogram"><code class="docutils literal notranslate"><span class="pre">SimtelHistograms.plot_one_histogram()</span></code></a></li>

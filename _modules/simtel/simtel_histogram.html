@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_histogram &#8212; simtools v0.1.dev1+g45fb968 Manual</title>
+    <title>simtel.simtel_histogram &#8212; simtools v0.1.dev1+g9b80d07 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=4cef0321"></script>
+    <script src="../../_static/documentation_options.js?v=13cedb0d"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g45fb968 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b80d07 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -672,14 +672,29 @@ document.write(`
 
 <div class="viewcode-block" id="SimtelHistogram.compute_system_trigger_rate">
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_system_trigger_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_system_trigger_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the system trigger rate and its uncertainty, which are saved as class attributes.</span>
+<span class="sd">        If events_histogram and triggered_events_histogram are passed, they are used to calculate</span>
+<span class="sd">        the trigger rate and trigger rate uncertainty, instead of the histograms from the file.</span>
+<span class="sd">        This is specially useful when calculating the trigger rate for stacked files, in which case</span>
+<span class="sd">        one can pass the histograms resulted from stacking the files to this function.</span>
+<span class="sd">        Default is filling from the file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        events_histogram:</span>
+<span class="sd">            A dictionary with &quot;data&quot; corresponding to a 2D histogram (core distance x energy)</span>
+<span class="sd">            for the simulated events.</span>
+<span class="sd">        triggered_events_histogram:</span>
+<span class="sd">            A dictionary with &quot;data&quot; corresponding to a 2D histogram (core distance x energy)</span>
+<span class="sd">            for the triggered events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Get the simulated and triggered 2D histograms from the simtel_array output file</span>
-            <span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">events_histogram</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">triggered_events_histogram</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
 
             <span class="c1"># Calculate triggered/simulated event 1D histogram (energy dependent)</span>
             <span class="n">triggered_to_sim_fraction_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span>
@@ -710,7 +725,11 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_per_energy_bin</span><span class="p">)</span>
 
             <span class="c1"># Derive the uncertainty in the system trigger rate estimate</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_uncertainty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_trigger_rate_uncertainty</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_uncertainty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">triggered_events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]),</span>
+            <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_uncertainty</span></div>
 
@@ -858,11 +877,18 @@ document.write(`
 
 <div class="viewcode-block" id="SimtelHistogram.estimate_observation_time">
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time">[docs]</a>
-    <span class="k">def</span> <span class="nf">estimate_observation_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">estimate_observation_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimates the observation time corresponding to the simulated number of events.</span>
 <span class="sd">        It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,</span>
 <span class="sd">        and other information from the simulation configuration self.config.</span>
+<span class="sd">        If stacked_num_simulated_events is given, the observation time is estimated from it instead</span>
+<span class="sd">        of from the simulation configuration (useful for the stacked trigger rate estimate).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stacked_num_simulated_events: int</span>
+<span class="sd">            total number of simulated events for the stacked dataset.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -877,15 +903,32 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
         <span class="p">)</span>
-        <span class="n">obs_time</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_num_simulated_events</span> <span class="o">/</span> <span class="n">first_estimate</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
-        <span class="k">return</span> <span class="n">obs_time</span></div>
+        <span class="k">if</span> <span class="n">stacked_num_simulated_events</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_num_simulated_events</span> <span class="o">/</span> <span class="n">first_estimate</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">stacked_num_simulated_events</span> <span class="o">/</span> <span class="n">first_estimate</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_estimate_trigger_rate_uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelHistogram.estimate_trigger_rate_uncertainty">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty">[docs]</a>
+    <span class="k">def</span> <span class="nf">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">trigger_rate_estimate</span><span class="p">,</span> <span class="n">num_simulated_events</span><span class="p">,</span> <span class="n">num_triggered_events</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the trigger rate uncertainty, based on the number of simulated and triggered</span>
 <span class="sd">        events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation</span>
 <span class="sd">        of the individual uncertainties.</span>
+<span class="sd">        If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead</span>
+<span class="sd">        of based on the total number of trigger events from the simulation configuration</span>
+<span class="sd">        (useful for the stacked trigger rate estimate).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trigger_rate_estimate: astropy.Quantity[1/time]</span>
+<span class="sd">            The already estimated the trigger rate.</span>
+<span class="sd">        num_simulated_events: int</span>
+<span class="sd">            Total number of simulated events.</span>
+<span class="sd">        num_triggered_events: int</span>
+<span class="sd">            Total number of triggered events.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -894,9 +937,10 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=E1101</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span><span class="o">.</span><span class="n">value</span>
-            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_num_triggered_events</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_num_simulated_events</span><span class="p">)</span>
-        <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span><span class="o">.</span><span class="n">unit</span>
+            <span class="n">trigger_rate_estimate</span><span class="o">.</span><span class="n">value</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">num_triggered_events</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">num_simulated_events</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">trigger_rate_estimate</span><span class="o">.</span><span class="n">unit</span></div>
+
 
 <div class="viewcode-block" id="SimtelHistogram.print_info">
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.print_info">[docs]</a>
