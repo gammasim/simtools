@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -W -v
+SPHINXOPTS    = -W -v --keep-going -n --color
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = simtools
 SOURCEDIR     = source

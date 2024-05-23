@@ -14,7 +14,7 @@ Before issuing a pull request
 
 - changes and new features shall be discussed with the team before implementation
 - all tests shall pass
-- no conflicts with 'main' (best to do a `merge main` before the pull request)
+- no conflicts with 'main' (best to do a ``merge main`` before the pull request)
 - self-review the changes made (e.g., by using the draft pull request feature)
 
 Issuing a pull request
