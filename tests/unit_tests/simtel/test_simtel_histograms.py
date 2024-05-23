@@ -198,7 +198,7 @@ def test_combine_histogram_files(simtel_array_histograms_file, caplog):
         assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 
-def test_plot_one_histogram(simtel_array_histograms_instance_file_list):
+def test_plot_one_histogram(simtel_array_histograms_instance):
     fig, ax = plt.subplots()
     simtel_array_histograms_instance.plot_one_histogram(0, ax)
     quadmesh = ax.collections[0]
