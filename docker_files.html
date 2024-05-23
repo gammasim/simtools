@@ -1,0 +1,687 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Containers (docker files) &#8212; simtools v0.1.dev1+g45fb968 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=4cef0321"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docker_files';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Guidelines" href="developer_guidelines.html" />
+    <link rel="prev" title="Simulation Software" href="simulation_software.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+  <div class="bd-header-announcement container-fluid bd-header-announcement">
+    <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+  </div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+g45fb968 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Containers (docker files)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/docker_files.md?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdocker_files.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/docker_files.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Containers (docker files)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users">Container for simtools users</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers">Container for simtools developers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-container-using-the-prepared-docker-image-available-from-repository">Run a container using the prepared Docker image available from repository</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-developers-container-locally">Build a new developers container locally</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-corsika-and-simtelarray">Container for CORSIKA and simtelarray</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-from-simtools-container-repository">Download from simtools container repository</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-container-locally">Build a new container locally</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="containers-docker-files">
+<h1>Containers (docker files)<a class="headerlink" href="#containers-docker-files" title="Link to this heading">#</a></h1>
+<p>Docker files are available for <a class="reference external" href="https://github.com/gammasim/simtools">simtools</a> for both development and applications. Pre-built container images are available through the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>.</p>
+<p><a class="reference external" href="https://www.docker.com/community-edition#/download">Docker</a> or any compatible software (e.g., <a class="reference external" href="https://podman.io/">podman</a>, <a class="reference external" href="https://apptainer.org/">apptainer</a>) are required to run or build these images.</p>
+<p>Types of docker files and containers available:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#container-for-simtools-users">simtools users</a>: a container with all software installed (CORSIKA, sim_telarray, simtools python environment, simtools). Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code></p></li>
+<li><p><a class="reference internal" href="#container-for-simtools-developers">simtools developers</a>: a container with CORSIKA, sim_telarray, and simtools conda environment installed. Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span></code></p></li>
+<li><p><a class="reference internal" href="#container-for-corsika-and-simtelarray">CORSIKA and sim_telarray</a>: provides containers with the CORSIKA and sim_telarray installed (for different sim_telarray version, hadronic interaction models, CTAO MC productions).
+This provides a base image for the previously listed containers.</p></li>
+</ul>
+<p>See the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools container repository</a> for image prepared for different versions of the simulation software.</p>
+<section id="simtools-package-registry">
+<h2>Simtools package registry<a class="headerlink" href="#simtools-package-registry" title="Link to this heading">#</a></h2>
+<p>Pre-built container images are available through the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>.</p>
+<p>Follow the <a class="reference external" href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry">instruction</a> (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span></code>) to authenticate with the GitHub package registry before pulling the first image.</p>
+<p>Note: if the docker image already exists in your system, this same image will be used to run the container. This might especially be an issue when using the <code class="docutils literal notranslate"><span class="pre">latest</span></code> tag, which might not be the latest version available in the registry. To force a pull of the latest image, use the <code class="docutils literal notranslate"><span class="pre">--pull</span></code> option, e.g.:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--pull<span class="w"> </span>always<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span>bash
+</pre></div>
+</div>
+<p>Alternatively, delete the image first and pull the latest version from the registry.</p>
+</section>
+<section id="container-for-simtools-users">
+<h2>Container for simtools users<a class="headerlink" href="#container-for-simtools-users" title="Link to this heading">#</a></h2>
+<p>Provides a container for simtools users, which includes:</p>
+<ul class="simple">
+<li><p>corsika and sim_telarray</p></li>
+<li><p>packages required by simtools</p></li>
+<li><p>simtools (main branch)</p></li>
+</ul>
+<section id="run-a-simtools-prod-container">
+<h3>Run a simtools-prod container<a class="headerlink" href="#run-a-simtools-prod-container" title="Link to this heading">#</a></h3>
+<p>Prerequisite: configure the simulation model database access (see simtools documentation) similar to the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">template example</a>.</p>
+<p>To startup a container to use bash</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span>bash
+</pre></div>
+</div>
+<p>In the container, simtools applications are installed and can be called directly (e.g., <code class="docutils literal notranslate"><span class="pre">simtools-print-array-elements</span> <span class="pre">-h</span></code>).
+This example uses the docker syntax to mount your local directory for file access.</p>
+<p>The following example runs an application inside the container and writes the output into a directory of the local files system,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>simtools-print-array-elements<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--array_element_list<span class="w"> </span>./simtools/tests/resources/telescope_positions-North-utm.ecsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--export<span class="w"> </span>corsika<span class="w"> </span>--use_corsika_telescope_height<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output_path<span class="w"> </span>/workdir/external/
+</pre></div>
+</div>
+<p>Output files can be found <code class="docutils literal notranslate"><span class="pre">./simtools-output/</span></code>.</p>
+</section>
+<section id="building-a-simtools-prod-container">
+<h3>Building a simtools-prod container<a class="headerlink" href="#building-a-simtools-prod-container" title="Link to this heading">#</a></h3>
+<p>To build a new container locally run in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">docker</a> directory::</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-prod<span class="w">  </span>-t<span class="w"> </span>simtools-prod<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Building will take a while and the image is large (~2.1 GB). For using images build on your own, replace in all examples <code class="docutils literal notranslate"><span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code> by the local image name <code class="docutils literal notranslate"><span class="pre">simtools-prod</span></code>.</p>
+</section>
+</section>
+<section id="container-for-simtools-developers">
+<h2>Container for simtools developers<a class="headerlink" href="#container-for-simtools-developers" title="Link to this heading">#</a></h2>
+<p>Provide a container for testing and development of simtools, including:</p>
+<ul class="simple">
+<li><p>CORSIKA and sim_telarray</p></li>
+<li><p>packages required by simtools</p></li>
+</ul>
+<p>The container does not include the simtools code, which should be cloned in a separate directory (see below).</p>
+<section id="run-a-container-using-the-prepared-docker-image-available-from-repository">
+<h3>Run a container using the prepared Docker image available from repository<a class="headerlink" href="#run-a-container-using-the-prepared-docker-image-available-from-repository" title="Link to this heading">#</a></h3>
+<p>Packages are available from the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools container repository</a>.</p>
+<p><strong>Preparation:</strong></p>
+<p>Create a new directory for your development and clone simtools into a subdirectory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>simtools-dev<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>simtools-dev
+git<span class="w"> </span>clone<span class="w"> </span>git@github.com:gammasim/simtools.git
+</pre></div>
+</div>
+<p>To download and run a prepared container with bash:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/:/workdir/external&quot;</span><span class="w"> </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;source /workdir/env/bin/activate &amp;&amp; cd /workdir/external/simtools &amp;&amp; pip install -e . &amp;&amp; bash&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="build-a-new-developers-container-locally">
+<h3>Build a new developers container locally<a class="headerlink" href="#build-a-new-developers-container-locally" title="Link to this heading">#</a></h3>
+<p>To build a new container locally run in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">docker</a> directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-dev<span class="w"> </span>-t<span class="w"> </span>simtools-dev<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Use the docker container in the same way as above, replacing <code class="docutils literal notranslate"><span class="pre">ghcr.io/gammasim/simtools-dev:latest</span></code> by <code class="docutils literal notranslate"><span class="pre">simtools-dev</span></code>.</p>
+<p>Containers can be built using different build arguments, e.g.,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-simtelarray<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--build-arg<span class="o">=</span><span class="s2">&quot;BUILD_OPT=prod5&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-t<span class="w"> </span>simtel-docker-dev<span class="w"> </span>.
+</pre></div>
+</div>
+<p>See the docker files for all available build arguments.</p>
+</section>
+</section>
+<section id="container-for-corsika-and-simtelarray">
+<h2>Container for CORSIKA and simtelarray<a class="headerlink" href="#container-for-corsika-and-simtelarray" title="Link to this heading">#</a></h2>
+<p>This provides a container including the CORSIKA and sim_telarray simulation software packages.</p>
+<section id="download-from-simtools-container-repository">
+<h3>Download from simtools container repository<a class="headerlink" href="#download-from-simtools-container-repository" title="Link to this heading">#</a></h3>
+<p>Packages are available from the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools container repository</a> for different options (e.g., sim_telarray versions, hadronic interaction models, CTA MC productions).</p>
+<p>To download and run a prepared container in bash using e.g., a container for prod6:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>ghcr.io/gammasim/simtools-corsika-sim-telarray-qgs2-prod6-baseline-240318:latest<span class="w"> </span><span class="se">\</span>
+<span class="w"> </span>bash
+</pre></div>
+</div>
+</section>
+</section>
+<section id="build-a-new-container-locally">
+<h2>Build a new container locally<a class="headerlink" href="#build-a-new-container-locally" title="Link to this heading">#</a></h2>
+<p>To build a new container locally run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-simtelarray<span class="w">  </span>-t<span class="w"> </span>simtelarray<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Building expects that a tar ball of corsika/sim_telarray (named corsika7.7_simtelarray.tar.gz) is available in the building directory.
+Download the tar package from MPIK (password applies) with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./download_simulationsoftware.sh
+</pre></div>
+</div>
+<p>Run the newly build container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span>simtelarray<span class="w"> </span>bash
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="simulation_software.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Simulation Software</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="developer_guidelines.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Developer Guidelines</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users">Container for simtools users</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers">Container for simtools developers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-container-using-the-prepared-docker-image-available-from-repository">Run a container using the prepared Docker image available from repository</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-developers-container-locally">Build a new developers container locally</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-corsika-and-simtelarray">Container for CORSIKA and simtelarray</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-from-simtools-container-repository">Download from simtools container repository</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-container-locally">Build a new container locally</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
