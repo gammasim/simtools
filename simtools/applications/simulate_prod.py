@@ -50,10 +50,10 @@
     data_directory (str, optional)
         The location of the output directories corsika-data and simtel-data.
         the label is added to the data_directory, such that the output
-        will be written to `data_directory/label/simtel-data`.
+        will be written to data_directory/label/simtel-data.
     pack_for_grid_register (bool, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
-        The files are written to the `output_path/directory_for_grid_upload` directory.
+        The files are written to the output_path/directory_for_grid_upload directory.
     log_level (str, optional)
         Log level to print.
 
@@ -73,7 +73,7 @@
     The location of the latter directories can be set
     to a different location via the option --data_directory,
     but the label is always added to the data_directory, such that the output
-    will be written to `data_directory/label/simtel-data`.
+    will be written to data_directory/label/simtel-data.
 
     Expected final print-out message:
 
@@ -201,7 +201,7 @@ def _parse(description=None):
         help=(
             "The directory where to save the corsika-data and simtel-data output directories."
             "the label is added to the data_directory, such that the output"
-            "will be written to `data_directory/label/simtel-data`."
+            "will be written to data_directory/label/simtel-data."
         ),
         type=str.lower,
         required=False,

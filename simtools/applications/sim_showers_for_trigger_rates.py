@@ -35,7 +35,7 @@
     data_directory (str, optional)
         The location of the output directories corsika-data.
         the label is added to the data_directory, such that the output
-        will be written to `data_directory/label/corsika-data`.
+        will be written to data_directory/label/corsika-data.
     test (activation mode, optional)
         If activated, no job will be submitted. Instead, an example of the \
         run script will be printed.
@@ -115,7 +115,7 @@ def _parse(label=None, description=None):
         help=(
             "The directory where to save the corsika-data output directories."
             "the label is added to the data_directory, such that the output"
-            "will be written to `data_directory/label/corsika-data`."
+            "will be written to data_directory/label/corsika-data."
         ),
         type=str.lower,
         required=False,
