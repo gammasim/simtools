@@ -1,14 +1,14 @@
-.. _simulators:
+(simulators)=
 
-Simulator
-=========
+# Simulator
 
 Base modules for calling external simulation software.
 
-simulator
----------
+## simulator
 
-.. _simulatormodule:
+(simulatormodule)=
 
+```{eval-rst}
 .. automodule:: simulator
    :members:
+```

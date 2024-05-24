@@ -1,7 +1,6 @@
-.. _pull_requests:
+(pull-requests)=
 
-Pull requests
-*************
+# Pull requests
 
 Pull requests are one of our most important and powerful development tools.
 They help to obtain good quality, homogeneous, and maintainable code.
@@ -9,16 +8,14 @@ They help to obtain good quality, homogeneous, and maintainable code.
 Both reviewing pull requests and addressing reviewers' comments is hard.
 The following thoughts might help to obtain an efficient and pleasant reviewing process.
 
-Before issuing a pull request
------------------------------
+## Before issuing a pull request
 
 - changes and new features shall be discussed with the team before implementation
 - all tests shall pass
-- no conflicts with 'main' (best to do a ``merge main`` before the pull request)
+- no conflicts with 'main' (best to do a `merge main` before the pull request)
 - self-review the changes made (e.g., by using the draft pull request feature)
 
-Issuing a pull request
-----------------------
+## Issuing a pull request
 
 - describe clearly the problem or issue solved by the pull request; do not assume full familiarity of the reviewer with the issue
 - indicate if this a new feature, refactoring, or bug fix
@@ -29,9 +26,7 @@ Issuing a pull request
 - pull request should focus on one problem and should be short (even though it is easier to make big ones)
 - if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue
 
-
-Reviewing a pull request
-------------------------
+## Reviewing a pull request
 
 - seek to understand the purpose of the pull request; reach out to the author before reviewing if it is not clear which problem will be solved
 - if you reject the pull request or if you think another approach might be more efficient, request immediately (not after many other patches are implemented); if there is a major issue, focus on that first and indicate that detailed comments will come at a later point

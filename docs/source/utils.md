@@ -1,35 +1,37 @@
-.. _Utilities:
+(utilities)=
 
-Utilities
-=========
+# Utilities
 
 In this section you find the reference documentation of the modules contained in
 the util module.
 
-* :ref:`general <utilsgeneral>`
-* :ref:`names <utilsnames>`
+- {ref}`general <utilsgeneral>`
+- {ref}`names <utilsnames>`
 
-.. _utilsgeneral:
+(utilsgeneral)=
 
-general
--------
+## general
 
+```{eval-rst}
 .. automodule:: utils.general
    :members:
 
+```
 
-.. _utilsgeometry:
+(utilsgeometry)=
 
-geometry
---------
+## geometry
 
+```{eval-rst}
 .. automodule:: utils.geometry
    :members:
+```
 
-.. _utilsnames:
+(utilsnames)=
 
-names
------
+## names
 
+```{eval-rst}
 .. automodule:: utils.names
    :members:
+```

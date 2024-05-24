@@ -1,22 +1,23 @@
-.. _ConfigurationModule:
+(configurationmodule)=
 
-Configuration
-=============
+# Configuration
 
 Reference documentation for the configuration of simtools applications.
 
-.. _configurationconfigurator:
+(configurationconfigurator)=
 
-configurator
-------------
+## configurator
 
+```{eval-rst}
 .. automodule:: configuration.configurator
    :members:
+```
 
-.. _configurationcommandline_parser:
+(configurationcommandline-parser)=
 
-commandline_parser
-------------------
+## commandline_parser
 
+```{eval-rst}
 .. automodule:: configuration.commandline_parser
    :members:
+```
