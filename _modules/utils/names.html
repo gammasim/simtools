@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g9b80d07 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g70a45ec Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=13cedb0d"></script>
+    <script src="../../_static/documentation_options.js?v=8b8f2063"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9b80d07 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g70a45ec Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -374,10 +374,23 @@ document.write(`
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
 
 
-<span class="n">site_names</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;South&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;paranal&quot;</span><span class="p">,</span> <span class="s2">&quot;south&quot;</span><span class="p">,</span> <span class="s2">&quot;cta-south&quot;</span><span class="p">,</span> <span class="s2">&quot;ctao-south&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;North&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lapalma&quot;</span><span class="p">,</span> <span class="s2">&quot;north&quot;</span><span class="p">,</span> <span class="s2">&quot;cta-north&quot;</span><span class="p">,</span> <span class="s2">&quot;ctao-north&quot;</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">],</span>
-<span class="p">}</span>
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">site_names</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Site names from reference file.</span>
+
+<span class="sd">    The list of sites is derived from the sites listed in the model parameter</span>
+<span class="sd">    schema files. Return a dictionary for compatibility with the validation routines.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Site names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_array_elements</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">()</span>
+    <span class="n">_sites</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">_sites</span><span class="p">}</span>
+
 
 <span class="n">all_model_version_names</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;2015-07-21&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
@@ -510,7 +523,7 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Validated name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">site_names</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">site_names</span><span class="p">())</span></div>
 
 
 
