@@ -1,36 +1,52 @@
-# Docker files for simtools
+# Containers (docker files)
 
-Docker files for [simtools](https://github.com/gammasim/simtools) development and applications. Prepared packages are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+Docker files are available for [simtools](https://github.com/gammasim/simtools) for both development and applications. Pre-built container images are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
-[Docker](https://www.docker.com/community-edition#/download) or any compatible software are required to run or build these images.
+[Docker](https://www.docker.com/community-edition#/download) or any compatible software (e.g., [podman](https://podman.io/), [apptainer](https://apptainer.org/)) are required to run or build these images.
 
-Types of dockerfiles and containers available:
+Types of docker files and containers available:
 
 - [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull latest release with: `docker pull ghcr.io/gammasim/simtools-prod:latest`
 - [simtools developers](#container-for-simtools-developers): a container with CORSIKA, sim\_telarray, and simtools conda environment installed. Pull latest release with: `docker pull ghcr.io/gammasim/simtools-dev:latest`
 - [CORSIKA and sim_telarray](#container-for-corsika-and-simtelarray): provides containers with the CORSIKA and sim\_telarray installed (for different sim\_telarray version, hadronic interaction models, CTAO MC productions).
-This provides base images for the previously listed containers. See the [simtools container repository](https://github.com/orgs/gammasim/packages?repo_name=simtools) for different available containers.
+This provides a base image for the previously listed containers.
+
+See the [simtools container repository](https://github.com/orgs/gammasim/packages?repo_name=simtools) for image prepared for different versions of the simulation software.
+
+## Simtools package registry
+
+Pre-built container images are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+
+Follow the [instruction](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`docker login`) to authenticate with the GitHub package registry before pulling the first image.
+
+Note: if the docker image already exists in your system, this same image will be used to run the container. This might especially be an issue when using the `latest` tag, which might not be the latest version available in the registry. To force a pull of the latest image, use the `--pull` option, e.g.:
+
+```bash
+docker run --pull always --rm -it ghcr.io/gammasim/simtools-prod:latest bash
+```
+
+Alternatively, delete the image first and pull the latest version from the registry.
 
 ## Container for simtools users
 
-Provide a container for simtools users, which includes:
+Provides a container for simtools users, which includes:
 
 - corsika and sim\_telarray
-- packages required by simtools (from pyproject.toml)
+- packages required by simtools
 - simtools (main branch)
 
 ### Run a simtools-prod container
 
-Prepare a file for the simulation model database access (see simtools documentation) similar to the [template example](https://github.com/gammasim/simtools/blob/main/.env_template) provided with simtools.
+Prerequisite: configure the simulation model database access (see simtools documentation) similar to the [template example](https://github.com/gammasim/simtools/blob/main/.env_template).
 
-To run the container in bash
+To startup a container to use bash
 
 ```bash
 docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-print-array-elements -h`).
-This example uses the docker syntax to mount your local directory.
+This example uses the docker syntax to mount your local directory for file access.
 
 The following example runs an application inside the container and writes the output into a directory of the local files system,
 
@@ -48,20 +64,20 @@ Output files can be found `./simtools-output/`.
 
 ### Building a simtools-prod container
 
-To build a new container locally run in the [simtools/docker](simtools/docker) directory::
+To build a new container locally run in the [docker](https://github.com/gammasim/simtools/tree/main/docker) directory::
 
 ```bash
 docker build -f Dockerfile-prod  -t simtools-prod .
 ```
 
-Building will take a while and the image is large (~1.4 GB). For using images build on your own, replace in all examples `ghcr.io/gammasim/simtools-prod:latest` by the local image name `simtools-prod`.
+Building will take a while and the image is large (~2.1 GB). For using images build on your own, replace in all examples `ghcr.io/gammasim/simtools-prod:latest` by the local image name `simtools-prod`.
 
 ## Container for simtools developers
 
 Provide a container for testing and development of simtools, including:
 
 - CORSIKA and sim\_telarray
-- packages required by simtools (from pyproject.toml)
+- packages required by simtools
 
 The container does not include the simtools code, which should be cloned in a separate directory (see below).
 
@@ -78,25 +94,15 @@ mkdir -p simtools-dev && cd simtools-dev
 git clone git@github.com:gammasim/simtools.git
 ```
 
-To download and run a prepared container in bash:
+To download and run a prepared container with bash:
 
 ```bash
 docker run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
 
-Remember you need to `docker login` to the GitHub package repository with a personal token in order to download an image (follow [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)).
-
-Note: if the docker image already exists in your system, this same image will be used to run the container. Please make sure to update the image regularly by, e.g., removing it **before** running the command above. This can be done by passing the docker id:
-
-```bash
-docker rmi <image ID>
-```
-
-For further useful docker commands, please check [the docker documentation](https://docs.docker.com/reference/cli/docker/).
-
 ### Build a new developers container locally
 
-To build a new container locally run in the [simtools/docker](simtools/docker) directory:
+To build a new container locally run in the [docker](https://github.com/gammasim/simtools/tree/main/docker) directory:
 
 ```bash
 docker build -f Dockerfile-dev -t simtools-dev .
@@ -107,14 +113,16 @@ Use the docker container in the same way as above, replacing `ghcr.io/gammasim/s
 Containers can be built using different build arguments, e.g.,
 
 ```bash
-docker build -f Dockerfile-simtelarray --build-arg="BUILD_OPT=prod5" -t simtel-docker-dev .
+docker build -f Dockerfile-simtelarray \
+  --build-arg="BUILD_OPT=prod5" \
+  -t simtel-docker-dev .
 ```
 
 See the docker files for all available build arguments.
 
 ## Container for CORSIKA and simtelarray
 
-Provide a container including the following the CORSIKA and sim\_telarray simulation software packages.
+This provides a container including the CORSIKA and sim\_telarray simulation software packages.
 
 ### Download from simtools container repository
 
@@ -123,7 +131,10 @@ Packages are available from the [simtools container repository](https://github.c
 To download and run a prepared container in bash using e.g., a container for prod6:
 
 ```bash
-docker run --rm -it -v "$(pwd)/external:/workdir/external" ghcr.io/gammasim/simtools-corsika-sim-telarray-qgs2-prod6-baseline-240318:latest bash
+docker run --rm -it \
+ -v "$(pwd)/external:/workdir/external" \
+ ghcr.io/gammasim/simtools-corsika-sim-telarray-qgs2-prod6-baseline-240318:latest \
+ bash
 ```
 
 ## Build a new container locally

@@ -560,7 +560,7 @@ def test_collect_data_from_http():
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
 
-    file = "tests/resources/simtel_histograms_file_list.txt"
+    file = "tests/resources/simtel_output_files.txt"
     with pytest.raises(InvalidConfigData):
         data = gen.collect_data_from_http(url + file)
 
