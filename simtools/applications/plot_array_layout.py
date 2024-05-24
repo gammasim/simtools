@@ -180,7 +180,7 @@ def main():
             if args_dict["figure_name"] is None:
                 plot_file_name = (
                     f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
-                    f"{str((round((one_angle.to(u.deg).value))))}deg"
+                    f"{str(round(one_angle.to(u.deg).value))}deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]

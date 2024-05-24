@@ -525,7 +525,7 @@ class DataValidator:
         try:
             if not self._interval_check(
                 (col_min, col_max),
-                (_entry[range_type].get("min", np.NINF), _entry[range_type].get("max", np.Inf)),
+                (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
                 range_type,
             ):
                 raise ValueError
@@ -533,8 +533,8 @@ class DataValidator:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
-                f"[{_entry[range_type].get('min', np.NINF)}, "
-                f"{_entry[range_type].get('max', np.Inf)}])"
+                f"[{_entry[range_type].get('min', -np.inf)}, "
+                f"{_entry[range_type].get('max', np.inf)}])"
             )
             raise
 
