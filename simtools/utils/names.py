@@ -44,8 +44,8 @@ def site_names():
     """
     Site names from reference file.
 
-    The list of sites is derived from location of available array elements
-    Return a dictionary for compatibility with the validation routines.
+    The list of sites is derived from the sites listed in the model parameter
+    schema files. Return a dictionary for compatibility with the validation routines.
 
     Returns
     -------
