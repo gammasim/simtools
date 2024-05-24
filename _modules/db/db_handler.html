@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+g70a45ec Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g6fa26d0 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=8b8f2063"></script>
+    <script src="../../_static/documentation_options.js?v=1a8e8dcc"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g70a45ec Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6fa26d0 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -384,6 +384,7 @@ document.write(`
     <span class="n">db_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">site_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">model_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">model_versions_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">sim_telarray_configuration_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -402,6 +403,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_available_array_elements</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
 
@@ -637,7 +639,7 @@ document.write(`
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">telescope_model_name</span><span class="p">,</span>
-            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">),</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">only_applicable</span><span class="p">:</span>
@@ -861,7 +863,7 @@ document.write(`
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">),</span>
             <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">telescope_model_name</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">model_version</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
@@ -970,7 +972,7 @@ document.write(`
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
         <span class="n">db_entries</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">_version_to_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">version_to_copy</span><span class="p">)</span>
+        <span class="n">_version_to_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">version_to_copy</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">tel_to_copy</span><span class="p">,</span>
@@ -1073,7 +1075,7 @@ document.write(`
         <span class="n">_collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
-            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">query</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
+            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">query</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleting </span><span class="si">{</span><span class="n">_collection</span><span class="o">.</span><span class="n">count_documents</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2"> entries from </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1134,7 +1136,7 @@ document.write(`
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The field </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">allowed_fields</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
-        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">_model_version</span><span class="p">,</span>
@@ -1284,24 +1286,14 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Will also add the file </span><span class="si">{</span><span class="n">file_to_insert_now</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">file_to_insert_now</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameter_cache</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameter_cache</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span></div>
 
-
-    <span class="k">def</span> <span class="nf">_convert_version_to_tagged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to tagged version, if needed.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span> <span class="s2">&quot;Latest&quot;</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tagged_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">model_version</span>
 
 <div class="viewcode-block" id="DatabaseHandler.add_tagged_version">
 <a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.add_tagged_version">[docs]</a>
     <span class="k">def</span> <span class="nf">add_tagged_version</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">released_version</span><span class="p">,</span>
-        <span class="n">released_label</span><span class="p">,</span>
-        <span class="n">latest_version</span><span class="p">,</span>
-        <span class="n">latest_label</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">,</span>
         <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1311,26 +1303,15 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        released_version: str</span>
 <span class="sd">            The version name to set as &quot;Released&quot;</span>
-<span class="sd">        released_label: str</span>
-<span class="sd">            The released version name as label.</span>
-<span class="sd">        latest_version: str</span>
-<span class="sd">            The version name to set as &quot;Latest&quot;</span>
-<span class="sd">        latest_label: str</span>
-<span class="sd">            The latest version name as label.</span>
+<span class="sd">        tags: dict</span>
+<span class="sd">            The version tags consisting of tag name and version name.</span>
 <span class="sd">        db_name: str</span>
 <span class="sd">            Database name</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
-
-        <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
-        <span class="n">db_entry</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;Entry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Simulation-Model-Tags&quot;</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;Released&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;Value&quot;</span><span class="p">:</span> <span class="n">released_version</span><span class="p">,</span> <span class="s2">&quot;Label&quot;</span><span class="p">:</span> <span class="n">released_label</span><span class="p">},</span>
-            <span class="s2">&quot;Latest&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;Value&quot;</span><span class="p">:</span> <span class="n">latest_version</span><span class="p">,</span> <span class="s2">&quot;Label&quot;</span><span class="p">:</span> <span class="n">latest_label</span><span class="p">},</span>
-        <span class="p">}</span>
-        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">db_entry</span><span class="p">)</span></div>
+        <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)][</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding tags </span><span class="si">{</span><span class="n">tags</span><span class="si">}</span><span class="s2"> to DB </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span><span class="s2">&quot;Entry&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation-Model-Tags&quot;</span><span class="p">,</span> <span class="s2">&quot;Tags&quot;</span><span class="p">:</span> <span class="n">tags</span><span class="p">})</span></div>
 
 
     <span class="k">def</span> <span class="nf">_get_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1349,23 +1330,25 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">db_name</span>
 
-    <span class="k">def</span> <span class="nf">_get_tagged_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.model_version">
+<a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.model_version">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the tag of the &quot;Released&quot; or &quot;Latest&quot; version of the MC Model.</span>
-<span class="sd">        The &quot;Released&quot; is the latest stable MC Model,</span>
-<span class="sd">        the latest is the latest tag (not necessarily stable, but can be equivalent to &quot;Released&quot;).</span>
+<span class="sd">        Return the model version for the requested tag.</span>
+
+<span class="sd">        Resolve the &quot;Released&quot; or &quot;Latest&quot; tag to the actual version name.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        version: str</span>
-<span class="sd">            Can be &quot;Released&quot; or &quot;Latest&quot; (default: &quot;Released&quot;).</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            Database name</span>
+<span class="sd">        version : str</span>
+<span class="sd">            Model version.</span>
+<span class="sd">        db_name : str</span>
+<span class="sd">            Database name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        str</span>
-<span class="sd">            The version name in the Simulation DB of the requested tag</span>
+<span class="sd">            Model version.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1374,15 +1357,25 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span> <span class="s2">&quot;Latest&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The only default versions are &quot;Released&quot; or &quot;Latest&quot;&#39;</span><span class="p">)</span>
+        <span class="n">_all_versions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_versions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">_all_versions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">version</span>
 
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)]</span><span class="o">.</span><span class="n">metadata</span>
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Entry&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation-Model-Tags&quot;</span><span class="p">}</span>
 
         <span class="n">tags</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;_id&quot;</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">DESCENDING</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># case insensitive search</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">][</span><span class="n">version</span><span class="p">][</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid model version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2"> in DB </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(allowed are </span><span class="si">{</span><span class="n">_all_versions</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span></div>
+
 
 <div class="viewcode-block" id="DatabaseHandler.insert_file_to_db">
 <a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.insert_file_to_db">[docs]</a>
@@ -1434,13 +1427,13 @@ document.write(`
 <a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.get_all_versions">[docs]</a>
     <span class="k">def</span> <span class="nf">get_all_versions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">parameter</span><span class="p">,</span>
+        <span class="n">parameter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get all version entries in the DB of a telescope or site for a specific parameter.</span>
+<span class="sd">        Get all version entries in the DB of collection and/or a specific parameter.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1467,27 +1460,31 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()][</span><span class="n">collection_name</span><span class="p">]</span>
+        <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model_versions_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span>
 
-        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">parameter</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+            <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span> <span class="ow">and</span> <span class="n">telescope_model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
+            <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;instrument&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">elif</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;sites&quot;</span> <span class="ow">and</span> <span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+            <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
-        <span class="n">_site_validated</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">collection_name</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
-            <span class="n">_tel_model_name_validated</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
-            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tel_model_name_validated</span>
-        <span class="k">elif</span> <span class="n">collection_name</span> <span class="o">==</span> <span class="s2">&quot;sites&quot;</span><span class="p">:</span>
-            <span class="n">query</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_site_validated</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only get versions of the telescopes and sites collections.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_cache_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting all versions from </span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">db_collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()][</span><span class="n">collection</span><span class="p">]</span>
+            <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">db_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The query </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2"> did not return any results. No versions found&quot;</span>
+                <span class="p">)</span>
 
-        <span class="n">_all_versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)]</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_all_versions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The query </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2"> did not return any results. No versions found&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">_all_versions</span></div>
+        <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_all_available_array_elements">
@@ -1514,11 +1511,7 @@ document.write(`
         <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection</span><span class="p">]</span>
 
-        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span>
-                <span class="n">names</span><span class="o">.</span><span class="n">validate_model_version_name</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
-            <span class="p">),</span>
-        <span class="p">}</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">)}</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_all_available_array_elements</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -1610,26 +1603,46 @@ document.write(`
         <span class="k">raise</span> <span class="ne">ValueError</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_parameter_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_parameter_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a cache key for the parameter cache dictionaries.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_version_to_tagged</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
+        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">telescope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_reset_parameter_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_reset_parameter_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset the cache for the parameters.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resetting cache for </span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">_cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_cache_key</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">_cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_cache_key</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
         <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">site_parameters_cached</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_cache_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_cache_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_cache_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DatabaseHandler.get_collections">
+<a class="viewcode-back" href="../../db_handler.html#db.db_handler.DatabaseHandler.get_collections">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of collections in the DB.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of collection names</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span> <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">db_name</span>
+        <span class="k">if</span> <span class="n">db_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span>
+                <span class="n">db_name</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">list_collection_names</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span></div>
+</div>
 
 </pre></div>
 
