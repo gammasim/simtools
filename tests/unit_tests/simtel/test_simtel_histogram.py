@@ -151,7 +151,6 @@ def test_view_cone(simtel_array_histogram_instance):
 
 
 def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
-    from astropy import units as u
 
     assert simtel_array_histogram_instance.trigger_rate is None
     assert simtel_array_histogram_instance.trigger_rate_uncertainty is None
@@ -173,8 +172,22 @@ def test_compute_system_trigger_rate_and_table(simtel_array_histogram_instance):
     assert table["Energy (TeV)"].value[0] == 1.00000000e-03
 
 
+def test_compute_system_trigger_rate_with_input(simtel_array_histogram_instance):
+
+    new_instance = copy.copy(simtel_array_histogram_instance)
+    events_histogram, triggered_events_histogram = new_instance.fill_event_histogram_dicts()
+    new_events_histogram = copy.copy(events_histogram)
+    new_events_histogram["data"] = 1e-9 * new_events_histogram["data"]
+    new_triggered_events_histogram = copy.copy(triggered_events_histogram)
+    new_triggered_events_histogram["data"] = 1e-8 * new_triggered_events_histogram["data"]
+    new_instance.compute_system_trigger_rate(new_events_histogram, new_triggered_events_histogram)
+    assert pytest.approx(new_instance.trigger_rate.value, 0.1) == 9006 * 10
+    assert new_instance.trigger_rate.unit == 1 / u.s
+    assert pytest.approx(new_instance.trigger_rate_uncertainty.value, 0.1) == 902892137
+    assert new_instance.trigger_rate_uncertainty.unit == 1 / u.s
+
+
 def test_produce_trigger_meta_data(simtel_array_histogram_instance, simtel_array_histograms_file):
-    from astropy import units as u
 
     trigger_rate = 1000  # Hz
 
@@ -224,10 +237,25 @@ def test_estimate_observation_time(simtel_array_histogram_instance):
     observation_time = simtel_array_histogram_instance.estimate_observation_time()
     assert observation_time.unit == u.s
     assert pytest.approx(observation_time.value, 0.1) == 9.4e-5
+    observation_time = simtel_array_histogram_instance.estimate_observation_time(
+        stacked_num_simulated_events=100
+    )
+    assert observation_time.unit == u.s
+    assert pytest.approx(observation_time.value, 0.1) == 4.7e-6
 
 
 def test_estimate_trigger_rate_uncertainty(simtel_array_histogram_instance):
+
     simtel_array_histogram_instance.compute_system_trigger_rate()
-    trigger_rate_uncertainty = simtel_array_histogram_instance._estimate_trigger_rate_uncertainty()
+    trigger_rate_uncertainty = simtel_array_histogram_instance.estimate_trigger_rate_uncertainty(
+        simtel_array_histogram_instance.trigger_rate,
+        simtel_array_histogram_instance.total_num_simulated_events,
+        simtel_array_histogram_instance.total_num_triggered_events,
+    )
     assert trigger_rate_uncertainty.unit == 1 / u.s
     assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 9008
+    trigger_rate_uncertainty = simtel_array_histogram_instance.estimate_trigger_rate_uncertainty(
+        1e4 / u.s, 100, 10
+    )
+    assert trigger_rate_uncertainty.unit == 1 / u.s
+    assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 3316

@@ -48,6 +48,7 @@ optional-dependencies."dev" = [
   "pylint",
 ]
 optional-dependencies."doc" = [
+  "myst-parser",
   "numpydoc",
   "sphinx",
   "sphinx-book-theme",

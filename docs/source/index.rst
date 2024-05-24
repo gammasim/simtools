@@ -14,6 +14,7 @@ Documentation
   auxiliary_files
   databases
   simulation_software
+  docker_files
   developer_guidelines
   pull_requests
   coding_guidelines

@@ -1,10 +1,9 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-calculate-trigger-rate
-  TEST_NAME: more_files
+  TEST_NAME: file_list
   CONFIGURATION:
     SIMTEL_FILE_NAMES:
-      - './tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst'
-      - './tests/resources/run202_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst'
+      - './tests/resources/simtel_output_files.txt'
     SAVE_TABLES: true
   INTEGRATION_TESTS:
     - OUTPUT_FILE: application-plots/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.ecsv
