@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config_data():
     return {
         "nshow": 100,
@@ -31,7 +31,7 @@ def corsika_config_data():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config(io_handler, corsika_config_data, array_model_south):
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
@@ -67,7 +67,7 @@ def test_export_input_file(corsika_config):
     corsika_config.export_input_file()
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
 
@@ -76,7 +76,7 @@ def test_export_input_file_multipipe(corsika_config):
     corsika_config.export_input_file(use_multipipe=True)
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" in f.read()
 
 

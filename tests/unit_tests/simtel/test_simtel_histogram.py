@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_file(io_handler, corsika_output_file_name):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
@@ -23,7 +23,7 @@ def simtel_array_histograms_file(io_handler, corsika_output_file_name):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histogram_instance(simtel_array_histograms_file):
     instance = SimtelHistogram(histogram_file=simtel_array_histograms_file)
     return instance

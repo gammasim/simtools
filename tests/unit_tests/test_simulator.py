@@ -19,22 +19,22 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def label():
     return "test"
 
 
-@pytest.fixture
+@pytest.fixture()
 def input_file_list():
     return ["run1", "abc_run22", "def_run02_and"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_file():
     return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
@@ -49,7 +49,7 @@ def array_simulator(
     return array_simulator
 
 
-@pytest.fixture
+@pytest.fixture()
 def shower_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
@@ -65,7 +65,7 @@ def shower_simulator(
     return shower_simulator
 
 
-@pytest.fixture
+@pytest.fixture()
 def shower_array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):

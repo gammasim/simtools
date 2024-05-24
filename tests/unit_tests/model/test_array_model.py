@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model(db_config, io_handler, model_version):
     return ArrayModel(
         label="test",

@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_runner(simtel_path):
     simtel_runner = SimtelRunner(simtel_source_path=simtel_path)
     return simtel_runner

@@ -14,7 +14,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def north_layout_center_data_dict():
     return {
         "center_lon": -17.8920302 * u.deg,
@@ -26,7 +26,7 @@ def north_layout_center_data_dict():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def south_layout_center_data_dict():
     return {
         "center_lon": -70.316345 * u.deg,
@@ -38,7 +38,7 @@ def south_layout_center_data_dict():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_layout_north_four_LST_instance(db_config, model_version):
     return ArrayLayout(
         site="North",
@@ -49,7 +49,7 @@ def array_layout_north_four_LST_instance(db_config, model_version):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_layout_south_four_LST_instance(db_config, model_version):
     return ArrayLayout(
         site="South",
