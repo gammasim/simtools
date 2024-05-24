@@ -474,7 +474,7 @@ def test_make_simtel_script(mock_simulator):
 
         mock_file.assert_has_calls(
             [
-                call("/path/to/config.cfg", "r", encoding="utf-8"),
+                call("/path/to/config.cfg", encoding="utf-8"),
                 call().__enter__(),
                 call().readlines(),
                 call().__exit__(None, None, None),
