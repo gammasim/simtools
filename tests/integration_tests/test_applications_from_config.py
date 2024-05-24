@@ -14,7 +14,6 @@ import yaml
 from astropy.table import Table
 
 import simtools.utils.general as gen
-import simtools.utils.names as names
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -382,10 +381,8 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     if request.config.getoption("--model_version") is None:
         output_status = validate_application_output(config)
     elif config_file_model_version is not None:
-        _from_command_line = names.validate_model_version_name(
-            request.config.getoption("--model_version")
-        )
-        _from_config_file = names.validate_model_version_name(config_file_model_version)
+        _from_command_line = request.config.getoption("--model_version")
+        _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
             output_status = validate_application_output(config)
 
