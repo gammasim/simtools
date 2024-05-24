@@ -35,7 +35,7 @@
 #       - {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
 #       DOCUMENT:
 #       - {CREATION_TIME: null, ID: null, TITLE: null, TYPE: null, URL: null}
-#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: CTA-North, SUBTYPE: null, TYPE: null}
+#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: North, SUBTYPE: null, TYPE: null}
 #     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
 #     PRODUCT:
 #       CREATION_TIME: '2024-01-17T08:18:14'
