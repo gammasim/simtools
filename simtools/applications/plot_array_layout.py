@@ -131,7 +131,7 @@ def _get_site_from_telescope_list_name(telescope_list_file):
         Site name.
 
     """
-    for _site in names.site_names:
+    for _site in names.site_names():
         if _site in str(telescope_list_file):
             return _site
     return None

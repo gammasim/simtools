@@ -38,8 +38,8 @@ def test_get_list_of_telescope_types():
 
 def test_validate_name():
     with_lists = {
-        "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
-        "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
+        "South": ["south"],
+        "North": ["north"],
     }
 
     for key, value in with_lists.items():
@@ -82,7 +82,7 @@ def test_validate_telescope_id_name(caplog):
 
 
 def test_validate_site_name():
-    for key, value in names.site_names.items():
+    for key, value in names.site_names().items():
         for test_name in value:
             assert key == names.validate_site_name(test_name)
     with pytest.raises(ValueError):
