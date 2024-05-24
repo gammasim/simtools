@@ -17,5 +17,6 @@ Documentation
   simulation_software
   docker_files
   developer_guidelines
+  documentation
   pull_requests
   coding_guidelines

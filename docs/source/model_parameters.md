@@ -18,7 +18,7 @@ with the nightly variability of the atmospheric parameters).
 
 The major components to handle the simulation model in simtools are:
 
-1. **Model parameter databases:** The simulation model is stored in [mongoDB database](#Databases).
+1. **Model parameter databases:** The simulation model is stored in [mongoDB databases](databases.md#databases).
 The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces to the database.
 2. **Model parameter management:** The {ref}`model_parameters module <model_parameters>` provides interfaces to manage the simulation model parameters.
 3. A **model of an array and its elements** consists of the {ref}`SiteModel <site_model>` and several {ref}`TelescopeModel <telescope_model>` and {ref}`CalibrationModel <calibration_model>` instances.
@@ -216,7 +216,7 @@ New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_
 
 The application `add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
 model repository to the model database for a given model versions.
-See the [database](#Databases)  section for implementation details on databases in simtools.
+See the [database](databases.md#databases) section for implementation details on databases in simtools.
 
 Example:
 

@@ -33,5 +33,5 @@ Notes
 
 ## Hints for Markdown
 
-- links to other files and headings should follow this syntax: `` {ref}`Simulation Model <Simulation Model> ``.
-- links to other files relative to this one in markdown: ``[mongoDB databases](databases.md#databases)``.
+- links to other files and headings should follow this syntax: `` {ref}`model_parameters module <model_parameters>` `` results in {ref}`model_parameters module <model_parameters>`
+- links to other files relative to this one in markdown: ``[mongoDB databases](databases.md#databases)`` results in [mongoDB databases](databases.md#databases).
