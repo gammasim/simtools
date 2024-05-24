@@ -191,7 +191,9 @@ def _add_model_parameters_to_db(args_dict, db, logger):
 def main():
     """Application main."""
     label = Path(__file__).stem
-    args_dict, db_config = _parse(label, description="Add a new model parameter database to the DB")
+    args_dict, db_config = _parse(
+        label, description="Add or update a model parameter database to the DB"
+    )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
