@@ -1,32 +1,34 @@
-.. _Layout:
+(layout)=
 
-Layout
-======
+# Layout
 
 The Layout Array module deals with the telescope positions and coordinate transformations.
 It is used within CORSIKA Config and Array Model in order to encapsulate the information about the telescope positions.
 
-.. _layoutarraymodule:
+(layoutarraymodule)=
 
-array_layout
-------------
+## array_layout
 
+```{eval-rst}
 .. automodule:: layout.array_layout
    :members:
 
+```
 
-.. _telescopedatamodule:
+(telescopedatamodule)=
 
-telescope_position
-------------------
+## telescope_position
 
+```{eval-rst}
 .. automodule:: layout.telescope_position
    :members:
+```
 
-.. _geocoordinatesmodule:
+(geocoordinatesmodule)=
 
-geo_coordinates
----------------
+## geo_coordinates
 
+```{eval-rst}
 .. automodule:: layout.geo_coordinates
    :members:
+```

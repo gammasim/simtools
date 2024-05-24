@@ -1,22 +1,23 @@
-.. _IO:
+(io)=
 
-I/O
----
+# I/O
 
 This module include I/O related functionality.
 
-.. _iomodule:
+(iomodule)=
 
-io_handler
-**********
+## io_handler
 
+```{eval-rst}
 .. automodule:: io_operations.io_handler
    :members:
+```
 
-.. _iohdf5:
+(iohdf5)=
 
-hdf5_handler
-************
+## hdf5_handler
 
+```{eval-rst}
 .. automodule:: io_operations.hdf5_handler
    :members:
+```
