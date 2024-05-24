@@ -66,7 +66,7 @@ class ModelParameter:
         self._derived = None
         self.collection = collection
         self.label = label
-        self.model_version = names.validate_model_version_name(model_version)
+        self.model_version = self.db.model_version(model_version)
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_telescope_name(
