@@ -56,7 +56,6 @@ def site_names():
     return {site: [site.lower()] for site in _sites}
 
 
-
 array_layout_names = {
     "4LST": ["4-lst", "4lst"],
     "1LST": ["1-lst", "1lst"],
