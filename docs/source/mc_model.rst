@@ -5,7 +5,7 @@ MC Model
 
 The array of imaging atmospheric Cherenkov telescopes is abstracted in the simulation model and divided into the following components:
 
-- `telescope_model`_ representing a telescope. Defined by its telescope name, allowing to read model parameters from the :ref:`Model Parameters DB` using this name.
+- `telescope_model`_ representing a telescope. Defined by its telescope name, allowing to read model parameters from the databases using this name.
 - sub-elements of the telescope represented by the modules `mirrors`_ and `camera`_
 - an array of telescopes (especially the telescope arrangement) represented by `array_model`_.
 

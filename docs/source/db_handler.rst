@@ -3,7 +3,7 @@
 Database support
 ================
 
-Modules for database access. See :ref:`Databases <Databases>` for a discussion of database details.
+Modules for database access. See the databases section for details.
 
 * :ref:`db_handler <db_handler>`
 * :ref:`db_from_repo_handler <db_from_repo_handler>`

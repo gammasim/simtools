@@ -31,10 +31,10 @@
           (provided through ``--mirror_list``)
         * randomly generated focal lengths using an expected spread (value given through
           ``--random_flen``) around the mean focal length (provided through the
-          :ref:`Model Parameters DB`). This option is switched with ``--use_random_flen``.
+          Model Parameters DB). This option is switched with ``--use_random_flen``.
 
     The tuning algorithm requires a starting value for the random reflection angle. This is either
-    taken from the :ref:`Model Parameters DB` (default) or can be set using the argument ``--rnda``.
+    taken from the Model Parameters DB (default) or can be set using the argument ``--rnda``.
 
     Ray-tracing simulations are performed for single mirror configurations for each
     mirror given in the mirror_list. The mean simulated containment diameter for all the mirrors
