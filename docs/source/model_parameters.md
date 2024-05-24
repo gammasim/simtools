@@ -1,9 +1,13 @@
-# Simulation model
+# Simulation Model
+
+## Introduction
 
 Simulation model parameters describe properties of all relevant elements of the observatory including site,
 telescopes, and calibration devices.
-Examples are the atmospheric models (profile, transmission) or geomagnetic field characteristics for the site,
-details on optical and mechanical properties of the telescope, plus camera, readout and trigger parameters.
+The management, definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
+
+Examples for model parameters are the atmospheric models (profile, transmission) or geomagnetic field characteristics for the site,
+description of optical and mechanical properties of the telescope, and detector plan, trigger, and readout settings for the cameras.
 
 For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
 (e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms
@@ -12,24 +16,30 @@ Parameters might be fixed in time (e.g., the number of mirrors on a certain tele
 on different time scales (e.g., compare the degradation of the mirror reflectivity over several months
 with the nightly variability of the atmospheric parameters).
 
-The definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
+The major components to handle the simulation model in simtools are:
 
-## General setup
+1. **Model parameter databases:** The simulation model is stored in [mongoDB database](#Databases).
+The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces to the database.
+2. **Model parameter management:** The {ref}`model_parameters module <model_parameters>` provides interfaces to manage the simulation model parameters.
+3. A **model of an array and its elements** consists of the {ref}`SiteModel <site_model>` and several {ref}`TelescopeModel <telescope_model>` and {ref}`CalibrationModel <calibration_model>` instances.
 
-The most important features of the simulation model are:
+Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files.
 
-- handled by the `model_parameters` module.
+Review and revision control of the simulation models uses the [model parameters gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/blob/main/README.md?ref_type=heads). Simtools provides applications to read, write, and update the databases from this repository.
 
-TODO - copy from model_parameters repository
+:::{Note}
+The simulation model is a central part of the CTAO Simulation Pipeline. The responsibility for the values and the correctness of the simulation model parameters is with the CTAO Simulation Team.
+:::
 
-## Schema files to describe simulation model parameter
+## Description of model parameters
 
 Schema files describing all simulation model parameters are part of [simtools](https://github.com/gammasim/simtools) and can be found in [simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
+
 These files describe the simulation model parameters including (among others fields) name, type, format, applicable telescopes, and parameter description.
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
 
-The files are in human readable yaml format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
+The schema files are in human readable yaml format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
 
 ### Example
 
@@ -74,7 +84,7 @@ simulation_software:
 
 ### Valid Keys
 
-Valid keys are described in detail in [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml). The following list gives a short (incomplete) overview of the most important parameters.
+Valid keys are described in detail in [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml). The most important parameters are:
 
 #### Header section
 
@@ -171,6 +181,25 @@ simulation_software:
     internal_parameter_name: secondary_ref_radius
 ```
 
+## Data structure for model parameters
+
+The model parameters are stored in json-style in the model repository and database.
+A typical model parameter file looks like:
+
+```json
+{
+    "parameter": "num_gains",
+    "instrument": "LSTN-01",
+    "site": "North",
+    "version": "2024-02-01",
+    "value": 2,
+    "unit": null,
+    "type": "int64",
+    "applicable": true,
+    "file": false
+}
+```
+
 ## Updating the model database
 
 :::{Danger}
@@ -181,7 +210,6 @@ Tests should be done before applying this to the production databases.
 ### Update a single model parameter
 
 New model parameter defined in the simtools database format (json file) can be uploaded to the database using the {ref}`simtools-add-value-from-json-to-db <add_value_from_json_to_db>` application.
-
 New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_db>`.
 
 ### Upload a complete simulation model from model repository to model database
@@ -203,9 +231,7 @@ This application loops over all subdirectories in `input_path` and uploads all j
 - subdirectories starting with `OBS` are uploaded to the `sites` collection
 - json files from the subdirectory `configuration_sim_telarray` are uploaded to the `configuration_sim_telarray` collection
 - `Files` are added to the `files` collection
-- all other json files are uploaded to the `telescopes` collection
-
-TODO - check what happens with illuminator data.
+- all other json files are uploaded to collection defined in the array element description in [simtools/schemas/array_elements.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/array_elements.yml). Allowed values are e.g., `telescopes`, `calibration_devices`.
 
 ## Import simulation model parameters
 
@@ -255,4 +281,14 @@ Prod5 model parameters can be extracted from `sim_telarray` using the following 
 
 ### Import telescope positions
 
-TODO: this is incomplete.
+Positions of array elements like telescopes are provided by CTAO in form of tables (typically ecsv files).
+To import these positions into the model parameter repository, see the following example:
+
+```bash
+simtools-write-array-element-positions-to-repository \
+    --input /path/to/positions.txt \
+    --repository_path /path/to/repository \
+    --model_version 1.0.0 \
+    --coordinate_system ground \
+    --site North
+```

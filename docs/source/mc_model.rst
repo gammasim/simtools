@@ -20,6 +20,14 @@ array_model
    :members:
 
 
+calibration_model
+-----------------
+
+.. _calibration_model:
+
+.. automodule:: model.calibration_model
+   :members:
+
 camera
 ------
 
@@ -41,7 +49,7 @@ mirrors
 model_parameter
 ---------------
 
-.. _modelparameters:
+.. _model_parameters:
 
 .. automodule:: model.model_parameter
    :members:
