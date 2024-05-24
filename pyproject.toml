@@ -46,6 +46,7 @@ optional-dependencies."dev" = [
   "flake8",
   "pre-commit",
   "pylint",
+  "ruff",
 ]
 optional-dependencies."doc" = [
   "myst-parser",
