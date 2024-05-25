@@ -87,7 +87,7 @@ def update_model_parameters_from_repo(
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
             _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
-        except (FileNotFoundError, gen.InvalidConfigData):
+        except (FileNotFoundError, gen.InvalidConfigDataError):
             # use design telescope model in case there is no model defined for this telescope ID
             # accept errors, as not all parameters are defined in the repository
             try:
@@ -101,7 +101,7 @@ def update_model_parameters_from_repo(
                 _tmp_par = gen.collect_data_from_file_or_dict(
                     file_name=gen.join_url_or_path(_file_path, f"{key}.json"), in_dict=None
                 )
-            except (FileNotFoundError, TypeError, gen.InvalidConfigData):
+            except (FileNotFoundError, TypeError, gen.InvalidConfigDataError):
                 pass
         if _tmp_par.get("version") == model_version:
             parameters[key] = _tmp_par

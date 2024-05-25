@@ -6,7 +6,7 @@ from pathlib import Path
 __all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
-class IncompleteIOHandlerInit(Exception):
+class IncompleteIOHandlerInitError(Exception):
     """Exception raised when IOHandler is not initialized"""
 
 
@@ -19,7 +19,7 @@ class IOHandlerSingleton(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(IOHandlerSingleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -169,7 +169,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         Raises
         ------
-        IncompleteIOHandlerInit
+        IncompleteIOHandlerInitError
             if data_path is not set
 
         """
@@ -179,5 +179,5 @@ class IOHandler(metaclass=IOHandlerSingleton):
         elif self.data_path is not None:
             file_prefix = Path(self.data_path).joinpath(parent_dir)
         else:
-            raise IncompleteIOHandlerInit
+            raise IncompleteIOHandlerInitError
         return file_prefix.joinpath(file_name).absolute()

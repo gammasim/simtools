@@ -131,9 +131,9 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")
 
-    if not isinstance(x, (list, np.ndarray)):
+    if not isinstance(x, list | np.ndarray):
         x = [x]
-    if not isinstance(y, (list, np.ndarray)):
+    if not isinstance(y, list | np.ndarray):
         y = [y]
 
     if (

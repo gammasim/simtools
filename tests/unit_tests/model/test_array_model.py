@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-from simtools.model.array_model import ArrayModel, InvalidArrayConfigData
+from simtools.model.array_model import ArrayModel, InvalidArrayConfigDataError
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -60,7 +60,9 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
             "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
         },
     }
-    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has no name for a telescope"):
+    with pytest.raises(
+        InvalidArrayConfigDataError, match="ArrayConfig has no name for a telescope"
+    ):
         ArrayModel(
             label="test",
             site="North",
@@ -91,7 +93,9 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     invalid_parameters = {
         "MSTN-05": 5.0,
     }
-    with pytest.raises(InvalidArrayConfigData, match="ArrayConfig has wrong input for a telescope"):
+    with pytest.raises(
+        InvalidArrayConfigDataError, match="ArrayConfig has wrong input for a telescope"
+    ):
         ArrayModel(
             label="test",
             site="North",

@@ -5,14 +5,14 @@ from pathlib import Path
 
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
-    MissingRequiredInputInCorsikaConfigData,
+    MissingRequiredInputInCorsikaConfigDataError,
 )
 from simtools.io_operations import io_handler
 
-__all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfig"]
+__all__ = ["CorsikaRunner", "MissingRequiredEntryInCorsikaConfigError"]
 
 
-class MissingRequiredEntryInCorsikaConfig(Exception):
+class MissingRequiredEntryInCorsikaConfigError(Exception):
     """Exception for missing required entry in corsika config."""
 
 
@@ -141,7 +141,7 @@ class CorsikaRunner:
             )
             # CORSIKA input file used as template for all runs
             self._corsika_input_file = self.corsika_config.get_input_file(use_multipipe)
-        except MissingRequiredInputInCorsikaConfigData:
+        except MissingRequiredInputInCorsikaConfigDataError:
             msg = "corsika_config_data is missing required entries."
             self._logger.error(msg)
             raise

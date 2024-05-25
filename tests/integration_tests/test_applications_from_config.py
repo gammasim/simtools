@@ -176,8 +176,7 @@ def compare_files(file1, file2, tolerance=1.0e-5):
         compare_json_files(file1, file2)
         return
 
-    logger.error(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
-    assert False
+    pytest.fail(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
 
 
 def assert_file_type(file_type, file_name):

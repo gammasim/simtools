@@ -141,12 +141,12 @@ class DataValidator:
         # validation assumes lists for values and units - convert to list if required
         value_as_list = (
             self.data_dict.get("value")
-            if isinstance(self.data_dict["value"], (list, np.ndarray))
+            if isinstance(self.data_dict["value"], list | np.ndarray)
             else [self.data_dict["value"]]
         )
         unit_as_list = (
             self.data_dict.get("unit")
-            if isinstance(self.data_dict["unit"], (list, np.ndarray))
+            if isinstance(self.data_dict["unit"], list | np.ndarray)
             else [self.data_dict["unit"]]
         )
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
@@ -462,10 +462,10 @@ class DataValidator:
             f"'{reference_unit}' and data unit '{unit}'"
         )
         try:
-            if isinstance(data, (u.Quantity, Column)):
+            if isinstance(data, u.Quantity | Column):
                 data = data.to(reference_unit)
                 return data, reference_unit
-            if isinstance(data, (list, np.ndarray)):
+            if isinstance(data, list | np.ndarray):
                 return [
                     (
                         u.Unit(_to_unit).to(reference_unit) * d

@@ -40,7 +40,7 @@
 import logging
 from pathlib import Path
 
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from astropy import units as u
 
@@ -153,7 +153,7 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    matplotlib.use("Agg")
+    mpl.use("Agg")
     telescope_file = None
     if args_dict["telescope_list"] is not None:
         logger.info("Plotting array from telescope list file(s).")

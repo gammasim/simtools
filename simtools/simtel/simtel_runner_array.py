@@ -3,7 +3,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_runner import InvalidOutputFile, SimtelRunner
+from simtools.simtel.simtel_runner import InvalidOutputFileError, SimtelRunner
 
 __all__ = ["SimtelRunnerArray"]
 
@@ -290,5 +290,5 @@ class SimtelRunnerArray(SimtelRunner):
         if not output_file.exists():
             msg = "sim_telarray output file does not exist."
             self._logger.error(msg)
-            raise InvalidOutputFile(msg)
+            raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
