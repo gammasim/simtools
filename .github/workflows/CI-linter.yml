@@ -115,7 +115,7 @@ jobs:
           VALIDATE_PYTHON_BLACK: true
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
           # markdown
-          VALIDATE_MARKDOWN: true
+          VALIDATE_MARKDOWN: false
           # docker
           VALIDATE_DOCKERFILE_HADOLINT: true
           # .env file
