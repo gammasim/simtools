@@ -167,7 +167,7 @@ Install Docker and start the Docker application (see
 
 Clone simtools from GitHub into a directory `external/simtools`:
 
-```
+```bash
 # create a working directory
 mkdir external
 # clone simtools repository
@@ -176,7 +176,7 @@ git clone https://github.com/gammasim/simtools.git external/simtools
 
 Start up a container (the image will be downloaded, if it is not available in your environment):
 
-```
+```bash
 docker run --rm -it -v "$(pwd)/external:/workdir/external" \
     ghcr.io/gammasim/simtools-dev:latest \
     bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
@@ -184,9 +184,7 @@ docker run --rm -it -v "$(pwd)/external:/workdir/external" \
 
 The container includes a CORSIKA and sim_telarray installation;
 the environmental variable `$SIMTOOLS_SIMTEL_PATH` and those for the database access are automatically set
-(if variables are set correctly in the .env\` file).
-
-Test your installation following the instructions in {ref}`this section <TestingInstallation>`.
+(if variables are set correctly in the `.env` file).
 
 (testinginstallation)=
 
@@ -201,5 +199,5 @@ $ pytest tests/unit_tests/
 Test the simtools plus CORSIKA/sim_telarray installation by running the integration tests:
 
 ```console
-$ pytest tests/integration_tests/
+$ pytest --no-cov tests/integration_tests/
 ```

@@ -10,7 +10,7 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ## array_model
 
-(array-model-1)=
+(array-model)=
 
 ```{eval-rst}
 .. automodule:: model.array_model
@@ -20,7 +20,7 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ## calibration_model
 
-(calibration-model-1)=
+(calibration-model)=
 
 ```{eval-rst}
 .. automodule:: model.calibration_model
@@ -68,7 +68,7 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ## site_model
 
-(site-model-1)=
+(site-model)=
 
 ```{eval-rst}
 .. automodule:: model.site_model
@@ -77,7 +77,7 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ## telescope_model
 
-(telescope-model-1)=
+(telescope-model)=
 
 ```{eval-rst}
 .. automodule:: model.telescope_model

@@ -15,7 +15,7 @@ Linting and code checks are done automatically using the pre-commit functionalit
 
 It is recommended for developers to install `pre-commit`:
 
-```
+```bash
 pre-commit install
 ```
 
@@ -24,13 +24,13 @@ The configuration of `pre-commit` is defined in
 
 For testing, pre-commit can be applied locally without commit:
 
-```
+```bash
 pre-commit run --all-files
 ```
 
 In rare cases, one might want to skip pre-commit checks with
 
-```
+```bash
 git commit --no-verify
 ```
 
@@ -40,7 +40,7 @@ Linters of almost all file types are run by the CI-linter workflow.
 
 To run pylint locally, use:
 
-```
+```bash
 pylint $(git ls-files 'simtools/*.py')
 ```
 
@@ -134,14 +134,14 @@ provide a clear interface.
 
 This is an example of a name dictionary:
 
-```
+```bash
 all_site_names = {
   "South": ["paranal", "south"],
   "North": ["lapalma", "north"]
 }
 ```
 
-And this is an example of how the site name is validated in the {ref}`telescope_model <telescope_model>` module:
+And this is an example of how the site name is validated in the {ref}`telescope_model <telescope-model>` module:
 
 ```python
 self.site = names.validate_site_name(site)

@@ -1,24 +1,21 @@
-```{eval-rst}
-.. include:: ../../README.rst
+```{include} ../../README.md
 ```
 
-# Documentation
+## Table of Contents
 
 ```{toctree}
-:glob: true
 :maxdepth: 2
-
-getting_started
-simtools-configuration
+getting_started.md
+simtools-configuration.md
 applications
-library
-auxiliary_files
-model_parameters
-databases
-simulation_software
-docker_files
-developer_guidelines
-documentation
-pull_requests
-coding_guidelines
+library.md
+auxiliary_files.md
+model_parameters.md
+databases.md
+simulation_software.md
+docker_files.md
+documentation.md
+developer_guidelines.md
+pull_requests.md
+coding_guidelines.md
 ```
