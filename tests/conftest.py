@@ -48,7 +48,7 @@ def io_handler(tmp_test_directory):
 
 
 @pytest.fixture()
-def mock_settings_env_vars(tmp_test_directory):
+def _mock_settings_env_vars(tmp_test_directory):
     """
     Removes all environment variable from the test system.
     Explicitly sets those needed.
@@ -127,7 +127,7 @@ def args_dict_site(tmp_test_directory, simtel_path):
 
 
 @pytest.fixture()
-def configurator(tmp_test_directory, mock_settings_env_vars, simtel_path):
+def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
     config = Configurator()
     config.default_config(
         ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
@@ -252,14 +252,14 @@ def site_model_north(db_config, model_version):
 
 @pytest.fixture()
 def telescope_model_lst(db_config, io_handler, model_version):
-    telescope_model_LST = TelescopeModel(
+    telescope_model_lst = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )
-    return telescope_model_LST
+    return telescope_model_lst
 
 
 @pytest.fixture()
@@ -277,27 +277,27 @@ def telescope_model_mst(db_config, io_handler, model_version):
 
 @pytest.fixture()
 def telescope_model_sst(db_config, io_handler, model_version):
-    telescope_model_SST = TelescopeModel(
+    telescope_model_sst = TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_SST
+    return telescope_model_sst
 
 
 # TODO - keep prod5 until a complete prod6 model is in the DB
 @pytest.fixture()
 def telescope_model_sst_prod5(db_config, io_handler):
-    telescope_model_SST = TelescopeModel(
+    telescope_model_sst = TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_SST
+    return telescope_model_sst
 
 
 @pytest.fixture()

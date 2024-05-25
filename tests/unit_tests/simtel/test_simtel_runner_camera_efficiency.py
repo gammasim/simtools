@@ -130,14 +130,14 @@ def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficienc
     def produced_file_has_expected_values(file):
         # Test that the first 3 non-comment lines are the following values:
         wavelengths = [300.00, 315.00, 330.00]
-        NSBs = [0, 0.612, 1.95]
+        nsbs = [0, 0.612, 1.95]
         with open(file, encoding="utf-8") as file:
             for line in file:
                 if line.startswith("#"):
                     continue
                 entry = line.split()
                 assert float(entry[0]) == pytest.approx(wavelengths.pop(0))
-                assert float(entry[2]) == pytest.approx(NSBs.pop(0))
+                assert float(entry[2]) == pytest.approx(nsbs.pop(0))
                 assert len(entry) == 3
                 if len(wavelengths) == 0:
                     break

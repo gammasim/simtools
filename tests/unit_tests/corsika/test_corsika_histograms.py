@@ -11,7 +11,10 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools import version
-from simtools.corsika.corsika_histograms import CorsikaHistograms, HistogramNotCreated
+from simtools.corsika.corsika_histograms import (
+    CorsikaHistograms,
+    HistogramNotCreatedError,
+)
 from simtools.io_operations.hdf5_handler import read_hdf5
 
 
@@ -144,7 +147,7 @@ def test_create_histograms(corsika_histograms_instance):
         assert isinstance(corsika_histograms_instance.hist_time_altitude[0], bh.Histogram)
 
 
-def test_fill_histograms_no_rotation(corsika_output_file_name):
+def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
     # Sample test of photons: 1 telescope, 2 photons
     photons = [
         {
@@ -280,7 +283,7 @@ def test_set_histograms_passing_config(corsika_histograms_instance):
 
 def test_raise_if_no_histogram(corsika_output_file_name, caplog, io_handler):
     corsika_histograms_instance_not_hist = CorsikaHistograms(corsika_output_file_name)
-    with pytest.raises(HistogramNotCreated):
+    with pytest.raises(HistogramNotCreatedError):
         corsika_histograms_instance_not_hist._raise_if_no_histogram()
         assert "The histograms were not created." in caplog
 

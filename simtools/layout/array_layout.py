@@ -13,14 +13,14 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
-__all__ = ["InvalidTelescopeListFile", "ArrayLayout"]
+__all__ = ["InvalidTelescopeListFileError", "ArrayLayout"]
 
 
-class InvalidTelescopeListFile(Exception):
+class InvalidTelescopeListFileError(Exception):
     """Exception for invalid telescope list file."""
 
 
-class InvalidCoordinateDataType(Exception):
+class InvalidCoordinateDataTypeError(Exception):
     """Exception for low-precision coordinate data type."""
 
 
@@ -272,7 +272,7 @@ class ArrayLayout:
 
         Raises
         ------
-        InvalidTelescopeListFile
+        InvalidTelescopeListFileError
             in case neither telescope name or asset_code / sequence number are given.
 
         """
@@ -302,7 +302,7 @@ class ArrayLayout:
         if tel.name is None:
             msg = "Missing required row with telescope_name or asset_code/sequence_number"
             self._logger.error(msg)
-            raise InvalidTelescopeListFile(msg)
+            raise InvalidTelescopeListFileError(msg)
 
         return tel
 

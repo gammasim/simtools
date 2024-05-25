@@ -9,7 +9,7 @@ from astropy import units as u
 from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import PowerLaw
 
-from simtools.simtel.simtel_histogram import HistogramIdNotFound, SimtelHistogram
+from simtools.simtel.simtel_histogram import HistogramIdNotFoundError, SimtelHistogram
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -81,7 +81,7 @@ def test_fill_event_histogram_dicts(simtel_array_histogram_instance, caplog):
         if hist["id"] == 2:
             new_instance.histogram[histogram_index]["id"] = 99
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(HistogramIdNotFound):
+        with pytest.raises(HistogramIdNotFoundError):
             new_instance.fill_event_histogram_dicts()
     assert "Histograms ids not found. Please check your files." in caplog.text
 

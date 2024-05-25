@@ -15,10 +15,10 @@ import yaml
 
 import simtools.utils.general as gen
 from simtools.utils.general import (
-    InvalidConfigData,
-    InvalidConfigEntry,
-    MissingRequiredConfigEntry,
-    UnableToIdentifyConfigEntry,
+    InvalidConfigDataError,
+    InvalidConfigEntryError,
+    MissingRequiredConfigEntryError,
+    UnableToIdentifyConfigEntryError,
 )
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -48,7 +48,7 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
     assert gen.collect_data_from_file_or_dict(None, None, allow_empty=True) is None
     assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
-    with pytest.raises(InvalidConfigData):
+    with pytest.raises(InvalidConfigDataError):
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
         assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
@@ -76,7 +76,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     assert len(_dict) > 0
 
     _url = "https://raw.githubusercontent.com/gammasim/simtools/not_main/"
-    with pytest.raises(gen.InvalidConfigData):
+    with pytest.raises(gen.InvalidConfigDataError):
         gen.collect_data_from_http(_url + _file)
 
     # yaml file with astropy header
@@ -116,7 +116,7 @@ def test_validate_config_data(args_dict, io_handler, caplog) -> None:
         "test_name": 10,
         "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
-    with pytest.raises(MissingRequiredConfigEntry):
+    with pytest.raises(MissingRequiredConfigEntryError):
         validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
         assert "Required entry in config_data" in caplog.text
 
@@ -162,7 +162,7 @@ def test_validate_config_data(args_dict, io_handler, caplog) -> None:
         )
         assert "in config_data cannot be identified" in caplog.text
 
-    with pytest.raises(UnableToIdentifyConfigEntry):
+    with pytest.raises(UnableToIdentifyConfigEntryError):
         gen.validate_config_data(config_data=config_data | {"test": "blah"}, parameters=parameters)
 
 
@@ -173,7 +173,7 @@ def test_check_value_entry_length() -> None:
     _par_info["len"] = None
     assert gen._check_value_entry_length([1, 4], "test_1", _par_info) == (2, True)
     _par_info["len"] = 3
-    with pytest.raises(InvalidConfigEntry):
+    with pytest.raises(InvalidConfigEntryError):
         gen._check_value_entry_length([1, 4], "test_1", _par_info)
     _par_info.pop("len")
     with pytest.raises(KeyError):
@@ -211,7 +211,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
         "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
         "names": ["scat"],
     }
-    with pytest.raises(InvalidConfigEntry):
+    with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
         assert "Config entry given with wrong unit" in caplog.text
     _parinfo = {
@@ -219,7 +219,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
         "unit": [None, u.Unit("kg"), u.Unit("m"), u.Unit("m"), None],
         "names": ["scat"],
     }
-    with pytest.raises(InvalidConfigEntry):
+    with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
         assert "Config entry given with wrong unit" in caplog.text
     _parinfo = {
@@ -228,7 +228,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
         "names": ["scat"],
     }
     _value = [0, 10 * u.m, 3 * u.km, 4, None]
-    with pytest.raises(InvalidConfigEntry):
+    with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
         assert "Config entry given without unit" in caplog.text
 
@@ -252,7 +252,7 @@ def test_validate_and_convert_value_without_units() -> None:
         "c": 3.0,
     }
     _value = [0, 10.0 * u.m, 3.0]
-    with pytest.raises(InvalidConfigEntry):
+    with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_without_units(_value, None, _parname, _parinfo)
 
     assert (
@@ -561,11 +561,11 @@ def test_collect_data_from_http():
     assert isinstance(data, dict)
 
     file = "tests/resources/simtel_output_files.txt"
-    with pytest.raises(InvalidConfigData):
+    with pytest.raises(InvalidConfigDataError):
         data = gen.collect_data_from_http(url + file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
-    with pytest.raises(InvalidConfigData):
+    with pytest.raises(InvalidConfigDataError):
         data = gen.collect_data_from_http(url + file)
 
 
@@ -649,7 +649,7 @@ def test_sort_arrays() -> None:
 
 
 @pytest.mark.parametrize(
-    "input_data, expected_output",
+    ("input_data", "expected_output"),
     [
         (
             {

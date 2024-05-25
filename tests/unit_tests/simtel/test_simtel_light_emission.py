@@ -183,14 +183,14 @@ def mock_output_path(label, io_handler):
 
 @pytest.fixture()
 def calibration_model_illn(db_config, io_handler, model_version):
-    calibration_model_ILLN = CalibrationModel(
+    calibration_model_illn = CalibrationModel(
         site="North",
         calibration_device_model_name="ILLN-01",
         mongo_db_config=db_config,
         model_version=model_version,
         label="test-simtel-light-emission",
     )
-    return calibration_model_ILLN
+    return calibration_model_illn
 
 
 def test_initialization(mock_simulator, default_config):

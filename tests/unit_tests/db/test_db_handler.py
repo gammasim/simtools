@@ -18,7 +18,7 @@ def random_id():
 
 
 @pytest.fixture()
-def db_cleanup(db, random_id):
+def _db_cleanup(db, random_id):
     yield
     # Cleanup
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
@@ -30,7 +30,7 @@ def db_cleanup(db, random_id):
 
 
 @pytest.fixture()
-def db_cleanup_file_sandbox(db_no_config_file, random_id):
+def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
@@ -109,7 +109,8 @@ def test_get_sim_telarray_configuration_parameters(db, model_version):
     assert "min_photoelectrons" in _pars
 
 
-def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_copy_telescope_db(db, random_id, io_handler, model_version):
     logger.info("----Testing copying a whole telescope-----")
     db.copy_telescope(
         db_name=None,
@@ -156,7 +157,8 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
         )
 
 
-def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_add_tagged_version(db, random_id, io_handler, model_version):
 
     tags = {
         "Released": {"Value": "2020-06-28"},
@@ -174,7 +176,8 @@ def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version
     db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
-def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
         db_name=None,
@@ -316,7 +319,8 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         )
 
 
-def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=None,
@@ -430,7 +434,8 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
+@pytest.mark.usefixtures("_db_cleanup_file_sandbox")
+def test_insert_files_db(db, io_handler, random_id, caplog):
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
