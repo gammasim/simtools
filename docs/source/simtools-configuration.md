@@ -13,26 +13,26 @@ To illustrate this, the example below sets the path pointing towards the directo
 
 Set the output directory using a command line argument:
 
-```
-$ python applications/<application_name> --output_path <path name>
+```console
+python applications/<application_name> --output_path <path name>
 ```
 
 Set the output directory using a configuration file in yaml format:
 
-```
+```yaml
 config_file: <path name>
 ```
 
 Load the yaml configuration file into the application with:
 
 ```console
-$ python applications/<application_name> --config <my_config.yml>
+python applications/<application_name> --config <my_config.yml>
 ```
 
 Configuration parameter read from a environmental variable:
 
 ```console
-$ EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
+EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 ```
 
 Configuration methods can be combined; conflicting configuration settings raise an Exception.
