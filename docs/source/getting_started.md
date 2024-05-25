@@ -52,14 +52,14 @@ and is not as well tests as the conda/mamba installation.
 Prepare a python environment (in this example for python version 3.11):
 
 ```console
-$ mamba create --name simtools-prod python=3.11
-$ mamba activate simtools-prod
+mamba create --name simtools-prod python=3.11
+mamba activate simtools-prod
 ```
 
 Use pip to install simtools and its dependencies:
 
 ```console
-$ pip install gammasimtools
+pip install gammasimtools
 ```
 
 The pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
@@ -71,9 +71,9 @@ The pip installation method requires to install CORSIKA/sim_telarray separately,
 Install simtools directly from the GitHub repository:
 
 ```console
-$ git clone https://github.com/gammasim/simtools.git
-$ cd simtools
-$ pip install .
+git clone https://github.com/gammasim/simtools.git
+cd simtools
+pip install .
 ```
 
 The git installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
@@ -120,16 +120,16 @@ docker run --rm -it --env-file .env \
 Developers install simtools directly from the GitHub repository:
 
 ```console
-$ git clone https://github.com/gammasim/simtools.git
-$ cd simtools
+git clone https://github.com/gammasim/simtools.git
+cd simtools
 ```
 
 Create a conda/mamba virtual environment with the simtools dependencies installed:
 
 ```console
-$ mamba env create -f environment.yml
-$ mamba activate simtools-dev
-$ pip install -e .
+mamba env create -f environment.yml
+mamba activate simtools-dev
+pip install -e .
 ```
 
 (corsikasimtelarrayinstallation)=
@@ -144,8 +144,8 @@ CTA users can download both packages from the [sim_telarray webpage](https://www
 (CTA password applies) and install the package with:
 
 ```console
-$ tar -czf corsika7.7_simtelarray.tar.gz
-$ ./build_all prod5 qgs2 gsl
+tar -czf corsika7.7_simtelarray.tar.gz
+./build_all prod5 qgs2 gsl
 ```
 
 The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORSIKA/sim_telarray installation
@@ -193,11 +193,11 @@ the environmental variable `$SIMTOOLS_SIMTEL_PATH` and those for the database ac
 Test the simtools installation the docker image by running the unit tests:
 
 ```console
-$ pytest tests/unit_tests/
+pytest tests/unit_tests/
 ```
 
 Test the simtools plus CORSIKA/sim_telarray installation by running the integration tests:
 
 ```console
-$ pytest --no-cov tests/integration_tests/
+pytest --no-cov tests/integration_tests/
 ```
