@@ -4,12 +4,9 @@
 
 Modules for database access. See the databases section for details.
 
-- {ref}`db_handler <db_handler>`
-- {ref}`db_from_repo_handler <db_from_repo_handler>`
-
 ## db_handler
 
-(db-handler-1)=
+(db-handler-class)=
 
 ```{eval-rst}
 .. automodule:: db.db_handler
@@ -18,7 +15,7 @@ Modules for database access. See the databases section for details.
 
 ## db_from_repo_handler
 
-(db-from-repo-handler-1)=
+(db-from-repo-handler)=
 
 ```{eval-rst}
 .. automodule:: db.db_from_repo_handler

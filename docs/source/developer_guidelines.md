@@ -35,7 +35,7 @@ It is recommended to discuss any code changes with the simtools team before star
 
 The following steps outline how to contribute code to simtools:
 
-01. Set up your coding environment as outlined in the {ref}`getting started <getting_started>` section.
+01. Set up your coding environment as outlined in the [getting started](getting_started.md#getting-started) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
 04. Add unit tests for new modules and functions.
@@ -46,7 +46,7 @@ The following steps outline how to contribute code to simtools:
 09. Wait for a review of your code and address any issues that arise.
 10. After successful review, the pull request can be merged into the main branch.
 
-Note the {ref}`guidelines on pull requests <pull_requests>`.
+Note the [guidelines on pull requests](pull_requests.md#pull-requests).
 
 ## Unit and Integration Testing
 
@@ -107,9 +107,9 @@ def main():
     ...
 ```
 
-Application handling should be done using the {ref}`Configurator <configurationconfigurator>` class, which allows to set
+Application handling should be done using the [Configurator](configuration_module.md#configurationconfigurator) class, which allows to set
 configurations from command line, configuration file, or environmental variables.
-Check the {ref}`commandline_parser <configurationcommandline_parser>` module for generic command line arguments before introducing new ones in applications
+Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command line arguments before introducing new ones in applications
 
 The documentation of application uses the in-line doc string.
 

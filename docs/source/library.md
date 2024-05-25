@@ -25,3 +25,7 @@ simulators
 utils
 visualization
 ```
+
+:::{hint}
+Confirm that all modules are included.
+:::

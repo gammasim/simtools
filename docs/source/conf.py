@@ -85,7 +85,8 @@ extensions = [
     "numpydoc",
 ]
 
-autosectionlabel_prefix_document = True
+# autosectionlabel_prefix_document = True
+# autosectionlabel_maxdepth = None
 
 # Display todos by setting to True
 todo_include_todos = True
@@ -182,3 +183,5 @@ myst_heading_anchors = 3
 myst_enable_extensions = {
     "colon_fence",
 }
+
+suppress_warnings = ["myst.*", "myst.duplicate_def"]

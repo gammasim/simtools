@@ -29,193 +29,35 @@ sim_telarray config files) are stored in the sub-directory *model*.
 Applications found in the *simtools/application/db_development_tools* directory are not intended for
 end-users, but for developers working on the database schema.
 
-# List of applications
+## List of applications
 
-(add-file-to-db)=
+```{toctree}
+:glob: true
+:maxdepth: 1
 
-## add_file_to_db
-
-```{eval-rst}
-.. automodule:: add_file_to_db
-   :members:
-```
-
-(add-value-from-json-to-db)=
-
-## add_value_from_json_to_db
-
-```{eval-rst}
-.. automodule:: add_value_from_json_to_db
-   :members:
-```
-
-## calculate_trigger_rate
-
-```{eval-rst}
-.. automodule:: calculate_trigger_rate
-   :members:
-```
-
-## compare_cumulative_psf
-
-```{eval-rst}
-.. automodule:: compare_cumulative_psf
-   :members:
-
-```
-
-## convert_all_model_parameters_from_simtel
-
-```{eval-rst}
-.. automodule:: convert_all_model_parameters_from_simtel
-   :members:
-
-```
-
-## convert_model_parameter_from_simtel
-
-```{eval-rst}
-.. automodule:: convert_model_parameter_from_simtel
-   :members:
-```
-
-## derive_mirror_rnda
-
-```{eval-rst}
-.. automodule:: derive_mirror_rnda
-   :members:
-```
-
-## generate_corsika_histograms
-
-```{eval-rst}
-.. automodule:: generate_corsika_histograms
-   :members:
-```
-
-## generate_default_metadata
-
-```{eval-rst}
-.. automodule:: generate_default_metadata
-   :members:
-```
-
-## generate_simtel_array_histograms
-
-```{eval-rst}
-.. automodule:: generate_simtel_array_histograms
-   :members:
-```
-
-## get_file_from_db
-
-```{eval-rst}
-.. automodule:: get_file_from_db
-   :members:
-```
-
-## get_parameter
-
-```{eval-rst}
-.. automodule:: get_parameter
-   :members:
-```
-
-## light_emission
-
-```{eval-rst}
-.. automodule:: light_emission
-   :members:
-```
-
-## make_regular_arrays
-
-```{eval-rst}
-.. automodule:: make_regular_arrays
-   :members:
-```
-
-## plot_array_layout
-
-```{eval-rst}
-.. automodule:: plot_array_layout
-   :members:
-```
-
-## print_array_elements
-
-```{eval-rst}
-.. automodule:: print_array_elements
-   :members:
-
-```
-
-## produce_array_config
-
-```{eval-rst}
-.. automodule:: produce_array_config
-   :members:
-
-```
-
-## sim_showers_for_trigger_rates
-
-```{eval-rst}
-.. automodule:: sim_showers_for_trigger_rates
-   :members:
-
-```
-
-## simulate_prod
-
-```{eval-rst}
-.. automodule:: simulate_prod
-   :members:
-```
-
-## submit_data_from_external
-
-```{eval-rst}
-.. automodule:: submit_data_from_external
-   :members:
-
-```
-
-## tune_psf
-
-```{eval-rst}
-.. automodule:: tune_psf
-   :members:
-
-```
-
-## validate_camera_efficiency
-
-```{eval-rst}
-.. automodule:: validate_camera_efficiency
-   :members:
-
-```
-
-## validate_camera_fov
-
-```{eval-rst}
-.. automodule:: validate_camera_fov
-   :members:
-
-```
-
-## validate_file_using_schema
-
-```{eval-rst}
-.. automodule:: validate_file_using_schema
-   :members:
-
-```
-
-## validate_optics
-
-```{eval-rst}
-.. automodule:: validate_optics
-   :members:
+add_file_to_db
+add_value_from_json_to_db
+calculate_trigger_rate
+compare_cumulative_psf
+convert_all_model_parameters_from_simtel
+convert_model_parameter_from_simtel
+derive_mirror_rnda
+generate_corsika_histograms
+generate_default_metadata
+generate_simtel_array_histograms
+get_file_from_db
+get_parameter
+light_emission
+make_regular_arrays
+plot_array_layout
+print_array_elements
+produce_array_config
+sim_showers_for_trigger_rates
+simulate_prod
+submit_data_from_external
+tune_psf
+validate_camera_efficiency
+validate_camera_fov
+validate_file_using_schema
+validate_optics
 ```

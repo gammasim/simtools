@@ -20,8 +20,8 @@ The major components to handle the simulation model in simtools are:
 
 1. **Model parameter databases:** The simulation model is stored in [mongoDB databases](databases.md#databases).
 The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces to the database.
-2. **Model parameter management:** The {ref}`model_parameters module <model_parameters>` provides interfaces to manage the simulation model parameters.
-3. A **model of an array and its elements** consists of the {ref}`SiteModel <site_model>` and several {ref}`TelescopeModel <telescope_model>` and {ref}`CalibrationModel <calibration_model>` instances.
+2. **Model parameter management:** The [model parameters module](mcmodel.md#model-parameters) provides interfaces to manage the simulation model parameters.
+3. A **model of an array and its elements** consists of the [SiteModel](mcmodel.md#site-model) and several [TelescopeModel](mcmodel.md#telescope-model)`and [CalibrationModel](mcmodel.md#calibration-model) instances.
 
 Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files.
 
