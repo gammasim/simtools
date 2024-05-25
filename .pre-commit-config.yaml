@@ -61,4 +61,4 @@ repos:
     rev: v0.40.0
     hooks:
     - id: markdownlint
-      args: ["--disable MD041 MD013 --"]
+      args: ["--disable", "MD041"]
