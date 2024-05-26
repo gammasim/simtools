@@ -79,7 +79,7 @@ Add the `--cov-report html` option to generate a coverage report in HTML format.
 
 ## Writing Applications
 
-Applications are command lines tools that should be built of the simtools library.
+Applications are command-line tools that should be built of the simtools library.
 Application should not include complex algorithm, this should be done at the module level.
 
 All applications should follow the same structure:
@@ -108,8 +108,8 @@ def main():
 ```
 
 Application handling should be done using the [Configurator](configuration_module.md#configurationconfigurator) class, which allows to set
-configurations from command line, configuration file, or environmental variables.
-Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command line arguments before introducing new ones in applications
+configurations from the command line, configuration files, or environmental variables.
+Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command-line arguments before introducing new ones in applications
 
 The documentation of application uses the in-line doc string.
 
