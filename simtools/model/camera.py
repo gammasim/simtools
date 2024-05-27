@@ -89,7 +89,7 @@ class Camera:
         pixels["pix_id"] = []
         pixels["pix_on"] = []
 
-        with open(camera_config_file, "r", encoding="utf-8") as dat_file:
+        with open(camera_config_file, encoding="utf-8") as dat_file:
             for line in dat_file:
                 pix_info = line.split()
                 if line.startswith("PixType"):

@@ -13,22 +13,22 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_config_file():
     return "tests/resources/simtel_config_test_la_palma.cfg"
 
 
-@pytest.fixture
+@pytest.fixture()
 def schema_num_gains():
     return "tests/resources/num_gains.schema.yml"
 
 
-@pytest.fixture
+@pytest.fixture()
 def schema_telescope_transmission():
     return "tests/resources/telescope_transmission.schema.yml"
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_reader_num_gains(simtel_config_file, schema_num_gains):
     return SimtelConfigReader(
         schema_file=schema_num_gains,
@@ -37,7 +37,7 @@ def config_reader_num_gains(simtel_config_file, schema_num_gains):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_reader_telescope_transmission(simtel_config_file, schema_telescope_transmission):
     return SimtelConfigReader(
         schema_file=schema_telescope_transmission,

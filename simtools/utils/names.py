@@ -1,7 +1,7 @@
 import glob
 import logging
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 import yaml
@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-@lru_cache(maxsize=None)
+@cache
 def array_elements():
     """
     Load array elements from reference files and keep in cache.
@@ -34,11 +34,11 @@ def array_elements():
         Array elements.
     """
     base_path = Path(__file__).parent
-    with open(base_path / "../schemas/array_elements.yml", "r", encoding="utf-8") as file:
+    with open(base_path / "../schemas/array_elements.yml", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
 
 
-@lru_cache(maxsize=None)
+@cache
 def site_names():
     """
     Site names from reference file.
@@ -68,12 +68,12 @@ array_layout_names = {
 }
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_model_parameters(class_key_list):
     model_parameters = {}
     schema_files = glob.glob(str(Path(__file__).parent / "../schemas/model_parameters") + "/*.yml")
     for schema_file in schema_files:
-        with open(schema_file, "r", encoding="utf-8") as f:
+        with open(schema_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         try:
             if data["instrument"]["class"] in class_key_list:
