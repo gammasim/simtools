@@ -23,17 +23,17 @@
 
     .. code-block:: console
 
-        simtools-submit-data-from-external \
-            --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \
-            --input ./tests/resources/MLTdata-preproduction.ecsv \
-            --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \
+        simtools-submit-data-from-external \\
+            --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\
+            --input ./tests/resources/MLTdata-preproduction.ecsv \\
+            --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \\
             --output_file TEST-submit_data_from_external.ecsv
 
     Expected final print-out message:
 
     .. code-block:: console
 
-        INFO::model_data_writer(l70)::write_data::Writing data to \
+        INFO::model_data_writer(l70)::write_data::Writing data to \\
             /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv
 
 """

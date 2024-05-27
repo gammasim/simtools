@@ -69,7 +69,7 @@
 
     .. code-block:: console
 
-        simtools-tune-psf --site North --telescope LST-1 \
+        simtools-tune-psf --site North --telescope LST-1 \\
             --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test
 
     The output is saved in simtools-output/tune_psf.

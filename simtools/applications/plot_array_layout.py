@@ -32,7 +32,7 @@
     -------
     .. code-block:: console
 
-        simtools-plot-layout-array --figure_name northern_array_alpha \
+        simtools-plot-layout-array --figure_name northern_array_alpha \\
         --array_layout_name North-TestLayout
 
 """
