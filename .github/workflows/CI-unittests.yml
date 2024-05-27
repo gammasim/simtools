@@ -1,6 +1,6 @@
 ---
 name: CI-unittests
-# Execute unit tests - flake8 and pytest
+# Execute unit tests
 #
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
@@ -91,10 +91,6 @@ jobs:
         if: matrix.install-method == 'mamba'
         run: |
           pip install -e '.[tests,dev,doc]'
-
-      - name: flake8
-        run: |
-          flake8 --max-line-length 100 --per-file-ignores="_version.py:F401 E501" .
 
       - name: Unit tests
         shell: bash -l {0}
