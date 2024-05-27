@@ -18,7 +18,7 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 ## Issuing a pull request
 
 - describe clearly the problem or issue solved by the pull request; do not assume full familiarity of the reviewer with the issue
-- indicate if this a new feature, refactoring, or bug fix
+- indicate if this a new feature, refactoring, or bugfix
 - describe the main logic of the changes
 - guide the reviewer through the changes; indicate for larger pull requests a logical order for reviewing
 - consider adding code or usage examples
@@ -37,5 +37,5 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 - discuss the code, not the coder (it is "the code is doing..", not "you are doing.."). Often logic has been introduced earlier and there is no use of pointing fingers.
 - pull the code locally and execute the new code
 - limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.
-- clearly indicate if you have no time for a review (this is ok if it is known)
+- clearly indicate if you have no time for a review (this is OK if it is known)
 - fix small typos directly
