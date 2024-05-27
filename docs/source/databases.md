@@ -17,4 +17,4 @@ This documentation is therefore incomplete.
 
 ## Browsing the mongoDB database
 
-The mongoDB database can be accessed via the command line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
+The mongoDB database can be accessed via the command-line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
