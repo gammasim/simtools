@@ -1,6 +1,6 @@
 import logging
 
-import matplotlib as mlp
+import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -109,13 +109,13 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     legend_objects = [leg_h.PixelObject(), leg_h.EdgePixelObject()]
     legend_labels = ["Pixel", "Edge pixel"]
     legend_handler_map = {}
-    if isinstance(on_pixels[0], mlp.patches.RegularPolygon):
+    if isinstance(on_pixels[0], mpl.patches.RegularPolygon):
         legend_handler_map = {
             leg_h.PixelObject: leg_h.HexPixelHandler(),
             leg_h.EdgePixelObject: leg_h.HexEdgePixelHandler(),
             leg_h.OffPixelObject: leg_h.HexOffPixelHandler(),
         }
-    elif isinstance(on_pixels[0], mlp.patches.Rectangle):
+    elif isinstance(on_pixels[0], mpl.patches.Rectangle):
         legend_handler_map = {
             leg_h.PixelObject: leg_h.SquarePixelHandler(),
             leg_h.EdgePixelObject: leg_h.SquareEdgePixelHandler(),

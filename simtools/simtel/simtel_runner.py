@@ -6,7 +6,7 @@ import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
 
-__all__ = ["InvalidOutputFile", "SimtelExecutionError", "SimtelRunner"]
+__all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
 
 # pylint: disable=no-member
 # The line above is needed because there are methods which are used in this class
@@ -17,7 +17,7 @@ class SimtelExecutionError(Exception):
     """Exception for simtel_array execution error."""
 
 
-class InvalidOutputFile(Exception):
+class InvalidOutputFileError(Exception):
     """Exception for invalid output file."""
 
 

@@ -67,7 +67,7 @@ class SimtelConfigWriter:
             file.write("#ifdef TELESCOPE\n")
             file.write(
                 f"   echo Configuration for {self._telescope_model_name}"
-                + " - TELESCOPE $(TELESCOPE)\n"
+                " - TELESCOPE $(TELESCOPE)\n"
             )
             file.write("#endif\n\n")
 
@@ -79,7 +79,7 @@ class SimtelConfigWriter:
                     value = "none" if value is None else value  # simtel requires 'none'
                     if isinstance(value, bool):
                         value = 1 if value else 0
-                    elif isinstance(value, (list, np.ndarray)):
+                    elif isinstance(value, list | np.ndarray):
                         value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
             _config_meta = self._get_simtel_metadata("telescope")

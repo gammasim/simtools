@@ -26,7 +26,7 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return int(o)
         if isinstance(o, np.ndarray):
             return o.tolist()
-        if isinstance(o, (u.core.CompositeUnit, u.core.IrreducibleUnit, u.core.Unit)):
+        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
             return str(o) if o != u.dimensionless_unscaled else None
         if np.issubdtype(type(o), np.bool_):
             return bool(o)
@@ -193,10 +193,7 @@ class SimtelConfigReader:
                 _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
 
             try:
-                if (
-                    not isinstance(_from_schema, (list, np.ndarray))
-                    and _from_simtel == _from_schema
-                ):
+                if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
                     self._logger.debug(f"Values for {data_type} match")
                     continue
             except ValueError:

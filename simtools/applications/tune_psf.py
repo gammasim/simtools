@@ -230,10 +230,11 @@ def main():
         mrf_range = 0.1
         mrra2_range = 0.03
         mar_range = 0.005
-        mrra = np.random.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
-        mrf = np.random.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
-        mrra2 = np.random.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
-        mar = np.random.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
+        rng = np.random.default_rng()
+        mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
+        mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
+        mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
+        mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
         add_parameters(mrra, mar, mrf, mrra2)
 
     # Loading measured cumulative PSF

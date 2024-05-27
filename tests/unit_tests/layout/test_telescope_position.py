@@ -8,7 +8,10 @@ import numpy as np
 import pyproj
 import pytest
 
-from simtools.layout.telescope_position import InvalidCoordSystem, TelescopePosition
+from simtools.layout.telescope_position import (
+    InvalidCoordSystemErrorError,
+    TelescopePosition,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -72,9 +75,9 @@ def test_str(crs_wgs84, crs_local, crs_utm):
 def test_get_coordinates(crs_wgs84, crs_local, crs_utm):
     tel = TelescopePosition(name="LSTN-01")
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel.get_coordinates("not_valid_crs")
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel.get_coordinates("not_valid_crs", coordinate_field="value")
 
     tel.set_coordinates("ground", 50, -25.0, 2158.0 * u.m)
@@ -121,7 +124,7 @@ def test_get_coordinate_variable():
 def test_set_coordinates():
     tel = TelescopePosition(name="LSTN-01")
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel.set_coordinates("not_valid_crs", 5.0, 2.0, 3.0)
     tel.set_coordinates("utm", 217611 * u.m, 3185066 * u.m)
     assert tel.crs["utm"]["xx"]["value"] == pytest.approx(217611, 0.1)
@@ -204,7 +207,7 @@ def test_get_reference_system_from(crs_utm):
 def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
     tel = TelescopePosition(name="LSTS-01")
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel.has_coordinates("not_a_system")
 
     assert not tel.has_coordinates("ground")
@@ -226,7 +229,7 @@ def test_has_coordinates(crs_wgs84, crs_local, crs_utm):
 def test_has_altitude():
     tel = TelescopePosition(name="LSTS-01")
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel.has_altitude("not_a_system")
 
     assert not tel.has_altitude("utm")
@@ -248,7 +251,7 @@ def test_has_altitude():
 def test_set_coordinate_system(crs_wgs84):
     tel = TelescopePosition(name="LSTN-01")
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         tel._set_coordinate_system("not_a_system", crs_wgs84)
 
     tel._set_coordinate_system("mercator", crs_wgs84)
@@ -373,5 +376,5 @@ def test_print_compact_format(capsys):
     _output = capsys.readouterr().out
     assert "".join(expected_output.split()) == "".join(_output.split())
 
-    with pytest.raises(InvalidCoordSystem):
+    with pytest.raises(InvalidCoordSystemErrorError):
         telescope.print_compact_format("not_a_crs")
