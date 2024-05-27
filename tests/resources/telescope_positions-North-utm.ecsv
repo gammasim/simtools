@@ -13,10 +13,10 @@
 #     CONTACT: {EMAIL: a@email.org, NAME: CTAO Project Scientist, ORGANIZATION: CTAO North}
 #     CONTEXT:
 #       ASSOCIATED_ELEMENTS:
-#       - {CLASS: array, ID: null, SITE: CTA-North, TYPE: null}
+#       - {CLASS: array, ID: null, SITE: North, TYPE: null}
 #       DOCUMENT:
 #       - {CREATION_TIME: '2022-05-30 12:00:00', ID: CTA-SPE-PSC-000000-0001 1c, TITLE: Layouts of the CTAO Arrays, TYPE: CTAO-DOC}
-#     INSTRUMENT: {CLASS: null, ID: null, SITE: CTA-North, TYPE: null}
+#     INSTRUMENT: {CLASS: null, ID: null, SITE: North, TYPE: null}
 #     PROCESS: {ID: null, TYPE: null}
 #     PRODUCT:
 #       CREATION_TIME: '2022-05-30 12:00:00'

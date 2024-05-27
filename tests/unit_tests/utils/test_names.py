@@ -38,8 +38,8 @@ def test_get_list_of_telescope_types():
 
 def test_validate_name():
     with_lists = {
-        "South": ["paranal", "south", "cta-south", "ctao-south", "s"],
-        "North": ["lapalma", "north", "cta-north", "ctao-north", "n"],
+        "South": ["south"],
+        "North": ["north"],
     }
 
     for key, value in with_lists.items():
@@ -82,7 +82,7 @@ def test_validate_telescope_id_name(caplog):
 
 
 def test_validate_site_name():
-    for key, value in names.site_names.items():
+    for key, value in names.site_names().items():
         for test_name in value:
             assert key == names.validate_site_name(test_name)
     with pytest.raises(ValueError):
@@ -136,15 +136,6 @@ def test_get_class_from_telescope_name():
     assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
     with pytest.raises(ValueError):
         names.get_site_from_telescope_name("SATW")
-
-
-def test_validate_model_version_name():
-    model_version = names.validate_model_version_name("p4")
-
-    assert model_version == "prod4"
-
-    with pytest.raises(ValueError):
-        names.validate_model_version_name("p0")
 
 
 def test_sanitize_name():

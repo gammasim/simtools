@@ -16,9 +16,9 @@ def test_rotate_telescope_position(caplog) -> None:
     def check_results(x_to_test, y_to_test, x_right, y_right, angle, theta=0 * u.deg):
         x_rot, y_rot = transf.rotate(x_to_test, y_to_test, angle, theta)
         x_rot, y_rot = np.around(x_rot, 1), np.around(y_rot, 1)
-        if not isinstance(x_right, (list, np.ndarray)):
+        if not isinstance(x_right, list | np.ndarray):
             x_right = [x_right]
-        if not isinstance(y_right, (list, np.ndarray)):
+        if not isinstance(y_right, list | np.ndarray):
             y_right = [y_right]
         for element, _ in enumerate(x_right):
             assert x_right[element] == x_rot[element]
@@ -71,17 +71,17 @@ def test_convert_2d_to_radial_distr(caplog) -> None:
     xaxis = np.arange(-max_dist, max_dist, step)
     yaxis = np.arange(-max_dist, max_dist, step)
     x2d, y2d = np.meshgrid(xaxis, yaxis)
-    distance_to_center_2D = np.sqrt((x2d) ** 2 + (y2d) ** 2)
+    distance_to_center_2d = np.sqrt((x2d) ** 2 + (y2d) ** 2)
 
-    distance_to_center_1D, radial_bin_edges = transf.convert_2d_to_radial_distr(
-        distance_to_center_2D, xaxis, yaxis, bins=bins, max_dist=max_dist
+    distance_to_center_1d, radial_bin_edges = transf.convert_2d_to_radial_distr(
+        distance_to_center_2d, xaxis, yaxis, bins=bins, max_dist=max_dist
     )
-    difference = radial_bin_edges[:-1] - distance_to_center_1D
+    difference = radial_bin_edges[:-1] - distance_to_center_1d
     assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
 
     # Test warning in caplog
     transf.convert_2d_to_radial_distr(
-        distance_to_center_2D, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
+        distance_to_center_2d, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
     )
     msg = "The histogram with number of bins"
     assert msg in caplog.text

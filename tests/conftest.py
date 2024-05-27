@@ -20,7 +20,7 @@ from simtools.model.telescope_model import TelescopeModel
 logger = logging.getLogger()
 
 
-@pytest.fixture
+@pytest.fixture()
 def tmp_test_directory(tmpdir_factory):
     """
     Sets test directories.
@@ -36,7 +36,7 @@ def tmp_test_directory(tmpdir_factory):
     return tmp_test_dir
 
 
-@pytest.fixture
+@pytest.fixture()
 def io_handler(tmp_test_directory):
     tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
     tmp_io_handler.set_paths(
@@ -47,8 +47,8 @@ def io_handler(tmp_test_directory):
     return tmp_io_handler
 
 
-@pytest.fixture
-def mock_settings_env_vars(tmp_test_directory):
+@pytest.fixture()
+def _mock_settings_env_vars(tmp_test_directory):
     """
     Removes all environment variable from the test system.
     Explicitly sets those needed.
@@ -74,7 +74,7 @@ def mock_settings_env_vars(tmp_test_directory):
         yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_path():
     """
     This fixture does not really set the sim_telarray path because it is used only
@@ -83,7 +83,7 @@ def simtel_path():
     return Path("")
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_path_no_mock():
     load_dotenv(".env")
     simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
@@ -92,7 +92,7 @@ def simtel_path_no_mock():
     return ""
 
 
-@pytest.fixture
+@pytest.fixture()
 def args_dict(tmp_test_directory, simtel_path):
     return Configurator().default_config(
         (
@@ -106,7 +106,7 @@ def args_dict(tmp_test_directory, simtel_path):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def args_dict_site(tmp_test_directory, simtel_path):
     return Configurator().default_config(
         (
@@ -126,8 +126,8 @@ def args_dict_site(tmp_test_directory, simtel_path):
     )
 
 
-@pytest.fixture
-def configurator(tmp_test_directory, mock_settings_env_vars, simtel_path):
+@pytest.fixture()
+def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
     config = Configurator()
     config.default_config(
         ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
@@ -135,7 +135,7 @@ def configurator(tmp_test_directory, mock_settings_env_vars, simtel_path):
     return config
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_config():
     """
     Read DB configuration from tests from .env file and from environmental variables.
@@ -163,7 +163,7 @@ def db_config():
     return mongo_db_config
 
 
-@pytest.fixture
+@pytest.fixture()
 def simulation_model_url(db_config):
     if (
         db_config["db_simulation_model_url"] is None
@@ -176,13 +176,13 @@ def simulation_model_url(db_config):
     return db_config["db_simulation_model_url"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def db(db_config):
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     return db
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_no_config_file():
     """
     Same as db above, but without DB variable defined,
@@ -198,7 +198,7 @@ def pytest_addoption(parser):
     parser.addoption("--model_version", action="store", default=None)
 
 
-@pytest.fixture
+@pytest.fixture()
 def model_version():
     """
     Simulation model version used in tests.
@@ -206,7 +206,7 @@ def model_version():
     return "2024-02-01"
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
     array_model = ArrayModel(
         label="test-lst-array",
@@ -218,7 +218,7 @@ def array_model_north(simulator_config_data_north, io_handler, db_config, model_
     return array_model
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
     array_model = ArrayModel(
         label="test-lst-array",
@@ -230,7 +230,7 @@ def array_model_south(simulator_config_data_south, io_handler, db_config, model_
     return array_model
 
 
-@pytest.fixture
+@pytest.fixture()
 def site_model_south(db_config, model_version):
     return SiteModel(
         site="South",
@@ -240,7 +240,7 @@ def site_model_south(db_config, model_version):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def site_model_north(db_config, model_version):
     return SiteModel(
         site="North",
@@ -250,19 +250,19 @@ def site_model_north(db_config, model_version):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_model_lst(db_config, io_handler, model_version):
-    telescope_model_LST = TelescopeModel(
+    telescope_model_lst = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )
-    return telescope_model_LST
+    return telescope_model_lst
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_model_mst(db_config, io_handler, model_version):
     tel = TelescopeModel(
         site="South",
@@ -275,76 +275,76 @@ def telescope_model_mst(db_config, io_handler, model_version):
     return tel
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_model_sst(db_config, io_handler, model_version):
-    telescope_model_SST = TelescopeModel(
+    telescope_model_sst = TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_SST
+    return telescope_model_sst
 
 
 # TODO - keep prod5 until a complete prod6 model is in the DB
-@pytest.fixture
+@pytest.fixture()
 def telescope_model_sst_prod5(db_config, io_handler):
-    telescope_model_SST = TelescopeModel(
+    telescope_model_sst = TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_SST
+    return telescope_model_sst
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_layout_north_instance(io_handler, db_config, model_version):
     return ArrayLayout(
         site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_layout_south_instance(io_handler, db_config, model_version):
     return ArrayLayout(
         site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_north_with_calibration_devices_test_file():
     return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_north_test_file():
     return "tests/resources/telescope_positions-North-ground.ecsv"
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_north_utm_test_file():
     return "tests/resources/telescope_positions-North-utm.ecsv"
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_north_mercator_test_file():
     return "tests/resources/telescope_positions-North-mercator.ecsv"
 
 
-@pytest.fixture
+@pytest.fixture()
 def telescope_south_test_file():
     return "tests/resources/telescope_positions-South-ground.ecsv"
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_output_file_name():
     return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
     from simtools.corsika.corsika_histograms import CorsikaHistograms
 
@@ -353,13 +353,13 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
     corsika_histograms_instance.set_histograms()
     return corsika_histograms_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def simulator_config_data_north(tmp_test_directory):
     return {
         "common": {
@@ -383,17 +383,17 @@ def simulator_config_data_north(tmp_test_directory):
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_config_data(simulator_config_data):
     return simulator_config_data["common"] | simulator_config_data["array"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def shower_config_data_north(simulator_config_data_north):
     return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def simulator_config_data_south(tmp_test_directory):
     return {
         "common": {
@@ -417,7 +417,7 @@ def simulator_config_data_south(tmp_test_directory):
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def file_has_text():
     def wrapper(file, text):
         try:

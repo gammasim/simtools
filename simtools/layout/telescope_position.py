@@ -4,10 +4,10 @@ import astropy.units as u
 import numpy as np
 import pyproj
 
-__all__ = ["InvalidCoordSystem", "TelescopePosition"]
+__all__ = ["InvalidCoordSystemErrorError", "TelescopePosition"]
 
 
-class InvalidCoordSystem(Exception):
+class InvalidCoordSystemErrorError(Exception):
     """Exception for invalid coordinate system."""
 
 
@@ -88,7 +88,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
            if coordinate system is not defined.
         """
 
@@ -129,7 +129,7 @@ class TelescopePosition:
             print(tel_str)
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
     def get_coordinates(self, crs_name, coordinate_field=None):
         """
@@ -149,7 +149,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
            if coordinate system is not defined
 
         """
@@ -162,7 +162,7 @@ class TelescopePosition:
                 )
             except KeyError as e:
                 self._logger.error(f"Invalid coordinate system ({crs_name})")
-                raise InvalidCoordSystem from e
+                raise InvalidCoordSystemErrorError from e
         else:
             try:
                 return (
@@ -175,7 +175,7 @@ class TelescopePosition:
                     f"Invalid coordinate system ({crs_name}) "
                     f"or coordinate field ({coordinate_field})"
                 )
-                raise InvalidCoordSystem from e
+                raise InvalidCoordSystemErrorError from e
 
     def _get_coordinate_value(self, value, unit):
         """
@@ -211,7 +211,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
             If coordinate system is not known.
 
         """
@@ -229,7 +229,7 @@ class TelescopePosition:
                 )
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
     def get_altitude(self):
         """ "
@@ -339,7 +339,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
             If coordinate system is not known.
 
 
@@ -348,7 +348,7 @@ class TelescopePosition:
             return "crs" in self.crs[crs_name]
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
     def has_coordinates(self, crs_name, crs_check=False):
         """
@@ -368,7 +368,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
             If coordinate system is not known.
         """
         if not self.is_coordinate_system(crs_name):
@@ -378,7 +378,7 @@ class TelescopePosition:
                 return False
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
         return np.all(
             np.isfinite(
@@ -406,7 +406,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
             If coordinate system is not known
 
         """
@@ -426,7 +426,7 @@ class TelescopePosition:
             )
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
     def _set_coordinate_system(self, crs_name, crs_system):
         """
@@ -441,7 +441,7 @@ class TelescopePosition:
 
         Raises
         ------
-        InvalidCoordSystem
+        InvalidCoordSystemErrorError
             If coordinate system is not known.
 
         """
@@ -449,7 +449,7 @@ class TelescopePosition:
             self.crs[crs_name]["crs"] = crs_system
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
-            raise InvalidCoordSystem from e
+            raise InvalidCoordSystemErrorError from e
 
     @staticmethod
     @u.quantity_input(tel_altitude=u.m, corsika_observation_level=u.m, telescope_axis_height=u.m)

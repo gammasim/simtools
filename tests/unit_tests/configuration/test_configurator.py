@@ -11,7 +11,7 @@ import yaml
 
 from simtools.configuration.configurator import (
     Configurator,
-    InvalidConfigurationParameter,
+    InvalidConfigurationParameterError,
 )
 from simtools.io_operations import io_handler
 
@@ -155,7 +155,7 @@ def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_
     # parameter changed; should raise Exception
     configurator.config["config"] = "non_default_config_file"
 
-    with pytest.raises(InvalidConfigurationParameter):
+    with pytest.raises(InvalidConfigurationParameterError):
         configurator._check_parameter_configuration_status("config", "abc")
 
 

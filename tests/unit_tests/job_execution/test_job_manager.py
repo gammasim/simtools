@@ -8,7 +8,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def label():
     return "test-shower-simulator"
 
@@ -16,5 +16,5 @@ def label():
 def test_test_submission_system(label):
     jm.JobManager(submit_command=None)
     jm.JobManager(submit_command="local")
-    with pytest.raises(jm.MissingWorkloadManager):
+    with pytest.raises(jm.MissingWorkloadManagerError):
         jm.JobManager(submit_command="abc")
