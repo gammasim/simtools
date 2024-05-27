@@ -47,33 +47,16 @@ jobs:
 
       - name: install packages not included in super-linter
         run: |
-          pip install validate-pyproject restructuredtext-lint
+          pip install validate-pyproject
 
       - name: pyproject.toml
         run: |
           validate-pyproject pyproject.toml
 
-      # RST linter
-      # Note: unclear how to suppress error messages
-      # (use grep -v in this case)
-    #  - name: restructuredtext-lint
-    #    run: |
-    #      rst-lint README.rst docs/source |
-    #       grep -v "Unknown directive type" |
-    #       grep -v "Unknown interpreted text role" |
-    #       grep -v "Cannot analyze code. Pygments package not found."
-
       - name: Check whether the citation metadata from CITATION.cff is valid
         uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
           args: "--validate"
-
-      - name: yaml_config used by super-linter
-        run: |
-          # TODO - very large line length
-          echo 'rules:' > yaml_config.yaml
-          echo '  line-length:' >> yaml_config.yaml
-          echo '    max: 250' >> yaml_config.yaml
 
       # Dependencies required to avoid errors
       # reported by linters
@@ -100,22 +83,6 @@ jobs:
         uses: super-linter/super-linter@v6
         env:
           VALIDATE_ALL_CODEBASE: false
-          # github actions
-          VALIDATE_GITHUB_ACTIONS: true
-          # yaml
-          VALIDATE_YAML: true
-          YAML_CONFIG_FILE: yaml_config.yaml
-          YAML_ERROR_ON_WARNING: false
-          # isort
-          VALIDATE_PYTHON_ISORT: true
-          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
-          # flake8
-          VALIDATE_PYTHON_FLAKE8: true
-          # black
-          VALIDATE_PYTHON_BLACK: true
-          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
-          # markdown
-          VALIDATE_MARKDOWN: true
           # docker
           VALIDATE_DOCKERFILE_HADOLINT: true
           # .env file
@@ -131,5 +98,5 @@ jobs:
           LOG_FILE: superlinter.log
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # exclude link to markdown files
+          # exclude markdown file with links
           FILTER_REGEX_EXCLUDE: "docs/source/docker_files.md"
