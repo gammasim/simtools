@@ -16,8 +16,8 @@
     -------
     .. code-block:: console
 
-        simtools-generate-default-metadata
-            --schema simtools/schemas/metadata.metaschema.yml
+        simtools-generate-default-metadata \\
+            --schema simtools/schemas/metadata.metaschema.yml \\
             --output_file default_metadata.yml
 
 

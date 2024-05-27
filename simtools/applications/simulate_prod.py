@@ -63,9 +63,9 @@
 
     .. code-block:: console
 
-        simtools-simulate-prod \
-        --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \
-        --site north --primary gamma --azimuth_angle north --zenith_angle 20 \
+        simtools-simulate-prod \\
+        --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \\
+        --site north --primary gamma --azimuth_angle north --zenith_angle 20 \\
         --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production

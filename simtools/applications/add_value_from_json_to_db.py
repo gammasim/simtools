@@ -23,7 +23,7 @@
 
     .. code-block:: console
 
-        simtools-add-value-from-json-to-db \
+        simtools-add-value-from-json-to-db \\
             --file_name new_value.json --db_collection sites
 
 

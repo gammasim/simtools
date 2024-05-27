@@ -80,8 +80,8 @@
 
     .. code-block:: console
 
-        simtools-produce-array-config --label test --array_config \
-        array_config_test.yml
+        simtools-produce-array-config --label test --array_config \\
+            array_config_test.yml
 
     The output is saved in simtools-output/test/model.
 

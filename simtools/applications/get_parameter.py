@@ -30,8 +30,9 @@
 
     .. code-block:: console
 
-        simtools-get-parameter --parameter mirror_list --site North --telescope LST-1\
-         --model_version prod5
+        simtools-get-parameter --parameter mirror_list \\
+                --site North --telescope LSTN-01 \\
+                --model_version prod5
 
     Expected final print-out message:
 
