@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.configurator &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>configuration.configurator &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -348,13 +348,13 @@ document.write(`
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;Configurator&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;InvalidConfigurationParameter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;InvalidConfigurationParameterError&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidConfigurationParameter">
-<a class="viewcode-back" href="../../configuration_module.html#configuration.configurator.InvalidConfigurationParameter">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidConfigurationParameter</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidConfigurationParameterError">
+<a class="viewcode-back" href="../../configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidConfigurationParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for Invalid configuration parameter.&quot;&quot;&quot;</span></div>
 
 
@@ -487,11 +487,6 @@ document.write(`
 <span class="sd">        dict</span>
 <span class="sd">            Dictionary with DB parameters</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        InvalidConfigurationParameter</span>
-<span class="sd">           if parameter has already been defined with a different value.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">initialize_default_arguments</span><span class="p">(</span>
@@ -532,11 +527,6 @@ document.write(`
 <span class="sd">            List of arguments.</span>
 <span class="sd">        require_command_line: bool</span>
 <span class="sd">            Require at least one command line argument.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        InvalidConfigurationParameter</span>
-<span class="sd">              invalid configuration.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -603,7 +593,7 @@ document.write(`
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        InvalidConfigurationParameter</span>
+<span class="sd">        InvalidConfigurationParameterError</span>
 <span class="sd">           if parameter has already been defined with a different value.</span>
 
 
@@ -618,7 +608,7 @@ document.write(`
                 <span class="sa">f</span><span class="s2">&quot;Inconsistent configuration parameter (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">) definition &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidConfigurationParameter</span>
+            <span class="k">raise</span> <span class="n">InvalidConfigurationParameterError</span>
 
     <span class="k">def</span> <span class="nf">_fill_from_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tune_psf &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>tune_psf &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -568,10 +568,11 @@ document.write(`
         <span class="n">mrf_range</span> <span class="o">=</span> <span class="mf">0.1</span>
         <span class="n">mrra2_range</span> <span class="o">=</span> <span class="mf">0.03</span>
         <span class="n">mar_range</span> <span class="o">=</span> <span class="mf">0.005</span>
-        <span class="n">mrra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra_0</span> <span class="o">-</span> <span class="n">mrra_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra_0</span> <span class="o">+</span> <span class="n">mrra_range</span><span class="p">)</span>
-        <span class="n">mrf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mfr_0</span> <span class="o">-</span> <span class="n">mrf_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mfr_0</span> <span class="o">+</span> <span class="n">mrf_range</span><span class="p">)</span>
-        <span class="n">mrra2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra2_0</span> <span class="o">-</span> <span class="n">mrra2_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra2_0</span> <span class="o">+</span> <span class="n">mrra2_range</span><span class="p">)</span>
-        <span class="n">mar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mar_0</span> <span class="o">-</span> <span class="n">mar_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mar_0</span> <span class="o">+</span> <span class="n">mar_range</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+        <span class="n">mrra</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra_0</span> <span class="o">-</span> <span class="n">mrra_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra_0</span> <span class="o">+</span> <span class="n">mrra_range</span><span class="p">)</span>
+        <span class="n">mrf</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mfr_0</span> <span class="o">-</span> <span class="n">mrf_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mfr_0</span> <span class="o">+</span> <span class="n">mrf_range</span><span class="p">)</span>
+        <span class="n">mrra2</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mrra2_0</span> <span class="o">-</span> <span class="n">mrra2_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mrra2_0</span> <span class="o">+</span> <span class="n">mrra2_range</span><span class="p">)</span>
+        <span class="n">mar</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mar_0</span> <span class="o">-</span> <span class="n">mar_range</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mar_0</span> <span class="o">+</span> <span class="n">mar_range</span><span class="p">)</span>
         <span class="n">add_parameters</span><span class="p">(</span><span class="n">mrra</span><span class="p">,</span> <span class="n">mar</span><span class="p">,</span> <span class="n">mrf</span><span class="p">,</span> <span class="n">mrra2</span><span class="p">)</span>
 
     <span class="c1"># Loading measured cumulative PSF</span>

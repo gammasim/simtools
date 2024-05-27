@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -424,7 +424,7 @@ document.write(`
         <span class="n">_parameter_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span><span class="n">_file_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_tmp_par</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">):</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">):</span>
             <span class="c1"># use design telescope model in case there is no model defined for this telescope ID</span>
             <span class="c1"># accept errors, as not all parameters are defined in the repository</span>
             <span class="k">try</span><span class="p">:</span>
@@ -438,7 +438,7 @@ document.write(`
                 <span class="n">_tmp_par</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
                     <span class="n">file_name</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span><span class="n">_file_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">),</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
                 <span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span><span class="p">):</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">):</span>
                 <span class="k">pass</span>
         <span class="k">if</span> <span class="n">_tmp_par</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">model_version</span><span class="p">:</span>
             <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tmp_par</span>

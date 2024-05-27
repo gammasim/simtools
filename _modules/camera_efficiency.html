@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -579,21 +579,21 @@ document.write(`
                     <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eff_pars</span><span class="p">)</span> <span class="o">-</span> <span class="mi">10</span><span class="p">):</span>
                         <span class="n">_results</span><span class="p">[</span><span class="n">eff_pars</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                    <span class="n">C1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
-                    <span class="n">C2</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-                    <span class="n">C3</span> <span class="o">=</span> <span class="n">C2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
-                    <span class="n">C4</span> <span class="o">=</span> <span class="n">C3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-                    <span class="n">C4x</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                    <span class="n">C1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C2</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C3</span> <span class="o">=</span> <span class="n">C2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C4</span> <span class="o">=</span> <span class="n">C3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C4x</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C2</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C3&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C3</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C4</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C4x</span><span class="p">)</span>
-                    <span class="n">N1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span>
-                    <span class="n">N2</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-                    <span class="n">N3</span> <span class="o">=</span> <span class="n">N2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
-                    <span class="n">N4</span> <span class="o">=</span> <span class="n">N3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-                    <span class="n">N4x</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                    <span class="n">N1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N2</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N3</span> <span class="o">=</span> <span class="n">N2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N4</span> <span class="o">=</span> <span class="n">N3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N4x</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N1</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N2</span><span class="p">)</span>
                     <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N3&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N3</span><span class="p">)</span>

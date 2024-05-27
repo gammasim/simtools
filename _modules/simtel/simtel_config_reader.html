@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -361,7 +361,7 @@ document.write(`
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CompositeUnit</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">IrreducibleUnit</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Unit</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CompositeUnit</span> <span class="o">|</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">IrreducibleUnit</span> <span class="o">|</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Unit</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">if</span> <span class="n">o</span> <span class="o">!=</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
@@ -538,10 +538,7 @@ document.write(`
                 <span class="n">_from_schema</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]))</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
-                    <span class="ow">and</span> <span class="n">_from_simtel</span> <span class="o">==</span> <span class="n">_from_schema</span>
-                <span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_from_simtel</span> <span class="o">==</span> <span class="n">_from_schema</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> match&quot;</span><span class="p">)</span>
                     <span class="k">continue</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>

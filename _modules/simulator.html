@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -353,13 +353,13 @@ document.write(`
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;Simulator&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;InvalidRunsToSimulate&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;InvalidRunsToSimulateError&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidRunsToSimulate">
-<a class="viewcode-back" href="../simulators.html#simulator.InvalidRunsToSimulate">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidRunsToSimulate</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidRunsToSimulateError">
+<a class="viewcode-back" href="../simulators.html#simulator.InvalidRunsToSimulateError">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidRunsToSimulateError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid runs to simulate.&quot;&quot;&quot;</span></div>
 
 
@@ -495,12 +495,12 @@ document.write(`
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        gen.InvalidConfigData</span>
+<span class="sd">        gen.InvalidConfigDataError</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">simulator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigData</span>
+            <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulator</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_load_configuration_and_simulation_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">):</span>
@@ -600,7 +600,7 @@ document.write(`
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">run_list</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_list must contain only integers.&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidRunsToSimulate</span>
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_list: </span><span class="si">{</span><span class="n">run_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">validated_runs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">run_list</span><span class="p">)</span>
@@ -609,7 +609,7 @@ document.write(`
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">run_range</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">run_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_range must contain two integers only.&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidRunsToSimulate</span>
+                <span class="k">raise</span> <span class="n">InvalidRunsToSimulateError</span>
 
             <span class="n">run_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">run_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">run_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_range: </span><span class="si">{</span><span class="n">run_range</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>

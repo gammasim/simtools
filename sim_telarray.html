@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=59e416fa"></script>
+    <script src="_static/documentation_options.js?v=e49bc34a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -430,7 +430,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-events">simtel_events</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.InconsistentInputFile"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFile</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.InconsistentInputFileError"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFileError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents"><code class="docutils literal notranslate"><span class="pre">SimtelEvents</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents.count_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelEvents.count_simulated_events()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents.count_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelEvents.count_triggered_events()</span></code></a></li>
@@ -443,8 +443,8 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-histogram">simtel_histogram</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.HistogramIdNotFound"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFound</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.InconsistentHistogramFormat"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormat</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.HistogramIdNotFoundError"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFoundError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.InconsistentHistogramFormatError"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormatError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.compute_system_trigger_rate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.config</span></code></a></li>
@@ -481,7 +481,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-runner">simtel_runner</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.InvalidOutputFile"><code class="docutils literal notranslate"><span class="pre">InvalidOutputFile</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.InvalidOutputFileError"><code class="docutils literal notranslate"><span class="pre">InvalidOutputFileError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelExecutionError"><code class="docutils literal notranslate"><span class="pre">SimtelExecutionError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelRunner"><code class="docutils literal notranslate"><span class="pre">SimtelRunner</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.prepare_run_script()</span></code></a></li>
@@ -690,8 +690,8 @@ classes (TelescopeModel and ArrayModel) only.</p>
 <section id="simtel-events">
 <h2>simtel_events<a class="headerlink" href="#simtel-events" title="Link to this heading">#</a></h2>
 <span class="target" id="module-simtel.simtel_events"><span id="id3"></span></span><dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_events.InconsistentInputFile">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_events.</span></span><span class="sig-name descname"><span class="pre">InconsistentInputFile</span></span><a class="reference internal" href="_modules/simtel/simtel_events.html#InconsistentInputFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_events.InconsistentInputFile" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simtel.simtel_events.InconsistentInputFileError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_events.</span></span><span class="sig-name descname"><span class="pre">InconsistentInputFileError</span></span><a class="reference internal" href="_modules/simtel/simtel_events.html#InconsistentInputFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_events.InconsistentInputFileError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for inconsistent input file.</p>
 </dd></dl>
 
@@ -814,14 +814,14 @@ This calculation assumes the simulated spectrum is given by a single power law.<
 <section id="simtel-histogram">
 <h2>simtel_histogram<a class="headerlink" href="#simtel-histogram" title="Link to this heading">#</a></h2>
 <span class="target" id="module-simtel.simtel_histogram"><span id="id4"></span></span><dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_histogram.HistogramIdNotFound">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_histogram.</span></span><span class="sig-name descname"><span class="pre">HistogramIdNotFound</span></span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#HistogramIdNotFound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.HistogramIdNotFound" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simtel.simtel_histogram.HistogramIdNotFoundError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_histogram.</span></span><span class="sig-name descname"><span class="pre">HistogramIdNotFoundError</span></span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#HistogramIdNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.HistogramIdNotFoundError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for histogram ID not found.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_histogram.InconsistentHistogramFormat">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_histogram.</span></span><span class="sig-name descname"><span class="pre">InconsistentHistogramFormat</span></span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#InconsistentHistogramFormat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.InconsistentHistogramFormat" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simtel.simtel_histogram.InconsistentHistogramFormatError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_histogram.</span></span><span class="sig-name descname"><span class="pre">InconsistentHistogramFormatError</span></span><a class="reference internal" href="_modules/simtel/simtel_histogram.html#InconsistentHistogramFormatError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_histogram.InconsistentHistogramFormatError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for bad histogram format.</p>
 </dd></dl>
 
@@ -968,7 +968,7 @@ of based on the total number of trigger events from the simulation configuration
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>HistogramIdNotFound:</dt><dd><p>if histogram ids not found. Problem with the file.</p>
+<dt>HistogramIdNotFoundError:</dt><dd><p>if histogram ids not found. Problem with the file.</p>
 </dd>
 </dl>
 </dd>
@@ -1292,8 +1292,8 @@ histogram list.</p>
 <section id="simtel-runner">
 <h2>simtel_runner<a class="headerlink" href="#simtel-runner" title="Link to this heading">#</a></h2>
 <span class="target" id="module-simtel.simtel_runner"><span id="id6"></span></span><dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_runner.InvalidOutputFile">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">InvalidOutputFile</span></span><a class="reference internal" href="_modules/simtel/simtel_runner.html#InvalidOutputFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner.InvalidOutputFile" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simtel.simtel_runner.InvalidOutputFileError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">InvalidOutputFileError</span></span><a class="reference internal" href="_modules/simtel/simtel_runner.html#InvalidOutputFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner.InvalidOutputFileError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid output file.</p>
 </dd></dl>
 
@@ -1672,7 +1672,7 @@ default: 1</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-events">simtel_events</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.InconsistentInputFile"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFile</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.InconsistentInputFileError"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFileError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents"><code class="docutils literal notranslate"><span class="pre">SimtelEvents</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents.count_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelEvents.count_simulated_events()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_events.SimtelEvents.count_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelEvents.count_triggered_events()</span></code></a></li>
@@ -1685,8 +1685,8 @@ default: 1</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-histogram">simtel_histogram</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.HistogramIdNotFound"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFound</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.InconsistentHistogramFormat"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormat</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.HistogramIdNotFoundError"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFoundError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.InconsistentHistogramFormatError"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormatError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.compute_system_trigger_rate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_histogram.SimtelHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelHistogram.config</span></code></a></li>
@@ -1723,7 +1723,7 @@ default: 1</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-runner">simtel_runner</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.InvalidOutputFile"><code class="docutils literal notranslate"><span class="pre">InvalidOutputFile</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.InvalidOutputFileError"><code class="docutils literal notranslate"><span class="pre">InvalidOutputFileError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelExecutionError"><code class="docutils literal notranslate"><span class="pre">SimtelExecutionError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelRunner"><code class="docutils literal notranslate"><span class="pre">SimtelRunner</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_runner.SimtelRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.prepare_run_script()</span></code></a></li>

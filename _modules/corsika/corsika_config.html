@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -346,21 +346,21 @@ document.write(`
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;CorsikaConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MissingRequiredInputInCorsikaConfigData&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;InvalidCorsikaInput&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MissingRequiredInputInCorsikaConfigDataError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;InvalidCorsikaInputError&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="MissingRequiredInputInCorsikaConfigData">
-<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">[docs]</a>
-<span class="k">class</span> <span class="nc">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="MissingRequiredInputInCorsikaConfigDataError">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.MissingRequiredInputInCorsikaConfigDataError">[docs]</a>
+<span class="k">class</span> <span class="nc">MissingRequiredInputInCorsikaConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required input in corsika config data.&quot;&quot;&quot;</span></div>
 
 
 
-<div class="viewcode-block" id="InvalidCorsikaInput">
-<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.InvalidCorsikaInput">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidCorsikaInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidCorsikaInputError">
+<a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.InvalidCorsikaInputError">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidCorsikaInputError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid corsika input.&quot;&quot;&quot;</span></div>
 
 
@@ -508,10 +508,10 @@ document.write(`
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        InvalidCorsikaInput</span>
+<span class="sd">        InvalidCorsikaInputError</span>
 <span class="sd">            If any parameter given as input has wrong len, unit or</span>
 <span class="sd">            an invalid name.</span>
-<span class="sd">        MissingRequiredInputInCorsikaConfigData</span>
+<span class="sd">        MissingRequiredInputInCorsikaConfigDataError</span>
 <span class="sd">            If any required user parameter is missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -538,7 +538,7 @@ document.write(`
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_identified</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">key_args</span><span class="si">}</span><span class="s2"> cannot be identified.&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># Checking for parameters with default option</span>
         <span class="c1"># If it is not given, filling it with the default value</span>
@@ -553,7 +553,7 @@ document.write(`
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required parameters </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not given (there may be more).&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">MissingRequiredInputInCorsikaConfigData</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">MissingRequiredInputInCorsikaConfigDataError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># Converting AZM to CORSIKA reference (PHIP)</span>
         <span class="n">phip</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;AZM&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -598,7 +598,7 @@ document.write(`
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_args</span><span class="p">)</span> <span class="o">!=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;len&quot;</span><span class="p">]:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input entry with wrong len: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">value_args</span>
@@ -619,11 +619,11 @@ document.write(`
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input given without unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CORSIKA input given with wrong unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="n">value_args_with_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
@@ -655,7 +655,7 @@ document.write(`
                 <span class="k">return</span> <span class="p">[</span><span class="n">prim_info</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]]</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Primary not valid: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">InvalidCorsikaInput</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CorsikaConfig.get_user_parameter">
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.get_user_parameter">[docs]</a>

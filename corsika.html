@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CORSIKA &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>CORSIKA &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=59e416fa"></script>
+    <script src="_static/documentation_options.js?v=e49bc34a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -423,8 +423,8 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.set_user_parameters"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.set_user_parameters()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInput"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInput</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData"><code class="docutils literal notranslate"><span class="pre">MissingRequiredInputInCorsikaConfigData</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInputError"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInputError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigDataError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredInputInCorsikaConfigDataError</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-default-config">corsika_default_config</a><ul class="nav section-nav flex-column">
@@ -484,7 +484,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.total_num_photons"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.total_num_photons</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreated"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreated</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreatedError"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreatedError</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-histograms-visualize">corsika_histograms_visualize</a><ul class="nav section-nav flex-column">
@@ -514,7 +514,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.CorsikaRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">CorsikaRunner.prepare_run_script()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig"><code class="docutils literal notranslate"><span class="pre">MissingRequiredEntryInCorsikaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfigError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredEntryInCorsikaConfigError</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -730,10 +730,10 @@ This is the input file after being pre-processed by sim_telarray (pfp).</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>InvalidCorsikaInput</dt><dd><p>If any parameter given as input has wrong len, unit or
+<dt>InvalidCorsikaInputError</dt><dd><p>If any parameter given as input has wrong len, unit or
 an invalid name.</p>
 </dd>
-<dt>MissingRequiredInputInCorsikaConfigData</dt><dd><p>If any required user parameter is missing.</p>
+<dt>MissingRequiredInputInCorsikaConfigDataError</dt><dd><p>If any required user parameter is missing.</p>
 </dd>
 </dl>
 </dd>
@@ -743,14 +743,14 @@ an invalid name.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="corsika.corsika_config.InvalidCorsikaInput">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">InvalidCorsikaInput</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#InvalidCorsikaInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.InvalidCorsikaInput" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="corsika.corsika_config.InvalidCorsikaInputError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">InvalidCorsikaInputError</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#InvalidCorsikaInputError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.InvalidCorsikaInputError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid corsika input.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="corsika.corsika_config.MissingRequiredInputInCorsikaConfigData">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredInputInCorsikaConfigData</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#MissingRequiredInputInCorsikaConfigData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="corsika.corsika_config.MissingRequiredInputInCorsikaConfigDataError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredInputInCorsikaConfigDataError</span></span><a class="reference internal" href="_modules/corsika/corsika_config.html#MissingRequiredInputInCorsikaConfigDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigDataError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for missing required input in corsika config data.</p>
 </dd></dl>
 
@@ -1638,8 +1638,8 @@ spherical representation of the telescopes.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="corsika.corsika_histograms.HistogramNotCreated">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">HistogramNotCreated</span></span><a class="reference internal" href="_modules/corsika/corsika_histograms.html#HistogramNotCreated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.HistogramNotCreated" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="corsika.corsika_histograms.HistogramNotCreatedError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">HistogramNotCreatedError</span></span><a class="reference internal" href="_modules/corsika/corsika_histograms.html#HistogramNotCreatedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.HistogramNotCreatedError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for histogram not created.</p>
 </dd></dl>
 
@@ -2159,8 +2159,8 @@ Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredEntryInCorsikaConfig</span></span><a class="reference internal" href="_modules/corsika/corsika_runner.html#MissingRequiredEntryInCorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="corsika.corsika_runner.MissingRequiredEntryInCorsikaConfigError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredEntryInCorsikaConfigError</span></span><a class="reference internal" href="_modules/corsika/corsika_runner.html#MissingRequiredEntryInCorsikaConfigError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfigError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for missing required entry in corsika config.</p>
 </dd></dl>
 
@@ -2224,8 +2224,8 @@ Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.set_user_parameters"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.set_user_parameters()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInput"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInput</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigData"><code class="docutils literal notranslate"><span class="pre">MissingRequiredInputInCorsikaConfigData</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInputError"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInputError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.MissingRequiredInputInCorsikaConfigDataError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredInputInCorsikaConfigDataError</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-default-config">corsika_default_config</a><ul class="nav section-nav flex-column">
@@ -2285,7 +2285,7 @@ Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.total_num_photons"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.total_num_photons</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreated"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreated</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreatedError"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreatedError</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-histograms-visualize">corsika_histograms_visualize</a><ul class="nav section-nav flex-column">
@@ -2315,7 +2315,7 @@ Choices are corsika_autoinputs_log, corsika_log, script, output or sub_log.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.CorsikaRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">CorsikaRunner.prepare_run_script()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfig"><code class="docutils literal notranslate"><span class="pre">MissingRequiredEntryInCorsikaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_runner.MissingRequiredEntryInCorsikaConfigError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredEntryInCorsikaConfigError</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.mirrors &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>model.mirrors &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../../_static/documentation_options.js?v=59e416fa"></script>
+    <script src="../../_static/documentation_options.js?v=e49bc34a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -340,12 +340,12 @@ document.write(`
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidMirrorListFile&quot;</span><span class="p">,</span> <span class="s2">&quot;Mirrors&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidMirrorListFileError&quot;</span><span class="p">,</span> <span class="s2">&quot;Mirrors&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="InvalidMirrorListFile">
-<a class="viewcode-back" href="../../mc_model.html#model.mirrors.InvalidMirrorListFile">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidMirrorListFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidMirrorListFileError">
+<a class="viewcode-back" href="../../mc_model.html#model.mirrors.InvalidMirrorListFileError">[docs]</a>
+<span class="k">class</span> <span class="nc">InvalidMirrorListFileError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid mirror list file.&quot;&quot;&quot;</span></div>
 
 
@@ -397,7 +397,7 @@ document.write(`
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        InvalidMirrorListFile</span>
+<span class="sd">        InvalidMirrorListFileError</span>
 <span class="sd">            If number of mirrors is 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -410,7 +410,7 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_mirrors</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Problem reading mirror list file&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidMirrorListFile</span>
+            <span class="k">raise</span> <span class="n">InvalidMirrorListFileError</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mirror_diameter</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mirror_table</span><span class="p">[</span><span class="s2">&quot;mirror_diameter&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
@@ -467,7 +467,7 @@ document.write(`
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        InvalidMirrorListFile</span>
+<span class="sd">        InvalidMirrorListFileError</span>
 <span class="sd">            If number of mirrors is 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 

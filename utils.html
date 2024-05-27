@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g72d7752 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+gda25445 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=59e416fa"></script>
+    <script src="_static/documentation_options.js?v=e49bc34a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g72d7752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gda25445 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -412,10 +412,10 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.general">general</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigData"><code class="docutils literal notranslate"><span class="pre">InvalidConfigData</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigEntry"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntry</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.MissingRequiredConfigEntry"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntry</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.UnableToIdentifyConfigEntry"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntry</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigDataError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigEntryError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.MissingRequiredConfigEntryError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.UnableToIdentifyConfigEntryError"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntryError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.change_dict_keys_case"><code class="docutils literal notranslate"><span class="pre">change_dict_keys_case()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file_or_dict"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file_or_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_final_lines"><code class="docutils literal notranslate"><span class="pre">collect_final_lines()</span></code></a></li>
@@ -471,26 +471,26 @@ the util module.</p>
 <span id="general"></span><span id="utilsgeneral"></span><h2>general<a class="headerlink" href="#module-utils.general" title="Link to this heading">#</a></h2>
 <p>General functions useful across different parts of the code.</p>
 <dl class="py exception">
-<dt class="sig sig-object py" id="utils.general.InvalidConfigData">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigData</span></span><a class="reference internal" href="_modules/utils/general.html#InvalidConfigData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.InvalidConfigData" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="utils.general.InvalidConfigDataError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigDataError</span></span><a class="reference internal" href="_modules/utils/general.html#InvalidConfigDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.InvalidConfigDataError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid configuration data.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="utils.general.InvalidConfigEntry">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigEntry</span></span><a class="reference internal" href="_modules/utils/general.html#InvalidConfigEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.InvalidConfigEntry" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="utils.general.InvalidConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigEntryError</span></span><a class="reference internal" href="_modules/utils/general.html#InvalidConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.InvalidConfigEntryError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid configuration entry.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="utils.general.MissingRequiredConfigEntry">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredConfigEntry</span></span><a class="reference internal" href="_modules/utils/general.html#MissingRequiredConfigEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.MissingRequiredConfigEntry" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="utils.general.MissingRequiredConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredConfigEntryError</span></span><a class="reference internal" href="_modules/utils/general.html#MissingRequiredConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.MissingRequiredConfigEntryError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for missing required configuration entry.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="utils.general.UnableToIdentifyConfigEntry">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">UnableToIdentifyConfigEntry</span></span><a class="reference internal" href="_modules/utils/general.html#UnableToIdentifyConfigEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.UnableToIdentifyConfigEntry" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="utils.general.UnableToIdentifyConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">UnableToIdentifyConfigEntryError</span></span><a class="reference internal" href="_modules/utils/general.html#UnableToIdentifyConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.UnableToIdentifyConfigEntryError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for unable to identify configuration entry.</p>
 </dd></dl>
 
@@ -732,11 +732,11 @@ and a debug message is printed. Otherwise, an unidentified parameter leads to an
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>UnableToIdentifyConfigEntry</dt><dd><p>When an entry in config_data cannot be identified among the parameters.</p>
+<dt>UnableToIdentifyConfigEntryError</dt><dd><p>When an entry in config_data cannot be identified among the parameters.</p>
 </dd>
-<dt>MissingRequiredConfigEntry</dt><dd><p>When a parameter without default value is not given in config_data.</p>
+<dt>MissingRequiredConfigEntryError</dt><dd><p>When a parameter without default value is not given in config_data.</p>
 </dd>
-<dt>InvalidConfigEntry</dt><dd><p>When an entry in config_data is invalid (wrong len, wrong unit, …).</p>
+<dt>InvalidConfigEntryError</dt><dd><p>When an entry in config_data is invalid (wrong len, wrong unit, …).</p>
 </dd>
 </dl>
 </dd>
@@ -1150,10 +1150,10 @@ Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.general">general</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigData"><code class="docutils literal notranslate"><span class="pre">InvalidConfigData</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigEntry"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntry</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.MissingRequiredConfigEntry"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntry</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.UnableToIdentifyConfigEntry"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntry</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigDataError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigEntryError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.MissingRequiredConfigEntryError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.UnableToIdentifyConfigEntryError"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntryError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.change_dict_keys_case"><code class="docutils literal notranslate"><span class="pre">change_dict_keys_case()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file_or_dict"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file_or_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_final_lines"><code class="docutils literal notranslate"><span class="pre">collect_final_lines()</span></code></a></li>
