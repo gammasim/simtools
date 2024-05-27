@@ -12,17 +12,17 @@ from eventio.search_utils import yield_toplevel_of_type
 from eventio.simtel import MCRunHeader
 
 __all__ = [
-    "InconsistentHistogramFormat",
-    "HistogramIdNotFound",
+    "InconsistentHistogramFormatError",
+    "HistogramIdNotFoundError",
     "SimtelHistogram",
 ]
 
 
-class InconsistentHistogramFormat(Exception):
+class InconsistentHistogramFormatError(Exception):
     """Exception for bad histogram format."""
 
 
-class HistogramIdNotFound(Exception):
+class HistogramIdNotFoundError(Exception):
     """Exception for histogram ID not found."""
 
 
@@ -184,7 +184,7 @@ class SimtelHistogram:
 
         Raises
         ------
-        HistogramIdNotFound:
+        HistogramIdNotFoundError:
             if histogram ids not found. Problem with the file.
         """
         # Save the appropriate histograms to variables
@@ -205,7 +205,7 @@ class SimtelHistogram:
         msg = "Histograms ids not found. Please check your files."
 
         self._logger.error(msg)
-        raise HistogramIdNotFound
+        raise HistogramIdNotFoundError
 
     @property
     def view_cone(self):

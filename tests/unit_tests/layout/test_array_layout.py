@@ -8,7 +8,7 @@ import pytest
 from astropy.table import QTable
 
 from simtools.data_model import data_reader
-from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFile
+from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -39,7 +39,7 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture()
-def array_layout_north_four_LST_instance(db_config, model_version):
+def array_layout_north_four_lst_instance(db_config, model_version):
     return ArrayLayout(
         site="North",
         mongo_db_config=db_config,
@@ -50,7 +50,7 @@ def array_layout_north_four_LST_instance(db_config, model_version):
 
 
 @pytest.fixture()
-def array_layout_south_four_LST_instance(db_config, model_version):
+def array_layout_south_four_lst_instance(db_config, model_version):
     return ArrayLayout(
         site="South",
         mongo_db_config=db_config,
@@ -81,7 +81,8 @@ def test_initialize_coordinate_systems(
         # set center data from database
         instance._initialize_coordinate_systems()
         _x, _y, _z = instance._array_center.get_coordinates("ground")
-        assert _x == 0.0 * u.m and _y == 0.0 * u.m
+        assert _x == 0.0 * u.m
+        assert _y == 0.0 * u.m
         assert _z.value == pytest.approx(
             instance._reference_position_dict["center_altitude"].value, 1.0e-2
         )
@@ -92,14 +93,14 @@ def test_initialize_coordinate_systems(
         assert _lat.value == pytest.approx(center_data_dict["center_lat"].value, 1.0e-2)
         assert _lon.value == pytest.approx(center_data_dict["center_lon"].value, 1.0e-2)
 
-        _E, _N, _z = instance._array_center.get_coordinates("utm")
+        _e, _n, _z = instance._array_center.get_coordinates("utm")
         assert _z.value == pytest.approx(
             instance._reference_position_dict["center_altitude"].value, 1.0e-2
         )
-        assert _E.value == pytest.approx(
+        assert _e.value == pytest.approx(
             instance._reference_position_dict["center_easting"].value, 1.0
         )
-        assert _N.value == pytest.approx(
+        assert _n.value == pytest.approx(
             instance._reference_position_dict["center_northing"].value, 1.0
         )
 
@@ -155,8 +156,8 @@ def test_add_tel(
 
 
 def test_build_layout(
-    array_layout_north_four_LST_instance,
-    array_layout_south_four_LST_instance,
+    array_layout_north_four_lst_instance,
+    array_layout_south_four_lst_instance,
     tmp_test_directory,
     db_config,
     io_handler,
@@ -230,22 +231,22 @@ def test_build_layout(
             assert "sequence_number" in _table.colnames
             return
 
-    test_one_site(array_layout_north_four_LST_instance, "North")
-    test_one_site(array_layout_south_four_LST_instance, "South")
-    test_one_site(array_layout_north_four_LST_instance, "North", add_geocode=True)
+    test_one_site(array_layout_north_four_lst_instance, "North")
+    test_one_site(array_layout_south_four_lst_instance, "South")
+    test_one_site(array_layout_north_four_lst_instance, "North", add_geocode=True)
     test_one_site(
-        array_layout_north_four_LST_instance, "North", asset_code=True, sequence_number=False
+        array_layout_north_four_lst_instance, "North", asset_code=True, sequence_number=False
     )
     test_one_site(
-        array_layout_north_four_LST_instance, "North", asset_code=False, sequence_number=True
+        array_layout_north_four_lst_instance, "North", asset_code=False, sequence_number=True
     )
     test_one_site(
-        array_layout_north_four_LST_instance, "North", asset_code=True, sequence_number=True
+        array_layout_north_four_lst_instance, "North", asset_code=True, sequence_number=True
     )
 
 
-def test_converting_center_coordinates_north(array_layout_north_four_LST_instance):
-    layout = array_layout_north_four_LST_instance
+def test_converting_center_coordinates_north(array_layout_north_four_lst_instance):
+    layout = array_layout_north_four_lst_instance
 
     _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
     assert _lat.value == pytest.approx(28.7621661)
@@ -258,8 +259,8 @@ def test_converting_center_coordinates_north(array_layout_north_four_LST_instanc
     assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
 
 
-def test_converting_center_coordinates_south(array_layout_south_four_LST_instance):
-    layout = array_layout_south_four_LST_instance
+def test_converting_center_coordinates_south(array_layout_south_four_lst_instance):
+    layout = array_layout_south_four_lst_instance
 
     _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
     assert _lat.value == pytest.approx(-24.68342915473787)
@@ -273,7 +274,7 @@ def test_converting_center_coordinates_south(array_layout_south_four_LST_instanc
 
 
 def test_altitude_from_corsika_z(
-    array_layout_north_four_LST_instance, array_layout_south_four_LST_instance
+    array_layout_north_four_lst_instance, array_layout_south_four_lst_instance
 ):
     def test_one_site(instance, result1, result2):
         instance.add_telescope(
@@ -294,8 +295,8 @@ def test_altitude_from_corsika_z(
             instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
         assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
 
-    test_one_site(array_layout_north_four_LST_instance, 2185.0, 45.0)
-    test_one_site(array_layout_south_four_LST_instance, 2176.0, 45.0)
+    test_one_site(array_layout_north_four_lst_instance, 2185.0, 45.0)
+    test_one_site(array_layout_south_four_lst_instance, 2176.0, 45.0)
 
 
 def test_try_set_altitude(
@@ -365,7 +366,7 @@ def test_try_set_coordinate(
         del table["telescope_name"]
         for step, row in enumerate(table[:6]):
             with pytest.raises(
-                InvalidTelescopeListFile,
+                InvalidTelescopeListFileError,
                 match="Missing required row with telescope_name or asset_code/sequence_number",
             ):
                 tel = instance._load_telescope_names(row)

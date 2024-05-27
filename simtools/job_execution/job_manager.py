@@ -5,10 +5,10 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 
-__all__ = ["JobManager", "MissingWorkloadManager", "JobExecutionError"]
+__all__ = ["JobManager", "MissingWorkloadManagerError", "JobExecutionError"]
 
 
-class MissingWorkloadManager(Exception):
+class MissingWorkloadManagerError(Exception):
     """Exception for missing work load manager."""
 
 
@@ -29,7 +29,7 @@ class JobManager:
 
     Raises
     ------
-    MissingWorkloadManager
+    MissingWorkloadManagerError
         if requested workflow manager not found.
     """
 
@@ -45,7 +45,7 @@ class JobManager:
 
         try:
             self.test_submission_system()
-        except MissingWorkloadManager:
+        except MissingWorkloadManagerError:
             self._logger.error(f"Requested workflow manager not found: {self.submit_command}")
             raise
 
@@ -55,7 +55,7 @@ class JobManager:
 
         Raises
         ------
-        MissingWorkloadManager
+        MissingWorkloadManagerError
             if workflow manager is not found.
         """
 
@@ -64,15 +64,15 @@ class JobManager:
         if self.submit_command.find("qsub") >= 0:
             if gen.program_is_executable("qsub"):
                 return
-            raise MissingWorkloadManager
+            raise MissingWorkloadManagerError
         if self.submit_command.find("condor_submit") >= 0:
             if gen.program_is_executable("condor_submit"):
                 return
-            raise MissingWorkloadManager
+            raise MissingWorkloadManagerError
         if self.submit_command.find("local") >= 0:
             return
 
-        raise MissingWorkloadManager
+        raise MissingWorkloadManagerError
 
     def submit(self, run_script=None, run_out_file=None, log_file=None):
         """

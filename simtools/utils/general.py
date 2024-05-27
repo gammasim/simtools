@@ -24,10 +24,10 @@ __all__ = [
     "collect_data_from_file_or_dict",
     "collect_final_lines",
     "collect_kwargs",
-    "InvalidConfigData",
-    "InvalidConfigEntry",
-    "MissingRequiredConfigEntry",
-    "UnableToIdentifyConfigEntry",
+    "InvalidConfigDataError",
+    "InvalidConfigEntryError",
+    "MissingRequiredConfigEntryError",
+    "UnableToIdentifyConfigEntryError",
     "get_log_level_from_user",
     "remove_substring_recursively_from_dict",
     "separate_args_and_config_data",
@@ -40,19 +40,19 @@ __all__ = [
 _logger = logging.getLogger(__name__)
 
 
-class UnableToIdentifyConfigEntry(Exception):
+class UnableToIdentifyConfigEntryError(Exception):
     """Exception for unable to identify configuration entry."""
 
 
-class MissingRequiredConfigEntry(Exception):
+class MissingRequiredConfigEntryError(Exception):
     """Exception for missing required configuration entry."""
 
 
-class InvalidConfigEntry(Exception):
+class InvalidConfigEntryError(Exception):
     """Exception for invalid configuration entry."""
 
 
-class InvalidConfigData(Exception):
+class InvalidConfigDataError(Exception):
     """Exception for invalid configuration data."""
 
 
@@ -77,11 +77,11 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
 
     Raises
     ------
-    UnableToIdentifyConfigEntry
+    UnableToIdentifyConfigEntryError
         When an entry in config_data cannot be identified among the parameters.
-    MissingRequiredConfigEntry
+    MissingRequiredConfigEntryError
         When a parameter without default value is not given in config_data.
-    InvalidConfigEntry
+    InvalidConfigEntryError
         When an entry in config_data is invalid (wrong len, wrong unit, ...).
 
     Returns
@@ -116,7 +116,7 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
                 _logger.debug(f"{msg}, ignoring.")
             else:
                 _logger.error(f"{msg}, stopping.")
-                raise UnableToIdentifyConfigEntry(msg)
+                raise UnableToIdentifyConfigEntryError(msg)
 
     # Checking for parameters with default option.
     # If it is not given, filling it with the default value.
@@ -142,7 +142,7 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         else:
             msg = f"Required entry in config_data {par_name} was not given (there may be more)."
             _logger.error(msg)
-            raise MissingRequiredConfigEntry(msg)
+            raise MissingRequiredConfigEntryError(msg)
 
     configuration_data = namedtuple("configuration_data", out_data)
     return configuration_data(**out_data)
@@ -180,7 +180,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
     elif any(u.Quantity(v).unit != u.dimensionless_unscaled for v in value):
         msg = f"Config entry {par_name} should not have units"
         _logger.error(msg)
-        raise InvalidConfigEntry(msg)
+        raise InvalidConfigEntryError(msg)
 
     if value_keys:
         return dict(zip(value_keys, value))
@@ -219,7 +219,7 @@ def _check_value_entry_length(value, par_name, par_info):
         elif value_length != par_info["len"]:
             msg = f"Config entry with wrong len: {par_name}"
             _logger.error(msg)
-            raise InvalidConfigEntry(msg)
+            raise InvalidConfigEntryError(msg)
     except KeyError:
         _logger.error("Missing len entry in par_info")
         raise
@@ -254,7 +254,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
     if undefined_length and len(par_unit) != 1:
         msg = f"Config entry with undefined length should have a single unit: {par_name}"
         _logger.error(msg)
-        raise InvalidConfigEntry(msg)
+        raise InvalidConfigEntryError(msg)
     if len(par_unit) == 1:
         par_unit *= value_length
 
@@ -273,14 +273,14 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         if not isinstance(arg, u.quantity.Quantity):
             msg = f"Config entry given without unit: {par_name}"
             _logger.error(msg)
-            raise InvalidConfigEntry(msg)
+            raise InvalidConfigEntryError(msg)
         if not arg.unit.is_equivalent(unit):
             msg = (
                 f"Config entry given with wrong unit: {par_name}"
                 f" (should be {unit}, is {arg.unit})"
             )
             _logger.error(msg)
-            raise InvalidConfigEntry(msg)
+            raise InvalidConfigEntryError(msg)
         value_with_units.append(arg.to(unit).value)
 
     if value_keys:
@@ -401,11 +401,11 @@ def collect_data_from_http(url):
     except TypeError as exc:
         msg = "Invalid url {url}"
         _logger.error(msg)
-        raise InvalidConfigData(msg) from exc
+        raise InvalidConfigDataError(msg) from exc
     except urllib.error.HTTPError as exc:
         msg = f"Failed to download file from {url}"
         _logger.error(msg)
-        raise InvalidConfigData(msg) from exc
+        raise InvalidConfigDataError(msg) from exc
 
     _logger.debug(f"Downloaded file from {url}")
     return data
@@ -458,7 +458,7 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
         return None
 
     _logger.debug(msg)
-    raise InvalidConfigData(msg)
+    raise InvalidConfigDataError(msg)
 
 
 def collect_kwargs(label, in_kwargs):
@@ -919,7 +919,7 @@ def get_value_unit_type(value, unit_str=None):
     """
 
     base_unit = None
-    if isinstance(value, (str, u.Quantity)):
+    if isinstance(value, str | u.Quantity):
         try:
             _quantity_value = u.Quantity(value)
             base_value = _quantity_value.value
@@ -1029,7 +1029,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
 
     """
     if value is not None and dtype is None:
-        if isinstance(value, (list, np.ndarray)):
+        if isinstance(value, list | np.ndarray):
             value = np.array(value)
             dtype = value.dtype
         else:
@@ -1078,7 +1078,7 @@ def convert_list_to_string(data, comma_separated=False):
         Converted data as string (if required)
 
     """
-    if data is None or not isinstance(data, (list, np.ndarray)):
+    if data is None or not isinstance(data, list | np.ndarray):
         return data
     if comma_separated:
         return ", ".join(str(item) for item in data)

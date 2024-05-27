@@ -7,10 +7,10 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import general, names
 
-__all__ = ["ArrayModel", "InvalidArrayConfigData"]
+__all__ = ["ArrayModel", "InvalidArrayConfigDataError"]
 
 
-class InvalidArrayConfigData(Exception):
+class InvalidArrayConfigDataError(Exception):
     """Exception for invalid array configuration data."""
 
 
@@ -226,7 +226,7 @@ class ArrayModel:
                 if "name" not in data.keys():
                     msg = "ArrayConfig has no name for a telescope"
                     self._logger.error(msg)
-                    raise InvalidArrayConfigData(msg)
+                    raise InvalidArrayConfigDataError(msg)
                 pars_to_change = {k: v for (k, v) in data.items() if k != "name"}
                 self._logger.debug(
                     "Grabbing tel data as dict - " f"{len(pars_to_change)} pars to change"
@@ -239,7 +239,7 @@ class ArrayModel:
             # Case 2: data has a wrong type
             msg = "ArrayConfig has wrong input for a telescope"
             self._logger.error(msg)
-            raise InvalidArrayConfigData(msg)
+            raise InvalidArrayConfigDataError(msg)
 
         if array_config_data and tel_name in array_config_data.keys():
             return _process_single_telescope(array_config_data[tel_name])

@@ -5,7 +5,7 @@ import numpy as np
 import simtools.io_operations.hdf5_handler as io_hdf5
 
 
-def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
+def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):
     hist = np.array([1, 2, 3])
     x_bin_edges = np.array([1, 2, 3, 4])
     y_bin_edges = None
@@ -25,7 +25,7 @@ def test_fill_hdf5_table_1D(corsika_histograms_instance_set_histograms):
     assert all(table["values"] == hist)
 
 
-def test_fill_hdf5_table_2D(corsika_histograms_instance_set_histograms):
+def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
     hist = np.array([[1, 2], [3, 4]])
     x_bin_edges = np.array([1, 2, 3])
     y_bin_edges = np.array([1, 2, 3])
