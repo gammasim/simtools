@@ -14,12 +14,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def crs_wgs84():
     return pyproj.CRS("EPSG:4326")
 
 
-@pytest.fixture
+@pytest.fixture()
 def crs_local():
     center_lon = -17.8920302
     center_lat = 28.7621661
@@ -29,7 +29,7 @@ def crs_local():
     return pyproj.CRS.from_proj4(proj4_string)
 
 
-@pytest.fixture
+@pytest.fixture()
 def crs_utm():
     return pyproj.CRS.from_user_input(32628)
 

@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
 
     telescope_model_sst.export_model_files()
@@ -24,7 +24,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
     return camera_efficiency_sst
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_runner_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
     simtel_runner_camera_efficiency = SimtelRunnerCameraEfficiency(
         simtel_source_path=simtel_path,
@@ -131,7 +131,7 @@ def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficienc
         # Test that the first 3 non-comment lines are the following values:
         wavelengths = [300.00, 315.00, 330.00]
         NSBs = [0, 0.612, 1.95]
-        with open(file, "r", encoding="utf-8") as file:
+        with open(file, encoding="utf-8") as file:
             for line in file:
                 if line.startswith("#"):
                     continue

@@ -64,7 +64,7 @@ def default_config_fixture():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_simulator(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
@@ -101,7 +101,7 @@ def mock_simulator(
     return mock_simulator
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_simulator_variable(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
@@ -138,7 +138,7 @@ def mock_simulator_variable(
     return mock_simulator_variable
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_simulator_laser(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
@@ -175,13 +175,13 @@ def mock_simulator_laser(
     return mock_simulator_laser
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_output_path(label, io_handler):
     path = io_handler.get_output_directory(label)
     return path
 
 
-@pytest.fixture
+@pytest.fixture()
 def calibration_model_illn(db_config, io_handler, model_version):
     calibration_model_ILLN = CalibrationModel(
         site="North",
@@ -257,7 +257,7 @@ def test_from_kwargs_with_minimal_args(
     assert simulator.light_source_type == "led"
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_layout_model(db_config, model_version, telescope_north_test_file):
 
     array_layout_model = ArrayLayout(
@@ -474,7 +474,7 @@ def test_make_simtel_script(mock_simulator):
 
         mock_file.assert_has_calls(
             [
-                call("/path/to/config.cfg", "r", encoding="utf-8"),
+                call("/path/to/config.cfg", encoding="utf-8"),
                 call().__enter__(),
                 call().readlines(),
                 call().__exit__(None, None, None),

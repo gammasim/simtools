@@ -46,6 +46,7 @@ optional-dependencies."dev" = [
   "flake8",
   "pre-commit",
   "pylint",
+  "ruff",
 ]
 optional-dependencies."doc" = [
   "myst-parser",
@@ -103,6 +104,48 @@ write_to = "simtools/_version.py"
 
 [tool.black]
 line-length = 100
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+exclude = [
+  "__init__.py",
+  "pyproject.toml",
+  "simtools/_version.py",
+]
+
+format.indent-style = "space"
+format.quote-style = "double"
+format.line-ending = "auto"
+# no documentation linting for test files
+format.skip-magic-trailing-comma = false
+lint.extend-select = [
+  "COM", # flake8-commas
+  # "D",   # pydocstyle (temporary off: use in 2nd step)
+  "G",   # logging
+  "I",   # isort
+  "ICN", # import name conventions
+  "ISC", # implicit string concat rules
+  "N",   # pep8 naming
+  "NPY", # numpy
+  "PT",  # pytest
+  "UP",  # pyupgrade
+]
+# lint.pydocstyle.convention = "numpy"
+lint.ignore = [
+  "COM812", # incompatible with ruff format
+  "D208",   # over-indentation (incompatible with sphinx)
+  "D214",   # section-not-over-indented
+  "D215",   # section-underline-not-over-indented
+  "G004",   # Logging statement uses f-string
+  "ISC001", # incompatible with ruff format
+]
+lint.per-file-ignores."**/tests/**" = [
+  "D",
+]
+lint.per-file-ignores."**/tests_*.py" = [
+  "D",
+]
 
 [tool.isort]
 profile = "black"

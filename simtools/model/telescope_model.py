@@ -214,7 +214,7 @@ class TelescopeModel(ModelParameter):
             return False
 
         file = self.config_file_directory.joinpath(file_name)
-        with open(file, "r", encoding="utf-8") as f:
+        with open(file, encoding="utf-8") as f:
             is_2d = "@RPOL@" in f.read()
         return is_2d
 
@@ -238,7 +238,7 @@ class TelescopeModel(ModelParameter):
         _file = self.config_file_directory.joinpath(file_name)
         self._logger.debug("Reading two dimensional distribution from %s", _file)
         line_to_start_from = 0
-        with open(_file, "r", encoding="utf-8") as f:
+        with open(_file, encoding="utf-8") as f:
             for i_line, line in enumerate(f):
                 if line.startswith("ANGLE"):
                     degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)

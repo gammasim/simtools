@@ -240,7 +240,7 @@ class SimtelConfigReader:
         )
         matching_lines = {}
         try:
-            with open(simtel_config_file, "r", encoding="utf-8") as file:
+            with open(simtel_config_file, encoding="utf-8") as file:
                 for line in file:
                     # split line into parts (space, tabs, comma separated)
                     parts_of_lines = re.split(r",\s*|\s+", line.strip())

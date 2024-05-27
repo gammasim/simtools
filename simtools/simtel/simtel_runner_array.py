@@ -227,7 +227,7 @@ class SimtelRunnerArray(SimtelRunner):
         _resources = {}
 
         _resources["runtime"] = None
-        with open(sub_log_file, "r", encoding="utf-8") as file:
+        with open(sub_log_file, encoding="utf-8") as file:
             for line in reversed(list(file)):
                 if "RUNTIME" in line:
                     _resources["runtime"] = int(line.split()[1])

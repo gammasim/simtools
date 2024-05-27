@@ -36,7 +36,7 @@ magic = "MAGIC"
 veritas = "VERITAS"
 
 
-class TelescopeHandler(object):
+class TelescopeHandler:
     """
     Telescope handler that centralizes the telescope information. Individual telescopes handlers
     inherit from this class.
@@ -69,51 +69,51 @@ class TelescopeHandler(object):
         }
 
 
-class PixelObject(object):
+class PixelObject:
     """Pixel Object."""
 
 
-class EdgePixelObject(object):
+class EdgePixelObject:
     """Edge-Pixel Object."""
 
 
-class OffPixelObject(object):
+class OffPixelObject:
     """Off-Pixel Object."""
 
 
-class LSTObject(object):
+class LSTObject:
     """LST Object."""
 
 
-class MSTObject(object):
+class MSTObject:
     """MST Object."""
 
 
-class SCTObject(object):
+class SCTObject:
     """SCT Object."""
 
 
-class SSTObject(object):
+class SSTObject:
     """SST Object."""
 
 
-class HESSObject(object):
+class HESSObject:
     """HESS Object."""
 
 
-class MAGICObject(object):
+class MAGICObject:
     """MAGIC Object."""
 
 
-class VERITASObject(object):
+class VERITASObject:
     """VERITAS Object."""
 
 
-class MeanRadiusOuterEdgeObject(object):
+class MeanRadiusOuterEdgeObject:
     """Object for Mean radius outer edge."""
 
 
-class HexPixelHandler(object):
+class HexPixelHandler:
     """
     Legend handler class to plot a hexagonal "on" pixel.
     """
@@ -135,7 +135,7 @@ class HexPixelHandler(object):
         return patch
 
 
-class HexEdgePixelHandler(object):
+class HexEdgePixelHandler:
     """
     Legend handler class to plot a hexagonal "edge" pixel.
     """
@@ -160,7 +160,7 @@ class HexEdgePixelHandler(object):
         return patch
 
 
-class HexOffPixelHandler(object):
+class HexOffPixelHandler:
     """
     Legend handler class to plot a hexagonal "off" pixel.
     """
@@ -185,7 +185,7 @@ class HexOffPixelHandler(object):
         return patch
 
 
-class SquarePixelHandler(object):
+class SquarePixelHandler:
     """
     Legend handler class to plot a square "on" pixel.
     """
@@ -206,7 +206,7 @@ class SquarePixelHandler(object):
         return patch
 
 
-class SquareEdgePixelHandler(object):
+class SquareEdgePixelHandler:
     """
     Legend handler class to plot a square "edge" pixel.
     """
@@ -227,7 +227,7 @@ class SquareEdgePixelHandler(object):
         return patch
 
 
-class SquareOffPixelHandler(object):
+class SquareOffPixelHandler:
     """
     Legend handler class to plot a square "off" pixel.
     """
@@ -406,7 +406,7 @@ class VERITASHandler(TelescopeHandler):
         return patch
 
 
-class MeanRadiusOuterEdgeHandler(object):
+class MeanRadiusOuterEdgeHandler:
     """
     Legend handler class to plot a the mean radius outer edge of the dish.
     """
