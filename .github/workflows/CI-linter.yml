@@ -98,5 +98,3 @@ jobs:
           LOG_FILE: superlinter.log
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # exclude markdown file with links
-          FILTER_REGEX_EXCLUDE: "docs/source/docker_files.md"
