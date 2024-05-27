@@ -7,7 +7,7 @@ This is done automatically with each merge into the main branch, see the
 [GitHub Action workflow CI-docs](https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-docs.yml>).
 
 The documentation is written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html) or reStructuredText (RST) format.
-Preference is given to markdown, as more developers are familiar with it.
+Preference is given to Markdown, as more developers are familiar with it.
 
 For writing and testing documentation locally:
 
