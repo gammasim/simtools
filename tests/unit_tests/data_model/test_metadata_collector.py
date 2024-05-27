@@ -129,7 +129,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "./file_does_not_exist.not_a_good_suffix"
-    with pytest.raises(gen.InvalidConfigData):
+    with pytest.raises(gen.InvalidConfigDataError):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
@@ -145,7 +145,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
-    with pytest.raises(gen.InvalidConfigData):
+    with pytest.raises(gen.InvalidConfigDataError):
         metadata_1._read_input_metadata_from_file()
         assert "More than one metadata entry" in caplog.text
 

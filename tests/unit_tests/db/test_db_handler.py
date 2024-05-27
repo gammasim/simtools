@@ -18,18 +18,19 @@ def random_id():
 
 
 @pytest.fixture()
-def db_cleanup(db, random_id):
+def _db_cleanup(db, random_id):
     yield
     # Cleanup
     logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
     db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["calibration_devices_" + random_id].drop()
     db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
+    db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
     db.db_client[f"sandbox_{random_id}"]["sites_" + random_id].drop()
 
 
 @pytest.fixture()
-def db_cleanup_file_sandbox(db_no_config_file, random_id):
+def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
@@ -108,7 +109,8 @@ def test_get_sim_telarray_configuration_parameters(db, model_version):
     assert "min_photoelectrons" in _pars
 
 
-def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_copy_telescope_db(db, random_id, io_handler, model_version):
     logger.info("----Testing copying a whole telescope-----")
     db.copy_telescope(
         db_name=None,
@@ -155,24 +157,27 @@ def test_copy_telescope_db(db, random_id, db_cleanup, io_handler, model_version)
         )
 
 
-def test_add_tagged_version(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_add_tagged_version(db, random_id, io_handler, model_version):
 
+    tags = {
+        "Released": {"Value": "2020-06-28"},
+        "Latest": {"Value": "2024-02-01"},
+        "Prod25": {"Value": "2020-06-28"},
+        "Prod26": {"Value": "2024-02-01"},
+    }
     db.add_tagged_version(
         db_name=f"sandbox_{random_id}",
-        released_version="2020-06-28",
-        released_label="Prod25",
-        latest_version="2024-02-01",
-        latest_label="Prod26",
+        tags=tags,
     )
 
-    assert (
-        db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
-    )
-    assert db._get_tagged_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
     db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
-def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_version):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
     db.copy_telescope(
         db_name=None,
@@ -182,6 +187,10 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
+    )
+    db.add_tagged_version(
+        db_name=f"sandbox_{random_id}",
+        tags={"test": {"Value": "test"}},
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
@@ -310,7 +319,8 @@ def test_adding_new_parameter_db(db, random_id, db_cleanup, io_handler, model_ve
         )
 
 
-def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
+@pytest.mark.usefixtures("_db_cleanup")
+def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_telescope(
         db_name=None,
@@ -327,6 +337,10 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         query={"Entry": "Simulation-Model-Tags"},
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="metadata_" + random_id,
+    )
+    db.add_tagged_version(
+        db_name=f"sandbox_{random_id}",
+        tags={"test": {"Value": "test"}, "Released": {"Value": "2020-06-28"}},
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
@@ -346,6 +360,18 @@ def test_update_parameter_field_db(db, random_id, db_cleanup, io_handler):
         write_files=False,
     )
     assert pars["camera_pixels"]["applicable"] is False
+
+    with pytest.raises(ValueError):
+        db.update_parameter_field(
+            db_name=f"sandbox_{random_id}",
+            telescope=None,
+            site=None,
+            version="2024-02-01",
+            parameter="not_important",
+            field="applicable",
+            new_value=False,
+            collection_name="site" + random_id,
+        )
 
     # make sure that cache has been emptied after updating
     assert (
@@ -408,7 +434,8 @@ def test_export_file_db(db, io_handler):
     assert file_to_export.exists()
 
 
-def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, caplog):
+@pytest.mark.usefixtures("_db_cleanup_file_sandbox")
+def test_insert_files_db(db, io_handler, random_id, caplog):
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
         "Creating a temporary file in "
@@ -435,11 +462,21 @@ def test_insert_files_db(db, io_handler, db_cleanup_file_sandbox, random_id, cap
 
 
 def test_get_all_versions(db):
+    # not specifying a telescope model name and parameter
+    all_versions = db.get_all_versions(
+        telescope_model_name=None,
+        site="North",
+        parameter=None,
+        collection="telescopes",
+    )
+    assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+
+    # using a specific parameter
     all_versions = db.get_all_versions(
         telescope_model_name="LSTN-01",
         site="North",
         parameter="camera_config_file",
-        collection_name="telescopes",
+        collection="telescopes",
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
@@ -448,7 +485,7 @@ def test_get_all_versions(db):
     all_versions = db.get_all_versions(
         site="North",
         parameter="corsika_observation_level",
-        collection_name="sites",
+        collection="sites",
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
@@ -489,14 +526,30 @@ def test_get_telescope_db_name(db):
 
 def test_parameter_cache_key(db):
 
-    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-Prod5"
-    assert db._parameter_cache_key("North", None, "Prod5") == "North-Prod5"
+    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-2020-06-28"
+    assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
 
 
-def test_get_tagged_version(db):
+def test_model_version(db, caplog):
 
-    with pytest.raises(ValueError):
-        db._get_tagged_version(version="NotReleased")
+    assert db.model_version(version="Released") == "2020-06-28"
+    assert db.model_version(version="Latest") == "2020-06-28"
+    assert db.model_version(version="2024-02-01") == "2024-02-01"
+    assert db.model_version(version="Prod6") == "2024-02-01"
+    assert db.model_version(version="prod6") == "2024-02-01"
 
-    assert db._get_tagged_version(version="Released") == "2020-06-28"
-    assert db._get_tagged_version(version="Latest") == "2020-06-28"
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            db.model_version(version="test")
+        assert "Invalid model version test" in caplog.text
+
+
+def test_get_collections(db):
+
+    collections = db.get_collections()
+    assert isinstance(collections, list)
+    assert "telescopes" in collections
+
+    collections_from_name = db.get_collections("CTA-Simulation-Model")
+    assert isinstance(collections_from_name, list)
+    assert "telescopes" in collections_from_name

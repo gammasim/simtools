@@ -116,5 +116,5 @@ def test_get_data_file(args_dict, io_handler):
     )
 
     io_handler.data_path = None
-    with pytest.raises(io_handler_module.IncompleteIOHandlerInit):
+    with pytest.raises(io_handler_module.IncompleteIOHandlerInitError):
         io_handler.get_input_data_file(file_name="test-file.txt")

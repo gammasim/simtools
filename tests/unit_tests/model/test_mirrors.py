@@ -4,13 +4,13 @@ import logging
 
 import pytest
 
-from simtools.model.mirrors import InvalidMirrorListFile, Mirrors
+from simtools.model.mirrors import InvalidMirrorListFileError, Mirrors
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def mirror_template_ecsv(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
@@ -21,7 +21,7 @@ def mirror_template_ecsv(io_handler):
     return mirror_template_ecsv
 
 
-@pytest.fixture
+@pytest.fixture()
 def mirror_template_simtel(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat",
@@ -32,7 +32,7 @@ def mirror_template_simtel(io_handler):
     return mirror_template_simtel
 
 
-@pytest.fixture
+@pytest.fixture()
 def mirror_table_template(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
@@ -137,11 +137,11 @@ def test_read_mirror_list_from_ecsv_empty(io_handler, tmp_test_directory, mirror
     mirror_list_file = write_tmp_mirror_list(
         io_handler, tmp_test_directory, incomplete_mirror_table
     )
-    with pytest.raises(InvalidMirrorListFile):
+    with pytest.raises(InvalidMirrorListFileError):
         Mirrors(mirror_list_file)
 
 
-def test_read_mirror_list_from_ecsv_no_DB(io_handler):
+def test_read_mirror_list_from_ecsv_no_db(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="MLTdata-preproduction.ecsv",
         test=True,

@@ -66,10 +66,10 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
     ray.plot("d80_deg", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plot_file_PSF = io_handler.get_output_file(
+    plot_file_psf = io_handler.get_output_file(
         file_name="d80_test_rx.pdf", sub_dir="plots", dir_type="test"
     )
-    plt.savefig(plot_file_PSF)
+    plt.savefig(plot_file_psf)
 
     # Plotting eff_area
     plt.figure(figsize=(8, 6), tight_layout=True)

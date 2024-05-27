@@ -141,12 +141,12 @@ class DataValidator:
         # validation assumes lists for values and units - convert to list if required
         value_as_list = (
             self.data_dict.get("value")
-            if isinstance(self.data_dict["value"], (list, np.ndarray))
+            if isinstance(self.data_dict["value"], list | np.ndarray)
             else [self.data_dict["value"]]
         )
         unit_as_list = (
             self.data_dict.get("unit")
-            if isinstance(self.data_dict["unit"], (list, np.ndarray))
+            if isinstance(self.data_dict["unit"], list | np.ndarray)
             else [self.data_dict["unit"]]
         )
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
@@ -462,10 +462,10 @@ class DataValidator:
             f"'{reference_unit}' and data unit '{unit}'"
         )
         try:
-            if isinstance(data, (u.Quantity, Column)):
+            if isinstance(data, u.Quantity | Column):
                 data = data.to(reference_unit)
                 return data, reference_unit
-            if isinstance(data, (list, np.ndarray)):
+            if isinstance(data, list | np.ndarray):
                 return [
                     (
                         u.Unit(_to_unit).to(reference_unit) * d
@@ -525,7 +525,7 @@ class DataValidator:
         try:
             if not self._interval_check(
                 (col_min, col_max),
-                (_entry[range_type].get("min", np.NINF), _entry[range_type].get("max", np.Inf)),
+                (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
                 range_type,
             ):
                 raise ValueError
@@ -533,8 +533,8 @@ class DataValidator:
             self._logger.error(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
-                f"[{_entry[range_type].get('min', np.NINF)}, "
-                f"{_entry[range_type].get('max', np.Inf)}])"
+                f"[{_entry[range_type].get('min', -np.inf)}, "
+                f"{_entry[range_type].get('max', np.inf)}])"
             )
             raise
 

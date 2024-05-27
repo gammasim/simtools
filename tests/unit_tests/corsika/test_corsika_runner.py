@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config_data(tmp_test_directory):
     return {
         "data_directory": f"{str(tmp_test_directory)}/test-output",
@@ -27,7 +27,7 @@ def corsika_config_data(tmp_test_directory):
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_runner(corsika_config_data, io_handler, simtel_path, array_model_south):
     corsika_runner = CorsikaRunner(
         simtel_source_path=simtel_path,
@@ -38,7 +38,7 @@ def corsika_runner(corsika_config_data, io_handler, simtel_path, array_model_sou
     return corsika_runner
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_file(io_handler):
     corsika_file = io_handler.get_input_data_file(
         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
@@ -52,7 +52,7 @@ def test_prepare_run_script(corsika_runner):
     script = corsika_runner.prepare_run_script()
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
@@ -63,7 +63,7 @@ def test_prepare_run_script(corsika_runner):
     script = corsika_runner.prepare_run_script(run_number=run_number)
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
@@ -82,7 +82,7 @@ def test_prepare_run_script_with_extra(corsika_runner, file_has_text):
     script = corsika_runner.prepare_run_script(run_number=3, extra_commands=extra)
 
     assert file_has_text(script, "testing-extra-2")
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content
@@ -93,7 +93,7 @@ def test_prepare_run_script_without_pfp(corsika_runner):
     script = corsika_runner.prepare_run_script(use_pfp=False)
 
     assert script.exists()
-    with open(script, "r") as f:
+    with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
         assert "corsika_autoinputs" in script_content

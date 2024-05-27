@@ -8,15 +8,15 @@ from astropy import units as u
 
 from simtools.corsika.corsika_config import (
     CorsikaConfig,
-    InvalidCorsikaInput,
-    MissingRequiredInputInCorsikaConfigData,
+    InvalidCorsikaInputError,
+    MissingRequiredInputInCorsikaConfigDataError,
 )
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config_data():
     return {
         "nshow": 100,
@@ -31,7 +31,7 @@ def corsika_config_data():
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_config(io_handler, corsika_config_data, array_model_south):
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
@@ -67,7 +67,7 @@ def test_export_input_file(corsika_config):
     corsika_config.export_input_file()
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
 
@@ -76,7 +76,7 @@ def test_export_input_file_multipipe(corsika_config):
     corsika_config.export_input_file(use_multipipe=True)
     input_file = corsika_config.get_input_file()
     assert input_file.exists()
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         assert "TELFIL |" in f.read()
 
 
@@ -84,65 +84,65 @@ def test_wrong_par_in_config_data(corsika_config, corsika_config_data, array_mod
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["wrong_par"] = 20 * u.m
-    with pytest.raises(InvalidCorsikaInput):
-        corsika_test_Config = CorsikaConfig(
+    with pytest.raises(InvalidCorsikaInputError):
+        corsika_test_config = CorsikaConfig(
             array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
-        corsika_test_Config.print_user_parameters()
+        corsika_test_config.print_user_parameters()
 
 
 def test_units_of_config_data(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_units_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["zenith"] = 20 * u.m
-    with pytest.raises(InvalidCorsikaInput):
-        corsika_test_Config = CorsikaConfig(
+    with pytest.raises(InvalidCorsikaInputError):
+        corsika_test_config = CorsikaConfig(
             array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
-        corsika_test_Config.print_user_parameters()
+        corsika_test_config.print_user_parameters()
 
 
 def test_len_of_config_data(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_len_of_config_data")
     new_config_data = copy(corsika_config_data)
     new_config_data["erange"] = [20 * u.TeV]
-    with pytest.raises(InvalidCorsikaInput):
-        corsika_test_Config = CorsikaConfig(
+    with pytest.raises(InvalidCorsikaInputError):
+        corsika_test_config = CorsikaConfig(
             array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
-        corsika_test_Config.print_user_parameters()
+        corsika_test_config.print_user_parameters()
 
 
 def test_wrong_primary_name(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_wrong_primary_name")
     new_config_data = copy(corsika_config_data)
     new_config_data["primary"] = "rock"
-    with pytest.raises(InvalidCorsikaInput):
-        corsika_test_Config = CorsikaConfig(
+    with pytest.raises(InvalidCorsikaInputError):
+        corsika_test_config = CorsikaConfig(
             array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
-        corsika_test_Config.print_user_parameters()
+        corsika_test_config.print_user_parameters()
 
 
 def test_missing_input(corsika_config, corsika_config_data, array_model_north):
     logger.info("test_missing_input")
     new_config_data = copy(corsika_config_data)
     new_config_data.pop("primary")
-    with pytest.raises(MissingRequiredInputInCorsikaConfigData):
-        corsika_test_Config = CorsikaConfig(
+    with pytest.raises(MissingRequiredInputInCorsikaConfigDataError):
+        corsika_test_config = CorsikaConfig(
             array_model=array_model_north,
             label="test-corsika-config",
             corsika_config_data=new_config_data,
         )
-        corsika_test_Config.print_user_parameters()
+        corsika_test_config.print_user_parameters()
 
 
 def test_set_user_parameters(corsika_config_data, corsika_config):

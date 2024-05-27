@@ -9,8 +9,8 @@ from eventio.search_utils import yield_toplevel_of_type
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
 from simtools.simtel.simtel_histogram import (
-    HistogramIdNotFound,
-    InconsistentHistogramFormat,
+    HistogramIdNotFoundError,
+    InconsistentHistogramFormatError,
     SimtelHistogram,
 )
 from simtools.utils.names import sanitize_name
@@ -125,7 +125,7 @@ class SimtelHistograms:
 
         Raises
         ------
-        HistogramIdNotFound:
+        HistogramIdNotFoundError:
             if histogram ids not found. Problem with the file.
         """
         sim_hist = None
@@ -142,7 +142,7 @@ class SimtelHistograms:
                 " Please check your simtel_array files!"
             )
             self._logger.error(msg)
-            raise HistogramIdNotFound
+            raise HistogramIdNotFoundError
 
         return sim_hist, trig_hist
 
@@ -309,7 +309,7 @@ class SimtelHistograms:
 
         Raises
         ------
-        InconsistentHistogramFormat:
+        InconsistentHistogramFormatError:
             if the format of the histograms have inconsistent dimensions.
         """
         for key_to_test in [
@@ -321,7 +321,7 @@ class SimtelHistograms:
             if first_hist_file[key_to_test] != second_hist_file[key_to_test]:
                 msg = "Trying to add histograms with inconsistent dimensions"
                 self._logger.error(msg)
-                raise InconsistentHistogramFormat
+                raise InconsistentHistogramFormatError
 
     @property
     def list_of_histograms(self):

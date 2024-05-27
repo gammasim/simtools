@@ -7,14 +7,14 @@ import pytest
 from astropy import units as u
 
 import simtools.utils.general as gen
-from simtools.model.model_parameter import InvalidModelParameter
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def lst_config_file():
     """Return the path to test config file for LSTN-01"""
     return "tests/resources/CTA-North-LSTN-01-Released_test-telescope-model.cfg"
@@ -27,7 +27,7 @@ def test_get_parameter_dict(telescope_model_lst):
     assert isinstance(tel_model._get_parameter_dict("telescope_axis_height")["value"], float)
     assert tel_model._get_parameter_dict("telescope_axis_height")["unit"] == "m"
 
-    with pytest.raises(InvalidModelParameter):
+    with pytest.raises(InvalidModelParameterError):
         tel_model._get_parameter_dict("not_a_parameter")
 
 
@@ -96,7 +96,7 @@ def test_handling_parameters(telescope_model_lst):
         pytest.approx(tel_model.get_parameter_value("mirror_reflection_random_angle")[0]) == 0.0080
     )
 
-    with pytest.raises(InvalidModelParameter):
+    with pytest.raises(InvalidModelParameterError):
         tel_model._get_parameter_dict("bla_bla")
 
 
