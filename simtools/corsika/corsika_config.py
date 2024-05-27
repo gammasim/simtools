@@ -11,16 +11,16 @@ from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = [
     "CorsikaConfig",
-    "MissingRequiredInputInCorsikaConfigData",
-    "InvalidCorsikaInput",
+    "MissingRequiredInputInCorsikaConfigDataError",
+    "InvalidCorsikaInputError",
 ]
 
 
-class MissingRequiredInputInCorsikaConfigData(Exception):
+class MissingRequiredInputInCorsikaConfigDataError(Exception):
     """Exception for missing required input in corsika config data."""
 
 
-class InvalidCorsikaInput(Exception):
+class InvalidCorsikaInputError(Exception):
     """Exception for invalid corsika input."""
 
 
@@ -160,10 +160,10 @@ class CorsikaConfig:
 
         Raises
         ------
-        InvalidCorsikaInput
+        InvalidCorsikaInputError
             If any parameter given as input has wrong len, unit or
             an invalid name.
-        MissingRequiredInputInCorsikaConfigData
+        MissingRequiredInputInCorsikaConfigDataError
             If any required user parameter is missing.
         """
 
@@ -190,7 +190,7 @@ class CorsikaConfig:
             if not is_identified:
                 msg = f"Argument {key_args} cannot be identified."
                 self._logger.error(msg)
-                raise InvalidCorsikaInput(msg)
+                raise InvalidCorsikaInputError(msg)
 
         # Checking for parameters with default option
         # If it is not given, filling it with the default value
@@ -205,7 +205,7 @@ class CorsikaConfig:
             else:
                 msg = f"Required parameters {par_name} was not given (there may be more)."
                 self._logger.error(msg)
-                raise MissingRequiredInputInCorsikaConfigData(msg)
+                raise MissingRequiredInputInCorsikaConfigDataError(msg)
 
         # Converting AZM to CORSIKA reference (PHIP)
         phip = 180.0 - self._user_parameters["AZM"][0]
@@ -249,7 +249,7 @@ class CorsikaConfig:
         if len(value_args) != par_info["len"]:
             msg = f"CORSIKA input entry with wrong len: {par_name}"
             self._logger.error(msg)
-            raise InvalidCorsikaInput(msg)
+            raise InvalidCorsikaInputError(msg)
 
         if "unit" not in par_info.keys():
             return value_args
@@ -270,11 +270,11 @@ class CorsikaConfig:
             if not isinstance(arg, u.quantity.Quantity):
                 msg = f"CORSIKA input given without unit: {par_name}"
                 self._logger.error(msg)
-                raise InvalidCorsikaInput(msg)
+                raise InvalidCorsikaInputError(msg)
             if not arg.unit.is_equivalent(unit):
                 msg = f"CORSIKA input given with wrong unit: {par_name}"
                 self._logger.error(msg)
-                raise InvalidCorsikaInput(msg)
+                raise InvalidCorsikaInputError(msg)
 
             value_args_with_units.append(arg.to(unit).value)
 
@@ -306,7 +306,7 @@ class CorsikaConfig:
                 return [prim_info["number"]]
         msg = f"Primary not valid: {value}"
         self._logger.error(msg)
-        raise InvalidCorsikaInput(msg)
+        raise InvalidCorsikaInputError(msg)
 
     def get_user_parameter(self, par_name):
         """

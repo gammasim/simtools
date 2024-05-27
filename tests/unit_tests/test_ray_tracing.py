@@ -10,7 +10,7 @@ from simtools.ray_tracing import RayTracing
 from simtools.utils import names
 
 
-@pytest.fixture
+@pytest.fixture()
 def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
     """A RayTracing instance with results read in that were simulated before"""
     config_data = {

@@ -9,13 +9,13 @@ from astropy import units as u
 from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import PowerLaw
 
-from simtools.simtel.simtel_histogram import HistogramIdNotFound, SimtelHistogram
+from simtools.simtel.simtel_histogram import HistogramIdNotFoundError, SimtelHistogram
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_file(io_handler, corsika_output_file_name):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
@@ -23,7 +23,7 @@ def simtel_array_histograms_file(io_handler, corsika_output_file_name):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histogram_instance(simtel_array_histograms_file):
     instance = SimtelHistogram(histogram_file=simtel_array_histograms_file)
     return instance
@@ -81,7 +81,7 @@ def test_fill_event_histogram_dicts(simtel_array_histogram_instance, caplog):
         if hist["id"] == 2:
             new_instance.histogram[histogram_index]["id"] = 99
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(HistogramIdNotFound):
+        with pytest.raises(HistogramIdNotFoundError):
             new_instance.fill_event_histogram_dicts()
     assert "Histograms ids not found. Please check your files." in caplog.text
 

@@ -144,7 +144,7 @@ class MetadataCollector:
 
         try:
             return gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
-        except gen.InvalidConfigData:
+        except gen.InvalidConfigDataError:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 
@@ -279,7 +279,7 @@ class MetadataCollector:
 
         Raises
         ------
-        gen.InvalidConfigData, FileNotFoundError
+        gen.InvalidConfigDataError, FileNotFoundError
             if metadata cannot be read from file.
         KeyError:
             if metadata does not exist
@@ -313,8 +313,8 @@ class MetadataCollector:
                     self._logger.error(
                         "More than one metadata entry found in %s", metadata_file_name
                     )
-                    raise gen.InvalidConfigData
-            except (gen.InvalidConfigData, FileNotFoundError):
+                    raise gen.InvalidConfigDataError
+            except (gen.InvalidConfigDataError, FileNotFoundError):
                 self._logger.error("Failed reading metadata from %s", metadata_file_name)
                 raise
         # metadata from table meta in ecsv file
@@ -332,7 +332,7 @@ class MetadataCollector:
                 raise
         else:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
-            raise gen.InvalidConfigData
+            raise gen.InvalidConfigDataError
 
         metadata_model.validate_schema(_input_metadata, None)
 

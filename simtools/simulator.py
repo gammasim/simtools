@@ -18,11 +18,11 @@ from simtools.utils import names
 
 __all__ = [
     "Simulator",
-    "InvalidRunsToSimulate",
+    "InvalidRunsToSimulateError",
 ]
 
 
-class InvalidRunsToSimulate(Exception):
+class InvalidRunsToSimulateError(Exception):
     """Exception for invalid runs to simulate."""
 
 
@@ -155,12 +155,12 @@ class Simulator:
 
         Raises
         ------
-        gen.InvalidConfigData
+        gen.InvalidConfigDataError
 
         """
 
         if simulator not in ["simtel", "corsika", "corsika_simtel"]:
-            raise gen.InvalidConfigData
+            raise gen.InvalidConfigDataError
         self._simulator = simulator.lower()
 
     def _load_configuration_and_simulation_model(self, config_data):
@@ -260,7 +260,7 @@ class Simulator:
             if not all(isinstance(r, int) for r in run_list):
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
-                raise InvalidRunsToSimulate
+                raise InvalidRunsToSimulateError
 
             self._logger.debug(f"run_list: {run_list}")
             validated_runs = list(run_list)
@@ -269,7 +269,7 @@ class Simulator:
             if not all(isinstance(r, int) for r in run_range) or len(run_range) != 2:
                 msg = "run_range must contain two integers only."
                 self._logger.error(msg)
-                raise InvalidRunsToSimulate
+                raise InvalidRunsToSimulateError
 
             run_range = np.arange(run_range[0], run_range[1] + 1)
             self._logger.debug(f"run_range: {run_range}")

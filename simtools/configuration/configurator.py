@@ -13,11 +13,11 @@ from simtools.utils import general as gen
 
 __all__ = [
     "Configurator",
-    "InvalidConfigurationParameter",
+    "InvalidConfigurationParameterError",
 ]
 
 
-class InvalidConfigurationParameter(Exception):
+class InvalidConfigurationParameterError(Exception):
     """Exception for Invalid configuration parameter."""
 
 
@@ -142,11 +142,6 @@ class Configurator:
         dict
             Dictionary with DB parameters
 
-        Raises
-        ------
-        InvalidConfigurationParameter
-           if parameter has already been defined with a different value.
-
         """
 
         self.parser.initialize_default_arguments(
@@ -186,11 +181,6 @@ class Configurator:
             List of arguments.
         require_command_line: bool
             Require at least one command line argument.
-
-        Raises
-        ------
-        InvalidConfigurationParameter
-              invalid configuration.
 
         """
 
@@ -257,7 +247,7 @@ class Configurator:
 
         Raises
         ------
-        InvalidConfigurationParameter
+        InvalidConfigurationParameterError
            if parameter has already been defined with a different value.
 
 
@@ -272,7 +262,7 @@ class Configurator:
                 f"Inconsistent configuration parameter ({key}) definition "
                 f"({self.config[key]} vs {value})"
             )
-            raise InvalidConfigurationParameter
+            raise InvalidConfigurationParameterError
 
     def _fill_from_config_file(self, config_file):
         """

@@ -44,7 +44,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    with open(args_dict["sections"], "r", encoding="utf-8") as stream:
+    with open(args_dict["sections"], encoding="utf-8") as stream:
         parameter_catogeries = yaml.safe_load(stream)
 
     non_optic_catagories = [

@@ -13,7 +13,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_runner(array_model_north, simtel_path):
     simtel_runner = SimtelRunnerArray(
         array_model=array_model_north,
@@ -27,7 +27,7 @@ def simtel_runner(array_model_north, simtel_path):
     return simtel_runner
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_file(io_handler):
     corsika_file = io_handler.get_input_data_file(
         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True

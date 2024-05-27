@@ -13,28 +13,28 @@ from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simtel_runner_array import SimtelRunnerArray
-from simtools.simulator import InvalidRunsToSimulate, Simulator
+from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def label():
     return "test"
 
 
-@pytest.fixture
+@pytest.fixture()
 def input_file_list():
     return ["run1", "abc_run22", "def_run02_and"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def corsika_file():
     return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
-@pytest.fixture
+@pytest.fixture()
 def array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
@@ -49,7 +49,7 @@ def array_simulator(
     return array_simulator
 
 
-@pytest.fixture
+@pytest.fixture()
 def shower_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
@@ -65,7 +65,7 @@ def shower_simulator(
     return shower_simulator
 
 
-@pytest.fixture
+@pytest.fixture()
 def shower_array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
@@ -106,7 +106,7 @@ def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator
     shower_array_simulator.simulator = "corsika_simtel"
     assert shower_array_simulator.simulator == "corsika_simtel"
 
-    with pytest.raises(gen.InvalidConfigData):
+    with pytest.raises(gen.InvalidConfigDataError):
         shower_simulator.simulator = "this_simulator_is_not_there"
 
 
@@ -163,7 +163,7 @@ def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
             24,
         ]
 
-        with pytest.raises(InvalidRunsToSimulate):
+        with pytest.raises(InvalidRunsToSimulateError):
             simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
 
         assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
@@ -175,10 +175,10 @@ def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
 
         assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
 
-        with pytest.raises(InvalidRunsToSimulate):
+        with pytest.raises(InvalidRunsToSimulateError):
             simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
 
-        with pytest.raises(InvalidRunsToSimulate):
+        with pytest.raises(InvalidRunsToSimulateError):
             simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
 
 
