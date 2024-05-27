@@ -6,10 +6,10 @@ import astropy.units as u
 import numpy as np
 from eventio.simtel import SimTelFile
 
-__all__ = ["InconsistentInputFile", "SimtelEvents"]
+__all__ = ["InconsistentInputFileError", "SimtelEvents"]
 
 
-class InconsistentInputFile(Exception):
+class InconsistentInputFileError(Exception):
     """Exception for inconsistent input file."""
 
 
@@ -119,7 +119,7 @@ class SimtelEvents:
                     if not _are_headers_consistent(self._mc_header, f.mc_run_headers[0]):
                         msg = "MC header pamameters from different files are inconsistent"
                         self._logger.error(msg)
-                        raise InconsistentInputFile(msg)
+                        raise InconsistentInputFileError(msg)
 
                 is_first_file = False
 

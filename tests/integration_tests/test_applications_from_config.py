@@ -14,7 +14,6 @@ import yaml
 from astropy.table import Table
 
 import simtools.utils.general as gen
-import simtools.utils.names as names
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -177,8 +176,7 @@ def compare_files(file1, file2, tolerance=1.0e-5):
         compare_json_files(file1, file2)
         return
 
-    logger.error(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
-    assert False
+    pytest.fail(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
 
 
 def assert_file_type(file_type, file_name):
@@ -196,14 +194,14 @@ def assert_file_type(file_type, file_name):
 
     if file_type == "json":
         try:
-            with open(file_name, "r", encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 json.load(file)
             return True
         except (json.JSONDecodeError, FileNotFoundError):
             return False
     if file_type == "yaml" or file_type == "yml":
         try:
-            with open(file_name, "r", encoding="utf-8") as file:
+            with open(file_name, encoding="utf-8") as file:
                 yaml.safe_load(file)
             return True
         except (yaml.YAMLError, FileNotFoundError):
@@ -382,10 +380,8 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     if request.config.getoption("--model_version") is None:
         output_status = validate_application_output(config)
     elif config_file_model_version is not None:
-        _from_command_line = names.validate_model_version_name(
-            request.config.getoption("--model_version")
-        )
-        _from_config_file = names.validate_model_version_name(config_file_model_version)
+        _from_command_line = request.config.getoption("--model_version")
+        _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
             output_status = validate_application_output(config)
 

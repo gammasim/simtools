@@ -22,7 +22,7 @@ from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 
 
-class HistogramNotCreated(Exception):
+class HistogramNotCreatedError(Exception):
     """Exception for histogram not created."""
 
 
@@ -296,10 +296,10 @@ class CorsikaHistograms:
         if telescope_new_indices is None:
             self._telescope_indices = np.arange(self.num_telescopes)
         else:
-            if not isinstance(telescope_new_indices, (list, np.ndarray)):
+            if not isinstance(telescope_new_indices, list | np.ndarray):
                 telescope_new_indices = np.array([telescope_new_indices])
             for i_telescope in telescope_new_indices:
-                if not isinstance(i_telescope, (int, np.integer)):
+                if not isinstance(i_telescope, int | np.integer):
                     msg = "The index or indices given are not of type int."
                     self._logger.error(msg)
                     raise TypeError
@@ -692,7 +692,7 @@ class CorsikaHistograms:
 
         Raises
         ------
-        HistogramNotCreated:
+        HistogramNotCreatedError:
             if the histogram was not previously created.
         """
 
@@ -703,7 +703,7 @@ class CorsikaHistograms:
                     "histograms from the CORSIKA output file."
                 )
                 self._logger.error(msg)
-                raise HistogramNotCreated
+                raise HistogramNotCreatedError
 
     def _get_hist_2d_projection(self, label):
         """

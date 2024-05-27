@@ -148,7 +148,7 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
     """
 
     simtel_parameter_set = set()
-    with open(simtel_config_file, "r", encoding="utf-8") as file:
+    with open(simtel_config_file, encoding="utf-8") as file:
         for line in file:
             parts_of_lines = re.split(r",\s*|\s+", line.strip())
             simtel_parameter_set.add(parts_of_lines[1].lower())

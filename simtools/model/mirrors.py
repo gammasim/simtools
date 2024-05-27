@@ -5,10 +5,10 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-__all__ = ["InvalidMirrorListFile", "Mirrors"]
+__all__ = ["InvalidMirrorListFileError", "Mirrors"]
 
 
-class InvalidMirrorListFile(Exception):
+class InvalidMirrorListFileError(Exception):
     """Exception for invalid mirror list file."""
 
 
@@ -57,7 +57,7 @@ class Mirrors:
 
         Raises
         ------
-        InvalidMirrorListFile
+        InvalidMirrorListFileError
             If number of mirrors is 0.
         """
 
@@ -70,7 +70,7 @@ class Mirrors:
         if self.number_of_mirrors == 0:
             msg = "Problem reading mirror list file"
             self._logger.error(msg)
-            raise InvalidMirrorListFile
+            raise InvalidMirrorListFileError
 
         try:
             self.mirror_diameter = u.Quantity(self.mirror_table["mirror_diameter"])[0]
@@ -127,7 +127,7 @@ class Mirrors:
 
         Raises
         ------
-        InvalidMirrorListFile
+        InvalidMirrorListFileError
             If number of mirrors is 0.
         """
 

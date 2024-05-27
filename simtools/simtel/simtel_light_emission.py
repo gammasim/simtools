@@ -387,7 +387,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += f" -c {self._telescope_model.get_config_file()}"
 
         def remove_line_from_config(file_path, line_prefix):
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path, encoding="utf-8") as file:
                 lines = file.readlines()
 
             with open(file_path, "w", encoding="utf-8") as file:

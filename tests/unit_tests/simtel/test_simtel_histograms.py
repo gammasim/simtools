@@ -11,8 +11,8 @@ from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.simtel.simtel_histogram import (
-    HistogramIdNotFound,
-    InconsistentHistogramFormat,
+    HistogramIdNotFoundError,
+    InconsistentHistogramFormatError,
     SimtelHistogram,
 )
 from simtools.simtel.simtel_histograms import SimtelHistograms
@@ -21,7 +21,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_file(io_handler):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
@@ -29,7 +29,7 @@ def simtel_array_histograms_file(io_handler):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_file_list(io_handler):
     return io_handler.get_input_data_file(
         file_name="simtel_output_files.txt",
@@ -37,7 +37,7 @@ def simtel_array_histograms_file_list(io_handler):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_instance(simtel_array_histograms_file):
     instance = SimtelHistograms(
         histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
@@ -45,7 +45,7 @@ def simtel_array_histograms_instance(simtel_array_histograms_file):
     return instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_array_histograms_instance_file_list(simtel_array_histograms_file_list):
     instance = SimtelHistograms(histogram_files=simtel_array_histograms_file_list, test=True)
     return instance
@@ -117,7 +117,7 @@ def test_fill_stacked_events(simtel_array_histograms_instance, caplog):
         if hist["id"] == 2:
             new_instance.combined_hists[histogram_index]["id"] = 99
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(HistogramIdNotFound):
+        with pytest.raises(HistogramIdNotFoundError):
             new_instance._fill_stacked_events()
 
 
@@ -146,8 +146,8 @@ def test_check_consistency(simtel_array_histograms_instance):
         "title": "Histogram 2",
     }
 
-    # Test if the method raises InconsistentHistogramFormat exception
-    with pytest.raises(InconsistentHistogramFormat):
+    # Test if the method raises InconsistentHistogramFormatError exception
+    with pytest.raises(InconsistentHistogramFormatError):
         simtel_array_histograms_instance._check_consistency(first_hist_file, second_hist_file)
 
 
@@ -191,7 +191,7 @@ def test_combine_histogram_files(simtel_array_histograms_file, caplog):
 
     # Test inconsistency
     instance_all.combined_hists[0]["lower_x"] = instance_all.combined_hists[0]["lower_x"] + 1
-    with pytest.raises(InconsistentHistogramFormat):
+    with pytest.raises(InconsistentHistogramFormatError):
         instance_all._combined_hists = None
         assert instance_all._combined_hists is None
         _ = instance_all.combined_hists

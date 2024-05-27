@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
 
     telescope_model_sst.export_model_files()
@@ -24,7 +24,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
     return camera_efficiency_sst
 
 
-@pytest.fixture
+@pytest.fixture()
 def simtel_runner_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
     simtel_runner_camera_efficiency = SimtelRunnerCameraEfficiency(
         simtel_source_path=simtel_path,
@@ -130,14 +130,14 @@ def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficienc
     def produced_file_has_expected_values(file):
         # Test that the first 3 non-comment lines are the following values:
         wavelengths = [300.00, 315.00, 330.00]
-        NSBs = [0, 0.612, 1.95]
-        with open(file, "r", encoding="utf-8") as file:
+        nsbs = [0, 0.612, 1.95]
+        with open(file, encoding="utf-8") as file:
             for line in file:
                 if line.startswith("#"):
                     continue
                 entry = line.split()
                 assert float(entry[0]) == pytest.approx(wavelengths.pop(0))
-                assert float(entry[2]) == pytest.approx(NSBs.pop(0))
+                assert float(entry[2]) == pytest.approx(nsbs.pop(0))
                 assert len(entry) == 3
                 if len(wavelengths) == 0:
                     break

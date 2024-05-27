@@ -40,7 +40,7 @@
 import logging
 from pathlib import Path
 
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from astropy import units as u
 
@@ -131,7 +131,7 @@ def _get_site_from_telescope_list_name(telescope_list_file):
         Site name.
 
     """
-    for _site in names.site_names:
+    for _site in names.site_names():
         if _site in str(telescope_list_file):
             return _site
     return None
@@ -153,7 +153,7 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    matplotlib.use("Agg")
+    mpl.use("Agg")
     telescope_file = None
     if args_dict["telescope_list"] is not None:
         logger.info("Plotting array from telescope list file(s).")
@@ -180,7 +180,7 @@ def main():
             if args_dict["figure_name"] is None:
                 plot_file_name = (
                     f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
-                    f"{str((round((one_angle.to(u.deg).value))))}deg"
+                    f"{str(round(one_angle.to(u.deg).value))}deg"
                 )
             else:
                 plot_file_name = args_dict["figure_name"]

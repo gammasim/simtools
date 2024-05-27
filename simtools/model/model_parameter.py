@@ -12,10 +12,10 @@ from simtools.io_operations import io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
-__all__ = ["InvalidModelParameter", "ModelParameter"]
+__all__ = ["InvalidModelParameterError", "ModelParameter"]
 
 
-class InvalidModelParameter(Exception):
+class InvalidModelParameterError(Exception):
     """Exception for invalid model parameter."""
 
 
@@ -66,7 +66,7 @@ class ModelParameter:
         self._derived = None
         self.collection = collection
         self.label = label
-        self.model_version = names.validate_model_version_name(model_version)
+        self.model_version = self.db.model_version(model_version)
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_telescope_name(
@@ -107,7 +107,7 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidModelParameter
+        InvalidModelParameterError
             If par_name does not match any parameter in this model.
         """
         try:
@@ -119,7 +119,7 @@ class ModelParameter:
         except (KeyError, ValueError) as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
-            raise InvalidModelParameter(msg) from e
+            raise InvalidModelParameterError(msg) from e
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
@@ -156,7 +156,7 @@ class ModelParameter:
             _is_float = False
             try:
                 _is_float = self.get_parameter_type(par_name).startswith("float")
-            except (InvalidModelParameter, TypeError):  # float - in case we don't know
+            except (InvalidModelParameterError, TypeError):  # float - in case we don't know
                 _is_float = True
             _parameter = gen.convert_string_to_list(_parameter, is_float=_is_float)
             _parameter = _parameter if len(_parameter) > 1 else _parameter[0]
@@ -408,13 +408,13 @@ class ModelParameter:
 
         Raises
         ------
-        InvalidModelParameter
+        InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
         if par_name not in self._parameters:
             msg = f"Parameter {par_name} not in the model"
             self._logger.error(msg)
-            raise InvalidModelParameter(msg)
+            raise InvalidModelParameterError(msg)
 
         if isinstance(value, str):
             value = gen.convert_string_to_list(value)

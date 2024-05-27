@@ -13,7 +13,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture
+@pytest.fixture()
 def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
         telescope_model=telescope_model_lst,
@@ -25,7 +25,7 @@ def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
     return camera_efficiency_lst
 
 
-@pytest.fixture
+@pytest.fixture()
 def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst,
@@ -37,7 +37,7 @@ def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
     return camera_efficiency_sst
 
 
-@pytest.fixture
+@pytest.fixture()
 def results_file(io_handler):
     test_file_name = (
         "tests/resources/"
