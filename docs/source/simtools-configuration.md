@@ -4,14 +4,14 @@
 
 Applications in simtools can be configured by the following four approaches, which are all equivalent:
 
-1. command line arguments;
+1. command-line arguments;
 2. configuration files (in yaml format);
 3. configuration dictionary when calling the {ref}`Configurator <configurationconfigurator>` class;
 4. environment variables.
 
 To illustrate this, the example below sets the path pointing towards the directory for all data products.
 
-Set the output directory using a command line argument:
+Set the output directory using a command-line argument:
 
 ```console
 python applications/<application_name> --output_path <path name>
