@@ -108,7 +108,7 @@ def main():
 ```
 
 Application handling should be done using the [Configurator](configuration_module.md#configurationconfigurator) class, which allows to set
-configurations from the command line, configuration files, or environmental variables.
+configurations from the commandline, configuration files, or environmental variables.
 Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command-line arguments before introducing new ones in applications
 
 The documentation of application uses the in-line doc string.

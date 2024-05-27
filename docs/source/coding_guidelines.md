@@ -49,7 +49,7 @@ pylint $(git ls-files 'simtools/*.py')
 Docstrings following the Numpy style must be added to any public function, class or method.
 It is also recommended to add docstrings-like comments to private functions.
 
-In applications, the modules should contain docstrings with a general description, command line
+In applications, the modules should contain docstrings with a general description, command-line
 parameters, and examples.
 A typical example should look like:
 

@@ -34,7 +34,7 @@ There are three options to install simtools for users:
 - using git and pip
 - download a docker container with all software installed
 
-All simtools applications are available as command line tools.
+All simtools applications are available as command-line tools.
 Note the naming of the tool, starting with `simtools-` followed by the application name.
 See {ref}`Applications` for more details.
 
@@ -140,7 +140,7 @@ CORSIKA and sim_telarray are external tools to simtools and are required depende
 Recommended is to use the Docker environment, see description in  [Docker Environment for Developers].
 
 For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
-CTA users can download both packages from the [sim_telarray webpage](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
+CTA users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
 (CTA password applies) and install the package with:
 
 ```console
