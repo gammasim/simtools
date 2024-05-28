@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools &#8212; simtools v0.1.dev1+gb3833bc Manual</title>
+    <title>simtools &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=5b8532bc"></script>
+    <script src="_static/documentation_options.js?v=f37fefd7"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -136,7 +136,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb3833bc Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf97b155 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -211,10 +211,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
@@ -525,8 +527,8 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="applications.html#list-of-applications">List of applications</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="applications.html#module-add_file_to_db">add_file_to_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="applications.html#module-add_value_from_json_to_db">add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#add-file-to-db">add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applications.html#add-value-from-json-to-db">add_value_from_json_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications.html#module-calculate_trigger_rate">calculate_trigger_rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications.html#module-compare_cumulative_psf">compare_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applications.html#module-convert_all_model_parameters_from_simtel">convert_all_model_parameters_from_simtel</a></li>
@@ -572,8 +574,16 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#description-of-model-parameters">Description of model parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#data-structure-for-model-parameters">Data structure for model parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#updating-the-model-database">Updating the model database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parameters.html#import-simulation-model-parameters">Import simulation model parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="databases.html#model-parameters-db">Model Parameters DB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="databases.html#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a><ul>
@@ -594,12 +604,16 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#python-version">Python version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#contributing-code">Contributing code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#unit-and-integration-testing">Unit and Integration Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#generating-documentation">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#writing-applications">Writing Applications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#data-files">Data files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html#input-validation">Input validation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#hints-for-rst">Hints for RST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#hints-for-markdown">Hints for Markdown</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a><ul>

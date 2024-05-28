@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+gb3833bc Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=5b8532bc"></script>
+    <script src="_static/documentation_options.js?v=f37fefd7"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb3833bc Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf97b155 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -210,10 +210,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
@@ -426,6 +428,10 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.InvalidArrayConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidArrayConfigDataError</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-model">calibration_model</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.calibration_model.CalibrationModel"><code class="docutils literal notranslate"><span class="pre">CalibrationModel</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#camera">camera</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.calc_fov"><code class="docutils literal notranslate"><span class="pre">Camera.calc_fov()</span></code></a></li>
@@ -521,8 +527,8 @@ document.write(`
 <span id="mcmodel"></span><h1>MC Model<a class="headerlink" href="#mc-model" title="Link to this heading">#</a></h1>
 <p>The array of imaging atmospheric Cherenkov telescopes is abstracted in the simulation model and divided into the following components:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#id5">telescope_model</a> representing a telescope. Defined by its telescope name, allowing to read model parameters from the <a class="reference internal" href="databases.html#model-parameters-db"><span class="std std-ref">Model Parameters DB</span></a> using this name.</p></li>
-<li><p>sub-elements of the telescope represented by the modules <a class="reference internal" href="#id3">mirrors</a> and <a class="reference internal" href="#id2">camera</a></p></li>
+<li><p><a class="reference internal" href="#id6">telescope_model</a> representing a telescope. Defined by its telescope name, allowing to read model parameters from the databases using this name.</p></li>
+<li><p>sub-elements of the telescope represented by the modules <a class="reference internal" href="#id4">mirrors</a> and <a class="reference internal" href="#id3">camera</a></p></li>
 <li><p>an array of telescopes (especially the telescope arrangement) represented by <a class="reference internal" href="#id1">array_model</a>.</p></li>
 </ul>
 <section id="array-model">
@@ -640,9 +646,34 @@ document.write(`
 </dd></dl>
 
 </section>
+<section id="calibration-model">
+<h2>calibration_model<a class="headerlink" href="#calibration-model" title="Link to this heading">#</a></h2>
+<span class="target" id="module-model.calibration_model"><span id="id2"></span></span><dl class="py class">
+<dt class="sig sig-object py" id="model.calibration_model.CalibrationModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.calibration_model.</span></span><span class="sig-name descname"><span class="pre">CalibrationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_device_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/calibration_model.html#CalibrationModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.calibration_model.CalibrationModel" title="Link to this definition">#</a></dt>
+<dd><p>CalibrationModel represents the MC model of an individual calibration device.     It provides functionality to read the required parameters from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>Site name (e.g., South or North).</p>
+</dd>
+<dt><strong>calibration_model_name: str</strong></dt><dd><p>Calibration device model name (ex. ILLS-01, ILLN-01, …).</p>
+</dd>
+<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model (ex. prod5).</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="camera">
 <h2>camera<a class="headerlink" href="#camera" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.camera"><span id="id2"></span></span><dl class="py class">
+<span class="target" id="module-model.camera"><span id="id3"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.camera.Camera">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera" title="Link to this definition">#</a></dt>
 <dd><p>Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating    FoV and plotting the camera.</p>
@@ -844,7 +875,7 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </section>
 <section id="mirrors">
 <h2>mirrors<a class="headerlink" href="#mirrors" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.mirrors"><span id="id3"></span></span><dl class="py exception">
+<span class="target" id="module-model.mirrors"><span id="id4"></span></span><dl class="py exception">
 <dt class="sig sig-object py" id="model.mirrors.InvalidMirrorListFileError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.mirrors.</span></span><span class="sig-name descname"><span class="pre">InvalidMirrorListFileError</span></span><a class="reference internal" href="_modules/model/mirrors.html#InvalidMirrorListFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.InvalidMirrorListFileError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid mirror list file.</p>
@@ -895,7 +926,7 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </section>
 <section id="model-parameter">
 <h2>model_parameter<a class="headerlink" href="#model-parameter" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.model_parameter"><span id="modelparameters"></span></span><dl class="py exception">
+<span class="target" id="module-model.model_parameter"><span id="model-parameters"></span></span><dl class="py exception">
 <dt class="sig sig-object py" id="model.model_parameter.InvalidModelParameterError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">InvalidModelParameterError</span></span><a class="reference internal" href="_modules/model/model_parameter.html#InvalidModelParameterError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.InvalidModelParameterError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid model parameter.</p>
@@ -1223,7 +1254,7 @@ model parameters.</p>
 </section>
 <section id="site-model">
 <h2>site_model<a class="headerlink" href="#site-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.site_model"><span id="id4"></span></span><dl class="py class">
+<span class="target" id="module-model.site_model"><span id="id5"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
 <dd><p>SiteModel represents the MC model of an observatory site.</p>
@@ -1281,7 +1312,7 @@ Parameters are returned with units wherever possible.</p>
 </section>
 <section id="telescope-model">
 <h2>telescope_model<a class="headerlink" href="#telescope-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.telescope_model"><span id="id5"></span></span><dl class="py class">
+<span class="target" id="module-model.telescope_model"><span id="id6"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
 <dd><p>TelescopeModel represents the MC model of an individual telescope.</p>
@@ -1550,6 +1581,10 @@ reflectivity, etc.)</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.InvalidArrayConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidArrayConfigDataError</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-model">calibration_model</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.calibration_model.CalibrationModel"><code class="docutils literal notranslate"><span class="pre">CalibrationModel</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#camera">camera</a><ul class="nav section-nav flex-column">

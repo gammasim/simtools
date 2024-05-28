@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gb3833bc Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
   
   
   
@@ -36,14 +36,14 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=5b8532bc"></script>
+    <script src="_static/documentation_options.js?v=f37fefd7"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guidelines';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Pull requests" href="pull_requests.html" />
+    <link rel="next" title="Generating Documentation" href="documentation.html" />
     <link rel="prev" title="Containers (docker files)" href="docker_files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb3833bc Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf97b155 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -210,10 +210,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
@@ -415,7 +417,6 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-documentation">Generating Documentation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
@@ -449,7 +450,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 <li><p>applications (simtools:) <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/applications">simtools/applications</a></p></li>
 <li><p>unit and integration tests: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">./tests</a></p></li>
 <li><p>documentation: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">./docs</a></p></li>
-<li><p>docker files: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">.docker</a></p></li>
+<li><p>docker files: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">./docker</a></p></li>
 </ul>
 </section>
 <section id="python-version">
@@ -499,31 +500,6 @@ and can be used to run unit and integration tests in parallel (e.g., <code class
 <a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
 <p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span> <span class="pre">--cov</span></code>.
 Add the <code class="docutils literal notranslate"><span class="pre">--cov-report</span> <span class="pre">html</span></code> option to generate a coverage report in HTML format.</p>
-</section>
-<section id="generating-documentation">
-<h2>Generating Documentation<a class="headerlink" href="#generating-documentation" title="Link to this heading">#</a></h2>
-<p>Sphinx is used to create this documentation from the files in the
-<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">docs</a> directory and from the
-docstrings in the code.</p>
-<p>This is done automatically with each merge into the main branch, see the
-<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-docs.yml">GitHub Action workflow CI-docs</a>.</p>
-<p>For writing and testing documentation locally:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">docs</span>
-<span class="n">make</span> <span class="n">clean</span>
-<span class="n">make</span> <span class="n">html</span>
-</pre></div>
-</div>
-<p>This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
-docstrings or RST files). The documentation can be viewed locally in a browser starting from the
-file <code class="docutils literal notranslate"><span class="pre">./build/html/index.html</span></code>.</p>
-<p>The documentation is written in reStructuredText (RST) format.
-Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.</p>
-<p>Hints:</p>
-<ul class="simple">
-<li><p>make sure that headings are underlined with the correct number of <code class="docutils literal notranslate"><span class="pre">=</span></code> characters</p></li>
-<li><p>make sure that the indentation is correct and aligned</p></li>
-<li><p>use unicode for special characters (e.g., <code class="docutils literal notranslate"><span class="pre">\u00B2</span></code> for superscript 2); see <a class="reference external" href="https://unicode-table.com/en/">unicode table</a></p></li>
-</ul>
 </section>
 <section id="writing-applications">
 <h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">#</a></h2>
@@ -653,11 +629,11 @@ properties. See an example below:</p>
       </div>
     </a>
     <a class="right-next"
-       href="pull_requests.html"
+       href="documentation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Pull requests</p>
+        <p class="prev-next-title">Generating Documentation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -681,7 +657,6 @@ properties. See an example below:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-documentation">Generating Documentation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>

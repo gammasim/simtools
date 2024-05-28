@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_utils &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
+    <title>model.calibration_model &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/model_utils';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/calibration_model';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -260,7 +260,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/model/model_utils.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/model/calibration_model.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -334,69 +334,58 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for model.model_utils</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/python3</span>
+  <h1>Source code for model.calibration_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">simtools.model.model_parameter</span> <span class="kn">import</span> <span class="n">ModelParameter</span>
 
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;compute_telescope_transmission&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;is_two_mirror_telescope&quot;</span><span class="p">,</span>
-<span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CalibrationModel&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="compute_telescope_transmission">
-<a class="viewcode-back" href="../../mc_model.html#model.model_utils.compute_telescope_transmission">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_telescope_transmission</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">off_axis</span><span class="p">):</span>
+<div class="viewcode-block" id="CalibrationModel">
+<a class="viewcode-back" href="../../mc_model.html#model.calibration_model.CalibrationModel">[docs]</a>
+<span class="k">class</span> <span class="nc">CalibrationModel</span><span class="p">(</span><span class="n">ModelParameter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute telescope transmission (0 &lt; T &lt; 1) for a given set of parameters as defined by \</span>
-<span class="sd">    the MC model and for a given off-axis angle.</span>
+<span class="sd">    CalibrationModel represents the MC model of an individual calibration device. \</span>
+<span class="sd">    It provides functionality to read the required parameters from the DB.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    pars: list of float</span>
-<span class="sd">        Parameters of the telescope transmission. Len(pars) should be 4.</span>
-<span class="sd">    off_axis: float</span>
-<span class="sd">        Off-axis angle in deg.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
-<span class="sd">        Telescope transmission.</span>
+<span class="sd">    site: str</span>
+<span class="sd">        Site name (e.g., South or North).</span>
+<span class="sd">    calibration_model_name: str</span>
+<span class="sd">        Calibration device model name (ex. ILLS-01, ILLN-01, ...).</span>
+<span class="sd">    mongo_db_config: dict</span>
+<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Version of the model (ex. prod5).</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label. Important for output file naming.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">_deg_to_rad</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span>
-    <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="n">t</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">off_axis</span> <span class="o">*</span> <span class="n">_deg_to_rad</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">_deg_to_rad</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">pars</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">t</span> <span class="o">**</span> <span class="n">pars</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span></div>
-
-
-
-<div class="viewcode-block" id="is_two_mirror_telescope">
-<a class="viewcode-back" href="../../mc_model.html#model.model_utils.is_two_mirror_telescope">[docs]</a>
-<span class="k">def</span> <span class="nf">is_two_mirror_telescope</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check if the telescope is a two mirror design.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    telescope_model_name: str</span>
-<span class="sd">        Telescope model name (ex. LSTN-01).</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    bool</span>
-<span class="sd">        True if the telescope is a two mirror one.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">tel_type</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">telescope_model_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;SST&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span> <span class="ow">or</span> <span class="s2">&quot;SCT&quot;</span> <span class="ow">in</span> <span class="n">tel_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="kc">False</span></div>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">calibration_device_model_name</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CalibrationModel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CalibrationModel </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">calibration_device_model_name</span><span class="p">)</span>
+        <span class="n">ModelParameter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">calibration_device_model_name</span><span class="p">,</span>
+            <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 </pre></div>
 

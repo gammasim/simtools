@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
+    <title>Generating Documentation &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'databases';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'documentation';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Simulation Software" href="simulation_software.html" />
-    <link rel="prev" title="Simulation Model" href="model_parameters.html" />
+    <link rel="next" title="Pull requests" href="pull_requests.html" />
+    <link rel="prev" title="Developer Guidelines" href="developer_guidelines.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -211,11 +211,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary_files.html">Auxiliary Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_parameters.html">Simulation Model</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Generating Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
@@ -272,7 +272,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/databases.md?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/documentation.md?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -289,7 +289,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdatabases.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdocumentation.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -319,7 +319,7 @@
       
       
       
-      <li><a href="_sources/databases.md" target="_blank"
+      <li><a href="_sources/documentation.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -403,7 +403,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Databases</h1>
+    <h1>Generating Documentation</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -413,7 +413,8 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hints-for-rst">Hints for RST</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hints-for-markdown">Hints for Markdown</a></li>
 </ul>
             </nav>
         </div>
@@ -425,24 +426,41 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="databases">
-<h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">#</a></h1>
-<p>The simtools package uses a prototype MongoDB database for the telescopes and sites model, reference data, derived values and test data.
-Access to the DB is handled via a dedicated API module. Access to the DB is restricted, please contact the developers in order to obtain access.</p>
-<p>Simulation model parameters are stored in databases, see the description in the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section.</p>
-<p>Several different data bases are used:</p>
-<ul class="simple">
-<li><p>model parameters DB (name needs to be indicated by <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> in your <code class="docutils literal notranslate"><span class="pre">.envfile</span></code> )</p></li>
-<li><p>derived values DB includes simtools-derived values</p></li>
-</ul>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The structure of the database is currently under revisions and will change in near future.
-This documentation is therefore incomplete.</p>
+  <section id="generating-documentation">
+<h1>Generating Documentation<a class="headerlink" href="#generating-documentation" title="Link to this heading">#</a></h1>
+<p>Sphinx is used to create this documentation from the files in the
+<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs%3E">docs</a> directory and from the
+docstrings in the code.
+This is done automatically with each merge into the main branch, see the
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-docs.yml%3E">GitHub Action workflow CI-docs</a>.</p>
+<p>The documentation is written in Markdown (<a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/index.html">MyST flavor</a> or reStructuredText (RST) format.
+Preference is given to Markdown, as more developers are familiar with it.
+The <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/index.html">numpy doc</a> format is used for docstrings in the code.</p>
+<p>For writing and testing documentation locally:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="nb">cd</span><span class="w"> </span>docs
+<span class="w">    </span>make<span class="w"> </span>clean
+<span class="w">    </span>make<span class="w"> </span>html
+</pre></div>
 </div>
-<section id="browsing-the-mongodb-database">
-<h2>Browsing the mongoDB database<a class="headerlink" href="#browsing-the-mongodb-database" title="Link to this heading">#</a></h2>
-<p>The mongoDB database can be accessed via the command-line interface <code class="docutils literal notranslate"><span class="pre">mongo</span></code> or via a GUI tool like <code class="docutils literal notranslate"><span class="pre">Robo</span> <span class="pre">3T</span></code> or <code class="docutils literal notranslate"><span class="pre">Studio</span> <span class="pre">3T</span></code>.</p>
+<p>This is especially recommended to identify warnings and errors by Sphinx (e.g., from badly formatted
+docstrings or RST files). The documentation can be viewed locally in a browser starting from the
+file <code class="docutils literal notranslate"><span class="pre">./build/html/index.html</span></code>.</p>
+<section id="hints-for-rst">
+<h2>Hints for RST<a class="headerlink" href="#hints-for-rst" title="Link to this heading">#</a></h2>
+<p>Please make sure that you follow the <a class="reference external" href="https://docutils.sourceforge.io/rst.html">RST format</a>, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.</p>
+<p>Notes</p>
+<ul class="simple">
+<li><p>make sure that headings are underlined with the correct number of <code class="docutils literal notranslate"><span class="pre">=</span></code> characters</p></li>
+<li><p>make sure that the indentation is correct and aligned</p></li>
+<li><p>use unicode for special characters (e.g., <code class="docutils literal notranslate"><span class="pre">\u00B2</span></code> for superscript 2); see <a class="reference external" href="https://unicode-table.com/en/">unicode table</a>.</p></li>
+</ul>
+</section>
+<section id="hints-for-markdown">
+<h2>Hints for Markdown<a class="headerlink" href="#hints-for-markdown" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>links to other files and headings should follow this syntax: <code class="docutils literal notranslate"><span class="pre">{ref}`model_parameters</span> <span class="pre">module</span> <span class="pre">&lt;model_parameters&gt;`</span></code> results in <a class="reference internal" href="mc_model.html#model-parameters"><span class="std std-ref">model_parameters module</span></a></p></li>
+<li><p>links to other files relative to this one in markdown: <code class="docutils literal notranslate"><span class="pre">[mongoDB</span> <span class="pre">databases](databases.md#databases)</span></code> results in <a class="reference internal" href="databases.html#databases"><span class="std std-ref">mongoDB databases</span></a>.</p></li>
+</ul>
 </section>
 </section>
 
@@ -458,20 +476,20 @@ This documentation is therefore incomplete.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="model_parameters.html"
+       href="developer_guidelines.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Simulation Model</p>
+        <p class="prev-next-title">Developer Guidelines</p>
       </div>
     </a>
     <a class="right-next"
-       href="simulation_software.html"
+       href="pull_requests.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Simulation Software</p>
+        <p class="prev-next-title">Pull requests</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -491,7 +509,8 @@ This documentation is therefore incomplete.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hints-for-rst">Hints for RST</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hints-for-markdown">Hints for Markdown</a></li>
 </ul>
   </nav></div>
 
