@@ -8,6 +8,7 @@ This is done automatically with each merge into the main branch, see the
 
 The documentation is written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html) or reStructuredText (RST) format.
 Preference is given to Markdown, as more developers are familiar with it.
+The [numpy doc](https://numpydoc.readthedocs.io/en/latest/index.html) format is used for docstrings in the code.
 
 For writing and testing documentation locally:
 
@@ -23,7 +24,7 @@ file `./build/html/index.html`.
 
 ## Hints for RST
 
-Please make sure that you follow the RST format, as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
+Please make sure that you follow the [RST format](https://docutils.sourceforge.io/rst.html), as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
 
 Notes
 
