@@ -34,6 +34,7 @@ end-users, but for developers working on the database schema.
 List of applications
 ********************
 
+.. _add_file_to_db:
 
 add_file_to_db
 ==============
@@ -41,6 +42,7 @@ add_file_to_db
 .. automodule:: add_file_to_db
    :members:
 
+.. _add_value_from_json_to_db:
 
 add_value_from_json_to_db
 ==========================
