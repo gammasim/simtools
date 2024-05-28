@@ -5,9 +5,10 @@
 Simulation model parameters describe properties of all relevant elements of the observatory including site,
 telescopes, and calibration devices.
 The management, definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
+Model parameters are centrally stored (in a database and repository) and described and defined by [schema files](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
 
-Examples for model parameters are the atmospheric models (profile, transmission) or geomagnetic field characteristics for the site,
-description of optical and mechanical properties of the telescope, and detector plan, trigger, and readout settings for the cameras.
+Examples for model parameters are those describing atmospheric model (profile, transmission) or geomagnetic field characteristics for the site,
+descriptions of optical and mechanical properties of the telescope, and detector plan, trigger, and readout settings for the cameras (see [model parameter schema files](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters) for all model parameters.)
 
 For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
 (e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms
@@ -23,7 +24,7 @@ The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces
 2. **Model parameter management:** The {ref}`model_parameters module <model_parameters>` provides interfaces to manage the simulation model parameters.
 3. A **model of an array and its elements** consists of the {ref}`SiteModel <site_model>` and several {ref}`TelescopeModel <telescope_model>` and {ref}`CalibrationModel <calibration_model>` instances.
 
-Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files.
+Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files (see following sections).
 
 Review and revision control of the simulation models uses the [model parameters gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/blob/main/README.md?ref_type=heads). Simtools provides applications to read, write, and update the databases from this repository.
 
@@ -33,9 +34,9 @@ The simulation model is a central part of the CTAO Simulation Pipeline. The resp
 
 ## Description of model parameters
 
-Schema files describing all simulation model parameters are part of [simtools](https://github.com/gammasim/simtools) and can be found in [simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
+Schema files define all simulation model parameters are part of [simtools](https://github.com/gammasim/simtools) and can be found in [simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
 
-These files describe the simulation model parameters including (among others fields) name, type, format, applicable telescopes, and parameter description.
+These files describe the simulation model parameters including (among others fields) name, type, format, units, applicable telescopes, and parameter description.
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
 
@@ -105,7 +106,7 @@ Valid keys are described in detail in [model_parameter_and_data_schema.metaschem
 The `data` field is used to describe the actual type, format, and allowed values of the parameter.
 
 - `type`: Data type of the parameter.
-- `unit`: Units of the parameter (compatible with astropy units). Note that units are explicitly listed in the jsonschema.yml file.
+- `unit`: Units of the parameter (compatible with astropy units).
 - `default`: Default value of the parameter.
 - `allowed_range`: Allowed range of the parameter.
 - `allowed_values`: Allowed values of the parameter. Use if values are not continuous and restricted to a small list of allowed values.
@@ -183,7 +184,7 @@ simulation_software:
 
 ## Data structure for model parameters
 
-The model parameters are stored in json-style in the model repository and database.
+The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) and database.
 A typical model parameter file looks like:
 
 ```json
@@ -204,7 +205,7 @@ A typical model parameter file looks like:
 
 :::{Danger}
 This is for experts only and might impact the simulation model database for all users.
-Tests should be done before applying this to the production databases.
+Tests should be done using a sandbox database before applying this to the production databases.
 :::
 
 ### Update a single model parameter
@@ -215,7 +216,7 @@ New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_
 ### Upload a complete simulation model from model repository to model database
 
 The application `add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
-model repository to the model database for a given model versions.
+model repository to the model database for a given model version.
 See the [database](databases.md#databases) section for implementation details on databases in simtools.
 
 Example:
