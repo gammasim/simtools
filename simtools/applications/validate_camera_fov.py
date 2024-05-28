@@ -37,7 +37,7 @@
 
     .. code-block:: console
 
-        simtools-validate-camera-fov --site North \
+        simtools-validate-camera-fov --site North \\
             --telescope LST-1 --model_version prod5
 
     The output is saved in simtools-output/validate_camera_fov.
@@ -46,7 +46,7 @@
 
     .. code-block:: console
 
-        Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\
+        Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\\
         /application-plots/validate_camera_fov_LST-1_pixel_layout.png
 
 """

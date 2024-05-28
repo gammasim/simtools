@@ -24,9 +24,9 @@
 
     .. code-block:: console
 
-        simtools-validate-file-using-schema \
-         --file_name tests/resources/MLTdata-preproduction.meta.yml \
-         --schema simtools/schemas/metadata.metaschema.yml \
+        simtools-validate-file-using-schema \\
+         --file_name tests/resources/MLTdata-preproduction.meta.yml \\
+         --schema simtools/schemas/metadata.metaschema.yml \\
          --data_type metadata
 
 """

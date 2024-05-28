@@ -18,18 +18,18 @@
 
         .. code-block:: console
 
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \
-            --illuminator ILLN-01 --light_source_setup variable \
+            simtools-simulate-light-emission --telescope MSTN-04 --site North \\
+            --illuminator ILLN-01 --light_source_setup variable \\
             --model_version prod6 --light_source_type led
 
     2. Simulate light emission with telescopes at fixed positions according to the layout:
 
         .. code-block:: console
 
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \
-            --illuminator ILLN-01 --light_source_setup variable \
-            --model_version prod6 --telescope_file \
-            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv\
+            simtools-simulate-light-emission --telescope MSTN-04 --site North \\
+            --illuminator ILLN-01 --light_source_setup variable \\
+            --model_version prod6 --telescope_file \\
+            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \\
             --light_source_type led
 
     Command Line Arguments

@@ -48,7 +48,7 @@
 
     .. code-block:: console
 
-        simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary \
+        simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary \\
         proton --nruns 2 --nevents 10000 --test --submit_command local
 
     The output is saved in simtools-output/sim_showers_for_trigger_rates.
