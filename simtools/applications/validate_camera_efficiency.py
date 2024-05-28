@@ -46,9 +46,9 @@
 
     .. code-block:: console
 
-        simtools-validate-camera-efficiency --site North \
-            --azimuth_angle 0 --zenith_angle 20 \
-            --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \
+        simtools-validate-camera-efficiency --site North \\
+            --azimuth_angle 0 --zenith_angle 20 \\
+            --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \\
             --telescope MST-NectarCam-D --model_version prod5
 
     The output is saved in simtools-output/validate_camera_efficiency.
