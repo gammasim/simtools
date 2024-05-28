@@ -2,7 +2,7 @@
 
 # Database support
 
-Modules for database access. See the databases section for details.
+Modules for database access. See the databases sections for details.
 
 ## db_handler
 
