@@ -8,7 +8,6 @@ dependencies:
   - boost-histogram
   - ctapipe
   - eventio
-  - flake8
   - jsonschema
   - matplotlib-base
   - myst-parser

@@ -1,21 +1,15 @@
 repos:
-  # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
       - id: black
         args: ["--line-length=100"]
-  # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=other%20tools#flake8
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff
+    rev: v0.4.5
     hooks:
-      - id: flake8
-        args: ["--max-line-length=100"]
+      - id: ruff
+        args: ["--fix"]
   # https://github.com/pre-commit/pre-commit-hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -24,26 +18,13 @@ repos:
       - id: end-of-file-fixer
       - id: check-added-large-files
         args: ['--maxkb=500']
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        exclude: ^tests/|^simtools/applications/db_development_tools/|docs/source/conf.py
-        args:
-          [
-            "-rn",  # Only display messages
-            "-sn",  # Don't display the score
-          ]
   # https://github.com/HunterMcGushion/docstr_coverage
   - repo: https://github.com/HunterMcGushion/docstr_coverage
     rev: v2.3.2  # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
-  # gitup action
+  # Github action
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.0
     hooks:
@@ -58,3 +39,9 @@ repos:
     rev: v2.3.0
     hooks:
       - id: codespell
+  # yamllint
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.29.0
+    hooks:
+      - id: yamllint
+        args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
