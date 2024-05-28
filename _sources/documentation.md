@@ -6,9 +6,16 @@ docstrings in the code.
 This is done automatically with each merge into the main branch, see the
 [GitHub Action workflow CI-docs](https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-docs.yml>).
 
-The documentation is written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html) or reStructuredText (RST) format.
-Preference is given to Markdown, as more developers are familiar with it.
-The [numpy doc](https://numpydoc.readthedocs.io/en/latest/index.html) format is used for docstrings in the code.
+Docstrings are written in RST format following the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) standard.
+Documentation pages are written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html), although RST
+is also possible (but not preferred).
+
+:::{Caution}
+Each application requires a small RST file (e.g., [get_file_from_db.rst](https://github.com/gammasim/simtools/tree/main/docs/source/get_file_from_db.rst]))
+to avoid Sphinx warnings regarding duplicated labels (sphinx generates those pages using the sphinx.autodoc extension)
+:::
+
+## Building
 
 For writing and testing documentation locally:
 
@@ -22,17 +29,6 @@ This is especially recommended to identify warnings and errors by Sphinx (e.g., 
 docstrings or RST files). The documentation can be viewed locally in a browser starting from the
 file `./build/html/index.html`.
 
-## Hints for RST
-
-Please make sure that you follow the [RST format](https://docutils.sourceforge.io/rst.html), as sphinx otherwise fails with error messages which are in some cases quite difficult to understand.
-
-Notes
-
-- make sure that headings are underlined with the correct number of `=` characters
-- make sure that the indentation is correct and aligned
-- use unicode for special characters (e.g., `\u00B2` for superscript 2); see [unicode table](https://unicode-table.com/en/).
-
 ## Hints for Markdown
 
-- links to other files and headings should follow this syntax: `` {ref}`model_parameters module <model_parameters>` `` results in {ref}`model_parameters module <model_parameters>`
-- links to other files relative to this one in markdown: ``[mongoDB databases](databases.md#databases)`` results in [mongoDB databases](databases.md#databases).
+- links to other files relative to current file: ``[mongoDB databases](databases.md#databases)`` results in [mongoDB databases](databases.md#databases).

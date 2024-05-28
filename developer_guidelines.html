@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gf97b155 Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g5674210 Manual</title>
   
   
   
@@ -36,15 +36,15 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=f37fefd7"></script>
+    <script src="_static/documentation_options.js?v=25d88637"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guidelines';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Generating Documentation" href="documentation.html" />
-    <link rel="prev" title="Containers (docker files)" href="docker_files.html" />
+    <link rel="next" title="Pull requests" href="pull_requests.html" />
+    <link rel="prev" title="Generating Documentation" href="documentation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf97b155 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5674210 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -188,9 +188,35 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="applications.html">simtools Applications</a></li>
-
-<li class="toctree-l1 has-children"><a class="reference internal" href="library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="add_file_to_db.html">add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add_value_from_json_to_db.html">add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_cumulative_psf.html">compare_cumulative_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_file_from_db.html">get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_parameter.html">get_parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="light_emission.html">light_emission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="make_regular_arrays.html">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="produce_array_config.html">produce_array_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_showers_for_trigger_rates.html">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tune_psf.html">tune_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="library.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
@@ -214,8 +240,8 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation_software.html">Simulation Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker_files.html">Containers (docker files)</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 </ul>
@@ -272,7 +298,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/developer_guidelines.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/developer_guidelines.md?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -319,7 +345,7 @@
       
       
       
-      <li><a href="_sources/developer_guidelines.rst" target="_blank"
+      <li><a href="_sources/developer_guidelines.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -329,7 +355,7 @@
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.rst</span>
+<span class="btn__text-container">.md</span>
 </a>
 </li>
       
@@ -455,7 +481,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 </section>
 <section id="python-version">
 <h2>Python version<a class="headerlink" href="#python-version" title="Link to this heading">#</a></h2>
-<p>The simtools package is currently developed for Python &gt;=3.11.</p>
+<p>The simtools package is currently developed for Python {{ python_min_requires }}.</p>
 </section>
 <section id="contributing-code">
 <h2>Contributing code<a class="headerlink" href="#contributing-code" title="Link to this heading">#</a></h2>
@@ -463,7 +489,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 (e.g., by opening an issue on GitHub).</p>
 <p>The following steps outline how to contribute code to simtools:</p>
 <ol class="arabic simple">
-<li><p>Set up your coding environment as outlined in the <a class="reference internal" href="getting_started.html#getting-started"><span class="std std-ref">getting started</span></a> section.</p></li>
+<li><p>Set up your coding environment as outlined in the <a class="reference internal" href="getting_started.html#id1"><span class="std std-ref">getting started</span></a> section.</p></li>
 <li><p>Start a new feature branch from the main branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">new-branch-name</span></code>).</p></li>
 <li><p>Implement your code changes.</p></li>
 <li><p>Add unit tests for new modules and functions.</p></li>
@@ -474,7 +500,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 <li><p>Wait for a review of your code and address any issues that arise.</p></li>
 <li><p>After successful review, the pull request can be merged into the main branch.</p></li>
 </ol>
-<p>Note the <a class="reference internal" href="pull_requests.html#pull-requests"><span class="std std-ref">guidelines on pull requests</span></a>.</p>
+<p>Note the <a class="reference internal" href="pull_requests.html#id1"><span class="std std-ref">guidelines on pull requests</span></a>.</p>
 </section>
 <section id="unit-and-integration-testing">
 <h2>Unit and Integration Testing<a class="headerlink" href="#unit-and-integration-testing" title="Link to this heading">#</a></h2>
@@ -503,7 +529,7 @@ Add the <code class="docutils literal notranslate"><span class="pre">--cov-repor
 </section>
 <section id="writing-applications">
 <h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">#</a></h2>
-<p>Applications are command lines tools that should be built of the simtools library.
+<p>Applications are command-line tools that should be built of the simtools library.
 Application should not include complex algorithm, this should be done at the module level.</p>
 <p>All applications should follow the same structure:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
@@ -529,8 +555,8 @@ Application should not include complex algorithm, this should be done at the mod
 </pre></div>
 </div>
 <p>Application handling should be done using the <a class="reference internal" href="configuration_module.html#configurationconfigurator"><span class="std std-ref">Configurator</span></a> class, which allows to set
-configurations from command line, configuration file, or environmental variables.
-Check the <a class="reference internal" href="configuration_module.html#configurationcommandline-parser"><span class="std std-ref">commandline_parser</span></a> module for generic command line arguments before introducing new ones in applications</p>
+configurations from the command-line options, configuration files, or environmental variables.
+Check the <a class="reference internal" href="configuration_module.html#configurationcommandline_parser"><span class="std std-ref">commandline_parser</span></a> module for generic command-line arguments before introducing new ones in applications</p>
 <p>The documentation of application uses the in-line doc string.</p>
 <p>Adding an applications requires the following changes:</p>
 <ul class="simple">
@@ -620,20 +646,20 @@ properties. See an example below:</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="docker_files.html"
+       href="documentation.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Containers (docker files)</p>
+        <p class="prev-next-title">Generating Documentation</p>
       </div>
     </a>
     <a class="right-next"
-       href="documentation.html"
+       href="pull_requests.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Generating Documentation</p>
+        <p class="prev-next-title">Pull requests</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
