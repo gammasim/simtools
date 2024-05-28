@@ -1,40 +1,14 @@
 # simtools
 
-```{image} https://img.shields.io/badge/License-BSD_3--Clause-blue.svg
-:target: https://github.com/gammasim/simtools/blob/main/LICENSE
-```
-
-```{image} https://img.shields.io/github/v/release/gammasim/simtools
-:target: https://github.com/gammasim/simtools/releases
-```
-
-```{image} https://zenodo.org/badge/195011575.svg
-:target: https://zenodo.org/badge/latestdoi/195011575
-```
-
-```{image} https://badge.fury.io/py/gammasimtools.svg
-:target: https://badge.fury.io/py/gammasimtools
-```
-
-```{image} https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg
-:target: https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml
-```
-
-```{image} https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg
-:target: https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml
-```
-
-```{image} https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg
-:target: https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml
-```
-
-```{image} https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7
-:target: https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
-```
-
-```{image} https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH
-:target: https://codecov.io/gh/gammasim/simtools
-```
+[![LICENSE](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/gammasim/simtools/blob/main/LICENSE)
+[![release](https://img.shields.io/github/v/release/gammasim/simtools)](https://github.com/gammasim/simtools/releases)
+[![DOI](https://zenodo.org/badge/195011575.svg)](https://zenodo.org/badge/latestdoi/195011575)
+[![pypyi](https://badge.fury.io/py/gammasimtools.svg)](https://badge.fury.io/py/gammasimtools)
+[![CI](https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml)
+[![CI-integrationtest](https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml)
+[![CI-docs](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml)
+[![Quality](https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7)](https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Coverage](https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH)](https://codecov.io/gh/gammasim/simtools)
 
 Simulation tools and applications for the [Cherenkov Telescope Array (CTAO)](https://www.cta-observatory.org).
 
