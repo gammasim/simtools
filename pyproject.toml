@@ -43,7 +43,6 @@ dependencies = [
   "toml",
 ]
 optional-dependencies."dev" = [
-  "flake8",
   "pre-commit",
   "pylint",
   "ruff",
@@ -148,9 +147,6 @@ lint.per-file-ignores."**/tests/**" = [
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
-
-[tool.isort]
-profile = "black"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.
