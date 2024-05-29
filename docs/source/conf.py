@@ -133,7 +133,7 @@ html_title = f"{project} v{version} Manual"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "path_to_docs": "docs",
+    "path_to_docs": "docs/source",
     "repository_url": "https://github.com/gammasim/simtools",
     "repository_branch": "main",
     "use_issues_button": True,
