@@ -24,13 +24,15 @@ Command line arguments
 ----------------------
 figure_name : str
     File name for the output figure.
-telescope_list : str
-    A telescopes file (.ecsv) with the list of telescopes.
+array_layout_file : str
+    File (astropy table compatible) with the list of array elements.
 array_layout_name : str
     Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
+array_element_list : list
+    List of array elements (e.g., telescopes) to plot.
 rotate_angle : float, optional
     Angle to rotate the array before plotting (in degrees).
-show_tel_label : bool, optional
+show_labels : bool, optional
     Shows the telescope labels in the plot.
 
 Examples
@@ -85,23 +87,30 @@ def _parse(label, description, usage):
     )
     config.parser.add_argument(
         "--rotate_angle",
-        help="Angle to rotate the array before plotting (in degrees).",
+        help="Angle to rotate the array (in degrees).",
         type=str,
-        nargs="+",
         required=False,
         default=None,
     )
     config.parser.add_argument(
-        "--show_tel_label",
-        help="Shows the telescope labels in the plot.",
+        "--show_labels",
+        help="Plot array element labels.",
         action="store_true",
         required=False,
         default=False,
     )
     input_group = config.parser.add_mutually_exclusive_group()
     input_group.add_argument(
-        "--telescope_list",
-        help="ECSV file with the list of telescopes",
+        "--array_element_list",
+        help="List of array elements (telescopes) to plot (e.g., LSTN-01, LSTN-02, MSTN).",
+        nargs="+",
+        type=str,
+        required=False,
+        default=None,
+    )
+    input_group.add_argument(
+        "--array_layout_file",
+        help="File(s) with the list of array elements (astropy table format).",
         nargs="+",
         type=str,
         required=False,
@@ -109,7 +118,7 @@ def _parse(label, description, usage):
     )
     input_group.add_argument(
         "--array_layout_name",
-        help="Name of the array layout.",
+        help="Name of the array layout (as predefined).",
         nargs="+",
         type=str,
         required=False,
@@ -172,6 +181,96 @@ def _get_list_of_plot_files(plot_file_name, output_dir):
     raise NameError(msg)
 
 
+def _layouts_from_array_layout_file(args_dict, db_config, rotate_angle):
+    """
+    Read array layout positions from file(s) and return a list of layouts.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with the command line arguments.
+    db_config : dict
+        Database configuration.
+    rotate_angle : float
+        Angle to rotate the array before plotting (in degrees).
+
+    Returns
+    -------
+    list
+        List of array layouts.
+    """
+    layouts = []
+    telescope_files = args_dict["array_layout_file"]
+    for one_file in telescope_files:
+        site = (
+            _get_site_from_telescope_list_name(one_file)
+            if args_dict["site"] is None
+            else args_dict["site"]
+        )
+        array_model = ArrayModel(
+            mongo_db_config=db_config,
+            model_version=args_dict["model_version"],
+            site=site,
+            array_elements=one_file,
+        )
+        if args_dict["figure_name"] is None:
+            plot_file_name = (
+                f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
+                f"{str(round(rotate_angle.to(u.deg).value))}deg"
+            )
+        else:
+            plot_file_name = args_dict["figure_name"]
+
+        layouts.append(
+            {
+                "array_elements": array_model.get_array_element_positions(),
+                "plot_file_name": plot_file_name,
+            }
+        )
+    return layouts
+
+
+def _layouts_from_database(args_dict, db_config, rotate_angle):
+    """
+    Read array layout positions from the database and return a list of layouts.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with the command line arguments.
+    db_config : dict
+        Database configuration.
+    rotate_angle : float
+        Angle to rotate the array before plotting (in degrees).
+
+    Returns
+    -------
+    list
+        List of array layouts.
+    """
+    site = (
+        names.get_site_from_telescope_name(args_dict["array_element_list"][0])
+        if args_dict["site"] is None
+        else args_dict["site"]
+    )
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        site=site,
+        array_elements=args_dict["array_element_list"],
+    )
+    if args_dict["figure_name"] is None:
+        plot_file_name = f"array_layout_{site}_" f"{str(round(rotate_angle.to(u.deg).value))}deg"
+    else:
+        plot_file_name = args_dict["figure_name"]
+    return [
+        {
+            "array_elements": array_model.get_array_element_positions(),
+            "plot_file_name": plot_file_name,
+        }
+    ]
+
+
 def main():
     """Plot array layout application."""
     label = Path(__file__).stem
@@ -184,66 +283,48 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
-    rotate_angles = (
-        [float(angle) * u.deg for angle in args_dict["rotate_angle"]]
-        if args_dict["rotate_angle"] is not None
-        else [0 * u.deg]
+    rotate_angle = (
+        0.0 * u.deg
+        if args_dict["rotate_angle"] is None
+        else float(args_dict["rotate_angle"]) * u.deg
     )
 
-    mpl.use("Agg")
-    telescope_file = None
-    if args_dict["telescope_list"] is not None:
-        logger.info("Plotting array from telescope list file(s).")
-        telescope_file = args_dict["telescope_list"]
-
-    elif args_dict["array_layout_name"] is not None:
+    layouts = []
+    # TODO - this will go and replaced by reading layouts from the database
+    # using their name
+    if args_dict["array_layout_name"] is not None:
         logger.info("Plotting array from layout array name(s).")
-        telescope_file = [
+        logger.warning("Temporary solution to read layout from file.")
+        args_dict["array_layout_file"] = [
             io_handler_instance.get_input_data_file(
                 "layout", f"telescope_positions-{one_array}.ecsv"
             )
             for one_array in args_dict["array_layout_name"]
         ]
+    if args_dict["array_layout_file"] is not None:
+        logger.info("Plotting array from telescope list file(s).")
+        layouts = _layouts_from_array_layout_file(args_dict, db_config, rotate_angle)
+    elif args_dict["array_element_list"] is not None:
+        logger.info("Plotting array from list of array elements.")
+        layouts = _layouts_from_database(args_dict, db_config, rotate_angle)
 
-    for one_file in telescope_file:
-        logger.debug(f"Processing: {one_file}.")
-        site = (
-            _get_site_from_telescope_list_name(one_file)
-            if args_dict["site"] is None
-            else args_dict["site"]
+    mpl.use("Agg")
+    for layout in layouts:
+        fig_out = plot_array(
+            telescopes=layout["array_elements"],
+            rotate_angle=rotate_angle,
+            show_tel_label=args_dict["show_labels"],
         )
-        for one_angle in rotate_angles:
-            logger.debug(f"Processing: {one_angle}.")
-            if args_dict["figure_name"] is None:
-                plot_file_name = (
-                    f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
-                    f"{str(round(one_angle.to(u.deg).value))}deg"
-                )
-            else:
-                plot_file_name = args_dict["figure_name"]
+        _plot_files = _get_list_of_plot_files(
+            layout["plot_file_name"],
+            io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
+        )
 
-            array_model = ArrayModel(
-                mongo_db_config=db_config,
-                model_version=args_dict["model_version"],
-                site=site,
-                array_elements_file=one_file,
-            )
-            fig_out = plot_array(
-                array_model.get_array_element_positions(),
-                rotate_angle=one_angle,
-                show_tel_label=args_dict["show_tel_label"],
-            )
-
-            _plot_files = _get_list_of_plot_files(
-                plot_file_name,
-                io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
-            )
-
-            for file in _plot_files:
-                logger.info(f"Saving figure as {file}")
-                plt.savefig(file, bbox_inches="tight", dpi=400)
-            fig_out.clf()
-            plt.close()
+        for file in _plot_files:
+            logger.info(f"Saving figure as {file}")
+            plt.savefig(file, bbox_inches="tight", dpi=400)
+        fig_out.clf()
+        plt.close()
 
 
 if __name__ == "__main__":
