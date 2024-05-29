@@ -1,6 +1,7 @@
 """Definition of the ArrayModel class."""
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 from astropy.table import QTable
@@ -35,7 +36,7 @@ class ArrayModel:
         Site name.
     layout_name: str
         Layout name.
-    array_elements: str, list
+    array_elements: str, Path, list
         Array element definitions (list of array element or path to file with
         the array element positions).
     parameters_to_change: dict
@@ -78,7 +79,7 @@ class ArrayModel:
         ----------
         site: str
             Site name.
-        array_elements_config: str, list
+        array_elements_config: str, Path, list
             Array element definitions.
         parameters_to_change: dict
             Dict with the parameters to be changed with respect to the DB model.
@@ -96,7 +97,7 @@ class ArrayModel:
         array_elements_file = None
         array_elements_list = None
         # Case 1: array_elements is file name
-        if isinstance(array_elements_config, str):
+        if isinstance(array_elements_config, str | Path):
             array_elements_file = array_elements_config
         # Case 2: array elements is a list of elements
         elif isinstance(array_elements_config, list):
