@@ -1,8 +1,8 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
-  TEST_NAME: layout_two_names_one_angle
+  TEST_NAME: layout_two_names_rotate
   CONFIGURATION:
-    ARRAY_LAYOUT:
+    ARRAY_LAYOUT_NAME:
       - North-4LST
       - South-4LST
     MODEL_VERSION: prod6

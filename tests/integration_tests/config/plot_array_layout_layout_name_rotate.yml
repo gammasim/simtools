@@ -1,10 +1,10 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
-  TEST_NAME: layout_name_one_angle
+  TEST_NAME: layout_name_rotate
   CONFIGURATION:
     SITE: North
     MODEL_VERSION: prod6
-    ARRAY_LAYOUT: North-4LST
+    ARRAY_LAYOUT_NAME: North-4LST
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
