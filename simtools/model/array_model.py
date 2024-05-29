@@ -35,8 +35,9 @@ class ArrayModel:
         Site name.
     layout_name: str
         Layout name.
-    array_elements_file: str
-        Path to the file with the array element positions.
+    array_elements: str, list
+        Array element definitions (list of array element or path to file with
+        the array element positions).
     parameters_to_change: dict
         Dict with the parameters to be changed with respect to the DB model.
     """
@@ -48,7 +49,7 @@ class ArrayModel:
         label=None,
         site=None,
         layout_name=None,
-        array_elements_file=None,
+        array_elements=None,
         parameters_to_change=None,
     ):
         """Initialize ArrayModel."""
@@ -63,13 +64,13 @@ class ArrayModel:
         self.io_handler = io_handler.IOHandler()
 
         self.array_elements, self.site_model, self.telescope_model = self._initialize(
-            site, array_elements_file, parameters_to_change
+            site, array_elements, parameters_to_change
         )
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def _initialize(self, site, array_elements_file, parameters_to_change):
+    def _initialize(self, site, array_elements_config, parameters_to_change):
         """
         Initialize ArrayModel taking different configuration options into account.
 
@@ -77,8 +78,8 @@ class ArrayModel:
         ----------
         site: str
             Site name.
-        array_elements_file: str
-            Path to the file with the array element positions.
+        array_elements_config: str, list
+            Array element definitions.
         parameters_to_change: dict
             Dict with the parameters to be changed with respect to the DB model.
 
@@ -92,7 +93,18 @@ class ArrayModel:
             Dict with telescope models.
 
         """
-        if self.layout_name is not None and array_elements_file is None:
+        array_elements_file = None
+        array_elements_list = None
+        # Case 1: array_elements is file name
+        if isinstance(array_elements_config, str):
+            array_elements_file = array_elements_config
+        # Case 2: array elements is a list of elements
+        elif isinstance(array_elements_config, list):
+            array_elements_list = {name: None for name in array_elements_config}
+        # Case 3: array elements defined by layout name
+        # TMP - read from ecsv file
+        # TODO - save pre-defined array layouts to DB
+        elif self.layout_name is not None:
             array_elements_file = io_handler.IOHandler().get_input_data_file(
                 "layout",
                 "telescope_positions-"
@@ -102,7 +114,7 @@ class ArrayModel:
             )
 
         self.array_elements = (
-            None
+            array_elements_list
             if array_elements_file is None
             else self._load_array_element_positions_from_file(array_elements_file, site)
         )
@@ -110,7 +122,6 @@ class ArrayModel:
         site_model, telescope_model = self._build_array_model(
             names.validate_site_name(site), parameters_to_change
         )
-
         return self.array_elements, site_model, telescope_model
 
     @property
@@ -181,6 +192,9 @@ class ArrayModel:
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
                 )
+                self.array_elements[element_name] = self._update_array_element_list(
+                    telescope_model[element_name], site
+                )
             # Collecting parameters to change from array_config_data
             pars_to_change = self._get_single_telescope_info_from_array_config(
                 element_name, parameters_to_change
@@ -196,6 +210,45 @@ class ArrayModel:
                     telescope_model[element_name].set_extra_label(element_name)
 
         return site_model, telescope_model
+
+    def _update_array_element_list(self, array_element_model, site, coordinates="ground"):
+        """
+        Update array element list (if values are missing).
+
+        Array element lists might be incomplete, e.g. when the array layout is defined
+        through a list of names of elements.
+
+        Parameters
+        ----------
+        array_element_model : ModelParameter
+            Telescope or calibration model.
+        site :  str
+            Site name.
+        coordinates : str
+            Coordinate system (ground, utm, ...).
+
+        Returns
+        -------
+        dict
+            Updated array element list.
+
+        Raises
+        ------
+        KeyError
+            If the coordinate system is not valid.
+        """
+        try:
+            position = array_element_model.get_parameter_value_with_unit(
+                "array_element_position_" + coordinates
+            )
+        except KeyError as exc:
+            self._logger.error("Invalid coordinate system for array element positions")
+            raise exc
+        if position is None:
+            return None
+        return self._get_telescope_position_parameter(
+            array_element_model.name, site, position[0], position[1], position[2]
+        )
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
