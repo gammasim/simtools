@@ -146,7 +146,7 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
         site=args_dict["site"],
-        array_elements_file=args_dict["input"],
+        array_elements=args_dict["input"],
     )
     for element_name, data in array_model.array_elements.items():
         output_path = Path(args_dict["repository_path"]) / f"{element_name}"
