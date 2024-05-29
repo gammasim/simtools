@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.4.5
+    rev: v0.4.6
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -26,7 +26,7 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.0
+    rev: v1.7.1
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
@@ -41,13 +41,13 @@ repos:
       - id: codespell
   # markdownlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.40.0
+    rev: v0.41.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD041"]
   # yamllint
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.29.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
         args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
