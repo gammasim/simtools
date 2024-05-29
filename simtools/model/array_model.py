@@ -1,3 +1,5 @@
+"""Definition of the ArrayModel class."""
+
 import logging
 
 import astropy.units as u
@@ -49,9 +51,7 @@ class ArrayModel:
         array_elements_file=None,
         parameters_to_change=None,
     ):
-        """
-        Initialize ArrayModel.
-        """
+        """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
         self.mongo_db_config = mongo_db_config
@@ -92,7 +92,6 @@ class ArrayModel:
             Dict with telescope models.
 
         """
-
         if self.layout_name is not None and array_elements_file is None:
             array_elements_file = io_handler.IOHandler().get_input_data_file(
                 "layout",
@@ -139,15 +138,13 @@ class ArrayModel:
         return self.site_model.site
 
     def _set_config_file_directory(self):
-        """
-        Define and create config file directory.
-
-        """
+        """Define and create config file directory."""
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
     def _build_array_model(self, site, parameters_to_change=None):
         """
         Build the constituents of the array model (site, telescopes, etc).
+
         Includes reading of all model parameters from the DB.
         The array is defined in the telescopes dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
@@ -165,7 +162,6 @@ class ArrayModel:
             Site and telescope model.
 
         """
-
         self._logger.debug(f"Getting site parameters from DB ({site})")
         site_model = SiteModel(
             site=site,
@@ -203,6 +199,8 @@ class ArrayModel:
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
+        Return telescope information from array configuration data.
+
         array_config_data contains the name of default telescope models for each telescope type
         and the list of specific telescopes. For each case, the data can be given only as a name \
         or as a dict with 'name' and parameters to change. This function has to identify these \
@@ -218,12 +216,18 @@ class ArrayModel:
 
         def _process_single_telescope(data):
             """
+            Read array configuration data for a single telescope.
+
             Parameters
             ----------
             data: dict or str
                 Piece of the array_config_data for one specific telescope.
-            """
 
+            Returns
+            -------
+            dict
+                Dict with the parameters to change.
+            """
             if isinstance(data, dict):
                 # Case 0: data is dict
                 if "name" not in data.keys():
@@ -249,20 +253,12 @@ class ArrayModel:
         return {}
 
     def print_telescope_list(self):
-        """
-        Print list of telescopes
-
-        """
-
+        """Print list of telescopes."""
         for tel_name, data in self.telescope_model.items():
             print(f"Name: {tel_name}\t Model: {data.name}")
 
     def export_simtel_telescope_config_files(self):
-        """
-        Export sim_telarray configuration files for all telescopes into the model directory.
-
-        """
-
+        """Export sim_telarray configuration files for all telescopes into the model directory."""
         exported_models = []
         for _, tel_model in self.telescope_model.items():
             name = tel_model.name + (
@@ -280,11 +276,7 @@ class ArrayModel:
         self._telescope_model_files_exported = True
 
     def export_simtel_array_config_file(self):
-        """
-        Export sim_telarray configuration file for the array into the model directory.
-
-        """
-
+        """Export sim_telarray configuration file for the array into the model directory."""
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
             array_name=self.layout_name,
@@ -311,10 +303,10 @@ class ArrayModel:
 
     def export_all_simtel_config_files(self):
         """
-        Export sim_telarray config file for the array and for each individual telescope into the \
-        output model directory.
-        """
+        Export sim_telarray config file for the array and for each individual telescope.
 
+        Config files are exported into the output model directory.
+        """
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
@@ -322,15 +314,15 @@ class ArrayModel:
 
     def get_config_file(self):
         """
-        Get the path of the array config file for sim_telarray. The config file is produced if the \
-        file is not updated.
+        Return the path of the array config file for sim_telarray.
+
+        A new config file is produced if the file is not updated.
 
         Returns
         -------
         Path
             Path of the exported config file for sim_telarray.
         """
-
         self.export_all_simtel_config_files()
         return self._config_file_path
 
@@ -361,7 +353,6 @@ class ArrayModel:
         dict
             Dict with telescope positions.
         """
-
         table = data_reader.read_table_from_file(file_name=array_elements_file)
 
         return {
@@ -385,7 +376,6 @@ class ArrayModel:
         astropy.table.QTable
             Astropy table with position information on array elements.
         """
-
         table = QTable()
         tel_names, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
         for tel_name, tel in self.telescope_model.items():
@@ -414,7 +404,7 @@ class ArrayModel:
 
     def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
         """
-        Return dictionary with telescope position parameters (following DB model database format)
+        Return dictionary with telescope position parameters (following DB model database format).
 
         Parameters
         ----------
@@ -434,7 +424,6 @@ class ArrayModel:
         dict
             Dict with telescope position parameters.
         """
-
         return {
             "parameter": "array_element_position_ground",
             "instrument": telescope_name,
