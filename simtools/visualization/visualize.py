@@ -590,7 +590,7 @@ def get_telescope_patch(name, x, y, radius):
 
 
 @u.quantity_input(rotate_angle=u.deg)
-def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
+def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None):
     """
     Plot the array of telescopes. The x axis gives the easting direction and y axis gives the
     northing direction.
@@ -613,6 +613,8 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     show_tel_label: bool
         If True it will print the label of the individual telescopes in the plot.
         While it works well for the smaller arrays, it gets crowded for larger arrays.
+    axes_range : float
+        Axis range for both axes. Range is from -plot_range to plot_range.
 
     Returns
     -------
@@ -677,11 +679,13 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False):
     x_title = "Easting [m]"
     y_title = "Northing [m]"
     plt.axis("square")
-    plt.grid(True)
+    if axes_range is not None:
+        plt.xlim(-axes_range, axes_range)
+        plt.ylim(-axes_range, axes_range)
     plt.gca().set_axisbelow(True)
-    plt.xlabel(x_title, fontsize=18, labelpad=0)
-    plt.ylabel(y_title, fontsize=18, labelpad=0)
-    plt.tick_params(axis="both", which="major", labelsize=15)
+    plt.xlabel(x_title, fontsize=12, labelpad=0)
+    plt.ylabel(y_title, fontsize=12, labelpad=0)
+    plt.tick_params(axis="both", which="major", labelsize=8)
 
     legend_handler_map = {
         list(leg_h.legend_handler_map.keys())[i_key]: list(leg_h.legend_handler_map.values())[
