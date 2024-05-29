@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: two_files
   CONFIGURATION:
-    TELESCOPE_FILE:
+    ARRAY_LAYOUT_FILE:
       - data/layout/telescope_positions-North-TestLayout.ecsv
       - data/layout/telescope_positions-South-TestLayout.ecsv
     MODEL_VERSION: prod6
