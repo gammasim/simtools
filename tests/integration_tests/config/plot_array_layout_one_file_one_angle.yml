@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: one_file_one_angle
   CONFIGURATION:
     MODEL_VERSION: prod6
-    TELESCOPE_FILE: data/layout/telescope_positions-North-TestLayout.ecsv
+    ARRAY_LAYOUT_FILE: data/layout/telescope_positions-North-TestLayout.ecsv
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
