@@ -5,6 +5,7 @@ CTA_SIMPIPE:
     ARRAY_ELEMENT_LIST: ["LSTN-01", "MSTN-01"]
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
+    AXES_RANGE: 500.
   INTEGRATION_TESTS:
     - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.png
     - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.pdf

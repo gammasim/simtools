@@ -34,6 +34,8 @@ rotate_angle : float, optional
     Angle to rotate the array before plotting (in degrees).
 show_labels : bool, optional
     Shows the telescope labels in the plot.
+axes_range : float, optional
+    Range of the both axes in meters.
 
 Examples
 --------
@@ -98,6 +100,13 @@ def _parse(label, description, usage):
         action="store_true",
         required=False,
         default=False,
+    )
+    config.parser.add_argument(
+        "--axes_range",
+        help="Range of the both axes in meters.",
+        type=float,
+        required=False,
+        default=None,
     )
     input_group = config.parser.add_mutually_exclusive_group()
     input_group.add_argument(
@@ -314,6 +323,7 @@ def main():
             telescopes=layout["array_elements"],
             rotate_angle=rotate_angle,
             show_tel_label=args_dict["show_labels"],
+            axes_range=args_dict["axes_range"],
         )
         _plot_files = _get_list_of_plot_files(
             layout["plot_file_name"],
