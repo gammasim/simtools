@@ -1,40 +1,44 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application plots the layout array and saves into disk.
+Plot array elements (array layout).
 
-    It accepts as input the telescope list file, the name of the layout, a sequence of arguments
-    with the telescope files or a sequence of arguments with the layout names.
+Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the database,
+or given as command line arguments (explicit listing or telescope list file). List of input
+files are accepted.
 
-    A rotation angle in degrees can be passed in case the array should be rotated before plotting.
-    A sequence of arguments for the rotation angle is also permitted, in which case all of them
-    are plotted and saved separately.
+A rotation angle in degrees allows to rotate the array before plotting.
+A sequence of arguments for the rotation angle is also permitted, in which case all of them
+are plotted and saved separately.
 
+The typical image formats for the output figures are allowed (e.g., pdf, png, jpg). If no
+``figure_name`` is given as output, layouts are plotted in pdf and png format.
 
-    Command line arguments
-    ----------------------
-    figure_name (str, optional)
-        File name for the pdf output.
-    telescope_list (str, optional)
-        The telescopes file (.ecsv) with the array information.
-    array_layout_name (str, optional)
-        Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
-    rotate_angle (float, optional)
-        Angle to rotate the array before plotting (in degrees).
-    show_tel_label (bool, optional)
-        Shows the telescope labels in the plot.
-    verbosity (str, optional)
-        Log level to print.
+Example of a layout plot:
 
-    Example
-    -------
-    .. code-block:: console
+.. _plot_array_layout_plot:
+.. image:: images/plot_array_layout_example.png
+    :width: 49 %
 
-        simtools-plot-layout-array --figure_name northern_array_alpha \\
-        --array_layout_name North-TestLayout
+Command line arguments
+----------------------
+figure_name : str
+    File name for the output figure.
+telescope_list : str
+    A telescopes file (.ecsv) with the list of telescopes.
+array_layout_name : str
+    Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
+rotate_angle : float, optional
+    Angle to rotate the array before plotting (in degrees).
+show_tel_label : bool, optional
+    Shows the telescope labels in the plot.
 
+Examples
+--------
+.. code-block:: console
+
+    simtools-plot-layout-array --figure_name northern_array_alpha
+                               --array_layout_name North-TestLayout
 """
 
 import logging
@@ -47,29 +51,28 @@ from astropy import units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.layout.array_layout import ArrayLayout
+from simtools.model.array_model import ArrayModel
 from simtools.utils import names
 from simtools.visualization.visualize import plot_array
 
 
 def _parse(label, description, usage):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
-    label: str
+    label : str
         Label describing the application.
-    description: str
+    description : str
         Description of the application.
-    usage: str
+    usage : str
         Example on how to use the application.
 
     Returns
     -------
     CommandLineParser
-        Command line parser object
-
+        Command line parser object.
     """
     config = configurator.Configurator(label=label, description=description, usage=usage)
 
@@ -122,14 +125,13 @@ def _get_site_from_telescope_list_name(telescope_list_file):
 
     Parameters
     ----------
-    telescope_list_file: str
+    telescope_list_file : str
         Telescope list file name.
 
     Returns
     -------
     str
         Site name.
-
     """
     for _site in names.site_names():
         if _site in str(telescope_list_file):
@@ -137,22 +139,57 @@ def _get_site_from_telescope_list_name(telescope_list_file):
     return None
 
 
+def _get_list_of_plot_files(plot_file_name, output_dir):
+    """
+    Get list of output file names for plotting.
+
+    Parameters
+    ----------
+    plot_file_name : str
+        Name of the plot file.
+    output_dir : str
+        Output directory.
+
+    Returns
+    -------
+    list
+        List of output file names.
+
+    Raises
+    ------
+    NameError
+        If the file extension is not valid.
+    """
+    plot_file = output_dir.joinpath(plot_file_name)
+
+    if len(plot_file.suffix) == 0:
+        return [plot_file.with_suffix(f".{ext}") for ext in ["pdf", "png"]]
+
+    allowed_extensions = [".jpeg", ".jpg", ".png", ".tiff", ".ps", ".pdf", ".bmp"]
+    if plot_file.suffix in allowed_extensions:
+        return [plot_file]
+    msg = f"Extension in {plot_file} is not valid. Valid extensions are:" f" {allowed_extensions}."
+    raise NameError(msg)
+
+
 def main():
+    """Plot array layout application."""
     label = Path(__file__).stem
-    description = "Plots layout array."
-    usage = "python applications/plot_array_layout.py --array_layout_name test_layout"
-    args_dict, db_config = _parse(label, description, usage)
-    io_handler_instance = io_handler.IOHandler()
-
-    if args_dict["rotate_angle"] is None:
-        rotate_angles = [0 * u.deg]
-    else:
-        rotate_angles = []
-        for one_angle in args_dict["rotate_angle"]:
-            rotate_angles.append(float(one_angle) * u.deg)
-
+    args_dict, db_config = _parse(
+        label,
+        "Plots array layout.",
+        "python applications/plot_array_layout.py --array_layout_name test_layout",
+    )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    io_handler_instance = io_handler.IOHandler()
+
+    rotate_angles = (
+        [float(angle) * u.deg for angle in args_dict["rotate_angle"]]
+        if args_dict["rotate_angle"] is not None
+        else [0 * u.deg]
+    )
+
     mpl.use("Agg")
     telescope_file = None
     if args_dict["telescope_list"] is not None:
@@ -185,42 +222,27 @@ def main():
             else:
                 plot_file_name = args_dict["figure_name"]
 
-            array_layout = ArrayLayout(
+            array_model = ArrayModel(
                 mongo_db_config=db_config,
                 model_version=args_dict["model_version"],
                 site=site,
-                telescope_list_file=one_file,
+                array_elements_file=one_file,
             )
-            # export_telescope_list_table
             fig_out = plot_array(
-                array_layout.export_telescope_list_table("ground"),
+                array_model.get_array_element_positions(),
                 rotate_angle=one_angle,
                 show_tel_label=args_dict["show_tel_label"],
             )
 
-            output_dir = io_handler_instance.get_output_directory(
-                label, sub_dir="application-plots"
+            _plot_files = _get_list_of_plot_files(
+                plot_file_name,
+                io_handler_instance.get_output_directory(label, sub_dir="application-plots"),
             )
-            plot_file = output_dir.joinpath(plot_file_name)
 
-            allowed_extensions = ["jpeg", "jpg", "png", "tiff", "ps", "pdf", "bmp"]
-
-            splitted_plot_file_name = plot_file_name.split(".")
-            if len(splitted_plot_file_name) > 1:
-                if splitted_plot_file_name[-1] in allowed_extensions:
-                    logger.info(f"Saving figure as {plot_file}.")
-                    plt.savefig(plot_file, bbox_inches="tight", dpi=400)
-                else:
-                    msg = (
-                        f"Extension in {plot_file} is not valid. Valid extensions are:"
-                        f" {allowed_extensions}."
-                    )
-                    raise NameError(msg)
-            else:
-                for ext in ["pdf", "png"]:
-                    logger.info(f"Saving figure to {plot_file}.{ext}.")
-                    plt.savefig(f"{str(plot_file)}.{ext}", bbox_inches="tight", dpi=400)
-                fig_out.clf()
+            for file in _plot_files:
+                logger.info(f"Saving figure as {file}")
+                plt.savefig(file, bbox_inches="tight", dpi=400)
+            fig_out.clf()
             plt.close()
 
 

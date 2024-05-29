@@ -1,5 +1,8 @@
 import logging
 
+import astropy.units as u
+from astropy.table import QTable
+
 from simtools.data_model import data_reader
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
@@ -367,6 +370,47 @@ class ArrayModel:
             )
             for row in table
         }
+
+    def get_array_element_positions(self, coordinates="ground"):
+        """
+        Return array element positions.
+
+        Parameters
+        ----------
+        coordinates: str
+            Coordinate system (ground, utm, ...).
+
+        Returns
+        -------
+        astropy.table.QTable
+            Astropy table with position information on array elements.
+        """
+
+        table = QTable()
+        tel_names, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
+        for tel_name, tel in self.telescope_model.items():
+            try:
+                position = tel.get_parameter_value_with_unit(
+                    "array_element_position_" + coordinates
+                )
+            except KeyError as exc:
+                self._logger.error("Invalid coordinate system for array element positions")
+                raise exc
+            tel_names.append(tel_name)
+            pos_x.append(position[0])
+            pos_y.append(position[1])
+            pos_z.append(position[2])
+            try:
+                tel_r.append(tel.get_parameter_value_with_unit("telescope_sphere_radius"))
+            except KeyError:  # not all array elements have a sphere radius
+                tel_r.append(0.0 * u.m)
+
+        table["telescope_name"] = tel_names
+        table["position_x"] = pos_x
+        table["position_y"] = pos_y
+        table["position_z"] = pos_z
+        table["sphere_radius"] = tel_r
+        return table
 
     def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
         """
