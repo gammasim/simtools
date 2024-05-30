@@ -96,7 +96,7 @@ class ArrayModel:
         """
         array_elements_file = None
         array_elements_list = None
-        # Case 1: array_elements is file name
+        # Case 1: array_elements is a file name
         if isinstance(array_elements_config, str | Path):
             array_elements_file = array_elements_config
         # Case 2: array elements is a list of elements
