@@ -90,7 +90,9 @@ def _parse(label=None, description=None):
 def write_utm_array_elements_to_repository(args_dict, logger):
     """
     Write UTM position of array elements to model repository.
-    Read array element positions from file.
+
+    Read array element positions from file. The ecsv row definition might
+    include telescope_name or asset_code and sequence_number.
 
     Parameters
     ----------
@@ -105,7 +107,11 @@ def write_utm_array_elements_to_repository(args_dict, logger):
     for row in array_elements:
         data = {
             "parameter": "array_element_position_utm",
-            "instrument": f"{row['asset_code']}-{row['sequence_number']}",
+            "instrument": (
+                row["telescope_name"]
+                if "telescope_name" in array_elements.colnames
+                else f"{row['asset_code']}-{row['sequence_number']}"
+            ),
             "site": args_dict["site"],
             "version": args_dict["model_version"],
             "value": f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
