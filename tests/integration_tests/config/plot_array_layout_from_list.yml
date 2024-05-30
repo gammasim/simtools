@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: from_list
   CONFIGURATION:
-    ARRAY_ELEMENT_LIST: ["LSTN-01", "MSTN-01"]
+    ARRAY_ELEMENT_LIST: ["LSTN-01", "MSTN"]
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
     AXES_RANGE: 500.
