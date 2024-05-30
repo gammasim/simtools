@@ -1,7 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
   TEST_NAME: gamma_20_deg_pack_for_grid_south
-  MODEL_VERSION_USE_CURRENT: true
   CONFIGURATION:
     PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_South.yml
     MODEL_VERSION: prod6
