@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.data_model import data_reader
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -63,6 +64,7 @@ class ArrayModel:
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
+        self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self.array_elements, self.site_model, self.telescope_model = self._initialize(
             site, array_elements, parameters_to_change
@@ -101,7 +103,7 @@ class ArrayModel:
             array_elements_file = array_elements_config
         # Case 2: array elements is a list of elements
         elif isinstance(array_elements_config, list):
-            array_elements_list = {name: None for name in array_elements_config}
+            array_elements_list = self._get_array_elements_from_list(array_elements_config)
         # Case 3: array elements defined by layout name
         # TMP - read from ecsv file
         # TODO - save pre-defined array layouts to DB
@@ -491,3 +493,50 @@ class ArrayModel:
             "applicable": True,
             "file": False,
         }
+
+    def _get_array_elements_from_list(self, array_elements_list):
+        """
+        Return dictionary with array elements from a list of telescope names.
+
+        Input list can contain telescope names (e.g, LSTN-01) or a telescope
+        type (e.g., MSTN). In the latter case, all telescopes of this specific
+        type are added.
+
+        Parameters
+        ----------
+        array_elements_list: list
+            List of telescope names.
+
+        Returns
+        -------
+        dict
+            Dict with array elements.
+        """
+        array_elements_dict = {}
+        for name in array_elements_list:
+            try:
+                array_elements_dict[names.validate_telescope_name(name)] = None
+            except ValueError:
+                array_elements_dict.update(self._get_all_array_elements_of_type(name))
+        return array_elements_dict
+
+    def _get_all_array_elements_of_type(self, array_element_type):
+        """
+        Return all array elements of a specific type using the database.
+
+        Parameters
+        ----------
+        array_element_type : str
+            Type of the array element (e.g. LSTN, MSTS)
+
+        Returns
+        -------
+        dict
+            Dict with array elements.
+        """
+        all_elements = self.db.get_available_array_elements_of_type(
+            array_element_type=array_element_type,
+            model_version=self.model_version,
+            collection="telescopes",
+        )
+        return self._get_array_elements_from_list(all_elements)
