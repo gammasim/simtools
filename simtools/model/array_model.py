@@ -95,34 +95,30 @@ class ArrayModel:
         dict
             Dict with telescope models.
         """
-        # Case 1: array elements is a dict in the format of array_model.array_elements
-        if isinstance(array_elements_config, dict):
-            self.array_elements = array_elements_config
-        else:
-            array_elements_file = None
-            array_elements_list = None
-            # Case 2: array_elements is a file name
-            if isinstance(array_elements_config, str | Path):
-                array_elements_file = array_elements_config
-            # Case 3: array elements is a list of elements
-            elif isinstance(array_elements_config, list):
-                array_elements_list = self._get_array_elements_from_list(array_elements_config)
-            # Case 4: array elements defined by layout name
-            # TMP - read from ecsv file
-            # TODO - save pre-defined array layouts to DB
-            elif self.layout_name is not None:
-                array_elements_file = io_handler.IOHandler().get_input_data_file(
-                    "layout",
-                    "telescope_positions-"
-                    f"{names.validate_site_name(site)}-"
-                    f"{names.validate_array_layout_name(self.layout_name)}"
-                    ".ecsv",
-                )
-            self.array_elements = (
-                array_elements_list
-                if array_elements_file is None
-                else self._load_array_element_positions_from_file(array_elements_file, site)
+        array_elements_file = None
+        array_elements_list = None
+        # Case 1: array_elements is a file name
+        if isinstance(array_elements_config, str | Path):
+            array_elements_file = array_elements_config
+        # Case 2: array elements is a list of elements
+        elif isinstance(array_elements_config, list):
+            array_elements_list = self._get_array_elements_from_list(array_elements_config)
+        # Case 3: array elements defined by layout name
+        # TMP - read from ecsv file
+        # TODO - save pre-defined array layouts to DB
+        elif self.layout_name is not None:
+            array_elements_file = io_handler.IOHandler().get_input_data_file(
+                "layout",
+                "telescope_positions-"
+                f"{names.validate_site_name(site)}-"
+                f"{names.validate_array_layout_name(self.layout_name)}"
+                ".ecsv",
             )
+        self.array_elements = (
+            array_elements_list
+            if array_elements_file is None
+            else self._load_array_element_positions_from_file(array_elements_file, site)
+        )
 
         self._set_config_file_directory()
         site_model, telescope_model = self._build_array_model(
