@@ -4,12 +4,10 @@
 Plot array elements (array layout).
 
 Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the database,
-or given as command line arguments (explicit listing or telescope list file). List of input
+or given as command line arguments (explicit listing or telescope list file). A list of input
 files are accepted.
-
+Layouts can be plotted in ground or UTM coordinate systems.
 A rotation angle in degrees allows to rotate the array before plotting.
-A sequence of arguments for the rotation angle is also permitted, in which case all of them
-are plotted and saved separately.
 
 The typical image formats for the output figures are allowed (e.g., pdf, png, jpg). If no
 ``figure_name`` is given as output, layouts are plotted in pdf and png format.
@@ -25,11 +23,11 @@ Command line arguments
 figure_name : str
     File name for the output figure.
 array_layout_file : str
-    File (astropy table compatible) with the list of array elements.
+    File (astropy table compatible) with a list of array elements.
 array_layout_name : str
     Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
 array_element_list : list
-    List of array elements (e.g., telescopes) to plot.
+    List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 coordinate_system : str, optional
     Coordinate system for the array layout (ground or utm).
 rotate_angle : float, optional
@@ -41,10 +39,27 @@ axes_range : float, optional
 
 Examples
 --------
+
+Plot layout with the name "North-TestLayout":
+
 .. code-block:: console
 
     simtools-plot-layout-array --figure_name northern_array_alpha
                                --array_layout_name North-TestLayout
+
+
+Plot layout with 2 LSTs and all northern MSTs in UTM coordinates:
+
+.. code-block:: console
+
+    simtools-plot-layout-array --array_element_list LSTN-01 LSTN-02 MSTN
+                               --coordinate_system utm
+
+Plot layout from a file with the list of telescopes:
+
+.. code-block:: console
+
+    simtools-plot-layout-array --array_element_list telescope_positions-North-TestLayout.ecsv
 """
 
 import logging

@@ -1,3 +1,5 @@
+"""Module for visualization."""
+
 #!/usr/bin/python3
 
 import logging
@@ -123,11 +125,12 @@ _logger = logging.getLogger(__name__)
 
 def _add_unit(title, array):
     """
-    A function to add a unit to "title" (presumably an axis title). The unit is extracted from the\
-    unit field of the array, in case array is an astropy quantity. If a unit is found, it is added \
-    to title in the form [unit]. If a unit already is present in title (in the same form), a \
-    warning is printed and no unit is added. The function assumes array not to be empty and returns\
-    the modified title.
+    Add a unit to "title" (presumably an axis title).
+
+    The unit is extracted from the unit field of the array, in case array is an astropy quantity.
+    If a unit is found, it is added to title in the form [unit]. If a unit already is present in
+    title (in the same form), a warning is printed and no unit is added. The function assumes
+    array not to be empty and returns the modified title.
 
     Parameters
     ----------
@@ -139,7 +142,6 @@ def _add_unit(title, array):
     str
         Title with units.
     """
-
     unit = ""
     if isinstance(array, u.Quantity):
         unit = str(array[0].unit)
@@ -160,13 +162,14 @@ def _add_unit(title, array):
 
 def set_style(palette="default", big_plot=False):
     """
-    A function to set the plotting style as part of an effort to homogenize plot style across the \
-    framework. The function receives the colour palette name and whether it is a big plot or not.\
+    Set the plotting style to homogenize plot style across the framework.
+
+    The function receives the colour palette name and whether it is a big plot or not.\
     The latter sets the fonts and marker to be bigger in case it is a big plot. The available \
     colour palettes are as follows:
 
-    - classic (default): A classic colourful palette with strong colours and contrast.
-    - modified classic: Similar to the classic, with slightly different colours.
+    - classic (default): A classic colorful palette with strong colors and contrast.
+    - modified classic: Similar to the classic, with slightly different colors.
     - autumn: A slightly darker autumn style colour palette.
     - purples: A pseudo sequential purple colour palette (not great for contrast).
     - greens: A pseudo sequential green colour palette (not great for contrast).
@@ -187,7 +190,6 @@ def set_style(palette="default", big_plot=False):
     KeyError
         if provided palette does not exist.
     """
-
     if palette not in COLORS:
         raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
@@ -220,8 +222,9 @@ def set_style(palette="default", big_plot=False):
 
 def get_colors(palette="default"):
     """
-    Get the colour list of the palette requested. If no palette is provided, the default is \
-    returned.
+    Get the colour list of the palette requested.
+
+    If no palette is provided, the default is returned.
 
     Parameters
     ----------
@@ -238,7 +241,6 @@ def get_colors(palette="default"):
     KeyError
         if provided palette does not exist.
     """
-
     if palette not in COLORS:
         raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
@@ -254,7 +256,6 @@ def get_markers():
     list
         List with markers.
     """
-
     return MARKERS
 
 
@@ -267,16 +268,17 @@ def get_lines():
     list
         List with line styles.
     """
-
     return LINES
 
 
 def plot_1d(data, **kwargs):
     """
-    Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \
-    added at the bottom to allow easy comparison. Additional options, such as plot title, plot
-    legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g., axes\
-    limits, log scale, etc.) should be done using the returned plt instance.
+    Produce a high contrast one dimensional plot from multiple data sets.
+
+    A ratio plot can be  added at the bottom to allow easy comparison. Additional options,
+    such as plot title, plot legend, etc., are given in kwargs. Any option that can be
+    changed after plotting (e.g., axes limits, log scale, etc.) should be done using the
+    returned plt instance.
 
     Parameters
     ----------
@@ -318,7 +320,6 @@ def plot_1d(data, **kwargs):
     ValueError
         if asked to plot a ratio or difference with just one set of data
     """
-
     palette = kwargs.get("palette", "default")
     kwargs.pop("palette", None)
     big_plot = kwargs.get("big_plot", False)
@@ -430,10 +431,11 @@ def plot_1d(data, **kwargs):
 
 def plot_table(table, y_title, **kwargs):
     """
-    Produce a high contrast one dimensional plot from the data in an astropy.Table. A ratio plot\
-    can be added at the bottom to allow easy comparison. Additional options, such as plot title,
-    plot legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g.,\
-    axes limits, log scale, etc.) should be done using the returned plt instance.
+    Produce a high contrast one dimensional plot from the data in an astropy.Table.
+
+    A ratio plot can be added at the bottom to allow easy comparison. Additional options, such
+    as plot title, plot legend, etc., are given in kwargs. Any option that can be changed after
+    plotting (e.g., axes limits, log scale, etc.) should be done using the returned plt instance.
 
     Parameters
     ----------
@@ -471,7 +473,6 @@ def plot_table(table, y_title, **kwargs):
     ValueError
         if table has less than two columns.
     """
-
     if len(table.keys()) < 2:
         raise ValueError("Table has to have at least two columns")
 
@@ -485,8 +486,10 @@ def plot_table(table, y_title, **kwargs):
 
 def plot_hist_2d(data, **kwargs):
     """
-    Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\
-    axes limits, log scale, etc.) should be done using the returned plt instance.
+    Produce a two dimensional histogram plot.
+
+    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.)
+    should be done using the returned plt instance.
 
     Parameters
     ----------
@@ -502,7 +505,6 @@ def plot_hist_2d(data, **kwargs):
         Instance of pyplot.figure in which the plot was produced.
 
     """
-
     cmap = plt.cm.gist_heat_r
     if "title" in kwargs:
         title = kwargs["title"]
@@ -592,8 +594,9 @@ def get_telescope_patch(name, x, y, radius):
 @u.quantity_input(rotate_angle=u.deg)
 def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None):
     """
-    Plot the array of telescopes. The x axis gives the easting direction and y axis gives the
-    northing direction.
+    Plot the array of telescopes.
+
+    The x axis gives the easting direction and y axis gives the northing direction.
     Note that in order to convert from the CORSIKA coordinate system to the 'conventional' system
     of North/East, a 90 degree rotation is always applied.
     Rotation of the array elements is possible through the 'rotate_angle' given either in degrees,
@@ -620,7 +623,6 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         Instance of plt.figure with the array of telescopes plotted.
 
     """
-
     fig, ax = plt.subplots(1)
     legend_objects = []
     legend_labels = []
@@ -643,25 +645,28 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
 
     patches = []
     for i_tel, tel_now in enumerate(telescopes):
+        try:
+            telescope_name = tel_now["telescope_name"]
+        except KeyError:
+            telescope_name = tel_now["asset_code"] + "-" + tel_now["sequence_number"]
         for tel_type in tel_counters:
-            if tel_type in tel_now["telescope_name"]:
+            if tel_type in telescope_name:
                 tel_counters[tel_type] += 1
-        i_tel_name = names.get_telescope_type_from_telescope_name(
-            telescopes[i_tel]["telescope_name"]
-        )
+        sphere_radius = 1.0 * u.m if "sphere_radius" not in tel_now else tel_now["sphere_radius"]
+        i_tel_name = names.get_telescope_type_from_telescope_name(telescope_name)
         patches.append(
             get_telescope_patch(
                 i_tel_name,
                 pos_x_rotated[i_tel],
                 pos_y_rotated[i_tel],
-                scale * telescopes[i_tel]["sphere_radius"],
+                scale * sphere_radius,
             )
         )
         if show_tel_label:
             ax.text(
                 pos_x_rotated[i_tel].value,
-                pos_y_rotated[i_tel].value + scale * telescopes[i_tel]["sphere_radius"].value,
-                telescopes[i_tel]["telescope_name"],
+                pos_y_rotated[i_tel].value + scale * sphere_radius.value,
+                telescope_name,
                 horizontalalignment="center",
                 verticalalignment="bottom",
                 fontsize=fontsize,

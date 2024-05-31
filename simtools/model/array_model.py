@@ -486,6 +486,7 @@ class ArrayModel:
             pos_z.append(xyz[2])
             try:
                 tel_r.append(data.get_parameter_value_with_unit("telescope_sphere_radius"))
+            #  TODO - tests of KeyError after positions calibration_elements are added to DB
             except KeyError:  # not all array elements have a sphere radius
                 tel_r.append(0.0 * u.m)
 

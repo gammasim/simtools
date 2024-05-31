@@ -8,6 +8,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy.table import QTable
 
 import simtools.utils.general as gen
 from simtools.utils import names
@@ -110,17 +111,14 @@ def test_get_telescope_patch(io_handler):
 
 def test_plot_array(
     telescope_north_test_file,
-    array_layout_north_instance,
     telescope_south_test_file,
-    array_layout_south_instance,
+    telescope_north_utm_test_file,
 ):
-    def test_one_site(test_file, instance):
-        instance._initialize_array_layout(telescope_list_file=test_file)
-        fig_out = visualize.plot_array(
-            instance.export_telescope_list_table("ground"), rotate_angle=0 * u.deg
-        )
+    def test_one_site(test_table):
+        fig_out = visualize.plot_array(QTable.read(test_table), rotate_angle=0 * u.deg)
         assert isinstance(fig_out, type(plt.figure()))
         plt.close()
 
-    test_one_site(telescope_north_test_file, array_layout_north_instance)
-    test_one_site(telescope_south_test_file, array_layout_south_instance)
+    test_one_site(telescope_north_test_file)
+    test_one_site(telescope_south_test_file)
+    test_one_site(telescope_north_utm_test_file)
