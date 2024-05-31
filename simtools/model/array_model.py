@@ -540,3 +540,41 @@ class ArrayModel:
             collection="telescopes",
         )
         return self._get_array_elements_from_list(all_elements)
+
+    def export_telescope_list_as_table(self, coordinate_system="ground"):
+        """
+        Export array elements positions to astropy table.
+
+        Parameters
+        ----------
+        coordinate_system: str
+            Positions are exported in this coordinate system.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Astropy table with the telescope layout information.
+        """
+
+        table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
+
+        name, pos_x, pos_y, pos_z = [], [], [], []
+        for tel_name, data in self.telescope_model.items():
+            name.append(tel_name)
+            xyz = data.position(coordinate_system=coordinate_system)
+            pos_x.append(xyz[0])
+            pos_y.append(xyz[1])
+            pos_z.append(xyz[2])
+
+        table["telescope_name"] = name
+        if coordinate_system == "ground":
+            table["position_x"] = pos_x
+            table["position_y"] = pos_y
+            table["position_z"] = pos_z
+        elif coordinate_system == "utm":
+            table["utm_east"] = pos_x
+            table["utm_north"] = pos_y
+            table["altitude"] = pos_z
+
+        table.sort("telescope_name")
+        return table
