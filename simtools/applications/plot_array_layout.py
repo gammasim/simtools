@@ -30,6 +30,8 @@ array_layout_name : str
     Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
 array_element_list : list
     List of array elements (e.g., telescopes) to plot.
+coordinate_system : str, optional
+    Coordinate system for the array layout (ground or utm).
 rotate_angle : float, optional
     Angle to rotate the array before plotting (in degrees).
 show_labels : bool, optional
@@ -100,6 +102,14 @@ def _parse(label, description, usage):
         action="store_true",
         required=False,
         default=False,
+    )
+    config.parser.add_argument(
+        "--coordinate_system",
+        help="Coordinate system for the array layout.",
+        type=str,
+        required=False,
+        default="ground",
+        choices=["ground", "utm"],
     )
     config.parser.add_argument(
         "--axes_range",
@@ -269,12 +279,18 @@ def _layouts_from_database(args_dict, db_config, rotate_angle):
         array_elements=args_dict["array_element_list"],
     )
     if args_dict["figure_name"] is None:
-        plot_file_name = f"array_layout_{site}_" f"{str(round(rotate_angle.to(u.deg).value))}deg"
+        plot_file_name = (
+            f"array_layout_{site}_"
+            f"{str(round(rotate_angle.to(u.deg).value))}deg"
+            f"_{args_dict['coordinate_system']}"
+        )
     else:
         plot_file_name = args_dict["figure_name"]
     return [
         {
-            "array_elements": array_model.export_array_elements_as_table(),
+            "array_elements": array_model.export_array_elements_as_table(
+                coordinate_system=args_dict["coordinate_system"]
+            ),
             "plot_file_name": plot_file_name,
         }
     ]

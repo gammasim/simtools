@@ -603,10 +603,8 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
 
     Parameters
     ----------
-    telescopes: dict
-        Dictionary with the telescope position and names. Coordinates are given in the CORSIKA
-        coordinate system, i.e., the x positive axis points toward north
-        and the y positive axis points toward west.
+    telescopes: astropy.table
+        Table with the telescope position and names. Note the orientation of the axes.
     rotate_angle:
         Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have
         the x-axis pointing towards the east, and the y-axis pointing towards the North.
@@ -627,14 +625,13 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
     legend_objects = []
     legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
-    if rotate_angle != 0:
-        pos_x_rotated, pos_y_rotated = transf.rotate(
-            telescopes["position_x"], telescopes["position_y"], rotate_angle
-        )
-    else:
+    if "position_x" in telescopes.colnames and "position_y" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
-
-    pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, 90 * u.deg)
+        rotate_angle = rotate_angle + 90.0 * u.deg
+    elif "utm_east" in telescopes.colnames and "utm_north" in telescopes.colnames:
+        pos_y_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
+    if rotate_angle != 0:
+        pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
