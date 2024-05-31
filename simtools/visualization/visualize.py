@@ -1,6 +1,5 @@
-"""Module for visualization."""
-
 #!/usr/bin/python3
+"""Module for visualization."""
 
 import logging
 import re

@@ -4,7 +4,6 @@ import logging
 
 import pytest
 
-from simtools.layout.array_layout import ArrayLayout
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
@@ -22,17 +21,9 @@ def simtel_config_writer():
     return simtel_config_writer
 
 
-@pytest.fixture()
-def layout(io_handler, db_config, model_version):
-    layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, model_version=model_version, array_layout_name="South-4LST"
-    )
-    return layout
-
-
 # @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Released'")
 def test_write_array_config_file(
-    simtel_config_writer, layout, telescope_model_lst, io_handler, file_has_text, site_model_north
+    simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):
     file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", dir_type="test")
     telescope_model = {
