@@ -625,6 +625,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
     legend_objects = []
     legend_labels = []
     tel_counters = {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
+    pos_x_rotated, pos_y_rotated = 0.0 * u.m, 0.0 * u.m
     if "position_x" in telescopes.colnames and "position_y" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
         rotate_angle = rotate_angle + 90.0 * u.deg
