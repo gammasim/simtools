@@ -232,7 +232,7 @@ def _layouts_from_array_layout_file(args_dict, db_config, rotate_angle):
 
         layouts.append(
             {
-                "array_elements": array_model.get_array_element_positions(),
+                "array_elements": array_model.export_array_elements_as_table(),
                 "plot_file_name": plot_file_name,
             }
         )
@@ -274,7 +274,7 @@ def _layouts_from_database(args_dict, db_config, rotate_angle):
         plot_file_name = args_dict["figure_name"]
     return [
         {
-            "array_elements": array_model.get_array_element_positions(),
+            "array_elements": array_model.export_array_elements_as_table(),
             "plot_file_name": plot_file_name,
         }
     ]
