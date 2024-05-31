@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-    This application adds all parameters found in a repository to a new database.
+    All parameters found in a model parameter repository to a new database.
 
     Generates a new database with all required collections.
     Follows the structure of the CTAO gitlab model parameters repository.
@@ -19,8 +19,7 @@
 
     Examples
     --------
-
-    Upload a repository to the DB:
+    Upload model data repository to the DB:
 
     .. code-block:: console
 
@@ -28,6 +27,15 @@
             --input_path /path/to/repository \
             --db_name new_db_name \
             --type model_parameters
+
+    Upload metadata from repository to the DB:
+
+    .. code-block:: console
+
+        simtools-add_model-parameters-from-repository-to-db \
+            --input_path /path/to/repository/metadata \
+            --db_name new_db_name \
+            --type metadata
 """
 
 import logging
@@ -55,7 +63,6 @@ def _parse(label=None, description=None):
     CommandLineParser
         Command line parser object.
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input_path",
