@@ -12,7 +12,6 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
-from simtools.layout.array_layout import ArrayLayout
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -298,20 +297,6 @@ def telescope_model_sst_prod5(db_config, io_handler):
         label="test-telescope-model-sst",
     )
     return telescope_model_sst
-
-
-@pytest.fixture()
-def array_layout_north_instance(io_handler, db_config, model_version):
-    return ArrayLayout(
-        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
-    )
-
-
-@pytest.fixture()
-def array_layout_south_instance(io_handler, db_config, model_version):
-    return ArrayLayout(
-        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
-    )
 
 
 @pytest.fixture()
