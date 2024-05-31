@@ -24,6 +24,17 @@ def array_model(db_config, io_handler, model_version):
     )
 
 
+@pytest.fixture()
+def array_model_from_list(db_config, io_handler, model_version):
+    return ArrayModel(
+        label="test",
+        site="North",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        array_elements=["LSTN-01", "MSTN-01"],
+    )
+
+
 def test_input_validation(array_model):
     am = array_model
     am.print_telescope_list()
@@ -180,14 +191,51 @@ def test_set_config_file_directory(array_model, io_handler):
     assert _config_dir_1.is_dir()
 
 
-def test_export_telescope_list_as_table(array_model, io_handler):
+def test_export_array_elements_as_table(array_model, io_handler):
     am = array_model
-    table_ground = am.export_telescope_list_as_table(coordinate_system="ground")
+    table_ground = am.export_array_elements_as_table(coordinate_system="ground")
     assert isinstance(table_ground, QTable)
     assert "position_z" in table_ground.colnames
     assert len(table_ground) > 0
 
-    table_utm = am.export_telescope_list_as_table(coordinate_system="utm")
+    table_utm = am.export_array_elements_as_table(coordinate_system="utm")
     assert isinstance(table_utm, QTable)
     assert "altitude" in table_utm.colnames
     assert len(table_utm) > 0
+
+
+def test_get_array_elements_from_list(array_model, io_handler):
+    am = array_model
+    assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
+        "LSTN-01": None,
+        "MSTN-01": None,
+    }
+    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"])
+    assert "MSTN-01" in all_msts_plus_lst
+    assert "MSTN-05" in all_msts_plus_lst
+    assert "LSTN-01" in all_msts_plus_lst
+
+
+def test_get_all_array_elements_of_type(array_model, io_handler):
+    am = array_model
+    assert am._get_all_array_elements_of_type("LSTS") == {
+        "LSTS-01": None,
+        "LSTS-02": None,
+        "LSTS-03": None,
+        "LSTS-04": None,
+    }
+    # simple check that more than 10 MSTS are there
+    assert len(am._get_all_array_elements_of_type("MSTS")) > 10
+
+    assert len(am._get_all_array_elements_of_type("MSTE")) == 0
+
+
+def test_update_array_element_position(array_model_from_list):
+    am = array_model_from_list
+    assert "LSTN-01" in am.array_elements
+    assert "LSTN-01" in am.telescope_model
+    print("FFFF", am.array_elements["LSTN-01"])
+    assert am.array_elements["LSTN-01"] is None
+
+
+#    assert am.array_elements["LSTN-01"]["array_element_position_ground"] is None
