@@ -629,7 +629,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
         rotate_angle = rotate_angle + 90.0 * u.deg
     elif "utm_east" in telescopes.colnames and "utm_north" in telescopes.colnames:
-        pos_y_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
+        pos_x_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
 
