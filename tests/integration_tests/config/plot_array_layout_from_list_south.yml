@@ -1,0 +1,11 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: from_list_south
+  CONFIGURATION:
+    ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
+    MODEL_VERSION: prod6
+    OUTPUT_PATH: simtools-tests
+    AXES_RANGE: 1200.
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/array_layout_South_0deg.png
+    - OUTPUT_FILE: application-plots/array_layout_South_0deg.pdf
