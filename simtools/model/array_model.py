@@ -195,9 +195,6 @@ class ArrayModel:
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
                 )
-                self.array_elements[element_name] = self._update_array_element_list(
-                    telescope_model[element_name], site
-                )
             # Collecting parameters to change from array_config_data
             pars_to_change = self._get_single_telescope_info_from_array_config(
                 element_name, parameters_to_change
@@ -213,45 +210,6 @@ class ArrayModel:
                     telescope_model[element_name].set_extra_label(element_name)
 
         return site_model, telescope_model
-
-    def _update_array_element_list(self, array_element_model, site, coordinates="ground"):
-        """
-        Update array element list (if values are missing).
-
-        Array element lists might be incomplete, e.g. when the array layout is defined
-        through a list of names of elements.
-
-        Parameters
-        ----------
-        array_element_model : ModelParameter
-            Telescope or calibration model.
-        site :  str
-            Site name.
-        coordinates : str
-            Coordinate system (ground, utm, ...).
-
-        Returns
-        -------
-        dict
-            Updated array element list.
-
-        Raises
-        ------
-        KeyError
-            If the coordinate system is not valid.
-        """
-        try:
-            position = array_element_model.get_parameter_value_with_unit(
-                "array_element_position_" + coordinates
-            )
-        except KeyError as exc:
-            self._logger.error("Invalid coordinate system for array element positions")
-            raise exc
-        if position is None:
-            return None
-        return self._get_telescope_position_parameter(
-            array_element_model.name, site, position[0], position[1], position[2]
-        )
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
@@ -418,46 +376,6 @@ class ArrayModel:
             for row in table
         }
 
-    def get_array_element_positions(self, coordinates="ground"):
-        """
-        Return array element positions.
-
-        Parameters
-        ----------
-        coordinates: str
-            Coordinate system (ground, utm, ...).
-
-        Returns
-        -------
-        astropy.table.QTable
-            Astropy table with position information on array elements.
-        """
-        table = QTable()
-        tel_names, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
-        for tel_name, tel in self.telescope_model.items():
-            try:
-                position = tel.get_parameter_value_with_unit(
-                    "array_element_position_" + coordinates
-                )
-            except KeyError as exc:
-                self._logger.error("Invalid coordinate system for array element positions")
-                raise exc
-            tel_names.append(tel_name)
-            pos_x.append(position[0])
-            pos_y.append(position[1])
-            pos_z.append(position[2])
-            try:
-                tel_r.append(tel.get_parameter_value_with_unit("telescope_sphere_radius"))
-            except KeyError:  # not all array elements have a sphere radius
-                tel_r.append(0.0 * u.m)
-
-        table["telescope_name"] = tel_names
-        table["position_x"] = pos_x
-        table["position_y"] = pos_y
-        table["position_z"] = pos_z
-        table["sphere_radius"] = tel_r
-        return table
-
     def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
         """
         Return dictionary with telescope position parameters (following DB model database format).
@@ -541,7 +459,7 @@ class ArrayModel:
         )
         return self._get_array_elements_from_list(all_elements)
 
-    def export_telescope_list_as_table(self, coordinate_system="ground"):
+    def export_array_elements_as_table(self, coordinate_system="ground"):
         """
         Export array elements positions to astropy table.
 
@@ -558,13 +476,17 @@ class ArrayModel:
 
         table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
 
-        name, pos_x, pos_y, pos_z = [], [], [], []
+        name, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
         for tel_name, data in self.telescope_model.items():
             name.append(tel_name)
             xyz = data.position(coordinate_system=coordinate_system)
             pos_x.append(xyz[0])
             pos_y.append(xyz[1])
             pos_z.append(xyz[2])
+            try:
+                tel_r.append(data.get_parameter_value_with_unit("telescope_sphere_radius"))
+            except KeyError:  # not all array elements have a sphere radius
+                tel_r.append(0.0 * u.m)
 
         table["telescope_name"] = name
         if coordinate_system == "ground":
@@ -575,6 +497,7 @@ class ArrayModel:
             table["utm_east"] = pos_x
             table["utm_north"] = pos_y
             table["altitude"] = pos_z
+        table["sphere_radius"] = tel_r
 
         table.sort("telescope_name")
         return table
