@@ -1,6 +1,7 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: from_list_south_utm
+  MODEL_VERSION_USE_CURRENT: true
   CONFIGURATION:
     ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
     COORDINATE_SYSTEM: utm
