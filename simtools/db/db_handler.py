@@ -1094,7 +1094,6 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
-            self._logger.debug(f"Getting all versions from {_cache_key}")
             db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
             DatabaseHandler.model_versions_cached[_cache_key] = list(
                 set(post["version"] for post in db_collection.find(query))
@@ -1129,13 +1128,13 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name][collection]
+        db_collection = DatabaseHandler.db_client[db_name][collection]
 
         query = {"version": self.model_version(model_version)}
-        try:
-            _all_available_array_elements = collection.find(query).distinct("instrument")
-        except ValueError as exc:
-            raise ValueError(f"Query for collection name {collection} not implemented.") from exc
+        _all_available_array_elements = db_collection.find(query).distinct("instrument")
+        if len(_all_available_array_elements) == 0:
+            self._logger.error(f"Query for collection name {collection} not implemented.")
+            raise ValueError
 
         return _all_available_array_elements
 
