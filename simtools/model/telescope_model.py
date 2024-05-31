@@ -1,3 +1,5 @@
+"""MC model of a telescope."""
+
 import logging
 
 import astropy.io.ascii
@@ -7,7 +9,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
-from simtools.model.model_parameter import ModelParameter
+from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.utils import names
 
 __all__ = ["TelescopeModel"]
@@ -41,9 +43,7 @@ class TelescopeModel(ModelParameter):
         model_version,
         label=None,
     ):
-        """
-        Initialize TelescopeModel.
-        """
+        """Initialize TelescopeModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init TelescopeModel %s %s", site, telescope_name)
         ModelParameter.__init__(
@@ -62,18 +62,14 @@ class TelescopeModel(ModelParameter):
 
     @property
     def mirrors(self):
-        """
-        Load the mirror information if the class instance hasn't done it yet.
-        """
+        """Load the mirror information if the class instance hasn't done it yet."""
         if self._mirrors is None:
             self._load_mirrors()
         return self._mirrors
 
     @property
     def camera(self):
-        """
-        Load the camera information if the class instance hasn't done it yet.
-        """
+        """Load the camera information if the class instance hasn't done it yet."""
         if self._camera is None:
             self._load_camera()
         return self._camera
@@ -145,8 +141,9 @@ class TelescopeModel(ModelParameter):
 
     def get_telescope_effective_focal_length(self, unit="m", return_focal_length_if_zero=False):
         """
-        Return effective focal length. Ensure backwards compatibility with older
-        sim-telarray versions.
+        Return effective focal length.
+
+        The function ensures backwards compatibility with older sim-telarray versions.
 
         Parameters
         ----------
@@ -175,7 +172,7 @@ class TelescopeModel(ModelParameter):
         return eff_focal_length
 
     def _load_camera(self):
-        """Loading camera attribute by creating a Camera object with the camera config file."""
+        """Load camera attribute by creating a Camera object with the camera config file."""
         camera_config_file = self.get_parameter_value("camera_config_file")
         focal_length = self.get_telescope_effective_focal_length("cm", True)
         try:
@@ -221,6 +218,7 @@ class TelescopeModel(ModelParameter):
     def read_two_dim_wavelength_angle(self, file_name):
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
+
         Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
         reflectivity, etc.)
 
@@ -234,7 +232,6 @@ class TelescopeModel(ModelParameter):
         dict:
             dict of three arrays, wavelength, degrees, z.
         """
-
         _file = self.config_file_directory.joinpath(file_name)
         self._logger.debug("Reading two dimensional distribution from %s", _file)
         line_to_start_from = 0
@@ -255,7 +252,6 @@ class TelescopeModel(ModelParameter):
 
     def get_on_axis_eff_optical_area(self):
         """Return the on-axis effective optical area (derived previously for this telescope)."""
-
         ray_tracing_data = astropy.io.ascii.read(
             self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
         )
@@ -281,7 +277,6 @@ class TelescopeModel(ModelParameter):
         incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution.
         """
-
         self._logger.debug(
             "Reading incidence angle distribution from %s",
             self.config_file_directory.joinpath(incidence_angle_dist_file),
@@ -294,8 +289,10 @@ class TelescopeModel(ModelParameter):
     @staticmethod
     def calc_average_curve(curves, incidence_angle_dist):
         """
-        Calculate an average curve from a set of curves, using as weights the distribution of \
-        incidence angles provided in incidence_angle_dist.
+        Calculate an average curve from a set of curves.
+
+        The calculation uses weights the distribution of incidence angles provided in
+        incidence_angle_dist.
 
         Parameters
         ----------
@@ -312,7 +309,6 @@ class TelescopeModel(ModelParameter):
         average_curve: astropy.table.Table
             Instance of astropy.table.Table with the averaged curve.
         """
-
         weights = []
         for angle_now in curves["Angle"]:
             weights.append(
@@ -344,7 +340,31 @@ class TelescopeModel(ModelParameter):
         Path:
             Path to the file exported.
         """
-
         file_to_write_to = self._config_file_directory.joinpath(file_name)
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
+
+    def position(self, coordinate_system="ground"):
+        """
+        Get coordinates in the given system.
+
+        Parameters
+        ----------
+        coordinate_system: str
+            Coordinates system. Default is 'ground'.
+
+        Returns
+        -------
+        list :
+            List of telescope position in the requested coordinate system.
+
+        Raises
+        ------
+        KeyError
+            If the coordinate system is not found.
+        """
+        try:
+            return self.get_parameter_value_with_unit(f"array_element_position_{coordinate_system}")
+        except InvalidModelParameterError as exc:
+            self._logger.error(f"Coordinate system {coordinate_system} not found.")
+            raise exc
