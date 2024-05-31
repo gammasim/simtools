@@ -9,7 +9,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
-from simtools.model.model_parameter import ModelParameter
+from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.utils import names
 
 __all__ = ["TelescopeModel"]
@@ -344,13 +344,13 @@ class TelescopeModel(ModelParameter):
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
 
-    def get_coordinates(self, coordinates="ground"):
+    def position(self, coordinate_system="ground"):
         """
         Get coordinates in the given system.
 
         Parameters
         ----------
-        coordinates : str
+        coordinate_system: str
             Coordinates system. Default is 'ground'.
 
         Returns
@@ -364,7 +364,7 @@ class TelescopeModel(ModelParameter):
             If the coordinate system is not found.
         """
         try:
-            return self.get_parameter_value_with_unit(f"array_element_position_{coordinates}")
-        except KeyError:
-            self._logger.error(f"Coordinate system {coordinates} not found.")
-            return None
+            return self.get_parameter_value_with_unit(f"array_element_position_{coordinate_system}")
+        except InvalidModelParameterError as exc:
+            self._logger.error(f"Coordinate system {coordinate_system} not found.")
+            raise exc
