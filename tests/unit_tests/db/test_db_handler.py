@@ -492,7 +492,7 @@ def test_get_all_versions(db):
     assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
 
 
-def test_get_all_available_array_elements(db, model_version):
+def test_get_all_available_array_elements(db, model_version, caplog):
     available_telescopes = db.get_all_available_array_elements(
         model_version=model_version, collection="telescopes"
     )
@@ -508,6 +508,23 @@ def test_get_all_available_array_elements(db, model_version):
         "SSTS-design",
     ]
     assert all(_t in available_telescopes for _t in expected_telescope_names)
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            db.get_all_available_array_elements(
+                model_version=model_version, collection="wrong_collection"
+            )
+        assert "Query for collection name wrong_collection not implemented." in caplog.text
+
+
+def test_get_available_array_elements_of_type(db, model_version, caplog):
+
+    available_types = db.get_available_array_elements_of_type(
+        array_element_type="LSTN", model_version=model_version, collection="telescopes"
+    )
+    assert "LSTN-04" in available_types
+    assert len(available_types) == 4
+    assert all("design" not in tel_type for tel_type in available_types)
 
 
 def test_get_telescope_db_name(db):
