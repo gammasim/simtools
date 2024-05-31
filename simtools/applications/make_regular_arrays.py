@@ -52,7 +52,7 @@ def main():
             f"  SST: {telescope_distance['SST']}\n"
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="site", output=True)
+    args_dict, _ = config.initialize(db_config=False, simulation_model="site", output=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
