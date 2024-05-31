@@ -35,6 +35,17 @@ def array_model_from_list(db_config, io_handler, model_version):
     )
 
 
+def test_array_model_from_file(db_config, io_handler, model_version, telescope_north_test_file):
+    am = ArrayModel(
+        label="test",
+        site="North",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        array_elements=telescope_north_test_file,
+    )
+    assert am.number_of_telescopes == 13
+
+
 def test_input_validation(array_model):
     am = array_model
     am.print_telescope_list()
@@ -234,8 +245,4 @@ def test_update_array_element_position(array_model_from_list):
     am = array_model_from_list
     assert "LSTN-01" in am.array_elements
     assert "LSTN-01" in am.telescope_model
-    print("FFFF", am.array_elements["LSTN-01"])
     assert am.array_elements["LSTN-01"] is None
-
-
-#    assert am.array_elements["LSTN-01"]["array_element_position_ground"] is None
