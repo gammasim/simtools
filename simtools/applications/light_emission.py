@@ -441,8 +441,8 @@ def main():
             array_elements_file=args_dict["telescope_file"],
         )
         try:
-            xyz = array_model.telescope_model[args_dict["telescope"]].get_coordinates(
-                coordinates="ground"
+            xyz = array_model.telescope_model[args_dict["telescope"]].position(
+                coordinate_system="ground"
             )
             default_le_config["x_pos"]["real"] = xyz[0]
             default_le_config["y_pos"]["real"] = xyz[1]

@@ -292,7 +292,7 @@ def test_make_light_emission_script(
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
 
-    xyz = array_layout_model.telescope_model["LSTN-01"].get_coordinates(coordinates="ground")
+    xyz = array_layout_model.telescope_model["LSTN-01"].position()
     mock_simulator.default_le_config["x_pos"]["real"] = xyz[0]
     mock_simulator.default_le_config["y_pos"]["real"] = xyz[1]
     mock_simulator.default_le_config["z_pos"]["real"] = xyz[2]
@@ -338,7 +338,7 @@ def test_make_light_emission_script_laser(
     mock_output_path,
     io_handler,
 ):
-    xyz = array_layout_model.telescope_model["LSTN-01"].get_coordinates(coordinates="ground")
+    xyz = array_layout_model.telescope_model["LSTN-01"].position()
     mock_simulator_laser.default_le_config["x_pos"]["real"] = xyz[0]
     mock_simulator_laser.default_le_config["y_pos"]["real"] = xyz[1]
     mock_simulator_laser.default_le_config["z_pos"]["real"] = xyz[2]
