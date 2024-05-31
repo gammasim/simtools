@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from astropy import units as u
+from astropy.table import QTable
 
 from simtools.model.array_model import ArrayModel, InvalidArrayConfigDataError
 
@@ -177,3 +178,16 @@ def test_set_config_file_directory(array_model, io_handler):
     _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
     am._set_config_file_directory()
     assert _config_dir_1.is_dir()
+
+
+def test_export_telescope_list_as_table(array_model, io_handler):
+    am = array_model
+    table_ground = am.export_telescope_list_as_table(coordinate_system="ground")
+    assert isinstance(table_ground, QTable)
+    assert "position_z" in table_ground.colnames
+    assert len(table_ground) > 0
+
+    table_utm = am.export_telescope_list_as_table(coordinate_system="utm")
+    assert isinstance(table_utm, QTable)
+    assert "altitude" in table_utm.colnames
+    assert len(table_utm) > 0
