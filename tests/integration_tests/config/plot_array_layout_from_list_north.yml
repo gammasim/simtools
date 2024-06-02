@@ -6,6 +6,7 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
     AXES_RANGE: 500.
+    SHOW_LABELS: True
   INTEGRATION_TESTS:
     - OUTPUT_FILE: application-plots/array_layout_North_0deg_ground.png
     - OUTPUT_FILE: application-plots/array_layout_North_0deg_ground.pdf
