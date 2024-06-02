@@ -9,9 +9,9 @@ files are accepted.
 Layouts can be plotted in ground or UTM coordinate systems.
 
 Listing of array elements follow the following logic:
-* explicit listing of array elements: e.g., ``-array_element_list MSTN-01, MSTN05``
-* listing of types of array elements: e.g, ``-array_element_list MSTN`` plots all telescopes
-of type MSTN.
+
+* explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``
+* listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.
 
 A rotation angle in degrees allows to rotate the array before plotting.
 The typical image formats (e.g., pdf, png, jpg) are allowed for the output figures.
