@@ -7,10 +7,15 @@ Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the
 or given as command line arguments (explicit listing or telescope list file). A list of input
 files are accepted.
 Layouts can be plotted in ground or UTM coordinate systems.
-A rotation angle in degrees allows to rotate the array before plotting.
 
-The typical image formats for the output figures are allowed (e.g., pdf, png, jpg). If no
-``figure_name`` is given as output, layouts are plotted in pdf and png format.
+Listing of array elements follow the following logic:
+* explicit listing of array elements: e.g., ``-array_element_list MSTN-01, MSTN05``
+* listing of types of array elements: e.g, ``-array_element_list MSTN`` plots all telescopes
+of type MSTN.
+
+A rotation angle in degrees allows to rotate the array before plotting.
+The typical image formats (e.g., pdf, png, jpg) are allowed for the output figures.
+If no ``figure_name`` is given as output, layouts are plotted in pdf and png format.
 
 Example of a layout plot:
 
