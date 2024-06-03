@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g634ea15 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g0aeaaec Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=0752c9a0"></script>
+    <script src="_static/documentation_options.js?v=f9f63468"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g634ea15 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0aeaaec Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -530,6 +530,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.get_telescope_effective_focal_length"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.get_telescope_effective_focal_length()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.is_file_2d"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.is_file_2d()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.mirrors"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.mirrors</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.position"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.position()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.read_incidence_angle_distribution"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.read_incidence_angle_distribution()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.read_two_dim_wavelength_angle()</span></code></a></li>
 </ul>
@@ -1336,7 +1337,8 @@ Parameters are returned with units wherever possible.</p>
 </section>
 <section id="telescope-model">
 <h2>telescope_model<a class="headerlink" href="#telescope-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.telescope_model"><span id="id4"></span></span><dl class="py class">
+<p id="module-model.telescope_model"><span id="id4"></span>MC model of a telescope.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
 <dd><p>TelescopeModel represents the MC model of an individual telescope.</p>
@@ -1360,7 +1362,9 @@ Parameters are returned with units wherever possible.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.calc_average_curve">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_average_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidence_angle_dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.calc_average_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.calc_average_curve" title="Link to this definition">#</a></dt>
-<dd><p>Calculate an average curve from a set of curves, using as weights the distribution of         incidence angles provided in incidence_angle_dist.</p>
+<dd><p>Calculate an average curve from a set of curves.</p>
+<p>The calculation uses weights the distribution of incidence angles provided in
+incidence_angle_dist.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1454,8 +1458,8 @@ Parameters are returned with units wherever possible.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.get_telescope_effective_focal_length">
 <span class="sig-name descname"><span class="pre">get_telescope_effective_focal_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_focal_length_if_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.get_telescope_effective_focal_length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.get_telescope_effective_focal_length" title="Link to this definition">#</a></dt>
-<dd><p>Return effective focal length. Ensure backwards compatibility with older
-sim-telarray versions.</p>
+<dd><p>Return effective focal length.</p>
+<p>The function ensures backwards compatibility with older sim-telarray versions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1501,6 +1505,32 @@ sim-telarray versions.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.position">
+<span class="sig-name descname"><span class="pre">position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.position" title="Link to this definition">#</a></dt>
+<dd><p>Get coordinates in the given system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coordinate_system: str</strong></dt><dd><p>Coordinates system. Default is ‘ground’.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of telescope position in the requested coordinate system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>If the coordinate system is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.read_incidence_angle_distribution">
 <span class="sig-name descname"><span class="pre">read_incidence_angle_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incidence_angle_dist_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.read_incidence_angle_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.read_incidence_angle_distribution" title="Link to this definition">#</a></dt>
 <dd><p>Read the incidence angle distribution from a file.</p>
@@ -1523,8 +1553,8 @@ sim-telarray versions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">
 <span class="sig-name descname"><span class="pre">read_two_dim_wavelength_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/telescope_model.html#TelescopeModel.read_two_dim_wavelength_angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle" title="Link to this definition">#</a></dt>
-<dd><p>Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
-Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
+<dd><p>Read a two dimensional distribution of wavelength and angle (z-axis can be anything).</p>
+<p>Return a dictionary with three arrays, wavelength, angles, z (can be transmission,
 reflectivity, etc.)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1685,6 +1715,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.get_telescope_effective_focal_length"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.get_telescope_effective_focal_length()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.is_file_2d"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.is_file_2d()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.mirrors"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.mirrors</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.position"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.position()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.read_incidence_angle_distribution"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.read_incidence_angle_distribution()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle"><code class="docutils literal notranslate"><span class="pre">TelescopeModel.read_two_dim_wavelength_angle()</span></code></a></li>
 </ul>

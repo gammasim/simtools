@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.telescope_model &#8212; simtools v0.1.dev1+g634ea15 Manual</title>
+    <title>model.telescope_model &#8212; simtools v0.1.dev1+g0aeaaec Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=0752c9a0"></script>
+    <script src="../../_static/documentation_options.js?v=f9f63468"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g634ea15 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0aeaaec Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -359,7 +359,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for model.telescope_model</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="sd">&quot;&quot;&quot;MC model of a telescope.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">astropy.io.ascii</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -368,7 +370,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.model.camera</span> <span class="kn">import</span> <span class="n">Camera</span>
 <span class="kn">from</span> <span class="nn">simtools.model.mirrors</span> <span class="kn">import</span> <span class="n">Mirrors</span>
-<span class="kn">from</span> <span class="nn">simtools.model.model_parameter</span> <span class="kn">import</span> <span class="n">ModelParameter</span>
+<span class="kn">from</span> <span class="nn">simtools.model.model_parameter</span> <span class="kn">import</span> <span class="n">InvalidModelParameterError</span><span class="p">,</span> <span class="n">ModelParameter</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;TelescopeModel&quot;</span><span class="p">]</span>
@@ -404,9 +406,7 @@ document.write(`
         <span class="n">model_version</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize TelescopeModel.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize TelescopeModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init TelescopeModel </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">)</span>
         <span class="n">ModelParameter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -425,18 +425,14 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">mirrors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load the mirror information if the class instance hasn&#39;t done it yet.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the mirror information if the class instance hasn&#39;t done it yet.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mirrors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_mirrors</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mirrors</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">camera</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load the camera information if the class instance hasn&#39;t done it yet.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the camera information if the class instance hasn&#39;t done it yet.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_camera</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_camera</span>
@@ -516,8 +512,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_telescope_effective_focal_length">[docs]</a>
     <span class="k">def</span> <span class="nf">get_telescope_effective_focal_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="n">return_focal_length_if_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return effective focal length. Ensure backwards compatibility with older</span>
-<span class="sd">        sim-telarray versions.</span>
+<span class="sd">        Return effective focal length.</span>
+
+<span class="sd">        The function ensures backwards compatibility with older sim-telarray versions.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -547,7 +544,7 @@ document.write(`
 
 
     <span class="k">def</span> <span class="nf">_load_camera</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loading camera attribute by creating a Camera object with the camera config file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load camera attribute by creating a Camera object with the camera config file.&quot;&quot;&quot;</span>
         <span class="n">camera_config_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_config_file&quot;</span><span class="p">)</span>
         <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_telescope_effective_focal_length</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -598,6 +595,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">read_two_dim_wavelength_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read a two dimensional distribution of wavelength and angle (z-axis can be anything).</span>
+
 <span class="sd">        Return a dictionary with three arrays, wavelength, angles, z (can be transmission,</span>
 <span class="sd">        reflectivity, etc.)</span>
 
@@ -611,7 +609,6 @@ document.write(`
 <span class="sd">        dict:</span>
 <span class="sd">            dict of three arrays, wavelength, degrees, z.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading two dimensional distribution from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_file</span><span class="p">)</span>
         <span class="n">line_to_start_from</span> <span class="o">=</span> <span class="mi">0</span>
@@ -635,7 +632,6 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.get_on_axis_eff_optical_area">[docs]</a>
     <span class="k">def</span> <span class="nf">get_on_axis_eff_optical_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the on-axis effective optical area (derived previously for this telescope).&quot;&quot;&quot;</span>
-
         <span class="n">ray_tracing_data</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;optics_properties&quot;</span><span class="p">))</span>
         <span class="p">)</span>
@@ -664,7 +660,6 @@ document.write(`
 <span class="sd">        incidence_angle_dist: astropy.table.Table</span>
 <span class="sd">            Instance of astropy.table.Table with the incidence angle distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Reading incidence angle distribution from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">incidence_angle_dist_file</span><span class="p">),</span>
@@ -680,8 +675,10 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">calc_average_curve</span><span class="p">(</span><span class="n">curves</span><span class="p">,</span> <span class="n">incidence_angle_dist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate an average curve from a set of curves, using as weights the distribution of \</span>
-<span class="sd">        incidence angles provided in incidence_angle_dist.</span>
+<span class="sd">        Calculate an average curve from a set of curves.</span>
+
+<span class="sd">        The calculation uses weights the distribution of incidence angles provided in</span>
+<span class="sd">        incidence_angle_dist.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -698,7 +695,6 @@ document.write(`
 <span class="sd">        average_curve: astropy.table.Table</span>
 <span class="sd">            Instance of astropy.table.Table with the averaged curve.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">angle_now</span> <span class="ow">in</span> <span class="n">curves</span><span class="p">[</span><span class="s2">&quot;Angle&quot;</span><span class="p">]:</span>
             <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -733,10 +729,37 @@ document.write(`
 <span class="sd">        Path:</span>
 <span class="sd">            Path to the file exported.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">file_to_write_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
         <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_to_write_to</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.commented_header&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file_to_write_to</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TelescopeModel.position">
+<a class="viewcode-back" href="../../mc_model.html#model.telescope_model.TelescopeModel.position">[docs]</a>
+    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get coordinates in the given system.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coordinate_system: str</span>
+<span class="sd">            Coordinates system. Default is &#39;ground&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list :</span>
+<span class="sd">            List of telescope position in the requested coordinate system.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the coordinate system is not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;array_element_position_</span><span class="si">{</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidModelParameterError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Coordinate system </span><span class="si">{</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span></div>
 </div>
 
 </pre></div>
