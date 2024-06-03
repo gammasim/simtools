@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-    Make a regular array of telescope and save as astropy table.
+    Make a regular array of telescopes and save it as astropy table.
 
     The arrays consist of one telescope at the center of the array and or of 4 telescopes
     in a square grid. These arrays are used for trigger rate simulations.
