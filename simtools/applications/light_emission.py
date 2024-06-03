@@ -322,7 +322,7 @@ def default_le_configs(le_application):
             "z_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 229500 * u.cm,
+                "default": 13700 * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -447,6 +447,7 @@ def main():
             default_le_config["x_pos"]["real"] = xyz[0]
             default_le_config["y_pos"]["real"] = xyz[1]
             default_le_config["z_pos"]["real"] = xyz[2]
+            print("Coordinates ground", xyz)
         except KeyError as exc:
             logger.error(f"Telescope {args_dict['telescope']} not found in array model")
             raise exc
