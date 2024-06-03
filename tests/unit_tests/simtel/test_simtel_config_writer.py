@@ -21,7 +21,6 @@ def simtel_config_writer():
     return simtel_config_writer
 
 
-# @pytest.mark.skip(reason="TODO :test_write_array_config_file - KeyError: 'Released'")
 def test_write_array_config_file(
     simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):

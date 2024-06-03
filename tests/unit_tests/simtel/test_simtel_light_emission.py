@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from simtools.layout.array_layout import ArrayLayout
+from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
@@ -52,7 +52,7 @@ def default_config_fixture():
         "z_pos_ILLN-01": {
             "len": 1,
             "unit": u.Unit("m"),
-            "default": 229500 * u.cm,
+            "default": 15500 * u.cm,
             "names": ["z_position"],
         },
         "direction": {
@@ -259,15 +259,12 @@ def test_from_kwargs_with_minimal_args(
 
 @pytest.fixture()
 def array_layout_model(db_config, model_version, telescope_north_test_file):
-
-    array_layout_model = ArrayLayout(
+    return ArrayModel(
         mongo_db_config=db_config,
         model_version=model_version,
         site="North",
-        telescope_list_file=telescope_north_test_file,
+        array_elements_file=telescope_north_test_file,
     )
-    array_layout_model.convert_coordinates()
-    return array_layout_model
 
 
 def test_make_light_emission_script(
@@ -295,13 +292,11 @@ def test_make_light_emission_script(
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
 
-    for telescope in array_layout_model._telescope_list:  # pylint: disable=protected-access
-        if telescope.name == "LSTN-01":
-            xx, yy, zz = telescope.get_coordinates(crs_name="ground")
+    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
 
-    mock_simulator.default_le_config["x_pos"]["real"] = xx
-    mock_simulator.default_le_config["y_pos"]["real"] = yy
-    mock_simulator.default_le_config["z_pos"]["real"] = zz
+    mock_simulator.default_le_config["x_pos"]["real"] = xyz[0]
+    mock_simulator.default_le_config["y_pos"]["real"] = xyz[1]
+    mock_simulator.default_le_config["z_pos"]["real"] = xyz[2]
 
     command = mock_simulator._make_light_emission_script()
 
@@ -311,7 +306,6 @@ def test_make_light_emission_script(
 def test_make_light_emission_script_variable(
     mock_simulator_variable,
     telescope_model_lst,
-    array_layout_model,
     simtel_path,
     mock_output_path,
     io_handler,
@@ -345,14 +339,10 @@ def test_make_light_emission_script_laser(
     mock_output_path,
     io_handler,
 ):
-
-    for telescope in array_layout_model._telescope_list:  # pylint: disable=protected-access
-        if telescope.name == "LSTN-01":
-            xx, yy, zz = telescope.get_coordinates(crs_name="ground")
-
-    mock_simulator_laser.default_le_config["x_pos"]["real"] = xx
-    mock_simulator_laser.default_le_config["y_pos"]["real"] = yy
-    mock_simulator_laser.default_le_config["z_pos"]["real"] = zz
+    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
+    mock_simulator_laser.default_le_config["x_pos"]["real"] = xyz[0]
+    mock_simulator_laser.default_le_config["y_pos"]["real"] = xyz[1]
+    mock_simulator_laser.default_le_config["z_pos"]["real"] = xyz[2]
 
     # Call the method under test
     command = mock_simulator_laser._make_light_emission_script()
