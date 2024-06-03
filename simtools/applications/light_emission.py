@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-
     Simulate calibration devices using the light emission package.
+
     Run the application in the command line.
     There are two ways this application can be executed:
 
@@ -133,7 +131,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.layout.array_layout import ArrayLayout
+from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -141,10 +139,7 @@ from simtools.simtel.simtel_light_emission import SimulatorLightEmission
 
 
 def _parse(label):
-    """
-    Parse command line configuration
-    """
-
+    """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
         description=(
@@ -250,6 +245,19 @@ def _parse(label):
 
 
 def distance_list(arg):
+    """
+    Convert distance list to astropy quantities.
+
+    Parameters
+    ----------
+    arg: list
+        List of distances.
+
+    Returns
+    -------
+    values: list
+        List of distances as astropy quantities.
+    """
     try:
         values = [float(x) * u.m for x in arg]
         return values
@@ -259,12 +267,24 @@ def distance_list(arg):
 
 def default_le_configs(le_application):
     """
+    Define default light emission configurations.
+
     Predefined angular distribution names not requiring to read any table are
     "Isotropic", "Gauss:<rms>", "Rayleigh", "Cone:<angle>", and "FilledCone:<angle>", "Parallel",
     with all angles given in degrees, all with respect to the given direction vector
     (vertically downwards if missing). If the light source has a non-zero length and velocity
     (in units of the vacuum speed of light), it is handled as a moving source,
     in the given direction.
+
+    Parameters
+    ----------
+    le_application: str
+        Light emission application.
+
+    Returns
+    -------
+    default_config: dict
+        Default light emission configuration.
     """
     default_config = {}
     if le_application in ("xyzls", "ls-beam"):
@@ -302,7 +322,7 @@ def default_le_configs(le_application):
             "z_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
-                "default": 229500 * u.cm,
+                "default": 13700 * u.cm,
                 "names": ["z_position"],
             },
             "direction": {
@@ -316,6 +336,19 @@ def default_le_configs(le_application):
 
 
 def select_application(args_dict):
+    """
+    Select sim_telarray application for light emission simulations.
+
+    Parameters
+    ----------
+    args_dict: dict
+        Dictionary with command line arguments.
+
+    Returns
+    -------
+    le_application: str
+        Light emission application.
+    """
     le_application = None
     if args_dict["light_source_type"] == "led":
         le_application = "xyzls"
@@ -326,7 +359,7 @@ def select_application(args_dict):
 
 
 def main():
-
+    """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     le_application = select_application(args_dict)
@@ -401,21 +434,23 @@ def main():
 
         # TODO: Here we use coordinates from the telescope list, change as soon as
         # coordinates are in DB i.e. calibration_model.coordinate, telescope_model.coordinate
-        layout = ArrayLayout(
+        array_model = ArrayModel(
             mongo_db_config=db_config,
             model_version=args_dict["model_version"],
             site=args_dict["site"],
-            telescope_list_file=args_dict["telescope_file"],
+            array_elements_file=args_dict["telescope_file"],
         )
-        layout.convert_coordinates()
-
-        for telescope in layout._telescope_list:  # pylint: disable=protected-access
-            if telescope.name == args_dict["telescope"]:
-                xx, yy, zz = telescope.get_coordinates(crs_name="ground")
-
-        default_le_config["x_pos"]["real"] = xx
-        default_le_config["y_pos"]["real"] = yy
-        default_le_config["z_pos"]["real"] = zz
+        try:
+            xyz = array_model.telescope_model[args_dict["telescope"]].position(
+                coordinate_system="ground"
+            )
+            default_le_config["x_pos"]["real"] = xyz[0]
+            default_le_config["y_pos"]["real"] = xyz[1]
+            default_le_config["z_pos"]["real"] = xyz[2]
+            print("Coordinates ground", xyz)
+        except KeyError as exc:
+            logger.error(f"Telescope {args_dict['telescope']} not found in array model")
+            raise exc
 
         le = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
