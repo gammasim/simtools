@@ -52,7 +52,7 @@ def default_config_fixture():
         "z_pos_ILLN-01": {
             "len": 1,
             "unit": u.Unit("m"),
-            "default": 229500 * u.cm,
+            "default": 15500 * u.cm,
             "names": ["z_position"],
         },
         "direction": {
@@ -292,7 +292,8 @@ def test_make_light_emission_script(
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
 
-    xyz = array_layout_model.telescope_model["LSTN-01"].position()
+    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
+
     mock_simulator.default_le_config["x_pos"]["real"] = xyz[0]
     mock_simulator.default_le_config["y_pos"]["real"] = xyz[1]
     mock_simulator.default_le_config["z_pos"]["real"] = xyz[2]
@@ -338,7 +339,7 @@ def test_make_light_emission_script_laser(
     mock_output_path,
     io_handler,
 ):
-    xyz = array_layout_model.telescope_model["LSTN-01"].position()
+    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
     mock_simulator_laser.default_le_config["x_pos"]["real"] = xyz[0]
     mock_simulator_laser.default_le_config["y_pos"]["real"] = xyz[1]
     mock_simulator_laser.default_le_config["z_pos"]["real"] = xyz[2]
