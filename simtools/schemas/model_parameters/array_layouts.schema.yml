@@ -9,9 +9,7 @@ name: array_layouts
 description: |-
   Array layout definitions.
 data:
-  - type: file
-    unit: dimensionless
-    default: None
+  - type: dict
 instrument:
   class: Site
   type:

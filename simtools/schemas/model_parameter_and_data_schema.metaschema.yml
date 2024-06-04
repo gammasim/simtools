@@ -342,6 +342,7 @@ definitions:
     enum:
       - boolean
       - data_table
+      - dict
       - double
       - float64
       - int
