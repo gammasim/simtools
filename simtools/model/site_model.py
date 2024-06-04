@@ -99,3 +99,24 @@ class SiteModel(ModelParameter):
             "geomag_vertical": self.get_parameter_value_with_unit("geomag_vertical"),
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
         }
+
+    def get_array_elements_for_layout(self, layout_name):
+        """
+        Return list of array elements for a given array layout.
+
+        Parameters
+        ----------
+        layout_name: str
+            Name of the array layout
+        
+        Returns
+        -------
+        list
+            List of array elements
+        """
+        layouts = self.get_parameter_value("array_layouts")
+        for layout in layouts:
+            if layout["name"] == layout_name.lower():
+                return layout["elements"]
+        self._logger.error("Array layout '%s' not found in site model.", layout_name)
+        raise ValueError

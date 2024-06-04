@@ -95,36 +95,35 @@ class ArrayModel:
         dict
             Dict with telescope models.
         """
-        array_elements_file = None
-        array_elements_list = None
-        # Case 1: array_elements is a file name
-        if isinstance(array_elements_config, str | Path):
-            array_elements_file = array_elements_config
-        # Case 2: array elements is a list of elements
-        elif isinstance(array_elements_config, list):
-            array_elements_list = self._get_array_elements_from_list(array_elements_config)
-        # Case 3: array elements defined by layout name
-        # TMP - read from ecsv file
-        # TODO - save pre-defined array layouts to DB
-        elif self.layout_name is not None:
-            array_elements_file = io_handler.IOHandler().get_input_data_file(
-                "layout",
-                "telescope_positions-"
-                f"{names.validate_site_name(site)}-"
-                f"{names.validate_array_layout_name(self.layout_name)}"
-                ".ecsv",
-            )
-        self.array_elements = (
-            array_elements_list
-            if array_elements_file is None
-            else self._load_array_element_positions_from_file(array_elements_file, site)
+
+        self._logger.debug(f"Getting site parameters from DB ({site})")
+        site_model = SiteModel(
+            site=names.validate_site_name(site),
+            mongo_db_config=self.mongo_db_config,
+            model_version=self.model_version,
+            label=self.label,
         )
 
+        array_elements = {}
+        # Case 1: array_elements is a file name
+        if isinstance(array_elements_config, str | Path):
+            array_elements = self._load_array_element_positions_from_file(
+                array_elements_config, site
+            )
+        # Case 2: array elements is a list of elements
+        elif isinstance(array_elements_config, list):
+            array_elements = self._get_array_elements_from_list(array_elements_config)
+        # Case 3: array elements defined in DB by array layout name
+        elif self.layout_name is not None:
+            array_elements = self._get_array_elements_from_list(
+                site_model.get_array_elements_for_layout(self.layout_name)
+            )
+                
         self._set_config_file_directory()
-        site_model, telescope_model = self._build_array_model(
-            names.validate_site_name(site), parameters_to_change
+        telescope_model = self._build_array_model(
+            site_model, array_elements, parameters_to_change
         )
-        return self.array_elements, site_model, telescope_model
+        return array_elements, site_model, telescope_model
 
     @property
     def number_of_telescopes(self):
@@ -154,7 +153,7 @@ class ArrayModel:
         """Define and create config file directory."""
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
-    def _build_array_model(self, site, parameters_to_change=None):
+    def _build_array_model(self, site_model, array_elements, parameters_to_change=None):
         """
         Build the constituents of the array model (site, telescopes, etc).
 
@@ -164,27 +163,20 @@ class ArrayModel:
 
         Parameters
         ----------
-        site: str
-            Site name.
+        site_model: str
+            Site model.
+        array_elements: dict
+            Dict with array elements.
         parameters_to_change: dict
             Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
-        SiteModel, TelescopeModel
-            Site and telescope model.
-
+        dict
+            Dictionary with telescope models.
         """
-        self._logger.debug(f"Getting site parameters from DB ({site})")
-        site_model = SiteModel(
-            site=site,
-            mongo_db_config=self.mongo_db_config,
-            model_version=self.model_version,
-            label=self.label,
-        )
-
         telescope_model = {}
-        for element_name, _ in self.array_elements.items():
+        for element_name, _ in array_elements.items():
             collection = names.get_collection_name_from_array_element_name(element_name)
             if collection == "telescopes":
                 telescope_model[element_name] = TelescopeModel(
@@ -208,7 +200,7 @@ class ArrayModel:
                     telescope_model[element_name].change_multiple_parameters(**pars_to_change)
                     telescope_model[element_name].set_extra_label(element_name)
 
-        return site_model, telescope_model
+        return telescope_model
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
