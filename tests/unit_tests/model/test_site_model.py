@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+
 import pytest
 
 from simtools.model.site_model import SiteModel

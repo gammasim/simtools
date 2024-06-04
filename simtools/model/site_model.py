@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Definition of site model."""
 
 import logging
 
@@ -30,9 +31,7 @@ class SiteModel(ModelParameter):
         model_version,
         label=None,
     ):
-        """
-        Initialize SiteModel
-        """
+        """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SiteModel for site %s", site)
         ModelParameter.__init__(
@@ -46,14 +45,13 @@ class SiteModel(ModelParameter):
 
     def get_reference_point(self):
         """
-        Get reference point coordinates as dict
+        Get reference point coordinates as dict.
 
         Returns
         -------
         dict
             Reference point coordinates as dict
         """
-
         return {
             "center_altitude": self.get_parameter_value_with_unit("reference_point_altitude"),
             "center_northing": self.get_parameter_value_with_unit("reference_point_utm_north"),
@@ -64,6 +62,7 @@ class SiteModel(ModelParameter):
     def get_corsika_site_parameters(self, config_file_style=False):
         """
         Get site-related CORSIKA parameters as dict.
+
         Parameters are returned with units wherever possible.
 
         Parameters
@@ -77,7 +76,6 @@ class SiteModel(ModelParameter):
             Site-related CORSIKA parameters as dict
 
         """
-
         # backwards compatibility to `corsika_parameters.yml` (temporary TODO)
         if config_file_style:
             _atmosphere_id = 26 if self.site == "North" else 36
@@ -108,7 +106,7 @@ class SiteModel(ModelParameter):
         ----------
         layout_name: str
             Name of the array layout
-        
+
         Returns
         -------
         list
