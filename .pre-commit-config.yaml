@@ -10,6 +10,20 @@ repos:
     hooks:
       - id: ruff
         args: ["--fix"]
+  # pylint
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        exclude: ^tests/|^simtools/applications/db_development_tools/
+        args:
+          [
+            "-rn",  # Only display messages
+            "-sn",  # Don't display the score
+          ]
   # https://github.com/pre-commit/pre-commit-hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
