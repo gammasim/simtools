@@ -95,7 +95,6 @@ class ArrayModel:
         dict
             Dict with telescope models.
         """
-
         self._logger.debug(f"Getting site parameters from DB ({site})")
         site_model = SiteModel(
             site=names.validate_site_name(site),
@@ -118,11 +117,9 @@ class ArrayModel:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
             )
-                
+
         self._set_config_file_directory()
-        telescope_model = self._build_array_model(
-            site_model, array_elements, parameters_to_change
-        )
+        telescope_model = self._build_array_model(site_model, array_elements, parameters_to_change)
         return array_elements, site_model, telescope_model
 
     @property
@@ -466,7 +463,6 @@ class ArrayModel:
         astropy.table.QTable
             Astropy table with the telescope layout information.
         """
-
         table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
 
         name, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
