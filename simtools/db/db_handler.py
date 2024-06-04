@@ -17,6 +17,8 @@ from simtools.utils import names
 
 __all__ = ["DatabaseHandler"]
 
+logging.getLogger("pymongo").setLevel(logging.WARNING)
+
 
 # pylint: disable=unsubscriptable-object
 # The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable
