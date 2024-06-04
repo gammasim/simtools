@@ -16,7 +16,6 @@ __all__ = [
     "sanitize_name",
     "simtel_single_mirror_list_file_name",
     "simtel_config_file_name",
-    "validate_array_layout_name",
     "validate_site_name",
     "validate_telescope_id_name",
     "validate_telescope_name",
@@ -54,18 +53,6 @@ def site_names():
     _array_elements = array_elements()
     _sites = set(entry["site"] for entry in _array_elements.values())
     return {site: [site.lower()] for site in _sites}
-
-
-array_layout_names = {
-    "4LST": ["4-lst", "4lst"],
-    "1LST": ["1-lst", "1lst"],
-    "4MST": ["4-mst", "4mst"],
-    "1MST": ["1-mst", "mst"],
-    "4SST": ["4-sst", "4sst"],
-    "1SST": ["1-sst", "sst"],
-    "Prod5": ["prod5", "p5"],
-    "TestLayout": ["test-layout"],
-}
 
 
 @cache
@@ -139,23 +126,6 @@ def validate_site_name(name):
         Validated name.
     """
     return _validate_name(name, site_names())
-
-
-def validate_array_layout_name(name):
-    """
-    Validate array layout name.
-
-    Parameters
-    ----------
-    name: str
-        Layout array name.
-
-    Returns
-    -------
-    str
-        Validated name.
-    """
-    return _validate_name(name, array_layout_names)
 
 
 def _validate_name(name, all_names):
