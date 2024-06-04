@@ -1,3 +1,5 @@
+"""Validation of names."""
+
 import glob
 import logging
 import re
@@ -80,7 +82,9 @@ def telescope_parameters():
 
 def validate_telescope_id_name(name):
     """
-    Validate telescope ID. Allowed IDs are
+    Validate telescope ID.
+
+    Allowed IDs are
     - design (for design telescopes or testing)
     - telescope ID (e.g., 1, 5, 15)
     - test (for testing)
@@ -100,7 +104,6 @@ def validate_telescope_id_name(name):
     ValueError
         If name is not valid.
     """
-
     if isinstance(name, int) or name.isdigit():
         return f"{int(name):02d}"
     if name.lower() in ("design", "test"):
@@ -130,8 +133,10 @@ def validate_site_name(name):
 
 def _validate_name(name, all_names):
     """
-    Validate name given the all_names options. For each key in all_names, a list of options is \
-    given. If name is in this list, the key name is returned.
+    Validate name given the all_names options.
+
+    For each key in all_names, a list of options is given.
+    If name is in this list, the key name is returned.
 
     Parameters
     ----------
@@ -139,6 +144,7 @@ def _validate_name(name, all_names):
         Name to validate.
     all_names: dict
         Dictionary with valid names.
+
     Returns
     -------
     str
@@ -149,7 +155,6 @@ def _validate_name(name, all_names):
     ValueError
         If name is not valid.
     """
-
     for key in all_names.keys():
         if isinstance(all_names[key], list) and name.lower() in [
             item.lower() for item in all_names[key]
@@ -268,7 +273,7 @@ def get_site_from_telescope_name(name):
 
 def get_collection_name_from_array_element_name(name):
     """
-    Get collection name(e.g., telescopes, calibration_devices) of array element from name
+    Get collection name (e.g., telescopes, calibration_devices) of array element from name.
 
     Parameters
     ----------
@@ -280,7 +285,6 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-
     return array_elements()[get_telescope_type_from_telescope_name(name)]["collection"]
 
 
@@ -292,6 +296,7 @@ def get_simulation_software_name_from_parameter_name(
 ):
     """
     Get the name used in the simulation software from the model parameter name.
+
     Name convention is expected to be defined in the schema.
     Returns the parameter name if no simulation software name is found.
 
@@ -311,7 +316,6 @@ def get_simulation_software_name_from_parameter_name(
     str
         Simtel parameter name.
     """
-
     _parameter_names = {}
     if search_telescope_parameters:
         _parameter_names.update(telescope_parameters())
@@ -336,6 +340,7 @@ def get_simulation_software_name_from_parameter_name(
 def get_parameter_name_from_simtel_name(simtel_name):
     """
     Get the model parameter name from the simtel parameter name.
+
     Assumes that both names are equal if not defined otherwise in names.py.
 
     Parameters
@@ -348,7 +353,6 @@ def get_parameter_name_from_simtel_name(simtel_name):
     str
         Model parameter name.
     """
-
     _parameters = {**telescope_parameters(), **site_parameters()}
 
     for par_name, par_info in _parameters.items():
@@ -472,6 +476,7 @@ def generate_file_name(
 ):
     """
     Generate a file name for output, config, or plotting.
+
     Used e.g., to generate camera-efficiency and ray-tracing output files.
 
     Parameters
@@ -540,7 +545,6 @@ def sanitize_name(name):
     ValueError:
         if the string name can not be sanitized.
     """
-
     # Convert to lowercase
     sanitized = name.lower()
 
