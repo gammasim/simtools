@@ -18,7 +18,7 @@ def array_model(db_config, io_handler, model_version):
     return ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -67,7 +67,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     am = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         parameters_to_change=parameters_to_change,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -89,7 +89,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
         ArrayModel(
             label="test",
             site="North",
-            layout_name="test-layout",
+            layout_name="test_layout",
             parameters_to_change=parameters_missing_name,
             mongo_db_config=db_config,
             model_version=model_version,
@@ -101,7 +101,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     am_with_string = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         parameters_to_change=parameters_with_string,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -122,7 +122,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
         ArrayModel(
             label="test",
             site="North",
-            layout_name="test-layout",
+            layout_name="test_layout",
             parameters_to_change=invalid_parameters,
             mongo_db_config=db_config,
             model_version=model_version,
@@ -133,7 +133,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     am = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -145,7 +145,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
         "CTA-North-LSTN-01-" + model_version + "_test.cfg",
         "CTA-North-MSTN-01-" + model_version + "_test.cfg",
-        "CTA-TestLayout-North-" + model_version + "_test.cfg",
+        "CTA-test_layout-North-" + model_version + "_test.cfg",
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
