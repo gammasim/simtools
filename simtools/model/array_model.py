@@ -60,7 +60,7 @@ class ArrayModel:
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout_name = names.validate_array_layout_name(layout_name) if layout_name else None
+        self.layout_name = layout_name if layout_name else None
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
