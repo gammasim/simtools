@@ -6,5 +6,5 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-test_layout_0deg.png
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-test_layout_0deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_0deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_0deg.pdf
