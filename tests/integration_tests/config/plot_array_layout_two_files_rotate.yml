@@ -9,7 +9,7 @@ CTA_SIMPIPE:
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-test_layout_20deg.png
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-test_layout_20deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-test_layout_20deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-test_layout_20deg.png
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_20deg.png
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_20deg.png

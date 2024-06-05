@@ -2,14 +2,15 @@ CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: layout_two_names_rotate
   CONFIGURATION:
+    SITE: South
     ARRAY_LAYOUT_NAME:
-      - North-4LST
-      - South-4LST
+      - 4mst
+      - 4sst
     MODEL_VERSION: prod6
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-4LST_20deg.png
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-4LST_20deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.png
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_4mst_South_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_4mst_South_ground_20deg.png
+    - OUTPUT_FILE: application-plots/array_layout_4sst_South_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_4sst_South_ground_20deg.png

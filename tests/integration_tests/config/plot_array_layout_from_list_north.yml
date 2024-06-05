@@ -8,5 +8,5 @@ CTA_SIMPIPE:
     AXES_RANGE: 500.
     SHOW_LABELS: True
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/array_layout_North_0deg_ground.png
-    - OUTPUT_FILE: application-plots/array_layout_North_0deg_ground.pdf
+    - OUTPUT_FILE: application-plots/array_layout_list_North_ground_0deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_list_North_ground_0deg.png

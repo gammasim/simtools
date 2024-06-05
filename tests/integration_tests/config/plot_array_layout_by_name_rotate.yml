@@ -4,9 +4,9 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     MODEL_VERSION: prod6
-    ARRAY_LAYOUT_NAME: North-4LST
+    ARRAY_LAYOUT_NAME: subsystem_lsts
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-4LST_20deg.png
+    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.png
