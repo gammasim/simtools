@@ -41,6 +41,8 @@ show_labels : bool, optional
     Shows the telescope labels in the plot.
 axes_range : float, optional
     Range of the both axes in meters.
+marker_scaling : float, optional.
+    Scaling factor for plotting of array elements, optional.
 
 Examples
 --------
@@ -124,6 +126,13 @@ def _parse(label, description, usage):
         default=False,
     )
     config.parser.add_argument(
+        "--marker_scaling",
+        help="Scaling factor for the markers.",
+        type=float,
+        required=False,
+        default=1.0,
+    )
+    config.parser.add_argument(
         "--coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
@@ -150,6 +159,7 @@ def _parse(label, description, usage):
     input_group.add_argument(
         "--array_layout_file",
         help="File(s) with the list of array elements (astropy table format).",
+        nargs="+",
         type=str,
         required=False,
         default=None,
@@ -157,6 +167,7 @@ def _parse(label, description, usage):
     input_group.add_argument(
         "--array_layout_name",
         help="Name of the array layout (as predefined).",
+        nargs="+",
         type=str,
         required=False,
         default=None,
@@ -359,26 +370,29 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
     list
         List of array layouts.
     """
-    array_model = ArrayModel(
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        site=args_dict["site"],
-        layout_name=args_dict["array_layout_name"],
-    )
-    return [
-        {
-            "array_elements": array_model.export_array_elements_as_table(
-                coordinate_system=args_dict["coordinate_system"]
-            ),
-            "plot_file_name": _get_plot_file_name(
-                figure_name=args_dict["figure_name"],
-                layout_name=args_dict["array_layout_name"],
-                site=args_dict["site"],
-                coordinate_system=args_dict["coordinate_system"],
-                rotation_angle=rotate_angle,
-            ),
-        }
-    ]
+    layouts = []
+    for layout_name in args_dict["array_layout_name"]:
+        array_model = ArrayModel(
+            mongo_db_config=db_config,
+            model_version=args_dict["model_version"],
+            site=args_dict["site"],
+            layout_name=layout_name,
+        )
+        layouts.append(
+            {
+                "array_elements": array_model.export_array_elements_as_table(
+                    coordinate_system=args_dict["coordinate_system"]
+                ),
+                "plot_file_name": _get_plot_file_name(
+                    figure_name=args_dict["figure_name"],
+                    layout_name=layout_name,
+                    site=args_dict["site"],
+                    coordinate_system=args_dict["coordinate_system"],
+                    rotation_angle=rotate_angle,
+                ),
+            }
+        )
+    return layouts
 
 
 def main():
@@ -417,6 +431,7 @@ def main():
             rotate_angle=rotate_angle,
             show_tel_label=args_dict["show_labels"],
             axes_range=args_dict["axes_range"],
+            marker_scaling=args_dict["marker_scaling"],
         )
         _plot_files = _get_list_of_plot_files(
             layout["plot_file_name"],

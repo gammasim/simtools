@@ -8,7 +8,7 @@ from collections import OrderedDict
 import astropy.units as u
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from astropy.table import QTable
+from astropy.table import Column, QTable
 from cycler import cycler
 from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
@@ -591,7 +591,9 @@ def get_telescope_patch(name, x, y, radius):
 
 
 @u.quantity_input(rotate_angle=u.deg)
-def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None):
+def plot_array(
+    telescopes, rotate_angle=0, show_tel_label=False, axes_range=None, marker_scaling=1.0
+):
     """
     Plot the array of telescopes.
 
@@ -615,6 +617,8 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         While it works well for the smaller arrays, it gets crowded for larger arrays.
     axes_range : float
         Axis range for both axes. Range is from -plot_range to plot_range.
+    maker_scaling : float
+        Scaling factor for marker size to be plotted.
 
     Returns
     -------
@@ -634,6 +638,8 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         pos_x_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
+    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
+    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
 
     if len(pos_x_rotated) > 30:
         fontsize = 4
@@ -643,7 +649,7 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         scale = 1
 
     patches = []
-    for i_tel, tel_now in enumerate(telescopes):
+    for tel_now in telescopes:
         try:
             telescope_name = tel_now["telescope_name"]
         except KeyError:
@@ -651,20 +657,22 @@ def plot_array(telescopes, rotate_angle=0, show_tel_label=False, axes_range=None
         for tel_type in tel_counters:
             if tel_type in telescope_name:
                 tel_counters[tel_type] += 1
-        sphere_radius = 1.0 * u.m if "sphere_radius" not in tel_now else tel_now["sphere_radius"]
+        sphere_radius = (
+            1.0 * u.m if "sphere_radius" not in telescopes.colnames else tel_now["sphere_radius"]
+        )
         i_tel_name = names.get_telescope_type_from_telescope_name(telescope_name)
         patches.append(
             get_telescope_patch(
                 i_tel_name,
-                pos_x_rotated[i_tel],
-                pos_y_rotated[i_tel],
-                scale * sphere_radius,
+                tel_now["pos_x_rotated"],
+                tel_now["pos_y_rotated"],
+                scale * sphere_radius * marker_scaling,
             )
         )
         if show_tel_label:
             ax.text(
-                pos_x_rotated[i_tel].value,
-                pos_y_rotated[i_tel].value + scale * sphere_radius.value,
+                tel_now["pos_x_rotated"].value,
+                tel_now["pos_y_rotated"].value + scale * sphere_radius.value,
                 telescope_name,
                 horizontalalignment="center",
                 verticalalignment="bottom",
