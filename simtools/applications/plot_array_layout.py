@@ -150,7 +150,6 @@ def _parse(label, description, usage):
     input_group.add_argument(
         "--array_layout_file",
         help="File(s) with the list of array elements (astropy table format).",
-        nargs="+",
         type=str,
         required=False,
         default=None,
@@ -158,7 +157,6 @@ def _parse(label, description, usage):
     input_group.add_argument(
         "--array_layout_name",
         help="Name of the array layout (as predefined).",
-        nargs="+",
         type=str,
         required=False,
         default=None,
@@ -220,6 +218,37 @@ def _get_list_of_plot_files(plot_file_name, output_dir):
     raise NameError(msg)
 
 
+def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotation_angle):
+    """
+    Generate and return the file name for plots.
+
+    Parameters
+    ----------
+    figure_name : str
+        Figure name given through command line.
+    layout_name : str
+        Name of the layout.
+    site : str
+        Site name.
+    coordinate_system : str
+        Coordinate system for the array layout.
+    rotation_angle : float
+        Angle to rotate the array before plotting.
+
+    Returns
+    -------
+    str
+        Plot file name.
+    """
+    if figure_name is not None:
+        return figure_name
+
+    return (
+        f"array_layout_{layout_name}_{site}_{coordinate_system}_"
+        f"{str(round(rotation_angle.to(u.deg).value))}deg"
+    )
+
+
 def _layouts_from_array_layout_file(args_dict, db_config, rotate_angle):
     """
     Read array layout positions from file(s) and return a list of layouts.
@@ -252,26 +281,24 @@ def _layouts_from_array_layout_file(args_dict, db_config, rotate_angle):
             site=site,
             array_elements=one_file,
         )
-        if args_dict["figure_name"] is None:
-            plot_file_name = (
-                f"plot_array_layout_{(Path(one_file).name).split('.')[0]}_"
-                f"{str(round(rotate_angle.to(u.deg).value))}deg"
-            )
-        else:
-            plot_file_name = args_dict["figure_name"]
-
         layouts.append(
             {
                 "array_elements": array_model.export_array_elements_as_table(),
-                "plot_file_name": plot_file_name,
+                "plot_file_name": _get_plot_file_name(
+                    args_dict["figure_name"],
+                    (Path(one_file).name).split(".")[0],
+                    site,
+                    args_dict["coordinate_system"],
+                    rotate_angle,
+                ),
             }
         )
     return layouts
 
 
-def _layouts_from_database(args_dict, db_config, rotate_angle):
+def _layouts_from_list(args_dict, db_config, rotate_angle):
     """
-    Read array layout positions from the database and return a list of layouts.
+    Read positions for a list of array elements from the database and return a list of layouts.
 
     Parameters
     ----------
@@ -298,20 +325,58 @@ def _layouts_from_database(args_dict, db_config, rotate_angle):
         site=site,
         array_elements=args_dict["array_element_list"],
     )
-    if args_dict["figure_name"] is None:
-        plot_file_name = (
-            f"array_layout_{site}_"
-            f"{str(round(rotate_angle.to(u.deg).value))}deg"
-            f"_{args_dict['coordinate_system']}"
-        )
-    else:
-        plot_file_name = args_dict["figure_name"]
     return [
         {
             "array_elements": array_model.export_array_elements_as_table(
                 coordinate_system=args_dict["coordinate_system"]
             ),
-            "plot_file_name": plot_file_name,
+            "plot_file_name": _get_plot_file_name(
+                args_dict["figure_name"],
+                "list",
+                site,
+                args_dict["coordinate_system"],
+                rotate_angle,
+            ),
+        }
+    ]
+
+
+def _layouts_from_db(args_dict, db_config, rotate_angle):
+    """
+    Read array elements and their positions from data base using the layout name.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with the command line arguments.
+    db_config : dict
+        Database configuration.
+    rotate_angle : float
+        Angle to rotate the array before plotting (in degrees).
+
+    Returns
+    -------
+    list
+        List of array layouts.
+    """
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        site=args_dict["site"],
+        layout_name=args_dict["array_layout_name"],
+    )
+    return [
+        {
+            "array_elements": array_model.export_array_elements_as_table(
+                coordinate_system=args_dict["coordinate_system"]
+            ),
+            "plot_file_name": _get_plot_file_name(
+                figure_name=args_dict["figure_name"],
+                layout_name=args_dict["array_layout_name"],
+                site=args_dict["site"],
+                coordinate_system=args_dict["coordinate_system"],
+                rotation_angle=rotate_angle,
+            ),
         }
     ]
 
@@ -335,23 +400,15 @@ def main():
     )
 
     layouts = []
-    # TODO - this will go and replaced by reading layouts from the database
-    # using their name
     if args_dict["array_layout_name"] is not None:
-        logger.info("Plotting array from layout array name(s).")
-        logger.warning("Temporary solution to read layout from file.")
-        args_dict["array_layout_file"] = [
-            io_handler_instance.get_input_data_file(
-                "layout", f"telescope_positions-{one_array}.ecsv"
-            )
-            for one_array in args_dict["array_layout_name"]
-        ]
-    if args_dict["array_layout_file"] is not None:
-        logger.info("Plotting array from telescope list file(s).")
+        logger.info("Plotting array from layout array name.")
+        layouts = _layouts_from_db(args_dict, db_config, rotate_angle)
+    elif args_dict["array_layout_file"] is not None:
+        logger.info("Plotting array from telescope list file.")
         layouts = _layouts_from_array_layout_file(args_dict, db_config, rotate_angle)
     elif args_dict["array_element_list"] is not None:
         logger.info("Plotting array from list of array elements.")
-        layouts = _layouts_from_database(args_dict, db_config, rotate_angle)
+        layouts = _layouts_from_list(args_dict, db_config, rotate_angle)
 
     mpl.use("Agg")
     for layout in layouts:
