@@ -30,7 +30,7 @@ figure_name : str
 array_layout_file : str
     File (astropy table compatible) with a list of array elements.
 array_layout_name : str
-    Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).
+    Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
     List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 coordinate_system : str, optional
@@ -45,12 +45,12 @@ axes_range : float, optional
 Examples
 --------
 
-Plot layout with the name "North-TestLayout":
+Plot layout with the name "test_layout":
 
 .. code-block:: console
 
     simtools-plot-layout-array --figure_name northern_array_alpha
-                               --array_layout_name North-TestLayout
+                               --array_layout_name test_layout
 
 
 Plot layout with 2 LSTs and all northern MSTs in UTM coordinates:
@@ -64,7 +64,7 @@ Plot layout from a file with the list of telescopes:
 
 .. code-block:: console
 
-    simtools-plot-layout-array --array_element_list telescope_positions-North-TestLayout.ecsv
+    simtools-plot-layout-array --array_element_list telescope_positions-test_layout.ecsv
 """
 
 import logging
