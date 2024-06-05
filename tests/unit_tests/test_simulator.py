@@ -338,7 +338,7 @@ def test_make_resources_report(
 
     # Copying the corsika log file to the expected location in the test directory.
     # This should not affect the efficacy of this test.
-    log_file_name = "log_sub_corsika_run000001_gamma_North_TestLayout_test-production.out"
+    log_file_name = "log_sub_corsika_run000001_gamma_North_test_layout_test-production.out"
     shutil.copy(
         f"tests/resources/{log_file_name}",
         shower_simulator._simulation_runner.get_file_name(
