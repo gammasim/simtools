@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg_North
+  TEST_NAME: gamma_20_deg_north
   CONFIGURATION:
     PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
     MODEL_VERSION: prod6
