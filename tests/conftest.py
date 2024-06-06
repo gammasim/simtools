@@ -12,7 +12,6 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.db import db_handler
-from simtools.layout.array_layout import ArrayLayout
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -301,20 +300,6 @@ def telescope_model_sst_prod5(db_config, io_handler):
 
 
 @pytest.fixture()
-def array_layout_north_instance(io_handler, db_config, model_version):
-    return ArrayLayout(
-        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
-    )
-
-
-@pytest.fixture()
-def array_layout_south_instance(io_handler, db_config, model_version):
-    return ArrayLayout(
-        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
-    )
-
-
-@pytest.fixture()
 def telescope_north_with_calibration_devices_test_file():
     return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
 
@@ -364,7 +349,7 @@ def simulator_config_data_north(tmp_test_directory):
     return {
         "common": {
             "site": "North",
-            "layout_name": "test-layout",
+            "layout_name": "test_layout",
             "data_directory": f"{str(tmp_test_directory)}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,
@@ -398,7 +383,7 @@ def simulator_config_data_south(tmp_test_directory):
     return {
         "common": {
             "site": "South",
-            "layout_name": "test-layout",
+            "layout_name": "test_layout",
             "data_directory": f"{str(tmp_test_directory)}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,

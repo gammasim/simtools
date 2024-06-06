@@ -4,7 +4,7 @@
     Summary
     -------
     This application simulates showers to be used in trigger rate calculations.
-    Arrays with one (1MST) or four telescopes (4LST) can be used, in case of \
+    Arrays with one or four telescopes can be used, in case of \
     mono or stereo trigger configurations, respectively.
 
     Simulations are managed by the Simulator module.
@@ -18,8 +18,8 @@
 
     Command line arguments
     ----------------------
-    array (str, required)
-        Name of the array (1MST, 4LST ...).
+    array_layout_name (str, required)
+        Name of the array (pre-defined in the site model).
     site (str, required)
         South or North.
     primary (str, required)
@@ -95,8 +95,8 @@ def _parse(label=None, description=None):
 
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
-        "--array",
-        help="Name of the array (e.g. 1MST, 4LST ...)",
+        "--array_layout_name",
+        help="Name of the (pre-defined) array",
         type=str,
         required=True,
     )
@@ -140,7 +140,7 @@ def main():
         "common": {
             "data_directory": Path(args_dict["data_directory"]) / label,
             "site": args_dict["site"],
-            "layout_name": args_dict["array"],
+            "layout_name": args_dict["array_layout_name"],
             "run_range": [1, args_dict["nruns"] + 1],
             "nshow": args_dict["nevents"],
             "primary": args_dict["primary"],

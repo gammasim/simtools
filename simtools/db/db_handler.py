@@ -1,4 +1,4 @@
-""" Module to handle interaction with DB. """
+"""Module to handle interaction with DB."""
 
 import logging
 from pathlib import Path
@@ -16,6 +16,8 @@ from simtools.io_operations import io_handler
 from simtools.utils import names
 
 __all__ = ["DatabaseHandler"]
+
+logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
 # pylint: disable=unsubscriptable-object
@@ -71,9 +73,7 @@ class DatabaseHandler:
         self._set_up_connection()
 
     def _set_up_connection(self):
-        """
-        Open the connection to MongoDB.
-        """
+        """Open the connection to MongoDB."""
         if self.mongo_db_config:
             if DatabaseHandler.db_client is None:
                 lock = Lock()
@@ -87,8 +87,6 @@ class DatabaseHandler:
         Returns
         -------
         A PyMongo DB client
-
-
         """
         try:
             _db_client = MongoClient(
@@ -117,6 +115,7 @@ class DatabaseHandler:
     ):
         """
         Get parameters from MongoDB or simulation model repository for an array element.
+
         An array element can be e.g., a telescope or a calibration device.
         Read parameters for design and for the specified array element (if necessary). This allows
         to overwrite design parameters with specific telescope parameters without having to copy
@@ -125,7 +124,7 @@ class DatabaseHandler:
         Parameters
         ----------
         site: str
-            South or North.
+            Site name.
         telescope_model_name: str
             Name of the telescope model (e.g. LSTN-01, MSTS-design)
         model_version: str
@@ -140,7 +139,6 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-
         _site, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
@@ -223,7 +221,6 @@ class DatabaseHandler:
             if a file in parameters.values is not found
 
         """
-
         if self.mongo_db_config:
             self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
@@ -256,6 +253,7 @@ class DatabaseHandler:
     ):
         """
         Build and execute query to Read the MongoDB for a specific telescope.
+
         Also writes the files listed in the parameter values into the sim_telarray run location
 
         Parameters
@@ -285,7 +283,6 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-
         collection = DatabaseHandler.db_client[db_name][collection_name]
         _parameters = {}
 
@@ -325,7 +322,7 @@ class DatabaseHandler:
         Parameters
         ----------
         site: str
-            South or North.
+            Site name.
         model_version: str
             Version of the model.
         only_applicable: bool
@@ -377,7 +374,7 @@ class DatabaseHandler:
         db_name: str
             The name of the DB.
         site: str
-            South or North.
+            Site name.
         model_version: str
             Version of the model.
         only_applicable: bool
@@ -393,7 +390,6 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-
         collection = DatabaseHandler.db_client[db_name].sites
         _parameters = {}
 
@@ -424,9 +420,9 @@ class DatabaseHandler:
         Parameters
         ----------
         site: str
-            South or North.
+            Site name.
         telescope_model_name: str
-            Name of the telescope model (e.g. MST-FlashCam-D ...)
+            Name of the telescope model (e.g. MSTN, SSTS).
         model_version: str
             Version of the model.
 
@@ -452,8 +448,20 @@ class DatabaseHandler:
         """
         Get sim_telarray configuration parameters from the DB for a specific telescope.
 
-        """
+        Parameters
+        ----------
+        site : str
+            Site name.
+        telescope_model_name : str
+            Name of the telescope model (e.g. MSTN).
+        model_version : str
+            Version of the model.
 
+        Returns
+        -------
+        dict
+            Configuration parameters for sim_telarray
+        """
         _, _telescope_model_name, _model_version = self._validate_model_input(
             site, telescope_model_name, model_version
         )
@@ -495,7 +503,7 @@ class DatabaseHandler:
         Validate input for model parameter queries.
 
         site: str
-            South or North.
+            Site name.
         telescope_model_name: str
             Name of the telescope model (e.g. LSTN-01, MSTS-design)
         model_version: str
@@ -511,7 +519,7 @@ class DatabaseHandler:
     @staticmethod
     def _get_file_mongo_db(db_name, file_name):
         """
-        Extract a file from MongoDB and return GridFS file instance
+        Extract a file from MongoDB and return GridFS file instance.
 
         Parameters
         ----------
@@ -531,7 +539,6 @@ class DatabaseHandler:
             If the desired file is not found.
 
         """
-
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
         if file_system.exists({"filename": file_name}):
@@ -542,7 +549,7 @@ class DatabaseHandler:
     @staticmethod
     def _write_file_from_mongo_to_disk(db_name, path, file):
         """
-        Extract a file from MongoDB and write it to disk
+        Extract a file from MongoDB and write it to disk.
 
         Parameters
         ----------
@@ -553,7 +560,6 @@ class DatabaseHandler:
         file: GridOut
             A file instance returned by GridFS find_one
         """
-
         db = DatabaseHandler.db_client[db_name]
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
@@ -571,6 +577,7 @@ class DatabaseHandler:
     ):
         """
         Copy a full telescope configuration to a new telescope name.
+
         Only a specific version is copied.
         (This function should be rarely used, probably only during "construction".)
 
@@ -596,7 +603,6 @@ class DatabaseHandler:
         BulkWriteError
 
         """
-
         db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
             db_to_copy_to = db_name
@@ -633,6 +639,7 @@ class DatabaseHandler:
     def copy_documents(self, db_name, collection, query, db_to_copy_to, collection_to_copy_to=None):
         """
         Copy the documents matching to "query" to the DB "db_to_copy_to".
+
         The documents are copied to the same collection as in "db_name".
         (This function should be rarely used, probably only during "construction".)
 
@@ -684,6 +691,7 @@ class DatabaseHandler:
     def delete_query(self, db_name, collection, query):
         """
         Delete all entries from the DB which correspond to the provided query.
+
         (This function should be rarely used, if at all.)
 
         Parameters
@@ -705,7 +713,6 @@ class DatabaseHandler:
                 }
 
         """
-
         _collection = DatabaseHandler.db_client[db_name][collection]
 
         if "version" in query:
@@ -728,6 +735,7 @@ class DatabaseHandler:
     ):
         """
         Update a parameter field value for a specific telescope/version.
+
         This function only modifies the value of one of the following
         DB entries: Applicable, units, Type, items, minimum, maximum.
         These type of changes should be very rare. However they can
@@ -760,7 +768,6 @@ class DatabaseHandler:
             if field not in allowed fields
 
         """
-
         db_name = self._get_db_name(db_name)
         allowed_fields = ["applicable", "unit", "type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
@@ -831,6 +838,7 @@ class DatabaseHandler:
     ):
         """
         Add a parameter value for a specific telescope.
+
         A new document will be added to the DB,
         with all fields taken from the input parameters.
 
@@ -848,7 +856,7 @@ class DatabaseHandler:
             The name of the telescope to add a parameter to
             (only used if collection_name is "telescopes").
         site: str
-           South or North, ignored if collection_name is "telescopes".
+            Site name; ignored if collection_name is "telescopes".
         collection_name: str
             The name of the collection to add a parameter to.
         file_prefix: str or Path
@@ -862,7 +870,6 @@ class DatabaseHandler:
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
 
         """
-
         db_name = self._get_db_name(db_name)
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
@@ -978,7 +985,6 @@ class DatabaseHandler:
             if version not valid. Valid versions are: 'Released' and 'Latest'.
 
         """
-
         _all_versions = self.get_all_versions()
         if version in _all_versions:
             return version
@@ -1057,7 +1063,8 @@ class DatabaseHandler:
             Which parameter to get the versions of
         telescope_model_name: str
             Which telescope to get the versions of (in case "collection_name" is "telescopes")
-        site: str, North or South
+        site: str
+            Site name.
             In case "collection_name" is "telescopes", the site is used to build the telescope name.
             In case "collection_name" is "sites",
             this argument sets which site parameter get the versions of
@@ -1075,7 +1082,6 @@ class DatabaseHandler:
             If key to collection_name is not valid. Valid entries are: 'telescopes' and 'sites'.
 
         """
-
         _cache_key = f"model_versions_{self._get_db_name()}-{collection}"
 
         query = {}
@@ -1090,7 +1096,6 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
-            self._logger.debug(f"Getting all versions from {_cache_key}")
             db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
             DatabaseHandler.model_versions_cached[_cache_key] = list(
                 set(post["version"] for post in db_collection.find(query))
@@ -1115,6 +1120,9 @@ class DatabaseHandler:
         collection: str
             Which collection to get the array elements from:
             i.e. telescopes, calibration_devices
+        db_name : str
+            Database name
+
         Returns
         -------
         _available_array_elements: list
@@ -1122,19 +1130,51 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name][collection]
+        db_collection = DatabaseHandler.db_client[db_name][collection]
 
         query = {"version": self.model_version(model_version)}
-        try:
-            _all_available_array_elements = collection.find(query).distinct("instrument")
-        except ValueError as exc:
-            raise ValueError(f"Query for collection name {collection} not implemented.") from exc
+        _all_available_array_elements = db_collection.find(query).distinct("instrument")
+        if len(_all_available_array_elements) == 0:
+            self._logger.error(f"Query for collection name {collection} not implemented.")
+            raise ValueError
 
         return _all_available_array_elements
 
+    def get_available_array_elements_of_type(
+        self, array_element_type, model_version, collection, db_name=None
+    ):
+        """
+        Get all array elements of a certain type in the specified collection in the DB.
+
+        Parameters
+        ----------
+        array_element_type : str
+            Type of the array element (e.g. LSTN, MSTS)
+        model_version : str
+            Which version to get the array elements of
+        collection : str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices
+        db_name : str
+            Database name
+
+        Returns
+        -------
+        list
+            List of all array element names found in collection
+
+        """
+        all_elements = self.get_all_available_array_elements(model_version, collection, db_name)
+        return [
+            entry
+            for entry in all_elements
+            if entry.startswith(array_element_type) and "design" not in entry
+        ]
+
     def get_telescope_list_for_db_query(self, telescope_model_name, model_version):
         """
-        Returns a list of telescope names to be used for querying the database.
+        Return a list of telescope names to be used for querying the database.
+
         The first entry of the list is the design telescope (if it exists in the DB),
         followed by the actual telescope model name.
 
@@ -1151,7 +1191,6 @@ class DatabaseHandler:
             List of telescope model names as used in the DB.
 
         """
-
         if "-design" in telescope_model_name:
             return [telescope_model_name]
         try:
@@ -1169,8 +1208,9 @@ class DatabaseHandler:
 
     def get_telescope_db_name(self, telescope_name, model_version, collection="telescopes"):
         """
-        Translate telescope name to the name used in the DB. This is required,
-        as not all telescopes are defined in the database yet. In these cases,
+        Translate telescope name to the name used in the DB.
+
+        This is required, as not all telescopes are defined in the database yet. In these cases,
         use the "design" telescope.
 
         Parameters
@@ -1193,7 +1233,6 @@ class DatabaseHandler:
             If the telescope name is not found in the database.
 
         """
-
         if self._available_array_elements is None:
             self._available_array_elements = self.get_all_available_array_elements(
                 model_version, collection
@@ -1213,6 +1252,21 @@ class DatabaseHandler:
         """
         Create a cache key for the parameter cache dictionaries.
 
+        Parameters
+        ----------
+        site: str
+            Site name.
+        telescope: str
+            Telescope name.
+        model_version: str
+            Model version.
+        db_name: str
+            Database name.
+
+        Returns
+        -------
+        str
+            Cache key.
         """
         _model_version = self.model_version(model_version, db_name=db_name)
 
@@ -1224,6 +1278,16 @@ class DatabaseHandler:
         """
         Reset the cache for the parameters.
 
+        Parameters
+        ----------
+        site: str
+            Site name.
+        telescope: str
+            Telescope name.
+        model_version: str
+            Model version.
+        db_name: str
+            Database name.
         """
         self._logger.debug(f"Resetting cache for {site} {telescope} {model_version}")
         _cache_key = self._parameter_cache_key(site, telescope, model_version, db_name)
@@ -1233,6 +1297,11 @@ class DatabaseHandler:
     def get_collections(self, db_name=None):
         """
         List of collections in the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            Database name.
 
         Returns
         -------

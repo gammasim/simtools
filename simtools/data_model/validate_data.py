@@ -150,7 +150,10 @@ class DataValidator:
             else [self.data_dict["unit"]]
         )
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            self._check_data_type(np.array(value).dtype, index)
+            if self._get_data_description(index).get("type", None) == "dict":
+                self._logger.debug(f"Skipping validation of dict type for entry {index}")
+            else:
+                self._check_data_type(np.array(value).dtype, index)
             if self.data_dict.get("type") != "string":
                 self._check_for_not_a_number(value, index)
                 value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
