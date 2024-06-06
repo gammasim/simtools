@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from astropy import units as u
+from astropy.table import QTable
 
 from simtools.model.array_model import ArrayModel, InvalidArrayConfigDataError
 
@@ -17,10 +18,32 @@ def array_model(db_config, io_handler, model_version):
     return ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
+
+
+@pytest.fixture()
+def array_model_from_list(db_config, io_handler, model_version):
+    return ArrayModel(
+        label="test",
+        site="North",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        array_elements=["LSTN-01", "MSTN-01"],
+    )
+
+
+def test_array_model_from_file(db_config, io_handler, model_version, telescope_north_test_file):
+    am = ArrayModel(
+        label="test",
+        site="North",
+        mongo_db_config=db_config,
+        model_version=model_version,
+        array_elements=telescope_north_test_file,
+    )
+    assert am.number_of_telescopes == 13
 
 
 def test_input_validation(array_model):
@@ -44,7 +67,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     am = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         parameters_to_change=parameters_to_change,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -66,7 +89,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
         ArrayModel(
             label="test",
             site="North",
-            layout_name="test-layout",
+            layout_name="test_layout",
             parameters_to_change=parameters_missing_name,
             mongo_db_config=db_config,
             model_version=model_version,
@@ -78,7 +101,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
     am_with_string = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         parameters_to_change=parameters_with_string,
         mongo_db_config=db_config,
         model_version=model_version,
@@ -99,7 +122,7 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
         ArrayModel(
             label="test",
             site="North",
-            layout_name="test-layout",
+            layout_name="test_layout",
             parameters_to_change=invalid_parameters,
             mongo_db_config=db_config,
             model_version=model_version,
@@ -110,7 +133,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     am = ArrayModel(
         label="test",
         site="North",
-        layout_name="test-layout",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -122,7 +145,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
         "CTA-North-LSTN-01-" + model_version + "_test.cfg",
         "CTA-North-MSTN-01-" + model_version + "_test.cfg",
-        "CTA-TestLayout-North-" + model_version + "_test.cfg",
+        "CTA-test_layout-North-" + model_version + "_test.cfg",
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
@@ -177,3 +200,49 @@ def test_set_config_file_directory(array_model, io_handler):
     _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
     am._set_config_file_directory()
     assert _config_dir_1.is_dir()
+
+
+def test_export_array_elements_as_table(array_model, io_handler):
+    am = array_model
+    table_ground = am.export_array_elements_as_table(coordinate_system="ground")
+    assert isinstance(table_ground, QTable)
+    assert "position_z" in table_ground.colnames
+    assert len(table_ground) > 0
+
+    table_utm = am.export_array_elements_as_table(coordinate_system="utm")
+    assert isinstance(table_utm, QTable)
+    assert "altitude" in table_utm.colnames
+    assert len(table_utm) > 0
+
+
+def test_get_array_elements_from_list(array_model, io_handler):
+    am = array_model
+    assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
+        "LSTN-01": None,
+        "MSTN-01": None,
+    }
+    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"])
+    assert "MSTN-01" in all_msts_plus_lst
+    assert "MSTN-05" in all_msts_plus_lst
+    assert "LSTN-01" in all_msts_plus_lst
+
+
+def test_get_all_array_elements_of_type(array_model, io_handler):
+    am = array_model
+    assert am._get_all_array_elements_of_type("LSTS") == {
+        "LSTS-01": None,
+        "LSTS-02": None,
+        "LSTS-03": None,
+        "LSTS-04": None,
+    }
+    # simple check that more than 10 MSTS are there
+    assert len(am._get_all_array_elements_of_type("MSTS")) > 10
+
+    assert len(am._get_all_array_elements_of_type("MSTE")) == 0
+
+
+def test_update_array_element_position(array_model_from_list):
+    am = array_model_from_list
+    assert "LSTN-01" in am.array_elements
+    assert "LSTN-01" in am.telescope_model
+    assert am.array_elements["LSTN-01"] is None

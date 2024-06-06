@@ -263,7 +263,7 @@ def array_layout_model(db_config, model_version, telescope_north_test_file):
         mongo_db_config=db_config,
         model_version=model_version,
         site="North",
-        array_elements_file=telescope_north_test_file,
+        array_elements=telescope_north_test_file,
     )
 
 

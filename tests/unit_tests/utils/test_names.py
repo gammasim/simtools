@@ -89,14 +89,6 @@ def test_validate_site_name():
         names.validate_site_name("Not a site")
 
 
-def test_validate_array_layout_name():
-    for key, value in names.array_layout_names.items():
-        for test_name in value:
-            assert key == names.validate_array_layout_name(test_name)
-    with pytest.raises(ValueError):
-        names.validate_array_layout_name("Not a layout")
-
-
 def test_validate_telescope_name():
     telescopes = {
         "LSTN-Design": "LSTN-design",

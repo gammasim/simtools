@@ -1,6 +1,13 @@
+"""Definition of the ArrayModel class."""
+
 import logging
+from pathlib import Path
+
+import astropy.units as u
+from astropy.table import QTable
 
 from simtools.data_model import data_reader
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -30,8 +37,9 @@ class ArrayModel:
         Site name.
     layout_name: str
         Layout name.
-    array_elements_file: str
-        Path to the file with the array element positions.
+    array_elements: str, Path, list
+        Array element definitions (list of array element or path to file with
+        the array element positions).
     parameters_to_change: dict
         Dict with the parameters to be changed with respect to the DB model.
     """
@@ -43,30 +51,29 @@ class ArrayModel:
         label=None,
         site=None,
         layout_name=None,
-        array_elements_file=None,
+        array_elements=None,
         parameters_to_change=None,
     ):
-        """
-        Initialize ArrayModel.
-        """
+        """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout_name = names.validate_array_layout_name(layout_name) if layout_name else None
+        self.layout_name = layout_name if layout_name else None
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
+        self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self.array_elements, self.site_model, self.telescope_model = self._initialize(
-            site, array_elements_file, parameters_to_change
+            site, array_elements, parameters_to_change
         )
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def _initialize(self, site, array_elements_file, parameters_to_change):
+    def _initialize(self, site, array_elements_config, parameters_to_change):
         """
         Initialize ArrayModel taking different configuration options into account.
 
@@ -74,8 +81,8 @@ class ArrayModel:
         ----------
         site: str
             Site name.
-        array_elements_file: str
-            Path to the file with the array element positions.
+        array_elements_config: str, Path, list
+            Array element definitions.
         parameters_to_change: dict
             Dict with the parameters to be changed with respect to the DB model.
 
@@ -87,29 +94,35 @@ class ArrayModel:
             Site model.
         dict
             Dict with telescope models.
-
         """
+        self._logger.debug(f"Getting site parameters from DB ({site})")
+        site_model = SiteModel(
+            site=names.validate_site_name(site),
+            mongo_db_config=self.mongo_db_config,
+            model_version=self.model_version,
+            label=self.label,
+        )
 
-        if self.layout_name is not None and array_elements_file is None:
-            array_elements_file = io_handler.IOHandler().get_input_data_file(
-                "layout",
-                "telescope_positions-"
-                f"{names.validate_site_name(site)}-"
-                f"{names.validate_array_layout_name(self.layout_name)}"
-                ".ecsv",
+        array_elements = {}
+        # Case 1: array_elements is a file name
+        if isinstance(array_elements_config, str | Path):
+            array_elements = self._load_array_element_positions_from_file(
+                array_elements_config, site
+            )
+        # Case 2: array elements is a list of elements
+        elif isinstance(array_elements_config, list):
+            array_elements = self._get_array_elements_from_list(array_elements_config)
+        # Case 3: array elements defined in DB by array layout name
+        elif self.layout_name is not None:
+            array_elements = self._get_array_elements_from_list(
+                site_model.get_array_elements_for_layout(self.layout_name)
             )
 
-        self.array_elements = (
-            None
-            if array_elements_file is None
-            else self._load_array_element_positions_from_file(array_elements_file, site)
-        )
         self._set_config_file_directory()
-        site_model, telescope_model = self._build_array_model(
-            names.validate_site_name(site), parameters_to_change
+        telescope_model = self._build_telescope_models(
+            site_model, array_elements, parameters_to_change
         )
-
-        return self.array_elements, site_model, telescope_model
+        return array_elements, site_model, telescope_model
 
     @property
     def number_of_telescopes(self):
@@ -136,43 +149,33 @@ class ArrayModel:
         return self.site_model.site
 
     def _set_config_file_directory(self):
-        """
-        Define and create config file directory.
-
-        """
+        """Define and create config file directory."""
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
-    def _build_array_model(self, site, parameters_to_change=None):
+    def _build_telescope_models(self, site_model, array_elements, parameters_to_change=None):
         """
-        Build the constituents of the array model (site, telescopes, etc).
-        Includes reading of all model parameters from the DB.
+        Build the the telescope models for all telescopes of this array.
+
+        Includes reading of telescope model parameters from the DB.
         The array is defined in the telescopes dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
 
         Parameters
         ----------
-        site: str
-            Site name.
+        site_model: str
+            Site model.
+        array_elements: dict
+            Dict with array elements.
         parameters_to_change: dict
             Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
-        SiteModel, TelescopeModel
-            Site and telescope model.
-
+        dict
+            Dictionary with telescope models.
         """
-
-        self._logger.debug(f"Getting site parameters from DB ({site})")
-        site_model = SiteModel(
-            site=site,
-            mongo_db_config=self.mongo_db_config,
-            model_version=self.model_version,
-            label=self.label,
-        )
-
         telescope_model = {}
-        for element_name, _ in self.array_elements.items():
+        for element_name, _ in array_elements.items():
             collection = names.get_collection_name_from_array_element_name(element_name)
             if collection == "telescopes":
                 telescope_model[element_name] = TelescopeModel(
@@ -196,10 +199,12 @@ class ArrayModel:
                     telescope_model[element_name].change_multiple_parameters(**pars_to_change)
                     telescope_model[element_name].set_extra_label(element_name)
 
-        return site_model, telescope_model
+        return telescope_model
 
     def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
         """
+        Return telescope information from array configuration data.
+
         array_config_data contains the name of default telescope models for each telescope type
         and the list of specific telescopes. For each case, the data can be given only as a name \
         or as a dict with 'name' and parameters to change. This function has to identify these \
@@ -215,12 +220,18 @@ class ArrayModel:
 
         def _process_single_telescope(data):
             """
+            Read array configuration data for a single telescope.
+
             Parameters
             ----------
             data: dict or str
                 Piece of the array_config_data for one specific telescope.
-            """
 
+            Returns
+            -------
+            dict
+                Dict with the parameters to change.
+            """
             if isinstance(data, dict):
                 # Case 0: data is dict
                 if "name" not in data.keys():
@@ -246,20 +257,12 @@ class ArrayModel:
         return {}
 
     def print_telescope_list(self):
-        """
-        Print list of telescopes
-
-        """
-
+        """Print list of telescopes."""
         for tel_name, data in self.telescope_model.items():
             print(f"Name: {tel_name}\t Model: {data.name}")
 
     def export_simtel_telescope_config_files(self):
-        """
-        Export sim_telarray configuration files for all telescopes into the model directory.
-
-        """
-
+        """Export sim_telarray configuration files for all telescopes into the model directory."""
         exported_models = []
         for _, tel_model in self.telescope_model.items():
             name = tel_model.name + (
@@ -277,11 +280,7 @@ class ArrayModel:
         self._telescope_model_files_exported = True
 
     def export_simtel_array_config_file(self):
-        """
-        Export sim_telarray configuration file for the array into the model directory.
-
-        """
-
+        """Export sim_telarray configuration file for the array into the model directory."""
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
             array_name=self.layout_name,
@@ -308,10 +307,10 @@ class ArrayModel:
 
     def export_all_simtel_config_files(self):
         """
-        Export sim_telarray config file for the array and for each individual telescope into the \
-        output model directory.
-        """
+        Export sim_telarray config file for the array and for each individual telescope.
 
+        Config files are exported into the output model directory.
+        """
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
@@ -319,15 +318,15 @@ class ArrayModel:
 
     def get_config_file(self):
         """
-        Get the path of the array config file for sim_telarray. The config file is produced if the \
-        file is not updated.
+        Return the path of the array config file for sim_telarray.
+
+        A new config file is produced if the file is not updated.
 
         Returns
         -------
         Path
             Path of the exported config file for sim_telarray.
         """
-
         self.export_all_simtel_config_files()
         return self._config_file_path
 
@@ -344,7 +343,9 @@ class ArrayModel:
 
     def _load_array_element_positions_from_file(self, array_elements_file, site):
         """
-        Load array element (e.g. telescope) positions from a file.
+        Load array element (e.g. telescope) positions from a file into a dict.
+
+        Dictionary format: {telescope_name: {position_x: x, position_y: y, position_z: z}}
 
         Parameters
         ----------
@@ -358,7 +359,6 @@ class ArrayModel:
         dict
             Dict with telescope positions.
         """
-
         table = data_reader.read_table_from_file(file_name=array_elements_file)
 
         return {
@@ -370,7 +370,7 @@ class ArrayModel:
 
     def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
         """
-        Return dictionary with telescope position parameters (following DB model database format)
+        Return dictionary with telescope position parameters (following DB model database format).
 
         Parameters
         ----------
@@ -390,7 +390,6 @@ class ArrayModel:
         dict
             Dict with telescope position parameters.
         """
-
         return {
             "parameter": "array_element_position_ground",
             "instrument": telescope_name,
@@ -404,3 +403,93 @@ class ArrayModel:
             "applicable": True,
             "file": False,
         }
+
+    def _get_array_elements_from_list(self, array_elements_list):
+        """
+        Return dictionary with array elements from a list of telescope names.
+
+        Input list can contain telescope names (e.g, LSTN-01) or a telescope
+        type (e.g., MSTN). In the latter case, all telescopes of this specific
+        type are added.
+
+        Parameters
+        ----------
+        array_elements_list: list
+            List of telescope names.
+
+        Returns
+        -------
+        dict
+            Dict with array elements.
+        """
+        array_elements_dict = {}
+        for name in array_elements_list:
+            try:
+                array_elements_dict[names.validate_telescope_name(name)] = None
+            except ValueError:
+                array_elements_dict.update(self._get_all_array_elements_of_type(name))
+        return array_elements_dict
+
+    def _get_all_array_elements_of_type(self, array_element_type):
+        """
+        Return all array elements of a specific type using the database.
+
+        Parameters
+        ----------
+        array_element_type : str
+            Type of the array element (e.g. LSTN, MSTS)
+
+        Returns
+        -------
+        dict
+            Dict with array elements.
+        """
+        all_elements = self.db.get_available_array_elements_of_type(
+            array_element_type=array_element_type,
+            model_version=self.model_version,
+            collection="telescopes",
+        )
+        return self._get_array_elements_from_list(all_elements)
+
+    def export_array_elements_as_table(self, coordinate_system="ground"):
+        """
+        Export array elements positions to astropy table.
+
+        Parameters
+        ----------
+        coordinate_system: str
+            Positions are exported in this coordinate system.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Astropy table with the telescope layout information.
+        """
+        table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
+
+        name, pos_x, pos_y, pos_z, tel_r = [], [], [], [], []
+        for tel_name, data in self.telescope_model.items():
+            name.append(tel_name)
+            xyz = data.position(coordinate_system=coordinate_system)
+            pos_x.append(xyz[0])
+            pos_y.append(xyz[1])
+            pos_z.append(xyz[2])
+            try:
+                tel_r.append(data.get_parameter_value_with_unit("telescope_sphere_radius"))
+            #  TODO - tests of KeyError after positions calibration_elements are added to DB
+            except KeyError:  # not all array elements have a sphere radius
+                tel_r.append(0.0 * u.m)
+
+        table["telescope_name"] = name
+        if coordinate_system == "ground":
+            table["position_x"] = pos_x
+            table["position_y"] = pos_y
+            table["position_z"] = pos_z
+        elif coordinate_system == "utm":
+            table["utm_east"] = pos_x
+            table["utm_north"] = pos_y
+            table["altitude"] = pos_z
+        table["sphere_radius"] = tel_r
+
+        table.sort("telescope_name")
+        return table

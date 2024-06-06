@@ -7,5 +7,5 @@ CTA_SIMPIPE:
     SAVE_TABLES: true
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.ecsv
-    - OUTPUT_FILE: application-plots/run202_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.ecsv
+    - OUTPUT_FILE: application-plots/run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv
+    - OUTPUT_FILE: application-plots/run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv
