@@ -55,4 +55,4 @@ def test_get_array_elements_for_layout(db_config, model_version, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
             _north.get_array_elements_for_layout("not_a_layout")
-        assert "Array layout 'not_a_layout' not found in site model." in caplog.text
+        assert "Array layout 'not_a_layout' not found in 'North' site model." in caplog.text
