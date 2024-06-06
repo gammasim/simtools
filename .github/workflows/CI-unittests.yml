@@ -101,6 +101,7 @@ jobs:
 
       # CTAO-DPPS-SonarQube
       - uses: SonarSource/sonarqube-scan-action@v2
+        if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
