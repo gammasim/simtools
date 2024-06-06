@@ -736,11 +736,12 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     fig : matplotlib.figure.Figure
         The matplotlib figure containing the plot.
     """
-    import numpy as np  # pylint:disable=import-outside-toplevel
-    from ctapipe.calib import CameraCalibrator  # pylint:disable=import-outside-toplevel
-    from ctapipe.image import tailcuts_clean  # pylint:disable=import-outside-toplevel
-    from ctapipe.io import EventSource  # pylint:disable=import-outside-toplevel
-    from ctapipe.visualization import CameraDisplay  # pylint:disable=import-outside-toplevel
+    # pylint:disable=import-outside-toplevel
+    import numpy as np
+    from ctapipe.calib import CameraCalibrator
+    from ctapipe.image import tailcuts_clean
+    from ctapipe.io import EventSource
+    from ctapipe.visualization import CameraDisplay
 
     default_cleaning_levels = {
         "CHEC": (2, 4, 2),
