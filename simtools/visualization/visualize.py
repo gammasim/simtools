@@ -718,11 +718,22 @@ def plot_array(
 
 def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
     """
-    reads in simtel file and plots reconstructed photo electrons via ctapipe
+    Reads in a simtel file and plots reconstructed photoelectrons via ctapipe.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the simtel file.
+    cleaning_args : tuple, optional
+        Cleaning parameters as (boundary_thresh, picture_thresh, min_number_picture_neighbors).
+    distance : astropy Quantity, optional
+        Distance to the target.
+    return_cleaned : bool, optional
+        If True, apply cleaning to the image.
 
     Returns
     -------
-    fig: matplotlib.figure
+    fig : matplotlib.figure.Figure
         The matplotlib figure containing the plot.
     """
     import numpy as np  # pylint:disable=import-outside-toplevel
@@ -731,6 +742,13 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     from ctapipe.io import EventSource  # pylint:disable=import-outside-toplevel
     from ctapipe.visualization import CameraDisplay  # pylint:disable=import-outside-toplevel
 
+    default_cleaning_levels = {
+        "CHEC": (2, 4, 2),
+        "LSTCam": (3.5, 7, 2),
+        "FlashCam": (3.5, 7, 2),
+        "NectarCam": (4, 8, 2),
+    }
+
     source = EventSource(filename, max_events=1)
     event = None
     for event in source:
@@ -738,22 +756,15 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     tel_id = sorted(event.r1.tel.keys())[0]
 
     calib = CameraCalibrator(subarray=source.subarray)
-
     calib(event)
-    geometry = source.subarray.tel[1].camera.geometry
 
+    geometry = source.subarray.tel[1].camera.geometry
     image = event.dl1.tel[tel_id].image
     cleaned = image.copy()
 
     if return_cleaned:
         if cleaning_args is None:
-            cleaning_level = {
-                "CHEC": (2, 4, 2),
-                "LSTCam": (3.5, 7, 2),
-                "FlashCam": (3.5, 7, 2),
-                "NectarCam": (4, 8, 2),
-            }
-            boundary, picture, min_neighbors = cleaning_level[geometry.name]
+            boundary, picture, min_neighbors = default_cleaning_levels[geometry.name]
         else:
             boundary, picture, min_neighbors = cleaning_args
         mask = tailcuts_clean(
@@ -764,7 +775,8 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
             min_number_picture_neighbors=min_neighbors,
         )
         cleaned[~mask] = 0
-    fig, ax = plt.subplots(1, 1, dpi=300)
+
+    fig, ax = plt.subplots(dpi=300)
     title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
     disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
     disp.cmap = "RdBu_r"
@@ -776,16 +788,16 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
         f"optics: {source.subarray.tel[1].optics.name}\n"
         f"camera: {source.subarray.tel[1].camera_name}\n"
         f"distance: {distance.to(u.m)}",
-        (0, 0),
-        (0.1, 1),
+        xy=(0, 0),
+        xytext=(0.1, 1),
         xycoords="axes fraction",
         va="top",
         size=7,
     )
     ax.annotate(
         f"dl1 image,\ntotal $p.e._{{reco}}$: {np.round(np.sum(image))}\n",
-        (0, 0),
-        (0.75, 1),
+        xy=(0, 0),
+        xytext=(0.75, 1),
         xycoords="axes fraction",
         va="top",
         ha="left",
