@@ -725,11 +725,11 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     fig: matplotlib.figure
         The matplotlib figure containing the plot.
     """
-    import numpy as np
-    from ctapipe.calib import CameraCalibrator
-    from ctapipe.image import tailcuts_clean
-    from ctapipe.io import EventSource
-    from ctapipe.visualization import CameraDisplay
+    import numpy as np  # pylint:disable=import-outside-toplevel
+    from ctapipe.calib import CameraCalibrator  # pylint:disable=import-outside-toplevel
+    from ctapipe.image import tailcuts_clean  # pylint:disable=import-outside-toplevel
+    from ctapipe.io import EventSource  # pylint:disable=import-outside-toplevel
+    from ctapipe.visualization import CameraDisplay  # pylint:disable=import-outside-toplevel
 
     source = EventSource(filename, max_events=1)
     event = None
