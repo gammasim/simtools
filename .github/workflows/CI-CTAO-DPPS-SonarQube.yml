@@ -1,0 +1,46 @@
+---
+name: CI-CTAO-DPPS-SonarQube
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+env:
+  SONAR_HOST_URL: https://sonar-cta-dpps.zeuthen.desy.de
+
+jobs:
+
+  linting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Python dependencies
+        run: |
+          pip install -e '.[tests,dev,doc]'
+
+      # CTAO-DPPS-SonarQube
+      - uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
