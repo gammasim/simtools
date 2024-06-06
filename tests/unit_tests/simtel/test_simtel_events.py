@@ -16,13 +16,13 @@ def test_files(io_handler):
     test_files = list()
     test_files.append(
         io_handler.get_input_data_file(
-            file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
             test=True,
         )
     )
     test_files.append(
         io_handler.get_input_data_file(
-            file_name="run202_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+            file_name="run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
             test=True,
         )
     )

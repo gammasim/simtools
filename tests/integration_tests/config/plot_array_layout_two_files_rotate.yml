@@ -1,0 +1,15 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: two_files_rotate
+  CONFIGURATION:
+    ARRAY_LAYOUT_FILE:
+      - data/layout/telescope_positions-North-test_layout.ecsv
+      - data/layout/telescope_positions-South-test_layout.ecsv
+    MODEL_VERSION: prod6
+    ROTATE_ANGLE: 20
+    OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_20deg.png
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_20deg.png

@@ -15,6 +15,20 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
+def array_layout_north_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
+
+
+@pytest.fixture()
+def array_layout_south_instance(io_handler, db_config, model_version):
+    return ArrayLayout(
+        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+    )
+
+
+@pytest.fixture()
 def north_layout_center_data_dict():
     return {
         "center_lon": -17.8920302 * u.deg,
