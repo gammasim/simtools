@@ -25,7 +25,7 @@
         .. code-block:: console
 
             simtools-simulate-light-emission --telescope MSTN-04 --site North \\
-            --illuminator ILLN-01 --light_source_setup variable \\
+            --illuminator ILLN-01 --light_source_setup layout \\
             --model_version prod6 --telescope_file \\
             /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \\
             --light_source_type led
@@ -136,6 +136,7 @@ from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
+from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
 def _parse(label):
@@ -411,12 +412,18 @@ def main():
             subprocess.run(run_script, shell=False, check=False)
 
             try:
-                fig = le.plot_simtel_ctapipe(
+                filename = (
+                    f"{le.output_directory}/"
+                    f"{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
+                )
+                fig = plot_simtel_ctapipe(
+                    filename,
                     cleaning_args=[
                         args_dict["boundary_thresh"],
                         args_dict["picture_thresh"],
                         args_dict["min_neighbors"],
                     ],
+                    distance=le.default_le_config["z_pos"]["default"],
                     return_cleaned=args_dict["return_cleaned"],
                 )
                 figures.append(fig)
@@ -464,12 +471,17 @@ def main():
         run_script = le.prepare_script(generate_postscript=True, **args_dict)
         subprocess.run(run_script, shell=False, check=False)
         try:
-            fig = le.plot_simtel_ctapipe(
+            filename = (
+                f"{le.output_directory}/" f"{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
+            )
+            fig = plot_simtel_ctapipe(
+                filename,
                 cleaning_args=[
                     args_dict["boundary_thresh"],
                     args_dict["picture_thresh"],
                     args_dict["min_neighbors"],
                 ],
+                distance=le.default_le_config["z_pos"]["default"],
                 return_cleaned=args_dict["return_cleaned"],
             )
         except AttributeError:
