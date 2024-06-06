@@ -445,7 +445,7 @@ def main():
             mongo_db_config=db_config,
             model_version=args_dict["model_version"],
             site=args_dict["site"],
-            array_elements_file=args_dict["telescope_file"],
+            array_elements=args_dict["telescope_file"],
         )
         try:
             xyz = array_model.telescope_model[args_dict["telescope"]].position(

@@ -15,8 +15,8 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production-South/simtel-data/South/gamma/data/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.simtel.zst
+        test-production-South/simtel-data/South/gamma/data/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production-South.simtel.zst
     - OUTPUT_FILE: |
-        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.log.gz
+        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production-South.log.gz
     - OUTPUT_FILE: |
-        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_TestLayout_test-production-South.hdata.zst
+        test-production-South/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production-South.hdata.zst

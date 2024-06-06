@@ -24,7 +24,7 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture()
 def simtel_array_histograms_file(io_handler):
     return io_handler.get_input_data_file(
-        file_name="run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst",
+        file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
         test=True,
     )
 

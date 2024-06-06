@@ -1,14 +1,12 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
+    Make a regular array of telescopes and save it as astropy table.
 
-    This application creates the layout array files (ECSV) of regular arrays
-    with one telescope at the center of the array and with 4 telescopes
+    The arrays consist of one telescope at the center of the array and or of 4 telescopes
     in a square grid. These arrays are used for trigger rate simulations.
 
-    The array layout files created should be available at the data/layout directory.
+    The array layout files created will be available at the data/layout directory.
 
     Command line arguments
     ----------------------
@@ -16,8 +14,6 @@
         observatory site (e.g., North or South).
     model_version (str, optional)
         Model version to use (e.g., prod6). If not provided, the latest version is used.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------
@@ -26,7 +22,6 @@
     .. code-block:: console
 
         simtools-make-regular-arrays --site=North
-
 """
 
 import logging
@@ -34,34 +29,34 @@ import os
 from pathlib import Path
 
 import astropy.units as u
+from astropy.table import QTable
 
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.layout.array_layout import ArrayLayout
 from simtools.utils import names
 
 
 def main():
+    """Create layout array files (ecsv) of regular arrays."""
+    # Telescope distances for 4 tel square arrays
+    # !HARDCODED
+    telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(
-            "This application creates the layout array files (ECSV) of regular arrays "
-            "with one telescope at the center of the array and with 4 telescopes "
-            "in a square grid. These arrays are used for trigger rate simulations. "
-            "The array layout files created should be available at the data/layout directory."
+            "Make a regular array of telescope and save as astropy table.\n"
+            "Default telescope distances for 4 telescope square arrays are: \n"
+            f"  LST: {telescope_distance['LST']}\n"
+            f"  MST: {telescope_distance['MST']}\n"
+            f"  SST: {telescope_distance['SST']}\n"
         ),
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="site", output=True)
-
-    label = "make_regular_arrays"
+    args_dict, _ = config.initialize(db_config=False, simulation_model="site", output=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Telescope distances for 4 tel square arrays
-    # !HARDCODED
-    telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
     if args_dict["site"] == "South":
         array_list = ["1SST", "4SST", "1MST", "4MST", "1LST", "4LST"]
     else:
@@ -69,68 +64,36 @@ def main():
 
     for array_name in array_list:
         logger.info(f"Processing array {array_name}")
-        layout = ArrayLayout(
-            site=args_dict["site"],
-            mongo_db_config=db_config,
-            model_version=args_dict.get("model_version", None),
-            label=label,
-            name=f"{args_dict['site']}-{array_name}",
-        )
 
+        tel_name, pos_x, pos_y, pos_z = [], [], [], []
         tel_size = array_name[1:4]
 
         # Single telescope at the center
         if array_name[0] == "1":
-            layout.add_telescope(
-                telescope_name=names.get_telescope_name_from_type_site_id(
-                    tel_size, args_dict["site"], "01"
-                ),
-                crs_name="ground",
-                xx=0 * u.m,
-                yy=0 * u.m,
-                tel_corsika_z=0 * u.m,
+            tel_name.append(
+                names.get_telescope_name_from_type_site_id(tel_size, args_dict["site"], "01")
             )
+            pos_x.append(0 * u.m)
+            pos_y.append(0 * u.m)
+            pos_z.append(0 * u.m)
         # 4 telescopes in a regular square grid
         else:
-            layout.add_telescope(
-                telescope_name=names.get_telescope_name_from_type_site_id(
-                    tel_size, args_dict["site"], "01"
-                ),
-                crs_name="ground",
-                xx=telescope_distance[tel_size],
-                yy=telescope_distance[tel_size],
-                tel_corsika_z=0 * u.m,
-            )
-            layout.add_telescope(
-                telescope_name=names.get_telescope_name_from_type_site_id(
-                    tel_size, args_dict["site"], "02"
-                ),
-                crs_name="ground",
-                xx=-telescope_distance[tel_size],
-                yy=telescope_distance[tel_size],
-                tel_corsika_z=0 * u.m,
-            )
-            layout.add_telescope(
-                telescope_name=names.get_telescope_name_from_type_site_id(
-                    tel_size, args_dict["site"], "03"
-                ),
-                crs_name="ground",
-                xx=telescope_distance[tel_size],
-                yy=-telescope_distance[tel_size],
-                tel_corsika_z=0 * u.m,
-            )
-            layout.add_telescope(
-                telescope_name=names.get_telescope_name_from_type_site_id(
-                    tel_size, args_dict["site"], "04"
-                ),
-                crs_name="ground",
-                xx=-telescope_distance[tel_size],
-                yy=-telescope_distance[tel_size],
-                tel_corsika_z=0 * u.m,
-            )
+            for i in range(1, 5):
+                tel_name.append(
+                    names.get_telescope_name_from_type_site_id(tel_size, args_dict["site"], f"0{i}")
+                )
+                pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
+                pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
+                pos_z.append(0 * u.m)
 
-        layout.convert_coordinates()
-        layout.print_telescope_list(crs_name="ground")
+        table = QTable(meta={"array_name": array_name, "site": args_dict["site"]})
+        table["telescope_name"] = tel_name
+        table["position_x"] = pos_x
+        table["position_y"] = pos_y
+        table["position_z"] = pos_z
+        table.sort("telescope_name")
+        table.pprint()
+
         output_file = args_dict.get("output_file", None)
         if output_file is not None:
             base_name, file_extension = os.path.splitext(output_file)
@@ -139,7 +102,7 @@ def main():
             args_dict=args_dict,
             output_file=output_file,
             metadata=None,
-            product_data=layout.export_telescope_list_table(crs_name="ground"),
+            product_data=table,
         )
 
 

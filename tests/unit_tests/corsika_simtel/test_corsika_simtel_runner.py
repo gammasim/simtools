@@ -138,7 +138,7 @@ def test_make_run_command(corsika_simtel_runner):
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
     assert "-C show=all" in command
-    assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
+    assert "run000001_gamma_za020deg_azm000deg_North_test_layout_test" in command
 
 
 def test_make_run_command_divergent(corsika_simtel_runner):
@@ -148,14 +148,14 @@ def test_make_run_command_divergent(corsika_simtel_runner):
     assert "-W telescope_theta=20" in command
     assert "-W telescope_phi=0" in command
     assert "-C show=all" in command
-    assert "run000001_gamma_za020deg_azm000deg_North_TestLayout_test" in command
+    assert "run000001_gamma_za020deg_azm000deg_North_test_layout_test" in command
 
 
 def test_get_info_for_file_name(corsika_simtel_runner):
     info_for_file_name = corsika_simtel_runner.get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
     assert info_for_file_name["primary"] == "gamma"
-    assert info_for_file_name["array_name"] == "TestLayout"
+    assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "North"
     assert info_for_file_name["label"] == "test-corsika-simtel-runner"
 
@@ -164,13 +164,13 @@ def test_get_file_name(corsika_simtel_runner, io_handler):
     info_for_file_name = corsika_simtel_runner.get_info_for_file_name(run_number=1)
 
     # Test one case of a CORSIKA file. Other cases are tested in the corsika_runner tests
-    file_name = "corsika_run000001_gamma_North_TestLayout_test-corsika-simtel-runner"
+    file_name = "corsika_run000001_gamma_North_test_layout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
         "corsika_autoinputs_log", **info_for_file_name
     ) == corsika_simtel_runner._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
 
     # Test the histogram case which calls the simtel_runner_array internally
-    file_name = "run000001_gamma_za020deg_azm000deg_North_TestLayout_test-corsika-simtel-runner"
+    file_name = "run000001_gamma_za020deg_azm000deg_North_test_layout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
         "histogram", **info_for_file_name
     ) == corsika_simtel_runner._simtel_log_dir.joinpath(f"{file_name}.hdata.zst")

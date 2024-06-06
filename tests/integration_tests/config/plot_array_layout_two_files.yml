@@ -2,13 +2,13 @@ CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: two_files
   CONFIGURATION:
-    TELESCOPE_LIST:
-      - data/layout/telescope_positions-North-TestLayout.ecsv
-      - data/layout/telescope_positions-South-TestLayout.ecsv
+    ARRAY_LAYOUT_FILE:
+      - data/layout/telescope_positions-North-test_layout.ecsv
+      - data/layout/telescope_positions-South-test_layout.ecsv
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.png
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-North-TestLayout_0deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-TestLayout_0deg.pdf
-    - OUTPUT_FILE: application-plots/plot_array_layout_telescope_positions-South-TestLayout_0deg.png
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_0deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-North-test_layout_North_ground_0deg.png
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_0deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_telescope_positions-South-test_layout_South_ground_0deg.png

@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: layout_by_name_rotate
+  CONFIGURATION:
+    SITE: North
+    MODEL_VERSION: prod6
+    ARRAY_LAYOUT_NAME: subsystem_lsts
+    ROTATE_ANGLE: 20
+    OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.pdf
+    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.png

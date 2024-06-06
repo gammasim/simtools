@@ -104,14 +104,14 @@ def test_get_info_for_file_name(corsika_runner):
     info_for_file_name = corsika_runner.get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
     assert info_for_file_name["primary"] == "gamma"
-    assert info_for_file_name["array_name"] == "TestLayout"
+    assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "South"
     assert info_for_file_name["label"] == "test-corsika-runner"
 
 
 def test_get_file_name(corsika_runner, io_handler):
     info_for_file_name = corsika_runner.get_info_for_file_name(run_number=1)
-    file_name = "corsika_run000001_gamma_South_TestLayout_test-corsika-runner"
+    file_name = "corsika_run000001_gamma_South_test_layout_test-corsika-runner"
 
     assert corsika_runner.get_file_name(
         "corsika_autoinputs_log", **info_for_file_name
@@ -131,7 +131,7 @@ def test_get_file_name(corsika_runner, io_handler):
     )
 
     file_name_for_output = (
-        "corsika_run000001_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
+        "corsika_run000001_gamma_za020deg_azm000deg_South_test_layout_test-corsika-runner.zst"
     )
     assert corsika_runner.get_file_name(
         "output", **info_for_file_name
@@ -163,7 +163,7 @@ def test_has_file(corsika_runner, corsika_file):
     shutil.copy(
         corsika_file,
         output_directory.joinpath(
-            "corsika_run000001_gamma_za020deg_azm000deg_South_TestLayout_test-corsika-runner.zst"
+            "corsika_run000001_gamma_za020deg_azm000deg_South_test_layout_test-corsika-runner.zst"
         ),
     )
     assert corsika_runner.has_file(file_type="output", run_number=1)
