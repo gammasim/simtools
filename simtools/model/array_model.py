@@ -119,7 +119,9 @@ class ArrayModel:
             )
 
         self._set_config_file_directory()
-        telescope_model = self._build_array_model(site_model, array_elements, parameters_to_change)
+        telescope_model = self._build_telescope_models(
+            site_model, array_elements, parameters_to_change
+        )
         return array_elements, site_model, telescope_model
 
     @property
@@ -150,11 +152,11 @@ class ArrayModel:
         """Define and create config file directory."""
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
-    def _build_array_model(self, site_model, array_elements, parameters_to_change=None):
+    def _build_telescope_models(self, site_model, array_elements, parameters_to_change=None):
         """
-        Build the constituents of the array model (site, telescopes, etc).
+        Build the the telescope models for all telescopes of this array.
 
-        Includes reading of all model parameters from the DB.
+        Includes reading of telescope model parameters from the DB.
         The array is defined in the telescopes dictionary. Array element positions
         are read from the database if no values are given in this dictionary.
 

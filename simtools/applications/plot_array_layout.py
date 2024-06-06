@@ -229,7 +229,7 @@ def _get_list_of_plot_files(plot_file_name, output_dir):
     raise NameError(msg)
 
 
-def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotation_angle):
+def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotate_angle):
     """
     Generate and return the file name for plots.
 
@@ -243,7 +243,7 @@ def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotat
         Site name.
     coordinate_system : str
         Coordinate system for the array layout.
-    rotation_angle : float
+    rotate_angle : float
         Angle to rotate the array before plotting.
 
     Returns
@@ -256,7 +256,7 @@ def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotat
 
     return (
         f"array_layout_{layout_name}_{site}_{coordinate_system}_"
-        f"{str(round(rotation_angle.to(u.deg).value))}deg"
+        f"{str(round(rotate_angle.to(u.deg).value))}deg"
     )
 
 
@@ -388,7 +388,7 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
                     layout_name=layout_name,
                     site=args_dict["site"],
                     coordinate_system=args_dict["coordinate_system"],
-                    rotation_angle=rotate_angle,
+                    rotate_angle=rotate_angle,
                 ),
             }
         )
