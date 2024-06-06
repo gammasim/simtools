@@ -4,11 +4,14 @@
 [![release](https://img.shields.io/github/v/release/gammasim/simtools)](https://github.com/gammasim/simtools/releases)
 [![DOI](https://zenodo.org/badge/195011575.svg)](https://zenodo.org/badge/latestdoi/195011575)
 [![pypyi](https://badge.fury.io/py/gammasimtools.svg)](https://badge.fury.io/py/gammasimtools)
+
 [![CI](https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml)
 [![CI-integrationtest](https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml)
 [![CI-docs](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg)](https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml)
 [![Quality](https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7)](https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Coverage](https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH)](https://codecov.io/gh/gammasim/simtools)
+[![Coverage](https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&metric=coverage&token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e)](https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w)
+[![Quality Gate Status](https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&metric=alert_status&token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e)](https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w)
 
 Simulation tools and applications for the [Cherenkov Telescope Array (CTAO)](https://www.cta-observatory.org).
 
