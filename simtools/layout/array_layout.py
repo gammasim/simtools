@@ -85,49 +85,6 @@ class ArrayLayout:
             validate=validate,
         )
 
-    @classmethod
-    def from_array_layout_name(cls, mongo_db_config, array_layout_name, model_version, label=None):
-        """
-        Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
-        Layout definitions are given in the data/layout path.
-
-        Parameters
-        ----------
-        mongo_db_config: dict
-            MongoDB configuration.
-        array_layout_name: str
-            e.g. South-4LST, North-Prod5 ...
-        model_version: str
-            Version of the model (e.g., prod6).
-        label: str
-            Instance label. Important for output file naming.
-
-        Returns
-        -------
-        ArrayLayout
-            Instance of the ArrayLayout.
-        """
-
-        split_name = array_layout_name.split("-")
-        site_name = names.validate_site_name(split_name[0])
-        array_name = split_name[1]
-        valid_array_layout_name = site_name + "-" + array_name
-
-        telescope_list_file = io_handler.IOHandler().get_input_data_file(
-            "layout", f"telescope_positions-{valid_array_layout_name}.ecsv"
-        )
-
-        layout = cls(
-            site=site_name,
-            mongo_db_config=mongo_db_config,
-            name=valid_array_layout_name,
-            model_version=model_version,
-            label=label,
-            telescope_list_file=telescope_list_file,
-        )
-
-        return layout
-
     def __len__(self):
         """
         Return number of telescopes in the layout.
