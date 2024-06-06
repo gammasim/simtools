@@ -110,7 +110,7 @@ class ArrayLayout:
 
         split_name = array_layout_name.split("-")
         site_name = names.validate_site_name(split_name[0])
-        array_name = names.validate_array_layout_name(split_name[1])
+        array_name = split_name[1]
         valid_array_layout_name = site_name + "-" + array_name
 
         telescope_list_file = io_handler.IOHandler().get_input_data_file(
