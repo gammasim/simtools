@@ -97,7 +97,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --durations=10 --color=yes -n auto --dist loadscope \
-            --cov --cov-report=xml ./tests/unit_tests/layout
+            --cov --cov-report=xml
 
       # CTAO-DPPS-SonarQube
       - uses: SonarSource/sonarqube-scan-action@v2
