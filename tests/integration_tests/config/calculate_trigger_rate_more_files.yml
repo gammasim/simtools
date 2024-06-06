@@ -3,10 +3,10 @@ CTA_SIMPIPE:
   TEST_NAME: more_files
   CONFIGURATION:
     SIMTEL_FILE_NAMES:
-      - './tests/resources/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst'
-      - './tests/resources/run202_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.zst'
+      - './tests/resources/run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst'
+      - './tests/resources/run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst'
     SAVE_TABLES: true
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/run201_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.ecsv
-    - OUTPUT_FILE: application-plots/run202_proton_za20deg_azm0deg_North_TestLayout_test-prod.simtel.ecsv
+    - OUTPUT_FILE: application-plots/run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv
+    - OUTPUT_FILE: application-plots/run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.ecsv

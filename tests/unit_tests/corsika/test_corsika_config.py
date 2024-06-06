@@ -181,7 +181,7 @@ def test_config_data_from_yaml_file(io_handler, array_model_south):
 
 
 def test_get_file_name(corsika_config, io_handler):
-    file_name = "proton_South_TestLayout_za020-azm000deg_cone0-5_test-corsika-config"
+    file_name = "proton_South_test_layout_za020-azm000deg_cone0-5_test-corsika-config"
 
     assert (
         corsika_config.get_file_name("config_tmp", run_number=1)
@@ -197,9 +197,9 @@ def test_get_file_name(corsika_config, io_handler):
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
     assert corsika_config.get_file_name("output_generic") == (
-        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_TestLayout_test-corsika-config.zst"
+        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_test_layout_test-corsika-config.zst"
     )
-    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-TestLayout.cfg"
+    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-test_layout.cfg"
     with pytest.raises(ValueError):
         corsika_config.get_file_name("foobar")
 

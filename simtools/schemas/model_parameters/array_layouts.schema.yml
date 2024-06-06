@@ -1,0 +1,30 @@
+%YAML 1.2
+---
+title: Schema for array_layouts model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: array_layouts
+description: |-
+  Array layout definitions.
+data:
+  - type: dict
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools
