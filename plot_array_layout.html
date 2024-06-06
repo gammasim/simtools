@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>plot_array_layout &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>plot_array_layout &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5866294a"></script>
+    <script src="_static/documentation_options.js?v=d6894ff9"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -437,9 +437,9 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_array_layout.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -453,39 +453,68 @@ document.write(`
                   
   <section id="module-plot_array_layout">
 <span id="plot-array-layout"></span><h1>plot_array_layout<a class="headerlink" href="#module-plot_array_layout" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>This application plots the layout array and saves into disk.</p>
-<p>It accepts as input the telescope list file, the name of the layout, a sequence of arguments
-with the telescope files or a sequence of arguments with the layout names.</p>
-<p>A rotation angle in degrees can be passed in case the array should be rotated before plotting.
-A sequence of arguments for the rotation angle is also permitted, in which case all of them
-are plotted and saved separately.</p>
-</section>
+<p>Plot array elements (array layout).</p>
+<p>Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the database,
+or given as command line arguments (explicit listing or telescope list file). A list of input
+files is also accepted.
+Layouts can be plotted in ground or UTM coordinate systems.</p>
+<p>Listing of array elements follow this logic:</p>
+<ul class="simple">
+<li><p>explicit listing: e.g., <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN-01,</span> <span class="pre">MSTN05</span></code></p></li>
+<li><p>listing of types: e.g, <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN</span></code> plots all telescopes of type MSTN.</p></li>
+</ul>
+<p>A rotation angle in degrees allows to rotate the array before plotting.
+The typical image formats (e.g., pdf, png, jpg) are allowed for the output figures.
+If no <code class="docutils literal notranslate"><span class="pre">figure_name</span></code> is given as output, layouts are plotted in pdf and png format.</p>
+<p>Example of a layout plot:</p>
+<a class="reference internal image-reference" href="_images/plot_array_layout_example.png" id="plot-array-layout-plot"><img alt="_images/plot_array_layout_example.png" id="plot-array-layout-plot" src="_images/plot_array_layout_example.png" style="width: 49%;" />
+</a>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>figure_name (str, optional)</dt><dd><p>File name for the pdf output.</p>
+<dt>figure_name<span class="classifier">str</span></dt><dd><p>File name for the output figure.</p>
 </dd>
-<dt>telescope_list (str, optional)</dt><dd><p>The telescopes file (.ecsv) with the array information.</p>
+<dt>array_layout_file<span class="classifier">str</span></dt><dd><p>File (astropy table compatible) with a list of array elements.</p>
 </dd>
-<dt>array_layout_name (str, optional)</dt><dd><p>Name of the layout array (e.g., North-TestLayout, South-TestLayout, North-4LST, etc.).</p>
+<dt>array_layout_name<span class="classifier">str</span></dt><dd><p>Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).</p>
 </dd>
-<dt>rotate_angle (float, optional)</dt><dd><p>Angle to rotate the array before plotting (in degrees).</p>
+<dt>array_element_list<span class="classifier">list</span></dt><dd><p>List of array elements (e.g., telescopes) to plot (e.g., <code class="docutils literal notranslate"><span class="pre">LSTN-01</span> <span class="pre">LSTN-02</span> <span class="pre">MSTN</span></code>).</p>
 </dd>
-<dt>show_tel_label (bool, optional)</dt><dd><p>Shows the telescope labels in the plot.</p>
+<dt>coordinate_system<span class="classifier">str, optional</span></dt><dd><p>Coordinate system for the array layout (ground or utm).</p>
 </dd>
-<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
+<dt>rotate_angle<span class="classifier">float, optional</span></dt><dd><p>Angle to rotate the array before plotting (in degrees).</p>
+</dd>
+<dt>show_labels<span class="classifier">bool, optional</span></dt><dd><p>Shows the telescope labels in the plot.</p>
+</dd>
+<dt>axes_range<span class="classifier">float, optional</span></dt><dd><p>Range of the both axes in meters.</p>
+</dd>
+<dt>marker_scaling<span class="classifier">float, optional.</span></dt><dd><p>Scaling factor for plotting of array elements, optional.</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha \</span>
-<span class="go">--array_layout_name North-TestLayout</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<p>Plot layout with the name “test_layout”:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --figure_name northern_array_alpha</span>
+<span class="go">                           --array_layout_name test_layout</span>
+</pre></div>
+</div>
+<p>Plot layout with 2 LSTs and all northern MSTs in UTM coordinates:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --array_element_list LSTN-01 LSTN-02 MSTN</span>
+<span class="go">                           --coordinate_system utm</span>
+</pre></div>
+</div>
+<p>Plot layout from a file with the list of telescopes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-layout-array --array_element_list telescope_positions-test_layout.ecsv</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_array_layout.main">
+<span class="sig-prename descclassname"><span class="pre">plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/plot_array_layout.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_array_layout.main" title="Link to this definition">#</a></dt>
+<dd><p>Plot array layout application.</p>
+</dd></dl>
+
 </section>
 
 
@@ -533,9 +562,9 @@ are plotted and saved separately.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_array_layout.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 

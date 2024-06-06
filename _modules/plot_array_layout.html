@@ -1,0 +1,882 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plot_array_layout &#8212; simtools v0.1.dev1+g525af48 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
+
+    <script src="../_static/documentation_options.js?v=d6894ff9"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/plot_array_layout';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../add_file_to_db.html">add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../add_value_from_json_to_db.html">add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../compare_cumulative_psf.html">compare_cumulative_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get_file_from_db.html">get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get_parameter.html">get_parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../light_emission.html">light_emission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../make_regular_arrays.html">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../print_array_elements.html">print_array_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../produce_array_config.html">produce_array_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim_showers_for_trigger_rates.html">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tune_psf.html">tune_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_optics.html">validate_optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../library.html">API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker_files.html">Containers (docker files)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Generating Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/plot_array_layout.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for plot_array_layout</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Plot array elements (array layout).</span>
+
+<span class="sd">Plot an array layout and save it to file (e.g., pdf). Layouts are defined in the database,</span>
+<span class="sd">or given as command line arguments (explicit listing or telescope list file). A list of input</span>
+<span class="sd">files is also accepted.</span>
+<span class="sd">Layouts can be plotted in ground or UTM coordinate systems.</span>
+
+<span class="sd">Listing of array elements follow this logic:</span>
+
+<span class="sd">* explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``</span>
+<span class="sd">* listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.</span>
+
+<span class="sd">A rotation angle in degrees allows to rotate the array before plotting.</span>
+<span class="sd">The typical image formats (e.g., pdf, png, jpg) are allowed for the output figures.</span>
+<span class="sd">If no ``figure_name`` is given as output, layouts are plotted in pdf and png format.</span>
+
+<span class="sd">Example of a layout plot:</span>
+
+<span class="sd">.. _plot_array_layout_plot:</span>
+<span class="sd">.. image:: images/plot_array_layout_example.png</span>
+<span class="sd">    :width: 49 %</span>
+
+<span class="sd">Command line arguments</span>
+<span class="sd">----------------------</span>
+<span class="sd">figure_name : str</span>
+<span class="sd">    File name for the output figure.</span>
+<span class="sd">array_layout_file : str</span>
+<span class="sd">    File (astropy table compatible) with a list of array elements.</span>
+<span class="sd">array_layout_name : str</span>
+<span class="sd">    Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).</span>
+<span class="sd">array_element_list : list</span>
+<span class="sd">    List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).</span>
+<span class="sd">coordinate_system : str, optional</span>
+<span class="sd">    Coordinate system for the array layout (ground or utm).</span>
+<span class="sd">rotate_angle : float, optional</span>
+<span class="sd">    Angle to rotate the array before plotting (in degrees).</span>
+<span class="sd">show_labels : bool, optional</span>
+<span class="sd">    Shows the telescope labels in the plot.</span>
+<span class="sd">axes_range : float, optional</span>
+<span class="sd">    Range of the both axes in meters.</span>
+<span class="sd">marker_scaling : float, optional.</span>
+<span class="sd">    Scaling factor for plotting of array elements, optional.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+
+<span class="sd">Plot layout with the name &quot;test_layout&quot;:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-layout-array --figure_name northern_array_alpha</span>
+<span class="sd">                               --array_layout_name test_layout</span>
+
+
+<span class="sd">Plot layout with 2 LSTs and all northern MSTs in UTM coordinates:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-layout-array --array_element_list LSTN-01 LSTN-02 MSTN</span>
+<span class="sd">                               --coordinate_system utm</span>
+
+<span class="sd">Plot layout from a file with the list of telescopes:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-layout-array --array_element_list telescope_positions-test_layout.ecsv</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.model.array_model</span> <span class="kn">import</span> <span class="n">ArrayModel</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span> <span class="nn">simtools.visualization.visualize</span> <span class="kn">import</span> <span class="n">plot_array</span>
+
+
+<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse command line configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Label describing the application.</span>
+<span class="sd">    description : str</span>
+<span class="sd">        Description of the application.</span>
+<span class="sd">    usage : str</span>
+<span class="sd">        Example on how to use the application.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CommandLineParser</span>
+<span class="sd">        Command line parser object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--figure_name&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the output figure to be saved into as a pdf.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--rotate_angle&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Angle to rotate the array (in degrees).&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--show_labels&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Plot array element labels.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--marker_scaling&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Scaling factor for the markers.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--coordinate_system&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Coordinate system for the array layout.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="s2">&quot;utm&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--axes_range&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Range of the both axes in meters.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">input_group</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--array_element_list&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of array elements (telescopes) to plot (e.g., LSTN-01, LSTN-02, MSTN).&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--array_layout_file&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;File(s) with the list of array elements (astropy table format).&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--array_layout_name&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the array layout (as predefined).&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_site_from_telescope_list_name</span><span class="p">(</span><span class="n">telescope_list_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the site name from the telescope list file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope_list_file : str</span>
+<span class="sd">        Telescope list file name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Site name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">_site</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">site_names</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">_site</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">telescope_list_file</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_site</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_get_list_of_plot_files</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of output file names for plotting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plot_file_name : str</span>
+<span class="sd">        Name of the plot file.</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Output directory.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of output file names.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NameError</span>
+<span class="sd">        If the file extension is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">plot_file</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">plot_file</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;png&quot;</span><span class="p">]]</span>
+
+    <span class="n">allowed_extensions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.jpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;.png&quot;</span><span class="p">,</span> <span class="s2">&quot;.tiff&quot;</span><span class="p">,</span> <span class="s2">&quot;.ps&quot;</span><span class="p">,</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.bmp&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">plot_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">allowed_extensions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">plot_file</span><span class="p">]</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Extension in </span><span class="si">{</span><span class="n">plot_file</span><span class="si">}</span><span class="s2"> is not valid. Valid extensions are:&quot;</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">allowed_extensions</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_plot_file_name</span><span class="p">(</span><span class="n">figure_name</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and return the file name for plots.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    figure_name : str</span>
+<span class="sd">        Figure name given through command line.</span>
+<span class="sd">    layout_name : str</span>
+<span class="sd">        Name of the layout.</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site name.</span>
+<span class="sd">    coordinate_system : str</span>
+<span class="sd">        Coordinate system for the array layout.</span>
+<span class="sd">    rotate_angle : float</span>
+<span class="sd">        Angle to rotate the array before plotting.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Plot file name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">figure_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">figure_name</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;array_layout_</span><span class="si">{</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">_&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">rotate_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">))</span><span class="si">}</span><span class="s2">deg&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_layouts_from_array_layout_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read array layout positions from file(s) and return a list of layouts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary with the command line arguments.</span>
+<span class="sd">    db_config : dict</span>
+<span class="sd">        Database configuration.</span>
+<span class="sd">    rotate_angle : float</span>
+<span class="sd">        Angle to rotate the array before plotting (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of array layouts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">telescope_files</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_file&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">one_file</span> <span class="ow">in</span> <span class="n">telescope_files</span><span class="p">:</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_get_site_from_telescope_list_name</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">array_elements</span><span class="o">=</span><span class="n">one_file</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">layouts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;array_elements&quot;</span><span class="p">:</span> <span class="n">array_model</span><span class="o">.</span><span class="n">export_array_elements_as_table</span><span class="p">(),</span>
+                <span class="s2">&quot;plot_file_name&quot;</span><span class="p">:</span> <span class="n">_get_plot_file_name</span><span class="p">(</span>
+                    <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;figure_name&quot;</span><span class="p">],</span>
+                    <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">site</span><span class="p">,</span>
+                    <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+                    <span class="n">rotate_angle</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">layouts</span>
+
+
+<span class="k">def</span> <span class="nf">_layouts_from_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read positions for a list of array elements from the database and return a list of layouts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary with the command line arguments.</span>
+<span class="sd">    db_config : dict</span>
+<span class="sd">        Database configuration.</span>
+<span class="sd">    rotate_angle : float</span>
+<span class="sd">        Angle to rotate the array before plotting (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of array layouts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_telescope_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
+        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+        <span class="n">array_elements</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;array_elements&quot;</span><span class="p">:</span> <span class="n">array_model</span><span class="o">.</span><span class="n">export_array_elements_as_table</span><span class="p">(</span>
+                <span class="n">coordinate_system</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;plot_file_name&quot;</span><span class="p">:</span> <span class="n">_get_plot_file_name</span><span class="p">(</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;figure_name&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+                <span class="n">site</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+                <span class="n">rotate_angle</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_layouts_from_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read array elements and their positions from data base using the layout name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary with the command line arguments.</span>
+<span class="sd">    db_config : dict</span>
+<span class="sd">        Database configuration.</span>
+<span class="sd">    rotate_angle : float</span>
+<span class="sd">        Angle to rotate the array before plotting (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of array layouts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">layout_name</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]:</span>
+        <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">layout_name</span><span class="o">=</span><span class="n">layout_name</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">layouts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;array_elements&quot;</span><span class="p">:</span> <span class="n">array_model</span><span class="o">.</span><span class="n">export_array_elements_as_table</span><span class="p">(</span>
+                    <span class="n">coordinate_system</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;plot_file_name&quot;</span><span class="p">:</span> <span class="n">_get_plot_file_name</span><span class="p">(</span>
+                    <span class="n">figure_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;figure_name&quot;</span><span class="p">],</span>
+                    <span class="n">layout_name</span><span class="o">=</span><span class="n">layout_name</span><span class="p">,</span>
+                    <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+                    <span class="n">coordinate_system</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+                    <span class="n">rotate_angle</span><span class="o">=</span><span class="n">rotate_angle</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">layouts</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../plot_array_layout.html#plot_array_layout.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot array layout application.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
+        <span class="n">label</span><span class="p">,</span>
+        <span class="s2">&quot;Plots array layout.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;python applications/plot_array_layout.py --array_layout_name test_layout&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
+    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+
+    <span class="n">rotate_angle</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="p">)</span>
+
+    <span class="n">layouts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from layout array name.&quot;</span><span class="p">)</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="n">_layouts_from_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_file&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from telescope list file.&quot;</span><span class="p">)</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="n">_layouts_from_array_layout_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from list of array elements.&quot;</span><span class="p">)</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="n">_layouts_from_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">)</span>
+
+    <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">layouts</span><span class="p">:</span>
+        <span class="n">fig_out</span> <span class="o">=</span> <span class="n">plot_array</span><span class="p">(</span>
+            <span class="n">telescopes</span><span class="o">=</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">],</span>
+            <span class="n">rotate_angle</span><span class="o">=</span><span class="n">rotate_angle</span><span class="p">,</span>
+            <span class="n">show_tel_label</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;show_labels&quot;</span><span class="p">],</span>
+            <span class="n">axes_range</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;axes_range&quot;</span><span class="p">],</span>
+            <span class="n">marker_scaling</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;marker_scaling&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">_plot_files</span> <span class="o">=</span> <span class="n">_get_list_of_plot_files</span><span class="p">(</span>
+            <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;plot_file_name&quot;</span><span class="p">],</span>
+            <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;application-plots&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">_plot_files</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving figure as </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">fig_out</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

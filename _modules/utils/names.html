@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5866294a"></script>
+    <script src="../../_static/documentation_options.js?v=d6894ff9"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -359,7 +359,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for utils.names</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span></span><span class="sd">&quot;&quot;&quot;Validation of names.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">cache</span>
@@ -377,7 +379,6 @@ document.write(`
     <span class="s2">&quot;sanitize_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_single_mirror_list_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_config_file_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_array_layout_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;validate_site_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;validate_telescope_id_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;validate_telescope_name&quot;</span><span class="p">,</span>
@@ -417,18 +418,6 @@ document.write(`
     <span class="k">return</span> <span class="p">{</span><span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">_sites</span><span class="p">}</span>
 
 
-<span class="n">array_layout_names</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;4LST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-lst&quot;</span><span class="p">,</span> <span class="s2">&quot;4lst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;1LST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-lst&quot;</span><span class="p">,</span> <span class="s2">&quot;1lst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;4MST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-mst&quot;</span><span class="p">,</span> <span class="s2">&quot;4mst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;1MST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-mst&quot;</span><span class="p">,</span> <span class="s2">&quot;mst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;4SST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4-sst&quot;</span><span class="p">,</span> <span class="s2">&quot;4sst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;1SST&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1-sst&quot;</span><span class="p">,</span> <span class="s2">&quot;sst&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;Prod5&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;prod5&quot;</span><span class="p">,</span> <span class="s2">&quot;p5&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;TestLayout&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;test-layout&quot;</span><span class="p">],</span>
-<span class="p">}</span>
-
-
 <span class="nd">@cache</span>
 <span class="k">def</span> <span class="nf">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="p">):</span>
     <span class="n">model_parameters</span> <span class="o">=</span> <span class="p">{}</span>
@@ -456,7 +445,9 @@ document.write(`
 <a class="viewcode-back" href="../../utils.html#utils.names.validate_telescope_id_name">[docs]</a>
 <span class="k">def</span> <span class="nf">validate_telescope_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate telescope ID. Allowed IDs are</span>
+<span class="sd">    Validate telescope ID.</span>
+
+<span class="sd">    Allowed IDs are</span>
 <span class="sd">    - design (for design telescopes or testing)</span>
 <span class="sd">    - telescope ID (e.g., 1, 5, 15)</span>
 <span class="sd">    - test (for testing)</span>
@@ -476,7 +467,6 @@ document.write(`
 <span class="sd">    ValueError</span>
 <span class="sd">        If name is not valid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">):</span>
@@ -508,30 +498,12 @@ document.write(`
 
 
 
-<div class="viewcode-block" id="validate_array_layout_name">
-<a class="viewcode-back" href="../../utils.html#utils.names.validate_array_layout_name">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_array_layout_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate array layout name.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
-<span class="sd">        Layout array name.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        Validated name.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_layout_names</span><span class="p">)</span></div>
-
-
-
 <span class="k">def</span> <span class="nf">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">all_names</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate name given the all_names options. For each key in all_names, a list of options is \</span>
-<span class="sd">    given. If name is in this list, the key name is returned.</span>
+<span class="sd">    Validate name given the all_names options.</span>
+
+<span class="sd">    For each key in all_names, a list of options is given.</span>
+<span class="sd">    If name is in this list, the key name is returned.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -539,6 +511,7 @@ document.write(`
 <span class="sd">        Name to validate.</span>
 <span class="sd">    all_names: dict</span>
 <span class="sd">        Dictionary with valid names.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
@@ -549,7 +522,6 @@ document.write(`
 <span class="sd">    ValueError</span>
 <span class="sd">        If name is not valid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">all_names</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">all_names</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span>
             <span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">all_names</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -677,7 +649,7 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get collection name(e.g., telescopes, calibration_devices) of array element from name</span>
+<span class="sd">    Get collection name (e.g., telescopes, calibration_devices) of array element from name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -689,7 +661,6 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Collection name .</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
 
 
@@ -701,6 +672,7 @@ document.write(`
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the name used in the simulation software from the model parameter name.</span>
+
 <span class="sd">    Name convention is expected to be defined in the schema.</span>
 <span class="sd">    Returns the parameter name if no simulation software name is found.</span>
 
@@ -720,7 +692,6 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Simtel parameter name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">_parameter_names</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">search_telescope_parameters</span><span class="p">:</span>
         <span class="n">_parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">telescope_parameters</span><span class="p">())</span>
@@ -745,6 +716,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">get_parameter_name_from_simtel_name</span><span class="p">(</span><span class="n">simtel_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the model parameter name from the simtel parameter name.</span>
+
 <span class="sd">    Assumes that both names are equal if not defined otherwise in names.py.</span>
 
 <span class="sd">    Parameters</span>
@@ -757,7 +729,6 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Model parameter name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">telescope_parameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">site_parameters</span><span class="p">()}</span>
 
     <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -892,6 +863,7 @@ document.write(`
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a file name for output, config, or plotting.</span>
+
 <span class="sd">    Used e.g., to generate camera-efficiency and ray-tracing output files.</span>
 
 <span class="sd">    Parameters</span>
@@ -963,7 +935,6 @@ document.write(`
 <span class="sd">    ValueError:</span>
 <span class="sd">        if the string name can not be sanitized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="c1"># Convert to lowercase</span>
     <span class="n">sanitized</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.visualize &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>visualization.visualize &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5866294a"></script>
+    <script src="../../_static/documentation_options.js?v=d6894ff9"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -360,6 +360,7 @@ document.write(`
                   
   <h1>Source code for visualization.visualize</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Module for visualization.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -368,7 +369,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">QTable</span>
 <span class="kn">from</span> <span class="nn">cycler</span> <span class="kn">import</span> <span class="n">cycler</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">gridspec</span>
 <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
@@ -484,11 +485,12 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">_add_unit</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A function to add a unit to &quot;title&quot; (presumably an axis title). The unit is extracted from the\</span>
-<span class="sd">    unit field of the array, in case array is an astropy quantity. If a unit is found, it is added \</span>
-<span class="sd">    to title in the form [unit]. If a unit already is present in title (in the same form), a \</span>
-<span class="sd">    warning is printed and no unit is added. The function assumes array not to be empty and returns\</span>
-<span class="sd">    the modified title.</span>
+<span class="sd">    Add a unit to &quot;title&quot; (presumably an axis title).</span>
+
+<span class="sd">    The unit is extracted from the unit field of the array, in case array is an astropy quantity.</span>
+<span class="sd">    If a unit is found, it is added to title in the form [unit]. If a unit already is present in</span>
+<span class="sd">    title (in the same form), a warning is printed and no unit is added. The function assumes</span>
+<span class="sd">    array not to be empty and returns the modified title.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -500,7 +502,6 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Title with units.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
         <span class="n">unit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
@@ -523,13 +524,14 @@ document.write(`
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.set_style">[docs]</a>
 <span class="k">def</span> <span class="nf">set_style</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">big_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A function to set the plotting style as part of an effort to homogenize plot style across the \</span>
-<span class="sd">    framework. The function receives the colour palette name and whether it is a big plot or not.\</span>
+<span class="sd">    Set the plotting style to homogenize plot style across the framework.</span>
+
+<span class="sd">    The function receives the colour palette name and whether it is a big plot or not.\</span>
 <span class="sd">    The latter sets the fonts and marker to be bigger in case it is a big plot. The available \</span>
 <span class="sd">    colour palettes are as follows:</span>
 
-<span class="sd">    - classic (default): A classic colourful palette with strong colours and contrast.</span>
-<span class="sd">    - modified classic: Similar to the classic, with slightly different colours.</span>
+<span class="sd">    - classic (default): A classic colorful palette with strong colors and contrast.</span>
+<span class="sd">    - modified classic: Similar to the classic, with slightly different colors.</span>
 <span class="sd">    - autumn: A slightly darker autumn style colour palette.</span>
 <span class="sd">    - purples: A pseudo sequential purple colour palette (not great for contrast).</span>
 <span class="sd">    - greens: A pseudo sequential green colour palette (not great for contrast).</span>
@@ -550,7 +552,6 @@ document.write(`
 <span class="sd">    KeyError</span>
 <span class="sd">        if provided palette does not exist.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="n">palette</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COLORS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;palette must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -586,8 +587,9 @@ document.write(`
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.get_colors">[docs]</a>
 <span class="k">def</span> <span class="nf">get_colors</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the colour list of the palette requested. If no palette is provided, the default is \</span>
-<span class="sd">    returned.</span>
+<span class="sd">    Get the colour list of the palette requested.</span>
+
+<span class="sd">    If no palette is provided, the default is returned.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -604,7 +606,6 @@ document.write(`
 <span class="sd">    KeyError</span>
 <span class="sd">        if provided palette does not exist.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="n">palette</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COLORS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;palette must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -623,7 +624,6 @@ document.write(`
 <span class="sd">    list</span>
 <span class="sd">        List with markers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">return</span> <span class="n">MARKERS</span></div>
 
 
@@ -639,7 +639,6 @@ document.write(`
 <span class="sd">    list</span>
 <span class="sd">        List with line styles.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">return</span> <span class="n">LINES</span></div>
 
 
@@ -648,10 +647,12 @@ document.write(`
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_1d">[docs]</a>
 <span class="k">def</span> <span class="nf">plot_1d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Produce a high contrast one dimensional plot from multiple data sets. A ratio plot can be \</span>
-<span class="sd">    added at the bottom to allow easy comparison. Additional options, such as plot title, plot</span>
-<span class="sd">    legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g., axes\</span>
-<span class="sd">    limits, log scale, etc.) should be done using the returned plt instance.</span>
+<span class="sd">    Produce a high contrast one dimensional plot from multiple data sets.</span>
+
+<span class="sd">    A ratio plot can be  added at the bottom to allow easy comparison. Additional options,</span>
+<span class="sd">    such as plot title, plot legend, etc., are given in kwargs. Any option that can be</span>
+<span class="sd">    changed after plotting (e.g., axes limits, log scale, etc.) should be done using the</span>
+<span class="sd">    returned plt instance.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -693,7 +694,6 @@ document.write(`
 <span class="sd">    ValueError</span>
 <span class="sd">        if asked to plot a ratio or difference with just one set of data</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">palette</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">big_plot</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;big_plot&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -808,10 +808,11 @@ document.write(`
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_table">[docs]</a>
 <span class="k">def</span> <span class="nf">plot_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">y_title</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Produce a high contrast one dimensional plot from the data in an astropy.Table. A ratio plot\</span>
-<span class="sd">    can be added at the bottom to allow easy comparison. Additional options, such as plot title,</span>
-<span class="sd">    plot legend, etc., are given in kwargs. Any option that can be changed after plotting (e.g.,\</span>
-<span class="sd">    axes limits, log scale, etc.) should be done using the returned plt instance.</span>
+<span class="sd">    Produce a high contrast one dimensional plot from the data in an astropy.Table.</span>
+
+<span class="sd">    A ratio plot can be added at the bottom to allow easy comparison. Additional options, such</span>
+<span class="sd">    as plot title, plot legend, etc., are given in kwargs. Any option that can be changed after</span>
+<span class="sd">    plotting (e.g., axes limits, log scale, etc.) should be done using the returned plt instance.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -849,7 +850,6 @@ document.write(`
 <span class="sd">    ValueError</span>
 <span class="sd">        if table has less than two columns.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Table has to have at least two columns&quot;</span><span class="p">)</span>
 
@@ -866,8 +866,10 @@ document.write(`
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_hist_2d">[docs]</a>
 <span class="k">def</span> <span class="nf">plot_hist_2d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Produce a two dimensional histogram plot. Any option that can be changed after plotting (e.g.,\</span>
-<span class="sd">    axes limits, log scale, etc.) should be done using the returned plt instance.</span>
+<span class="sd">    Produce a two dimensional histogram plot.</span>
+
+<span class="sd">    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.)</span>
+<span class="sd">    should be done using the returned plt instance.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -883,7 +885,6 @@ document.write(`
 <span class="sd">        Instance of pyplot.figure in which the plot was produced.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gist_heat_r</span>
     <span class="k">if</span> <span class="s2">&quot;title&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
@@ -977,10 +978,13 @@ document.write(`
 <div class="viewcode-block" id="plot_array">
 <a class="viewcode-back" href="../../visualization.html#visualization.visualize.plot_array">[docs]</a>
 <span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">rotate_angle</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">plot_array</span><span class="p">(</span><span class="n">telescopes</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show_tel_label</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">plot_array</span><span class="p">(</span>
+    <span class="n">telescopes</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show_tel_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axes_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">marker_scaling</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot the array of telescopes. The x axis gives the easting direction and y axis gives the</span>
-<span class="sd">    northing direction.</span>
+<span class="sd">    Plot the array of telescopes.</span>
+
+<span class="sd">    The x axis gives the easting direction and y axis gives the northing direction.</span>
 <span class="sd">    Note that in order to convert from the CORSIKA coordinate system to the &#39;conventional&#39; system</span>
 <span class="sd">    of North/East, a 90 degree rotation is always applied.</span>
 <span class="sd">    Rotation of the array elements is possible through the &#39;rotate_angle&#39; given either in degrees,</span>
@@ -990,16 +994,18 @@ document.write(`
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    telescopes: dict</span>
-<span class="sd">        Dictionary with the telescope position and names. Coordinates are given in the CORSIKA</span>
-<span class="sd">        coordinate system, i.e., the x positive axis points toward north</span>
-<span class="sd">        and the y positive axis points toward west.</span>
+<span class="sd">    telescopes: astropy.table</span>
+<span class="sd">        Table with the telescope position and names. Note the orientation of the axes.</span>
 <span class="sd">    rotate_angle:</span>
 <span class="sd">        Angle to rotate the plot. For rotate_angle = 0 the resulting plot will have</span>
 <span class="sd">        the x-axis pointing towards the east, and the y-axis pointing towards the North.</span>
 <span class="sd">    show_tel_label: bool</span>
 <span class="sd">        If True it will print the label of the individual telescopes in the plot.</span>
 <span class="sd">        While it works well for the smaller arrays, it gets crowded for larger arrays.</span>
+<span class="sd">    axes_range : float</span>
+<span class="sd">        Axis range for both axes. Range is from -plot_range to plot_range.</span>
+<span class="sd">    maker_scaling : float</span>
+<span class="sd">        Scaling factor for marker size to be plotted.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1007,19 +1013,20 @@ document.write(`
 <span class="sd">        Instance of plt.figure with the array of telescopes plotted.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">legend_objects</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">tel_counters</span> <span class="o">=</span> <span class="p">{</span><span class="n">one_telescope</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">one_telescope</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">get_list_of_telescope_types</span><span class="p">()}</span>
-    <span class="k">if</span> <span class="n">rotate_angle</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">transf</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span>
-            <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">],</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">],</span> <span class="n">rotate_angle</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+    <span class="k">if</span> <span class="s2">&quot;position_x&quot;</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="o">.</span><span class="n">colnames</span> <span class="ow">and</span> <span class="s2">&quot;position_y&quot;</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
         <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">],</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span>
-
-    <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">transf</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+        <span class="n">rotate_angle</span> <span class="o">=</span> <span class="n">rotate_angle</span> <span class="o">+</span> <span class="mf">90.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="k">elif</span> <span class="s2">&quot;utm_east&quot;</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="o">.</span><span class="n">colnames</span> <span class="ow">and</span> <span class="s2">&quot;utm_north&quot;</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;utm_east&quot;</span><span class="p">],</span> <span class="n">telescopes</span><span class="p">[</span><span class="s2">&quot;utm_north&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">rotate_angle</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span> <span class="o">=</span> <span class="n">transf</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">pos_y_rotated</span><span class="p">,</span> <span class="n">rotate_angle</span><span class="p">)</span>
+    <span class="n">telescopes</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">Column</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pos_x_rotated&quot;</span><span class="p">))</span>
+    <span class="n">telescopes</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">Column</span><span class="p">(</span><span class="n">pos_y_rotated</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pos_y_rotated&quot;</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_x_rotated</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
         <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">4</span>
@@ -1029,26 +1036,31 @@ document.write(`
         <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="n">patches</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i_tel</span><span class="p">,</span> <span class="n">tel_now</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">telescopes</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">tel_now</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;asset_code&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;sequence_number&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">tel_counters</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">telescope_name</span><span class="p">:</span>
                 <span class="n">tel_counters</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="n">i_tel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span>
-            <span class="n">telescopes</span><span class="p">[</span><span class="n">i_tel</span><span class="p">][</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
+        <span class="n">sphere_radius</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="k">if</span> <span class="s2">&quot;sphere_radius&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">telescopes</span><span class="o">.</span><span class="n">colnames</span> <span class="k">else</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;sphere_radius&quot;</span><span class="p">]</span>
         <span class="p">)</span>
+        <span class="n">i_tel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
         <span class="n">patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">get_telescope_patch</span><span class="p">(</span>
                 <span class="n">i_tel_name</span><span class="p">,</span>
-                <span class="n">pos_x_rotated</span><span class="p">[</span><span class="n">i_tel</span><span class="p">],</span>
-                <span class="n">pos_y_rotated</span><span class="p">[</span><span class="n">i_tel</span><span class="p">],</span>
-                <span class="n">scale</span> <span class="o">*</span> <span class="n">telescopes</span><span class="p">[</span><span class="n">i_tel</span><span class="p">][</span><span class="s2">&quot;sphere_radius&quot;</span><span class="p">],</span>
+                <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;pos_x_rotated&quot;</span><span class="p">],</span>
+                <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;pos_y_rotated&quot;</span><span class="p">],</span>
+                <span class="n">scale</span> <span class="o">*</span> <span class="n">sphere_radius</span> <span class="o">*</span> <span class="n">marker_scaling</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">show_tel_label</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-                <span class="n">pos_x_rotated</span><span class="p">[</span><span class="n">i_tel</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                <span class="n">pos_y_rotated</span><span class="p">[</span><span class="n">i_tel</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">telescopes</span><span class="p">[</span><span class="n">i_tel</span><span class="p">][</span><span class="s2">&quot;sphere_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                <span class="n">telescopes</span><span class="p">[</span><span class="n">i_tel</span><span class="p">][</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">],</span>
+                <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;pos_x_rotated&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;pos_y_rotated&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">sphere_radius</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">telescope_name</span><span class="p">,</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                 <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
@@ -1064,11 +1076,13 @@ document.write(`
     <span class="n">x_title</span> <span class="o">=</span> <span class="s2">&quot;Easting [m]&quot;</span>
     <span class="n">y_title</span> <span class="o">=</span> <span class="s2">&quot;Northing [m]&quot;</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">axes_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="n">axes_range</span><span class="p">,</span> <span class="n">axes_range</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="n">axes_range</span><span class="p">,</span> <span class="n">axes_range</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 
     <span class="n">legend_handler_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="nb">list</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">legend_handler_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="n">i_key</span><span class="p">]:</span> <span class="nb">list</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">legend_handler_map</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5866294a"></script>
+    <script src="_static/documentation_options.js?v=d6894ff9"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,6 +440,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#array-model">array_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel"><code class="docutils literal notranslate"><span class="pre">ArrayModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_all_simtel_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_all_simtel_config_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_array_elements_as_table"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_array_elements_as_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_array_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_array_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
@@ -513,6 +514,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#site-model">site_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel"><code class="docutils literal notranslate"><span class="pre">SiteModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_array_elements_for_layout"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_array_elements_for_layout()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_corsika_site_parameters"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_corsika_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_reference_point"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_reference_point()</span></code></a></li>
 </ul>
@@ -558,9 +560,10 @@ document.write(`
 </ul>
 <section id="array-model">
 <h2>array_model<a class="headerlink" href="#array-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.array_model"><span id="id1"></span></span><dl class="py class">
+<p id="module-model.array_model"><span id="id1"></span>Definition of the ArrayModel class.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">ArrayModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_elements_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_to_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.array_model.</span></span><span class="sig-name descname"><span class="pre">ArrayModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_to_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel" title="Link to this definition">#</a></dt>
 <dd><p>Representation of an observatory consisting of site, telescopes, and further devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -575,7 +578,8 @@ document.write(`
 </dd>
 <dt><strong>layout_name: str</strong></dt><dd><p>Layout name.</p>
 </dd>
-<dt><strong>array_elements_file: str</strong></dt><dd><p>Path to the file with the array element positions.</p>
+<dt><strong>array_elements: str, Path, list</strong></dt><dd><p>Array element definitions (list of array element or path to file with
+the array element positions).</p>
 </dd>
 <dt><strong>parameters_to_change: dict</strong></dt><dd><p>Dict with the parameters to be changed with respect to the DB model.</p>
 </dd>
@@ -585,7 +589,28 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.export_all_simtel_config_files">
 <span class="sig-name descname"><span class="pre">export_all_simtel_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_all_simtel_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_all_simtel_config_files" title="Link to this definition">#</a></dt>
-<dd><p>Export sim_telarray config file for the array and for each individual telescope into the         output model directory.</p>
+<dd><p>Export sim_telarray config file for the array and for each individual telescope.</p>
+<p>Config files are exported into the output model directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.export_array_elements_as_table">
+<span class="sig-name descname"><span class="pre">export_array_elements_as_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.export_array_elements_as_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_array_elements_as_table" title="Link to this definition">#</a></dt>
+<dd><p>Export array elements positions to astropy table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coordinate_system: str</strong></dt><dd><p>Positions are exported in this coordinate system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.QTable</dt><dd><p>Astropy table with the telescope layout information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -617,7 +642,8 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.get_config_file">
 <span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.get_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Get the path of the array config file for sim_telarray. The config file is produced if the         file is not updated.</p>
+<dd><p>Return the path of the array config file for sim_telarray.</p>
+<p>A new config file is produced if the file is not updated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -645,7 +671,7 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.print_telescope_list">
 <span class="sig-name descname"><span class="pre">print_telescope_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/array_model.html#ArrayModel.print_telescope_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.print_telescope_list" title="Link to this definition">#</a></dt>
-<dd><p>Print list of telescopes</p>
+<dd><p>Print list of telescopes.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1279,7 +1305,8 @@ model parameters.</p>
 </section>
 <section id="site-model">
 <h2>site_model<a class="headerlink" href="#site-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.site_model"><span id="id3"></span></span><dl class="py class">
+<p id="module-model.site_model"><span id="id3"></span>Definition of site model.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
 <dd><p>SiteModel represents the MC model of an observatory site.</p>
@@ -1298,10 +1325,30 @@ model parameters.</p>
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="model.site_model.SiteModel.get_array_elements_for_layout">
+<span class="sig-name descname"><span class="pre">get_array_elements_for_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/site_model.html#SiteModel.get_array_elements_for_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_array_elements_for_layout" title="Link to this definition">#</a></dt>
+<dd><p>Return list of array elements for a given array layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>layout_name: str</strong></dt><dd><p>Name of the array layout</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of array elements</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_corsika_site_parameters">
 <span class="sig-name descname"><span class="pre">get_corsika_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/site_model.html#SiteModel.get_corsika_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_corsika_site_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get site-related CORSIKA parameters as dict.
-Parameters are returned with units wherever possible.</p>
+<dd><p>Get site-related CORSIKA parameters as dict.</p>
+<p>Parameters are returned with units wherever possible.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1321,7 +1368,7 @@ Parameters are returned with units wherever possible.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_reference_point">
 <span class="sig-name descname"><span class="pre">get_reference_point</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/site_model.html#SiteModel.get_reference_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_reference_point" title="Link to this definition">#</a></dt>
-<dd><p>Get reference point coordinates as dict</p>
+<dd><p>Get reference point coordinates as dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1625,6 +1672,7 @@ reflectivity, etc.)</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#array-model">array_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel"><code class="docutils literal notranslate"><span class="pre">ArrayModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_all_simtel_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_all_simtel_config_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_array_elements_as_table"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_array_elements_as_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_array_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_array_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
@@ -1698,6 +1746,7 @@ reflectivity, etc.)</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#site-model">site_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel"><code class="docutils literal notranslate"><span class="pre">SiteModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_array_elements_for_layout"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_array_elements_for_layout()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_corsika_site_parameters"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_corsika_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_reference_point"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_reference_point()</span></code></a></li>
 </ul>

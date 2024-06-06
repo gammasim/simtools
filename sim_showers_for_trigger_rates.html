@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_showers_for_trigger_rates &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>sim_showers_for_trigger_rates &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5866294a"></script>
+    <script src="_static/documentation_options.js?v=d6894ff9"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -456,7 +456,7 @@ document.write(`
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>This application simulates showers to be used in trigger rate calculations.
-Arrays with one (1MST) or four telescopes (4LST) can be used, in case of     mono or stereo trigger configurations, respectively.</p>
+Arrays with one or four telescopes can be used, in case of     mono or stereo trigger configurations, respectively.</p>
 <p>Simulations are managed by the Simulator module.
 Each run is simulated in a job. Each job is submitted by using the submission     command from the global config settings. The config entry extra_commands can be used     to extra commands to be ran in each job, before the actual simulation.</p>
 <p>At the moment, the shower simulations are performed by CORSIKA, which requires     the zstd package. Please, make sure that the command to set your zstd path is     properly set by the extra_commands in the command line configuration.</p>
@@ -464,7 +464,7 @@ Each run is simulated in a job. Each job is submitted by using the submission   
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>array (str, required)</dt><dd><p>Name of the array (1MST, 4LST …).</p>
+<dt>array_layout_name (str, required)</dt><dd><p>Name of the array (pre-defined in the site model).</p>
 </dd>
 <dt>site (str, required)</dt><dd><p>South or North.</p>
 </dd>

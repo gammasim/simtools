@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5866294a"></script>
+    <script src="_static/documentation_options.js?v=d6894ff9"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -468,7 +468,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.sanitize_name"><code class="docutils literal notranslate"><span class="pre">sanitize_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_config_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_config_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_single_mirror_list_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_single_mirror_list_file_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_layout_name"><code class="docutils literal notranslate"><span class="pre">validate_array_layout_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_id_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_id_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_name()</span></code></a></li>
@@ -847,11 +846,12 @@ the rotation of the coordinate system is clockwise.</p>
 </section>
 <section id="module-utils.names">
 <span id="names"></span><span id="utilsnames"></span><h2>names<a class="headerlink" href="#module-utils.names" title="Link to this heading">#</a></h2>
+<p>Validation of names.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.generate_file_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">generate_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#generate_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.generate_file_name" title="Link to this definition">#</a></dt>
-<dd><p>Generate a file name for output, config, or plotting.
-Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
+<dd><p>Generate a file name for output, config, or plotting.</p>
+<p>Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1039,26 +1039,6 @@ Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_array_layout_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_layout_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_array_layout_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_layout_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate array layout name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Layout array name.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Validated name.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_site_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_site_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_site_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_site_name" title="Link to this definition">#</a></dt>
 <dd><p>Validate site name.</p>
@@ -1081,7 +1061,8 @@ Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_telescope_id_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_telescope_id_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/names.html#validate_telescope_id_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_telescope_id_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate telescope ID. Allowed IDs are
+<dd><p>Validate telescope ID.</p>
+<p>Allowed IDs are
 - design (for design telescopes or testing)
 - telescope ID (e.g., 1, 5, 15)
 - test (for testing)</p>
@@ -1206,7 +1187,6 @@ Used e.g., to generate camera-efficiency and ray-tracing output files.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.sanitize_name"><code class="docutils literal notranslate"><span class="pre">sanitize_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_config_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_config_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_single_mirror_list_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_single_mirror_list_file_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_layout_name"><code class="docutils literal notranslate"><span class="pre">validate_array_layout_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_id_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_id_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_name()</span></code></a></li>

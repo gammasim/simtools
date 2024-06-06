@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g525af48 Manual</title>
+    <title>make_regular_arrays &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/validate_file_using_schema';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/make_regular_arrays';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -284,7 +284,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/validate_file_using_schema.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/make_regular_arrays.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -358,180 +358,116 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for validate_file_using_schema</h1><div class="highlight"><pre>
+  <h1>Source code for make_regular_arrays</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Summary</span>
-<span class="sd">    -------</span>
-<span class="sd">    Validate a file using a schema.</span>
-<span class="sd">    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</span>
+<span class="sd">    Make a regular array of telescopes and save it as astropy table.</span>
+
+<span class="sd">    The arrays consist of one telescope at the center of the array and or of 4 telescopes</span>
+<span class="sd">    in a square grid. These arrays are used for trigger rate simulations.</span>
+
+<span class="sd">    The array layout files created will be available at the data/layout directory.</span>
 
 <span class="sd">    Command line arguments</span>
 <span class="sd">    ----------------------</span>
-<span class="sd">    file_name (str)</span>
-<span class="sd">      input file to be validated</span>
-<span class="sd">    schema (str)</span>
-<span class="sd">      schema file (jsonschema format) used for validation</span>
-<span class="sd">    data_type (str)</span>
-<span class="sd">        type of input data (allowed types: metadata, schema, data)</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    FileNotFoundError</span>
-<span class="sd">      if file to be validated is not found</span>
+<span class="sd">    site (str, required)</span>
+<span class="sd">        observatory site (e.g., North or South).</span>
+<span class="sd">    model_version (str, optional)</span>
+<span class="sd">        Model version to use (e.g., prod6). If not provided, the latest version is used.</span>
 
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
+<span class="sd">    Runtime &lt; 10 s.</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-validate-file-using-schema \\</span>
-<span class="sd">         --file_name tests/resources/MLTdata-preproduction.meta.yml \\</span>
-<span class="sd">         --schema simtools/schemas/metadata.metaschema.yml \\</span>
-<span class="sd">         --data_type metadata</span>
-
+<span class="sd">        simtools-make-regular-arrays --site=North</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
+
+<span class="kn">import</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="k">as</span> <span class="nn">writer</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">metadata_collector</span><span class="p">,</span> <span class="n">metadata_model</span><span class="p">,</span> <span class="n">validate_data</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 
-<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line configuration</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    label (str)</span>
-<span class="sd">        application label</span>
-<span class="sd">    description (str)</span>
-<span class="sd">        application description</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    config (Configurator)</span>
-<span class="sd">        application configuration</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--file_name&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file to be validated&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--schema&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;json schema file&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--data_type&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;type of input data&quot;</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;model_parameter&quot;</span><span class="p">],</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--require_exact_data_type&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;require exact data type for validation&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">paths</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get schema file name from metadata, data dict, or from command line argument.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict (dict)</span>
-<span class="sd">        command line arguments</span>
-<span class="sd">    data_dict (dict)</span>
-<span class="sd">        dictionary with metaschema information</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    schema_file: str</span>
-<span class="sd">        schema file name</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">schema_file</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">schema_file</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span>
-            <span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">schema_file</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_data_model_schema_file_name</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">schema_file</span>
-
-
-<div class="viewcode-block" id="validate_schema">
-<a class="viewcode-back" href="../validate_file_using_schema.html#validate_file_using_schema.validate_schema">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_schema</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a schema file given in yaml or json format.</span>
-<span class="sd">    Schema is either given as command line argument, read from the meta_schema_url or from</span>
-<span class="sd">    the metadata section of the data dictionary.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading schema file from </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">exc</span>
-    <span class="n">metadata_model</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of schema file </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_data_file">
-<a class="viewcode-back" href="../validate_file_using_schema.html#validate_file_using_schema.validate_data_file">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a data file (e.g., in ecsv, json, yaml format)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
-        <span class="n">schema_file</span><span class="o">=</span><span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">),</span>
-        <span class="n">data_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span>
-        <span class="n">check_exact_data_type</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
-    <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">(</span><span class="n">is_model_parameter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;model_parameter&quot;</span><span class="p">:</span>
-        <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_parameter_and_file_name</span><span class="p">()</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of data file </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_metadata">
-<a class="viewcode-back" href="../validate_file_using_schema.html#validate_file_using_schema.validate_metadata">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_metadata</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate metadata.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># metadata_collector runs the metadata validation by default, no need to do anything else</span>
-    <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">])</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of metadata </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../make_regular_arrays.html#make_regular_arrays.main">[docs]</a>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Validate a file (metadata, schema, or data file) using a schema.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create layout array files (ecsv) of regular arrays.&quot;&quot;&quot;</span>
+    <span class="c1"># Telescope distances for 4 tel square arrays</span>
+    <span class="c1"># !HARDCODED</span>
+    <span class="n">telescope_distance</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;LST&quot;</span><span class="p">:</span> <span class="mf">57.5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;MST&quot;</span><span class="p">:</span> <span class="mi">70</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;SST&quot;</span><span class="p">:</span> <span class="mi">80</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">}</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Make a regular array of telescope and save as astropy table.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Default telescope distances for 4 telescope square arrays are: </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  LST: </span><span class="si">{</span><span class="n">telescope_distance</span><span class="p">[</span><span class="s1">&#39;LST&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  MST: </span><span class="si">{</span><span class="n">telescope_distance</span><span class="p">[</span><span class="s1">&#39;MST&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  SST: </span><span class="si">{</span><span class="n">telescope_distance</span><span class="p">[</span><span class="s1">&#39;SST&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span>
-        <span class="n">validate_metadata</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span>
-        <span class="n">validate_schema</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;South&quot;</span><span class="p">:</span>
+        <span class="n">array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1SST&quot;</span><span class="p">,</span> <span class="s2">&quot;4SST&quot;</span><span class="p">,</span> <span class="s2">&quot;1MST&quot;</span><span class="p">,</span> <span class="s2">&quot;4MST&quot;</span><span class="p">,</span> <span class="s2">&quot;1LST&quot;</span><span class="p">,</span> <span class="s2">&quot;4LST&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1MST&quot;</span><span class="p">,</span> <span class="s2">&quot;4MST&quot;</span><span class="p">,</span> <span class="s2">&quot;1LST&quot;</span><span class="p">,</span> <span class="s2">&quot;4LST&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">array_name</span> <span class="ow">in</span> <span class="n">array_list</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing array </span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">tel_size</span> <span class="o">=</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="c1"># Single telescope at the center</span>
+        <span class="k">if</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
+            <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="c1"># 4 telescopes in a regular square grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+                <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]})</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_name</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_x</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_y</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">pprint</span><span class="p">()</span>
+
+        <span class="n">output_file</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_name</span><span class="p">,</span> <span class="n">file_extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">array_name</span><span class="si">}{</span><span class="n">file_extension</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">product_data</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

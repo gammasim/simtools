@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.site_model &#8212; simtools v0.1.dev1+g2119992 Manual</title>
+    <title>model.site_model &#8212; simtools v0.1.dev1+g525af48 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5866294a"></script>
+    <script src="../../_static/documentation_options.js?v=d6894ff9"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2119992 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g525af48 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -360,6 +360,7 @@ document.write(`
                   
   <h1>Source code for model.site_model</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Definition of site model.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 
@@ -393,9 +394,7 @@ document.write(`
         <span class="n">model_version</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize SiteModel</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SiteModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SiteModel for site </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
         <span class="n">ModelParameter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -411,14 +410,13 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.site_model.SiteModel.get_reference_point">[docs]</a>
     <span class="k">def</span> <span class="nf">get_reference_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get reference point coordinates as dict</span>
+<span class="sd">        Get reference point coordinates as dict.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Reference point coordinates as dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;center_altitude&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_altitude&quot;</span><span class="p">),</span>
             <span class="s2">&quot;center_northing&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_utm_north&quot;</span><span class="p">),</span>
@@ -432,6 +430,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_corsika_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_style</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get site-related CORSIKA parameters as dict.</span>
+
 <span class="sd">        Parameters are returned with units wherever possible.</span>
 
 <span class="sd">        Parameters</span>
@@ -445,7 +444,6 @@ document.write(`
 <span class="sd">            Site-related CORSIKA parameters as dict</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># backwards compatibility to `corsika_parameters.yml` (temporary TODO)</span>
         <span class="k">if</span> <span class="n">config_file_style</span><span class="p">:</span>
             <span class="n">_atmosphere_id</span> <span class="o">=</span> <span class="mi">26</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">==</span> <span class="s2">&quot;North&quot;</span> <span class="k">else</span> <span class="mi">36</span>
@@ -467,6 +465,32 @@ document.write(`
             <span class="s2">&quot;geomag_vertical&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;geomag_vertical&quot;</span><span class="p">),</span>
             <span class="s2">&quot;geomag_rotation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;geomag_rotation&quot;</span><span class="p">),</span>
         <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SiteModel.get_array_elements_for_layout">
+<a class="viewcode-back" href="../../mc_model.html#model.site_model.SiteModel.get_array_elements_for_layout">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_array_elements_for_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return list of array elements for a given array layout.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layout_name: str</span>
+<span class="sd">            Name of the array layout</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of array elements</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">layouts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">layout_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;Array layout &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in &#39;</span><span class="si">%s</span><span class="s2">&#39; site model.&quot;</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span></div>
 </div>
 
 </pre></div>
