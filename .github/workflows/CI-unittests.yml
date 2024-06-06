@@ -1,13 +1,14 @@
 ---
 name: CI-unittests
 # Execute unit tests
-#
+# (includes CTAO-DPPS-SonarQube)
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   SIMTOOLS_DB_SIMULATION_MODEL: "Staging-CTA-Simulation-Model-v0-3-0"
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 on:
   workflow_dispatch:
@@ -95,7 +96,14 @@ jobs:
       - name: Unit tests
         shell: bash -l {0}
         run: |
-          pytest --durations=10 --color=yes -n auto --dist loadscope
+          pytest --durations=10 --color=yes -n auto --dist loadscope \
+            --cov --cov-report=xml
+
+      # CTAO-DPPS-SonarQube
+      - uses: SonarSource/sonarqube-scan-action@v2
+        if: contains(matrix.extra-args, 'codecov')
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
