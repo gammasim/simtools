@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-plot-array-layout
+  TEST_NAME: from_list_south_utm
+  MODEL_VERSION_USE_CURRENT: true
+  CONFIGURATION:
+    ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
+    COORDINATE_SYSTEM: utm
+    MODEL_VERSION: prod6
+    OUTPUT_PATH: simtools-tests
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: application-plots/array_layout_South_0deg_utm.png
+    - OUTPUT_FILE: application-plots/array_layout_South_0deg_utm.pdf

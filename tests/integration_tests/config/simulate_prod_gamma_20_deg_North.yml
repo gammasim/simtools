@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg
+  TEST_NAME: gamma_20_deg_north
   CONFIGURATION:
     PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
     MODEL_VERSION: prod6
@@ -15,8 +15,8 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production-North/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.simtel.zst
+        test-production-North/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production-North.simtel.zst
     - OUTPUT_FILE: |
-        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.log.gz
+        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production-North.log.gz
     - OUTPUT_FILE: |
-        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_TestLayout_test-production-North.hdata.zst
+        test-production-North/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production-North.hdata.zst

@@ -1,6 +1,6 @@
 common:
   site: North
-  layout_name: test-layout
+  layout_name: test_layout
 array:
   model_version: Prod5
   default:
