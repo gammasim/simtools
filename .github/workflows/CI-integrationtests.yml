@@ -25,6 +25,7 @@ jobs:
       image: ghcr.io/gammasim/simtools-dev:latest
       options: --user 0
     strategy:
+      fail-fast: false
       matrix:
         type: ['2024-02-01', 'prod5']
 
