@@ -51,4 +51,5 @@ for dir in "${model_directory}"*/; do
     --type "model_parameters"
   fi
 done
+
 rm -rf ./tmp_model_parameters
