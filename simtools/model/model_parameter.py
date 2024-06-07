@@ -460,9 +460,9 @@ class ModelParameter:
 
         self._is_config_file_up_to_date = False
 
-    def add_parameter_file(self, par_name, file_path):
+    def export_parameter_file(self, par_name, file_path):
         """
-        Add a file to the config file directory.
+        Export a file to the config file directory.
 
         Parameters
         ----------
