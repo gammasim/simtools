@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-sim-showers-for-trigger-rates
+  APPLICATION: simtools-simulate-showers-for-trigger-rates
   TEST_NAME: run
   CONFIGURATION:
     ARRAY_LAYOUT_NAME: subsystem_lsts

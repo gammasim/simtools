@@ -36,7 +36,6 @@ end users, but for developers working on the database schema.
 :maxdepth: 1
 
 calculate_trigger_rate
-compare_cumulative_psf
 convert_all_model_parameters_from_simtel
 convert_model_parameter_from_simtel
 db_add_file_to_db
@@ -44,20 +43,21 @@ db_add_value_from_json_to_db
 db_get_file_from_db
 db_get_parameter_from_db
 derive_mirror_rnda
+generate_array_config
 generate_corsika_histograms
 generate_default_metadata
 generate_simtel_array_histograms
-light_emission
 generate_regular_arrays
 plot_array_layout
 print_array_elements
-generate_array_config
-simulate_showers_for_trigger_rates
+simulate_light_emission
 simulate_prod
+simulate_showers_for_trigger_rates
 submit_data_from_external
 tune_psf
 validate_camera_efficiency
 validate_camera_fov
+validate_cumulative_psf
 validate_file_using_schema
 validate_optics
 ```
