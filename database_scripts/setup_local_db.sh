@@ -1,8 +1,7 @@
 #!/bin/bash
 # Setup a local mongoDB database for the simtools projects
 # Assumes that podman or docker is installed and running
-# Requires a dump directory with the database dump to be present in the current directory
-#
+
 SIMTOOLS_NETWORK="simtools-mongo-network"
 CONTAINER_NAME="simtools-mongodb"
 HOST_NAME="local-simtools-mongodb"
@@ -54,34 +53,3 @@ if ! $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCo
   $CMD logs $CONTAINER_NAME
   exit 1
 fi
-
-# Create user
-echo "Create user"
-$CMD exec -it $CONTAINER_NAME mongosh admin -u root -p example --eval "
-db.createUser({
-  user: 'api',
-  pwd: 'password',
-  roles: [
-    {
-      role: 'readWrite',
-      db: 'Staging-CTA-Simulation-Model-v0-3-0'
-    },
-  ]
-});
-"
-
-echo "Upload existing DB dump to DB."
-for db in $(ls dump); do
-  echo "Uploading $db"
-  $CMD run --rm \
-    --network $SIMTOOLS_NETWORK \
-    -v "$(pwd)"/dump:/dump \
-    mongo:latest mongorestore \
-    --host $CONTAINER_NAME \
-    --port 27017 \
-    -u api \
-    -p password \
-    --authenticationDatabase "admin" \
-    -d "$db" \
-    "/dump/$db"
-done
