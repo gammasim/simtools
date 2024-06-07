@@ -35,8 +35,8 @@ end users, but for developers working on the database schema.
 :glob: true
 :maxdepth: 1
 
-add_file_to_db
-add_value_from_json_to_db
+db_add_file_to_db
+db_add_value_from_json_to_db
 calculate_trigger_rate
 compare_cumulative_psf
 convert_all_model_parameters_from_simtel
