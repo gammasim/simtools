@@ -63,7 +63,8 @@ db.createUser({
   pwd: 'password',
   roles: [
     {
-      role: 'dbAdmin',
+      role: 'readWrite',
+      db: 'Staging-CTA-Simulation-Model-v0-3-0'
     },
   ]
 });
