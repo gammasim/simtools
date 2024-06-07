@@ -35,18 +35,18 @@ end users, but for developers working on the database schema.
 :glob: true
 :maxdepth: 1
 
-db_add_file_to_db
-db_add_value_from_json_to_db
 calculate_trigger_rate
 compare_cumulative_psf
 convert_all_model_parameters_from_simtel
 convert_model_parameter_from_simtel
+db_add_file_to_db
+db_add_value_from_json_to_db
+db_get_file_from_db
+db_get_parameter_from_db
 derive_mirror_rnda
 generate_corsika_histograms
 generate_default_metadata
 generate_simtel_array_histograms
-get_file_from_db
-get_parameter
 light_emission
 generate_regular_arrays
 plot_array_layout
