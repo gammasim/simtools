@@ -48,7 +48,7 @@ generate_simtel_array_histograms
 get_file_from_db
 get_parameter
 light_emission
-make_regular_arrays
+generate_regular_arrays
 plot_array_layout
 print_array_elements
 produce_array_config

@@ -1,0 +1,13 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-generate-regular-arrays
+  TEST_NAME: run-south
+  CONFIGURATION:
+    OUTPUT_PATH: simtools-tests
+    SITE: South
+    MODEL_VERSION: prod6
+    OUTPUT_FILE: generate_regular_arrays.ecsv
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: generate_regular_arrays-South-1LST.ecsv
+    - OUTPUT_FILE: generate_regular_arrays-South-4LST.ecsv
+    - OUTPUT_FILE: generate_regular_arrays-South-1MST.ecsv
+    - OUTPUT_FILE: generate_regular_arrays-South-4MST.ecsv
