@@ -56,7 +56,7 @@ SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 
 `SIMTOOLS_DB_SIMULATION_MODEL` is set as an example here to `Staging-CTA-Simulation-Model-v0-3-0` and should be changed accordingly.
 
-### Purge the local database instance and all networks, images, containers
+## Purge the local database instance and all networks, images, containers
 
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
