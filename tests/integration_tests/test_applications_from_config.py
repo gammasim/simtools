@@ -330,7 +330,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     """
 
-    # The add_file_to_db.py application requires a user confirmation.
+    # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
     monkeypatch.setattr("sys.stdin", StringIO("y\n"))
