@@ -249,7 +249,7 @@ def _define_telescope_model(label, args_dict, db_config):
     if args_dict["mirror_list"] is not None:
         mirror_list_file = gen.find_file(name=args_dict["mirror_list"], loc=args_dict["model_path"])
         tel.change_parameter("mirror_list", args_dict["mirror_list"])
-        tel.add_parameter_file("mirror_list", mirror_list_file)
+        tel.export_parameter_file("mirror_list", mirror_list_file)
     if args_dict["random_flen"] is not None:
         tel.change_parameter("random_focal_length", str(args_dict["random_flen"]))
 
