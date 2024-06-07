@@ -52,7 +52,7 @@ generate_regular_arrays
 plot_array_layout
 print_array_elements
 generate_array_config
-sim_showers_for_trigger_rates
+simulate_showers_for_trigger_rates
 simulate_prod
 submit_data_from_external
 tune_psf

@@ -48,17 +48,17 @@
 
     .. code-block:: console
 
-        simtools-sim-showers-for-trigger-rates --array 4LST --site North --primary \\
+        simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \\
         proton --nruns 2 --nevents 10000 --test --submit_command local
 
-    The output is saved in simtools-output/sim_showers_for_trigger_rates.
+    The output is saved in simtools-output/simulate_showers_for_trigger_rates.
 
     Expected final print-out message:
 
     .. code-block:: console
 
-        INFO::sim_showers_for_trigger_rates(l174)::main::List of log files exported to \
-        /workdir/external/simtools/simtools-output/sim_showers_for_trigger_rates/application-\
+        INFO::simulate_showers_for_trigger_rates(l174)::main::List of log files exported to \
+        /workdir/external/simtools/simtools-output/simulate_showers_for_trigger_rates/application-\
         plots/log_files_proton.list
         INFO::simulator(l646)::get_list_of_log_files::Getting list of log files
 
