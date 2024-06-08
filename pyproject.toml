@@ -69,6 +69,7 @@ scripts.simtools-add-value-from-json-to-db = "simtools.applications.add_value_fr
 scripts.simtools-calculate-trigger-rate = "simtools.applications.calculate_trigger_rate:main"
 scripts.simtools-compare-cumulative-psf = "simtools.applications.compare_cumulative_psf:main"
 scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
+scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
@@ -79,7 +80,6 @@ scripts.simtools-get-parameter = "simtools.applications.get_parameter:main"
 scripts.simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
 scripts.simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:main"
-scripts.simtools-print-array-elements = "simtools.applications.print_array_elements:main"
 scripts.simtools-produce-array-config = "simtools.applications.produce_array_config:main"
 scripts.simtools-production = "simtools.applications.production:main"
 scripts.simtools-sim-showers-for-trigger-rates = "simtools.applications.sim_showers_for_trigger_rates:main"
@@ -120,7 +120,7 @@ format.line-ending = "auto"
 format.skip-magic-trailing-comma = false
 lint.extend-select = [
   "COM", # flake8-commas
-  # "D",   # pydocstyle (temporary off: use in 2nd step)
+  #  "D",   # pydocstyle (temporary off: use in 2nd step)
   "G",   # logging
   "I",   # isort
   "ICN", # import name conventions
@@ -130,7 +130,6 @@ lint.extend-select = [
   "PT",  # pytest
   "UP",  # pyupgrade
 ]
-# lint.pydocstyle.convention = "numpy"
 lint.ignore = [
   "COM812", # incompatible with ruff format
   "D208",   # over-indentation (incompatible with sphinx)
@@ -147,6 +146,8 @@ lint.per-file-ignores."**/tests/**" = [
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
+
+lint.pydocstyle.convention = "numpy"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.
