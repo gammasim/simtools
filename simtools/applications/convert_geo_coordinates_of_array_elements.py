@@ -4,9 +4,7 @@
     Description
     -----------
 
-    This application converts a list of array element positions in different CTAO coordinate
-    systems.
-
+    Convert array element positions in different CTAO coordinate systems.
     Available coordinate systems are:
 
     1. UTM system
@@ -19,17 +17,16 @@
     input (str)
         File name with list of array element positions
     print (str)
-        Print requested coordinate system; possible are ground, utm, mercator
+        Print in requested coordinate system; possible are ground, utm, mercator
     export (str)
         Export array element list to file in requested coordinate system;
           possible are ground, utm, mercator
     select_assets (str)
         Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
-
     Example
     -------
-    Print a list of array elements using a list of telescope positions in UTM coordinates.
+    Convert a list of array elements using a list of telescope positions in UTM coordinates.
 
     .. code-block:: console
 
@@ -130,7 +127,7 @@ def _parse(label=None, description=None):
         action="store_true",
     )
     return config.initialize(
-        output=True, require_command_line=True, db_config=True, simulation_model="version"
+        output=True, require_command_line=True, db_config=True, simulation_model=["version", "site"]
     )
 
 
@@ -146,12 +143,21 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
+    # simplified metadata treatment for model parameter json files
+    if args_dict.get("input", None) is not None and Path(args_dict["input"]).suffix == ".json":
+        site = args_dict.get("site", None)
+        top_level_meta = None
+        validate_schema_file = None
+    else:
+        metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
+        site = (metadata.get_site(from_input_meta=True),)
+        top_level_meta = metadata.top_level_meta
+        validate_schema_file = (metadata.get_data_model_schema_file_name(),)
 
     layout = array_layout.ArrayLayout(
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
-        site=metadata.get_site(from_input_meta=True),
+        site=site,
         telescope_list_file=args_dict["input"],
         telescope_list_metadata_file=args_dict["input_meta"],
         validate=not args_dict["skip_input_validation"],
@@ -162,11 +168,11 @@ def main():
     if args_dict["export"] is not None:
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=metadata.top_level_meta,
+            metadata=top_level_meta,
             product_data=layout.export_telescope_list_table(
                 crs_name=args_dict["export"],
             ),
-            validate_schema_file=metadata.get_data_model_schema_file_name(),
+            validate_schema_file=validate_schema_file,
         )
     else:
         layout.print_telescope_list(

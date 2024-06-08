@@ -1,0 +1,11 @@
+{
+    "parameter": "array_element_position_utm",
+    "instrument": "SSTS-09",
+    "site": "South",
+    "version": "2024-02-01",
+    "value": "367321.0 7269466.0 2183.5",
+    "unit": "m",
+    "type": "float64",
+    "applicable": true,
+    "file": false
+}
