@@ -1,7 +1,0 @@
-CTA_SIMPIPE:
-  APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-  TEST_NAME: print_compact_nocors_utm
-  CONFIGURATION:
-    INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
-    PRINT: utm
-    MODEL_VERSION: prod6
