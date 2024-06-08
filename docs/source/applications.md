@@ -40,6 +40,7 @@ convert_all_model_parameters_from_simtel
 convert_model_parameter_from_simtel
 db_add_file_to_db
 db_add_value_from_json_to_db
+db_get_array_layouts_from_db
 db_get_file_from_db
 db_get_parameter_from_db
 derive_mirror_rnda
