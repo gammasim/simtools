@@ -1,6 +1,8 @@
 """Prepare layout for coordinate transformations."""
 
+import json
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -384,15 +386,14 @@ class ArrayLayout:
             return None
 
         self._logger.debug(f"Reading telescope list from {telescope_list_file}")
-        table = (
-            data_reader.read_table_from_file(
+        if Path(telescope_list_file).suffix == ".json":
+            table = self._read_table_from_json_file(file_name=telescope_list_file)
+        else:
+            table = data_reader.read_table_from_file(
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
             )
-            if telescope_list_file is not None
-            else None
-        )
 
         for row in table:
             tel = self._load_telescope_names(row)
@@ -404,6 +405,38 @@ class ArrayLayout:
             self._try_set_altitude(row, tel, table)
             self._telescope_list.append(tel)
 
+        return table
+
+    def _read_table_from_json_file(self, file_name):
+        """
+        Read a telescope position from a json file and return as astropy table.
+
+        Parameters
+        ----------
+        file_name: str or Path
+            Path to the json file.
+
+        Returns
+        -------
+        astropy.table.QTable
+            Table with the telescope layout information.
+        """
+        with Path(file_name).open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        position = gen.convert_string_to_list(data["value"])
+        self.site = data.get("site", None)
+
+        table = QTable()
+        table["telescope_name"] = [data["instrument"]]
+        if "utm" in data["parameter"]:
+            table["utm_east"] = [position[0]] * u.Unit(data["unit"])
+            table["utm_north"] = [position[1]] * u.Unit(data["unit"])
+            table["altitude"] = [position[2]] * u.Unit(data["unit"])
+        else:
+            table["position_x"] = [position[0]] * u.Unit(data["unit"])
+            table["position_y"] = [position[1]] * u.Unit(data["unit"])
+            table["position_z"] = [position[2]] * u.Unit(data["unit"])
         return table
 
     def _set_telescope_auxiliary_parameters(self, telescope):
