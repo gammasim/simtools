@@ -1,0 +1,8 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-convert-geo-coordinates-of-array-elements
+  TEST_NAME: print_ground
+  CONFIGURATION:
+    INPUT: tests/resources/telescope_positions-North-ground.ecsv
+    PRINT: ground
+    MODEL_VERSION: prod6
+    LOG_LEVEL: DEBUG
