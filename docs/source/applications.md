@@ -40,6 +40,7 @@ add_value_from_json_to_db
 calculate_trigger_rate
 compare_cumulative_psf
 convert_all_model_parameters_from_simtel
+convert_geo_coordinates_of_array_elements
 convert_model_parameter_from_simtel
 derive_mirror_rnda
 generate_corsika_histograms
@@ -50,7 +51,6 @@ get_parameter
 light_emission
 make_regular_arrays
 plot_array_layout
-convert_geo_coordinates_of_array_elements
 produce_array_config
 sim_showers_for_trigger_rates
 simulate_prod
