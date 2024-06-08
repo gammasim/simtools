@@ -1,3 +1,5 @@
+"""Definition of geospatial coordinate systems."""
+
 import logging
 
 import astropy.units as u
@@ -8,16 +10,13 @@ import pyproj
 class GeoCoordinates:
     """
     Geospatial Coordinate systems.
+
     Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.
 
     """
 
     def __init__(self):
-        """
-        Initialize GeoCoordinates
-
-        """
-
+        """Initialize GeoCoordinates."""
         self._logger = logging.getLogger(__name__)
 
     def crs_utm(self, epsg):
@@ -58,6 +57,7 @@ class GeoCoordinates:
     def crs_local(self, reference_point):
         """
         Local coordinate system definition.
+
         This is a cartesian coordinate system with the origin at the array center.
         X-axis points towards geographic North, y-axis towards geographic West.
 
@@ -93,6 +93,7 @@ class GeoCoordinates:
     def _valid_reference_point(self, reference_point):
         """
         Check if reference point has valid long/lat coordinates (including altitude).
+
         This is required to derive the local coordinate system.
         Try if a conversion from UTM coordinates to long/lat is possible.
 
@@ -123,8 +124,7 @@ class GeoCoordinates:
 
     def _coordinate_scale_factor(self, reference_point):
         """
-        Derive coordinate scale factor for transformation into
-        local coordinate system
+        Derive coordinate scale factor for transformation into local coordinate system.
 
         Depends on latitude and altitude of array center.
         Ignores transformation of geodetic height to geocentric height
@@ -146,7 +146,6 @@ class GeoCoordinates:
             If reference_point does not have a valid center or UTM system is not defined.
 
         """
-
         try:
             _center_lat, _, _centre_altitude = reference_point.get_coordinates("mercator")
         except AttributeError:
@@ -183,7 +182,6 @@ class GeoCoordinates:
             Ellipsoid radius at given latitude.
 
         """
-
         _lat_rad = np.deg2rad(latitude)
         _numerator = (semi_major_axis**2 * np.cos(_lat_rad)) ** 2 + (
             semi_minor_axis**2 * np.sin(_lat_rad)

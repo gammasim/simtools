@@ -1,3 +1,5 @@
+"""Prepare layout for coordinate transformations."""
+
 import logging
 
 import astropy.units as u
@@ -59,10 +61,7 @@ class ArrayLayout:
         telescope_list_metadata_file=None,
         validate=False,
     ):
-        """
-        Initialize ArrayLayout.
-        """
-
+        """Initialize ArrayLayout."""
         self._logger = logging.getLogger(__name__)
 
         self.model_version = model_version
@@ -89,7 +88,6 @@ class ArrayLayout:
     def from_array_layout_name(cls, mongo_db_config, array_layout_name, model_version, label=None):
         """
         Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).
-        Layout definitions are given in the data/layout path.
 
         Parameters
         ----------
@@ -107,7 +105,6 @@ class ArrayLayout:
         ArrayLayout
             Instance of the ArrayLayout.
         """
-
         split_name = array_layout_name.split("-")
         site_name = names.validate_site_name(split_name[0])
         array_name = split_name[1]
@@ -129,23 +126,15 @@ class ArrayLayout:
         return layout
 
     def __len__(self):
-        """
-        Return number of telescopes in the layout.
-        """
+        """Return number of telescopes in the layout."""
         return len(self._telescope_list)
 
     def __getitem__(self, i):
-        """
-        Return telescope at list position i.
-
-        """
+        """Return telescope at list position i."""
         return self._telescope_list[i]
 
     def _initialize_site_parameters_from_db(self):
-        """
-        Initialize site parameters required for transformations using the database.
-
-        """
+        """Initialize site parameters required for transformations using the database."""
         self._logger.debug("Initialize parameters from DB")
         if self.mongo_db_config is None:
             self._logger.error("No database configuration provided")
@@ -165,6 +154,7 @@ class ArrayLayout:
     def _initialize_coordinate_systems(self):
         """
         Initialize array center and coordinate systems.
+
         By definition, the array center is at (0,0) in
         the ground coordinate system.
 
@@ -174,7 +164,6 @@ class ArrayLayout:
             invalid array center definition.
 
         """
-
         self._array_center = TelescopePosition()
         self._array_center.name = "array_center"
         self._array_center.set_coordinates("ground", 0.0 * u.m, 0.0 * u.m)
@@ -197,6 +186,7 @@ class ArrayLayout:
     def _set_array_center_utm(self):
         """
         Set array center coordinates in UTM system.
+
         Convert array center position to WGS84 system
         (as latitudes are required for the definition
         for the definition of the ground coordinate system)
@@ -217,8 +207,10 @@ class ArrayLayout:
 
     def _altitude_from_corsika_z(self, pos_z=None, altitude=None, telescope_axis_height=None):
         """
-        Calculate altitude from CORSIKA z-coordinate (if pos_z is given) or CORSIKA z-coordinate \
-        from altitude (if altitude is given).
+        Calculate altitude.
+
+        The value is calculated from CORSIKA z-coordinate (if pos_z is given) or CORSIKA
+        z-coordinate from altitude (if altitude is given).
 
         Parameters
         ----------
@@ -276,7 +268,6 @@ class ArrayLayout:
             in case neither telescope name or asset_code / sequence number are given.
 
         """
-
         tel = TelescopePosition()
         try:
             tel.name = row["telescope_name"]
@@ -307,7 +298,8 @@ class ArrayLayout:
         return tel
 
     def _try_set_coordinate(self, row, tel, table, crs_name, key1, key2):
-        """Function auxiliary to self._initialize_array_layout. It sets the coordinates.
+        """
+        Try and set coordinates for all coordinate systems.
 
         Parameters
         ----------
@@ -335,8 +327,9 @@ class ArrayLayout:
 
     def _try_set_altitude(self, row, tel, table):
         """
-        Function auxiliary to self._initialize_array_layout. It sets the altitude of the
-        TelescopePosition instance.
+        Try and set altitude.
+
+        It sets the altitude of the TelescopePosition instance.
 
         Parameters
         ----------
@@ -366,6 +359,7 @@ class ArrayLayout:
     ):
         """
         Initialize the Layout array including site and telescope parameters.
+
         Read array list if telescope_list_file is given.
 
         Parameters
@@ -382,7 +376,6 @@ class ArrayLayout:
         astropy.table.QTable
             Table with the telescope layout information.
         """
-
         self._logger.debug("Initializing array (site and telescope parameters)")
         self._initialize_site_parameters_from_db()
         self._initialize_coordinate_systems()
@@ -423,7 +416,6 @@ class ArrayLayout:
             Instance of TelescopePosition.
 
         """
-
         if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
             self._logger.debug(
                 f"Reading auxiliary telescope parameters for {telescope.name}"
@@ -461,7 +453,6 @@ class ArrayLayout:
             CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
             center).
         """
-
         tel = TelescopePosition(name=telescope_name)
         self._set_telescope_auxiliary_parameters(tel)
         tel.set_coordinates(crs_name, xx, yy)
@@ -477,8 +468,9 @@ class ArrayLayout:
 
     def _get_export_metadata(self):
         """
-        File metadata for export of array element list to file. Included array center definition,\
-        CORSIKA telescope parameters, and EPSG code.
+        File metadata for export of array element list to file.
+
+        Included array center definition, CORSIKA telescope parameters, and EPSG code.
 
         Returns
         -------
@@ -486,7 +478,6 @@ class ArrayLayout:
             Metadata header for array element list export.
 
         """
-
         _meta = {}
         if self._array_center:
             (
@@ -516,7 +507,6 @@ class ArrayLayout:
             Astropy table with the telescope layout information.
 
         """
-
         table = QTable(meta=self._get_export_metadata())
 
         tel_names, asset_code, sequence_number, geo_code = [], [], [], []
@@ -588,7 +578,6 @@ class ArrayLayout:
             Name of coordinate system to be used for export.
 
         """
-
         for tel in self._telescope_list:
             tel.print_compact_format(
                 crs_name=crs_name,
@@ -600,7 +589,6 @@ class ArrayLayout:
 
     def convert_coordinates(self):
         """Perform all the possible conversions the coordinates of the tel positions."""
-
         self._logger.info("Converting telescope coordinates")
 
         crs_wgs84 = self.geo_coordinates.crs_wgs84()
@@ -629,7 +617,6 @@ class ArrayLayout:
             If the asset list is empty.
 
         """
-
         _n_telescopes = len(self._telescope_list)
         try:
             if len(asset_list) > 0:
