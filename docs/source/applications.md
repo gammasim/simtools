@@ -50,7 +50,7 @@ get_parameter
 light_emission
 make_regular_arrays
 plot_array_layout
-print_array_elements
+convert_geo_coordinates_of_array_elements
 produce_array_config
 sim_showers_for_trigger_rates
 simulate_prod

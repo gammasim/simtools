@@ -38,7 +38,7 @@
 
     .. code-block:: console
 
-        simtools-print-array-elements \\
+        simtools-convert-geo-coordinates-of-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
             --print ground
 
@@ -50,7 +50,7 @@
 
     .. code-block:: console
 
-        simtools-print-array-elements \\
+        simtools-convert-geo-coordinates-of-array-elements \\
             --input tests/resources/telescope_positions-North-utm.ecsv \\
             --export ground \\
             --select_assets LSTN
