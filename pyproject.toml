@@ -69,6 +69,7 @@ scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applicatio
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
+scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
@@ -120,7 +121,7 @@ format.line-ending = "auto"
 format.skip-magic-trailing-comma = false
 lint.extend-select = [
   "COM", # flake8-commas
-  # "D",   # pydocstyle (temporary off: use in 2nd step)
+  #  "D",   # pydocstyle (temporary off: use in 2nd step)
   "G",   # logging
   "I",   # isort
   "ICN", # import name conventions
@@ -130,7 +131,6 @@ lint.extend-select = [
   "PT",  # pytest
   "UP",  # pyupgrade
 ]
-# lint.pydocstyle.convention = "numpy"
 lint.ignore = [
   "COM812", # incompatible with ruff format
   "D208",   # over-indentation (incompatible with sphinx)
@@ -147,6 +147,8 @@ lint.per-file-ignores."**/tests/**" = [
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
+
+lint.pydocstyle.convention = "numpy"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.
