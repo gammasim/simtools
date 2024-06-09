@@ -15,7 +15,9 @@
     Command line arguments
     ----------------------
     input (str)
-        File name with list of array element positions
+        File name with list of array element positions.
+        Input can be given as astropy table file (ecsv) or a single array element in
+        a json file.
     print (str)
         Print in requested coordinate system; possible are ground, utm, mercator
     export (str)
@@ -143,8 +145,9 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    json_type = args_dict.get("input", "").endswith(".json")
     # simplified metadata treatment for model parameter json files
-    if args_dict.get("input", None) is not None and Path(args_dict["input"]).suffix == ".json":
+    if json_type:
         site = args_dict.get("site", None)
         top_level_meta = None
         validate_schema_file = None
@@ -166,12 +169,15 @@ def main():
     layout.convert_coordinates()
 
     if args_dict["export"] is not None:
+        product_data = (
+            layout.export_telescope_list_as_json(crs_name=args_dict["export"])
+            if json_type
+            else layout.export_telescope_list_table(crs_name=args_dict["export"])
+        )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
             metadata=top_level_meta,
-            product_data=layout.export_telescope_list_table(
-                crs_name=args_dict["export"],
-            ),
+            product_data=product_data,
             validate_schema_file=validate_schema_file,
         )
     else:
