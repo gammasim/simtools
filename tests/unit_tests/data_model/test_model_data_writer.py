@@ -48,6 +48,26 @@ def test_write(tmp_test_directory):
     with pytest.raises(IORegistryError):
         w_1.write(metadata=None, product_data=empty_table)
 
+    # test json format
+    dict_data = {"value": 5.5}
+    w_1.product_data_file = tmp_test_directory.join("test_file.json")
+    w_1.write(metadata=None, product_data=dict_data)
+    assert Path(w_1.product_data_file).is_file()
+
+
+def test_write_dict_to_model_parameter_json(tmp_test_directory):
+    w1 = writer.ModelDataWriter()
+    data_dict = {"value": 5.5}
+    data_file = tmp_test_directory.join("test_file.json")
+    w1.write_dict_to_model_parameter_json(file_name=data_file, data_dict=data_dict)
+    assert Path(data_file).is_file()
+
+    this_directory_is_not_there = "./this_directory_is_not_there/test_file.json"
+    with pytest.raises(FileNotFoundError, match=r"^Error writing model data to"):
+        w1.write_dict_to_model_parameter_json(
+            file_name=this_directory_is_not_there, data_dict=data_dict
+        )
+
 
 def test_dump(args_dict, tmp_test_directory):
     _metadata = {"name": "test_metadata"}
