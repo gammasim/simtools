@@ -20,7 +20,6 @@
 
     Examples
     --------
-
     Add array element positions to repository:
 
     .. code-block:: console
@@ -42,8 +41,8 @@ import astropy.table
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model.model_data_writer import JsonNumpyEncoder, ModelDataWriter
 from simtools.model.array_model import ArrayModel
-from simtools.simtel.simtel_config_reader import JsonNumpyEncoder
 
 
 def _parse(label=None, description=None):
@@ -62,7 +61,6 @@ def _parse(label=None, description=None):
     CommandLineParser
         Command line parser object.
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input",
@@ -102,7 +100,6 @@ def write_utm_array_elements_to_repository(args_dict, logger):
         Logger object.
 
     """
-
     array_elements = astropy.table.Table.read(args_dict["input"])
     for row in array_elements:
         data = {
@@ -123,15 +120,9 @@ def write_utm_array_elements_to_repository(args_dict, logger):
         output_path = Path(args_dict["repository_path"]) / f"{data['instrument']}"
         output_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Writing array element positions (utm) to {output_path}")
-        with open(output_path / "array_element_position_utm.json", "w", encoding="utf-8") as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                sort_keys=False,
-                cls=JsonNumpyEncoder,
-            )
-            file.write("\n")
+        ModelDataWriter.write_dict_to_model_parameter_json(
+            file_name=output_path / "array_element_position_utm.json", data=data
+        )
 
 
 def write_ground_array_elements_to_repository(args_dict, db_config, logger):
