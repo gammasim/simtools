@@ -531,14 +531,11 @@ class ArrayLayout:
         ----------
         crs_name: str
             Name of coordinate system to be used for export.
-        corsika_z: bool
-            Write telescope height in CORSIKA coordinates (for CORSIKA system).
 
         Returns
         -------
         astropy.table.QTable
             Astropy table with the telescope layout information.
-
         """
         table = QTable(meta=self._get_export_metadata())
 
@@ -589,6 +586,63 @@ class ArrayLayout:
             table.sort(["asset_code", "sequence_number"])
 
         return table
+
+    def export_telescope_list_as_json(self, crs_name):
+        """
+        Return a single-telescope list as simtools-DB-style json.
+
+        Parameters
+        ----------
+        crs_name: str
+            Name of coordinate system to be used for export.
+
+        Returns
+        -------
+        dict
+            Dictionary with array element information.
+        """
+        table = self.export_telescope_list_table(crs_name)
+        if len(table) != 1:
+            raise ValueError("Only one telescope can be exported to json")
+        parameter_name = value_string = None
+        if crs_name == "ground":
+            parameter_name = "array_element_position_ground"
+            value_string = gen.convert_list_to_string(
+                [
+                    table["position_x"][0].value,
+                    table["position_y"][0].value,
+                    table["position_z"][0].value,
+                ]
+            )
+        elif crs_name == "utm":
+            parameter_name = "array_element_position_utm"
+            value_string = gen.convert_list_to_string(
+                [
+                    table["utm_east"][0].value,
+                    table["utm_north"][0].value,
+                    table["altitude"][0].value,
+                ]
+            )
+        elif crs_name == "mercator":
+            parameter_name = "array_element_position_mercator"
+            value_string = gen.convert_list_to_string(
+                [
+                    table["latitude"][0].value,
+                    table["longitude"][0].value,
+                    table["altitude"][0].value,
+                ]
+            )
+        return {
+            "parameter": parameter_name,
+            "instrument": table["telescope_name"][0],
+            "site": self.site,
+            "version": self.model_version,
+            "value": value_string,
+            "unit": "m",
+            "type": "float64",
+            "applicable": True,
+            "file": False,
+        }
 
     def get_number_of_telescopes(self):
         """
