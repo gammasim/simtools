@@ -1,15 +1,15 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-convert-geo-coordinates-of-array-elements
-  TEST_NAME: utm_to_ground_json
+  TEST_NAME: ground_to_utm_json
   CONFIGURATION:
-    INPUT: tests/resources/array_element_position_utm.json
+    INPUT: tests/resources/array_element_position_ground.json
     SITE: South
-    EXPORT: ground
+    EXPORT: utm
     MODEL_VERSION: "2024-02-01"
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.json
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |
-        tests/resources/array_element_position_ground.json
+        tests/resources/array_element_position_utm.json
       TOLERANCE: 1.e-2
