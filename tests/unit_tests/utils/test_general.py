@@ -524,16 +524,16 @@ def test_find_file_not_found(tmp_test_directory) -> None:
 
 
 def test_is_url():
-    url = "http://www.desy.de"
+    url = "https://www.desy.de"
     assert gen.is_url(url) is True
 
-    url = "ftp://www.desy.de"
+    url = "sftp://www.desy.de"
     assert gen.is_url(url) is True
 
     url = ""
     assert gen.is_url(url) is False
 
-    url = "http://"
+    url = "https://"
     assert gen.is_url(url) is False
 
     url = "desy.de"
@@ -570,9 +570,10 @@ def test_collect_data_from_http():
 
 
 def test_join_url_or_path():
-    assert gen.join_url_or_path("http://www.desy.de", "test") == "http://www.desy.de/test"
+    assert gen.join_url_or_path("https://www.desy.de", "test") == "https://www.desy.de/test"
     assert (
-        gen.join_url_or_path("http://www.desy.de", "test", "test") == "http://www.desy.de/test/test"
+        gen.join_url_or_path("https://www.desy.de", "test", "test")
+        == "https://www.desy.de/test/test"
     )
     assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
 
