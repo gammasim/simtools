@@ -35,6 +35,7 @@ $CMD run -d \
   mongo:latest
 
 echo "Waiting for MongoDB to start..."
+sleep 5
 # Loop until MongoDB is ready
 RETRIES=30
 until $CMD exec $CONTAINER_NAME mongosh --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
