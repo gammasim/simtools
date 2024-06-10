@@ -16,18 +16,18 @@
 
         .. code-block:: console
 
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \\
-            --illuminator ILLN-01 --light_source_setup variable \\
+            simtools-simulate-light-emission --telescope MSTN-04 --site North \
+            --illuminator ILLN-01 --light_source_setup variable \
             --model_version prod6 --light_source_type led
 
     2. Simulate light emission with telescopes at fixed positions according to the layout:
 
         .. code-block:: console
 
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \\
-            --illuminator ILLN-01 --light_source_setup layout \\
-            --model_version prod6 --telescope_file \\
-            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \\
+            simtools-simulate-light-emission --telescope MSTN-04 --site North \
+            --illuminator ILLN-01 --light_source_setup layout \
+            --model_version prod6 --telescope_file \
+            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \
             --light_source_type led
 
     Command Line Arguments
@@ -308,6 +308,9 @@ def default_le_configs(le_application):
                 "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
                 "names": ["z_position"],
             },
+            # TODO: Hardcoded illuminator 1 coordinates until we have added them to the DB.
+            # When available use the coordinates from CalibrationModel instance directly in
+            # simtel_light_emission.
             "x_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
@@ -439,8 +442,6 @@ def main():
 
     elif args_dict["light_source_setup"] == "layout":
 
-        # TODO: Here we use coordinates from the telescope list, change as soon as
-        # coordinates are in DB i.e. calibration_model.coordinate, telescope_model.coordinate
         array_model = ArrayModel(
             mongo_db_config=db_config,
             model_version=args_dict["model_version"],
@@ -454,7 +455,7 @@ def main():
             default_le_config["x_pos"]["real"] = xyz[0]
             default_le_config["y_pos"]["real"] = xyz[1]
             default_le_config["z_pos"]["real"] = xyz[2]
-            print("Coordinates ground", xyz)
+
         except KeyError as exc:
             logger.error(f"Telescope {args_dict['telescope']} not found in array model")
             raise exc
