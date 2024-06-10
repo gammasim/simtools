@@ -115,7 +115,7 @@ class DataValidator:
 
         """
 
-        if not self.data_dict.get("parameter") == Path(self.data_file_name).stem:
+        if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
             self._logger.error(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
                 f"file name {Path(self.data_file_name).stem} do not match."
@@ -641,7 +641,7 @@ class DataValidator:
         """
 
         self._logger.debug(
-            f"Getting reference data column {column_name} " f"from schema {self._data_description}"
+            f"Getting reference data column {column_name} from schema {self._data_description}"
         )
         try:
             return (
