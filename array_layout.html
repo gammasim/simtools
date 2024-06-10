@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+g6562752 Manual</title>
+    <title>Layout &#8212; simtools v0.1.dev1+gd17c42d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=bfb33257"></script>
+    <script src="_static/documentation_options.js?v=f5de1c80"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6562752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd17c42d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -442,7 +442,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.from_array_layout_name"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.from_array_layout_name()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.select_assets"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.select_assets()</span></code></a></li>
@@ -570,33 +569,6 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>astropy.table.QTable</dt><dd><p>Astropy table with the telescope layout information.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.from_array_layout_name">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_array_layout_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.from_array_layout_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.from_array_layout_name" title="Link to this definition">#</a></dt>
-<dd><p>Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, …).
-Layout definitions are given in the data/layout path.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
-</dd>
-<dt><strong>array_layout_name: str</strong></dt><dd><p>e.g. South-4LST, North-Prod5 …</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model (e.g., prod6).</p>
-</dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ArrayLayout</dt><dd><p>Instance of the ArrayLayout.</p>
 </dd>
 </dl>
 </dd>
@@ -1098,7 +1070,6 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.from_array_layout_name"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.from_array_layout_name()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.select_assets"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.select_assets()</span></code></a></li>

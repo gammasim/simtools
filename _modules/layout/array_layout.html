@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+g6562752 Manual</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+gd17c42d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=bfb33257"></script>
+    <script src="../../_static/documentation_options.js?v=f5de1c80"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6562752 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd17c42d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -450,52 +450,6 @@ document.write(`
             <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="n">telescope_list_metadata_file</span><span class="p">,</span>
             <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
         <span class="p">)</span>
-
-<div class="viewcode-block" id="ArrayLayout.from_array_layout_name">
-<a class="viewcode-back" href="../../array_layout.html#layout.array_layout.ArrayLayout.from_array_layout_name">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_array_layout_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">array_layout_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read telescope list from file for given layout name (e.g. South-4LST, North-Prod5, ...).</span>
-<span class="sd">        Layout definitions are given in the data/layout path.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mongo_db_config: dict</span>
-<span class="sd">            MongoDB configuration.</span>
-<span class="sd">        array_layout_name: str</span>
-<span class="sd">            e.g. South-4LST, North-Prod5 ...</span>
-<span class="sd">        model_version: str</span>
-<span class="sd">            Version of the model (e.g., prod6).</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Instance label. Important for output file naming.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ArrayLayout</span>
-<span class="sd">            Instance of the ArrayLayout.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">split_name</span> <span class="o">=</span> <span class="n">array_layout_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
-        <span class="n">site_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">split_name</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">array_name</span> <span class="o">=</span> <span class="n">split_name</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">valid_array_layout_name</span> <span class="o">=</span> <span class="n">site_name</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">array_name</span>
-
-        <span class="n">telescope_list_file</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_input_data_file</span><span class="p">(</span>
-            <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;telescope_positions-</span><span class="si">{</span><span class="n">valid_array_layout_name</span><span class="si">}</span><span class="s2">.ecsv&quot;</span>
-        <span class="p">)</span>
-
-        <span class="n">layout</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">site_name</span><span class="p">,</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">valid_array_layout_name</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-            <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">telescope_list_file</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">layout</span></div>
-
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
