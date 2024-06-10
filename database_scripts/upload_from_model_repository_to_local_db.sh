@@ -34,7 +34,7 @@ echo "Cloning model parameters from $SIMTOOLS_DB_SIMULATION_MODEL_URL"
 rm -rf ./tmp_model_parameters
 git clone $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 
-model_directory="./tmp/model_versions/"
+model_directory="./tmp_model_parameters/model_versions/"
 
 for dir in "${model_directory}"*/; do
   model_version=$(basename "${dir}")
