@@ -95,7 +95,8 @@ class DatabaseHandler:
                 username=self.mongo_db_config["db_api_user"],
                 password=self.mongo_db_config["db_api_pw"],
                 authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
-                ssl=True,
+                directConnection=("localhost" in self.mongo_db_config["db_server"]),
+                ssl=("localhost" not in self.mongo_db_config["db_server"]),
                 tlsallowinvalidhostnames=True,
                 tlsallowinvalidcertificates=True,
             )
