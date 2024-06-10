@@ -52,8 +52,6 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 * starts a container with the image and initialize a new database
 * add a user with 'readWrite' role
 
-Note that (for unknown reason) the script needs to be executed twice.
-
 ### Filling the local database instance
 
 #### Option 1: Fill local database from remote DB dump
