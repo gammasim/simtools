@@ -238,22 +238,22 @@ class CameraEfficiency:
                     C2 = C1 * numbers[4] * numbers[5]  # noqa: N806
                     C3 = C2 * numbers[6] * numbers[7]  # noqa: N806
                     C4 = C3 * numbers[3]  # noqa: N806
-                    C4x = C1 * numbers[3] * numbers[6] * numbers[7]  # noqa: N806
+                    c4x_value = C1 * numbers[3] * numbers[6] * numbers[7]  # noqa: N806
                     _results["C1"].append(C1)
                     _results["C2"].append(C2)
                     _results["C3"].append(C3)
                     _results["C4"].append(C4)
-                    _results["C4x"].append(C4x)
+                    _results["C4x"].append(c4x_value)
                     N1 = numbers[14]  # noqa: N806
                     N2 = N1 * numbers[4] * numbers[5]  # noqa: N806
                     N3 = N2 * numbers[6] * numbers[7]  # noqa: N806
                     N4 = N3 * numbers[3]  # noqa: N806
-                    N4x = N1 * numbers[3] * numbers[6] * numbers[7]  # noqa: N806
+                    n4x_value = N1 * numbers[3] * numbers[6] * numbers[7]  # noqa: N806
                     _results["N1"].append(N1)
                     _results["N2"].append(N2)
                     _results["N3"].append(N3)
                     _results["N4"].append(N4)
-                    _results["N4x"].append(N4x)
+                    _results["N4x"].append(n4x_value)
 
         self._results = Table(_results)
         self._has_results = True
