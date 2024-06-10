@@ -36,6 +36,9 @@ def main():
     for db_name in databases:
         if args_dict["db_name"] != "all" and db_name != args_dict["db_name"]:
             continue
+        # missing admin rights; skip config and admin
+        if db_name in ("config", "admin", "local"):
+            continue
         print("Database:", db_name)
         collections = db.get_collections(db_name=db_name)
         print("   Collections:", collections)
