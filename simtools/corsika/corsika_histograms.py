@@ -1234,8 +1234,8 @@ class CorsikaHistograms:
 
         for _, function_dict in self.dict_1d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
-            function = getattr(self, function_dict["function"])
-            hist_1d_list, x_bin_edges_list = function()
+            histogram_function = getattr(self, function_dict["function"])
+            hist_1d_list, x_bin_edges_list = histogram_function()
             x_bin_edges_list = x_bin_edges_list * function_dict["axis unit"]
             if function_dict["function"] == "get_photon_density_distr":
                 histogram_value_unit = 1 / (function_dict["axis unit"] ** 2)
@@ -1282,52 +1282,59 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 2D distributions.
         """
+        function = "function"
+        file_name = "file name"
+        title = "title"
+        x_bin_edges = "x bin edges"
+        x_axis_unit = "x axis unit"
+        y_bin_edges = "y bin edges"
+        y_axis_unit = "y axis unit"
         if self._dict_2d_distributions is None:
             self._dict_2d_distributions = {
                 "counts": {
-                    "function": "get_2d_photon_position_distr",
-                    "file name": "hist_2d_photon_count_distr",
-                    "title": "Photon count distribution on the ground",
-                    "x bin edges": "x position on the ground",
-                    "x axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
-                    "y bin edges": "y position on the ground",
-                    "y axis unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
+                    function: "get_2d_photon_position_distr",
+                    file_name: "hist_2d_photon_count_distr",
+                    title: "Photon count distribution on the ground",
+                    x_bin_edges: "x position on the ground",
+                    x_axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    y_bin_edges: "y position on the ground",
+                    y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "density": {
-                    "function": "get_2d_photon_density_distr",
-                    "file name": "hist_2d_photon_density_distr",
-                    "title": "Photon density distribution on the ground",
-                    "x bin edges": "x position on the ground",
-                    "x axis unit": self.hist_config["hist_position"]["x axis"]["start"].unit,
-                    "y bin edges": "y position on the ground",
-                    "y axis unit": self.hist_config["hist_position"]["y axis"]["start"].unit,
+                    function: "get_2d_photon_density_distr",
+                    file_name: "hist_2d_photon_density_distr",
+                    title: "Photon density distribution on the ground",
+                    x_bin_edges: "x position on the ground",
+                    x_axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    y_bin_edges: "y position on the ground",
+                    y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "direction": {
-                    "function": "get_2d_photon_direction_distr",
-                    "file name": "hist_2d_photon_direction_distr",
-                    "title": "Photon arrival direction",
-                    "x bin edges": "x direction cosine",
-                    "x axis unit": u.dimensionless_unscaled,
-                    "y bin edges": "y direction cosine",
-                    "y axis unit": u.dimensionless_unscaled,
+                    function: "get_2d_photon_direction_distr",
+                    file_name: "hist_2d_photon_direction_distr",
+                    title: "Photon arrival direction",
+                    x_bin_edges: "x direction cosine",
+                    x_axis_unit: u.dimensionless_unscaled,
+                    y_bin_edges: "y direction cosine",
+                    y_axis_unit: u.dimensionless_unscaled,
                 },
                 "time_altitude": {
-                    "function": "get_2d_photon_time_altitude_distr",
-                    "file name": "hist_2d_photon_time_altitude_distr",
-                    "title": "Time of arrival vs altitude of emission",
-                    "x bin edges": "Time of arrival",
-                    "x axis unit": self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
-                    "y bin edges": "Altitude of emission",
-                    "y axis unit": self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+                    function: "get_2d_photon_time_altitude_distr",
+                    file_name: "hist_2d_photon_time_altitude_distr",
+                    title: "Time of arrival vs altitude of emission",
+                    x_bin_edges: "Time of arrival",
+                    x_axis_unit: self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+                    y_bin_edges: "Altitude of emission",
+                    y_axis_unit: self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
                 },
                 "num_photons_per_telescope": {
-                    "function": "get_2d_num_photons_distr",
-                    "file name": "hist_2d_photon_telescope_event_distr",
-                    "title": "Number of photons per telescope and per event",
-                    "x bin edges": "Telescope counter",
-                    "x axis unit": u.dimensionless_unscaled,
-                    "y bin edges": "Event counter",
-                    "y axis unit": u.dimensionless_unscaled,
+                    function: "get_2d_num_photons_distr",
+                    file_name: "hist_2d_photon_telescope_event_distr",
+                    title: "Number of photons per telescope and per event",
+                    x_bin_edges: "Telescope counter",
+                    x_axis_unit: u.dimensionless_unscaled,
+                    y_bin_edges: "Event counter",
+                    y_axis_unit: u.dimensionless_unscaled,
                 },
             }
         return self._dict_2d_distributions
@@ -1343,9 +1350,9 @@ class CorsikaHistograms:
         """
         for property_name, function_dict in self.dict_2d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
-            function = getattr(self, function_dict["function"])
+            histogram_function = getattr(self, function_dict["function"])
 
-            hist_2d_list, x_bin_edges_list, y_bin_edges_list = function()
+            hist_2d_list, x_bin_edges_list, y_bin_edges_list = histogram_function()
             if function_dict["function"] == "get_2d_photon_density_distr":
                 histogram_value_unit = 1 / (
                     self.dict_2d_distributions[property_name]["x axis unit"]
