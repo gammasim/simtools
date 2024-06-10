@@ -15,7 +15,7 @@ fi
 
 # Clean up environment variables
 clean_var() {
-    echo "$1" | sed "s/[ ']*//g"
+    echo "${1//[[:space:]\']/}"
 }
 
 SIMTOOLS_DB_SERVER=$(clean_var "$SIMTOOLS_DB_SERVER")
@@ -23,6 +23,7 @@ SIMTOOLS_DB_API_PORT=$(clean_var "$SIMTOOLS_DB_API_PORT")
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=$(clean_var "$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE")
 SIMTOOLS_DB_API_USER=$(clean_var "$SIMTOOLS_DB_API_USER")
 SIMTOOLS_DB_API_PW=$(clean_var "$SIMTOOLS_DB_API_PW")
+SIMTOOLS_DB_SIMULATION_MODEL=$(clean_var "$SIMTOOLS_DB_SIMULATION_MODEL")
 
 [[ "$1" ]] && DB_TO_DUMP="$1" || DB_TO_DUMP="$SIMTOOLS_DB_SIMULATION_MODEL"
 
@@ -32,6 +33,8 @@ echo "Port: $SIMTOOLS_DB_API_PORT"
 echo "Auth DB: $SIMTOOLS_DB_API_AUTHENTICATION_DATABASE"
 echo "User: $SIMTOOLS_DB_API_USER"
 echo "Database to dump: $DB_TO_DUMP"
+
+exit
 
 mkdir -p dump
 
