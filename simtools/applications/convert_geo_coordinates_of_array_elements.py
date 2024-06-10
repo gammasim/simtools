@@ -153,9 +153,9 @@ def main():
         validate_schema_file = None
     else:
         metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
-        site = (metadata.get_site(from_input_meta=True),)
+        site = metadata.get_site(from_input_meta=True)
         top_level_meta = metadata.top_level_meta
-        validate_schema_file = (metadata.get_data_model_schema_file_name(),)
+        validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
         mongo_db_config=db_config,
