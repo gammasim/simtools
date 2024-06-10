@@ -495,14 +495,14 @@ class Camera:
         edge_pixel_indices = []
 
         for i_pix, _ in enumerate(pixels["x"]):
-            if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
-                if pixels["pix_on"][i_pix]:
-                    if len(neighbours[i_pix]) < 6:
-                        edge_pixel_indices.append(i_pix)
-            elif pixels["pixel_shape"] == 2:
-                if pixels["pix_on"][i_pix]:
-                    if len(neighbours[i_pix]) < 4:
-                        edge_pixel_indices.append(i_pix)
+            if (pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3) and pixels["pix_on"][
+                i_pix
+            ]:
+                if len(neighbours[i_pix]) < 6:
+                    edge_pixel_indices.append(i_pix)
+            elif pixels["pixel_shape"] == 2 and pixels["pix_on"][i_pix]:
+                if len(neighbours[i_pix]) < 4:
+                    edge_pixel_indices.append(i_pix)
 
         return edge_pixel_indices
 
