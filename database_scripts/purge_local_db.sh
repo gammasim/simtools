@@ -1,6 +1,6 @@
 #!/bin/bash
-# Purge local images, containers, networks related to the simtools-mongodb
 # **DANGEROUS; this removes items**
+# Purge images, containers, networks related to a local simtools-db setup
 
 SIMTOOLS_NETWORK="simtools-mongo-network"
 CONTAINER_NAME="simtools-mongodb"
@@ -12,6 +12,13 @@ elif command -v docker &> /dev/null; then
     CMD=docker
 else
     echo "Error: Neither podman nor docker is available."
+    exit 1
+fi
+
+# ask for confirmation, as this script removes items
+read -r -p "Do you really want to continue? This script removes items. Type 'yes' to confirm: " user_input
+if [ "$user_input" != "yes" ]; then
+    echo "Operation aborted."
     exit 1
 fi
 
