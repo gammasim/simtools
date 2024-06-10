@@ -7,20 +7,19 @@ This directory contains a collection of scripts that can be used to interact wit
 
 ## Running a local copy of the model parameter database
 
-The model parameter database is a mongoDB instance running on a server at DESY.
+The production version of model-parameter database is a mongoDB instance running on a server at DESY.
 For testing and development, it might be useful to work with a local copy of the database.
+The following scripts allow to setup and fill a local database running in a container.
 
-**The following steps are "experimental" and need further testing.**
-
-### Startup and configure local data base instance
+### Startup and configure local database instance
 
 The scripts `setup_local_db.sh` generates a local database instance in a container:
 
 * downloads a mongoDB docker image
 * starts a container with the image and initialize a new database
-* add a user 'api' with 'readWrite' role
+* add a user with 'readWrite' role
 
-Note that for unknown reason, the script needs to be executed twice (!!), in case error messages are shown during the first run.
+Note that (for unknown reason) the script needs to be executed twice.
 
 ### Fill local database from remote DB dump
 
@@ -35,7 +34,7 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 ### Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_local_db.sh` uses the model parameter repository from the CTAO gitlab and
+The script `upload_from_model_repository_to_local_db.sh` uses the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) from the CTAO gitlab and
 uploads its contents to the local database instance.
 
 Note that database names are hardcoded in the scripts and need to be adjusted accordingly.
