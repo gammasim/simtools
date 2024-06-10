@@ -1,6 +1,7 @@
 #!/bin/bash
-# Dump a remove mongo DB to a local directory
-# uses environment variables from .env file defined in "../.env"
+# Dump a remote mongo DB to a local directory
+# uses database definitions found in environment variables
+# (from .env file defined in "../.env")
 
 if [ -f ../.env ]; then
     while IFS='=' read -r key value || [[ -n "$key" ]]; do
