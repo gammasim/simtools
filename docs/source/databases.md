@@ -3,17 +3,34 @@
 The simtools package uses a prototype MongoDB database for the telescopes and sites model, reference data, derived values and test data.
 Access to the DB is handled via a dedicated API module. Access to the DB is restricted, please contact the developers in order to obtain access.
 
-Simulation model parameters are stored in databases, see the description in the [Simulation Model](model_parameters.md#simulation-model) section.
+Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters).
 
-Several different data bases are used:
+Several different databases are used:
 
-* model parameters DB (name needs to be indicated by `SIMTOOLS_DB_SIMULATION_MODEL` in your `.envfile` )
-* derived values DB includes simtools-derived values
+* model parameters DB (name needs to be indicated by `SIMTOOLS_DB_SIMULATION_MODEL` in your `.env` file)
+* derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Values` defined in `db_handler.DB_DERIVED_VALUES`)
 
 :::{Important}
 The structure of the database is currently under revisions and will change in near future.
 This documentation is therefore incomplete.
 :::
+
+## Using the remote database located at DESY
+
+A prototype remote database is located at DESY. Access to the database is restricted, please contact the developers in order to obtain access.
+
+Database and access configuration is given in the `.env` file, see the [.env_template](../../.env_template) file as example:
+
+```console
+SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
+SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
+SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
+SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person
+SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
+SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
+# SIMTOOLS_DB_SIMULATION_MODEL_URL=''
+SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
+```
 
 ## Browsing the mongoDB database
 
@@ -25,11 +42,11 @@ The production version of model-parameter database is a mongoDB instance running
 For testing and development, it might be useful to work with a local copy of the database.
 The following scripts allow to setup and fill a local database running in a container.
 
-All scripts to setup and fill a local database instance are located in the `database_scripts` directory.
+All scripts to setup and fill a local database instance are located in the [database_scripts](../../database_scripts/) directory.
 
 ### Startup and configure local database instance
 
-The script `setup_local_db.sh` generates a local database instance in a container:
+The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generates a local database instance in a container:
 
 * downloads a mongoDB docker image
 * starts a container with the image and initialize a new database
@@ -81,4 +98,7 @@ SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 
 `SIMTOOLS_DB_SIMULATION_MODEL` is set as an example here to `Staging-CTA-Simulation-Model-v0-3-0` and should be changed accordingly.
 
-For using simtools inside a container, connect to the local network adding `--network simtools-mongo-network` to the `docker run` command.
+For using simtools inside a container:
+
+* set the `SIMTOOLS_DB_SERVER` in the `.env` file to SIMTOOLS_DB_SERVER='simtools-mongodb'.
+* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g, `podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash`
