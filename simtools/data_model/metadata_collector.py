@@ -216,7 +216,7 @@ class MetadataCollector:
         _association = {}
 
         try:
-            if self.args_dict.get("site", None):
+            if self.args_dict and self.args_dict.get("site", None):
                 _association["site"] = names.validate_site_name(self.args_dict["site"])
             if "telescope" in self.args_dict:
                 _telescope_name = names.validate_telescope_name(self.args_dict["telescope"])
