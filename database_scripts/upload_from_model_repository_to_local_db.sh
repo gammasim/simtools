@@ -22,10 +22,9 @@ db.createUser({
   user: 'api',
   pwd: 'password',
   roles: [
-    {
-      role: 'readWrite',
-      db: '$SIMTOOLS_DB_SIMULATION_MODEL',
-    },
+    { role: 'readWriteAnyDatabase', db: 'admin' },
+    { role: 'dbAdminAnyDatabase', db: 'admin' },
+    { role: 'userAdminAnyDatabase', db: 'admin' }
   ]
 });
 "
