@@ -121,7 +121,7 @@ def write_utm_array_elements_to_repository(args_dict, logger):
         output_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Writing array element positions (utm) to {output_path}")
         ModelDataWriter.write_dict_to_model_parameter_json(
-            file_name=output_path / "array_element_position_utm.json", data=data
+            file_name=output_path / "array_element_position_utm.json", data_dict=data
         )
 
 
