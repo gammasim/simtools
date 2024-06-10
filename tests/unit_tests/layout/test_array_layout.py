@@ -74,6 +74,14 @@ def array_layout_south_four_lst_instance(db_config, model_version):
     )
 
 
+def test_initialize_site_parameters_from_db(caplog):
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            ArrayLayout(site="North", mongo_db_config=None, model_version="test_model_version")
+    assert "No database configuration provided" in caplog.text
+
+
 def test_initialize_coordinate_systems(
     north_layout_center_data_dict,
     array_layout_north_instance,
@@ -390,6 +398,7 @@ def test_len(telescope_north_test_file, db_config, model_version):
         site="North",
     )
     assert len(layout) == 13
+    assert layout.get_number_of_telescopes() == 13
 
 
 def test_getitem(db_config, telescope_north_test_file, model_version):
@@ -437,3 +446,52 @@ def test_export_telescope_list_table(
         table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
     except IndexError:
         pytest.fail("IndexError raised")
+
+
+def test_export_telescope_list_as_json(db_config, model_version, telescope_north_utm_test_file):
+
+    layout = ArrayLayout(
+        mongo_db_config=db_config,
+        site="North",
+        model_version=model_version,
+        telescope_list_file="tests/resources/array_element_position_ground.json",
+    )
+
+    ground_dict = layout.export_telescope_list_as_json(crs_name="ground")
+    assert isinstance(ground_dict, dict)
+    assert ground_dict["instrument"] == "SSTS-09"
+    assert ground_dict["parameter"] == "array_element_position_ground"
+
+    utm_dict = layout.export_telescope_list_as_json(crs_name="utm")
+    assert utm_dict["parameter"] == "array_element_position_utm"
+
+    mercator_dict = layout.export_telescope_list_as_json(crs_name="mercator")
+    assert mercator_dict["parameter"] == "array_element_position_mercator"
+
+    layout_utm = ArrayLayout(
+        mongo_db_config=db_config,
+        site="North",
+        model_version=model_version,
+        telescope_list_file=telescope_north_utm_test_file,
+    )
+    with pytest.raises(ValueError, match=r"Only one telescope can be exported to json"):
+        layout_utm.export_telescope_list_as_json(crs_name="ground")
+
+
+def test_read_table_from_json_file(db_config, model_version):
+
+    layout = ArrayLayout(
+        mongo_db_config=db_config,
+        site="North",
+        model_version=model_version,
+        telescope_list_file="tests/resources/array_element_position_ground.json",
+    )
+    ground_table = layout._read_table_from_json_file(
+        "tests/resources/array_element_position_ground.json"
+    )
+    assert isinstance(ground_table, QTable)
+    assert "position_x" in ground_table.colnames
+
+    utm_table = layout._read_table_from_json_file("tests/resources/array_element_position_utm.json")
+    assert isinstance(utm_table, QTable)
+    assert "utm_north" in utm_table.colnames
