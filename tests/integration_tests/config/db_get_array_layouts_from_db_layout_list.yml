@@ -5,6 +5,6 @@ CTA_SIMPIPE:
     SITE: North
     MODEL_VERSION: "2024-02-01"
     ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
-    COORDINATE_SYSTEM: utm
+    COORDINATE_SYSTEM: ground
     OUTPUT_PATH: simtools-tests
-    OUTPUT_FILE: array_layout_south_utm_from_list.ecsv
+    OUTPUT_FILE: array_layout_south_ground_from_list.ecsv
