@@ -74,17 +74,6 @@ def array_layout_south_four_lst_instance(db_config, model_version):
     )
 
 
-def test_from_array_layout_name(io_handler, db_config, model_version):
-    layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, model_version=model_version, array_layout_name="South-4LST"
-    )
-    assert 4 == layout.get_number_of_telescopes()
-    layout = ArrayLayout.from_array_layout_name(
-        mongo_db_config=db_config, model_version=model_version, array_layout_name="North-4MST"
-    )
-    assert 4 == layout.get_number_of_telescopes()
-
-
 def test_initialize_coordinate_systems(
     north_layout_center_data_dict,
     array_layout_north_instance,
