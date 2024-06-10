@@ -34,17 +34,14 @@ echo "Auth DB: $SIMTOOLS_DB_API_AUTHENTICATION_DATABASE"
 echo "User: $SIMTOOLS_DB_API_USER"
 echo "Database to dump: $DB_TO_DUMP"
 
-exit
-
 mkdir -p dump
 
-mongodump --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}" \
- --ssl --tlsInsecure \
- --username="$SIMTOOLS_DB_API_USER" --password="$SIMTOOLS_DB_API_PW" \
- --authenticationDatabase="$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE" \
- --db="$DB_TO_DUMP" --out="./dump/"
+if ! mongodump --uri="mongodb://${SIMTOOLS_DB_SERVER}:${SIMTOOLS_DB_API_PORT}" \
+     --ssl --tlsInsecure \
+     --username="$SIMTOOLS_DB_API_USER" --password="$SIMTOOLS_DB_API_PW" \
+     --authenticationDatabase="$SIMTOOLS_DB_API_AUTHENTICATION_DATABASE" \
+     --db="$DB_TO_DUMP" --out="./dump/"; then
 
-if [ $? -ne 0 ]; then
     echo "Failed to connect to MongoDB server. Please check your connection settings and try again."
     exit 1
 fi
