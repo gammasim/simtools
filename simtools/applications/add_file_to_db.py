@@ -104,13 +104,12 @@ def main():
         for ext_now in db.ALLOWED_FILE_EXTENSIONS:
             files_to_insert.extend(Path(args_dict["input_path"]).glob(f"*{ext_now}"))
 
-    plural = "s"
     if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
     if len(files_to_insert) == 1:
         plural = ""
     else:
-        pass
+        plural = "s"
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
     print(*files_to_insert, sep="\n")
