@@ -249,7 +249,7 @@ def main():
 
     simulator = Simulator(
         label=label,
-        simulation_software=args_dict["simulator"],
+        simulation_software=args_dict["simulation_software"],
         simulator_source_path=args_dict["simtel_path"],
         config_data=config_data,
         submit_command="local",
