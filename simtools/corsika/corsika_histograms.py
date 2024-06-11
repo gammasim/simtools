@@ -397,7 +397,7 @@ class CorsikaHistograms:
             xy_bin = 64
         x_axis = "x axis"
         y_axis = "y axis"
-        z_axis = "z_axis"
+        z_axis = "z axis"
         histogram_config = {
             "hist_position": {
                 x_axis: {
