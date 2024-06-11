@@ -39,7 +39,7 @@ def array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
     array_simulator = Simulator(
-        simulator="simtel",
+        simulation_software="simtel",
         simulator_source_path=simtel_path,
         label=label,
         config_data=simulator_config_data_north,
@@ -55,7 +55,7 @@ def shower_simulator(
 ):
 
     shower_simulator = Simulator(
-        simulator="corsika",
+        simulation_software="corsika",
         simulator_source_path=simtel_path,
         label=label,
         config_data=simulator_config_data_north,
@@ -70,7 +70,7 @@ def shower_array_simulator(
     label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
 ):
     shower_array_simulator = Simulator(
-        simulator="corsika_simtel",
+        simulation_software="corsika_simtel",
         simulator_source_path=simtel_path,
         label=label,
         config_data=simulator_config_data_north,
@@ -97,17 +97,17 @@ def test_guess_run_from_file(array_simulator):
 
 
 def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator):
-    array_simulator.simulator = "simtel"
-    assert array_simulator.simulator == "simtel"
+    array_simulator.simulation_software = "simtel"
+    assert array_simulator.simulation_software == "simtel"
 
-    shower_simulator.simulator = "corsika"
-    assert shower_simulator.simulator == "corsika"
+    shower_simulator.simulation_software = "corsika"
+    assert shower_simulator.simulation_software == "corsika"
 
-    shower_array_simulator.simulator = "corsika_simtel"
-    assert shower_array_simulator.simulator == "corsika_simtel"
+    shower_array_simulator.simulation_software = "corsika_simtel"
+    assert shower_array_simulator.simulation_software == "corsika_simtel"
 
     with pytest.raises(gen.InvalidConfigDataError):
-        shower_simulator.simulator = "this_simulator_is_not_there"
+        shower_simulator.simulation_software = "this_simulator_is_not_there"
 
 
 def test_load_configuration_and_simulation_model(array_simulator, simulator_config_data_north):
@@ -291,7 +291,7 @@ def test_no_corsika_data(
     new_shower_config_data.pop("data_directory", None)
     new_shower_simulator = Simulator(
         label=label,
-        simulator="corsika",
+        simulation_software="corsika",
         config_data=new_shower_config_data,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
@@ -309,7 +309,7 @@ def test_resources(
     simulator_config_data_north["showers"]["run_range"] = None
     shower_simulator = Simulator(
         label="corsika-test",
-        simulator="corsika",
+        simulation_software="corsika",
         config_data=simulator_config_data_north,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
@@ -327,7 +327,7 @@ def test_make_resources_report(
     simulator_config_data_north["showers"]["run_range"] = None
     shower_simulator = Simulator(
         label="corsika-test",
-        simulator="corsika",
+        simulation_software="corsika",
         config_data=simulator_config_data_north,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
@@ -360,7 +360,7 @@ def test_get_runs_to_simulate(
 ):
     shower_simulator = Simulator(
         label="corsika-test",
-        simulator="corsika",
+        simulation_software="corsika",
         config_data=simulator_config_data_north,
         simulator_source_path=simtel_path,
         mongo_db_config=db_config,
