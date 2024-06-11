@@ -1,12 +1,8 @@
 #!/usr/bin/python3
-
 """
-    Summary
-    -------
-    This application is an example of how to produce sim_telarray config \
-    files for a given array.
+    Generate sim_telarray config files for a given array.
 
-    All the input required has to be given as a yaml file by the command \
+    All the input required has to be given as a yaml file by the command
     line argument array_config.
 
     The required entries in the array_config file are:
@@ -17,10 +13,10 @@
 
     'model_version': name of a valid model version.
 
-    'default': telescope model names to be assigned to each telescope size by default. \
+    'default': telescope model names to be assigned to each telescope size by default.
 
-    As optional data, specific telescope models can be assigned to individual telescopes. \
-    This is done by the entries with the name of the telescope (as used by the layout \
+    As optional data, specific telescope models can be assigned to individual telescopes.
+    This is done by the entries with the name of the telescope (as used by the layout
     definition, ex. LSTN-01, MSTN-05, SSTS-10).
 
     Each telescope model can be set in two ways.
@@ -28,7 +24,7 @@
     a) A single str with the name of telescope model.
     Ex. 'MSTN-05': 'NectarCam-D'
 
-    b) A dict containing a 'name' key with the name of the telescope model and further keys \
+    b) A dict containing a 'name' key with the name of the telescope model and further keys
     with model parameters to be changed from the original model.
     Ex.:
 
@@ -80,18 +76,9 @@
 
     .. code-block:: console
 
-        simtools-produce-array-config --label test --array_config \\
-            array_config_test.yml
+        simtools-produce-array-config --label test --array_config array_config_test.yml
 
     The output is saved in simtools-output/test/model.
-
-    Expected final print-out message:
-
-    .. code-block:: console
-
-        INFO::array_model(l361)::export_simtel_array_config_file::Writing array config file into \
-        /workdir/external/simtools/simtools-output/test/model/CTA-TestLayout-North-2020-06-\
-        28_test.cfg
 """
 
 import logging
@@ -103,6 +90,7 @@ from simtools.model.array_model import ArrayModel
 
 
 def main():
+    """Generate sim_telarray config files for a given array."""
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=("Example of how to produce sim_telarray config files for a given array."),
