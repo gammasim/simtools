@@ -56,3 +56,15 @@ def test_get_array_elements_for_layout(db_config, model_version, caplog):
         with pytest.raises(ValueError):
             _north.get_array_elements_for_layout("not_a_layout")
         assert "Array layout 'not_a_layout' not found in 'North' site model." in caplog.text
+
+
+def test_get_list_of_array_layouts(db_config, model_version):
+    _north = SiteModel(
+        site="North",
+        mongo_db_config=db_config,
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+
+    assert isinstance(_north.get_list_of_array_layouts(), list)
+    assert "test_layout" in _north.get_list_of_array_layouts()
