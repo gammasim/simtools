@@ -157,7 +157,7 @@ def main():
 
     shower_simulator = Simulator(
         label=label,
-        simulator="corsika",
+        simulation_software="corsika",
         simulator_source_path=args_dict.get("simtel_path", None),
         config_data=shower_config_data,
         submit_command=args_dict.get("submit_command", ""),
