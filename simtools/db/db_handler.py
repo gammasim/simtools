@@ -88,14 +88,18 @@ class DatabaseHandler:
         A PyMongo DB client
         """
         try:
+            direct_connection = self.mongo_db_config["db_server"] in (
+                "localhost",
+                "simtools-mongodb",
+            )
             _db_client = MongoClient(
                 self.mongo_db_config["db_server"],
                 port=self.mongo_db_config["db_api_port"],
                 username=self.mongo_db_config["db_api_user"],
                 password=self.mongo_db_config["db_api_pw"],
                 authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
-                directConnection=("localhost" in self.mongo_db_config["db_server"]),
-                ssl=("localhost" not in self.mongo_db_config["db_server"]),
+                directConnection=direct_connection,
+                ssl=not direct_connection,
                 tlsallowinvalidhostnames=True,
                 tlsallowinvalidcertificates=True,
             )
