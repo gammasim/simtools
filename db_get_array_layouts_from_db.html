@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+gdf077aa Manual</title>
+    <title>db_get_array_layouts_from_db &#8212; simtools v0.1.dev1+gdf077aa Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'convert_all_model_parameters_from_simtel';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'db_get_array_layouts_from_db';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="convert_model_parameter_from_simtel" href="convert_model_parameter_from_simtel.html" />
-    <link rel="prev" title="compare_cumulative_psf" href="compare_cumulative_psf.html" />
+    <link rel="next" title="db_add_model_parameters_from_repository_to_db" href="db_add_model_parameters_from_repository_to_db.html" />
+    <link rel="prev" title="convert_model_parameter_from_simtel" href="convert_model_parameter_from_simtel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -191,9 +191,9 @@
 <li class="toctree-l2"><a class="reference internal" href="add_value_from_json_to_db.html">add_value_from_json_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compare_cumulative_psf.html">compare_cumulative_psf</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">db_get_array_layouts_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
@@ -298,7 +298,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/convert_all_model_parameters_from_simtel.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/db_get_array_layouts_from_db.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -315,7 +315,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fconvert_all_model_parameters_from_simtel.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdb_get_array_layouts_from_db.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,7 +345,7 @@
       
       
       
-      <li><a href="_sources/convert_all_model_parameters_from_simtel.rst" target="_blank"
+      <li><a href="_sources/db_get_array_layouts_from_db.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -429,7 +429,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>convert_all_model_parameters_from_simtel</h1>
+    <h1>db_get_array_layouts_from_db</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -439,16 +439,9 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files"><code class="docutils literal notranslate"><span class="pre">get_list_of_parameters_and_schema_files()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters"><code class="docutils literal notranslate"><span class="pre">get_list_of_simtel_parameters()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel"><code class="docutils literal notranslate"><span class="pre">get_number_of_camera_pixel()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.print_list_of_files"><code class="docutils literal notranslate"><span class="pre">print_list_of_files()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.print_parameters_not_found"><code class="docutils literal notranslate"><span class="pre">print_parameters_not_found()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.read_and_export_parameters"><code class="docutils literal notranslate"><span class="pre">read_and_export_parameters()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">read_simtel_config_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_get_array_layouts_from_db.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -460,205 +453,55 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-convert_all_model_parameters_from_simtel">
-<span id="convert-all-model-parameters-from-simtel"></span><h1>convert_all_model_parameters_from_simtel<a class="headerlink" href="#module-convert_all_model_parameters_from_simtel" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>Convert all simulation model parameters exported from sim_telarray format using
-schema files. Check value, type, and range, convert units, and write json files
-ready to be submitted to the model database. Prints out parameters which are not found
-in simtel configuration file and parameters which are not found in simtools schema files.</p>
-</section>
+  <section id="db-get-array-layouts-from-db">
+<span id="id1"></span><h1>db_get_array_layouts_from_db<a class="headerlink" href="#db-get-array-layouts-from-db" title="Link to this heading">#</a></h1>
+<p id="module-db_get_array_layouts_from_db">Get list of array layouts or list of elements for a given layout as defined in the db.</p>
+<p>To get the list of pre-defined array layouts, use <code class="docutils literal notranslate"><span class="pre">--list_available_layouts</span></code>.</p>
+<p>To get the list of array elements for a given layout, use <code class="docutils literal notranslate"><span class="pre">--array_layout_name</span></code>.</p>
+<p>To get the positions for a set of array elements, use <code class="docutils literal notranslate"><span class="pre">--array_element_list</span></code>.
+Listing of array elements follows this logic:</p>
+<ul class="simple">
+<li><p>explicit listing: e.g., <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN-01,</span> <span class="pre">MSTN05</span></code></p></li>
+<li><p>listing of types: e.g, <code class="docutils literal notranslate"><span class="pre">-array_element_list</span> <span class="pre">MSTN</span></code> plots all telescopes of type MSTN.</p></li>
+</ul>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>simtel_cfg_file (str)</dt><dd><p>File name of sim_telarray configuration file containing all simulation model parameters.</p>
+<dt>list_available_layouts<span class="classifier">bool, optional</span></dt><dd><p>List available layouts in the database.</p>
 </dd>
-<dt>simtel_telescope_name (str)</dt><dd><p>Name of the telescope in the sim_telarray configuration file.</p>
+<dt>array_layout_name<span class="classifier">str</span></dt><dd><p>Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).</p>
 </dd>
-<dt>telescope (str, optional)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
+<dt>array_element_list<span class="classifier">list</span></dt><dd><p>List of array elements (e.g., telescopes) to plot (e.g., <code class="docutils literal notranslate"><span class="pre">LSTN-01</span> <span class="pre">LSTN-02</span> <span class="pre">MSTN</span></code>).</p>
+</dd>
+<dt>coordinate_system<span class="classifier">str, optional</span></dt><dd><p>Coordinate system for the array layout (ground or utm).</p>
+</dd>
+<dt>output_file<span class="classifier">str, optional</span></dt><dd><p>Name of the output file to be saved as astropy table (ecsv file)</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Extract model parameters with schema files from simtel configuration file
-(requires access to the model parameter repository)</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-convert-all-model-parameters-from-simtel \</span>
-<span class="go">   --schema_directory ../model_parameters/schema\</span>
-<span class="go">   --simtel_cfg_file all_telescope_config_la_palma.cfg\</span>
-<span class="go">   --simtel_telescope_name CT1\</span>
-<span class="go">   --telescope LSTN-01\</span>
-<span class="go">   --model_version &quot;2024-03-06&quot;</span>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<p>List pre-defined array layouts.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
 </pre></div>
 </div>
-<p>The export of the model parameters from sim_telarray for prod6 can be done e.g., as follows:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">./sim_telarray/bin/sim_telarray -c sim_telarray/cfg/CTA/CTA-PROD6-LaPalma.cfg \</span>
-<span class="go">    -C limits=no-internal -C initlist=no-internal -C list=no-internal \</span>
-<span class="go">    -C typelist=no-internal -C maximum_telescopes=30 -DNSB_AUTOSCALE \</span>
-<span class="go">    -DNECTARCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=30 /dev/null \</span>
-<span class="go">    2&gt;|/dev/null | grep &#39;(@cfg)&#39;  &gt;| all_telescope_config_la_palma.cfg</span>
-
-<span class="go">./sim_telarray/bin/sim_telarray -c sim_telarray/cfg/CTA/CTA-PROD6-Paranal.cfg \</span>
-<span class="go">    -C limits=no-internal -C initlist=no-internal -C list=no-internal \</span>
-<span class="go">    -C typelist=no-internal -C maximum_telescopes=87 -DNSB_AUTOSCALE \</span>
-<span class="go">    -DFLASHCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=87 /dev/null \</span>
-<span class="go">    2&gt;|/dev/null | grep &#39;(@cfg)&#39;  &gt;| all_telescope_config_paranal.cfg</span>
+<p>Retrieve telescope positions for array layout ‘test_layout’ from database.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
+<span class="go">    --array_layout_name test_layout</span>
+</pre></div>
+</div>
+<p>Retrieve telescope positions from database (utm coordinate system) and write to an ecsv files</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
+<span class="go">  --array_element_list LSTN-01 LSTN-02 MSTN</span>
+<span class="go">  --coordinate_system utm</span>
+<span class="go">  --output_file telescope_positions-test_layout.ecsv</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">get_list_of_parameters_and_schema_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#get_list_of_parameters_and_schema_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files" title="Link to this definition">#</a></dt>
-<dd><p>Return list of parameters and schema files located in schema file directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>schema_directory: str</strong></dt><dd><p>Directory with schema files for model parameter validation</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of parameters found in schema file directory.</p>
-</dd>
-<dt>list</dt><dd><p>List of schema files found in schema file directory.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">get_list_of_simtel_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#get_list_of_simtel_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Return list of simtel parameters found in simtel configuration file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>simtel_config_file: str</strong></dt><dd><p>File name for sim_telarray configuration</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of parameters found in simtel configuration file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.get_number_of_camera_pixel">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">get_number_of_camera_pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#get_number_of_camera_pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel" title="Link to this definition">#</a></dt>
-<dd><p>Get the number of camera pixels from the simtel configuration file
-Required to set the dimension some of the parameter correctly, as simtel
-in some cases does not provide the dimension (‘all:’ in the parameter files)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>int, None</dt><dd><p>Number of camera pixels (None if file is not found)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.print_list_of_files">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">print_list_of_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#print_list_of_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.print_list_of_files" title="Link to this definition">#</a></dt>
-<dd><p>Print model parameters which describe a file name.
-This is useful to find files which are part of the model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.print_parameters_not_found">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">print_parameters_not_found</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_parameters_not_in_simtel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_simtel_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#print_parameters_not_found"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.print_parameters_not_found" title="Link to this definition">#</a></dt>
-<dd><p>Print simtel parameters not found in schema files and simtools parameters not found in simtel
-configuration file. For simtel parameters not found, check if the setting for the chose
-telescope is different from the default values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>_parameters_not_in_simtel: list</strong></dt><dd><p>List of simtel parameters not found in schema files.</p>
-</dd>
-<dt><strong>_simtel_parameters: list</strong></dt><dd><p>List of simtel parameters not found in simtools schema files.</p>
-</dd>
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.read_and_export_parameters">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">read_and_export_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#read_and_export_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.read_and_export_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Read and export parameters from simtel configuration file to json files.
-Only applicable parameters are exported to json.
-Provide extensive logging information on the parameters found in the simtel
-configuration file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of simtel parameters not found in schema files.</p>
-</dd>
-<dt>list</dt><dd><p>List of simtools parameter not found in simtel configuration file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.read_simtel_config_file">
-<span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">read_simtel_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#read_simtel_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.read_simtel_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Reads the simtel configuration file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object</p>
-</dd>
-<dt><strong>schema_file: str</strong></dt><dd><p>Schema path name.</p>
-</dd>
-<dt><strong>camera_pixels: int</strong></dt><dd><p>Number of camera pixels.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="db_get_array_layouts_from_db.main">
+<span class="sig-prename descclassname"><span class="pre">db_get_array_layouts_from_db.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/db_get_array_layouts_from_db.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db_get_array_layouts_from_db.main" title="Link to this definition">#</a></dt>
+<dd><p>Get list of array elements as defined in the db (array layout).</p>
 </dd></dl>
 
 </section>
@@ -675,20 +518,20 @@ configuration file.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="compare_cumulative_psf.html"
+       href="convert_model_parameter_from_simtel.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">compare_cumulative_psf</p>
+        <p class="prev-next-title">convert_model_parameter_from_simtel</p>
       </div>
     </a>
     <a class="right-next"
-       href="convert_model_parameter_from_simtel.html"
+       href="db_add_model_parameters_from_repository_to_db.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">convert_model_parameter_from_simtel</p>
+        <p class="prev-next-title">db_add_model_parameters_from_repository_to_db</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -708,16 +551,9 @@ configuration file.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files"><code class="docutils literal notranslate"><span class="pre">get_list_of_parameters_and_schema_files()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters"><code class="docutils literal notranslate"><span class="pre">get_list_of_simtel_parameters()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel"><code class="docutils literal notranslate"><span class="pre">get_number_of_camera_pixel()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.print_list_of_files"><code class="docutils literal notranslate"><span class="pre">print_list_of_files()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.print_parameters_not_found"><code class="docutils literal notranslate"><span class="pre">print_parameters_not_found()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.read_and_export_parameters"><code class="docutils literal notranslate"><span class="pre">read_and_export_parameters()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert_all_model_parameters_from_simtel.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">read_simtel_config_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_get_array_layouts_from_db.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
