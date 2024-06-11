@@ -109,10 +109,10 @@ class IOHandler(metaclass=IOHandlerSingleton):
             label_dir = label if label is not None else "d-" + str(datetime.date.today())
             path = output_directory_prefix.joinpath(label_dir)
 
-            if sub_dir is not None and (
-                not self.use_plain_output_path or dir_type != "simtools-result"
-            ):
-                path = path.joinpath(sub_dir)
+        if sub_dir is not None and (
+            not self.use_plain_output_path or dir_type != "simtools-result"
+        ):
+            path = path.joinpath(sub_dir)
 
         try:
             path.mkdir(parents=True, exist_ok=True)
