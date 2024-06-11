@@ -276,7 +276,6 @@ class PSFImage:
             found_radius = fabs(delta_number) < tolerance
 
         if found_radius:
-            # Diameter = 2 * radius
             return 2 * current_radius
 
         self._logger.warning("Could not find PSF efficiently - trying by scanning")
