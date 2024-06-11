@@ -109,6 +109,16 @@ class SimtelConfigReader:
         """
         self._logger.debug(f"Getting validated parameter dictionary for {telescope_name}")
 
+        type_value = (
+            "string"
+            if self.parameter_dict.get("type") == "str"
+            else (
+                "boolean"
+                if self.parameter_dict.get("type") == "bool"
+                else self.parameter_dict.get("type")
+            )
+        )
+
         _json_dict = {
             "parameter": self.parameter_name,
             "instrument": telescope_name,
@@ -116,15 +126,7 @@ class SimtelConfigReader:
             "version": model_version,
             "value": self.parameter_dict.get(self.simtel_telescope_name),
             "unit": self._get_unit_from_schema(),
-            "type": (
-                "string"
-                if self.parameter_dict.get("type") == "str"
-                else (
-                    "boolean"
-                    if self.parameter_dict.get("type") == "bool"
-                    else self.parameter_dict.get("type")
-                )
-            ),
+            "type": type_value,
             "applicable": self._check_parameter_applicability(telescope_name),
             "file": self._parameter_is_a_file(),
         }
