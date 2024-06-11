@@ -2,6 +2,7 @@
 # Upload model parameter from repository a local mongoDB.
 #
 # Assumes that podman or docker is installed and running.
+# Requires configuration of local DB in .env file
 
 CONTAINER_NAME="simtools-mongodb"
 SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
@@ -25,7 +26,8 @@ db.createUser({
   roles: [
     { role: 'readWriteAnyDatabase', db: 'admin' },
     { role: 'dbAdminAnyDatabase', db: 'admin' },
-    { role: 'userAdminAnyDatabase', db: 'admin' }
+    { role: 'userAdminAnyDatabase', db: 'admin' },
+    { role: 'readWrite', db: '$SIMTOOLS_DB_SIMULATION_MODEL' }
   ]
 });
 "
@@ -39,12 +41,12 @@ model_directory="./tmp_model_parameters/model_versions/"
 for dir in "${model_directory}"*/; do
   model_version=$(basename "${dir}")
   if [ "$model_version" = "metadata" ]; then
-    python ./simtools/applications/db_development_tools/add_model_parameters_from_repository_to_db.py \
+    simtools-db-add-model-parameters-from-repository-to-db \
     --input_path "${dir}"/ \
     --db_name $SIMTOOLS_DB_SIMULATION_MODEL \
     --type "metadata"
   else
-    python ./simtools/applications/db_development_tools/add_model_parameters_from_repository_to_db.py \
+    simtools-db-add-model-parameters-from-repository-to-db \
     --model_version "${model-version}" \
     --input_path "${dir}"/verified_model \
     --db_name $SIMTOOLS_DB_SIMULATION_MODEL \
