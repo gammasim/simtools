@@ -1,5 +1,6 @@
 #!/bin/bash
 # Upload model parameter from repository a local mongoDB.
+#
 # Assumes that podman or docker is installed and running.
 
 CONTAINER_NAME="simtools-mongodb"

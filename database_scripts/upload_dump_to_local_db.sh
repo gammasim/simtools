@@ -1,5 +1,6 @@
 #!/bin/bash
 # Upload a local dump of the remote mongoDB to a local mongoDB.
+#
 # Requires a dump directory with the database dump to be present in the current directory.
 # Assumes that podman or docker is installed and running.
 

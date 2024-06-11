@@ -1,5 +1,6 @@
 #!/bin/bash
-# Setup a local mongoDB database for the simtools projects
+# Setup a local mongoDB database for the simtools projects.
+#
 # Assumes that podman or docker is installed and running
 
 SIMTOOLS_NETWORK="simtools-mongo-network"
