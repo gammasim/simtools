@@ -1,0 +1,10 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-db-get-array-layouts-from-db
+  TEST_NAME: layout_list
+  CONFIGURATION:
+    SITE: North
+    MODEL_VERSION: "2024-02-01"
+    ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
+    COORDINATE_SYSTEM: ground
+    OUTPUT_PATH: simtools-tests
+    OUTPUT_FILE: array_layout_south_ground_from_list.ecsv
