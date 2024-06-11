@@ -215,7 +215,7 @@ New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_
 
 ### Upload a complete simulation model from model repository to model database
 
-The application `add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
+The application `db_add_model_parameters_from_repository_to_db.py` allows to export the simulation model parameters from a
 model repository to the model database for a given model version.
 See the [database](databases.md#databases) section for implementation details on databases in simtools.
 

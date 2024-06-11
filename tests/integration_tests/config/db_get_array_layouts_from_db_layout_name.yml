@@ -1,0 +1,7 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-db-get-array-layouts-from-db
+  TEST_NAME: layout_name
+  CONFIGURATION:
+    SITE: North
+    MODEL_VERSION: "2024-02-01"
+    ARRAY_LAYOUT_NAME: test_layout
