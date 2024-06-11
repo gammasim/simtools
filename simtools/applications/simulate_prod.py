@@ -132,7 +132,7 @@ def _parse(description=None):
         required=True,
     )
     config.parser.add_argument(
-        "--simulator",
+        "--simulation_software",
         help="Simulation software steps.",
         type=str,
         choices=["corsika", "simtel", "corsika_simtel"],
@@ -249,7 +249,7 @@ def main():
 
     simulator = Simulator(
         label=label,
-        simulator=args_dict["simulator"],
+        simulation_software=args_dict["simulator"],
         simulator_source_path=args_dict["simtel_path"],
         config_data=config_data,
         submit_command="local",
