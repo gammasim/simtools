@@ -54,7 +54,6 @@ class SimtelEvents:
 
         for file in files:
             self.input_files.append(file)
-        return
 
     @property
     def number_of_files(self):
