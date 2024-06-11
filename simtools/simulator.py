@@ -482,10 +482,9 @@ class Simulator:
 
     def _guess_run_from_file(self, file):
         """
-        Finds the run number for a given input file name.
+        Extract the run number from the given file name.
         Input file names can follow any pattern with the
         string 'run' followed by the run number.
-        If not found, returns 1.
 
         Parameters
         ----------
@@ -495,13 +494,12 @@ class Simulator:
         Returns
         -------
         int
-            Run number
-
+            The extracted run number. If extraction fails, returns 1 and logs a warning.
         """
         file_name = str(Path(file).name)
 
         try:
-            run_str = re.search("run[0-9]*", file_name).group()
+            run_str = re.search(r"run\d*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
             msg = f"Run number could not be guessed from {file_name} using run = 1"
