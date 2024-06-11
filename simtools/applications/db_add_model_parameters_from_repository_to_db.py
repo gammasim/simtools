@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-    All parameters found in a model parameter repository to a new database.
+    Add parameters found in a model parameter repository to a new database.
 
     Generates a new database with all required collections.
     Follows the structure of the CTAO gitlab model parameters repository.
@@ -23,7 +23,7 @@
 
     .. code-block:: console
 
-        simtools-add_model-parameters-from-repository-to-db \
+        simtools-db-add_model-parameters-from-repository-to-db \
             --input_path /path/to/repository \
             --db_name new_db_name \
             --type model_parameters
@@ -32,7 +32,7 @@
 
     .. code-block:: console
 
-        simtools-add_model-parameters-from-repository-to-db \
+        simtools-db-add_model-parameters-from-repository-to-db \
             --input_path /path/to/repository/metadata \
             --db_name new_db_name \
             --type metadata
