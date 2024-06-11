@@ -1,6 +1,7 @@
 #!/bin/bash
-# Dump a remote mongo DB to a local directory
-# uses database definitions found in environment variables
+# Dump a remote mongo DB to a local directory.
+#
+# Uses database definitions found in environment variables
 # (from .env file defined in "../.env")
 
 if [ -f ../.env ]; then
@@ -27,7 +28,6 @@ SIMTOOLS_DB_SIMULATION_MODEL=$(clean_var "$SIMTOOLS_DB_SIMULATION_MODEL")
 
 [[ "$1" ]] && DB_TO_DUMP="$1" || DB_TO_DUMP="$SIMTOOLS_DB_SIMULATION_MODEL"
 
-# Debugging information
 echo "Server: $SIMTOOLS_DB_SERVER"
 echo "Port: $SIMTOOLS_DB_API_PORT"
 echo "Auth DB: $SIMTOOLS_DB_API_AUTHENTICATION_DATABASE"

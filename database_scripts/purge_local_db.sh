@@ -1,6 +1,7 @@
 #!/bin/bash
-# **DANGEROUS; this removes items**
-# Purge images, containers, networks related to a local simtools-db setup
+# Purge images, containers, networks related to a local simtools-db setup.
+#
+# **DANGEROUS; this script removes items**
 
 SIMTOOLS_NETWORK="simtools-mongo-network"
 CONTAINER_NAME="simtools-mongodb"
@@ -22,7 +23,7 @@ if [ "$user_input" != "yes" ]; then
     exit 1
 fi
 
-# Function to remove container
+# Remove container
 remove_container() {
     local container_name=$1
     if $CMD ps -a --format "{{.Names}}" | grep -q "^${container_name}$"; then
@@ -31,7 +32,7 @@ remove_container() {
     fi
 }
 
-# Function to remove network
+# Remove network
 remove_network() {
     local network_name=$1
     if $CMD network exists "$network_name"; then
