@@ -9,6 +9,7 @@ from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_light_emission import SimulatorLightEmission
+from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
 @pytest.fixture(name="label")
@@ -417,7 +418,12 @@ def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
 
     mock_simulator.output_directory = "./tests/resources/"
     cleaning_args = [5, 3, 2]
-    fig = mock_simulator.plot_simtel_ctapipe(cleaning_args=cleaning_args, return_cleaned=True)
+    filename = f"{mock_simulator.output_directory}/"
+    filename += f"{mock_simulator.le_application[0]}_{mock_simulator.le_application[1]}.simtel.gz"
+    distance = 1000 * u.m
+    fig = plot_simtel_ctapipe(
+        filename, cleaning_args=cleaning_args, distance=distance, return_cleaned=True
+    )
     assert isinstance(fig, plt.Figure)  # Check if fig is an instance of matplotlib figure
 
 
