@@ -9,9 +9,9 @@
 
     'site': South or North
 
-    'layout_name': name of a valid layout array.
+    'layout_name': name of an array layout.
 
-    'model_version': name of a valid model version.
+    'model_version': model version.
 
     'default': telescope model names to be assigned to each telescope size by default.
 
@@ -21,7 +21,7 @@
 
     Each telescope model can be set in two ways.
 
-    a) A single str with the name of telescope model.
+    a) A single str with the name of telescope model
     Ex. 'MSTN-05': 'NectarCam-D'
 
     b) A dict containing a 'name' key with the name of the telescope model and further keys
