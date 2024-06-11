@@ -264,6 +264,8 @@ def main():
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
+        cumulative_psf = "Cumulative PSF"
+
         if pars is not None:
             tel_model.change_multiple_parameters(**pars)
         else:
@@ -291,7 +293,7 @@ def main():
             raise ValueError("Radius data is not available.")
 
         rmsd = calculate_rmsd(
-            data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
+            data_to_plot["measured"][cumulative_psf], data_to_plot["simulated"][cumulative_psf]
         )
 
         if plot:
