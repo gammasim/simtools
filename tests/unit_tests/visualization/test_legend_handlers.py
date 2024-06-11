@@ -2,6 +2,7 @@
 
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
+from simtools.visualization.legend_handlers import SquareOffPixelHandler
 
 
 def test_objects():
@@ -45,3 +46,11 @@ def test_handlers(io_handler):
             array_element_class="telescopes", site=None, observatory=None
         )
     )
+
+
+def test_legend_artist_handlebox_none():
+    # Call the legend_artist method with handlebox=None
+    result = SquareOffPixelHandler.legend_artist(handlebox=None)
+
+    # Assert that the result is None
+    assert result is None
