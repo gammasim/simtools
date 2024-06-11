@@ -68,6 +68,7 @@ scripts.simtools-calculate-trigger-rate = "simtools.applications.calculate_trigg
 scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
+scripts.simtools-db-add-model-parameters-from-repository-to-db = "simtools.applications.db_add_model_parameters_from_repository_to_db:main"
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
