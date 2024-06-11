@@ -104,7 +104,7 @@ class SimtelConfigWriter:
 
         parameters = {}
         parameters["config_release"] = (
-            f"{self._model_version} written by " f"simtools v{simtools.version.__version__}"
+            f"{self._model_version} written by simtools v{simtools.version.__version__}"
         )
         parameters["config_version"] = self._model_version
         if config_type == "telescope":

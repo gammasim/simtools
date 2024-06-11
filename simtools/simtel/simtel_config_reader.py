@@ -212,7 +212,7 @@ class SimtelConfigReader:
                 f" ({type(_from_simtel)})"
             )
             self._logger.warning(
-                f"  from schema: {self.parameter_name} {_from_schema}" f" ({type(_from_schema)})"
+                f"  from schema: {self.parameter_name} {_from_schema} ({type(_from_schema)})"
             )
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
@@ -358,13 +358,16 @@ class SimtelConfigReader:
             column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            return (
+            processed_value = (
                 np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
                 if column[0] is not None
                 else None
-            ), 1
+            )
+            return processed_value, 1
+
         if len(column) > 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
+
         return None, None
 
     def _get_type_and_dimension_from_simtel_cfg(self, column):
