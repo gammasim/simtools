@@ -2,12 +2,7 @@ import logging
 import os
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
-from ctapipe.calib import CameraCalibrator
-from ctapipe.image import tailcuts_clean
-from ctapipe.io import EventSource
-from ctapipe.visualization import CameraDisplay
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
@@ -480,83 +475,6 @@ class SimulatorLightEmission(SimtelRunner):
         # command += f"ps2pdf {self.output_directory}/{self.le_application}.ps
         #  {self.output_directory}/{self.le_application}.pdf"
         return command
-
-    def plot_simtel_ctapipe(self, cleaning_args, return_cleaned=False):
-        """
-        reads in simtel file and plots reconstructed photo electrons via ctapipe
-
-        Returns
-        -------
-        fig: matplotlib.figure
-            The matplotlib figure containing the plot.
-        """
-        filename = (
-            f"{self.output_directory}/"
-            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
-        )
-        source = EventSource(filename, max_events=1)
-        event = None
-        for event in source:
-            print(event.index.event_id)
-        tel_id = sorted(event.r1.tel.keys())[0]
-
-        calib = CameraCalibrator(subarray=source.subarray)
-
-        calib(event)
-        geometry = source.subarray.tel[1].camera.geometry
-
-        image = event.dl1.tel[tel_id].image
-        cleaned = image.copy()
-
-        if return_cleaned:
-            if cleaning_args is None:
-                cleaning_level = {
-                    "CHEC": (2, 4, 2),
-                    "LSTCam": (3.5, 7, 2),
-                    "FlashCam": (3.5, 7, 2),
-                    "NectarCam": (4, 8, 2),
-                }
-                boundary, picture, min_neighbors = cleaning_level[geometry.name]
-            else:
-                boundary, picture, min_neighbors = cleaning_args
-            mask = tailcuts_clean(
-                geometry,
-                image,
-                picture_thresh=picture,
-                boundary_thresh=boundary,
-                min_number_picture_neighbors=min_neighbors,
-            )
-            cleaned[~mask] = 0
-        fig, ax = plt.subplots(1, 1, dpi=300)
-        title = f"CT{tel_id}, run {event.index.obs_id} event {event.index.event_id}"
-        disp = CameraDisplay(geometry, image=cleaned, norm="symlog", ax=ax)
-        disp.cmap = "RdBu_r"
-        disp.add_colorbar(fraction=0.02, pad=-0.1)
-        disp.set_limits_percent(100)
-        ax.set_title(title, pad=20)
-        ax.annotate(
-            f"tel type: {source.subarray.tel[1].type.name}\n"
-            f"optics: {source.subarray.tel[1].optics.name}\n"
-            f"camera: {source.subarray.tel[1].camera_name}\n"
-            f"distance: {self.default_le_config['z_pos']['default'].to(u.m)}",
-            (0, 0),
-            (0.1, 1),
-            xycoords="axes fraction",
-            va="top",
-            size=7,
-        )
-        ax.annotate(
-            f"dl1 image,\ntotal $p.e._{{reco}}$: {np.round(np.sum(image))}\n",
-            (0, 0),
-            (0.75, 1),
-            xycoords="axes fraction",
-            va="top",
-            ha="left",
-            size=7,
-        )
-        ax.set_axis_off()
-        fig.tight_layout()
-        return fig
 
     def prepare_script(self, generate_postscript=False, **kwargs):
         """

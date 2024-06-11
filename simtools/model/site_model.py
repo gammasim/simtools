@@ -120,3 +120,14 @@ class SiteModel(ModelParameter):
             "Array layout '%s' not found in '%s' site model.", layout_name, self.site
         )
         raise ValueError
+
+    def get_list_of_array_layouts(self):
+        """
+        Get list of available array layouts.
+
+        Returns
+        -------
+        list
+            List of available array layouts
+        """
+        return [layout["name"] for layout in self.get_parameter_value("array_layouts")]
