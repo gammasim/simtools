@@ -458,7 +458,6 @@ class SimtelHistograms:
             centers = 0.5 * (x_bins[:-1] + x_bins[1:])
             ax.hist(centers, bins=x_bins, weights=hist["data"])
             ax.set_xlim(xlim)
-        return
 
     @property
     def _meta_dict(self):
@@ -518,7 +517,7 @@ class SimtelHistograms:
             )
 
             self._logger.debug(
-                f"Writing histogram with name {self._meta_dict['Title']} to " f"{hdf5_file_name}."
+                f"Writing histogram with name {self._meta_dict['Title']} to {hdf5_file_name}."
             )
             # overwrite takes precedence over append
             if overwrite is True:

@@ -168,7 +168,7 @@ class SimtelRunner:
             self._logger.error(msg)
             raise RuntimeError(msg)
 
-        if not self._shall_run(run_number=run_number) and not force:
+        if not self._shall_run() and not force:
             self._logger.info("Skipping because output exists and force = False")
             return
 
@@ -228,7 +228,7 @@ class SimtelRunner:
         if self._simtel_failed(sys_output):
             self._raise_simtel_error()
 
-    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
+    def _shall_run(self):
         self._logger.debug(
             "shall_run is being called from the base class - returning False -"
             "it should be implemented in the sub class"

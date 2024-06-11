@@ -75,7 +75,7 @@ class Simulator:
 
     Parameters
     ----------
-    simulator: str
+    simulation_software: str
         Simulation software to be used (choices: [corsika, simtel, corsika_simtel])
     simulator_source_path: str or Path
         Location of executables for simulation software \
@@ -98,7 +98,7 @@ class Simulator:
 
     def __init__(
         self,
-        simulator,
+        simulation_software,
         simulator_source_path,
         config_data,
         label=None,
@@ -112,10 +112,10 @@ class Simulator:
         Initialize Simulator class.
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug(f"Init Simulator {simulator}")
+        self._logger.debug(f"Init Simulator {simulation_software}")
 
         self.label = label
-        self.simulator = simulator
+        self.simulation_software = simulation_software
         self.runs = []
         self._results = defaultdict(list)
         self.test = test
@@ -127,7 +127,9 @@ class Simulator:
         self._simulation_runner = None
 
         self.io_handler = io_handler.IOHandler()
-        self._output_directory = self.io_handler.get_output_directory(self.label, self.simulator)
+        self._output_directory = self.io_handler.get_output_directory(
+            self.label, self.simulation_software
+        )
         self._simulator_source_path = Path(simulator_source_path)
         self._submit_command = submit_command
         self._extra_commands = extra_commands
@@ -138,18 +140,18 @@ class Simulator:
         self._set_simulation_runner()
 
     @property
-    def simulator(self):
-        """The attribute simulator"""
-        return self._simulator
+    def simulation_software(self):
+        """The attribute simulation_software"""
+        return self._simulation_software
 
-    @simulator.setter
-    def simulator(self, simulator):
+    @simulation_software.setter
+    def simulation_software(self, simulation_software):
         """
-        Set and test simulator type
+        Set and test simulation_software type
 
         Parameters
         ----------
-        simulator: choices: [simtel, corsika, corsika_simtel]
+        simulation_software: choices: [simtel, corsika, corsika_simtel]
             implemented are sim_telarray and CORSIKA or corsika_simtel
             (running CORSIKA and piping it directly to sim_telarray)
 
@@ -159,9 +161,9 @@ class Simulator:
 
         """
 
-        if simulator not in ["simtel", "corsika", "corsika_simtel"]:
+        if simulation_software not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigDataError
-        self._simulator = simulator.lower()
+        self._simulation_software = simulation_software.lower()
 
     def _load_configuration_and_simulation_model(self, config_data):
         """
@@ -318,7 +320,7 @@ class Simulator:
             "corsika_config_data": self._corsika_config_data,
         }
         simtel_args = {}
-        if self.simulator in ["simtel", "corsika_simtel"]:
+        if self.simulation_software in ["simtel", "corsika_simtel"]:
             simtel_args = {
                 "config_data": {
                     "simtel_data_directory": self.config.data_directory,
@@ -328,11 +330,11 @@ class Simulator:
                 },
             }
 
-        if self.simulator == "corsika":
+        if self.simulation_software == "corsika":
             self._set_corsika_runner(common_args | corsika_args)
-        if self.simulator == "simtel":
+        if self.simulation_software == "simtel":
             self._set_simtel_runner(common_args | simtel_args)
-        if self.simulator == "corsika_simtel":
+        if self.simulation_software == "corsika_simtel":
             self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
 
     def _set_corsika_runner(self, simulator_args):
@@ -407,7 +409,9 @@ class Simulator:
                     file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
                 ),
                 log_file=self._simulation_runner.get_file_name(
-                    file_type="corsika_autoinputs_log" if self.simulator == "corsika" else "log",
+                    file_type=(
+                        "corsika_autoinputs_log" if self.simulation_software == "corsika" else "log"
+                    ),
                     **self._simulation_runner.get_info_for_file_name(run),
                 ),
             )
@@ -455,11 +459,11 @@ class Simulator:
 
         _runs_and_files = {}
 
-        if self.simulator == "simtel":
+        if self.simulation_software == "simtel":
             _file_list = self._enforce_list_type(input_file_list)
             for file in _file_list:
                 _runs_and_files[self._guess_run_from_file(file)] = file
-        if self.simulator in ["corsika", "corsika_simtel"]:
+        if self.simulation_software in ["corsika", "corsika_simtel"]:
             _run_list = self._get_runs_to_simulate()
             for run in _run_list:
                 _runs_and_files[run] = None
@@ -528,7 +532,7 @@ class Simulator:
                 )
             )
         )
-        if self.simulator in ["simtel", "corsika_simtel"]:
+        if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._results["log"].append(
                 str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
             )
@@ -616,7 +620,7 @@ class Simulator:
             List with the full path of all the log files.
         """
         self._logger.info("Getting list of log files")
-        if self.simulator in ["simtel", "corsika_simtel"]:
+        if self.simulation_software in ["simtel", "corsika_simtel"]:
             return self._results["log"]
         return self._results["corsika_autoinputs_log"]
 
@@ -638,7 +642,7 @@ class Simulator:
     def print_list_of_log_files(self):
         """Print list of log files."""
         self._logger.info("Printing list of log files")
-        if self.simulator in ["simtel", "corsika_simtel"]:
+        if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._print_list_of_files(which="log")
         else:
             self._print_list_of_files(which="corsika_autoinputs_log")
@@ -698,7 +702,7 @@ class Simulator:
         """
         resources = self._make_resources_report(input_file_list)
         print("-----------------------------")
-        print(f"Computing Resources Report - {self.simulator} Simulations")
+        print(f"Computing Resources Report - {self.simulation_software} Simulations")
         for key, value in resources.items():
             print(f"{key} = {value:.2f}")
         print("-----------------------------")
