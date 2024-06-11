@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gdf077aa Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+ga76453d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=8bc5e45d"></script>
+    <script src="../../_static/documentation_options.js?v=615d12ae"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdf077aa Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga76453d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -454,14 +454,18 @@ document.write(`
 <span class="sd">        A PyMongo DB client</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">direct_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;simtools-mongodb&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">_db_client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">],</span>
                 <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_port&quot;</span><span class="p">],</span>
                 <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_user&quot;</span><span class="p">],</span>
                 <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_pw&quot;</span><span class="p">],</span>
                 <span class="n">authSource</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
-                <span class="n">directConnection</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;localhost&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]),</span>
-                <span class="n">ssl</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;localhost&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]),</span>
+                <span class="n">directConnection</span><span class="o">=</span><span class="n">direct_connection</span><span class="p">,</span>
+                <span class="n">ssl</span><span class="o">=</span><span class="ow">not</span> <span class="n">direct_connection</span><span class="p">,</span>
                 <span class="n">tlsallowinvalidhostnames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">tlsallowinvalidcertificates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>

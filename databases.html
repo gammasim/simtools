@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+gdf077aa Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+ga76453d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=8bc5e45d"></script>
+    <script src="_static/documentation_options.js?v=615d12ae"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdf077aa Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga76453d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -439,7 +439,19 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-remote-database-located-at-desy">Using the remote database located at DESY</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-1-fill-local-database-from-remote-db-dump">Option 1: Fill local database from remote DB dump</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-2-fill-local-database-from-model-parameter-repository">Option 2: Fill local database from model parameter repository</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
             </nav>
         </div>
@@ -455,20 +467,95 @@ document.write(`
 <h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">#</a></h1>
 <p>The simtools package uses a prototype MongoDB database for the telescopes and sites model, reference data, derived values and test data.
 Access to the DB is handled via a dedicated API module. Access to the DB is restricted, please contact the developers in order to obtain access.</p>
-<p>Simulation model parameters are stored in databases, see the description in the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section.</p>
-<p>Several different data bases are used:</p>
+<p>Simulation model parameters are stored in databases (see the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section) and synced with the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">CTAO model parameter repository</a>.</p>
+<p>Several different databases are used:</p>
 <ul class="simple">
-<li><p>model parameters DB (name needs to be indicated by <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> in your <code class="docutils literal notranslate"><span class="pre">.envfile</span></code> )</p></li>
-<li><p>derived values DB includes simtools-derived values</p></li>
+<li><p>model parameters DB (name needs to be indicated by <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> in your <code class="docutils literal notranslate"><span class="pre">.env</span></code> file)</p></li>
+<li><p>derived values DB (e.g., <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-Derived-Values</span></code> defined in <code class="docutils literal notranslate"><span class="pre">db_handler.DB_DERIVED_VALUES</span></code>)</p></li>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The structure of the database is currently under revisions and will change in near future.
 This documentation is therefore incomplete.</p>
 </div>
+<section id="using-the-remote-database-located-at-desy">
+<h2>Using the remote database located at DESY<a class="headerlink" href="#using-the-remote-database-located-at-desy" title="Link to this heading">#</a></h2>
+<p>A prototype remote database is located at DESY. Access to the database is restricted, please contact the developers in order to obtain access.</p>
+<p>Database and access configuration is given in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file, see the <a class="reference download internal" download="" href="_downloads/f7e99075456074df44a14124fd3ea974/.env_template"><span class="xref download myst">.env_template</span></a> file as example:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server</span>
+<span class="go">SIMTOOLS_DB_SERVER=&#39;cta-simpipe-protodb.zeuthen.desy.de&#39; # MongoDB server</span>
+<span class="go">SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person</span>
+<span class="go">SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person</span>
+<span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;Staging-CTA-Simulation-Model-v0-3-0&#39;</span>
+<span class="gp"># </span><span class="nv">SIMTOOLS_DB_SIMULATION_MODEL_URL</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+<span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
+</pre></div>
+</div>
+</section>
 <section id="browsing-the-mongodb-database">
 <h2>Browsing the mongoDB database<a class="headerlink" href="#browsing-the-mongodb-database" title="Link to this heading">#</a></h2>
 <p>The mongoDB database can be accessed via the command-line interface <code class="docutils literal notranslate"><span class="pre">mongo</span></code> or via a GUI tool like <code class="docutils literal notranslate"><span class="pre">Robo</span> <span class="pre">3T</span></code> or <code class="docutils literal notranslate"><span class="pre">Studio</span> <span class="pre">3T</span></code>.</p>
+</section>
+<section id="configure-and-use-a-local-copy-of-the-model-parameter-database">
+<h2>Configure and use a local copy of the model parameter database<a class="headerlink" href="#configure-and-use-a-local-copy-of-the-model-parameter-database" title="Link to this heading">#</a></h2>
+<p>The production version of model-parameter database is a mongoDB instance running on a server at DESY.
+For testing and development, it might be useful to work with a local copy of the database.
+The following scripts allow to setup and fill a local database running in a container.</p>
+<p>All scripts to setup and fill a local database instance are located in the <a class="reference internal" href="#../../database_scripts/"><span class="xref myst">database_scripts</span></a> directory.</p>
+<section id="startup-and-configure-local-database-instance">
+<h3>Startup and configure local database instance<a class="headerlink" href="#startup-and-configure-local-database-instance" title="Link to this heading">#</a></h3>
+<p>The script <a class="reference download internal" download="" href="_downloads/c58b0e50e67a215c8e3189330df0ed4c/setup_local_db.sh"><span class="xref download myst">setup_local_db.sh</span></a> generates a local database instance in a container:</p>
+<ul class="simple">
+<li><p>downloads a mongoDB docker image</p></li>
+<li><p>starts a container with the image and initialize a new database</p></li>
+<li><p>add a user with ‘readWrite’ role</p></li>
+</ul>
+</section>
+<section id="filling-the-local-database-instance">
+<h3>Filling the local database instance<a class="headerlink" href="#filling-the-local-database-instance" title="Link to this heading">#</a></h3>
+<section id="option-1-fill-local-database-from-remote-db-dump">
+<h4>Option 1: Fill local database from remote DB dump<a class="headerlink" href="#option-1-fill-local-database-from-remote-db-dump" title="Link to this heading">#</a></h4>
+<p>Access to a database dump of the production database is required. It is assumed that the dumps
+are located in the directory <code class="docutils literal notranslate"><span class="pre">database_scripts/dumps</span></code>.</p>
+<p>The script <code class="docutils literal notranslate"><span class="pre">./dump_remote_db.sh</span></code> can be used to create a dump of the production database (requires access to this DB and the <code class="docutils literal notranslate"><span class="pre">mongodump</span></code> tool).</p>
+<p>Use then the <code class="docutils literal notranslate"><span class="pre">upload_dump_to_local_db.sh</span></code> to upload this dump to the local database instance.</p>
+<p>Note that database names are hardcoded in the scripts and need to be adjusted accordingly.</p>
+</section>
+<section id="option-2-fill-local-database-from-model-parameter-repository">
+<h4>Option 2: Fill local database from model parameter repository<a class="headerlink" href="#option-2-fill-local-database-from-model-parameter-repository" title="Link to this heading">#</a></h4>
+<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_local_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> from the CTAO gitlab and
+uploads its contents to the local database instance.</p>
+<p>Note that database names are hardcoded in the scripts and need to be adjusted accordingly.</p>
+</section>
+</section>
+</section>
+<section id="purge-the-local-database-instance-and-all-networks-images-containers">
+<h2>Purge the local database instance and all networks, images, containers<a class="headerlink" href="#purge-the-local-database-instance-and-all-networks-images-containers" title="Link to this heading">#</a></h2>
+<p>The script <code class="docutils literal notranslate"><span class="pre">purge_local_db.sh</span></code> stops and removes the container and deletes all networks, images, and containers.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.</p>
+</div>
+</section>
+<section id="using-the-local-database-instance">
+<h2>Using the local database instance<a class="headerlink" href="#using-the-local-database-instance" title="Link to this heading">#</a></h2>
+<p>This requires the following changes to the settings of the environmental variables in <code class="docutils literal notranslate"><span class="pre">.evn</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
+<span class="go">SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server</span>
+<span class="go">SIMTOOLS_DB_SERVER=&#39;localhost&#39;</span>
+<span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for MongoDB</span>
+<span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for MongoDB</span>
+<span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;Staging-CTA-Simulation-Model-v0-3-0&#39;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-v0-3-0</span></code> and should be changed accordingly.</p>
+<p>For using simtools inside a container:</p>
+<ul class="simple">
+<li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
+<li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g, <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">--rm</span> <span class="pre">-it</span> <span class="pre">-v</span> <span class="pre">&quot;$(pwd)/:/workdir/external&quot;</span> <span class="pre">--network</span> <span class="pre">simtools-mongo-network</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span> <span class="pre">bash</span></code></p></li>
+</ul>
 </section>
 </section>
 
@@ -517,7 +604,19 @@ This documentation is therefore incomplete.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-remote-database-located-at-desy">Using the remote database located at DESY</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-1-fill-local-database-from-remote-db-dump">Option 1: Fill local database from remote DB dump</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-2-fill-local-database-from-model-parameter-repository">Option 2: Fill local database from model parameter repository</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
   </nav></div>
 
