@@ -71,6 +71,7 @@ scripts.simtools-compare-cumulative-psf = "simtools.applications.compare_cumulat
 scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-model-parameters-from-repository-to-db = "simtools.applications.db_add_model_parameters_from_repository_to_db:main"
+scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"

@@ -41,6 +41,7 @@ calculate_trigger_rate
 compare_cumulative_psf
 convert_all_model_parameters_from_simtel
 convert_model_parameter_from_simtel
+db_get_array_layouts_from_db
 db_add_model_parameters_from_repository_to_db
 db_inspect_databases
 derive_mirror_rnda

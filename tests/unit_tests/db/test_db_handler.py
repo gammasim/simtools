@@ -561,12 +561,12 @@ def test_model_version(db, caplog):
         assert "Invalid model version test" in caplog.text
 
 
-def test_get_collections(db):
+def test_get_collections(db, db_config):
 
     collections = db.get_collections()
     assert isinstance(collections, list)
     assert "telescopes" in collections
 
-    collections_from_name = db.get_collections("CTA-Simulation-Model")
+    collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
