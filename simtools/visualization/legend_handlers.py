@@ -121,6 +121,7 @@ class HexPixelHandler:
     @staticmethod
     def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + handlebox.width / 3, handlebox.ydescent + handlebox.height / 3
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -145,6 +146,7 @@ class HexEdgePixelHandler:
             handlebox.xdescent + handlebox.width / 3,
             handlebox.ydescent + handlebox.height / 3,
         )
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -169,6 +171,7 @@ class HexOffPixelHandler:
             handlebox.xdescent + handlebox.width / 3,
             handlebox.ydescent + handlebox.height / 3,
         )
+        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -188,7 +191,7 @@ class SquarePixelHandler:
     """
 
     @staticmethod
-    def legend_artist(handlebox):
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -209,7 +212,7 @@ class SquareEdgePixelHandler:
     """
 
     @staticmethod
-    def legend_artist(handlebox):
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -230,7 +233,7 @@ class SquareOffPixelHandler:
     """
 
     @staticmethod
-    def legend_artist(handlebox):
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -250,7 +253,7 @@ class LSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an LST in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.3 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -272,7 +275,7 @@ class MSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an MST in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -294,7 +297,7 @@ class SSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an SST in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.5 * handlebox.height,
@@ -316,7 +319,7 @@ class SCTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an SCT in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -336,7 +339,7 @@ class HESSHandler(TelescopeHandler):
     Legend handler class to plot a representation of an HESS in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = (
             handlebox.xdescent + handlebox.width / 3,
             handlebox.ydescent + handlebox.height / 3,
@@ -360,7 +363,7 @@ class MAGICHandler(TelescopeHandler):
     Legend handler class to plot a representation of an MAGIC in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = (
             handlebox.xdescent + handlebox.width / 3,
             handlebox.ydescent + handlebox.height / 3,
@@ -384,7 +387,7 @@ class VERITASHandler(TelescopeHandler):
     Legend handler class to plot a representation of an VERITAS in an array layout.
     """
 
-    def legend_artist(self, handlebox):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = (
             handlebox.xdescent + handlebox.width / 3,
             handlebox.ydescent + handlebox.height / 3,
@@ -409,7 +412,7 @@ class MeanRadiusOuterEdgeHandler:
     """
 
     @staticmethod
-    def legend_artist(handlebox):
+    def legend_artist(legend, orig_handle, fontsize, handlebox):
         center = (
             handlebox.xdescent + 0.25 * handlebox.width,
             handlebox.ydescent + 0.25 * handlebox.height,
