@@ -79,7 +79,7 @@ class SimtelConfigWriter:
                     value = "none" if value is None else value  # simtel requires 'none'
                     if isinstance(value, bool):
                         value = 1 if value else 0
-                    elif isinstance(value, list | np.ndarray):
+                    elif isinstance(value, (list, np.ndarray)):  # noqa: UP038
                         value = gen.convert_list_to_string(value)
                     file.write(f"{_simtel_name} = {value}\n")
             _config_meta = self._get_simtel_metadata("telescope")
@@ -160,8 +160,7 @@ class SimtelConfigWriter:
             # Maximum telescopes
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
 
-            # Default telescope - 0th tel in telescope list
-            # TODO check if this is correct - probably not!
+            # Default telescope in sim_telarray - 0th tel in telescope list
             _, first_telescope = next(iter(telescope_model.items()))
             tel_config_file = first_telescope.get_config_file(no_export=True).name
             file.write(f"# include <{tel_config_file}>\n\n")
