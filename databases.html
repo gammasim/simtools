@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+ga76453d Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+gc16b17f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=615d12ae"></script>
+    <script src="_static/documentation_options.js?v=555f26e2"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga76453d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc16b17f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -439,8 +439,15 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-structure">Database structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-parameters-db">Model parameters DB</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#derived-values-db">Derived values DB</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-databases">Other databases</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-remote-database-located-at-desy">Using the remote database located at DESY</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browse-the-database">Browse the database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-the-database">Update the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
@@ -465,19 +472,44 @@ document.write(`
                   
   <section id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">#</a></h1>
-<p>The simtools package uses a prototype MongoDB database for the telescopes and sites model, reference data, derived values and test data.
-Access to the DB is handled via a dedicated API module. Access to the DB is restricted, please contact the developers in order to obtain access.</p>
+<p>The simtools package uses a prototype MongoDB database to store the simulation model parameters and derived data products.
+Access to the DB is handled via a dedicated API module (<a class="reference internal" href="db_handler.html#dbhandler"><span class="std std-ref">db_handler</span></a>).</p>
 <p>Simulation model parameters are stored in databases (see the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section) and synced with the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">CTAO model parameter repository</a>.</p>
-<p>Several different databases are used:</p>
-<ul class="simple">
-<li><p>model parameters DB (name needs to be indicated by <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> in your <code class="docutils literal notranslate"><span class="pre">.env</span></code> file)</p></li>
-<li><p>derived values DB (e.g., <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-Derived-Values</span></code> defined in <code class="docutils literal notranslate"><span class="pre">db_handler.DB_DERIVED_VALUES</span></code>)</p></li>
-</ul>
+<section id="database-structure">
+<h2>Database structure<a class="headerlink" href="#database-structure" title="Link to this heading">#</a></h2>
+<p>Several different databases are used in simtools.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The structure of the database is currently under revisions and will change in near future.
 This documentation is therefore incomplete.</p>
 </div>
+<section id="model-parameters-db">
+<h3>Model parameters DB<a class="headerlink" href="#model-parameters-db" title="Link to this heading">#</a></h3>
+<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
+<p>Collections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">telescopes</span></code> with the model parameters for each telescope plus the reference design model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sites</span></code> with all site-specific parameters (e.g., atmosphere, magnetic field, array layouts)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">calibration_devices</span></code> with the model parameters for e.g., the illumination devices</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray</span></code> with default configuration parameters for the sim_telarray simulation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code> containing tables describing the model versions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fs.files</span></code> with all file type entries for the model parameters (e.g., the quantum-efficiency tables)</p></li>
+</ul>
+</section>
+<section id="derived-values-db">
+<h3>Derived values DB<a class="headerlink" href="#derived-values-db" title="Link to this heading">#</a></h3>
+<p>Database with derived values DB (e.g., <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-Derived-Values</span></code> defined in <code class="docutils literal notranslate"><span class="pre">db_handler.DB_DERIVED_VALUES</span></code>).</p>
+<p>Collections are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">derived_values</span></code> with the derived values for each telescope or site</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fs.files</span></code> with file type derived results</p></li>
+</ul>
+</section>
+<section id="other-databases">
+<h3>Other databases<a class="headerlink" href="#other-databases" title="Link to this heading">#</a></h3>
+<p>All other currently available databases are not in use and kept for historical reasons.</p>
+</section>
+</section>
 <section id="using-the-remote-database-located-at-desy">
 <h2>Using the remote database located at DESY<a class="headerlink" href="#using-the-remote-database-located-at-desy" title="Link to this heading">#</a></h2>
 <p>A prototype remote database is located at DESY. Access to the database is restricted, please contact the developers in order to obtain access.</p>
@@ -493,9 +525,25 @@ This documentation is therefore incomplete.</p>
 </pre></div>
 </div>
 </section>
-<section id="browsing-the-mongodb-database">
-<h2>Browsing the mongoDB database<a class="headerlink" href="#browsing-the-mongodb-database" title="Link to this heading">#</a></h2>
+<section id="browse-the-database">
+<h2>Browse the database<a class="headerlink" href="#browse-the-database" title="Link to this heading">#</a></h2>
 <p>The mongoDB database can be accessed via the command-line interface <code class="docutils literal notranslate"><span class="pre">mongo</span></code> or via a GUI tool like <code class="docutils literal notranslate"><span class="pre">Robo</span> <span class="pre">3T</span></code> or <code class="docutils literal notranslate"><span class="pre">Studio</span> <span class="pre">3T</span></code>.</p>
+</section>
+<section id="update-the-database">
+<h2>Update the database<a class="headerlink" href="#update-the-database" title="Link to this heading">#</a></h2>
+<p>Model parameters should first be reviewed and accepted in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Updating the database is for experts only.
+Note that updating the databases might have impact on workflows of others.
+Best to define a new database when adding new values or files.</p>
+</div>
+<p>The following applications are important:</p>
+<ul class="simple">
+<li><p>update or define a single model parameter from a json file (as defined in the model parameter repository): <a class="reference internal" href="add_value_from_json_to_db.html#add-value-from-json-to-db"><span class="std std-ref">add_value_from_json_to_db.py</span></a></p></li>
+<li><p>upload a model parameter file: <a class="reference internal" href="add_file_to_db.html#add-file-to-db"><span class="std std-ref">add_file_to_db.py</span></a></p></li>
+<li><p>upload all model parameters and files from the model parameter repository: <a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html"><span class="doc std std-doc">db_add_model_parameters_from_repository_to_db.py</span></a></p></li>
+</ul>
 </section>
 <section id="configure-and-use-a-local-copy-of-the-model-parameter-database">
 <h2>Configure and use a local copy of the model parameter database<a class="headerlink" href="#configure-and-use-a-local-copy-of-the-model-parameter-database" title="Link to this heading">#</a></h2>
@@ -604,8 +652,15 @@ uploads its contents to the local database instance.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-structure">Database structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-parameters-db">Model parameters DB</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#derived-values-db">Derived values DB</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-databases">Other databases</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-remote-database-located-at-desy">Using the remote database located at DESY</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browsing-the-mongodb-database">Browsing the mongoDB database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browse-the-database">Browse the database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-the-database">Update the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
