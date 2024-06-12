@@ -164,7 +164,6 @@ class SimtelHistogram:
         int:
             total number of simulated events.
         """
-
         if self._total_num_triggered_events is None:
             _, triggered_hist = self.fill_event_histogram_dicts()
             self._total_num_triggered_events = np.round(np.sum(triggered_hist["data"]))
@@ -308,7 +307,6 @@ class SimtelHistogram:
         event_ratio_histogram:
             The new histogram with the fraction of triggered over simulated events.
         """
-
         simulated_events_per_energy_bin = np.sum(events_histogram["data"], axis=1)
 
         triggered_events_per_energy_bin = np.sum(triggered_events_histogram["data"], axis=1)
@@ -339,7 +337,6 @@ class SimtelHistogram:
             A dictionary with "data" corresponding to a 2D histogram (core distance x energy)
             for the triggered events.
         """
-
         if self.trigger_rate is None:
             # Get the simulated and triggered 2D histograms from the simtel_array output file
             if events_histogram is None and triggered_events_histogram is None:
@@ -490,7 +487,6 @@ class SimtelHistogram:
         ctao_cr_spectra.spectral.PowerLaw
             The function describing the spectral distribution.
         """
-
         if label == "reference":
             particle_distribution_function = copy.copy(IRFDOC_PROTON_SPECTRUM)
         elif label == "simulation":

@@ -73,7 +73,6 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         """
         Prepare the command used to run testeff
         """
-
         self._logger.debug("Preparing the command to run testeff")
 
         # Processing camera pixel features
@@ -221,7 +220,6 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         This function makes sure the file has at least three columns,
         by copying the second column to the third.
         """
-
         validated_nsb_spectrum_file = (
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )

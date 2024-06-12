@@ -143,7 +143,6 @@ class SimulatorLightEmission(SimtelRunner):
             Default configuration light emission.
 
         """
-
         return {
             "zenith_angle": {
                 "len": 1,
@@ -234,7 +233,6 @@ class SimulatorLightEmission(SimtelRunner):
         astropy Quantity
             The distance between the telescope and the calibration device.
         """
-
         if "real" in self.default_le_config["x_pos"]:
             x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
             y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
@@ -376,7 +374,6 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The command to run simtel_array
         """
-
         # LightEmission
         command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
@@ -446,11 +443,10 @@ class SimulatorLightEmission(SimtelRunner):
 
 
         Returns
-        ------
+        -------
         str
             Command to create the postscript file
         """
-
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
 

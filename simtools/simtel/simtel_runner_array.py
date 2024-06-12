@@ -86,7 +86,6 @@ class SimtelRunnerArray(SimtelRunner):
         be used. A sub directory simtel-data will be created and sub directories for
         log and data will be created inside it.
         """
-
         if self.config.simtel_data_directory is None:
             # Default config value
             simtel_base_dir = self._base_directory
@@ -160,7 +159,6 @@ class SimtelRunnerArray(SimtelRunner):
         ValueError
             If file_type is unknown.
         """
-
         file_label = (
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
@@ -197,7 +195,6 @@ class SimtelRunnerArray(SimtelRunner):
         mode: str
             Mode.
         """
-
         info_for_file_name = self.get_info_for_file_name(run_number)
         run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
         self._logger.debug(f"Checking if {run_sub_file} exists")
@@ -218,7 +215,6 @@ class SimtelRunnerArray(SimtelRunner):
             run time of job in seconds.
 
         """
-
         info_for_file_name = self.get_info_for_file_name(run_number)
         sub_log_file = self.get_file_name("sub_log", **info_for_file_name, mode="out")
 
@@ -259,7 +255,6 @@ class SimtelRunnerArray(SimtelRunner):
                     run number
 
         """
-
         run_number = kwargs["run_number"] if "run_number" in kwargs else 1
         info_for_file_name = self.get_info_for_file_name(run_number)
         self._log_file = self.get_file_name(file_type="log", **info_for_file_name)

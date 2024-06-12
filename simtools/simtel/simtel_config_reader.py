@@ -142,7 +142,6 @@ class SimtelConfigReader:
             Dictionary to export.
 
         """
-
         try:
             dict_to_write["value"] = gen.convert_list_to_string(dict_to_write["value"])
             dict_to_write["unit"] = gen.convert_list_to_string(dict_to_write["unit"], True)
@@ -168,7 +167,6 @@ class SimtelConfigReader:
         in 'default' and 'limits' entries.
 
         """
-
         for data_type in ["default", "limits"]:
             _from_simtel = self.parameter_dict.get(data_type)
             # ignore limits checks for boolean
@@ -230,7 +228,6 @@ class SimtelConfigReader:
             Dictionary with the parameter values.
 
         """
-
         self._logger.debug(
             f"Reading simtel config file {simtel_config_file} "
             f"for parameter {self.parameter_name}"
@@ -287,7 +284,6 @@ class SimtelConfigReader:
             List of resolved strings.
 
         """
-
         # don't do anything if all string items in column do not start with 'all'
         if not any(isinstance(item, str) and item.startswith("all") for item in column):
             return column, {}
@@ -382,7 +378,6 @@ class SimtelConfigReader:
             Type and dimension.
 
         """
-
         if column[0].lower() == "text" or column[0].lower() == "func":
             return "str", 1
         if column[0].lower() == "ibool":
@@ -407,7 +402,6 @@ class SimtelConfigReader:
             Parameter name as used in sim_telarray.
 
         """
-
         try:
             for sim_soft in self.schema_dict["simulation_software"]:
                 if sim_soft["name"] == "sim_telarray":
@@ -435,7 +429,6 @@ class SimtelConfigReader:
             True if parameter is applicable to telescope.
 
         """
-
         try:
             if telescope_name in self.schema_dict["instrument"]["type"]:
                 return True
@@ -458,7 +451,6 @@ class SimtelConfigReader:
             True if parameter is a file.
 
         """
-
         try:
             return self.schema_dict["data"][0]["type"] == "file"
         except (KeyError, IndexError):
@@ -498,7 +490,6 @@ class SimtelConfigReader:
             Validated dictionary (possibly converted to reference units).
 
         """
-
         self._logger.debug(
             f"Validating parameter dictionary {parameter_dict} using {self.schema_file}"
         )
