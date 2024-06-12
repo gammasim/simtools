@@ -1,3 +1,5 @@
+"""Read and analyse of sim_telarray histogram files."""
+
 import copy
 import logging
 
@@ -8,23 +10,24 @@ from eventio.search_utils import yield_toplevel_of_type
 
 from simtools import version
 from simtools.io_operations.hdf5_handler import fill_hdf5_table
-from simtools.simtel.simtel_histogram import (
+from simtools.simtel.simtel_io_histogram import (
     HistogramIdNotFoundError,
     InconsistentHistogramFormatError,
-    SimtelHistogram,
+    SimtelIOHistogram,
 )
 from simtools.utils.names import sanitize_name
 
 __all__ = [
-    "SimtelHistograms",
+    "SimtelIOHistograms",
 ]
 
 
-class SimtelHistograms:
+class SimtelIOHistograms:
     """
-    This class handles sim_telarray files (both the .hdata.zst histogram and the .simtel.zst output
-    file).
-    It uses the SimtelHistogram class to deal with individual files.
+    Handle histograms sim_telarray files especially for trigger rate calculations.
+
+    Allow both the .hdata.zst histogram and the .simtel.zst output file type.
+    It uses the SimtelIOHistogram class to deal with individual files.
     Histogram files are ultimately handled by using eventio library.
 
     Parameters
@@ -49,9 +52,7 @@ class SimtelHistograms:
     """
 
     def __init__(self, histogram_files, test=False, area_from_distribution=False):
-        """
-        Initialize SimtelHistograms
-        """
+        """Initialize SimtelIOHistograms."""
         self._logger = logging.getLogger(__name__)
         if not isinstance(histogram_files, list):
             histogram_files = [histogram_files]
@@ -65,6 +66,7 @@ class SimtelHistograms:
     def calculate_trigger_rates(self, print_info=False, stack_files=False):
         """
         Calculate the triggered and simulated event rate considering the histograms in each file.
+
         It returns also a list with the tables where the energy dependent trigger rate for each
         file can be found.
 
@@ -113,8 +115,7 @@ class SimtelHistograms:
 
     def _fill_stacked_events(self):
         """
-        Helper function to retrieve the simulated and triggered event histograms from the stacked
-        histograms instead of individually.
+        Retrieve the simulated and triggered event histograms from the stacked histograms instead.
 
         Returns
         -------
@@ -148,7 +149,7 @@ class SimtelHistograms:
 
     def get_stacked_num_events(self):
         """
-        Returns the stacked number of simulated events and triggered events.
+        Return stacked number of simulated events and triggered events.
 
         Returns
         -------
@@ -160,7 +161,7 @@ class SimtelHistograms:
         stacked_num_simulated_events = 0
         stacked_num_triggered_events = 0
         for _, file in enumerate(self.histogram_files):
-            simtel_hist_instance = SimtelHistogram(
+            simtel_hist_instance = SimtelIOHistogram(
                 file, area_from_distribution=self.area_from_distribution
             )
             stacked_num_simulated_events += simtel_hist_instance.total_num_simulated_events
@@ -169,7 +170,7 @@ class SimtelHistograms:
 
     def _rates_for_stacked_files(self):
         """
-        Helper function to calculate the trigger rate for the stacked case.
+        Calculate trigger rate for the stacked case.
 
         Returns
         -------
@@ -183,12 +184,11 @@ class SimtelHistograms:
             The energy dependent trigger rates.
             Only filled if stack_files is False.
         """
-
         logging.info("Estimates for the stacked histograms:")
         sim_hist, trig_hist = self._fill_stacked_events()
-        # Using a dummy instance of SimtelHistogram to calculate the trigger rate for the
+        # Using a dummy instance of SimtelIOHistogram to calculate the trigger rate for the
         # stacked files
-        simtel_hist_instance = SimtelHistogram(
+        simtel_hist_instance = SimtelIOHistogram(
             self.histogram_files[0], area_from_distribution=self.area_from_distribution
         )
 
@@ -226,7 +226,7 @@ class SimtelHistograms:
 
     def _rates_for_each_file(self, print_info=False):
         """
-        Helper function to calculate the trigger rate for each file.
+        Calculate trigger rate for each file.
 
         Returns
         -------
@@ -242,7 +242,7 @@ class SimtelHistograms:
         trigger_rate_in_tables = []
         triggered_event_rate_uncertainties = []
         for i_file, file in enumerate(self.histogram_files):
-            simtel_hist_instance = SimtelHistogram(
+            simtel_hist_instance = SimtelIOHistogram(
                 file, area_from_distribution=self.area_from_distribution
             )
             if print_info:
@@ -297,7 +297,8 @@ class SimtelHistograms:
 
     def _check_consistency(self, first_hist_file, second_hist_file):
         """
-        Checks whether two histograms have the same format.
+        Check whether two histograms have the same format.
+
         Raises an error in case they are not consistent.
 
         Parameters
@@ -344,8 +345,11 @@ class SimtelHistograms:
 
     @property
     def combined_hists(self):
-        """Add the values of the same type of histogram from the various lists into a single
-        histogram list."""
+        """
+        Combine histograms of same type of histogram.
+
+        Histograms are read from various lists into a single histogram list.
+        """
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
@@ -388,7 +392,6 @@ class SimtelHistograms:
         ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
-
         hist = self.combined_hists[histogram_index]
         ax.set_title(hist["title"])
 
@@ -469,7 +472,6 @@ class SimtelHistograms:
         dict
             Meta dictionary for the hdf5 files with the histograms.
         """
-
         if self.__meta_dict is None:
             self.__meta_dict = {
                 "simtools_version": version.__version__,

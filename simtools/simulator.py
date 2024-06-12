@@ -1,3 +1,5 @@
+"""Simulator class for managing simulations of showers and array of telescopes."""
+
 import logging
 import re
 from collections import defaultdict
@@ -13,7 +15,7 @@ from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.simtel.simulator_array import SimulatorArray
 from simtools.utils import names
 
 __all__ = [
@@ -28,7 +30,8 @@ class InvalidRunsToSimulateError(Exception):
 
 class Simulator:
     """
-    Simulator is responsible for managing simulation of showers and array of telescopes. \
+    Simulator is responsible for managing simulation of showers and array of telescopes.
+
     It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.
 
     The configuration is set as a dict config_data or a yaml \
@@ -108,9 +111,7 @@ class Simulator:
         model_version=None,
         test=False,
     ):
-        """
-        Initialize Simulator class.
-        """
+        """Initialize Simulator class."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug(f"Init Simulator {simulation_software}")
 
@@ -160,7 +161,6 @@ class Simulator:
         gen.InvalidConfigDataError
 
         """
-
         if simulation_software not in ["simtel", "corsika", "corsika_simtel"]:
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
@@ -189,6 +189,8 @@ class Simulator:
 
     def _load_corsika_config_and_model(self, config_data):
         """
+        Load configuration data for CORSIKA shower simulation.
+
         Validate configuration data for CORSIKA shower simulation and
         remove entries not needed for CorsikaRunner.
 
@@ -198,7 +200,6 @@ class Simulator:
             Simulator configuration data.
 
         """
-
         self._corsika_config_data = copy(config_data["common"])
         self._corsika_config_data.update(copy(config_data["showers"]))
         self.runs = self._validate_run_list_and_range(
@@ -235,7 +236,8 @@ class Simulator:
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
-        Prepares list of run numbers from a list or from a range.
+        Prepare list of run numbers from a list or from a range.
+
         If both arguments are given, they will be merged into a single list.
 
         Attributes
@@ -306,10 +308,7 @@ class Simulator:
         return _rest_data
 
     def _set_simulation_runner(self):
-        """
-        Set simulation runners
-
-        """
+        """Set simulation runners."""
         common_args = {
             "label": self.label,
             "simtel_source_path": self._simulator_source_path,
@@ -338,24 +337,15 @@ class Simulator:
             self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
 
     def _set_corsika_runner(self, simulator_args):
-        """
-        Creating CorsikaRunner.
-
-        """
+        """Create CorsikaRunner."""
         self._simulation_runner = CorsikaRunner(**simulator_args)
 
     def _set_simtel_runner(self, simulator_args):
-        """
-        Creating a SimtelRunnerArray.
-
-        """
-        self._simulation_runner = SimtelRunnerArray(**simulator_args)
+        """Create a SimulatorArray."""
+        self._simulation_runner = SimulatorArray(**simulator_args)
 
     def _set_corsika_simtel_runner(self, common_args, corsika_args, simtel_args):
-        """
-        Creating CorsikaRunner.
-
-        """
+        """Create CorsikaRunner."""
         self._simulation_runner = CorsikaSimtelRunner(common_args, corsika_args, simtel_args)
 
     def _fill_results_without_run(self, input_file_list):
@@ -386,7 +376,6 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-
         self._logger.info(f"Submission command: {self._submit_command}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
@@ -420,7 +409,7 @@ class Simulator:
 
     def file_list(self, input_file_list=None):
         """
-        List output files obtained with simulation run
+        List output files obtained with simulation run.
 
         Parameters
         ----------
@@ -428,7 +417,6 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
@@ -441,8 +429,9 @@ class Simulator:
 
     def _get_runs_and_files_to_submit(self, input_file_list=None):
         """
-        Return a dictionary with run numbers and (if applicable) simulation
-        files. The latter are expected to be given for the simtel simulator.
+        Return a dictionary with run numbers and simulation files.
+
+        The latter are expected to be given for the simtel simulator.
 
         Parameters
         ----------
@@ -456,7 +445,6 @@ class Simulator:
             file name as value
 
         """
-
         _runs_and_files = {}
 
         if self.simulation_software == "simtel":
@@ -483,6 +471,7 @@ class Simulator:
     def _guess_run_from_file(self, file):
         """
         Extract the run number from the given file name.
+
         Input file names can follow any pattern with the
         string 'run' followed by the run number.
 
@@ -518,7 +507,6 @@ class Simulator:
             run number
 
         """
-
         info_for_file_name = self._simulation_runner.get_info_for_file_name(run)
         self._results["output"].append(
             str(self._simulation_runner.get_file_name(file_type="output", **info_for_file_name))
@@ -586,6 +574,7 @@ class Simulator:
     def get_list_of_histogram_files(self):
         """
         Get list of histogram files.
+
         (not applicable to all simulation types)
 
         Returns
@@ -647,8 +636,9 @@ class Simulator:
 
     def _make_resources_report(self, input_file_list):
         """
-        Prepare a simple report on computing resources used
-        (includes wall clock time per run only at this point)
+        Prepare a simple report on computing resources used.
+
+        Includes wall clock time per run only at this point.
 
         Parameters
         ----------
@@ -661,7 +651,6 @@ class Simulator:
            Dictionary with reports on computing resources
 
         """
-
         if len(self._results["sub_out"]) == 0:
             if input_file_list is None:
                 return {"Walltime/run [sec]": np.nan}
@@ -689,8 +678,9 @@ class Simulator:
 
     def resources(self, input_file_list=None):
         """
-        Print a simple report on computing resources used
-        (includes run time per run only at this point)
+        Print a simple report on computing resources used.
+
+        Includes run time per run only at this point.
 
         Parameters
         ----------
@@ -734,7 +724,7 @@ class Simulator:
 
     def _print_list_of_files(self, which):
         """
-        Print list of files of a certain type
+        Print list of files of a certain type.
 
         Parameters
         ----------
@@ -742,7 +732,6 @@ class Simulator:
             file type (e.g., log)
 
         """
-
         if which not in self._results:
             self._logger.error(f"Invalid file type {which}")
             raise KeyError
