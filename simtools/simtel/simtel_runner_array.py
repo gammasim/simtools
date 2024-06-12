@@ -59,7 +59,7 @@ class SimtelRunnerArray(SimtelRunner):
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.array_model = self._validate_array_model(array_model)
+        self.array_model = array_model
         self.label = label if label is not None else self.array_model.label
         self._log_file = None
 

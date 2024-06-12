@@ -3,8 +3,6 @@ import os
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.model.array_model import ArrayModel
-from simtools.model.telescope_model import TelescopeModel
 
 __all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
 
@@ -49,48 +47,6 @@ class SimtelRunner:
 
     def __repr__(self):
         return f"SimtelRunner(label={self.label})\n"
-
-    def _validate_telescope_model(self, tel):
-        """Validate TelescopeModel.
-
-        Parameters
-        ----------
-        tel: TelescopeModel
-            instance of TelescopeModel to validate.
-
-        Raises
-        ------
-        ValueError
-            if there 'tel' is not an TelescopeModel instance.
-        """
-        if isinstance(tel, TelescopeModel):
-            self._logger.debug("TelescopeModel is valid")
-            return tel
-
-        msg = "Invalid TelescopeModel"
-        self._logger.error(msg)
-        raise ValueError(msg)
-
-    def _validate_array_model(self, array):
-        """Validate ArrayModel
-
-        Parameters
-        ----------
-        array: ArrayModel
-            Instance of ArrayModel to validate.
-
-        Raises
-        ------
-        ValueError
-            if there 'array' is not an ArrayModel instance.
-        """
-        if isinstance(array, ArrayModel):
-            self._logger.debug("ArrayModel is valid")
-            return array
-
-        msg = "Invalid ArrayModel"
-        self._logger.error(msg)
-        raise ValueError(msg)
 
     def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
