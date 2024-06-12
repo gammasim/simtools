@@ -6,14 +6,14 @@ import astropy.units as u
 import numpy as np
 from eventio.simtel import SimTelFile
 
-__all__ = ["InconsistentInputFileError", "SimtelEvents"]
+__all__ = ["InconsistentInputFileError", "SimtelIOEvents"]
 
 
 class InconsistentInputFileError(Exception):
     """Exception for inconsistent input file."""
 
 
-class SimtelEvents:
+class SimtelIOEvents:
     """
     This class handle sim_telarray events. sim_telarray files are read with eventio package.
 
@@ -25,7 +25,7 @@ class SimtelEvents:
 
     def __init__(self, input_files=None):
         """
-        Initialize SimtelEvents.
+        Initialize SimtelIOEvents.
         """
         self._logger = logging.getLogger(__name__)
         self.load_input_files(input_files)
