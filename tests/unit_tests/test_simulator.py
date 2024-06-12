@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.model.array_model import ArrayModel
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
@@ -190,7 +190,7 @@ def test_collect_array_model_parameters(array_simulator, simulator_config_data_n
 
 
 def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_simulator):
-    assert isinstance(array_simulator._simulation_runner, SimtelRunnerArray)
+    assert isinstance(array_simulator._simulation_runner, SimulatorArray)
 
     assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
 
