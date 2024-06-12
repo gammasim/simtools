@@ -119,7 +119,7 @@ class HexPixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -146,7 +146,7 @@ class HexEdgePixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -176,7 +176,7 @@ class HexOffPixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -206,7 +206,7 @@ class SquarePixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -232,7 +232,7 @@ class SquareEdgePixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -258,7 +258,7 @@ class SquareOffPixelHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -283,7 +283,7 @@ class LSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an LST in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -310,7 +310,7 @@ class MSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an MST in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -337,7 +337,7 @@ class SSTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an SST in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -364,7 +364,7 @@ class SCTHandler(TelescopeHandler):
     Legend handler class to plot a representation of an SCT in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -389,7 +389,7 @@ class HESSHandler(TelescopeHandler):
     Legend handler class to plot a representation of an HESS in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -418,7 +418,7 @@ class MAGICHandler(TelescopeHandler):
     Legend handler class to plot a representation of an MAGIC in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -447,7 +447,7 @@ class VERITASHandler(TelescopeHandler):
     Legend handler class to plot a representation of an VERITAS in an array layout.
     """
 
-    def legend_artist(self, *args, **kwargs):
+    def legend_artist(self, **kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided
@@ -477,7 +477,7 @@ class MeanRadiusOuterEdgeHandler:
     """
 
     @staticmethod
-    def legend_artist(*args, **kwargs):
+    def legend_artist(**kwargs):
         handlebox = kwargs.pop("handlebox", None)
         if handlebox is None:
             # handlebox is expected, return None if not provided

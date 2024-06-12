@@ -1164,56 +1164,56 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 1D distributions.
         """
-        function = "function"
+        fn_key = "function"
         file_name = "file name"
         title = "title"
         bin_edges = "bin edges"
         axis_unit = "axis unit"
         self._dict_1d_distributions = {
             "wavelength": {
-                function: "get_photon_wavelength_distr",
+                fn_key: "get_photon_wavelength_distr",
                 file_name: "hist_1d_photon_wavelength_distr",
                 title: "Photon wavelength distribution",
                 bin_edges: "wavelength",
                 axis_unit: self.hist_config["hist_position"]["z axis"]["start"].unit,
             },
             "counts": {
-                function: "get_photon_radial_distr",
+                fn_key: "get_photon_radial_distr",
                 file_name: "hist_1d_photon_radial_distr",
                 title: "Radial photon distribution on the ground",
                 bin_edges: "Distance to center",
                 axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
             "density": {
-                function: "get_photon_density_distr",
+                fn_key: "get_photon_density_distr",
                 file_name: "hist_1d_photon_density_distr",
                 title: "Photon density distribution on the ground",
                 bin_edges: "Distance to center",
                 axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
             },
             "time": {
-                function: "get_photon_time_of_emission_distr",
+                fn_key: "get_photon_time_of_emission_distr",
                 file_name: "hist_1d_photon_time_distr",
                 title: "Photon time of arrival distribution",
                 bin_edges: "Time of arrival",
                 axis_unit: self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
             },
             "altitude": {
-                function: "get_photon_altitude_distr",
+                fn_key: "get_photon_altitude_distr",
                 file_name: "hist_1d_photon_altitude_distr",
                 title: "Photon altitude of emission distribution",
                 bin_edges: "Altitude of emission",
                 axis_unit: self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
             },
             "num_photons_per_event": {
-                function: "get_num_photons_per_event_distr",
+                fn_key: "get_num_photons_per_event_distr",
                 file_name: "hist_1d_photon_per_event_distr",
                 title: "Photons per event distribution",
                 bin_edges: "Event counter",
                 axis_unit: u.dimensionless_unscaled,
             },
             "num_photons_per_telescope": {
-                function: "get_num_photons_per_telescope_distr",
+                fn_key: "get_num_photons_per_telescope_distr",
                 file_name: "hist_1d_photon_per_telescope_distr",
                 title: "Photons per telescope distribution",
                 bin_edges: "Telescope counter",
@@ -1282,7 +1282,7 @@ class CorsikaHistograms:
         dict:
             The dictionary with information about the 2D distributions.
         """
-        function = "function"
+        fn_key = "function"
         file_name = "file name"
         title = "title"
         x_bin_edges = "x bin edges"
@@ -1292,7 +1292,7 @@ class CorsikaHistograms:
         if self._dict_2d_distributions is None:
             self._dict_2d_distributions = {
                 "counts": {
-                    function: "get_2d_photon_position_distr",
+                    fn_key: "get_2d_photon_position_distr",
                     file_name: "hist_2d_photon_count_distr",
                     title: "Photon count distribution on the ground",
                     x_bin_edges: "x position on the ground",
@@ -1301,7 +1301,7 @@ class CorsikaHistograms:
                     y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "density": {
-                    function: "get_2d_photon_density_distr",
+                    fn_key: "get_2d_photon_density_distr",
                     file_name: "hist_2d_photon_density_distr",
                     title: "Photon density distribution on the ground",
                     x_bin_edges: "x position on the ground",
@@ -1310,7 +1310,7 @@ class CorsikaHistograms:
                     y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
                 },
                 "direction": {
-                    function: "get_2d_photon_direction_distr",
+                    fn_key: "get_2d_photon_direction_distr",
                     file_name: "hist_2d_photon_direction_distr",
                     title: "Photon arrival direction",
                     x_bin_edges: "x direction cosine",
@@ -1319,7 +1319,7 @@ class CorsikaHistograms:
                     y_axis_unit: u.dimensionless_unscaled,
                 },
                 "time_altitude": {
-                    function: "get_2d_photon_time_altitude_distr",
+                    fn_key: "get_2d_photon_time_altitude_distr",
                     file_name: "hist_2d_photon_time_altitude_distr",
                     title: "Time of arrival vs altitude of emission",
                     x_bin_edges: "Time of arrival",
@@ -1328,7 +1328,7 @@ class CorsikaHistograms:
                     y_axis_unit: self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
                 },
                 "num_photons_per_telescope": {
-                    function: "get_2d_num_photons_distr",
+                    fn_key: "get_2d_num_photons_distr",
                     file_name: "hist_2d_photon_telescope_event_distr",
                     title: "Number of photons per telescope and per event",
                     x_bin_edges: "Telescope counter",
