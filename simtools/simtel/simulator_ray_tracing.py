@@ -9,16 +9,16 @@ from simtools.io_operations import io_handler
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.utils import names
 
-__all__ = ["SimtelRunnerRayTracing"]
+__all__ = ["SimulatorRayTracing"]
 
 # pylint: disable=no-member
 # The line above is needed because there are members which are created
 # by adding them to the __dict__ of the class rather than directly.
 
 
-class SimtelRunnerRayTracing(SimtelRunner):
+class SimulatorRayTracing(SimtelRunner):
     """
-    SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
+    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
     Configurable parameters:
         zenith_angle:
@@ -71,7 +71,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelRunnerRayTracing")
+        self._logger.debug("Init SimulatorRayTracing")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
