@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Read model parameters and configuration from sim_telarray configuration files."""
 
 import json
 import logging
@@ -15,9 +16,7 @@ __all__ = ["SimtelConfigReader"]
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
-    """
-    Convert numpy to python types as accepted by json.dump.
-    """
+    """Convert numpy to python types as accepted by json.dump."""
 
     def default(self, o):
         if isinstance(o, np.floating):
@@ -35,9 +34,11 @@ class JsonNumpyEncoder(json.JSONEncoder):
 
 class SimtelConfigReader:
     """
-    SimtelConfigReader reads model parameters from configuration files and converts to the simtools
-    representation (json dict). The sim_telarray configuration can be generated using e.g., the
-    following simtel_array command:
+    Reads model parameters from configuration files and converts to the simtools representation.
+
+    The output format are simtool-db-style json dicts.
+
+    The sim_telarray configuration can be generated using e.g., the following simtel_array command:
 
     ... code-block:: console
 
@@ -70,9 +71,7 @@ class SimtelConfigReader:
         parameter_name=None,
         camera_pixels=None,
     ):
-        """
-        Initialize SimtelConfigReader.
-        """
+        """Initialize SimtelConfigReader."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelConfigReader")
 
@@ -142,7 +141,6 @@ class SimtelConfigReader:
             Dictionary to export.
 
         """
-
         try:
             dict_to_write["value"] = gen.convert_list_to_string(dict_to_write["value"])
             dict_to_write["unit"] = gen.convert_list_to_string(dict_to_write["unit"], True)
@@ -163,12 +161,11 @@ class SimtelConfigReader:
 
     def compare_simtel_config_with_schema(self):
         """
-        Compare limits and defaults reported by simtel_array with schema
-        (for debugging purposes; simple printing). Check for differences
-        in 'default' and 'limits' entries.
+        Compare limits and defaults reported by simtel_array with schema.
 
+        This is mostly for debugging purposes and includes simple printing.
+        Check for differences in 'default' and 'limits' entries.
         """
-
         for data_type in ["default", "limits"]:
             _from_simtel = self.parameter_dict.get(data_type)
             # ignore limits checks for boolean
@@ -230,7 +227,6 @@ class SimtelConfigReader:
             Dictionary with the parameter values.
 
         """
-
         self._logger.debug(
             f"Reading simtel config file {simtel_config_file} "
             f"for parameter {self.parameter_name}"
@@ -272,7 +268,9 @@ class SimtelConfigReader:
 
     def _resolve_all_in_column(self, column):
         """
-        Resolve 'all' entries in a column. This needs to resolve the following cases:
+        Resolve 'all' entries in a column.
+
+        This needs to resolve the following cases:
         no 'all' in any entry; ['all:', '5'], ['all: 5'], ['all:5', '3:1']
         This function is fine-tuned to the simtel configuration output.
 
@@ -287,7 +285,6 @@ class SimtelConfigReader:
             List of resolved strings.
 
         """
-
         # don't do anything if all string items in column do not start with 'all'
         if not any(isinstance(item, str) and item.startswith("all") for item in column):
             return column, {}
@@ -314,6 +311,7 @@ class SimtelConfigReader:
     def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
         """
         Extract value(s) from simtel configuration file columns.
+
         This function is fine-tuned to the simtel configuration output.
 
         Parameters
@@ -368,6 +366,7 @@ class SimtelConfigReader:
     def _get_type_and_dimension_from_simtel_cfg(self, column):
         """
         Return type and dimension from simtel configuration column.
+
         'Func' type from simtel is treated as string. Return number
         of camera pixel for a hard-wired set up parameters.
 
@@ -382,7 +381,6 @@ class SimtelConfigReader:
             Type and dimension.
 
         """
-
         if column[0].lower() == "text" or column[0].lower() == "func":
             return "str", 1
         if column[0].lower() == "ibool":
@@ -393,8 +391,9 @@ class SimtelConfigReader:
 
     def _get_simtel_parameter_name(self, parameter_name):
         """
-        Return parameter name as used in sim_telarray. This is
-        documented in the schema file.
+        Return parameter name as used in sim_telarray.
+
+        This is documented in the schema file.
 
         Parameters
         ----------
@@ -407,7 +406,6 @@ class SimtelConfigReader:
             Parameter name as used in sim_telarray.
 
         """
-
         try:
             for sim_soft in self.schema_dict["simulation_software"]:
                 if sim_soft["name"] == "sim_telarray":
@@ -419,8 +417,8 @@ class SimtelConfigReader:
 
     def _check_parameter_applicability(self, telescope_name):
         """
-        Check if a parameter is applicable for a given telescope using
-        the information available in the schema file.
+        Check if a parameter is applicable for a given telescope using schema files.
+
         First check for exact telescope name, if not listed in the schema
         use telescope type.
 
@@ -435,7 +433,6 @@ class SimtelConfigReader:
             True if parameter is applicable to telescope.
 
         """
-
         try:
             if telescope_name in self.schema_dict["instrument"]["type"]:
                 return True
@@ -458,7 +455,6 @@ class SimtelConfigReader:
             True if parameter is a file.
 
         """
-
         try:
             return self.schema_dict["data"][0]["type"] == "file"
         except (KeyError, IndexError):
@@ -498,7 +494,6 @@ class SimtelConfigReader:
             Validated dictionary (possibly converted to reference units).
 
         """
-
         self._logger.debug(
             f"Validating parameter dictionary {parameter_dict} using {self.schema_file}"
         )
