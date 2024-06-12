@@ -75,7 +75,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.telescope_model = self._validate_telescope_model(telescope_model)
+        self.telescope_model = telescope_model
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
