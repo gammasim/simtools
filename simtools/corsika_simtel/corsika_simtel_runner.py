@@ -1,24 +1,27 @@
+"""Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality."""
+
 import stat
 from pathlib import Path
 
 from simtools.corsika.corsika_runner import CorsikaRunner
-from simtools.simtel.simtel_runner_array import SimtelRunnerArray
+from simtools.simtel.simulator_array import SimulatorArray
 
 __all__ = ["CorsikaSimtelRunner"]
 
 
-class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
+class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
     """
-    CorsikaSimtelRunner is responsible for running CORSIKA and piping it to sim_telarray
-    using the multipipe functionality. CORSIKA is set up using corsika_autoinputs program
+    Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.
+
+    CORSIKA is set up using corsika_autoinputs program
     provided by the sim_telarray package. It creates the multipipe script and sim_telarray command
     corresponding to the requested configuration.
 
-    It uses CorsikaConfig to manage the CORSIKA configuration and SimtelRunnerArray
+    It uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
     for the sim_telarray configuration. User parameters must be given by the
     common_args, corsika_args and simtel_args arguments.
     The corsika_args and simtel_args are explained in
-    CorsikaRunner and SimtelRunnerArray respectively.
+    CorsikaRunner and SimulatorArray respectively.
     An example of the common_args is given below.
 
     .. code-block:: python
@@ -35,12 +38,12 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
     corsika_args: dict
         Arguments for the CORSIKA runner (see full list in CorsikaRunner documentation).
     simtel_args: dict
-        Arguments for the sim_telarray runner (see full list in SimtelRunnerArray documentation).
+        Arguments for the sim_telarray runner (see full list in SimulatorArray documentation).
     """
 
     def __init__(self, common_args=None, corsika_args=None, simtel_args=None):
         CorsikaRunner.__init__(self, use_multipipe=True, **(common_args | corsika_args))
-        SimtelRunnerArray.__init__(self, **(common_args | simtel_args))
+        SimulatorArray.__init__(self, **(common_args | simtel_args))
 
     def prepare_run_script(self, use_pfp=False, **kwargs):
         """
@@ -79,7 +82,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         Path:
             Full path of the run script file.
         """
-
         kwargs = {
             "run_number": None,
             **kwargs,
@@ -106,7 +108,6 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
         multipipe_file: str or Path
             The name of the multipipe file which contains all of the multipipe commands.
         """
-
         multipipe_executable = Path(self.corsika_config.config_file_path.parent).joinpath(
             "run_cta_multipipe"
         )
@@ -122,7 +123,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
 
     def _make_run_command(self, **kwargs):
         """
-        Builds and returns the command to run simtel_array.
+        Build and return the command to run simtel_array.
 
         Parameters
         ----------
@@ -135,8 +136,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
                     run number
 
         """
-
-        info_for_file_name = SimtelRunnerArray.get_info_for_file_name(self, kwargs["run_number"])
+        info_for_file_name = SimulatorArray.get_info_for_file_name(self, kwargs["run_number"])
         weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
         command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
@@ -165,19 +165,18 @@ class CorsikaSimtelRunner(CorsikaRunner, SimtelRunnerArray):
     def get_file_name(self, file_type, run_number=None, **kwargs):
         """
         Get a CORSIKA or sim_telarray style file name for various file types.
-        See the implementations in CorsikaRunner and SimtelRunnerArray for details.
-        """
 
+        See the implementations in CorsikaRunner and SimulatorArray for details.
+        """
         if file_type in ["output", "log", "histogram"]:
-            return SimtelRunnerArray.get_file_name(self, file_type=file_type, **kwargs)
+            return SimulatorArray.get_file_name(self, file_type=file_type, **kwargs)
         return CorsikaRunner.get_file_name(
             self, file_type=file_type, run_number=run_number, **kwargs
         )
 
     def get_info_for_file_name(self, run_number):
         """
-        Get a dictionary with the info necessary for building
-        a CORSIKA or sim_telarray runner file names.
+        Get a dictionary necessary for building a CORSIKA or sim_telarray runner file names.
 
         Returns
         -------
