@@ -5,7 +5,7 @@ import logging
 import pytest
 
 from simtools.camera_efficiency import CameraEfficiency
-from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
+from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -25,28 +25,28 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
 
 
 @pytest.fixture()
-def simtel_runner_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
-    simtel_runner_camera_efficiency = SimtelRunnerCameraEfficiency(
+def simulator_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
+    simulator_camera_efficiency = SimulatorCameraEfficiency(
         simtel_source_path=simtel_path,
         telescope_model=telescope_model_sst,
         file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
-    return simtel_runner_camera_efficiency
+    return simulator_camera_efficiency
 
 
-def test_shall_run(simtel_runner_camera_efficiency):
+def test_shall_run(simulator_camera_efficiency):
     """
     Testing here that the file does not exist because no simulations
     are run in unit tests. This function is tested for the positive case
     in the integration tests.
     """
 
-    assert simtel_runner_camera_efficiency._shall_run()
+    assert simulator_camera_efficiency._shall_run()
 
 
-def test_make_run_command(simtel_runner_camera_efficiency):
-    command = simtel_runner_camera_efficiency._make_run_command()
+def test_make_run_command(simulator_camera_efficiency):
+    command = simulator_camera_efficiency._make_run_command()
 
     assert "testeff" in command
     assert "-fnsb" not in command
@@ -58,11 +58,11 @@ def test_make_run_command(simtel_runner_camera_efficiency):
     assert "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat" in command
 
 
-def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
-    simtel_runner_camera_efficiency.nsb_spectrum = (
+def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
+    simulator_camera_efficiency.nsb_spectrum = (
         "tests/resources/benn_ellison_spectrum_for_testing.txt"
     )
-    command = simtel_runner_camera_efficiency._make_run_command()
+    command = simulator_camera_efficiency._make_run_command()
 
     assert "testeff" in command
     assert "-fnsb" in command
@@ -75,7 +75,7 @@ def test_make_run_command_with_nsb_spectrum(simtel_runner_camera_efficiency):
     assert "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat" in command
 
 
-def test_check_run_result(simtel_runner_camera_efficiency):
+def test_check_run_result(simulator_camera_efficiency):
     """
     Testing here that the file does not exist because no simulations
     are run in unit tests. This function is tested for the positive case
@@ -83,7 +83,7 @@ def test_check_run_result(simtel_runner_camera_efficiency):
     """
 
     with pytest.raises(RuntimeError):
-        simtel_runner_camera_efficiency._check_run_result()
+        simulator_camera_efficiency._check_run_result()
 
 
 def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model_sst_prod5):
@@ -101,19 +101,19 @@ def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model
         simtel_source_path=simtel_path,
         test=True,
     )
-    simtel_runner_camera_efficiency_prod5 = SimtelRunnerCameraEfficiency(
+    simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
         simtel_source_path=simtel_path,
         telescope_model=telescope_model_sst_prod5,
         file_simtel=camera_efficiency_sst_prod5._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
-    camera_filter_file = simtel_runner_camera_efficiency_prod5._get_one_dim_distribution(
+    camera_filter_file = simulator_camera_efficiency_prod5._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
     )
     assert camera_filter_file.exists()
 
 
-def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficiency):
+def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
     """
     Test that the function returns a file with the correct format.
     The test is run twice, once on a file with the wrong format and then
@@ -121,7 +121,7 @@ def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficienc
     the function does not change the format of a file with the correct format.
     """
     validated_nsb_spectrum_file = (
-        simtel_runner_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
+        simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
             "tests/resources/benn_ellison_spectrum_for_testing.txt"
         )
     )
@@ -145,7 +145,7 @@ def test_validate_or_fix_nsb_spectrum_file_format(simtel_runner_camera_efficienc
     produced_file_has_expected_values(validated_nsb_spectrum_file)
     # Test that the function does not change the format of a file with the correct format
     second_validated_nsb_spectrum_file = (
-        simtel_runner_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
+        simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
             validated_nsb_spectrum_file
         )
     )

@@ -8,7 +8,7 @@ import pytest
 from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_light_emission import SimulatorLightEmission
+from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
@@ -486,8 +486,10 @@ def test_make_simtel_script(mock_simulator):
 
 
 @patch("os.system")
-@patch("simtools.simtel.simtel_light_emission.SimulatorLightEmission._make_light_emission_script")
-@patch("simtools.simtel.simtel_light_emission.SimulatorLightEmission._make_simtel_script")
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._make_light_emission_script"
+)
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._make_simtel_script")
 @patch("builtins.open", create=True)
 def test_prepare_script(
     mock_open,
