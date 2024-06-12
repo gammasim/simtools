@@ -81,7 +81,7 @@ scripts.simtools-get-file-from-db = "simtools.applications.get_file_from_db:main
 scripts.simtools-get-parameter = "simtools.applications.get_parameter:main"
 scripts.simtools-make-regular-arrays = "simtools.applications.make_regular_arrays:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
-scripts.simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_histograms:main"
+scripts.simtools-plot-simtel-histograms = "simtools.applications.plot_simtel_io_histograms:main"
 scripts.simtools-print-array-elements = "simtools.applications.print_array_elements:main"
 scripts.simtools-produce-array-config = "simtools.applications.produce_array_config:main"
 scripts.simtools-production = "simtools.applications.production:main"
@@ -133,7 +133,6 @@ lint.extend-select = [
   "PT",  # pytest
   "UP",  # pyupgrade
 ]
-# lint.pydocstyle.convention = "numpy"
 lint.ignore = [
   "COM812", # incompatible with ruff format
   "D208",   # over-indentation (incompatible with sphinx)
@@ -150,6 +149,8 @@ lint.per-file-ignores."**/tests/**" = [
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
+
+lint.pydocstyle.convention = "numpy"
 
 [tool.pylint.main]
 # Good variable names which should always be accepted, separated by a comma.

@@ -1,3 +1,5 @@
+"""Simulation runner for array simulations."""
+
 import logging
 from pathlib import Path
 
@@ -5,12 +7,12 @@ import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFileError, SimtelRunner
 
-__all__ = ["SimtelRunnerArray"]
+__all__ = ["SimulatorArray"]
 
 
-class SimtelRunnerArray(SimtelRunner):
+class SimulatorArray(SimtelRunner):
     """
-    SimtelRunnerArray is the interface with sim_telarray to perform array simulations.
+    SimulatorArray is the interface with sim_telarray to perform array simulations.
 
     Configurable parameters:
         simtel_data_directory:
@@ -51,15 +53,13 @@ class SimtelRunnerArray(SimtelRunner):
         config_data=None,
         config_file=None,
     ):
-        """
-        Initialize SimtelRunnerArray.
-        """
+        """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelRunnerArray")
+        self._logger.debug("Init SimulatorArray")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.array_model = self._validate_array_model(array_model)
+        self.array_model = array_model
         self.label = label if label is not None else self.array_model.label
         self._log_file = None
 
@@ -86,7 +86,6 @@ class SimtelRunnerArray(SimtelRunner):
         be used. A sub directory simtel-data will be created and sub directories for
         log and data will be created inside it.
         """
-
         if self.config.simtel_data_directory is None:
             # Default config value
             simtel_base_dir = self._base_directory
@@ -160,7 +159,6 @@ class SimtelRunnerArray(SimtelRunner):
         ValueError
             If file_type is unknown.
         """
-
         file_label = (
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
@@ -185,7 +183,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def has_file(self, file_type, run_number, mode="out"):
         """
-        Checks that the file of file_type for the specified run number exists.
+        Check that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
@@ -197,7 +195,6 @@ class SimtelRunnerArray(SimtelRunner):
         mode: str
             Mode.
         """
-
         info_for_file_name = self.get_info_for_file_name(run_number)
         run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
         self._logger.debug(f"Checking if {run_sub_file} exists")
@@ -205,7 +202,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def get_resources(self, run_number):
         """
-        Reading run time from last line of submission log file.
+        Read run time from last line of submission log file.
 
         Parameters
         ----------
@@ -218,7 +215,6 @@ class SimtelRunnerArray(SimtelRunner):
             run time of job in seconds.
 
         """
-
         info_for_file_name = self.get_info_for_file_name(run_number)
         sub_log_file = self.get_file_name("sub_log", **info_for_file_name, mode="out")
 
@@ -247,7 +243,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _make_run_command(self, **kwargs):
         """
-        Builds and returns the command to run simtel_array.
+        Build and return the command to run simtel_array.
 
         Parameters
         ----------
@@ -257,9 +253,7 @@ class SimtelRunnerArray(SimtelRunner):
                     Full path of the input CORSIKA file
                 run_number: int (optional)
                     run number
-
         """
-
         run_number = kwargs["run_number"] if "run_number" in kwargs else 1
         info_for_file_name = self.get_info_for_file_name(run_number)
         self._log_file = self.get_file_name(file_type="log", **info_for_file_name)
@@ -283,7 +277,7 @@ class SimtelRunnerArray(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):
-        # Checking run
+        """Check run results."""
         output_file = self.get_file_name(
             file_type="output", **self.get_info_for_file_name(kwargs["run_number"])
         )
