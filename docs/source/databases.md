@@ -1,19 +1,44 @@
 # Databases
 
-The simtools package uses a prototype MongoDB database for the telescopes and sites model, reference data, derived values and test data.
-Access to the DB is handled via a dedicated API module. Access to the DB is restricted, please contact the developers in order to obtain access.
+The simtools package uses a prototype MongoDB database to store the simulation model parameters and derived data products.
+Access to the DB is handled via a dedicated API module ([db_handler](#dbhandler)).
 
 Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters).
 
-Several different databases are used:
+## Database structure
 
-* model parameters DB (name needs to be indicated by `SIMTOOLS_DB_SIMULATION_MODEL` in your `.env` file)
-* derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Values` defined in `db_handler.DB_DERIVED_VALUES`)
+Several different databases are used in simtools.
 
 :::{Important}
 The structure of the database is currently under revisions and will change in near future.
 This documentation is therefore incomplete.
 :::
+
+### Model parameters DB
+
+The name of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` environmental variable and defined e.g., in the `.env` file.
+
+Collections:
+
+* `telescopes` with the model parameters for each telescope plus the reference design model
+* `sites` with all site-specific parameters (e.g., atmosphere, magnetic field, array layouts)
+* `calibration_devices` with the model parameters for e.g., the illumination devices
+* `configuration_sim_telarray` with default configuration parameters for the sim_telarray simulation
+* `metadata` containing tables describing the model versions
+* `fs.files` with all file type entries for the model parameters (e.g., the quantum-efficiency tables)
+
+### Derived values DB
+
+Database with derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Values` defined in `db_handler.DB_DERIVED_VALUES`).
+
+Collections are:
+
+* `derived_values` with the derived values for each telescope or site
+* `fs.files` with file type derived results
+
+### Other databases
+
+All other currently available databases are not in use and kept for historical reasons.
 
 ## Using the remote database located at DESY
 
@@ -32,9 +57,25 @@ SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
-## Browsing the mongoDB database
+## Browse the database
 
 The mongoDB database can be accessed via the command-line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
+
+## Update the database
+
+Model parameters should first be reviewed and accepted in the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).
+
+:::{Danger}
+Updating the database is for experts only.
+Note that updating the databases might have impact on workflows of others.
+Best to define a new database when adding new values or files.
+:::
+
+The following applications are important:
+
+* update or define a single model parameter from a json file (as defined in the model parameter repository): [add_value_from_json_to_db.py](add_value_from_json_to_db)
+* upload a model parameter file: [add_file_to_db.py](add_file_to_db)
+* upload all model parameters and files from the model parameter repository: [db_add_model_parameters_from_repository_to_db.py](db_add_model_parameters_from_repository_to_db)
 
 ## Configure and use a local copy of the model parameter database
 
