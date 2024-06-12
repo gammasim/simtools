@@ -1,3 +1,5 @@
+"""Camera efficiency simulations and analysis."""
+
 import logging
 import re
 from collections import defaultdict
@@ -9,7 +11,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_runner_camera_efficiency import SimtelRunnerCameraEfficiency
+from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -18,7 +20,7 @@ __all__ = ["CameraEfficiency"]
 
 class CameraEfficiency:
     """
-    Class for handling camera efficiency simulations and analysis.
+    Camera efficiency simulations and analysis.
 
     Parameters
     ----------
@@ -48,10 +50,7 @@ class CameraEfficiency:
         config_file=None,
         test=False,
     ):
-        """
-        Initialize the CameraEfficiency class.
-        """
-
+        """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = simtel_source_path
@@ -84,7 +83,8 @@ class CameraEfficiency:
     @classmethod
     def from_kwargs(cls, **kwargs):
         """
-        Builds a CameraEfficiency object from kwargs only.
+        Build a CameraEfficiency object from kwargs only.
+
         The configurable parameters can be given as kwargs, instead of using the
         config_data or config_file arguments.
 
@@ -110,15 +110,18 @@ class CameraEfficiency:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
+        """Return string representation of the CameraEfficiency instance."""
         return f"CameraEfficiency(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
-        """Validate TelescopeModel
+        """
+        Validate TelescopeModel.
 
         Parameters
         ----------
         tel: TelescopeModel
             An assumed instance of the TelescopeModel class.
+
         Raises
         ------
         ValueError
@@ -163,7 +166,7 @@ class CameraEfficiency:
         """
         self._logger.info("Simulating CameraEfficiency")
 
-        simtel = SimtelRunnerCameraEfficiency(
+        simtel = SimulatorCameraEfficiency(
             simtel_source_path=self._simtel_source_path,
             telescope_model=self._telescope_model,
             zenith_angle=self.config.zenith_angle,
@@ -270,6 +273,7 @@ class CameraEfficiency:
     def results_summary(self):
         """
         Print a summary of the results.
+
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
         """
@@ -331,7 +335,6 @@ class CameraEfficiency:
         tel_efficiency: float
             Telescope efficiency
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -353,7 +356,6 @@ class CameraEfficiency:
         cam_efficiency: float
             Wavelength-averaged camera efficiency
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -383,7 +385,6 @@ class CameraEfficiency:
         Float
             Telescope total efficiency including gaps
         """
-
         # Sum(N1) from 300 - 550 nm:
         n1_reduced_wl = self._results["N1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         n1_sum = np.sum(n1_reduced_wl)
@@ -405,7 +406,6 @@ class CameraEfficiency:
         Float
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
-
         # Sum(C1) from 300 - 550 nm:
         c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c1_sum = np.sum(c1_reduced_wl)
@@ -428,7 +428,6 @@ class CameraEfficiency:
             NSB pixel rate in p.e./ns for reference conditions
             (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
-
         nsb_rate_provided_spectrum = (
             np.sum(self._results["N4"])
             * self._telescope_model.camera.get_pixel_active_solid_angle()

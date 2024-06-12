@@ -22,30 +22,30 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_events
+## simtel_io_events
 
-(simtel-events-1)=
+(simtel-io-events-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_events
+.. automodule:: simtel.simtel_io_events
    :members:
 ```
 
-## simtel_histogram
+## simtel_io_histogram
 
-(simtel-histogram-1)=
+(simtel-io-histogram-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_histogram
+.. automodule:: simtel.simtel_io_histogram
    :members:
 ```
 
-## simtel_histograms
+## simtel_io_histograms
 
-(simtel-histograms-1)=
+(simtel-io-histograms-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_histograms
+.. automodule:: simtel.simtel_io_histograms
    :members:
 ```
 
@@ -58,29 +58,29 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_runner_array
+## simulator_array
 
-(simtel-runner-array-1)=
+(simulate-array-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_runner_array
+.. automodule:: simtel.simulator_array
    :members:
 ```
 
-## simtel_runner_camera_efficiency
+## simulator_camera_efficiency
 
-(simtel-runner-camera-efficiency-1)=
+(simulate-camera-efficiency-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_runner_camera_efficiency
+.. automodule:: simtel.simulator_camera_efficiency
    :members:
 ```
 
-## simtel_runner_ray_tracing
+## simulator_ray_tracing
 
-(simtel-runner-ray-tracing-1)=
+(simulate-ray-tracing-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_runner_ray_tracing
+.. automodule:: simtel.simulator_ray_tracing
    :members:
 ```
