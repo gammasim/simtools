@@ -117,8 +117,7 @@ def load_data(data_file):
     return data
 
 
-# pylint: disable=too-many-statements
-def main():
+def initialize_config():
     config = configurator.Configurator(
         description=(
             "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "
@@ -148,10 +147,14 @@ def main():
         help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
+    return config.initialize(db_config=True, simulation_model="telescope")
 
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+
+# pylint: disable=too-many-statements
+def main():
+    args_dict, db_config = initialize_config()
+
     label = "tune_psf"
-
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
@@ -184,14 +187,15 @@ def main():
         Transform the parameters to the proper format and add a new set of
         parameters to the all_parameters list.
         """
-        pars = {}
-        pars["mirror_reflection_random_angle"] = [
-            mirror_reflection,
-            mirror_reflection_fraction,
-            mirror_reflection_2,
-        ]
-        pars["mirror_align_random_horizontal"] = [mirror_align, 28.0, 0.0, 0.0]
-        pars["mirror_align_random_vertical"] = [mirror_align, 28.0, 0.0, 0.0]
+        pars = {
+            "mirror_reflection_random_angle": [
+                mirror_reflection,
+                mirror_reflection_fraction,
+                mirror_reflection_2,
+            ],
+            "mirror_align_random_horizontal": [mirror_align, 28.0, 0.0, 0.0],
+            "mirror_align_random_vertical": [mirror_align, 28.0, 0.0, 0.0],
+        }
         all_parameters.append(pars)
 
     # Grabbing the previous values of the parameters from the tel model.
@@ -201,12 +205,13 @@ def main():
     # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
     # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
 
-    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
-    mrra_0 = split_par[0]
-    mfr_0 = split_par[1]
-    mrra2_0 = split_par[2]
+    def get_previous_values():
+        split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
+        mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
+        mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
+        return mrra_0, mfr_0, mrra2_0, mar_0
 
-    mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
+    mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values()
 
     logger.debug(
         "Previous parameter values:\n"
@@ -219,27 +224,27 @@ def main():
     if args_dict["fixed"]:
         logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
 
-    # Drawing parameters randomly
-    # Range around the previous values are hardcoded
-    # Number of runs is hardcoded
-    n_runs = 50
-    if args_dict["test"]:
-        n_runs = 5
-    for _ in range(n_runs):
-        mrra_range = 0.004 if not args_dict["fixed"] else 0
-        mrf_range = 0.1
-        mrra2_range = 0.03
-        mar_range = 0.005
-        rng = np.random.default_rng()
-        mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
-        mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
-        mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
-        mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
-        add_parameters(mrra, mar, mrf, mrra2)
+    def generate_random_parameters(n_runs):
+        # Range around the previous values are hardcoded
+        # Number of runs is hardcoded
+        for _ in range(n_runs):
+            mrra_range = 0.004 if not args_dict["fixed"] else 0
+            mrf_range = 0.1
+            mrra2_range = 0.03
+            mar_range = 0.005
+            rng = np.random.default_rng()
+            mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
+            mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
+            mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
+            mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
+            add_parameters(mrra, mar, mrf, mrra2)
 
-    # Loading measured cumulative PSF
+    n_runs = 5 if args_dict["test"] else 50
+    generate_random_parameters(n_runs)
+
     data_to_plot = OrderedDict()
     radius = None
+
     if args_dict["data"] is not None:
         data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
         data_to_plot["measured"] = load_data(data_file)
