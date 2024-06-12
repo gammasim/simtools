@@ -135,7 +135,7 @@ from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_light_emission import SimulatorLightEmission
+from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
@@ -310,7 +310,7 @@ def default_le_configs(le_application):
             },
             # TODO: Hardcoded illuminator 1 coordinates until we have added them to the DB.
             # When available use the coordinates from CalibrationModel instance directly in
-            # simtel_light_emission.
+            # simulator_light_emission.
             "x_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
