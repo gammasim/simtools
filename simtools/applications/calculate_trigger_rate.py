@@ -39,7 +39,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 
 def _parse(label, description):
@@ -120,7 +120,7 @@ def main():
             logger.error(msg)
             raise FileNotFoundError from exc
 
-    histograms = SimtelHistograms(
+    histograms = SimtelIOHistograms(
         simtel_array_files, area_from_distribution=config_parser["area_from_distribution"]
     )
 

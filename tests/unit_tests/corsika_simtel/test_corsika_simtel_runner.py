@@ -169,7 +169,7 @@ def test_get_file_name(corsika_simtel_runner, io_handler):
         "corsika_autoinputs_log", **info_for_file_name
     ) == corsika_simtel_runner._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
 
-    # Test the histogram case which calls the simtel_runner_array internally
+    # Test the histogram case which calls the simulator_array internally
     file_name = "run000001_gamma_za020deg_azm000deg_North_test_layout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
         "histogram", **info_for_file_name

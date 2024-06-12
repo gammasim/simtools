@@ -10,12 +10,12 @@ from astropy.table import Table
 from matplotlib.collections import QuadMesh
 
 from simtools.io_operations.hdf5_handler import read_hdf5
-from simtools.simtel.simtel_histogram import (
+from simtools.simtel.simtel_io_histogram import (
     HistogramIdNotFoundError,
     InconsistentHistogramFormatError,
-    SimtelHistogram,
+    SimtelIOHistogram,
 )
-from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -39,7 +39,7 @@ def simtel_array_histograms_file_list(io_handler):
 
 @pytest.fixture()
 def simtel_array_histograms_instance(simtel_array_histograms_file):
-    instance = SimtelHistograms(
+    instance = SimtelIOHistograms(
         histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
     )
     return instance
@@ -47,14 +47,14 @@ def simtel_array_histograms_instance(simtel_array_histograms_file):
 
 @pytest.fixture()
 def simtel_array_histograms_instance_file_list(simtel_array_histograms_file_list):
-    instance = SimtelHistograms(histogram_files=simtel_array_histograms_file_list, test=True)
+    instance = SimtelIOHistograms(histogram_files=simtel_array_histograms_file_list, test=True)
     return instance
 
 
 def test_file_does_not_exist(caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(FileNotFoundError):
-            _ = SimtelHistogram(histogram_file="non_existent_file.simtel.zst")
+            _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
     assert "does not exist." in caplog.text
 
 
@@ -179,10 +179,10 @@ def test_list_of_histograms(simtel_array_histograms_instance):
 
 def test_combine_histogram_files(simtel_array_histograms_file, caplog):
     # Reading one histogram file
-    instance_alone = SimtelHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    instance_alone = SimtelIOHistograms(histogram_files=simtel_array_histograms_file, test=True)
 
     # Passing the same file twice
-    instance_all = SimtelHistograms(
+    instance_all = SimtelIOHistograms(
         histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
     )
     assert (
