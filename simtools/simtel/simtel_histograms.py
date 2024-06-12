@@ -183,7 +183,6 @@ class SimtelHistograms:
             The energy dependent trigger rates.
             Only filled if stack_files is False.
         """
-
         logging.info("Estimates for the stacked histograms:")
         sim_hist, trig_hist = self._fill_stacked_events()
         # Using a dummy instance of SimtelHistogram to calculate the trigger rate for the
@@ -345,7 +344,8 @@ class SimtelHistograms:
     @property
     def combined_hists(self):
         """Add the values of the same type of histogram from the various lists into a single
-        histogram list."""
+        histogram list.
+        """
         # Processing and combining histograms from multiple files
         if self._combined_hists is None:
             self._combined_hists = []
@@ -388,7 +388,6 @@ class SimtelHistograms:
         ax: matplotlib.axes.Axes
             Instance of matplotlib.axes.Axes in which to plot the histogram.
         """
-
         hist = self.combined_hists[histogram_index]
         ax.set_title(hist["title"])
 
@@ -470,7 +469,6 @@ class SimtelHistograms:
         dict
             Meta dictionary for the hdf5 files with the histograms.
         """
-
         if self.__meta_dict is None:
             self.__meta_dict = {
                 "simtools_version": version.__version__,

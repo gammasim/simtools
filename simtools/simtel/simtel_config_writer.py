@@ -101,7 +101,6 @@ class SimtelConfigWriter:
             Dictionary with simtel metadata.
 
         """
-
         parameters = {}
         parameters["config_release"] = (
             f"{self._model_version} written by " f"simtools v{simtools.version.__version__}"

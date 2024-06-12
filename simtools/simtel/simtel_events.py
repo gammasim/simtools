@@ -72,7 +72,6 @@ class SimtelEvents:
         Read MC header from sim_telarray files and store it into _mc_header. Also fills \
         summary_events with energy and core radius of triggered events.
         """
-
         self._number_of_files = len(self.input_files)
         keys_to_grab = [
             "obsheight",

@@ -99,7 +99,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
         Which file are required for running depends on the mode.
         Here we define and write some information into these files. Log files are always required.
         """
-
         # This file is not actually needed and does not exist in simtools.
         # However, we need to provide the name of a CORSIKA input file to sim_telarray
         # so it is set up here.
@@ -157,7 +156,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
-
         if self.config.single_mirror_mode:
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
@@ -251,7 +249,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Default configuration for ray tracing.
 
         """
-
         return {
             "zenith_angle": {
                 "len": 1,
