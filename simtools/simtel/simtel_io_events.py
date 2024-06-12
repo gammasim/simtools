@@ -1,3 +1,5 @@
+"""Read sim_telarray events from file."""
+
 import logging
 import math
 from copy import copy
@@ -6,16 +8,18 @@ import astropy.units as u
 import numpy as np
 from eventio.simtel import SimTelFile
 
-__all__ = ["InconsistentInputFileError", "SimtelEvents"]
+__all__ = ["InconsistentInputFileError", "SimtelIOEvents"]
 
 
 class InconsistentInputFileError(Exception):
     """Exception for inconsistent input file."""
 
 
-class SimtelEvents:
+class SimtelIOEvents:
     """
-    This class handle sim_telarray events. sim_telarray files are read with eventio package.
+    Read sim_telarray events from file.
+
+    sim_telarray files are read with eventio package.
 
     Parameters
     ----------
@@ -24,9 +28,7 @@ class SimtelEvents:
     """
 
     def __init__(self, input_files=None):
-        """
-        Initialize SimtelEvents.
-        """
+        """Initialize SimtelIOEvents."""
         self._logger = logging.getLogger(__name__)
         self.load_input_files(input_files)
         if self.number_of_files > 0:
@@ -69,10 +71,10 @@ class SimtelEvents:
 
     def load_header_and_summary(self):
         """
-        Read MC header from sim_telarray files and store it into _mc_header. Also fills \
-        summary_events with energy and core radius of triggered events.
-        """
+        Read MC header from sim_telarray files and store it into _mc_header.
 
+        Also fills summary_events with energy and core radius of triggered events.
+        """
         self._number_of_files = len(self.input_files)
         keys_to_grab = [
             "obsheight",
@@ -203,8 +205,9 @@ class SimtelEvents:
     @u.quantity_input(core_max=u.m)
     def count_simulated_events(self, energy_range=None, core_max=None):
         """
-        Count (or calculate) number of simulated events within a certain energy range and \
-        core radius, based on the simulated power law.
+        Determine number of simulated events within a certain energy range and  core radius.
+
+        Use the simulated power law.
         This calculation assumes the simulated spectrum is given by a single power law.
 
         Parameters
@@ -236,8 +239,9 @@ class SimtelEvents:
 
     def _validate_energy_range(self, energy_range):
         """
-        Returns the default energy range from mc_header in case energy_range=None.
-        Checks units, convert it to TeV and return it in the right format, otherwise.
+        Return the default energy range from mc_header in case energy_range=None.
+
+        Check units, convert it to TeV and return it in the right format, otherwise.
         """
         if energy_range is None:
             return self._mc_header["E_range"]
@@ -258,7 +262,8 @@ class SimtelEvents:
 
     def _validate_core_max(self, core_max):
         """
-        Returns the default core_max from mc_header in case core_max=None.
-        Checks units, convert it to m and return it in the right format, otherwise.
+        Return the default core_max from mc_header in case core_max=None.
+
+        Check units, convert it to m and return it in the right format, otherwise.
         """
         return self._mc_header["core_range"][1] if core_max is None else core_max.to(u.m).value

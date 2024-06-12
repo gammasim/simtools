@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""SimtelConfigRead to read sim_telarray configuration output."""
+"""Read model parameters and configuration from sim_telarray configuration files."""
 
 import logging
 import re
@@ -16,10 +16,11 @@ __all__ = ["SimtelConfigReader"]
 
 class SimtelConfigReader:
     """
-    SimtelConfigReader reads model parameters and converts to the simtools representation.
+    Reads model parameters from configuration files and converts to the simtools representation.
 
+    The output format are simtool-db-style json dicts.
     Model parameters are read from sim_telarray configuration files.
-    The sim_telarray configuration can be generated using e.g., the following simtel_array command:
+    The sim_telarray configuration can be generated using e.g., the following sim_telarray command:
 
     ... code-block:: console
 
@@ -138,9 +139,8 @@ class SimtelConfigReader:
         """
         Compare limits and defaults reported by simtel_array with schema.
 
-        This is mostly for debugging purposes snd for simple printing.
+        This is mostly for debugging purposes and includes simple printing.
         Check for differences in 'default' and 'limits' entries.
-
         """
         for data_type in ["default", "limits"]:
             _from_simtel = self.parameter_dict.get(data_type)
@@ -393,9 +393,10 @@ class SimtelConfigReader:
 
     def _check_parameter_applicability(self, telescope_name):
         """
-        Check if a parameter is applicable for a given telescope using the the schema file.
+        Check if a parameter is applicable for a given telescope using schema files.
 
-        First check for exact telescope name, if not listed in the schema use telescope type.
+        First check for exact telescope name, if not listed in the schema
+        use telescope type.
 
         Parameters
         ----------
