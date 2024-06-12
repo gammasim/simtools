@@ -57,7 +57,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 
 def _parse(label, description):
@@ -155,8 +155,8 @@ def main():
     else:
         overwrite = False
 
-    # Building SimtelHistograms
-    simtel_histograms = SimtelHistograms(histogram_files)
+    # Building SimtelIOHistograms
+    simtel_io_histograms = SimtelIOHistograms(histogram_files)
 
     if config_parser["pdf"]:
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
@@ -165,14 +165,14 @@ def main():
         if config_parser["test"]:
             number_of_histograms = 2
         else:
-            number_of_histograms = len(simtel_histograms.combined_hists)
+            number_of_histograms = len(simtel_io_histograms.combined_hists)
 
         for i_hist in range(number_of_histograms):
 
             logger.debug(f"Processing: {i_hist + 1} histogram.")
 
             fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-            simtel_histograms.plot_one_histogram(i_hist, ax)
+            simtel_io_histograms.plot_one_histogram(i_hist, ax)
 
             plt.tight_layout()
             pdf_pages.savefig(fig)
@@ -184,7 +184,7 @@ def main():
 
     if config_parser["hdf5"]:
         logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
-        simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
+        simtel_io_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
 
 
 if __name__ == "__main__":
