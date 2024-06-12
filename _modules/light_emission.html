@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>light_emission &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>light_emission &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,17 +28,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/light_emission';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -498,7 +498,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools.model.calibration_model</span> <span class="kn">import</span> <span class="n">CalibrationModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.site_model</span> <span class="kn">import</span> <span class="n">SiteModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_light_emission</span> <span class="kn">import</span> <span class="n">SimulatorLightEmission</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simulator_light_emission</span> <span class="kn">import</span> <span class="n">SimulatorLightEmission</span>
 <span class="kn">from</span> <span class="nn">simtools.visualization.visualize</span> <span class="kn">import</span> <span class="n">plot_simtel_ctapipe</span>
 
 
@@ -678,7 +678,7 @@ document.write(`
             <span class="p">},</span>
             <span class="c1"># TODO: Hardcoded illuminator 1 coordinates until we have added them to the DB.</span>
             <span class="c1"># When available use the coordinates from CalibrationModel instance directly in</span>
-            <span class="c1"># simtel_light_emission.</span>
+            <span class="c1"># simulator_light_emission.</span>
             <span class="s2">&quot;x_pos_ILLN-01&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                 <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_runner_ray_tracing &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,18 +28,18 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_runner_ray_tracing';</script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simulator_ray_tracing';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -286,7 +286,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_runner_ray_tracing.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simulator_ray_tracing.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -360,8 +360,10 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for simtel.simtel_runner_ray_tracing</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+  <h1>Source code for simtel.simulator_ray_tracing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulation runner for ray tracing simulations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 
@@ -370,18 +372,18 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools.simtel.simtel_runner</span> <span class="kn">import</span> <span class="n">SimtelRunner</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelRunnerRayTracing&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorRayTracing&quot;</span><span class="p">]</span>
 
 <span class="c1"># pylint: disable=no-member</span>
 <span class="c1"># The line above is needed because there are members which are created</span>
 <span class="c1"># by adding them to the __dict__ of the class rather than directly.</span>
 
 
-<div class="viewcode-block" id="SimtelRunnerRayTracing">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelRunnerRayTracing</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<div class="viewcode-block" id="SimulatorRayTracing">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simulator_ray_tracing.SimulatorRayTracing">[docs]</a>
+<span class="k">class</span> <span class="nc">SimulatorRayTracing</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.</span>
+<span class="sd">    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.</span>
 
 <span class="sd">    Configurable parameters:</span>
 <span class="sd">        zenith_angle:</span>
@@ -432,15 +434,13 @@ document.write(`
         <span class="n">force_simulate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize SimtelRunner.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimtelRunnerRayTracing&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimulatorRayTracing&quot;</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">simtel_source_path</span><span class="o">=</span><span class="n">simtel_source_path</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_telescope_model</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="n">telescope_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">label</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
@@ -462,9 +462,14 @@ document.write(`
     <span class="k">def</span> <span class="nf">_load_required_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_simulate</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Which file are required for running depends on the mode.</span>
-<span class="sd">        Here we define and write some information into these files. Log files are always required.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
+<span class="sd">        Here we define and write some information into these files. Log files are always required.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        force_simulate: bool</span>
+<span class="sd">            Remove existing files and force re-running of the ray-tracing simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># This file is not actually needed and does not exist in simtools.</span>
         <span class="c1"># However, we need to provide the name of a CORSIKA input file to sim_telarray</span>
         <span class="c1"># so it is set up here.</span>
@@ -522,7 +527,6 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_make_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the command to run simtel_array.&quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
             <span class="n">_mirror_focal_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_focal_length&quot;</span><span class="p">)</span>
@@ -579,7 +583,7 @@ document.write(`
         <span class="k">return</span> <span class="n">command</span>
 
     <span class="k">def</span> <span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checking run results.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check run results.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -595,7 +599,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Everything looks fine with output file.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_is_photon_list_file_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the photon list is valid,&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the photon list is valid.&quot;&quot;&quot;</span>
         <span class="n">n_lines</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_photons_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ff</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">:</span>
@@ -605,8 +609,8 @@ document.write(`
 
         <span class="k">return</span> <span class="n">n_lines</span> <span class="o">&gt;</span> <span class="mi">100</span>
 
-<div class="viewcode-block" id="SimtelRunnerRayTracing.ray_tracing_default_configuration">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_ray_tracing.SimtelRunnerRayTracing.ray_tracing_default_configuration">[docs]</a>
+<div class="viewcode-block" id="SimulatorRayTracing.ray_tracing_default_configuration">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">ray_tracing_default_configuration</span><span class="p">(</span><span class="n">config_runner</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -618,7 +622,6 @@ document.write(`
 <span class="sd">            Default configuration for ray tracing.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>

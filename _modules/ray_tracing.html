@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>ray_tracing &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,17 +28,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -361,7 +361,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for ray_tracing</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">gzip</span>
+<span></span><span class="sd">&quot;&quot;&quot;Ray tracing simulations and analysis.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">gzip</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
@@ -381,7 +383,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools.model.model_utils</span> <span class="kn">import</span> <span class="n">compute_telescope_transmission</span>
 <span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
 <span class="kn">from</span> <span class="nn">simtools.psf_analysis</span> <span class="kn">import</span> <span class="n">PSFImage</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_runner_ray_tracing</span> <span class="kn">import</span> <span class="n">SimtelRunnerRayTracing</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simulator_ray_tracing</span> <span class="kn">import</span> <span class="n">SimulatorRayTracing</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span> <span class="nn">simtools.visualization</span> <span class="kn">import</span> <span class="n">visualize</span>
 
@@ -392,7 +394,7 @@ document.write(`
 <a class="viewcode-back" href="../ray_tracing.html#ray_tracing.RayTracing">[docs]</a>
 <span class="k">class</span> <span class="nc">RayTracing</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Class for handling ray tracing simulations and analysis.</span>
+<span class="sd">    Ray tracing simulations and analysis.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -423,10 +425,7 @@ document.write(`
         <span class="n">config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize RayTracing class.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize RayTracing class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing RayTracing class&quot;</span><span class="p">)</span>
 
@@ -437,7 +436,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_config_data</span><span class="p">(</span>
             <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">config_data</span><span class="p">),</span>
-            <span class="n">SimtelRunnerRayTracing</span><span class="o">.</span><span class="n">ray_tracing_default_configuration</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">SimulatorRayTracing</span><span class="o">.</span><span class="n">ray_tracing_default_configuration</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="c1"># Due to float representation, round the off-axis angles so the values in results table</span>
@@ -492,7 +491,8 @@ document.write(`
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_kwargs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Builds a RayTracing object from kwargs only.</span>
+<span class="sd">        Build a RayTracing object from kwargs only.</span>
+
 <span class="sd">        The configurable parameters can be given as kwargs, instead of using the</span>
 <span class="sd">        config_data or config_file arguments.</span>
 
@@ -517,13 +517,11 @@ document.write(`
 
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        String representation of RayTracing class.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of RayTracing class.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;RayTracing(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
 
     <span class="k">def</span> <span class="nf">_validate_telescope_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate TelescopeModel&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate TelescopeModel.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="n">TelescopeModel</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;RayTracing contains a valid TelescopeModel&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">tel</span>
@@ -536,7 +534,7 @@ document.write(`
 <a class="viewcode-back" href="../ray_tracing.html#ray_tracing.RayTracing.simulate">[docs]</a>
     <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Simulate RayTracing using SimtelRunnerRayTracing.</span>
+<span class="sd">        Simulate RayTracing using SimulatorRayTracing.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -551,7 +549,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Simulating RayTracing for off_axis=</span><span class="si">{</span><span class="n">this_off_axis</span><span class="si">}</span><span class="s2">, mirror=</span><span class="si">{</span><span class="n">this_mirror</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
-                <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimtelRunnerRayTracing</span><span class="p">(</span>
+                <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorRayTracing</span><span class="p">(</span>
                     <span class="n">simtel_source_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="p">,</span>
                     <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">,</span>
                     <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
@@ -601,7 +599,9 @@ document.write(`
         <span class="n">containment_fraction</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the</span>
+<span class="sd">        Raytracing analysis.</span>
+
+<span class="sd">        Involves the following: read simtel files, compute psfs and eff areas and store the</span>
 <span class="sd">        results in _results.</span>
 
 <span class="sd">        Parameters</span>
@@ -620,7 +620,6 @@ document.write(`
 <span class="sd">            Containment fraction for PSF containment calculation. Allowed values are in the</span>
 <span class="sd">            interval [0,1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">do_analyze</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">force</span>
 
         <span class="n">focal_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;focal_length&quot;</span><span class="p">))</span>
@@ -711,8 +710,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_process_rx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">containment_fraction</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process sim_telarray photon list with rx binary and return the results</span>
-<span class="sd">        (containment_diameter_cm, centroids and eff area).</span>
+<span class="sd">        Process sim_telarray photon list with rx binary and return results.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -727,7 +725,6 @@ document.write(`
 <span class="sd">        (containment_diameter_cm, x_mean, y_mean, eff_area)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="n">rx_output</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>  <span class="c1"># pylint: disable=consider-using-with</span>
                 <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
@@ -790,7 +787,6 @@ document.write(`
 <span class="sd">        KeyError</span>
 <span class="sd">            If key is not among the valid options.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> vs off-axis angle&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>

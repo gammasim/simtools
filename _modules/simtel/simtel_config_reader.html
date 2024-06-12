@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,17 +28,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_config_reader';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -362,6 +362,7 @@ document.write(`
                   
   <h1>Source code for simtel.simtel_config_reader</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Read model parameters and configuration from sim_telarray configuration files.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -378,9 +379,7 @@ document.write(`
 
 
 <span class="k">class</span> <span class="nc">JsonNumpyEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert numpy to python types as accepted by json.dump.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert numpy to python types as accepted by json.dump.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
@@ -400,9 +399,11 @@ document.write(`
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">[docs]</a>
 <span class="k">class</span> <span class="nc">SimtelConfigReader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SimtelConfigReader reads model parameters from configuration files and converts to the simtools</span>
-<span class="sd">    representation (json dict). The sim_telarray configuration can be generated using e.g., the</span>
-<span class="sd">    following simtel_array command:</span>
+<span class="sd">    Reads model parameters from configuration files and converts to the simtools representation.</span>
+
+<span class="sd">    The output format are simtool-db-style json dicts.</span>
+
+<span class="sd">    The sim_telarray configuration can be generated using e.g., the following simtel_array command:</span>
 
 <span class="sd">    ... code-block:: console</span>
 
@@ -435,9 +436,7 @@ document.write(`
         <span class="n">parameter_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize SimtelConfigReader.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelConfigReader.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimtelConfigReader&quot;</span><span class="p">)</span>
 
@@ -512,7 +511,6 @@ document.write(`
 <span class="sd">            Dictionary to export.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
             <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
@@ -536,12 +534,11 @@ document.write(`
 <a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">[docs]</a>
     <span class="k">def</span> <span class="nf">compare_simtel_config_with_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compare limits and defaults reported by simtel_array with schema</span>
-<span class="sd">        (for debugging purposes; simple printing). Check for differences</span>
-<span class="sd">        in &#39;default&#39; and &#39;limits&#39; entries.</span>
+<span class="sd">        Compare limits and defaults reported by simtel_array with schema.</span>
 
+<span class="sd">        This is mostly for debugging purposes and includes simple printing.</span>
+<span class="sd">        Check for differences in &#39;default&#39; and &#39;limits&#39; entries.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">for</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;limits&quot;</span><span class="p">]:</span>
             <span class="n">_from_simtel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span>
             <span class="c1"># ignore limits checks for boolean</span>
@@ -604,7 +601,6 @@ document.write(`
 <span class="sd">            Dictionary with the parameter values.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Reading simtel config file </span><span class="si">{</span><span class="n">simtel_config_file</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;for parameter </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -646,7 +642,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_resolve_all_in_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Resolve &#39;all&#39; entries in a column. This needs to resolve the following cases:</span>
+<span class="sd">        Resolve &#39;all&#39; entries in a column.</span>
+
+<span class="sd">        This needs to resolve the following cases:</span>
 <span class="sd">        no &#39;all&#39; in any entry; [&#39;all:&#39;, &#39;5&#39;], [&#39;all: 5&#39;], [&#39;all:5&#39;, &#39;3:1&#39;]</span>
 <span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
 
@@ -661,7 +659,6 @@ document.write(`
 <span class="sd">            List of resolved strings.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># don&#39;t do anything if all string items in column do not start with &#39;all&#39;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="p">{}</span>
@@ -688,6 +685,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract value(s) from simtel configuration file columns.</span>
+
 <span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
 
 <span class="sd">        Parameters</span>
@@ -742,6 +740,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return type and dimension from simtel configuration column.</span>
+
 <span class="sd">        &#39;Func&#39; type from simtel is treated as string. Return number</span>
 <span class="sd">        of camera pixel for a hard-wired set up parameters.</span>
 
@@ -756,7 +755,6 @@ document.write(`
 <span class="sd">            Type and dimension.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span> <span class="ow">or</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;func&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;str&quot;</span><span class="p">,</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;ibool&quot;</span><span class="p">:</span>
@@ -767,8 +765,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return parameter name as used in sim_telarray. This is</span>
-<span class="sd">        documented in the schema file.</span>
+<span class="sd">        Return parameter name as used in sim_telarray.</span>
+
+<span class="sd">        This is documented in the schema file.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -781,7 +780,6 @@ document.write(`
 <span class="sd">            Parameter name as used in sim_telarray.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sim_soft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">sim_soft</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span>
@@ -793,8 +791,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_check_parameter_applicability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if a parameter is applicable for a given telescope using</span>
-<span class="sd">        the information available in the schema file.</span>
+<span class="sd">        Check if a parameter is applicable for a given telescope using schema files.</span>
+
 <span class="sd">        First check for exact telescope name, if not listed in the schema</span>
 <span class="sd">        use telescope type.</span>
 
@@ -809,7 +807,6 @@ document.write(`
 <span class="sd">            True if parameter is applicable to telescope.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">telescope_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]:</span>
                 <span class="k">return</span> <span class="kc">True</span>
@@ -832,7 +829,6 @@ document.write(`
 <span class="sd">            True if parameter is a file.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
@@ -872,7 +868,6 @@ document.write(`
 <span class="sd">            Validated dictionary (possibly converted to reference units).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Validating parameter dictionary </span><span class="si">{</span><span class="n">parameter_dict</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>

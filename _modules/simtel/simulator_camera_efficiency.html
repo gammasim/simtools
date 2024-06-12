@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_runner_camera_efficiency &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,18 +28,18 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_runner_camera_efficiency';</script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simulator_camera_efficiency';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -286,7 +286,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_runner_camera_efficiency.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simulator_camera_efficiency.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -360,22 +360,23 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for simtel.simtel_runner_camera_efficiency</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+  <h1>Source code for simtel.simulator_camera_efficiency</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulation runner for camera efficiency calculations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span> <span class="nn">simtools.model.model_parameter</span> <span class="kn">import</span> <span class="n">InvalidModelParameterError</span>
 <span class="kn">from</span> <span class="nn">simtools.simtel.simtel_runner</span> <span class="kn">import</span> <span class="n">SimtelRunner</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelRunnerCameraEfficiency&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorCameraEfficiency&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="SimtelRunnerCameraEfficiency">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_runner_camera_efficiency.SimtelRunnerCameraEfficiency">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelRunnerCameraEfficiency</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<div class="viewcode-block" id="SimulatorCameraEfficiency">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency">[docs]</a>
+<span class="k">class</span> <span class="nc">SimulatorCameraEfficiency</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray to perform\</span>
-<span class="sd">    camera efficiency simulations.</span>
+<span class="sd">    Interface with the testeff tool of sim_telarray to perform camera efficiency simulations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -386,9 +387,11 @@ document.write(`
 <span class="sd">    simtel_source_path: str or Path</span>
 <span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    file_simtel: str or Path</span>
-<span class="sd">        location of the sim_telarray testeff tool output file.</span>
+<span class="sd">        Location of the sim_telarray testeff tool output file.</span>
 <span class="sd">    zenith_angle: float</span>
-<span class="sd">        The zenith angle given in the config to CameraEfficiency.</span>
+<span class="sd">        Zenith angle given in the config to CameraEfficiency.</span>
+<span class="sd">    nsb_spectrum: str or Path</span>
+<span class="sd">        Path to the nsb spectrum file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -401,11 +404,9 @@ document.write(`
         <span class="n">zenith_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nsb_spectrum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize SimtelRunner.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimtelRunnerCameraEfficiency&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimulatorCameraEfficiency&quot;</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">simtel_source_path</span><span class="o">=</span><span class="n">simtel_source_path</span><span class="p">)</span>
 
@@ -419,12 +420,12 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nsb_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;nsb_spectrum property&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nsb_spectrum property.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_spectrum</span>
 
     <span class="nd">@nsb_spectrum</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">nsb_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsb_spectrum</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter for nsb_spectrum&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter for nsb_spectrum.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nsb_spectrum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_or_fix_nsb_spectrum_file_format</span><span class="p">(</span><span class="n">nsb_spectrum</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -435,10 +436,7 @@ document.write(`
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_make_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Prepare the command used to run testeff</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the command used to run testeff.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Preparing the command to run testeff&quot;</span><span class="p">)</span>
 
         <span class="c1"># Processing camera pixel features</span>
@@ -521,7 +519,7 @@ document.write(`
         <span class="k">return</span> <span class="n">command</span>
 
     <span class="k">def</span> <span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checking run results</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check run results.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -539,9 +537,17 @@ document.write(`
     <span class="k">def</span> <span class="nf">_get_one_dim_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">two_dim_parameter</span><span class="p">,</span> <span class="n">weighting_distribution_parameter</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate an average one-dimensional curve for testeff from the two-dimensional curve.</span>
+
 <span class="sd">        The two-dimensional distribution is provided in two_dim_parameter. The distribution</span>
 <span class="sd">        of weights to use for averaging the two-dimensional distribution is given in</span>
 <span class="sd">        weighting_distribution_parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        two_dim_parameter: str</span>
+<span class="sd">            The name of the two-dimensional distribution parameter.</span>
+<span class="sd">        weighting_distribution_parameter: str</span>
+<span class="sd">            The name of the parameter with the distribution of weights.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -580,13 +586,23 @@ document.write(`
     <span class="k">def</span> <span class="nf">_validate_or_fix_nsb_spectrum_file_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsb_spectrum_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate or fix the nsb spectrum file format.</span>
+
 <span class="sd">        The nsb spectrum file format required by sim_telarray has three columns:</span>
-<span class="sd">            wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],</span>
+<span class="sd">        wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],</span>
 <span class="sd">        where the second column is ignored by sim_telarray and the third is used for the NSB flux.</span>
 <span class="sd">        This function makes sure the file has at least three columns,</span>
 <span class="sd">        by copying the second column to the third.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nsb_spectrum_file: str or Path</span>
+<span class="sd">            The path to the nsb spectrum file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        validated_nsb_spectrum_file: Path</span>
+<span class="sd">            The path to the validated nsb spectrum file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validated_nsb_spectrum_file</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">nsb_spectrum_file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
         <span class="p">)</span>

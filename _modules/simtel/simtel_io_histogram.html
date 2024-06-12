@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_histogram &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>simtel.simtel_io_histogram &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,18 +28,18 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_histogram';</script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_histogram';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -286,7 +286,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_histogram.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_io_histogram.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -360,8 +360,10 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for simtel.simtel_histogram</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
+  <h1>Source code for simtel.simtel_io_histogram</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Handle a single histogram (or simtel_array output) file.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
@@ -377,29 +379,29 @@ document.write(`
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;InconsistentHistogramFormatError&quot;</span><span class="p">,</span>
     <span class="s2">&quot;HistogramIdNotFoundError&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SimtelHistogram&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SimtelIOHistogram&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
 <div class="viewcode-block" id="InconsistentHistogramFormatError">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.InconsistentHistogramFormatError">[docs]</a>
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.InconsistentHistogramFormatError">[docs]</a>
 <span class="k">class</span> <span class="nc">InconsistentHistogramFormatError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for bad histogram format.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="HistogramIdNotFoundError">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.HistogramIdNotFoundError">[docs]</a>
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.HistogramIdNotFoundError">[docs]</a>
 <span class="k">class</span> <span class="nc">HistogramIdNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for histogram ID not found.&quot;&quot;&quot;</span></div>
 
 
 
-<div class="viewcode-block" id="SimtelHistogram">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelHistogram</span><span class="p">:</span>
+<div class="viewcode-block" id="SimtelIOHistogram">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram">[docs]</a>
+<span class="k">class</span> <span class="nc">SimtelIOHistogram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This class handles a single histogram (or simtel_array output) file.</span>
+<span class="sd">    Handle a single histogram (or simtel_array output) file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -421,10 +423,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize SimtelHistogram class.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelIOHistogram class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">histogram_file</span> <span class="o">=</span> <span class="n">histogram_file</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">histogram_file</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -450,7 +449,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_initialize_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initializes lists of histograms and files.</span>
+<span class="sd">        Initialize lists of histograms and files.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -463,14 +462,14 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_histogram_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns number of histograms.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return number of histograms.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelHistogram.get_histogram_type_title">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.get_histogram_type_title">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.get_histogram_type_title">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title">[docs]</a>
     <span class="k">def</span> <span class="nf">get_histogram_type_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_index</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the title of the histogram with index histogram_index.</span>
+<span class="sd">        Return the title of the histogram with index histogram_index.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -488,7 +487,7 @@ document.write(`
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns information about the input parameters for the simulation.</span>
+<span class="sd">        Return information about the input parameters for the simulation.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -505,8 +504,7 @@ document.write(`
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">total_num_simulated_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the total number of simulated events.</span>
-<span class="sd">        the histograms.</span>
+<span class="sd">        Return the total number of simulated events the histograms.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -529,6 +527,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">total_num_triggered_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the total number of triggered events.</span>
+
 <span class="sd">        Please note that this value is not supposed to match the trigger rate x estimated</span>
 <span class="sd">        observation time, as the simulation is optimized for computational time and the energy</span>
 <span class="sd">        distribution assumed is not necessarily the reference cosmic-ray spectra.</span>
@@ -538,15 +537,14 @@ document.write(`
 <span class="sd">        int:</span>
 <span class="sd">            total number of simulated events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">triggered_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">triggered_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]))</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of triggered events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span>
 
-<div class="viewcode-block" id="SimtelHistogram.fill_event_histogram_dicts">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.fill_event_histogram_dicts">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.fill_event_histogram_dicts">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts">[docs]</a>
     <span class="k">def</span> <span class="nf">fill_event_histogram_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get data from the total simulated event and the triggered event histograms.</span>
@@ -668,6 +666,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce a new histogram with the fraction of triggered events over the simulated events.</span>
+
 <span class="sd">        The dimension of the histogram is reduced, as the rates are summed for all the bins in</span>
 <span class="sd">        impact distance.</span>
 
@@ -685,7 +684,6 @@ document.write(`
 <span class="sd">        event_ratio_histogram:</span>
 <span class="sd">            The new histogram with the fraction of triggered over simulated events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">simulated_events_per_energy_bin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="n">triggered_events_per_energy_bin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">triggered_events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -698,11 +696,12 @@ document.write(`
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ratio_per_energy_bin</span>
 
-<div class="viewcode-block" id="SimtelHistogram.compute_system_trigger_rate">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.compute_system_trigger_rate">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.compute_system_trigger_rate">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_system_trigger_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the system trigger rate and its uncertainty, which are saved as class attributes.</span>
+
 <span class="sd">        If events_histogram and triggered_events_histogram are passed, they are used to calculate</span>
 <span class="sd">        the trigger rate and trigger rate uncertainty, instead of the histograms from the file.</span>
 <span class="sd">        This is specially useful when calculating the trigger rate for stacked files, in which case</span>
@@ -718,7 +717,6 @@ document.write(`
 <span class="sd">            A dictionary with &quot;data&quot; corresponding to a 2D histogram (core distance x energy)</span>
 <span class="sd">            for the triggered events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Get the simulated and triggered 2D histograms from the simtel_array output file</span>
             <span class="k">if</span> <span class="n">events_histogram</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">triggered_events_histogram</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -762,8 +760,8 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_uncertainty</span></div>
 
 
-<div class="viewcode-block" id="SimtelHistogram.trigger_info_in_table">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.trigger_info_in_table">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.trigger_info_in_table">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table">[docs]</a>
     <span class="k">def</span> <span class="nf">trigger_info_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provide the trigger rate per energy bin in tabulated form.</span>
@@ -782,11 +780,12 @@ document.write(`
         <span class="k">return</span> <span class="n">trigger_rate_per_energy_bin_table</span></div>
 
 
-<div class="viewcode-block" id="SimtelHistogram.produce_trigger_meta_data">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.produce_trigger_meta_data">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.produce_trigger_meta_data">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data">[docs]</a>
     <span class="k">def</span> <span class="nf">produce_trigger_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce the meta data to include in the tabulated form of the trigger rate per energy bin.</span>
+
 <span class="sd">        It shows some information from the input file (simtel_array file) and the final estimate</span>
 <span class="sd">        system trigger rate.</span>
 
@@ -805,8 +804,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_integrate_in_energy_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_distribution_function</span><span class="p">,</span> <span class="n">energy_axis</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Helper function to integrate the particle distribution function between the consecutive</span>
-<span class="sd">        energy bins given by the energy_axis array.</span>
+<span class="sd">        Integrate the particle distribution.</span>
+
+<span class="sd">        The function integrates between the consecutive energy bins given by the energy_axis array.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -835,7 +835,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_initialize_histogram_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the two axes of a histogram: the array with the edges of the bins in core</span>
+<span class="sd">        Initialize the two axes of a histogram.</span>
+
+<span class="sd">        The two axes are: the array with the edges of the bins in core</span>
 <span class="sd">        distance and the edges of the array with the energy bins.</span>
 
 <span class="sd">        Parameters</span>
@@ -857,12 +859,14 @@ document.write(`
             <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelHistogram.get_particle_distribution_function">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.get_particle_distribution_function">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.get_particle_distribution_function">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function">[docs]</a>
     <span class="k">def</span> <span class="nf">get_particle_distribution_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the particle distribution function, depending on whether one wants the reference CR</span>
-<span class="sd">        distribution or the distribution used in the simulation.This is controlled by label.</span>
+<span class="sd">        Get the particle distribution function.</span>
+
+<span class="sd">        This depends  on whether one wants the reference CR distribution or the distribution</span>
+<span class="sd">        used in the simulation.This is controlled by label.</span>
 <span class="sd">        By using label=&quot;reference&quot;, one gets the distribution function according to a pre-defined CR</span>
 <span class="sd">        distribution, while by using label=&quot;simulation&quot;, the spectral index of the distribution</span>
 <span class="sd">        function from the simulation is used.</span>
@@ -878,7 +882,6 @@ document.write(`
 <span class="sd">        ctao_cr_spectra.spectral.PowerLaw</span>
 <span class="sd">            The function describing the spectral distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;reference&quot;</span><span class="p">:</span>
             <span class="n">particle_distribution_function</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">IRFDOC_PROTON_SPECTRUM</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;simulation&quot;</span><span class="p">:</span>
@@ -903,11 +906,12 @@ document.write(`
         <span class="n">spectral_distribution</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;spectral_index&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">spectral_distribution</span>
 
-<div class="viewcode-block" id="SimtelHistogram.estimate_observation_time">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.estimate_observation_time">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.estimate_observation_time">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time">[docs]</a>
     <span class="k">def</span> <span class="nf">estimate_observation_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimates the observation time corresponding to the simulated number of events.</span>
+
 <span class="sd">        It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,</span>
 <span class="sd">        and other information from the simulation configuration self.config.</span>
 <span class="sd">        If stacked_num_simulated_events is given, the observation time is estimated from it instead</span>
@@ -936,14 +940,16 @@ document.write(`
         <span class="k">return</span> <span class="p">(</span><span class="n">stacked_num_simulated_events</span> <span class="o">/</span> <span class="n">first_estimate</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span></div>
 
 
-<div class="viewcode-block" id="SimtelHistogram.estimate_trigger_rate_uncertainty">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.estimate_trigger_rate_uncertainty">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.estimate_trigger_rate_uncertainty">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty">[docs]</a>
     <span class="k">def</span> <span class="nf">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">trigger_rate_estimate</span><span class="p">,</span> <span class="n">num_simulated_events</span><span class="p">,</span> <span class="n">num_triggered_events</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Estimate the trigger rate uncertainty, based on the number of simulated and triggered</span>
-<span class="sd">        events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation</span>
+<span class="sd">        Estimate the trigger rate uncertainty.</span>
+
+<span class="sd">        The calculation is based on the number of simulated and triggered events.</span>
+<span class="sd">        Poisson statistics are assumed. The uncertainty is calculated based on propagation</span>
 <span class="sd">        of the individual uncertainties.</span>
 <span class="sd">        If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead</span>
 <span class="sd">        of based on the total number of trigger events from the simulation configuration</span>
@@ -970,8 +976,8 @@ document.write(`
         <span class="p">)</span> <span class="o">*</span> <span class="n">trigger_rate_estimate</span><span class="o">.</span><span class="n">unit</span></div>
 
 
-<div class="viewcode-block" id="SimtelHistogram.print_info">
-<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_histogram.SimtelHistogram.print_info">[docs]</a>
+<div class="viewcode-block" id="SimtelIOHistogram.print_info">
+<a class="viewcode-back" href="../../sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.print_info">[docs]</a>
     <span class="k">def</span> <span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print information on the geometry and input parameters.</span>

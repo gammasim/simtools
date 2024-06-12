@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -28,17 +28,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="../_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulator';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -272,9 +272,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -361,7 +361,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for simulator</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="sd">&quot;&quot;&quot;Simulator class for managing simulations of showers and array of telescopes.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
@@ -376,7 +378,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.job_execution.job_manager</span> <span class="kn">import</span> <span class="n">JobManager</span>
 <span class="kn">from</span> <span class="nn">simtools.model.array_model</span> <span class="kn">import</span> <span class="n">ArrayModel</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_runner_array</span> <span class="kn">import</span> <span class="n">SimtelRunnerArray</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simulator_array</span> <span class="kn">import</span> <span class="n">SimulatorArray</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -396,7 +398,8 @@ document.write(`
 <a class="viewcode-back" href="../simulators.html#simulator.Simulator">[docs]</a>
 <span class="k">class</span> <span class="nc">Simulator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Simulator is responsible for managing simulation of showers and array of telescopes. \</span>
+<span class="sd">    Simulator is responsible for managing simulation of showers and array of telescopes.</span>
+
 <span class="sd">    It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.</span>
 
 <span class="sd">    The configuration is set as a dict config_data or a yaml \</span>
@@ -476,9 +479,7 @@ document.write(`
         <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize Simulator class.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Simulator class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init Simulator </span><span class="si">{</span><span class="n">simulator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -507,13 +508,13 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The attribute simulator&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The attribute simulator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulator</span>
 
     <span class="nd">@simulator</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">simulator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set and test simulator type</span>
+<span class="sd">        Set and test simulator type.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -526,7 +527,6 @@ document.write(`
 <span class="sd">        gen.InvalidConfigDataError</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">simulator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulator</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -555,6 +555,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_load_corsika_config_and_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load configuration data for CORSIKA shower simulation.</span>
+
 <span class="sd">        Validate configuration data for CORSIKA shower simulation and</span>
 <span class="sd">        remove entries not needed for CorsikaRunner.</span>
 
@@ -564,7 +566,6 @@ document.write(`
 <span class="sd">            Simulator configuration data.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">copy</span><span class="p">(</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;showers&quot;</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_run_list_and_range</span><span class="p">(</span>
@@ -601,7 +602,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_validate_run_list_and_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_list</span><span class="p">,</span> <span class="n">run_range</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Prepares list of run numbers from a list or from a range.</span>
+<span class="sd">        Prepare list of run numbers from a list or from a range.</span>
+
 <span class="sd">        If both arguments are given, they will be merged into a single list.</span>
 
 <span class="sd">        Attributes</span>
@@ -672,10 +674,7 @@ document.write(`
         <span class="k">return</span> <span class="n">_rest_data</span>
 
     <span class="k">def</span> <span class="nf">_set_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set simulation runners</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set simulation runners.&quot;&quot;&quot;</span>
         <span class="n">common_args</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="s2">&quot;simtel_source_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulator_source_path</span><span class="p">,</span>
@@ -704,24 +703,15 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_corsika_simtel_runner</span><span class="p">(</span><span class="n">common_args</span><span class="p">,</span> <span class="n">corsika_args</span><span class="p">,</span> <span class="n">simtel_args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_corsika_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator_args</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creating CorsikaRunner.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create CorsikaRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="n">CorsikaRunner</span><span class="p">(</span><span class="o">**</span><span class="n">simulator_args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_simtel_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator_args</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creating a SimtelRunnerArray.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="n">SimtelRunnerArray</span><span class="p">(</span><span class="o">**</span><span class="n">simulator_args</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a SimulatorArray.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="n">SimulatorArray</span><span class="p">(</span><span class="o">**</span><span class="n">simulator_args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_corsika_simtel_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">common_args</span><span class="p">,</span> <span class="n">corsika_args</span><span class="p">,</span> <span class="n">simtel_args</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creating CorsikaRunner.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create CorsikaRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="n">CorsikaSimtelRunner</span><span class="p">(</span><span class="n">common_args</span><span class="p">,</span> <span class="n">corsika_args</span><span class="p">,</span> <span class="n">simtel_args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fill_results_without_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
@@ -754,7 +744,6 @@ document.write(`
 <span class="sd">            Single file or list of files of shower simulations.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Submission command: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_submit_command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">runs_and_files_to_submit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_and_files_to_submit</span><span class="p">(</span>
@@ -789,7 +778,7 @@ document.write(`
 <a class="viewcode-back" href="../simulators.html#simulator.Simulator.file_list">[docs]</a>
     <span class="k">def</span> <span class="nf">file_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List output files obtained with simulation run</span>
+<span class="sd">        List output files obtained with simulation run.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -797,7 +786,6 @@ document.write(`
 <span class="sd">            Single file or list of files of shower simulations.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">runs_and_files_to_submit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_and_files_to_submit</span><span class="p">(</span>
             <span class="n">input_file_list</span><span class="o">=</span><span class="n">input_file_list</span>
         <span class="p">)</span>
@@ -811,8 +799,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_runs_and_files_to_submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a dictionary with run numbers and (if applicable) simulation</span>
-<span class="sd">        files. The latter are expected to be given for the simtel simulator.</span>
+<span class="sd">        Return a dictionary with run numbers and simulation files.</span>
+
+<span class="sd">        The latter are expected to be given for the simtel simulator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -826,7 +815,6 @@ document.write(`
 <span class="sd">            file name as value</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">==</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span>
@@ -852,7 +840,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_guess_run_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finds the run number for a given input file name.</span>
+<span class="sd">        Find the run number for a given input file name.</span>
+
 <span class="sd">        Input file names can follow any pattern with the</span>
 <span class="sd">        string &#39;run&#39; followed by the run number.</span>
 <span class="sd">        If not found, returns 1.</span>
@@ -890,7 +879,6 @@ document.write(`
 <span class="sd">            run number</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">info_for_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">info_for_file_name</span><span class="p">))</span>
@@ -963,6 +951,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_list_of_histogram_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of histogram files.</span>
+
 <span class="sd">        (not applicable to all simulation types)</span>
 
 <span class="sd">        Returns</span>
@@ -1043,8 +1032,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_make_resources_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Prepare a simple report on computing resources used</span>
-<span class="sd">        (includes wall clock time per run only at this point)</span>
+<span class="sd">        Prepare a simple report on computing resources used.</span>
+
+<span class="sd">        Includes wall clock time per run only at this point.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1057,7 +1047,6 @@ document.write(`
 <span class="sd">           Dictionary with reports on computing resources</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">input_file_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;Walltime/run [sec]&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">}</span>
@@ -1087,8 +1076,9 @@ document.write(`
 <a class="viewcode-back" href="../simulators.html#simulator.Simulator.resources">[docs]</a>
     <span class="k">def</span> <span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Print a simple report on computing resources used</span>
-<span class="sd">        (includes run time per run only at this point)</span>
+<span class="sd">        Print a simple report on computing resources used.</span>
+
+<span class="sd">        Includes run time per run only at this point.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1133,7 +1123,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_print_list_of_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">which</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Print list of files of a certain type</span>
+<span class="sd">        Print list of files of a certain type.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1141,7 +1131,6 @@ document.write(`
 <span class="sd">            file type (e.g., log)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">which</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid file type </span><span class="si">{</span><span class="n">which</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span>

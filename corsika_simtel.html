@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CORSIKA and sim_telarray &#8212; simtools v0.1.dev1+gb010eee Manual</title>
+    <title>CORSIKA and sim_telarray &#8212; simtools v0.1.dev1+g43ae333 Manual</title>
   
   
   
@@ -29,17 +29,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=a7b9e205"></script>
+    <script src="_static/documentation_options.js?v=b9b9ba47"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'corsika_simtel';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb010eee Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g43ae333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -273,9 +273,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -416,9 +416,9 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -465,18 +465,19 @@ document.write(`
 <p>Support module for running CORSIKA and sim_telarray.</p>
 <section id="corsika-simtel-runner">
 <h2>corsika_simtel_runner<a class="headerlink" href="#corsika-simtel-runner" title="Link to this heading">#</a></h2>
-<span class="target" id="module-corsika_simtel.corsika_simtel_runner"><span id="corsika-simtel-runner-1"></span></span><dl class="py class">
+<p id="module-corsika_simtel.corsika_simtel_runner"><span id="corsika-simtel-runner-1"></span>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika_simtel.corsika_simtel_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaSimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">common_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika_simtel/corsika_simtel_runner.html#CorsikaSimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner" title="Link to this definition">#</a></dt>
-<dd><p>CorsikaSimtelRunner is responsible for running CORSIKA and piping it to sim_telarray
-using the multipipe functionality. CORSIKA is set up using corsika_autoinputs program
+<dd><p>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
+<p>CORSIKA is set up using corsika_autoinputs program
 provided by the sim_telarray package. It creates the multipipe script and sim_telarray command
 corresponding to the requested configuration.</p>
-<p>It uses CorsikaConfig to manage the CORSIKA configuration and SimtelRunnerArray
+<p>It uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
 for the sim_telarray configuration. User parameters must be given by the
 common_args, corsika_args and simtel_args arguments.
 The corsika_args and simtel_args are explained in
-CorsikaRunner and SimtelRunnerArray respectively.
+CorsikaRunner and SimulatorArray respectively.
 An example of the common_args is given below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">common_args</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;test-production&#39;</span><span class="p">,</span>
@@ -491,7 +492,7 @@ An example of the common_args is given below.</p>
 </dd>
 <dt><strong>corsika_args: dict</strong></dt><dd><p>Arguments for the CORSIKA runner (see full list in CorsikaRunner documentation).</p>
 </dd>
-<dt><strong>simtel_args: dict</strong></dt><dd><p>Arguments for the sim_telarray runner (see full list in SimtelRunnerArray documentation).</p>
+<dt><strong>simtel_args: dict</strong></dt><dd><p>Arguments for the sim_telarray runner (see full list in SimulatorArray documentation).</p>
 </dd>
 </dl>
 </dd>
@@ -525,15 +526,14 @@ An example of the common_args is given below.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name">
 <span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika_simtel/corsika_simtel_runner.html#CorsikaSimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
-<dd><p>Get a CORSIKA or sim_telarray style file name for various file types.
-See the implementations in CorsikaRunner and SimtelRunnerArray for details.</p>
+<dd><p>Get a CORSIKA or sim_telarray style file name for various file types.</p>
+<p>See the implementations in CorsikaRunner and SimulatorArray for details.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_info_for_file_name">
 <span class="sig-name descname"><span class="pre">get_info_for_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/corsika_simtel/corsika_simtel_runner.html#CorsikaSimtelRunner.get_info_for_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika_simtel.corsika_simtel_runner.CorsikaSimtelRunner.get_info_for_file_name" title="Link to this definition">#</a></dt>
-<dd><p>Get a dictionary with the info necessary for building
-a CORSIKA or sim_telarray runner file names.</p>
+<dd><p>Get a dictionary necessary for building a CORSIKA or sim_telarray runner file names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
