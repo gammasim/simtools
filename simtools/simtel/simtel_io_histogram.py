@@ -14,7 +14,7 @@ from eventio.simtel import MCRunHeader
 __all__ = [
     "InconsistentHistogramFormatError",
     "HistogramIdNotFoundError",
-    "SimtelHistogram",
+    "SimtelIOHistogram",
 ]
 
 
@@ -26,7 +26,7 @@ class HistogramIdNotFoundError(Exception):
     """Exception for histogram ID not found."""
 
 
-class SimtelHistogram:
+class SimtelIOHistogram:
     """
     This class handles a single histogram (or simtel_array output) file.
 
@@ -51,7 +51,7 @@ class SimtelHistogram:
 
     def __init__(self, histogram_file, area_from_distribution=False):
         """
-        Initialize SimtelHistogram class.
+        Initialize SimtelIOHistogram class.
 
         """
         self._logger = logging.getLogger(__name__)
