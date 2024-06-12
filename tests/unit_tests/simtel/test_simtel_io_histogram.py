@@ -9,7 +9,7 @@ from astropy import units as u
 from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import PowerLaw
 
-from simtools.simtel.simtel_histogram import HistogramIdNotFoundError, SimtelHistogram
+from simtools.simtel.simtel_io_histogram import HistogramIdNotFoundError, SimtelIOHistogram
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -25,14 +25,14 @@ def simtel_array_histograms_file(io_handler, corsika_output_file_name):
 
 @pytest.fixture()
 def simtel_array_histogram_instance(simtel_array_histograms_file):
-    instance = SimtelHistogram(histogram_file=simtel_array_histograms_file)
+    instance = SimtelIOHistogram(histogram_file=simtel_array_histograms_file)
     return instance
 
 
 def test_file_does_not_exist(caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(FileNotFoundError):
-            _ = SimtelHistogram(histogram_file="non_existent_file.simtel.zst")
+            _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
     assert "does not exist." in caplog.text
 
 
@@ -216,7 +216,7 @@ def test_total_area(simtel_array_histogram_instance, simtel_array_histograms_fil
     total_area = simtel_array_histogram_instance.total_area
     assert total_area.unit == u.cm**2
     assert pytest.approx(total_area.value, 0.05) == 1.25e11
-    new_instance = SimtelHistogram(
+    new_instance = SimtelIOHistogram(
         histogram_file=simtel_array_histograms_file, area_from_distribution=True
     )
     assert pytest.approx(new_instance.total_area.value, 0.05) == 1.3e11
