@@ -1,3 +1,5 @@
+"""Simulation using the light emission package for calibration."""
+
 import logging
 import os
 
@@ -13,9 +15,9 @@ __all__ = ["SimulatorLightEmission"]
 
 class SimulatorLightEmission(SimtelRunner):
     """
-    SimulatorLightEmission is the interface with sim_telarray to perform
-    light emission package simulations. The light emission package is used to
-    simulate a artificial light source, used for calibration.
+    Interface with sim_telarray to perform light emission package simulations.
+
+    The light emission package is used to simulate a artificial light source, used for calibration.
 
     The angle and pointing vector calculations use the convention north (x) towards
     east (-y).
@@ -61,9 +63,7 @@ class SimulatorLightEmission(SimtelRunner):
         config_file=None,
         test=False,
     ):
-        """
-        Initialize SimtelRunner
-        """
+        """Initialize SimtelRunner."""
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
         self._logger = logging.getLogger(__name__)
@@ -103,7 +103,8 @@ class SimulatorLightEmission(SimtelRunner):
     @classmethod
     def from_kwargs(cls, **kwargs):
         """
-        Builds a LightEmission object from kwargs only.
+        Build a LightEmission object from kwargs only.
+
         The configurable parameters can be given as kwargs, instead of using the
         config_data or config_file arguments.
 
@@ -257,8 +258,9 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _make_light_emission_script(self):
         """
-        Creates the light emission script to run the light emission package with the
-        specified pre-compiled light emission package application
+        Create the light emission script to run the light emission package.
+
+        Require the specified pre-compiled light emission package application
         in the sim_telarray/LightEmission/ path.
 
         Returns
@@ -427,7 +429,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _create_postscript(self, **kwargs):
         """
-        writes out post-script file using read_cta in hessioxxx/bin/read_cta
+        Write out post-script file using read_cta in hessioxxx/bin/read_cta.
 
         parts from the documentation
         -r level        (Use 10/5 tail-cut image cleaning and redo reconstruction.)
@@ -474,8 +476,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def prepare_script(self, generate_postscript=False, **kwargs):
         """
-        Builds and returns the full path of the bash run script
-        containing the light-emission command.
+        Build and return bash run script containing the light-emission command.
 
         Parameters
         ----------

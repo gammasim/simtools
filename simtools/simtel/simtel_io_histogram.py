@@ -1,3 +1,5 @@
+"""Handle a single histogram (or simtel_array output) file."""
+
 import copy
 import logging
 from pathlib import Path
@@ -28,7 +30,7 @@ class HistogramIdNotFoundError(Exception):
 
 class SimtelIOHistogram:
     """
-    This class handles a single histogram (or simtel_array output) file.
+    Handle a single histogram (or simtel_array output) file.
 
     Parameters
     ----------
@@ -50,10 +52,7 @@ class SimtelIOHistogram:
     """
 
     def __init__(self, histogram_file, area_from_distribution=False):
-        """
-        Initialize SimtelIOHistogram class.
-
-        """
+        """Initialize SimtelIOHistogram class."""
         self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
         if not Path(histogram_file).exists():
@@ -79,7 +78,7 @@ class SimtelIOHistogram:
 
     def _initialize_histogram(self):
         """
-        Initializes lists of histograms and files.
+        Initialize lists of histograms and files.
 
         Returns
         -------
@@ -92,12 +91,12 @@ class SimtelIOHistogram:
 
     @property
     def number_of_histogram_types(self):
-        """Returns number of histograms."""
+        """Return number of histograms."""
         return len(self.histogram)
 
     def get_histogram_type_title(self, histogram_index):
         """
-        Returns the title of the histogram with index histogram_index.
+        Return the title of the histogram with index histogram_index.
 
         Parameters
         ----------
@@ -114,7 +113,7 @@ class SimtelIOHistogram:
     @property
     def config(self):
         """
-        Returns information about the input parameters for the simulation.
+        Return information about the input parameters for the simulation.
 
         Returns
         -------
@@ -131,8 +130,7 @@ class SimtelIOHistogram:
     @property
     def total_num_simulated_events(self):
         """
-        Returns the total number of simulated events.
-        the histograms.
+        Return the total number of simulated events the histograms.
 
         Returns
         -------
@@ -155,6 +153,7 @@ class SimtelIOHistogram:
     def total_num_triggered_events(self):
         """
         Returns the total number of triggered events.
+
         Please note that this value is not supposed to match the trigger rate x estimated
         observation time, as the simulation is optimized for computational time and the energy
         distribution assumed is not necessarily the reference cosmic-ray spectra.
@@ -290,6 +289,7 @@ class SimtelIOHistogram:
     def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
         """
         Produce a new histogram with the fraction of triggered events over the simulated events.
+
         The dimension of the histogram is reduced, as the rates are summed for all the bins in
         impact distance.
 
@@ -322,6 +322,7 @@ class SimtelIOHistogram:
     def compute_system_trigger_rate(self, events_histogram=None, triggered_events_histogram=None):
         """
         Compute the system trigger rate and its uncertainty, which are saved as class attributes.
+
         If events_histogram and triggered_events_histogram are passed, they are used to calculate
         the trigger rate and trigger rate uncertainty, instead of the histograms from the file.
         This is specially useful when calculating the trigger rate for stacked files, in which case
@@ -399,6 +400,7 @@ class SimtelIOHistogram:
     def produce_trigger_meta_data(self):
         """
         Produce the meta data to include in the tabulated form of the trigger rate per energy bin.
+
         It shows some information from the input file (simtel_array file) and the final estimate
         system trigger rate.
 
@@ -416,8 +418,9 @@ class SimtelIOHistogram:
 
     def _integrate_in_energy_bin(self, particle_distribution_function, energy_axis):
         """
-        Helper function to integrate the particle distribution function between the consecutive
-        energy bins given by the energy_axis array.
+        Integrate the particle distribution.
+
+        The function integrates between the consecutive energy bins given by the energy_axis array.
 
         Parameters
         ----------
@@ -446,7 +449,9 @@ class SimtelIOHistogram:
 
     def _initialize_histogram_axes(self, events_histogram):
         """
-        Initialize the two axes of a histogram: the array with the edges of the bins in core
+        Initialize the two axes of a histogram.
+
+        The two axes are: the array with the edges of the bins in core
         distance and the edges of the array with the energy bins.
 
         Parameters
@@ -470,8 +475,10 @@ class SimtelIOHistogram:
 
     def get_particle_distribution_function(self, label="reference"):
         """
-        Get the particle distribution function, depending on whether one wants the reference CR
-        distribution or the distribution used in the simulation.This is controlled by label.
+        Get the particle distribution function.
+
+        This depends  on whether one wants the reference CR distribution or the distribution
+        used in the simulation.This is controlled by label.
         By using label="reference", one gets the distribution function according to a pre-defined CR
         distribution, while by using label="simulation", the spectral index of the distribution
         function from the simulation is used.
@@ -513,6 +520,7 @@ class SimtelIOHistogram:
     def estimate_observation_time(self, stacked_num_simulated_events=None):
         """
         Estimates the observation time corresponding to the simulated number of events.
+
         It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
         and other information from the simulation configuration self.config.
         If stacked_num_simulated_events is given, the observation time is estimated from it instead
@@ -544,8 +552,10 @@ class SimtelIOHistogram:
         self, trigger_rate_estimate, num_simulated_events, num_triggered_events
     ):
         """
-        Estimate the trigger rate uncertainty, based on the number of simulated and triggered
-        events. Poisson Statistics are assumed. The uncertainty is calculated based on propagation
+        Estimate the trigger rate uncertainty.
+
+        The calculation is based on the number of simulated and triggered events.
+        Poisson statistics are assumed. The uncertainty is calculated based on propagation
         of the individual uncertainties.
         If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead
         of based on the total number of trigger events from the simulation configuration
