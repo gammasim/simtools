@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Configuration file writer for sim_telarray."""
 
 import logging
 
@@ -13,8 +14,9 @@ __all__ = ["SimtelConfigWriter"]
 
 class SimtelConfigWriter:
     """
-    SimtelConfigWriter writes sim_telarray configuration files. It is designed to be used by model
-    classes (TelescopeModel and ArrayModel) only.
+    SimtelConfigWriter writes sim_telarray configuration files.
+
+    It is designed to be used by model classes (TelescopeModel and ArrayModel) only.
 
     Parameters
     ----------
@@ -35,9 +37,7 @@ class SimtelConfigWriter:
     def __init__(
         self, site, model_version, layout_name=None, telescope_model_name=None, label=None
     ):
-        """
-        Initialize SimtelConfigWriter.
-        """
+        """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelConfigWriter")
 
@@ -49,7 +49,7 @@ class SimtelConfigWriter:
 
     def write_telescope_config_file(self, config_file_path, parameters, config_parameters=None):
         """
-        Writes the sim_telarray config file for a single telescope.
+        Write the sim_telarray config file for a single telescope.
 
         Parameters
         ----------
@@ -127,7 +127,7 @@ class SimtelConfigWriter:
 
     def write_array_config_file(self, config_file_path, telescope_model, site_model):
         """
-        Writes the sim_telarray config file for an array of telescopes.
+        Write the sim_telarray config file for an array of telescopes.
 
         Parameters
         ----------
@@ -178,7 +178,7 @@ class SimtelConfigWriter:
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
     ):
         """
-        Writes the sim_telarray mirror list file for a single mirror.
+        Write the sim_telarray mirror list file for a single mirror.
 
         Parameters
         ----------
@@ -224,8 +224,16 @@ class SimtelConfigWriter:
 
     def _write_header(self, file, title, comment_char="%"):
         """
-        Writes a generic header. comment_char is the character to be used for comments, which \
-        differs among ctypes of config files.
+        Write a generic header.
+
+        Parameters
+        ----------
+        file: file
+            File to write.
+        title: str
+            Title of the header.
+        comment_char: str
+            Character to be used for comments, which differs among ctypes of config files.
         """
         header = f"{comment_char}{50 * '='}\n"
         header += f"{comment_char} {title}\n"
@@ -247,7 +255,16 @@ class SimtelConfigWriter:
         file.write(header)
 
     def _write_site_parameters(self, file, site_model):
-        """Writes site parameters."""
+        """
+        Write site parameters.
+
+        Parameters
+        ----------
+        file: file
+            File to write on.
+        site_model: SiteModel
+            Site model.
+        """
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
         for par, value in _site_parameters.items():

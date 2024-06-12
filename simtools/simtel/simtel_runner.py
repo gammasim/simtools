@@ -1,3 +1,5 @@
+"""Base class for running sim_telarray simulations."""
+
 import logging
 import os
 from pathlib import Path
@@ -32,9 +34,7 @@ class SimtelRunner:
     """
 
     def __init__(self, simtel_source_path, label=None):
-        """
-        Initialize SimtelRunner.
-        """
+        """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_source_path = Path(simtel_source_path)
@@ -45,11 +45,12 @@ class SimtelRunner:
         self.runs_per_set = 1
 
     def __repr__(self):
+        """Return a string representation of the SimtelRunner object."""
         return f"SimtelRunner(label={self.label})\n"
 
     def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
         """
-        Builds and returns the full path of the bash run script containing the sim_telarray command.
+        Build and return the full path of the bash run script containing the sim_telarray command.
 
         Parameters
         ----------
@@ -107,7 +108,7 @@ class SimtelRunner:
 
     def run(self, test=False, force=False, input_file=None, run_number=None):
         """
-        Basic sim_telarray run method.
+        Make run command and run sim_telarray.
 
         Parameters
         ----------
@@ -115,6 +116,10 @@ class SimtelRunner:
             If True, make simulations faster.
         force: bool
             If True, remove possible existing output files and run again.
+        input_file: str or Path
+            Full path of the input CORSIKA file.
+        run_number: int
+            Run number.
         """
         self._logger.debug("Running sim_telarray")
 
@@ -154,8 +159,9 @@ class SimtelRunner:
 
     def _raise_simtel_error(self):
         """
-        Raise sim_telarray execution error. Final 30 lines from the log file are collected and \
-        printed.
+        Raise sim_telarray execution error.
+
+        Final 30 lines from the log file are collected and printed.
 
         Raises
         ------
@@ -191,7 +197,23 @@ class SimtelRunner:
 
     @staticmethod
     def _config_option(par, value=None, weak_option=False):
-        """Util function for building sim_telarray command."""
+        """
+        Build sim_telarray command.
+
+        Parameters
+        ----------
+        par: str
+            Parameter name.
+        value: str
+            Parameter value.
+        weak_option: bool
+            If True, use -W option instead of -C.
+
+        Returns
+        -------
+        str
+            Command for sim_telarray.
+        """
         option_syntax = "-W" if weak_option else "-C"
         c = f" {option_syntax} {par}"
         c += f"={value}" if value is not None else ""

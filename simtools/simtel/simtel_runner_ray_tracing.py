@@ -1,3 +1,5 @@
+"""Simulation runner for ray tracing simulations."""
+
 import logging
 
 import astropy.units as u
@@ -67,9 +69,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         force_simulate=False,
         test=False,
     ):
-        """
-        Initialize SimtelRunner.
-        """
+        """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerRayTracing")
 
@@ -97,7 +97,13 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _load_required_files(self, force_simulate):
         """
         Which file are required for running depends on the mode.
+
         Here we define and write some information into these files. Log files are always required.
+
+        Parameters
+        ----------
+        force_simulate: bool
+            Remove existing files and force re-running of the ray-tracing simulation.
         """
         # This file is not actually needed and does not exist in simtools.
         # However, we need to provide the name of a CORSIKA input file to sim_telarray
@@ -212,7 +218,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
-        """Checking run results.
+        """Check run results.
 
         Raises
         ------
@@ -228,7 +234,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self._logger.debug("Everything looks fine with output file.")
 
     def _is_photon_list_file_ok(self):
-        """Check if the photon list is valid,"""
+        """Check if the photon list is valid."""
         n_lines = 0
         with open(self._photons_file, "rb") as ff:
             for _ in ff:

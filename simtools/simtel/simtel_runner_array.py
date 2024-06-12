@@ -1,3 +1,5 @@
+"""Simulation runner for array simulations."""
+
 import logging
 from pathlib import Path
 
@@ -51,9 +53,7 @@ class SimtelRunnerArray(SimtelRunner):
         config_data=None,
         config_file=None,
     ):
-        """
-        Initialize SimtelRunnerArray.
-        """
+        """Initialize SimtelRunnerArray."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerArray")
 
@@ -183,7 +183,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def has_file(self, file_type, run_number, mode="out"):
         """
-        Checks that the file of file_type for the specified run number exists.
+        Check that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
@@ -202,7 +202,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def get_resources(self, run_number):
         """
-        Reading run time from last line of submission log file.
+        Read run time from last line of submission log file.
 
         Parameters
         ----------
@@ -243,7 +243,7 @@ class SimtelRunnerArray(SimtelRunner):
 
     def _make_run_command(self, **kwargs):
         """
-        Builds and returns the command to run simtel_array.
+        Build and return the command to run simtel_array.
 
         Parameters
         ----------
@@ -253,7 +253,6 @@ class SimtelRunnerArray(SimtelRunner):
                     Full path of the input CORSIKA file
                 run_number: int (optional)
                     run number
-
         """
         run_number = kwargs["run_number"] if "run_number" in kwargs else 1
         info_for_file_name = self.get_info_for_file_name(run_number)
@@ -278,7 +277,7 @@ class SimtelRunnerArray(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):
-        # Checking run
+        """Check run results."""
         output_file = self.get_file_name(
             file_type="output", **self.get_info_for_file_name(kwargs["run_number"])
         )
