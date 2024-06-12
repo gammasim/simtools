@@ -10,6 +10,7 @@
     1. UTM system
     2. ground system (similar to sim_telarray system with x-axis pointing toward geographic north
        and y-axis pointing towards the west); altitude relative to the CORSIKA observation level.
+       Altitude is the height of the elevation rotation axis (plus some possible mirror offset).
     3. Mercator system
 
     Command line arguments
