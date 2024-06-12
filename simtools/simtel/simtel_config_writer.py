@@ -71,20 +71,36 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            if config_parameters is not None:
+            if config_parameters:
                 parameters.update(config_parameters)
 
             for _simtel_name, value in parameters.items():
-                if _simtel_name is not None:
-                    value = "none" if value is None else value  # simtel requires 'none'
-                    if isinstance(value, bool):
-                        value = 1 if value else 0
-                    elif isinstance(value, (list, np.ndarray)):  # noqa: UP038
-                        value = gen.convert_list_to_string(value)
-                    file.write(f"{_simtel_name} = {value}\n")
+                if _simtel_name:
+                    file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
             for _simtel_name, value in _config_meta.items():
                 file.write(f"{_simtel_name} = {value}\n")
+
+    def _get_value_string_for_simtel(self, value):
+        """
+        Return a value string for simtel.
+
+        Parameters
+        ----------
+        value: any
+            Value to convert to string.
+
+        Returns
+        -------
+        str
+            Value string for simtel.
+        """
+        value = "none" if value is None else value  # simtel requires 'none'
+        if isinstance(value, bool):
+            value = 1 if value else 0
+        elif isinstance(value, (list, np.ndarray)):  # noqa: UP038
+            value = gen.convert_list_to_string(value)
+        return value
 
     def _get_simtel_metadata(self, config_type):
         """
