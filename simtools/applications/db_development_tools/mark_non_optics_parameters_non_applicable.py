@@ -38,7 +38,7 @@ def initialize_config():
         type=str,
         required=True,
     )
-    return config
+    return config.initialize(db_config=True, simulation_model="telescope")
 
 
 def load_non_optic_parameters(sections_file):
@@ -86,8 +86,8 @@ def process_site_version(db, db_config, non_optic_parameters, site, version):
 
 
 def main():
-    config = initialize_config()
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+    args_dict, db_config = initialize_config()
+
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
