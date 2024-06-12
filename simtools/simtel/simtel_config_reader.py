@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Read model parameters and configuration from sim_telarray configuration files."""
 
 import json
 import logging
@@ -15,9 +16,7 @@ __all__ = ["SimtelConfigReader"]
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
-    """
-    Convert numpy to python types as accepted by json.dump.
-    """
+    """Convert numpy to python types as accepted by json.dump."""
 
     def default(self, o):
         if isinstance(o, np.floating):
@@ -35,9 +34,11 @@ class JsonNumpyEncoder(json.JSONEncoder):
 
 class SimtelConfigReader:
     """
-    SimtelConfigReader reads model parameters from configuration files and converts to the simtools
-    representation (json dict). The sim_telarray configuration can be generated using e.g., the
-    following simtel_array command:
+    Reads model parameters from configuration files and converts to the simtools representation.
+
+    The output format are simtool-db-style json dicts.
+
+    The sim_telarray configuration can be generated using e.g., the following simtel_array command:
 
     ... code-block:: console
 
@@ -70,9 +71,7 @@ class SimtelConfigReader:
         parameter_name=None,
         camera_pixels=None,
     ):
-        """
-        Initialize SimtelConfigReader.
-        """
+        """Initialize SimtelConfigReader."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelConfigReader")
 
@@ -162,10 +161,10 @@ class SimtelConfigReader:
 
     def compare_simtel_config_with_schema(self):
         """
-        Compare limits and defaults reported by simtel_array with schema
-        (for debugging purposes; simple printing). Check for differences
-        in 'default' and 'limits' entries.
+        Compare limits and defaults reported by simtel_array with schema.
 
+        This is mostly for debugging purposes and includes simple printing.
+        Check for differences in 'default' and 'limits' entries.
         """
         for data_type in ["default", "limits"]:
             _from_simtel = self.parameter_dict.get(data_type)
@@ -269,7 +268,9 @@ class SimtelConfigReader:
 
     def _resolve_all_in_column(self, column):
         """
-        Resolve 'all' entries in a column. This needs to resolve the following cases:
+        Resolve 'all' entries in a column.
+
+        This needs to resolve the following cases:
         no 'all' in any entry; ['all:', '5'], ['all: 5'], ['all:5', '3:1']
         This function is fine-tuned to the simtel configuration output.
 
@@ -310,6 +311,7 @@ class SimtelConfigReader:
     def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
         """
         Extract value(s) from simtel configuration file columns.
+
         This function is fine-tuned to the simtel configuration output.
 
         Parameters
@@ -364,6 +366,7 @@ class SimtelConfigReader:
     def _get_type_and_dimension_from_simtel_cfg(self, column):
         """
         Return type and dimension from simtel configuration column.
+
         'Func' type from simtel is treated as string. Return number
         of camera pixel for a hard-wired set up parameters.
 
@@ -388,8 +391,9 @@ class SimtelConfigReader:
 
     def _get_simtel_parameter_name(self, parameter_name):
         """
-        Return parameter name as used in sim_telarray. This is
-        documented in the schema file.
+        Return parameter name as used in sim_telarray.
+
+        This is documented in the schema file.
 
         Parameters
         ----------
@@ -413,8 +417,8 @@ class SimtelConfigReader:
 
     def _check_parameter_applicability(self, telescope_name):
         """
-        Check if a parameter is applicable for a given telescope using
-        the information available in the schema file.
+        Check if a parameter is applicable for a given telescope using schema files.
+
         First check for exact telescope name, if not listed in the schema
         use telescope type.
 

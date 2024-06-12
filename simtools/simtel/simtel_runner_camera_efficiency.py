@@ -1,3 +1,5 @@
+"""Simulation runner for camera efficiency calculations."""
+
 import logging
 from pathlib import Path
 
@@ -9,8 +11,7 @@ __all__ = ["SimtelRunnerCameraEfficiency"]
 
 class SimtelRunnerCameraEfficiency(SimtelRunner):
     """
-    SimtelRunnerCameraEfficiency is the interface with the testeff tool of sim_telarray to perform\
-    camera efficiency simulations.
+    Interface with the testeff tool of sim_telarray to perform camera efficiency simulations.
 
     Parameters
     ----------
@@ -21,9 +22,11 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
     simtel_source_path: str or Path
         Location of sim_telarray installation.
     file_simtel: str or Path
-        location of the sim_telarray testeff tool output file.
+        Location of the sim_telarray testeff tool output file.
     zenith_angle: float
-        The zenith angle given in the config to CameraEfficiency.
+        Zenith angle given in the config to CameraEfficiency.
+    nsb_spectrum: str or Path
+        Path to the nsb spectrum file.
     """
 
     def __init__(
@@ -36,9 +39,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         zenith_angle=None,
         nsb_spectrum=None,
     ):
-        """
-        Initialize SimtelRunner.
-        """
+        """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerCameraEfficiency")
 
@@ -54,12 +55,12 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
 
     @property
     def nsb_spectrum(self):
-        """nsb_spectrum property"""
+        """nsb_spectrum property."""
         return self._nsb_spectrum
 
     @nsb_spectrum.setter
     def nsb_spectrum(self, nsb_spectrum):
-        """Setter for nsb_spectrum"""
+        """Setter for nsb_spectrum."""
         if nsb_spectrum is not None:
             self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
         else:
@@ -70,9 +71,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         return not self._file_simtel.exists()
 
     def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
-        """
-        Prepare the command used to run testeff
-        """
+        """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 
         # Processing camera pixel features
@@ -155,7 +154,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
-        """Checking run results
+        """Check run results.
 
         Raises
         ------
@@ -173,9 +172,17 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
     def _get_one_dim_distribution(self, two_dim_parameter, weighting_distribution_parameter):
         """
         Calculate an average one-dimensional curve for testeff from the two-dimensional curve.
+
         The two-dimensional distribution is provided in two_dim_parameter. The distribution
         of weights to use for averaging the two-dimensional distribution is given in
         weighting_distribution_parameter.
+
+        Parameters
+        ----------
+        two_dim_parameter: str
+            The name of the two-dimensional distribution parameter.
+        weighting_distribution_parameter: str
+            The name of the parameter with the distribution of weights.
 
         Returns
         -------
@@ -214,11 +221,22 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
     def _validate_or_fix_nsb_spectrum_file_format(self, nsb_spectrum_file):
         """
         Validate or fix the nsb spectrum file format.
+
         The nsb spectrum file format required by sim_telarray has three columns:
-            wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],
+        wavelength (nm), ignored, NSB flux [1e9 * ph/m2/s/sr/nm],
         where the second column is ignored by sim_telarray and the third is used for the NSB flux.
         This function makes sure the file has at least three columns,
         by copying the second column to the third.
+
+        Parameters
+        ----------
+        nsb_spectrum_file: str or Path
+            The path to the nsb spectrum file.
+
+        Returns
+        -------
+        validated_nsb_spectrum_file: Path
+            The path to the validated nsb spectrum file.
         """
         validated_nsb_spectrum_file = (
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
