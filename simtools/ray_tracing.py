@@ -249,91 +249,121 @@ class RayTracing:
         """
 
         do_analyze = not self._file_results.exists() or force
+        if not do_analyze:
+            self._read_results()
 
         focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
-        tel_transmission_pars = (
-            self._telescope_model.get_parameter_value("telescope_transmission")
-            if not no_tel_transmission
-            else [1, 0, 0, 0]
-        )
-
+        tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
         cm_to_deg = 180.0 / pi / focal_length
 
         self._psf_images = {}
         _rows = []
-        if not do_analyze:
-            self._read_results()
 
-        all_mirrors = self._mirror_numbers if self.config.single_mirror_mode else [0]
+        all_mirrors = self._get_all_mirrors()
         for this_off_axis in self.config.off_axis_angle:
             for this_mirror in all_mirrors:
                 self._logger.debug(f"Analyzing RayTracing for off_axis={this_off_axis}")
                 if self.config.single_mirror_mode:
                     self._logger.debug(f"mirror_number={this_mirror}")
 
-                photons_file_name = names.generate_file_name(
-                    file_type="photons",
-                    suffix=".lis",
-                    site=self._telescope_model.site,
-                    telescope_model_name=self._telescope_model.name,
-                    source_distance=self._source_distance,
-                    zenith_angle=self.config.zenith_angle,
-                    off_axis_angle=this_off_axis,
-                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
-                    label=self.label,
-                )
-
-                photons_file = self._output_directory.joinpath(photons_file_name + ".gz")
+                photons_file = self._get_photons_file(this_off_axis, this_mirror)
                 tel_transmission = compute_telescope_transmission(
                     tel_transmission_pars, this_off_axis
                 )
-                image = PSFImage(focal_length, None)
-                image.read_photon_list_from_simtel_file(photons_file)
-                self._psf_images[this_off_axis] = copy(image)
+                image = self._create_psf_image(photons_file, focal_length, this_off_axis)
 
-                if not do_analyze:
-                    continue
-
-                if use_rx:
-                    containment_diameter_cm, centroid_x, centroid_y, eff_area = self._process_rx(
-                        photons_file
+                if do_analyze:
+                    _current_results = self._analyze_image(
+                        image,
+                        photons_file,
+                        this_off_axis,
+                        use_rx,
+                        cm_to_deg,
+                        containment_fraction,
+                        tel_transmission,
                     )
-                    containment_diameter_deg = containment_diameter_cm * cm_to_deg
-                    image.set_psf(containment_diameter_cm, fraction=containment_fraction, unit="cm")
-                    image.centroid_x = centroid_x
-                    image.centroid_y = centroid_y
-                    image.set_effective_area(eff_area * tel_transmission)
-                else:
-                    containment_diameter_cm = image.get_psf(containment_fraction, "cm")
-                    containment_diameter_deg = image.get_psf(containment_fraction, "deg")
-                    centroid_x = image.centroid_x
-                    centroid_y = image.centroid_y
-                    eff_area = image.get_effective_area() * tel_transmission
 
-                eff_flen = (
-                    np.nan if this_off_axis == 0 else centroid_x / tan(this_off_axis * pi / 180.0)
-                )
-                _current_results = (
-                    this_off_axis * u.deg,
-                    containment_diameter_cm * u.cm,
-                    containment_diameter_deg * u.deg,
-                    eff_area * u.m * u.m,
-                    eff_flen * u.cm,
-                )
                 if self.config.single_mirror_mode:
                     _current_results += (this_mirror,)
                 _rows.append(_current_results)
 
         if do_analyze:
-            _columns = ["Off-axis angle"]
-            _columns.extend(list(self.YLABEL.keys()))
-            if self.config.single_mirror_mode:
-                _columns.append("mirror_number")
-            self._results = QTable(rows=_rows, names=_columns)
-
+            self._store_results(_rows)
         self._has_results = True
         if export:
             self.export_results()
+
+    def _get_telescope_transmission_params(self, no_tel_transmission):
+        return (
+            self._telescope_model.get_parameter_value("telescope_transmission")
+            if not no_tel_transmission
+            else [1, 0, 0, 0]
+        )
+
+    def _get_all_mirrors(self):
+        return self._mirror_numbers if self.config.single_mirror_mode else [0]
+
+    def _get_photons_file(self, this_off_axis, this_mirror):
+        photons_file_name = names.generate_file_name(
+            file_type="photons",
+            suffix=".lis",
+            site=self._telescope_model.site,
+            telescope_model_name=self._telescope_model.name,
+            source_distance=self._source_distance,
+            zenith_angle=self.config.zenith_angle,
+            off_axis_angle=this_off_axis,
+            mirror_number=this_mirror if self.config.single_mirror_mode else None,
+            label=self.label,
+        )
+        return self._output_directory.joinpath(photons_file_name + ".gz")
+
+    def _create_psf_image(self, photons_file, focal_length, this_off_axis):
+        image = PSFImage(focal_length, None)
+        image.read_photon_list_from_simtel_file(photons_file)
+        self._psf_images[this_off_axis] = copy(image)
+        return image
+
+    def _analyze_image(
+        self,
+        image,
+        photons_file,
+        this_off_axis,
+        use_rx,
+        cm_to_deg,
+        containment_fraction,
+        tel_transmission,
+    ):
+        if use_rx:
+            containment_diameter_cm, centroid_x, centroid_y, eff_area = self._process_rx(
+                photons_file
+            )
+            containment_diameter_deg = containment_diameter_cm * cm_to_deg
+            image.set_psf(containment_diameter_cm, fraction=containment_fraction, unit="cm")
+            image.centroid_x = centroid_x
+            image.centroid_y = centroid_y
+            image.set_effective_area(eff_area * tel_transmission)
+        else:
+            containment_diameter_cm = image.get_psf(containment_fraction, "cm")
+            containment_diameter_deg = image.get_psf(containment_fraction, "deg")
+            centroid_x = image.centroid_x
+            centroid_y = image.centroid_y
+            eff_area = image.get_effective_area() * tel_transmission
+
+        eff_flen = np.nan if this_off_axis == 0 else centroid_x / tan(this_off_axis * pi / 180.0)
+        return (
+            this_off_axis * u.deg,
+            containment_diameter_cm * u.cm,
+            containment_diameter_deg * u.deg,
+            eff_area * u.m * u.m,
+            eff_flen * u.cm,
+        )
+
+    def _store_results(self, _rows):
+        _columns = ["Off-axis angle"]
+        _columns.extend(list(self.YLABEL.keys()))
+        if self.config.single_mirror_mode:
+            _columns.append("mirror_number")
+        self._results = QTable(rows=_rows, names=_columns)
 
     def _process_rx(self, file, containment_fraction=0.8):
         """
