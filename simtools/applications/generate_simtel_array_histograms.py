@@ -112,6 +112,57 @@ def _parse(label, description):
     return config_parser
 
 
+def build_histogram_files(config_parser, logger):
+    histogram_files = []
+    for one_file in config_parser["hist_file_names"]:
+        try:
+            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
+                histogram_files.append(one_file)
+            else:
+                with open(one_file, encoding="utf-8") as file:
+                    for line in file:
+                        histogram_files.append(line.strip())
+        except FileNotFoundError as exc:
+            msg = f"{one_file} is not a file."
+            logger.error(msg)
+            raise FileNotFoundError from exc
+    return histogram_files
+
+
+def check_and_log_overwrite(config_parser, logger):
+    if Path(f"{config_parser['output_file_name']}.hdf5").exists() and config_parser["hdf5"]:
+        msg = (
+            f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
+            f"Overwriting it."
+        )
+        logger.warning(msg)
+        return True
+    return False
+
+
+def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
+    if config_parser["pdf"]:
+        logger.debug(f"Creating the pdf file {output_file_name}.pdf")
+        pdf_pages = PdfPages(f"{output_file_name}.pdf")
+        number_of_histograms = 2 if config_parser["test"] else len(simtel_histograms.combined_hists)
+        for i_hist in range(number_of_histograms):
+            logger.debug(f"Processing: {i_hist + 1} histogram.")
+            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+            simtel_histograms.plot_one_histogram(i_hist, ax)
+            plt.tight_layout()
+            pdf_pages.savefig(fig)
+            plt.clf()
+        plt.close()
+        pdf_pages.close()
+        logger.info(f"Wrote histograms to the pdf file {output_file_name}.pdf")
+
+
+def export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger):
+    if config_parser["hdf5"]:
+        logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
+        simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
+
+
 def main():
     label = Path(__file__).stem
     description = "Display the simtel_array histograms."
@@ -122,22 +173,7 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
     logger.info("Starting the application.")
 
-    # Building list of histograms from the input files
-    histogram_files = []
-    for one_file in config_parser["hist_file_names"]:
-        try:
-            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
-                histogram_files.append(one_file)
-            else:
-                # Collecting hist files
-                with open(one_file, encoding="utf-8") as file:
-                    for line in file:
-                        # Removing '\n' from filename, in case it is left there.
-                        histogram_files.append(line.replace("\n", ""))
-        except FileNotFoundError as exc:
-            msg = f"{one_file} is not a file."
-            logger.error(msg)
-            raise FileNotFoundError from exc
+    histogram_files = build_histogram_files(config_parser, logger)
 
     # If no output name is passed, the tool gets the name of the first histogram of the list
     if config_parser["output_file_name"] is None:
@@ -145,46 +181,11 @@ def main():
     output_file_name = Path(output_path).joinpath(f"{config_parser['output_file_name']}")
 
     # If the hdf5 output file already exists, it is overwritten
-    if (Path(f"{config_parser['output_file_name']}.hdf5").exists()) and (config_parser["hdf5"]):
-        msg = (
-            f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
-            f"Overwriting it."
-        )
-        logger.warning(msg)
-        overwrite = True
-    else:
-        overwrite = False
+    overwrite = check_and_log_overwrite(config_parser, logger)
 
-    # Building SimtelHistograms
     simtel_histograms = SimtelHistograms(histogram_files)
-
-    if config_parser["pdf"]:
-        logger.debug(f"Creating the pdf file {output_file_name}.pdf")
-        pdf_pages = PdfPages(f"{output_file_name}.pdf")
-
-        if config_parser["test"]:
-            number_of_histograms = 2
-        else:
-            number_of_histograms = len(simtel_histograms.combined_hists)
-
-        for i_hist in range(number_of_histograms):
-
-            logger.debug(f"Processing: {i_hist + 1} histogram.")
-
-            fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-            simtel_histograms.plot_one_histogram(i_hist, ax)
-
-            plt.tight_layout()
-            pdf_pages.savefig(fig)
-            plt.clf()
-
-        plt.close()
-        pdf_pages.close()
-        logger.info(f"Wrote histograms to the pdf file {output_file_name}.pdf")
-
-    if config_parser["hdf5"]:
-        logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
-        simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
+    create_pdf(simtel_histograms, output_file_name, config_parser, logger)
+    export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger)
 
 
 if __name__ == "__main__":
