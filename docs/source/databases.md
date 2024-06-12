@@ -25,7 +25,7 @@ Collections:
 * `calibration_devices` with the model parameters for e.g., the illumination devices
 * `configuration_sim_telarray` with default configuration parameters for the sim_telarray simulation
 * `metadata` containing tables describing the model versions
-* `fs.files` with all file-type entries for the model parameters (e.g., the quantum-efficiency tables)
+* `fs.files` with all file type entries for the model parameters (e.g., the quantum-efficiency tables)
 
 ### Derived values DB
 
@@ -34,7 +34,7 @@ Database with derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Val
 Collections are:
 
 * `derived_values` with the derived values for each telescope or site
-* `fs.files` with file-type derived results
+* `fs.files` with file type derived results
 
 ### Other databases
 
