@@ -1,3 +1,5 @@
+"""Ray tracing simulations and analysis."""
+
 import gzip
 import logging
 import shlex
@@ -18,7 +20,7 @@ from simtools.io_operations import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
-from simtools.simtel.simtel_runner_ray_tracing import SimtelRunnerRayTracing
+from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -27,7 +29,7 @@ __all__ = ["RayTracing"]
 
 class RayTracing:
     """
-    Class for handling ray tracing simulations and analysis.
+    Ray tracing simulations and analysis.
 
     Parameters
     ----------
@@ -58,10 +60,7 @@ class RayTracing:
         config_data=None,
         config_file=None,
     ):
-        """
-        Initialize RayTracing class.
-        """
-
+        """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing RayTracing class")
 
@@ -72,7 +71,7 @@ class RayTracing:
 
         self.config = gen.validate_config_data(
             gen.collect_data_from_file_or_dict(config_file, config_data),
-            SimtelRunnerRayTracing.ray_tracing_default_configuration(False),
+            SimulatorRayTracing.ray_tracing_default_configuration(False),
         )
 
         # Due to float representation, round the off-axis angles so the values in results table
@@ -125,7 +124,8 @@ class RayTracing:
     @classmethod
     def from_kwargs(cls, **kwargs):
         """
-        Builds a RayTracing object from kwargs only.
+        Build a RayTracing object from kwargs only.
+
         The configurable parameters can be given as kwargs, instead of using the
         config_data or config_file arguments.
 
@@ -149,13 +149,11 @@ class RayTracing:
         return cls(**args, config_data=config_data)
 
     def __repr__(self):
-        """
-        String representation of RayTracing class.
-        """
+        """Return string representation of RayTracing class."""
         return f"RayTracing(label={self.label})\n"
 
     def _validate_telescope_model(self, tel):
-        """Validate TelescopeModel"""
+        """Validate TelescopeModel."""
         if isinstance(tel, TelescopeModel):
             self._logger.debug("RayTracing contains a valid TelescopeModel")
             return tel
@@ -166,7 +164,7 @@ class RayTracing:
 
     def simulate(self, test=False, force=False):
         """
-        Simulate RayTracing using SimtelRunnerRayTracing.
+        Simulate RayTracing using SimulatorRayTracing.
 
         Parameters
         ----------
@@ -181,7 +179,7 @@ class RayTracing:
                 self._logger.info(
                     f"Simulating RayTracing for off_axis={this_off_axis}, mirror={this_mirror}"
                 )
-                simtel = SimtelRunnerRayTracing(
+                simtel = SimulatorRayTracing(
                     simtel_source_path=self._simtel_source_path,
                     telescope_model=self._telescope_model,
                     test=test,
@@ -228,7 +226,9 @@ class RayTracing:
         containment_fraction=0.8,
     ):
         """
-        Analyze RayTracing, meaning read simtel files, compute psfs and eff areas and store the
+        Raytracing analysis.
+
+        Involves the following: read simtel files, compute psfs and eff areas and store the
         results in _results.
 
         Parameters
@@ -247,7 +247,6 @@ class RayTracing:
             Containment fraction for PSF containment calculation. Allowed values are in the
             interval [0,1]
         """
-
         do_analyze = not self._file_results.exists() or force
 
         focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
@@ -337,8 +336,7 @@ class RayTracing:
 
     def _process_rx(self, file, containment_fraction=0.8):
         """
-        Process sim_telarray photon list with rx binary and return the results
-        (containment_diameter_cm, centroids and eff area).
+        Process sim_telarray photon list with rx binary and return results.
 
         Parameters
         ----------
@@ -353,7 +351,6 @@ class RayTracing:
         (containment_diameter_cm, x_mean, y_mean, eff_area)
 
         """
-
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
@@ -411,7 +408,6 @@ class RayTracing:
         KeyError
             If key is not among the valid options.
         """
-
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
         try:
