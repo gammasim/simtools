@@ -7,12 +7,12 @@ import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.simtel.simtel_runner import InvalidOutputFileError, SimtelRunner
 
-__all__ = ["SimtelRunnerArray"]
+__all__ = ["SimulatorArray"]
 
 
-class SimtelRunnerArray(SimtelRunner):
+class SimulatorArray(SimtelRunner):
     """
-    SimtelRunnerArray is the interface with sim_telarray to perform array simulations.
+    SimulatorArray is the interface with sim_telarray to perform array simulations.
 
     Configurable parameters:
         simtel_data_directory:
@@ -53,9 +53,9 @@ class SimtelRunnerArray(SimtelRunner):
         config_data=None,
         config_file=None,
     ):
-        """Initialize SimtelRunnerArray."""
+        """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelRunnerArray")
+        self._logger.debug("Init SimulatorArray")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 

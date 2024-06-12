@@ -6,10 +6,10 @@ from pathlib import Path
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.simtel.simtel_runner import SimtelRunner
 
-__all__ = ["SimtelRunnerCameraEfficiency"]
+__all__ = ["SimulatorCameraEfficiency"]
 
 
-class SimtelRunnerCameraEfficiency(SimtelRunner):
+class SimulatorCameraEfficiency(SimtelRunner):
     """
     Interface with the testeff tool of sim_telarray to perform camera efficiency simulations.
 
@@ -41,7 +41,7 @@ class SimtelRunnerCameraEfficiency(SimtelRunner):
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelRunnerCameraEfficiency")
+        self._logger.debug("Init SimulatorCameraEfficiency")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
