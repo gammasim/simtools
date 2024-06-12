@@ -63,7 +63,7 @@ The mongoDB database can be accessed via the command-line interface `mongo` or v
 
 ## Update the database
 
-Model parameters should first reviewed and accepted in the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).
+Model parameters should first be reviewed and accepted in the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).
 
 :::{Danger}
 Updating the database is for experts only.
