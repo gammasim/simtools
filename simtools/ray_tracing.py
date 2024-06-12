@@ -283,9 +283,9 @@ class RayTracing:
                         tel_transmission,
                     )
 
-                if self.config.single_mirror_mode:
-                    _current_results += (this_mirror,)
-                _rows.append(_current_results)
+                    if self.config.single_mirror_mode:
+                        _current_results += (this_mirror,)
+                    _rows.append(_current_results)
 
         if do_analyze:
             self._store_results(_rows)
