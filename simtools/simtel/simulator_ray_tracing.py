@@ -1,3 +1,5 @@
+"""Simulation runner for ray tracing simulations."""
+
 import logging
 
 import astropy.units as u
@@ -7,16 +9,16 @@ from simtools.io_operations import io_handler
 from simtools.simtel.simtel_runner import SimtelRunner
 from simtools.utils import names
 
-__all__ = ["SimtelRunnerRayTracing"]
+__all__ = ["SimulatorRayTracing"]
 
 # pylint: disable=no-member
 # The line above is needed because there are members which are created
 # by adding them to the __dict__ of the class rather than directly.
 
 
-class SimtelRunnerRayTracing(SimtelRunner):
+class SimulatorRayTracing(SimtelRunner):
     """
-    SimtelRunnerRayTracing is the interface with sim_telarray to perform ray tracing simulations.
+    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
     Configurable parameters:
         zenith_angle:
@@ -67,15 +69,13 @@ class SimtelRunnerRayTracing(SimtelRunner):
         force_simulate=False,
         test=False,
     ):
-        """
-        Initialize SimtelRunner.
-        """
+        """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelRunnerRayTracing")
+        self._logger.debug("Init SimulatorRayTracing")
 
         super().__init__(label=label, simtel_source_path=simtel_source_path)
 
-        self.telescope_model = self._validate_telescope_model(telescope_model)
+        self.telescope_model = telescope_model
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
@@ -97,9 +97,14 @@ class SimtelRunnerRayTracing(SimtelRunner):
     def _load_required_files(self, force_simulate):
         """
         Which file are required for running depends on the mode.
-        Here we define and write some information into these files. Log files are always required.
-        """
 
+        Here we define and write some information into these files. Log files are always required.
+
+        Parameters
+        ----------
+        force_simulate: bool
+            Remove existing files and force re-running of the ray-tracing simulation.
+        """
         # This file is not actually needed and does not exist in simtools.
         # However, we need to provide the name of a CORSIKA input file to sim_telarray
         # so it is set up here.
@@ -157,7 +162,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
 
     def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
-
         if self.config.single_mirror_mode:
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
@@ -214,7 +218,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         return command
 
     def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
-        """Checking run results.
+        """Check run results.
 
         Raises
         ------
@@ -230,7 +234,7 @@ class SimtelRunnerRayTracing(SimtelRunner):
         self._logger.debug("Everything looks fine with output file.")
 
     def _is_photon_list_file_ok(self):
-        """Check if the photon list is valid,"""
+        """Check if the photon list is valid."""
         n_lines = 0
         with open(self._photons_file, "rb") as ff:
             for _ in ff:
@@ -251,7 +255,6 @@ class SimtelRunnerRayTracing(SimtelRunner):
             Default configuration for ray tracing.
 
         """
-
         return {
             "zenith_angle": {
                 "len": 1,
