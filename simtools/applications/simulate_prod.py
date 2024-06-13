@@ -1,20 +1,24 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to run simulations for productions (typically on the grid).
-    It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
+    Generate simulation configuration and run simulations for productions (if required).
+
+    It allows to run array layout simulation including shower and detector simulations
     with the provided "prod_tag" simulation configuration (e.g., Prod6)
     for a given primary particle, azimuth, and zenith angle.
 
-    The entire simulation chain is performed, i.e., shower simulations with CORSIKA
-    which are piped directly to sim_telarray using the sim_telarray multipipe mechanism.
-    This script produces all the necessary configuration files for CORSIKA and
-    sim_telarray before running simulation.
-    The multipipe scripts will be produced as part of this script.
+    The entire simulation chain or parts of it is performed:
 
-    This script does not provide a mechanism to submit jobs to a batch system like others
+    - shower simulations with CORSIKA only
+    - shower simulations with CORSIKA which are piped directly to sim_telarray using
+      the sim_telarray multipipe mechanism.
+
+    This application produces all the necessary configuration files for CORSIKA and
+    sim_telarray before running simulation.
+    The multipipe scripts will be produced as part of this application.
+
+    TODO - check if this is still correct
+    This application does not provide a mechanism to submit jobs to a batch system like others
     in simtools since it is meant to be executed on a grid node
     (distributed to it by the workload management system).
 
@@ -98,6 +102,8 @@ import logging
 import shutil
 import tarfile
 from pathlib import Path
+
+import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -196,6 +202,35 @@ def _parse(description=None):
         type=int,
         required=True,
     )
+    shower_config = config.parser.add_argument_group("shower parameters")
+    shower_config.add_argument(
+        "--eslope",
+        help="Slope of the energy spectrum.",
+        type=float,
+        required=False,
+        default=-2.0,
+    )
+    shower_config.add_argument(
+        "--erange",
+        help="Energy range of the primary particle (min/max value).",
+        type=CommandLineParser.energy_range,
+        required=False,
+        default=["3 GeV 330 TeV"],
+    )
+    shower_config.add_argument(
+        "--viewcone",
+        help="Viewcone for primary arrival directions (min/max value in degrees).",
+        type=CommandLineParser.viewcone,
+        required=False,
+        default=["0 deg 0 deg"],
+    )
+    shower_config.add_argument(
+        "--cscatter",
+        help="Scatter area for shower cores (number of use; scatter radius).",
+        type=CommandLineParser.core_scatter,
+        required=False,
+        default=["10 1400 m"],
+    )
     config.parser.add_argument(
         "--data_directory",
         help=(
@@ -214,7 +249,7 @@ def _parse(description=None):
         required=False,
         default=False,
     )
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model=["site", "layout", "telescope"])
 
 
 def main():
@@ -223,29 +258,35 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    try:
-        config_data = gen.collect_data_from_file_or_dict(
-            file_name=args_dict["production_config"], in_dict=None
-        )
-    except FileNotFoundError:
-        logger.error(
-            f"Error loading simulation configuration file from {args_dict['production_config']}"
-        )
-        raise
+    config_data = {}
+    config_data["showers"] = {}
+    config_data["common"] = {}
 
     # Overwrite default and optional settings
     config_data["showers"]["run_list"] = args_dict["run"] + args_dict["start_run"]
-    config_data["showers"]["primary"] = args_dict["primary"]
+    config_data["common"]["primary"] = args_dict["primary"]
     config_data["common"]["site"] = args_dict["site"]
+    config_data["common"]["layout_name"] = args_dict["array_layout_name"]
     config_data["common"]["zenith"] = args_dict["zenith_angle"]
     config_data["common"]["phi"] = args_dict["azimuth_angle"]
     label = config_data["common"].pop("label", "test-production")
     config_data["common"]["data_directory"] = Path(args_dict["data_directory"]) / label
 
-    if args_dict["nshow"] is not None:
-        config_data["showers"]["nshow"] = args_dict["nshow"]
-    if args_dict["label"] is not None:
-        label = args_dict["label"]
+    config_data["showers"]["nshow"] = args_dict.get("nshow", None)
+    config_data["showers"]["primary"] = args_dict["primary"]
+    config_data["showers"]["eslope"] = args_dict.get("eslope", None)
+    e_range = args_dict["erange"].split(" ")
+    config_data["showers"]["erange"] = [
+        float(e_range[0]) * u.Unit(e_range[1]),
+        float(e_range[2]) * u.Unit(e_range[3]),
+    ]
+    view_cone = args_dict["viewcone"].split(" ")
+    config_data["showers"]["viewcone"] = [
+        float(view_cone[0]) * u.Unit(view_cone[1]),
+        float(view_cone[2]) * u.Unit(view_cone[3]),
+    ]
+    cscat = args_dict["cscatter"].split(" ")
+    config_data["showers"]["cscat"] = [int(cscat[0]), float(cscat[1]) * u.Unit(cscat[2]), 0.0]
 
     simulator = Simulator(
         label=label,
