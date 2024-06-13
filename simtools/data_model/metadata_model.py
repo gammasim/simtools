@@ -222,26 +222,27 @@ def _fill_defaults(schema, observatory="CTA"):
     """
 
     defaults = {observatory: {}}
-
     schema = _resolve_references(schema[observatory])
 
+    def process_property(prop, prop_schema, current_dict):
+        if "default" in prop_schema:
+            current_dict[prop] = prop_schema["default"]
+        elif "type" in prop_schema:
+            if prop_schema["type"] == "object":
+                current_dict[prop] = {}
+                _fill_defaults_recursive(prop_schema, current_dict[prop])
+            elif prop_schema["type"] == "array":
+                current_dict[prop] = [{}]
+                if "items" in prop_schema and isinstance(prop_schema["items"], dict):
+                    _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
+
     def _fill_defaults_recursive(subschema, current_dict):
-        try:
-            for prop, prop_schema in subschema["properties"].items():
-                if "default" in prop_schema:
-                    current_dict[prop] = prop_schema["default"]
-                elif "type" in prop_schema:
-                    if prop_schema["type"] == "object":
-                        current_dict[prop] = {}
-                        _fill_defaults_recursive(prop_schema, current_dict[prop])
-                    elif prop_schema["type"] == "array":
-                        current_dict[prop] = [{}]
-                        if "items" in prop_schema and isinstance(prop_schema["items"], dict):
-                            _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
-        except KeyError:
+        if "properties" not in subschema:
             msg = "Missing 'properties' key in schema."
             _logger.error(msg)
-            raise
+            raise KeyError(msg)
+        for prop, prop_schema in subschema["properties"].items():
+            process_property(prop, prop_schema, current_dict)
 
     _fill_defaults_recursive(schema, defaults[observatory])
     return defaults
