@@ -147,33 +147,7 @@ def _parse(label, description, usage):
         required=False,
         default=None,
     )
-    input_group = config.parser.add_mutually_exclusive_group()
-    input_group.add_argument(
-        "--array_element_list",
-        help="List of array elements (telescopes) to plot (e.g., LSTN-01, LSTN-02, MSTN).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-    input_group.add_argument(
-        "--array_layout_file",
-        help="File(s) with the list of array elements (astropy table format).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-    input_group.add_argument(
-        "--array_layout_name",
-        help="Name of the array layout (as predefined).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-
-    return config.initialize(db_config=True, simulation_model="site")
+    return config.initialize(db_config=True, simulation_model=["site", "layout", "layout_file"])
 
 
 def _get_site_from_telescope_list_name(telescope_list_file):

@@ -247,27 +247,94 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         model_options: list
-            Options to be set: "telescope", "site"
+            Options to be set: "telescope", "site", "layout", "layout_file"
         """
 
-        if model_options is not None:
-            _job_group = self.add_argument_group("simulation model")
-            if "site" in model_options or "telescope" in model_options:
-                _job_group.add_argument(
-                    "--site", help="site (e.g., North, South)", type=self.site, required=False
-                )
-            if "telescope" in model_options:
-                _job_group.add_argument(
-                    "--telescope",
-                    help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
-                    type=self.telescope,
-                )
+        if model_options is None:
+            return
+
+        _job_group = self.add_argument_group("simulation model")
+        _job_group.add_argument(
+            "--model_version",
+            help="model version",
+            type=str,
+            default="Released",
+        )
+        if any(
+            option in model_options for option in ["site", "telescope", "layout", "layout_file"]
+        ):
+            self._add_model_option_site(_job_group)
+
+        if "telescope" in model_options:
             _job_group.add_argument(
-                "--model_version",
-                help="model version",
-                type=str,
-                default="Released",
+                "--telescope",
+                help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
+                type=self.telescope,
             )
+
+        if "layout" in model_options or "layout_file" in model_options:
+            _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
+
+    @staticmethod
+    def _add_model_option_layout(job_group, add_layout_file):
+        """
+        Add layout option to the job group.
+
+        Parameters
+        ----------
+        job_group: argparse.ArgumentParser
+            Job group
+        add_layout_file: bool
+            Add layout file option
+
+        Returns
+        -------
+        argparse.ArgumentParser
+        """
+        _layout_group = job_group.add_mutually_exclusive_group(required=False)
+        _layout_group.add_argument(
+            "--array_layout_name",
+            help="array layout name (e.g., alpha, subsystem_msts)",
+            nargs="+",
+            type=str,
+            required=False,
+        )
+        _layout_group.add_argument(
+            "--array_element_list",
+            help="list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
+            nargs="+",
+            type=str,
+            required=False,
+            default=None,
+        )
+        if add_layout_file:
+            _layout_group.add_argument(
+                "--array_layout_file",
+                help="file(s) with the list of array elements (astropy table format).",
+                nargs="+",
+                type=str,
+                required=False,
+                default=None,
+            )
+        return job_group
+
+    def _add_model_option_site(self, job_group):
+        """
+        Add site option to the job group.
+
+        Parameters
+        ----------
+        job_group: argparse.ArgumentParser
+            Job group
+
+        Returns
+        -------
+        argparse.ArgumentParser
+        """
+        job_group.add_argument(
+            "--site", help="site (e.g., North, South)", type=self.site, required=False
+        )
+        return job_group
 
     @staticmethod
     def site(value):

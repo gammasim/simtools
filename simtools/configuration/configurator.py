@@ -129,7 +129,6 @@ class Configurator:
             Add output file configuration to list of args.
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
-            (use: 'version', 'telescope', 'site')
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
