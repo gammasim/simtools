@@ -431,36 +431,55 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     data: dict or list
         Data as dict or list.
     """
-
     if file_name is not None:
-        if in_dict is not None:
-            _logger.warning("Both in_dict and file_name were given - file_name will be used")
-        if is_url(str(file_name)):
-            data = collect_data_from_http(file_name)
-        else:
-            with open(file_name, encoding="utf-8") as file:
-                if Path(file_name).suffix.lower() == ".json":
-                    data = json.load(file)
-                elif Path(file_name).suffix.lower() == ".list":
-                    lines = file.readlines()
-                    data = [line.strip() for line in lines]
-                else:
-                    # try plain yaml first for efficiency reason
-                    try:
-                        data = yaml.safe_load(file)
-                    except yaml.constructor.ConstructorError:
-                        data = _load_yaml_using_astropy(file)
-        return data
+        return collect_data_from_file(file_name, in_dict)
+
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "Input has not been provided (neither by file, nor by dict)"
     if allow_empty:
-        _logger.debug(msg)
+        _logger.debug("Input has not been provided (neither by file, nor by dict)")
         return None
 
+    msg = "Input has not been provided (neither by file, nor by dict)"
     _logger.debug(msg)
     raise InvalidConfigDataError(msg)
+
+
+def collect_data_from_file(file_name, in_dict):
+    """
+    Collect data from file based on its extension.
+
+    Parameters
+    ----------
+    file_name: str
+        Name of the yaml/json/ascii file.
+    in_dict: dict
+        Data as dict.
+
+    Returns
+    -------
+    data: dict or list
+        Data as dict or list.
+    """
+    if in_dict is not None:
+        _logger.warning("Both in_dict and file_name were given - file_name will be used")
+
+    if is_url(file_name):
+        return collect_data_from_http(file_name)
+
+    with open(file_name, encoding="utf-8") as file:
+        if Path(file_name).suffix.lower() == ".json":
+            return json.load(file)
+
+        if Path(file_name).suffix.lower() == ".list":
+            lines = file.readlines()
+            return [line.strip() for line in lines]
+
+        try:
+            return yaml.safe_load(file)
+        except yaml.constructor.ConstructorError:
+            return _load_yaml_using_astropy(file)
 
 
 def collect_kwargs(label, in_kwargs):
