@@ -487,24 +487,19 @@ class CommandLineParser(argparse.ArgumentParser):
                 "Will check if it is (north, south, east, west) instead"
             )
         if isinstance(angle, str):
+            azimuth_map = {
+                "north": 0 * u.deg,
+                "south": 180 * u.deg,
+                "east": 90 * u.deg,
+                "west": 270 * u.deg,
+            }
             azimuth_angle = angle.lower()
-            if azimuth_angle == "north":
-                return 0 * u.deg
-            if azimuth_angle == "south":
-                return 180 * u.deg
-            if azimuth_angle == "east":
-                return 90 * u.deg
-            if azimuth_angle == "west":
-                return 270 * u.deg
+            if azimuth_angle in azimuth_map:
+                return azimuth_map[azimuth_angle]
             raise argparse.ArgumentTypeError(
-                "The azimuth angle can only be a number or one of "
-                f"(north, south, east, west), not {angle}"
+                "The azimuth angle can only be one of " f"(north, south, east, west), not {angle}"
             )
-        logger.error(
-            f"The azimuth value provided, {angle}, is not a valid number "
-            "nor one of (north, south, east, west)."
-        )
-        raise TypeError
+        return None
 
     @staticmethod
     def energy_range(energy_range, energy_unit="GeV"):
