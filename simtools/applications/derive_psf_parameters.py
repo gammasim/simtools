@@ -103,6 +103,7 @@ from simtools.visualization import visualize
 def load_data(data_file):
     """
     Load data from file txt file.
+
     Parameters
     ----------
     data_file: str
