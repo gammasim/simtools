@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-add-file-to-db
+  APPLICATION: simtools-db-add-file-to-db
   TEST_NAME: run
   CONFIGURATION:
     FILE_NAME:

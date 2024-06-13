@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-get-parameter
+  APPLICATION: simtools-db-get-parameter-from-db
   TEST_NAME: telescope_parameter
   CONFIGURATION:
     SITE: North

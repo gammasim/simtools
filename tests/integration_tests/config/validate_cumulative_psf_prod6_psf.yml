@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-compare-cumulative-psf
+  APPLICATION: simtools-validate-cumulative-psf
   TEST_NAME: run
   CONFIGURATION:
     SITE: North
@@ -10,4 +10,4 @@ CTA_SIMPIPE:
     TEST: true
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: ray-tracing/results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_compare_cumulative_psf.ecsv
+    - OUTPUT_FILE: ray-tracing/results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_validate_cumulative_psf.ecsv

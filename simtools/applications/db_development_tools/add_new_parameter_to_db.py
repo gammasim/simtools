@@ -31,7 +31,6 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    # epsgs = [32628, 32719]
     parameter = {
         "mirror_panel_shape": 1,
         "mirror_panel_diameter": 84.6 * u.cm,

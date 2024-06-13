@@ -105,9 +105,8 @@ def _parse(label, description):
     )
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
-    if not config_parser["pdf"]:
-        if not config_parser["hdf5"]:
-            config.parser.error("At least one argument is required: --pdf or --hdf5.")
+    if not config_parser["pdf"] and not config_parser["hdf5"]:
+        config.parser.error("At least one argument is required: --pdf or --hdf5.")
 
     return config_parser
 
