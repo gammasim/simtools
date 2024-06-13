@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg_corsika
   CONFIGURATION:
     PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
-    SIMULATOR: corsika
+    SIMULATION_SOFTWARE: corsika
     MODEL_VERSION: prod6
     SITE: North
     PRIMARY: gamma
