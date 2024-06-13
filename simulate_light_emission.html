@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>add_value_from_json_to_db &#8212; simtools v0.1.dev1+g56adc9b Manual</title>
+    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g49a6ca0 Manual</title>
   
   
   
@@ -36,15 +36,15 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbcff591"></script>
+    <script src="_static/documentation_options.js?v=2005f50e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'add_value_from_json_to_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'simulate_light_emission';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="calculate_trigger_rate" href="calculate_trigger_rate.html" />
-    <link rel="prev" title="add_file_to_db" href="add_file_to_db.html" />
+    <link rel="next" title="simulate_prod" href="simulate_prod.html" />
+    <link rel="prev" title="print_array_elements" href="print_array_elements.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g56adc9b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g49a6ca0 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -187,31 +187,31 @@
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="add_file_to_db.html">add_file_to_db</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">add_value_from_json_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compare_cumulative_psf.html">compare_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_array_config.html">generate_array_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_default_metadata.html">generate_default_metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_file_from_db.html">get_file_from_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_parameter.html">get_parameter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="light_emission.html">light_emission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="make_regular_arrays.html">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="produce_array_config.html">produce_array_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sim_showers_for_trigger_rates.html">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tune_psf.html">tune_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_cumulative_psf.html">validate_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
 </ul>
@@ -298,7 +298,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/add_value_from_json_to_db.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/simulate_light_emission.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -315,7 +315,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fadd_value_from_json_to_db.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fsimulate_light_emission.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,7 +345,7 @@
       
       
       
-      <li><a href="_sources/add_value_from_json_to_db.rst" target="_blank"
+      <li><a href="_sources/simulate_light_emission.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -429,7 +429,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>add_value_from_json_to_db</h1>
+    <h1>simulate_light_emission</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -439,9 +439,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.distance_list"><code class="docutils literal notranslate"><span class="pre">distance_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.select_application"><code class="docutils literal notranslate"><span class="pre">select_application()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -453,32 +457,180 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="add-value-from-json-to-db">
-<span id="id1"></span><h1>add_value_from_json_to_db<a class="headerlink" href="#add-value-from-json-to-db" title="Link to this heading">#</a></h1>
-<section id="summary">
-<span id="module-add_value_from_json_to_db"></span><h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>This application adds a new parameter / value to a collection in the DB using a json
-file as input.</p>
+  <section id="module-simulate_light_emission">
+<span id="simulate-light-emission"></span><h1>simulate_light_emission<a class="headerlink" href="#module-simulate_light_emission" title="Link to this heading">#</a></h1>
+<p>Simulate calibration devices using the light emission package.</p>
+<p>Run the application in the command line.
+There are two ways this application can be executed:</p>
+<ol class="arabic simple">
+<li><p>Illuminator at varying distances.</p></li>
+<li><p>Illuminator and telescopes at fixed positions as defined in the layout.</p></li>
+</ol>
+<section id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h2>
+<ol class="arabic">
+<li><p>Simulate light emission with varying distances:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup variable             --model_version prod6 --light_source_type led</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Simulate light emission with telescopes at fixed positions according to the layout:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup layout             --model_version prod6 --telescope_file             /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv             --light_source_type led</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
 </section>
 <section id="command-line-arguments">
-<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<h2>Command Line Arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>file_name (str, required)</dt><dd><p>Name of the file to upload including the full path.</p>
+<dt>–telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, …)</p>
 </dd>
-<dt>db_collection (str, required)</dt><dd><p>The DB collection to which to add the file.</p>
+<dt>–site (str, required)</dt><dd><p>Site name (North or South).</p>
 </dd>
-<dt>db (str)</dt><dd><p>The DB to insert the files to.         The choices are either the default CTA simulation DB or a sandbox for testing.</p>
+<dt>–illuminator (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
+</dd>
+<dt>–light_source_setup (str, optional)</dt><dd><p>Select calibration light source positioning/setup:
+- “variable” for varying distances.
+- “layout” for actual telescope positions.</p>
+</dd>
+<dt>–model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
+</dd>
+<dt>–light_source_type (str, optional)</dt><dd><p>Select calibration light source type: led (default) or laser.
+This changes the pre-compiled (simtel_array) application that is used to run the
+light emission package with. Currently we use xyzls (laser), and ls-beam can be
+accessed by using the laser option.</p>
+</dd>
+<dt>–telescope_file (str, optional)</dt><dd><p>Telescope position file. Required when using the –light_source_setup layout option.</p>
+</dd>
+<dt>–off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
+</dd>
+<dt>–plot (flag, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Upload a file to sites collection:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-value-from-json-to-db \</span>
-<span class="go">    --file_name new_value.json --db_collection sites</span>
+<p>Simulate isotropic light source at different distances for the MSTN-04:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North         --illuminator ILLN-01 --light_source_setup variable         --model_version prod6 --light_source_type led    ```</span>
+</pre></div>
+</div>
+<p>Expected Output:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">light-emission package stage:</span>
+<span class="go">File &#39;/workdir/external/simtools/simtools-output/light_emission/model/</span>
+<span class="go">    atmprof_ecmwf_north_winter_fixed.dat&#39; registered for atmospheric profile 99.</span>
+<span class="go">Atmospheric profile 99 to be read from file &#39;/workdir/external/simtools/</span>
+<span class="go">    simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat&#39;.</span>
+<span class="go">Atmospheric profile 99 with 55 levels read from file /workdir/external/</span>
+<span class="go">    simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat</span>
+<span class="go">Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.</span>
+<span class="go">IACT control parameter line: print_events 999 10 100 1000 0</span>
+<span class="go">Case 1: 1 event with 1e+10 photons.</span>
+<span class="go">Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999</span>
+<span class="go">Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz</span>
+<span class="go">    not yet created.</span>
+<span class="go">Telescope output file: &#39;/workdir/external/simtools/simtools-output/</span>
+<span class="go">    light_emission/xyzls.iact.gz&#39;</span>
+<span class="go">....</span>
+<span class="go">....</span>
+<span class="go">Sim_telarray stage:</span>
+<span class="go">Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105</span>
+<span class="go">Event end data has been found.</span>
+<span class="go">Shower of 0.0000 TeV energy was seen in 1 of 1 cases.</span>
+<span class="go">Photon statistics:</span>
+<span class="go">All photons:               928518</span>
+<span class="go">Used photons:              928518</span>
+<span class="go">Not absorbed/max. Q.E.:    189560</span>
+<span class="go">Reflected on mirror:        26815</span>
+<span class="go">Camera hit:                 25574</span>
+<span class="go">Pixel hit:                  25574</span>
+<span class="go">Detected:                   20998</span>
+<span class="go">Trigger statistics:</span>
+<span class="go">Tel. triggered:             1</span>
+<span class="go">Tel. + array:               1</span>
+<span class="go">Early readout:              0</span>
+<span class="go">Late readout:               0</span>
+<span class="go">Finish data conversion ...</span>
+<span class="go">Writing 13 histograms to output file.</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="simulate_light_emission.default_le_configs">
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">default_le_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulate_light_emission.html#default_le_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.default_le_configs" title="Link to this definition">#</a></dt>
+<dd><p>Define default light emission configurations.</p>
+<p>Predefined angular distribution names not requiring to read any table are
+“Isotropic”, “Gauss:&lt;rms&gt;”, “Rayleigh”, “Cone:&lt;angle&gt;”, and “FilledCone:&lt;angle&gt;”, “Parallel”,
+with all angles given in degrees, all with respect to the given direction vector
+(vertically downwards if missing). If the light source has a non-zero length and velocity
+(in units of the vacuum speed of light), it is handled as a moving source,
+in the given direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>le_application: str</strong></dt><dd><p>Light emission application.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>default_config: dict</dt><dd><p>Default light emission configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulate_light_emission.distance_list">
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">distance_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulate_light_emission.html#distance_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.distance_list" title="Link to this definition">#</a></dt>
+<dd><p>Convert distance list to astropy quantities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>arg: list</strong></dt><dd><p>List of distances.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>values: list</dt><dd><p>List of distances as astropy quantities.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulate_light_emission.main">
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulate_light_emission.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.main" title="Link to this definition">#</a></dt>
+<dd><p>Simulate light emission.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulate_light_emission.select_application">
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">select_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulate_light_emission.html#select_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.select_application" title="Link to this definition">#</a></dt>
+<dd><p>Select sim_telarray application for light emission simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>le_application: str</dt><dd><p>Light emission application.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -493,20 +645,20 @@ file as input.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="add_file_to_db.html"
+       href="print_array_elements.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">add_file_to_db</p>
+        <p class="prev-next-title">print_array_elements</p>
       </div>
     </a>
     <a class="right-next"
-       href="calculate_trigger_rate.html"
+       href="simulate_prod.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">calculate_trigger_rate</p>
+        <p class="prev-next-title">simulate_prod</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -526,9 +678,13 @@ file as input.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.distance_list"><code class="docutils literal notranslate"><span class="pre">distance_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.select_application"><code class="docutils literal notranslate"><span class="pre">select_application()</span></code></a></li>
 </ul>
   </nav></div>
 

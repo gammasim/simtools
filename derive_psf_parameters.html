@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>make_regular_arrays &#8212; simtools v0.1.dev1+g56adc9b Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g49a6ca0 Manual</title>
   
   
   
@@ -36,15 +36,15 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbcff591"></script>
+    <script src="_static/documentation_options.js?v=2005f50e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'make_regular_arrays';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'derive_psf_parameters';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="plot_array_layout" href="plot_array_layout.html" />
-    <link rel="prev" title="light_emission" href="light_emission.html" />
+    <link rel="next" title="generate_array_config" href="generate_array_config.html" />
+    <link rel="prev" title="derive_mirror_rnda" href="derive_mirror_rnda.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g56adc9b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g49a6ca0 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -187,31 +187,31 @@
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="add_file_to_db.html">add_file_to_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="add_value_from_json_to_db.html">add_value_from_json_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compare_cumulative_psf.html">compare_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">derive_psf_parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_array_config.html">generate_array_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_default_metadata.html">generate_default_metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_file_from_db.html">get_file_from_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_parameter.html">get_parameter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="light_emission.html">light_emission</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="produce_array_config.html">produce_array_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sim_showers_for_trigger_rates.html">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tune_psf.html">tune_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_cumulative_psf.html">validate_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
 </ul>
@@ -298,7 +298,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/make_regular_arrays.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/derive_psf_parameters.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -315,7 +315,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fmake_regular_arrays.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fderive_psf_parameters.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,7 +345,7 @@
       
       
       
-      <li><a href="_sources/make_regular_arrays.rst" target="_blank"
+      <li><a href="_sources/derive_psf_parameters.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -429,7 +429,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>make_regular_arrays</h1>
+    <h1>derive_psf_parameters</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -439,9 +439,10 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make_regular_arrays.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_psf_parameters.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -453,32 +454,82 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-make_regular_arrays">
-<span id="make-regular-arrays"></span><h1>make_regular_arrays<a class="headerlink" href="#module-make_regular_arrays" title="Link to this heading">#</a></h1>
-<p>Make a regular array of telescopes and save it as astropy table.</p>
-<p>The arrays consist of one telescope at the center of the array and or of 4 telescopes
-in a square grid. These arrays are used for trigger rate simulations.</p>
-<p>The array layout files created will be available at the data/layout directory.</p>
+  <section id="module-derive_psf_parameters">
+<span id="derive-psf-parameters"></span><h1>derive_psf_parameters<a class="headerlink" href="#module-derive_psf_parameters" title="Link to this heading">#</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>This applications tunes the parameters mirror_reflection_random_angle,     mirror_align_random_horizontal and mirror_align_random_vertical using     cumulative PSF measurement.</p>
+<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
+<p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contain 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
+<p>The tuning is performed through a random search. A number of random combination of the     parameters are tested and the best ones are selected based on the minimum value of     the Root Mean Squared Deviation between data and simulations. The range in which the     parameter are drawn uniformly are defined based on the previous value on the telescope model.</p>
+<p>The assumption are:</p>
+<ol class="loweralpha simple">
+<li><p>mirror_align_random_horizontal and mirror_align_random_vertical are the same.</p></li>
+<li><p>mirror_align_random_horizontal/vertical have no dependence on the zenith angle.</p></li>
+</ol>
+<p>One example of the plot generated by this applications are shown below.</p>
+<a class="reference internal image-reference" href="_images/derive_psf_parameters.png" id="derive-psf-parameters-plot"><img alt="_images/derive_psf_parameters.png" id="derive-psf-parameters-plot" src="_images/derive_psf_parameters.png" style="width: 49%;" />
+</a>
+</section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>site (str, required)</dt><dd><p>observatory site (e.g., North or South).</p>
+<dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version to use (e.g., prod6). If not provided, the latest version is used.</p>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
+</dd>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
+</dd>
+<dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
+</dd>
+<dt>plot_all (activation mode, optional)</dt><dd><p>If activated, plots will be generated for all values tested during tuning.</p>
+</dd>
+<dt>fixed (activation mode, optional)</dt><dd><p>Keep the first entry of mirror_reflection_random_angle fixed.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
+</dd>
+<dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Runtime &lt; 10 s.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-make-regular-arrays --site=North</span>
+<p>LST-1 Prod5</p>
+<p>Runtime &lt; 3 min.</p>
+<p>Get PSF data from the DB:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from_db --file_name PSFcurve_data_v2.txt</span>
+</pre></div>
+</div>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-tune-psf --site North --telescope LST-1 \</span>
+<span class="go">    --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/derive_psf_parameters.</p>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Best parameters:</span>
+<span class="go">mirror_reflection_random_angle = 0.0043,0.08,0.0470</span>
+<span class="go">mirror_align_random_horizontal = 0.0047,28.,0.,0.</span>
+<span class="go">mirror_align_random_vertical = 0.0047,28.,0.,0.</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="make_regular_arrays.main">
-<span class="sig-prename descclassname"><span class="pre">make_regular_arrays.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/make_regular_arrays.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#make_regular_arrays.main" title="Link to this definition">#</a></dt>
-<dd><p>Create layout array files (ecsv) of regular arrays.</p>
+<dt class="sig sig-object py" id="derive_psf_parameters.load_data">
+<span class="sig-prename descclassname"><span class="pre">derive_psf_parameters.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/derive_psf_parameters.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_psf_parameters.load_data" title="Link to this definition">#</a></dt>
+<dd><p>Load data from file txt file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_file: str</strong></dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -495,20 +546,20 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="light_emission.html"
+       href="derive_mirror_rnda.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">light_emission</p>
+        <p class="prev-next-title">derive_mirror_rnda</p>
       </div>
     </a>
     <a class="right-next"
-       href="plot_array_layout.html"
+       href="generate_array_config.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">plot_array_layout</p>
+        <p class="prev-next-title">generate_array_config</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -528,9 +579,10 @@ in a square grid. These arrays are used for trigger rate simulations.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make_regular_arrays.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_psf_parameters.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
   </nav></div>
 

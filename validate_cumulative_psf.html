@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>get_file_from_db &#8212; simtools v0.1.dev1+g56adc9b Manual</title>
+    <title>validate_cumulative_psf &#8212; simtools v0.1.dev1+g49a6ca0 Manual</title>
   
   
   
@@ -36,15 +36,15 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbcff591"></script>
+    <script src="_static/documentation_options.js?v=2005f50e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'get_file_from_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'validate_cumulative_psf';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="get_parameter" href="get_parameter.html" />
-    <link rel="prev" title="generate_simtel_array_histograms" href="generate_simtel_array_histograms.html" />
+    <link rel="next" title="validate_file_using_schema" href="validate_file_using_schema.html" />
+    <link rel="prev" title="validate_camera_fov" href="validate_camera_fov.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g56adc9b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g49a6ca0 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -187,31 +187,31 @@
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simtools-configuration.html">Configuration</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="add_file_to_db.html">add_file_to_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="add_value_from_json_to_db.html">add_value_from_json_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="compare_cumulative_psf.html">compare_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_array_config.html">generate_array_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_default_metadata.html">generate_default_metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">get_file_from_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_parameter.html">get_parameter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="light_emission.html">light_emission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="make_regular_arrays.html">make_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="produce_array_config.html">produce_array_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sim_showers_for_trigger_rates.html">sim_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tune_psf.html">tune_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">validate_cumulative_psf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
 </ul>
@@ -298,7 +298,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/get_file_from_db.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/validate_cumulative_psf.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -315,7 +315,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fget_file_from_db.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fvalidate_cumulative_psf.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,7 +345,7 @@
       
       
       
-      <li><a href="_sources/get_file_from_db.rst" target="_blank"
+      <li><a href="_sources/validate_cumulative_psf.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -429,7 +429,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>get_file_from_db</h1>
+    <h1>validate_cumulative_psf</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -442,6 +442,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_cumulative_psf.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -453,22 +454,38 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-get_file_from_db">
-<span id="get-file-from-db"></span><h1>get_file_from_db<a class="headerlink" href="#module-get_file_from_db" title="Link to this heading">#</a></h1>
+  <section id="module-validate_cumulative_psf">
+<span id="validate-cumulative-psf"></span><h1>validate_cumulative_psf<a class="headerlink" href="#module-validate_cumulative_psf" title="Link to this heading">#</a></h1>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>Get a file from the DB.</p>
-<p>The name of the file is required.
-This application complements the ones for getting parameters, adding entries and files     to the DB.</p>
+<p>This application simulates the cumulative PSF and compare with data (if available).</p>
+<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
+<p>The measured cumulative PSF should be provided by using the command line argument data.     A file name is expected, in which the file should contains 3 columns: radial distance in mm,     differential value of photon intensity and its integral value.</p>
+<p>The MC model can be changed by providing a yaml file with the new parameter values using     the argument pars (see example below).</p>
+<p>Examples of the plots generated by this applications are shown below. On the left,     the cumulative PSF and on the right, the simulated PSF image.</p>
+<a class="reference internal image-reference" href="_images/validate_cumulative_psf_North-LST-1_cumulativePSF.png" id="validate-cumulative-psf-plot"><img alt="_images/validate_cumulative_psf_North-LST-1_cumulativePSF.png" id="validate-cumulative-psf-plot" src="_images/validate_cumulative_psf_North-LST-1_cumulativePSF.png" style="width: 49%;" />
+</a>
+<a class="reference internal image-reference" href="_images/validate_cumulative_psf_North-LST-1_image.png"><img alt="_images/validate_cumulative_psf_North-LST-1_image.png" src="_images/validate_cumulative_psf_North-LST-1_image.png" style="width: 49%;" />
+</a>
 </section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>file_name (str or list of str, required)</dt><dd><p>Name of the file to get including its full directory. A list of files is also allowed.
-i.e., python applications/get_file_from_db.py -file_name mirror_CTA-N-LST1_v2019-03-31.dat.</p>
+<dt>site (str, required)</dt><dd><p>North or South.</p>
 </dd>
-<dt>output_path (str)</dt><dd><p>Name of the local output directory where to save the files.
-Default it $CWD.</p>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
+</dd>
+<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
+</dd>
+<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
+</dd>
+<dt>data (str, optional)</dt><dd><p>Name of the data file with the measured cumulative PSF.</p>
+</dd>
+<dt>pars (str, optional)</dt><dd><p>Yaml file with the new model parameters to replace the default ones.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
 </dd>
 <dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
@@ -476,15 +493,28 @@ Default it $CWD.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>getting a file from the DB.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat</span>
+<p>LST-1 Prod5</p>
+<p>Runtime &lt; 1 min.</p>
+<p>Get an example dataset from the DB:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-get-file-from-db --file_name PSFcurve_data_v2.txt</span>
 </pre></div>
 </div>
+<p>Run the application:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-compare-cumulative-psf --site North --telescope LST-1             --model_version prod5 --data PSFcurve_data_v2.txt</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/validate_cumulative_psf</p>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::get_file_from_db(l82)::main::Got file mirror_CTA-N-LST1_v2019-03-31.dat from DB         CTA-Simulation-Model and saved into .</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">d80 in cm = 3.3662565358159013</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_cumulative_psf.load_data">
+<span class="sig-prename descclassname"><span class="pre">validate_cumulative_psf.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datafile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_cumulative_psf.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_cumulative_psf.load_data" title="Link to this definition">#</a></dt>
+<dd><p>Load the data file with the measured PSF vs radius [cm].</p>
+</dd></dl>
+
 </section>
 
 
@@ -499,20 +529,20 @@ Default it $CWD.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="generate_simtel_array_histograms.html"
+       href="validate_camera_fov.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">generate_simtel_array_histograms</p>
+        <p class="prev-next-title">validate_camera_fov</p>
       </div>
     </a>
     <a class="right-next"
-       href="get_parameter.html"
+       href="validate_file_using_schema.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">get_parameter</p>
+        <p class="prev-next-title">validate_file_using_schema</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -535,6 +565,7 @@ Default it $CWD.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_cumulative_psf.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 </ul>
   </nav></div>
 
