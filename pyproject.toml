@@ -75,7 +75,7 @@ scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_d
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
-scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
+scripts.simtools-generate-array-configuration = "simtools.applications.generate_array_configuration:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
@@ -250,3 +250,8 @@ addopts = "-v --cov=simtools --cov-report=xml --cov-report=term"
 testpaths = "tests/unit_tests/"
 # Ignore the warning about fontTools.misc.py23
 filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
+
+[tool.coverage.report]
+exclude_also = [
+  "if __name__ == \"__main__\":",
+]
