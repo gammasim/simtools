@@ -210,8 +210,8 @@ Tests should be done using a sandbox database before applying this to the produc
 
 ### Update a single model parameter
 
-New model parameter defined in the simtools database format (json file) can be uploaded to the database using the {ref}`simtools-add-value-from-json-to-db <add_value_from_json_to_db>` application.
-New data files can be uploaded using {ref}`simtools-add-file-to-db <add_file_to_db>`.
+New model parameter defined in the simtools database format (json file) can be uploaded to the database using the {ref}`simtools-add-value-from-json-to-db <db_add_value_from_json_to_db>` application.
+New data files can be uploaded using {ref}`simtools-add-file-to-db <db_add_file_to_db>`.
 
 ### Upload a complete simulation model from model repository to model database
 
