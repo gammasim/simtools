@@ -295,7 +295,6 @@ class CommandLineParser(argparse.ArgumentParser):
         _layout_group.add_argument(
             "--array_layout_name",
             help="array layout name (e.g., alpha, subsystem_msts)",
-            nargs="+",
             type=str,
             required=False,
         )
