@@ -73,9 +73,10 @@ def test_zenith_angle(caplog):
 
 def test_energy_range(caplog):
     assert parser.CommandLineParser.energy_range("100 GeV 5 TeV") == "100.0 GeV 5000.0 GeV"
-    with pytest.raises(ValueError):
-        parser.CommandLineParser.energy_range("100 GeV 5 km")
     caplog.set_level(logging.ERROR)
+    with pytest.raises(ValueError):
+        parser.CommandLineParser.energy_range("100 GeV 5 abc")
+    assert any("Invalid energy values" in message for message in caplog.messages)
     with pytest.raises(TypeError):
         parser.CommandLineParser.energy_range("100 GeV 5")
     assert any("Energy range must be given in the form" in message for message in caplog.messages)
@@ -84,7 +85,7 @@ def test_energy_range(caplog):
 def test_viewcone(caplog):
     assert parser.CommandLineParser.viewcone("0 deg 5 deg") == "0.0 deg 5.0 deg"
     with pytest.raises(ValueError):
-        parser.CommandLineParser.viewcone("0 deg 5 km")
+        parser.CommandLineParser.viewcone("0 deg 5 abc")
     caplog.set_level(logging.ERROR)
     with pytest.raises(TypeError):
         parser.CommandLineParser.viewcone("0 deg 5")
@@ -94,7 +95,7 @@ def test_viewcone(caplog):
 def test_core_scatter(caplog):
     assert parser.CommandLineParser.core_scatter("5 1500 m") == "5 1500.0 m"
     with pytest.raises(ValueError):
-        parser.CommandLineParser.core_scatter("5 5 TeV")
+        parser.CommandLineParser.core_scatter("5 5 abc")
     caplog.set_level(logging.ERROR)
     with pytest.raises(TypeError):
         parser.CommandLineParser.core_scatter("0 m 5 m")

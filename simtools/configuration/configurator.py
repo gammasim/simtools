@@ -420,10 +420,6 @@ class Configurator:
         input_container
             List or dictionary with configuration updates.
         """
-        print("AAAAA", input_container)
-        print("BBBBB", self.config)
-        print("AAAAA", self._arglist_from_config(input_container))
-        print("BBBB", self._arglist_from_config(self.config))
         self.config = self._convert_string_none_to_none(
             vars(
                 self.parser.parse_args(
