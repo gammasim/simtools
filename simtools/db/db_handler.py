@@ -74,11 +74,10 @@ class DatabaseHandler:
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
-        if self.mongo_db_config:
-            if DatabaseHandler.db_client is None:
-                lock = Lock()
-                with lock:
-                    DatabaseHandler.db_client = self._open_mongo_db()
+        if self.mongo_db_config and DatabaseHandler.db_client is None:
+            lock = Lock()
+            with lock:
+                DatabaseHandler.db_client = self._open_mongo_db()
 
     def _open_mongo_db(self):
         """
