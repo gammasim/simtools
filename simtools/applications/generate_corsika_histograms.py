@@ -270,16 +270,16 @@ def _parse(label, description):
 
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
-    if not config_parser["pdf"]:
-        if (
-            not config_parser["hdf5"]
-            and not config_parser["event_1d_histograms"]
-            and not config_parser["event_2d_histograms"]
-        ):
-            config.parser.error(
-                "At least one argument is required: --pdf, --hdf5, --event_1d_histograms, or "
-                "--event_2d_histograms."
-            )
+    if (
+        not config_parser["pdf"]
+        and not config_parser["hdf5"]
+        and not config_parser["event_1d_histograms"]
+        and not config_parser["event_2d_histograms"]
+    ):
+        config.parser.error(
+            "At least one argument is required: --pdf, --hdf5, --event_1d_histograms, or "
+            "--event_2d_histograms."
+        )
 
     return config_parser, _
 
@@ -307,8 +307,8 @@ def _plot_figures(corsika_histograms_instance, test=False):
 
     figure_list = []
     for function_name in plot_function_names:
-        function = getattr(corsika_histograms_visualize, function_name)
-        figures = function(corsika_histograms_instance)
+        plot_function = getattr(corsika_histograms_visualize, function_name)
+        figures = plot_function(corsika_histograms_instance)
         for fig in figures:
             figure_list.append(fig)
 

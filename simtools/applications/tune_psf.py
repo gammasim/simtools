@@ -110,10 +110,12 @@ def load_data(data_file):
     data_file: str
         Name of the data file with the measured cumulative PSF.
     """
-    d_type = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
+    radius_cm = "Radius [cm]"
+    cumulative_psf = "Cumulative PSF"
+    d_type = {"names": (radius_cm, cumulative_psf), "formats": ("f8", "f8")}
     data = np.loadtxt(data_file, dtype=d_type, usecols=(0, 2))
-    data["Radius [cm]"] *= 0.1
-    data["Cumulative PSF"] /= np.max(np.abs(data["Cumulative PSF"]))
+    data[radius_cm] *= 0.1
+    data[cumulative_psf] /= np.max(np.abs(data[cumulative_psf]))
     return data
 
 
@@ -262,6 +264,8 @@ def main():
         Runs the tuning for one set of parameters, add a plot to the pdfPages
         (if plot=True) and returns the RMSD and the D80.
         """
+        cumulative_psf = "Cumulative PSF"
+
         if pars is not None:
             tel_model.change_multiple_parameters(**pars)
         else:
@@ -289,7 +293,7 @@ def main():
             raise ValueError("Radius data is not available.")
 
         rmsd = calculate_rmsd(
-            data_to_plot["measured"]["Cumulative PSF"], data_to_plot["simulated"]["Cumulative PSF"]
+            data_to_plot["measured"][cumulative_psf], data_to_plot["simulated"][cumulative_psf]
         )
 
         if plot:
