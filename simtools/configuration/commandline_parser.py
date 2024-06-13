@@ -172,7 +172,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def initialize_db_config_arguments(self):
         """Initialize DB configuration parameters."""
-        _job_group = self.add_argument_group("MongoDB configuration")
+        _job_group = self.add_argument_group("database configuration")
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
         _job_group.add_argument("--db_api_port", help="database port", type=int, required=False)
