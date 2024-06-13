@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tune_psf &#8212; simtools v0.1.dev1+g3694c4d Manual</title>
+    <title>tune_psf &#8212; simtools v0.1.dev1+gcf5f651 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=bf5e305b"></script>
+    <script src="../_static/documentation_options.js?v=0c601cdf"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3694c4d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gcf5f651 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -475,10 +475,12 @@ document.write(`
 <span class="sd">    data_file: str</span>
 <span class="sd">        Name of the data file with the measured cumulative PSF.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">d_type</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Radius [cm]&quot;</span><span class="p">,</span> <span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">),</span> <span class="s2">&quot;formats&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;f8&quot;</span><span class="p">,</span> <span class="s2">&quot;f8&quot;</span><span class="p">)}</span>
+    <span class="n">radius_cm</span> <span class="o">=</span> <span class="s2">&quot;Radius [cm]&quot;</span>
+    <span class="n">cumulative_psf</span> <span class="o">=</span> <span class="s2">&quot;Cumulative PSF&quot;</span>
+    <span class="n">d_type</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">radius_cm</span><span class="p">,</span> <span class="n">cumulative_psf</span><span class="p">),</span> <span class="s2">&quot;formats&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;f8&quot;</span><span class="p">,</span> <span class="s2">&quot;f8&quot;</span><span class="p">)}</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d_type</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Radius [cm]&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.1</span>
-    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">]))</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">radius_cm</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">0.1</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">cumulative_psf</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">cumulative_psf</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
 
@@ -628,6 +630,8 @@ document.write(`
 <span class="sd">        Runs the tuning for one set of parameters, add a plot to the pdfPages</span>
 <span class="sd">        (if plot=True) and returns the RMSD and the D80.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cumulative_psf</span> <span class="o">=</span> <span class="s2">&quot;Cumulative PSF&quot;</span>
+
         <span class="k">if</span> <span class="n">pars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -655,7 +659,7 @@ document.write(`
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Radius data is not available.&quot;</span><span class="p">)</span>
 
         <span class="n">rmsd</span> <span class="o">=</span> <span class="n">calculate_rmsd</span><span class="p">(</span>
-            <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">],</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">][</span><span class="s2">&quot;Cumulative PSF&quot;</span><span class="p">]</span>
+            <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="n">cumulative_psf</span><span class="p">],</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">][</span><span class="n">cumulative_psf</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>

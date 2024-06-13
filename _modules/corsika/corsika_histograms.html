@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+g3694c4d Manual</title>
+    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+gcf5f651 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=bf5e305b"></script>
+    <script src="../../_static/documentation_options.js?v=0c601cdf"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3694c4d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gcf5f651 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -769,22 +769,24 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="n">xy_maximum</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
             <span class="n">xy_bin</span> <span class="o">=</span> <span class="mi">64</span>
-
+        <span class="n">x_axis</span> <span class="o">=</span> <span class="s2">&quot;x axis&quot;</span>
+        <span class="n">y_axis</span> <span class="o">=</span> <span class="s2">&quot;y axis&quot;</span>
+        <span class="n">z_axis</span> <span class="o">=</span> <span class="s2">&quot;z axis&quot;</span>
         <span class="n">histogram_config</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;hist_position&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;x axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">x_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="n">xy_bin</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="o">-</span><span class="n">xy_maximum</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="n">xy_maximum</span><span class="p">,</span>
                     <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;y axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">y_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="n">xy_bin</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="o">-</span><span class="n">xy_maximum</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="n">xy_maximum</span><span class="p">,</span>
                     <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;z axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">z_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="mi">200</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
@@ -792,13 +794,13 @@ document.write(`
                 <span class="p">},</span>
             <span class="p">},</span>
             <span class="s2">&quot;hist_direction&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;x axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">x_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;y axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">y_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -806,13 +808,13 @@ document.write(`
                 <span class="p">},</span>
             <span class="p">},</span>
             <span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;x axis&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">x_axis</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
                     <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">,</span>
                     <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">2000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">,</span>
                     <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;y axis&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="mi">120</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">},</span>
+                <span class="n">y_axis</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="mi">120</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">},</span>
             <span class="p">},</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">histogram_config</span>
@@ -1290,21 +1292,24 @@ document.write(`
 <span class="sd">        max_dist: float</span>
 <span class="sd">            Maximum distance to consider in the 1D histogram (in meters).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hist_position</span> <span class="o">=</span> <span class="s2">&quot;hist_position&quot;</span>
+        <span class="n">x_axis</span> <span class="o">=</span> <span class="s2">&quot;x axis&quot;</span>
+        <span class="n">y_axis</span> <span class="o">=</span> <span class="s2">&quot;y axis&quot;</span>
         <span class="k">if</span> <span class="n">max_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">max_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">x_axis</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">x_axis</span><span class="p">][</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">y_axis</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">y_axis</span><span class="p">][</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">bins</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span>
                     <span class="p">[</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;bins&quot;</span><span class="p">],</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;bins&quot;</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">x_axis</span><span class="p">][</span><span class="s2">&quot;bins&quot;</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="n">hist_position</span><span class="p">][</span><span class="n">y_axis</span><span class="p">][</span><span class="s2">&quot;bins&quot;</span><span class="p">],</span>
                     <span class="p">]</span>
                 <span class="p">)</span>
                 <span class="o">//</span> <span class="mi">2</span>
@@ -1575,55 +1580,60 @@ document.write(`
 <span class="sd">        dict:</span>
 <span class="sd">            The dictionary with information about the 1D distributions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fn_key</span> <span class="o">=</span> <span class="s2">&quot;function&quot;</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;file name&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;title&quot;</span>
+        <span class="n">bin_edges</span> <span class="o">=</span> <span class="s2">&quot;bin edges&quot;</span>
+        <span class="n">axis_unit</span> <span class="o">=</span> <span class="s2">&quot;axis unit&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dict_1d_distributions</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;wavelength&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_photon_wavelength_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_wavelength_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon wavelength distribution&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;wavelength&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;z axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_photon_wavelength_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_wavelength_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon wavelength distribution&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;wavelength&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;z axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;counts&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_photon_radial_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_radial_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Radial photon distribution on the ground&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance to center&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_photon_radial_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_radial_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Radial photon distribution on the ground&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Distance to center&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_photon_density_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_density_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon density distribution on the ground&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Distance to center&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_photon_density_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_density_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon density distribution on the ground&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Distance to center&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_photon_time_of_emission_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_time_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon time of arrival distribution&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Time of arrival&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_photon_time_of_emission_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_time_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon time of arrival distribution&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Time of arrival&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;altitude&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_photon_altitude_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_altitude_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon altitude of emission distribution&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Altitude of emission&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_photon_altitude_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_altitude_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon altitude of emission distribution&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Altitude of emission&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;num_photons_per_event&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_num_photons_per_event_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_per_event_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photons per event distribution&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Event counter&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_num_photons_per_event_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_per_event_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photons per event distribution&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Event counter&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;num_photons_per_telescope&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_num_photons_per_telescope_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_per_telescope_distr&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photons per telescope distribution&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Telescope counter&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_num_photons_per_telescope_distr&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_1d_photon_per_telescope_distr&quot;</span><span class="p">,</span>
+                <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photons per telescope distribution&quot;</span><span class="p">,</span>
+                <span class="n">bin_edges</span><span class="p">:</span> <span class="s2">&quot;Telescope counter&quot;</span><span class="p">,</span>
+                <span class="n">axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_1d_distributions</span>
@@ -1640,8 +1650,8 @@ document.write(`
 
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">function_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_1d_distributions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">])</span>
-            <span class="n">function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">])</span>
-            <span class="n">hist_1d_list</span><span class="p">,</span> <span class="n">x_bin_edges_list</span> <span class="o">=</span> <span class="n">function</span><span class="p">()</span>
+            <span class="n">histogram_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">])</span>
+            <span class="n">hist_1d_list</span><span class="p">,</span> <span class="n">x_bin_edges_list</span> <span class="o">=</span> <span class="n">histogram_function</span><span class="p">()</span>
             <span class="n">x_bin_edges_list</span> <span class="o">=</span> <span class="n">x_bin_edges_list</span> <span class="o">*</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;axis unit&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;get_photon_density_distr&quot;</span><span class="p">:</span>
                 <span class="n">histogram_value_unit</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;axis unit&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
@@ -1688,52 +1698,59 @@ document.write(`
 <span class="sd">        dict:</span>
 <span class="sd">            The dictionary with information about the 2D distributions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fn_key</span> <span class="o">=</span> <span class="s2">&quot;function&quot;</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;file name&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;title&quot;</span>
+        <span class="n">x_bin_edges</span> <span class="o">=</span> <span class="s2">&quot;x bin edges&quot;</span>
+        <span class="n">x_axis_unit</span> <span class="o">=</span> <span class="s2">&quot;x axis unit&quot;</span>
+        <span class="n">y_bin_edges</span> <span class="o">=</span> <span class="s2">&quot;y bin edges&quot;</span>
+        <span class="n">y_axis_unit</span> <span class="o">=</span> <span class="s2">&quot;y axis unit&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_2d_distributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dict_2d_distributions</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;counts&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_position_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_count_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon count distribution on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;x position on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
-                    <span class="s2">&quot;y bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;y position on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_position_distr&quot;</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_count_distr&quot;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon count distribution on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">x_bin_edges</span><span class="p">:</span> <span class="s2">&quot;x position on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">x_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">y_bin_edges</span><span class="p">:</span> <span class="s2">&quot;y position on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">y_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;density&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_density_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_density_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon density distribution on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;x position on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
-                    <span class="s2">&quot;y bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;y position on the ground&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_density_distr&quot;</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_density_distr&quot;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon density distribution on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">x_bin_edges</span><span class="p">:</span> <span class="s2">&quot;x position on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">x_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">y_bin_edges</span><span class="p">:</span> <span class="s2">&quot;y position on the ground&quot;</span><span class="p">,</span>
+                    <span class="n">y_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_position&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_direction_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_direction_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Photon arrival direction&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;x direction cosine&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
-                    <span class="s2">&quot;y bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;y direction cosine&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                    <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_direction_distr&quot;</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_direction_distr&quot;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Photon arrival direction&quot;</span><span class="p">,</span>
+                    <span class="n">x_bin_edges</span><span class="p">:</span> <span class="s2">&quot;x direction cosine&quot;</span><span class="p">,</span>
+                    <span class="n">x_axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                    <span class="n">y_bin_edges</span><span class="p">:</span> <span class="s2">&quot;y direction cosine&quot;</span><span class="p">,</span>
+                    <span class="n">y_axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;time_altitude&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_time_altitude_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_time_altitude_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Time of arrival vs altitude of emission&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Time of arrival&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
-                    <span class="s2">&quot;y bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Altitude of emission&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y axis unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_2d_photon_time_altitude_distr&quot;</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_time_altitude_distr&quot;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Time of arrival vs altitude of emission&quot;</span><span class="p">,</span>
+                    <span class="n">x_bin_edges</span><span class="p">:</span> <span class="s2">&quot;Time of arrival&quot;</span><span class="p">,</span>
+                    <span class="n">x_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;x axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="n">y_bin_edges</span><span class="p">:</span> <span class="s2">&quot;Altitude of emission&quot;</span><span class="p">,</span>
+                    <span class="n">y_axis_unit</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_config</span><span class="p">[</span><span class="s2">&quot;hist_time_altitude&quot;</span><span class="p">][</span><span class="s2">&quot;y axis&quot;</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;num_photons_per_telescope&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;get_2d_num_photons_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;file name&quot;</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_telescope_event_distr&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of photons per telescope and per event&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Telescope counter&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;x axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
-                    <span class="s2">&quot;y bin edges&quot;</span><span class="p">:</span> <span class="s2">&quot;Event counter&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;y axis unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                    <span class="n">fn_key</span><span class="p">:</span> <span class="s2">&quot;get_2d_num_photons_distr&quot;</span><span class="p">,</span>
+                    <span class="n">file_name</span><span class="p">:</span> <span class="s2">&quot;hist_2d_photon_telescope_event_distr&quot;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="p">:</span> <span class="s2">&quot;Number of photons per telescope and per event&quot;</span><span class="p">,</span>
+                    <span class="n">x_bin_edges</span><span class="p">:</span> <span class="s2">&quot;Telescope counter&quot;</span><span class="p">,</span>
+                    <span class="n">x_axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+                    <span class="n">y_bin_edges</span><span class="p">:</span> <span class="s2">&quot;Event counter&quot;</span><span class="p">,</span>
+                    <span class="n">y_axis_unit</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
                 <span class="p">},</span>
             <span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_2d_distributions</span>
@@ -1749,9 +1766,9 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">function_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_2d_distributions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">])</span>
-            <span class="n">function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">])</span>
+            <span class="n">histogram_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">])</span>
 
-            <span class="n">hist_2d_list</span><span class="p">,</span> <span class="n">x_bin_edges_list</span><span class="p">,</span> <span class="n">y_bin_edges_list</span> <span class="o">=</span> <span class="n">function</span><span class="p">()</span>
+            <span class="n">hist_2d_list</span><span class="p">,</span> <span class="n">x_bin_edges_list</span><span class="p">,</span> <span class="n">y_bin_edges_list</span> <span class="o">=</span> <span class="n">histogram_function</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">function_dict</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;get_2d_photon_density_distr&quot;</span><span class="p">:</span>
                 <span class="n">histogram_value_unit</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">dict_2d_distributions</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s2">&quot;x axis unit&quot;</span><span class="p">]</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_histograms &#8212; simtools v0.1.dev1+g3694c4d Manual</title>
+    <title>simtel.simtel_io_histograms &#8212; simtools v0.1.dev1+gcf5f651 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=bf5e305b"></script>
+    <script src="../../_static/documentation_options.js?v=0c601cdf"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3694c4d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gcf5f651 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -833,8 +833,7 @@ document.write(`
             <span class="n">x_bins</span> <span class="o">=</span> <span class="n">_get_bins</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlim</span><span class="p">)</span>
-        <span class="k">return</span></div>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlim</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -896,7 +895,7 @@ document.write(`
             <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Writing histogram with name </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> to &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hdf5_file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Writing histogram with name </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_dict</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">hdf5_file_name</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
             <span class="c1"># overwrite takes precedence over append</span>
             <span class="k">if</span> <span class="n">overwrite</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
