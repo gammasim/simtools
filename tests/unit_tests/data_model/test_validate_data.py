@@ -254,8 +254,6 @@ def test_check_and_convert_units():
 
     table_1 = Table()
     table_1["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
-    table_1["qe"] = Column([0.1, 0.5], dtype="float32")
-    table_1["qe"] = Column([0.1, 0.5], unit=None, dtype="float32")
     table_1["qe"] = Column([0.1, 0.5], unit="dimensionless", dtype="float32")
     table_1["position_x"] = [0.1, 0.5] * u.km
     table_1["position_y"] = Column([5.0, 7], unit="km", dtype="float32")
