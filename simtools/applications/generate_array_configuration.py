@@ -66,17 +66,12 @@ def main():
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    try:
-        layout_name = args_dict.get("array_layout_name")[0]
-    except IndexError:
-        layout_name = None
-
     array_model = ArrayModel(
         label=args_dict["label"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
         site=args_dict.get("site"),
-        layout_name=layout_name,
+        layout_name=args_dict.get("array_layout_name"),
         array_elements=args_dict.get("array_elements"),
         parameters_to_change=None,
     )

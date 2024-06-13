@@ -46,7 +46,7 @@ db_get_file_from_db
 db_get_parameter_from_db
 derive_mirror_rnda
 derive_psf_parameters
-generate_array_config
+generate_array_configuration
 generate_corsika_histograms
 generate_default_metadata
 generate_simtel_array_histograms

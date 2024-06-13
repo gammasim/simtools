@@ -345,27 +345,26 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
         List of array layouts.
     """
     layouts = []
-    for layout_name in args_dict["array_layout_name"]:
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=args_dict["model_version"],
-            site=args_dict["site"],
-            layout_name=layout_name,
-        )
-        layouts.append(
-            {
-                "array_elements": array_model.export_array_elements_as_table(
-                    coordinate_system=args_dict["coordinate_system"]
-                ),
-                "plot_file_name": _get_plot_file_name(
-                    figure_name=args_dict["figure_name"],
-                    layout_name=layout_name,
-                    site=args_dict["site"],
-                    coordinate_system=args_dict["coordinate_system"],
-                    rotate_angle=rotate_angle,
-                ),
-            }
-        )
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        site=args_dict["site"],
+        layout_name=args_dict["array_layout_name"],
+    )
+    layouts.append(
+        {
+            "array_elements": array_model.export_array_elements_as_table(
+                coordinate_system=args_dict["coordinate_system"]
+            ),
+            "plot_file_name": _get_plot_file_name(
+                figure_name=args_dict["figure_name"],
+                layout_name=args_dict["array_layout_name"],
+                site=args_dict["site"],
+                coordinate_system=args_dict["coordinate_system"],
+                rotate_angle=rotate_angle,
+            ),
+        }
+    )
     return layouts
 
 
