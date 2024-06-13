@@ -30,7 +30,7 @@
 
     .. code-block:: console
 
-        simtools-get-parameter --parameter mirror_list \\
+        simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
                 --model_version prod5
 
