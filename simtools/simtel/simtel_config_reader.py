@@ -367,11 +367,10 @@ class SimtelConfigReader:
             column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            processed_value = (
-                np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
-                if column[0] is not None
-                else None
-            )
+            if column[0] is not None:
+                processed_value = np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
+            else:
+                processed_value = None
             return processed_value, 1
 
         if len(column) > 1:
