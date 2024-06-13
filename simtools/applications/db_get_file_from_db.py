@@ -26,13 +26,13 @@
 
     .. code-block:: console
 
-        simtools-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat
+        simtools-db-get-file-from-db --file_name mirror_CTA-N-LST1_v2019-03-31.dat
 
     Expected final print-out message:
 
     .. code-block:: console
 
-        INFO::get_file_from_db(l82)::main::Got file mirror_CTA-N-LST1_v2019-03-31.dat from DB \
+        INFO::db_get_file_from_db(l82)::main::Got file mirror_CTA-N-LST1_v2019-03-31.dat from DB \
         CTA-Simulation-Model and saved into .
 
 """

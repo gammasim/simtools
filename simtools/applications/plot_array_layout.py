@@ -8,7 +8,7 @@ or given as command line arguments (explicit listing or telescope list file). A 
 files is also accepted.
 Layouts can be plotted in ground or UTM coordinate systems.
 
-Listing of array elements follow this logic:
+Listing of array elements follows this logic:
 
 * explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``
 * listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.

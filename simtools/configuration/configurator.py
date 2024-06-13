@@ -350,6 +350,7 @@ class Configurator:
 
         """
         if self.config.get("output_file", None) is None:
+            self.config["output_file_from_default"] = True
             prefix = "TEST"
             label = extension = ""
             if not self.config.get("test", False):

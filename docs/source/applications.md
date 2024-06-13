@@ -35,31 +35,31 @@ end users, but for developers working on the database schema.
 :glob: true
 :maxdepth: 1
 
-add_file_to_db
-add_value_from_json_to_db
 calculate_trigger_rate
-compare_cumulative_psf
 convert_all_model_parameters_from_simtel
 convert_model_parameter_from_simtel
-db_get_array_layouts_from_db
+db_add_file_to_db
 db_add_model_parameters_from_repository_to_db
+db_add_value_from_json_to_db
+db_get_array_layouts_from_db
+db_get_file_from_db
+db_get_parameter_from_db
 derive_mirror_rnda
+derive_psf_parameters
+generate_array_config
 generate_corsika_histograms
 generate_default_metadata
 generate_simtel_array_histograms
-get_file_from_db
-get_parameter
-light_emission
-make_regular_arrays
+generate_regular_arrays
 plot_array_layout
 print_array_elements
-produce_array_config
-sim_showers_for_trigger_rates
+simulate_light_emission
 simulate_prod
+simulate_showers_for_trigger_rates
 submit_data_from_external
-tune_psf
 validate_camera_efficiency
 validate_camera_fov
+validate_cumulative_psf
 validate_file_using_schema
 validate_optics
 ```
