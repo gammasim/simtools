@@ -2,16 +2,20 @@ CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
   TEST_NAME: gamma_20_deg_corsika
   CONFIGURATION:
-    PRODUCTION_CONFIG: ./tests/resources/prod_multi_config_test_North.yml
     SIMULATION_SOFTWARE: corsika
     MODEL_VERSION: prod6
     SITE: North
+    ARRAY_LAYOUT_NAME: test_layout
     PRIMARY: gamma
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
     START_RUN: 0
     RUN: 2
     NSHOW: 5
+    ESLOPE: -2.
+    VIEWCONE: "0 deg 0 deg"
+    ERANGE: "3 GeV 330 TeV"
+    CSCAT: "10 1400 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
