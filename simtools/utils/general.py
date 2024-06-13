@@ -101,6 +101,34 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
                 return True
         return False
 
+    def handle_unidentified_entry(key_data):
+        msg = f"Entry {key_data} in config_data cannot be identified"
+        if ignore_unidentified:
+            _logger.debug(f"{msg}, ignoring.")
+        else:
+            _logger.error(f"{msg}, stopping.")
+            raise UnableToIdentifyConfigEntryError(msg)
+
+    def process_default_value(par_name, par_info):
+        if "default" not in par_info:
+            msg = f"Required entry in config_data {par_name} was not given."
+            _logger.error(msg)
+            raise MissingRequiredConfigEntryError(msg)
+
+        default_value = par_info["default"]
+
+        if default_value is None:
+            out_data[par_name] = None
+        else:
+            if isinstance(default_value, dict):
+                default_value = default_value["value"]
+
+            if "unit" in par_info and not isinstance(default_value, u.Quantity):
+                default_value *= u.Unit(par_info["unit"])
+
+            validated_value = _validate_and_convert_value(par_name, par_info, default_value)
+            out_data[par_name] = validated_value
+
     out_data = {}
 
     if config_data is None:
@@ -110,36 +138,13 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         is_identified = _process_identified_entry(key_data, value_data)
 
         if not is_identified:
-            msg = f"Entry {key_data} in config_data cannot be identified"
-            if ignore_unidentified:
-                _logger.debug(f"{msg}, ignoring.")
-            else:
-                _logger.error(f"{msg}, stopping.")
-                raise UnableToIdentifyConfigEntryError(msg)
+            handle_unidentified_entry(key_data)
 
     for par_name, par_info in parameters.items():
         if par_name in out_data:
             continue
 
-        if "default" in par_info:
-            if par_info["default"] is not None:
-                if isinstance(par_info["default"], dict):
-                    default_value = par_info["default"]["value"]
-                    default_value = default_value * u.Unit(par_info["default"].get("unit", ""))
-                else:
-                    default_value = par_info["default"]
-
-                if "unit" in par_info and not isinstance(default_value, u.Quantity):
-                    default_value *= u.Unit(par_info["unit"])
-
-                validated_value = _validate_and_convert_value(par_name, par_info, default_value)
-                out_data[par_name] = validated_value
-            elif par_info["default"] is None:
-                out_data[par_name] = None
-        else:
-            msg = f"Required entry in config_data {par_name} was not given."
-            _logger.error(msg)
-            raise MissingRequiredConfigEntryError(msg)
+        process_default_value(par_name, par_info)
 
     configuration_data = namedtuple("configuration_data", out_data)
     return configuration_data(**out_data)
