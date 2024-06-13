@@ -182,7 +182,6 @@ class Simulator:
             label=self.label,
             site=config_data["common"]["site"],
             layout_name=config_data["common"]["layout_name"],
-            parameters_to_change=config_data,
             mongo_db_config=self._mongo_db_config,
             model_version=self._model_version,
         )

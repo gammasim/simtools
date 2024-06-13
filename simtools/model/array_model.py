@@ -14,11 +14,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import general, names
 
-__all__ = ["ArrayModel", "InvalidArrayConfigDataError"]
-
-
-class InvalidArrayConfigDataError(Exception):
-    """Exception for invalid array configuration data."""
+__all__ = ["ArrayModel"]
 
 
 class ArrayModel:
@@ -40,8 +36,6 @@ class ArrayModel:
     array_elements: str, Path, list
         Array element definitions (list of array element or path to file with
         the array element positions).
-    parameters_to_change: dict
-        Dict with the parameters to be changed with respect to the DB model.
     """
 
     def __init__(
@@ -52,7 +46,6 @@ class ArrayModel:
         site=None,
         layout_name=None,
         array_elements=None,
-        parameters_to_change=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -67,13 +60,13 @@ class ArrayModel:
         self.db = db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
 
         self.array_elements, self.site_model, self.telescope_model = self._initialize(
-            site, array_elements, parameters_to_change
+            site, array_elements
         )
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def _initialize(self, site, array_elements_config, parameters_to_change):
+    def _initialize(self, site, array_elements_config):
         """
         Initialize ArrayModel taking different configuration options into account.
 
@@ -83,8 +76,6 @@ class ArrayModel:
             Site name.
         array_elements_config: str, Path, list
             Array element definitions.
-        parameters_to_change: dict
-            Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
@@ -119,9 +110,7 @@ class ArrayModel:
             )
 
         self._set_config_file_directory()
-        telescope_model = self._build_telescope_models(
-            site_model, array_elements, parameters_to_change
-        )
+        telescope_model = self._build_telescope_models(site_model, array_elements)
         return array_elements, site_model, telescope_model
 
     @property
@@ -152,7 +141,7 @@ class ArrayModel:
         """Define and create config file directory."""
         self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
-    def _build_telescope_models(self, site_model, array_elements, parameters_to_change=None):
+    def _build_telescope_models(self, site_model, array_elements):
         """
         Build the the telescope models for all telescopes of this array.
 
@@ -166,8 +155,6 @@ class ArrayModel:
             Site model.
         array_elements: dict
             Dict with array elements.
-        parameters_to_change: dict
-            Dict with the parameters to be changed with respect to the DB model.
 
         Returns
         -------
@@ -185,76 +172,7 @@ class ArrayModel:
                     mongo_db_config=self.mongo_db_config,
                     label=self.label,
                 )
-            # Collecting parameters to change from array_config_data
-            pars_to_change = self._get_single_telescope_info_from_array_config(
-                element_name, parameters_to_change
-            )
-            if len(pars_to_change) > 0:
-                self._logger.debug(
-                    f"Changing {len(pars_to_change)} parameters of "
-                    f"{element_name}: "
-                    f"{*pars_to_change, }, ..."
-                )
-                if element_name in telescope_model:
-                    telescope_model[element_name].change_multiple_parameters(**pars_to_change)
-                    telescope_model[element_name].set_extra_label(element_name)
-
         return telescope_model
-
-    def _get_single_telescope_info_from_array_config(self, tel_name, array_config_data):
-        """
-        Return telescope information from array configuration data.
-
-        array_config_data contains the name of default telescope models for each telescope type
-        and the list of specific telescopes. For each case, the data can be given only as a name \
-        or as a dict with 'name' and parameters to change. This function has to identify these \
-        two cases and collect the telescope name and the dict with the parameters to change.
-
-        Parameters
-        ----------
-        tel_name: str
-            Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).
-        array_config_data: dict
-            Dict with the array config data.
-        """
-
-        def _process_single_telescope(data):
-            """
-            Read array configuration data for a single telescope.
-
-            Parameters
-            ----------
-            data: dict or str
-                Piece of the array_config_data for one specific telescope.
-
-            Returns
-            -------
-            dict
-                Dict with the parameters to change.
-            """
-            if isinstance(data, dict):
-                # Case 0: data is dict
-                if "name" not in data.keys():
-                    msg = "ArrayConfig has no name for a telescope"
-                    self._logger.error(msg)
-                    raise InvalidArrayConfigDataError(msg)
-                pars_to_change = {k: v for (k, v) in data.items() if k != "name"}
-                self._logger.debug(
-                    "Grabbing tel data as dict - " f"{len(pars_to_change)} pars to change"
-                )
-                return pars_to_change
-            if isinstance(data, str):
-                # Case 1: data is string (only name)
-                return {}
-
-            # Case 2: data has a wrong type
-            msg = "ArrayConfig has wrong input for a telescope"
-            self._logger.error(msg)
-            raise InvalidArrayConfigDataError(msg)
-
-        if array_config_data and tel_name in array_config_data.keys():
-            return _process_single_telescope(array_config_data[tel_name])
-        return {}
 
     def print_telescope_list(self):
         """Print list of telescopes."""

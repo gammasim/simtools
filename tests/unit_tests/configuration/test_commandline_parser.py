@@ -202,7 +202,7 @@ def test_initialize_default_arguments():
     _parser_6 = parser.CommandLineParser()
     _parser_6.initialize_default_arguments(db_config=True)
     job_groups = _parser_6._action_groups
-    assert "MongoDB configuration" in [str(group.title) for group in job_groups]
+    assert "database configuration" in [str(group.title) for group in job_groups]
 
     # layout parsers
     _parser_7 = parser.CommandLineParser()
