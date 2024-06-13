@@ -233,11 +233,6 @@ class CorsikaConfig:
             List of values for the parameter.
         """
 
-        def convert_to_quantities(values):
-            if not isinstance(values, list):
-                values = [values]
-            return [u.Quantity(v) if not isinstance(v, u.Quantity) else v for v in values]
-
         def fix_single_value_parameters(par_name, par_info, values):
             if len(values) == 1 and par_name in ["THETAP", "AZM"]:
                 return values * 2
@@ -283,7 +278,7 @@ class CorsikaConfig:
                 raise InvalidCorsikaInputError(msg)
             return value
 
-        value_args = convert_to_quantities(value_args_in)
+        value_args = self._convert_to_quantities(value_args_in)
         value_args = fix_single_value_parameters(par_name, par_info, value_args)
         value_args = handle_special_parameters(par_name, value_args)
         validate_length(par_name, par_info, value_args)
