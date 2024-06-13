@@ -1,3 +1,5 @@
+"""Command line parser for applications."""
+
 import argparse
 import logging
 from pathlib import Path
@@ -52,7 +54,6 @@ class CommandLineParser(argparse.ArgumentParser):
         job_submission: bool
             Add job submission configuration parameters to list of args.
         """
-
         self.initialize_simulation_model_arguments(simulation_model)
         if job_submission:
             self.initialize_job_submission_arguments()
@@ -66,11 +67,7 @@ class CommandLineParser(argparse.ArgumentParser):
         self.initialize_application_execution_arguments()
 
     def initialize_config_files(self):
-        """
-        Initialize configuration files.
-
-        """
-
+        """Initialize configuration files."""
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
             "--config",
@@ -88,9 +85,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_path_arguments(self):
-        """
-        Initialize paths.
-        """
+        """Initialize paths."""
         _job_group = self.add_argument_group("paths")
         _job_group.add_argument(
             "--data_path",
@@ -127,10 +122,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_output_arguments(self):
-        """
-        Initialize application output files(s)
-        """
-
+        """Initialize application output files(s)."""
         _job_group = self.add_argument_group("output")
         _job_group.add_argument(
             "--output_file",
@@ -154,10 +146,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_application_execution_arguments(self):
-        """
-        Initialize application execution arguments.
-        """
-
+        """Initialize application execution arguments."""
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
             "--test",
@@ -182,10 +171,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_db_config_arguments(self):
-        """
-        Initialize DB configuration parameters.
-        """
-
+        """Initialize DB configuration parameters."""
         _job_group = self.add_argument_group("MongoDB configuration")
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
@@ -216,10 +202,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_job_submission_arguments(self):
-        """
-        Initialize job submission arguments for simulator.
-
-        """
+        """Initialize job submission arguments for simulator."""
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
             "--submit_command",
@@ -242,6 +225,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_simulation_model_arguments(self, model_options):
         """
         Initialize default arguments for simulation model definition.
+
         Note that the model version is always required.
 
         Parameters
@@ -249,7 +233,6 @@ class CommandLineParser(argparse.ArgumentParser):
         model_options: list
             Options to be set: "telescope", "site", "layout", "layout_file"
         """
-
         if model_options is None:
             return
 
@@ -338,7 +321,7 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def site(value):
         """
-        Argument parser type to check that a valid site name is given
+        Argument parser type to check that a valid site name is given.
 
         Parameters
         ----------
@@ -356,14 +339,13 @@ class CommandLineParser(argparse.ArgumentParser):
             for invalid sites
 
         """
-
         names.validate_site_name(str(value))
         return str(value)
 
     @staticmethod
     def telescope(value):
         """
-        Argument parser type to check that a valid telescope name is given
+        Argument parser type to check that a valid telescope name is given.
 
         Parameters
         ----------
@@ -381,15 +363,13 @@ class CommandLineParser(argparse.ArgumentParser):
             for invalid telescope
 
         """
-
         names.validate_telescope_name(str(value))
         return str(value)
 
     @staticmethod
     def efficiency_interval(value):
         """
-        Argument parser type to check that value is an efficiency
-        in the interval [0,1]
+        Argument parser type to check that value is an efficiency in the interval [0,1].
 
         Parameters
         ----------
@@ -418,6 +398,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def zenith_angle(angle):
         """
         Argument parser type to check that the zenith angle provided is in the interval [0, 180].
+
         We allow here zenith angles larger than 90 degrees in the improbable case
         such simulations are requested. It is not guaranteed that the actual simulation software
         supports such angles!
@@ -439,7 +420,6 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-
         logger = logging.getLogger(__name__)
 
         try:
@@ -457,13 +437,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 f"The provided zenith angle, {angle:.1f}, "
                 "is outside of the allowed [0, 180] interval"
             )
-
         return fangle
 
     @staticmethod
     def azimuth_angle(angle):
         """
         Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
+
         Other allowed options are north, south, east or west which will be translated to an angle
         where north corresponds to zero.
 
@@ -484,7 +464,6 @@ class CommandLineParser(argparse.ArgumentParser):
 
 
         """
-
         logger = logging.getLogger(__name__)
         try:
             fangle = float(angle)
@@ -526,3 +505,111 @@ class CommandLineParser(argparse.ArgumentParser):
             "nor one of (north, south, east, west)."
         )
         raise TypeError
+
+    @staticmethod
+    def energy_range(energy_range, energy_unit="GeV"):
+        """
+        Argument parser type for energy ranges.
+
+        Energy ranges are given as string in following the example "10 GeV 200 PeV".
+
+        Parameters
+        ----------
+        energy_range : str
+            energy range string
+        energy_unit : str
+            default energy unit to use
+
+        Returns
+        -------
+        string
+            energy range  (min, max)
+        """
+        logger = logging.getLogger(__name__)
+
+        parts = energy_range.split()
+        if len(parts) != 4:
+            logger.error(
+                "Energy range must be given in the form 'E1 unit E1 unit' (e.g., '10 GeV 100 TeV')"
+            )
+            raise TypeError
+        value1, unit1, value2, unit2 = parts
+        try:
+            energy1 = float(value1) * u.Unit(unit1)
+            energy2 = float(value2) * u.Unit(unit2)
+        except ValueError as exc:
+            logger.error(f"Invalid energy values: {value1} {unit1} {value2} {unit2}")
+            raise exc
+        return f"{energy1.to(energy_unit)} {energy2.to(energy_unit)}"
+
+    @staticmethod
+    def viewcone(viewcone):
+        """
+        Argument parser type for viewcone argument.
+
+        Viewcone is given as string in the form "min max" where min and max are in degrees.
+
+        Parameters
+        ----------
+        viewcone: str
+            viewcone string
+
+        Returns
+        -------
+        string
+            viewcone (min, max)
+        """
+        logger = logging.getLogger(__name__)
+
+        parts = viewcone.split()
+        if len(parts) != 4:
+            logger.error(
+                "Viewcone must be given in the form 'min deg max deg ' (e.g., '0 deg 5 deg')"
+            )
+            raise TypeError
+        value1, unit1, value2, unit2 = parts
+        try:
+            viewcone_min = float(value1) * u.Unit(unit1)
+            viewcone_max = float(value2) * u.Unit(unit2)
+        except ValueError as exc:
+            logger.error(f"Invalid viewcone  values: {value1} {unit1} {value2} {unit2}")
+            raise exc
+        return f"{viewcone_min.to('deg')} {viewcone_max.to('deg')}"
+
+    @staticmethod
+    def core_scatter(core_scatter):
+        """
+        Argument parser type for core scatter argument for multiple use of events.
+
+        Arguments are given as string with two values separated by a space:
+
+        - Number of uses of each event
+        - Radius of scatter area
+
+        Parameters
+        ----------
+        core_scatter: str
+            core scatter string
+
+        Returns
+        -------
+        string
+            Core scatter string.
+        """
+        logger = logging.getLogger(__name__)
+
+        parts = core_scatter.split()
+        if len(parts) != 3:
+            logger.error(
+                "Core scatter argument must be given in the form "
+                "'n_scatter radius (m)' (e.g., '0 1500 m')"
+            )
+            raise TypeError
+        value1, value2, unit2 = parts
+        try:
+            n_scatter = int(value1)
+            core_radius = float(value2) * u.Unit(unit2)
+        except ValueError as exc:
+            logger.error(f"Invalid core scatter argument: {value1} {value2} {unit2}")
+            raise exc
+        return f"{n_scatter} {core_radius.to('m')}"
