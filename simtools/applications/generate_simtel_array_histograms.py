@@ -57,7 +57,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_histograms import SimtelHistograms
+from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 
 def _parse(label, description):
@@ -183,7 +183,7 @@ def main():
     # If the hdf5 output file already exists, it is overwritten
     overwrite = check_and_log_overwrite(config_parser, logger)
 
-    simtel_histograms = SimtelHistograms(histogram_files)
+    simtel_histograms = SimtelIOHistograms(histogram_files)
     create_pdf(simtel_histograms, output_file_name, config_parser, logger)
     export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger)
 
