@@ -122,9 +122,7 @@ class Simulator:
         self.test = test
 
         self._corsika_config_data = None
-        self._corsika_parameters_file = None
         self.config = None
-        self.array_model = None
         self._simulation_runner = None
 
         self.io_handler = io_handler.IOHandler()
@@ -137,7 +135,7 @@ class Simulator:
         self._mongo_db_config = mongo_db_config
         self._model_version = model_version
 
-        self._load_configuration_and_simulation_model(config_data)
+        self.array_model = self._load_configuration_and_simulation_model(config_data)
         self._set_simulation_runner()
 
     @property
@@ -178,7 +176,7 @@ class Simulator:
         self._load_corsika_config_and_model(config_data)
         self._load_sim_tel_config_and_model(config_data)
 
-        self.array_model = ArrayModel(
+        return ArrayModel(
             label=self.label,
             site=config_data["common"]["site"],
             layout_name=config_data["common"]["layout_name"],
@@ -210,10 +208,6 @@ class Simulator:
                 self._corsika_config_data.pop(key)
             except KeyError:
                 pass
-
-        self._corsika_parameters_file = self._corsika_config_data.pop(
-            "corsika_parameters_file", None
-        )
 
     def _load_sim_tel_config_and_model(self, config_data):
         """
@@ -314,7 +308,6 @@ class Simulator:
             "array_model": self.array_model,
         }
         corsika_args = {
-            "corsika_parameters_file": self._corsika_parameters_file,
             "corsika_config_data": self._corsika_config_data,
         }
         simtel_args = {}
