@@ -717,39 +717,37 @@ def find_file(name, loc):
         If the desired file is not found.
     """
 
-    all_locations = copy.copy(loc)
-    all_locations = [all_locations] if not isinstance(all_locations, list) else all_locations
+    all_locations = [loc] if not isinstance(loc, list) else loc
 
     def _search_directory(directory, filename, rec=False):
         if not Path(directory).exists():
-            msg = f"Directory {directory} does not exist"
-            _logger.debug(msg)
+            _logger.debug(f"Directory {directory} does not exist")
             return None
 
         file = Path(directory).joinpath(filename)
         if file.exists():
             _logger.debug(f"File {filename} found in {directory}")
             return file
-        if not rec:  # Not recursively
-            return None
 
-        for subdir in Path(directory).iterdir():
-            if not subdir.is_dir():
-                continue
-            file = _search_directory(subdir, filename, True)
-            if file is not None:
-                return file
+        if rec:
+            for subdir in Path(directory).iterdir():
+                if subdir.is_dir():
+                    file = _search_directory(subdir, filename, True)
+                    if file:
+                        return file
         return None
 
     # Searching file locally
     file = _search_directory(".", name)
-    if file is not None:
+    if file:
         return file
+
     # Searching file in given locations
-    for location_now in all_locations:
-        file = _search_directory(location_now, name, True)
-        if file is not None:
+    for location in all_locations:
+        file = _search_directory(location, name, True)
+        if file:
             return file
+
     msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
     raise FileNotFoundError(msg)
