@@ -181,17 +181,23 @@ def _resolve_references(yaml_data, observatory="CTA"):
             ref_data = ref_data.get(part, {})
         return ref_data
 
+    def resolve_dict(data):
+        if "$ref" in data:
+            ref = data["$ref"]
+            resolved_data = expand_ref(ref)
+            if isinstance(resolved_data, dict) and len(resolved_data) > 1:
+                return _resolve_references_recursive(resolved_data)
+            return resolved_data
+        return {k: _resolve_references_recursive(v) for k, v in data.items()}
+
+    def resolve_list(data):
+        return [_resolve_references_recursive(item) for item in data]
+
     def _resolve_references_recursive(data):
         if isinstance(data, dict):
-            if "$ref" in data:
-                ref = data["$ref"]
-                resolved_data = expand_ref(ref)
-                if isinstance(resolved_data, dict) and len(resolved_data) > 1:
-                    return _resolve_references_recursive(resolved_data)
-                return resolved_data
-            return {k: _resolve_references_recursive(v) for k, v in data.items()}
+            return resolve_dict(data)
         if isinstance(data, list):
-            return [_resolve_references_recursive(item) for item in data]
+            return resolve_list(data)
         return data
 
     return _resolve_references_recursive(yaml_data)
