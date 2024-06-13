@@ -184,8 +184,8 @@ def test_arglist_from_config():
     )
 
 
-def test_convert_stringnone_to_none():
-    assert {} == Configurator._convert_stringnone_to_none({})
+def test_convert_string_none_to_none():
+    assert {} == Configurator._convert_string_none_to_none({})
 
     _tmp_dict = {
         "a": 1.0,
@@ -196,7 +196,7 @@ def test_convert_stringnone_to_none():
     _tmp_none = copy(_tmp_dict)
     _tmp_none["d"] = None
 
-    assert _tmp_none == Configurator._convert_stringnone_to_none(_tmp_dict)
+    assert _tmp_none == Configurator._convert_string_none_to_none(_tmp_dict)
 
 
 def test_get_db_parameters_from_env(configurator, args_dict):
