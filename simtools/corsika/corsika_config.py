@@ -518,7 +518,7 @@ class CorsikaConfig:
         """
         random_seed = self._user_parameters["PRMPAR"][0] + self._user_parameters["RUNNR"][0]
         rng = np.random.default_rng(random_seed)
-        corsika_seeds = [int(rng.uniform(0, 1e7)) for i in range(4)]
+        corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
 
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")

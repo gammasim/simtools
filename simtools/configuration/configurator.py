@@ -350,6 +350,7 @@ class Configurator:
 
         """
         if self.config.get("output_file", None) is None:
+            self.config["output_file_from_default"] = True
             prefix = "TEST"
             label = extension = ""
             if not self.config.get("test", False):
@@ -393,10 +394,9 @@ class Configurator:
                 if isinstance(value, list):
                     _list_args.append("--" + key)
                     _list_args += value
-                elif isinstance(value, u.Quantity):
-                    _list_args.append("--" + key)
-                    _list_args.append(str(value))
-                elif not isinstance(value, bool) and value is not None and len(str(value)) > 0:
+                elif isinstance(value, u.Quantity) or (
+                    not isinstance(value, bool) and value is not None and len(str(value)) > 0
+                ):
                     _list_args.append("--" + key)
                     _list_args.append(str(value))
                 elif value:

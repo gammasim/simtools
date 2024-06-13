@@ -8,7 +8,7 @@ or given as command line arguments (explicit listing or telescope list file). A 
 files is also accepted.
 Layouts can be plotted in ground or UTM coordinate systems.
 
-Listing of array elements follow this logic:
+Listing of array elements follows this logic:
 
 * explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``
 * listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.
@@ -225,7 +225,7 @@ def _get_list_of_plot_files(plot_file_name, output_dir):
     allowed_extensions = [".jpeg", ".jpg", ".png", ".tiff", ".ps", ".pdf", ".bmp"]
     if plot_file.suffix in allowed_extensions:
         return [plot_file]
-    msg = f"Extension in {plot_file} is not valid. Valid extensions are:" f" {allowed_extensions}."
+    msg = f"Extension in {plot_file} is not valid. Valid extensions are: {allowed_extensions}."
     raise NameError(msg)
 
 

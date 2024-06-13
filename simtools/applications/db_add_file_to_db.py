@@ -14,7 +14,7 @@
     file_name (str or list of str, required)
         Name of the file to upload including the full path. \
         A list of files is also allowed, in which case only one -file_name is necessary, \
-        i.e., python applications/add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat \
+        i.e., python applications/db_add_file_to_db.py -file_name file_1.dat file_2.dat file_3.dat \
         If no path is given, the file is assumed to be in the CWD.
     input_path (str, required if file_name is not given)
         A directory with files to upload to the DB. \
@@ -63,7 +63,7 @@ def main():
         help=(
             "The file name to upload. "
             "A list of files is also allowed, in which case only one -f is necessary, "
-            "i.e., python applications/add_file_to_db.py --file_name file_1.dat file_2.dat "
+            "i.e., python applications/db_add_file_to_db.py --file_name file_1.dat file_2.dat "
             "file_3.dat. If no path is given, the file is assumed to be in the CWD."
         ),
         type=str,
@@ -104,13 +104,12 @@ def main():
         for ext_now in db.ALLOWED_FILE_EXTENSIONS:
             files_to_insert.extend(Path(args_dict["input_path"]).glob(f"*{ext_now}"))
 
-    plural = "s"
     if len(files_to_insert) < 1:
         raise ValueError("No files were provided to upload")
     if len(files_to_insert) == 1:
         plural = ""
     else:
-        pass
+        plural = "s"
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
     print(*files_to_insert, sep="\n")
