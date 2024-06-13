@@ -473,7 +473,7 @@ def main():
         subprocess.run(run_script, shell=False, check=False)
         try:
             filename = (
-                f"{le.output_directory}/" f"{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
+                f"{le.output_directory}/{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
             )
             fig = plot_simtel_ctapipe(
                 filename,

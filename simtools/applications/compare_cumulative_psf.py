@@ -95,11 +95,13 @@ def load_data(datafile):
     Load the data file with the measured PSF vs radius [cm].
 
     """
-    d_type = {"names": ("Radius [cm]", "Relative intensity"), "formats": ("f8", "f8")}
-    # test_data_file = io.get_test_data_file('PSFcurve_data_v2.txt')
+    radius_cm = "Radius [cm]"
+    relative_intensity = "Relative intensity"
+
+    d_type = {"names": (radius_cm, relative_intensity), "formats": ("f8", "f8")}
     data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
-    data["Radius [cm]"] *= 0.1
-    data["Relative intensity"] /= np.max(np.abs(data["Relative intensity"]))
+    data[radius_cm] *= 0.1
+    data[relative_intensity] /= np.max(np.abs(data[relative_intensity]))
     return data
 
 
