@@ -45,6 +45,7 @@ db_get_array_layouts_from_db
 db_get_file_from_db
 db_get_parameter_from_db
 derive_mirror_rnda
+derive_psf_parameters
 generate_array_config
 generate_corsika_histograms
 generate_default_metadata
@@ -56,7 +57,6 @@ simulate_light_emission
 simulate_prod
 simulate_showers_for_trigger_rates
 submit_data_from_external
-tune_psf
 validate_camera_efficiency
 validate_camera_fov
 validate_cumulative_psf
