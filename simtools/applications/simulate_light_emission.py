@@ -402,7 +402,7 @@ def main():
         for distance in default_le_config["z_pos"]["default"]:
             le_config = default_le_config.copy()
             le_config["z_pos"]["default"] = distance
-            le = SimulatorLightEmission.from_kwargs(
+            light_source = SimulatorLightEmission.from_kwargs(
                 telescope_model=telescope_model,
                 calibration_model=calibration_model,
                 site_model=site_model,
@@ -411,13 +411,13 @@ def main():
                 simtel_source_path=args_dict["simtel_path"],
                 light_source_type=args_dict["light_source_type"],
             )
-            run_script = le.prepare_script(generate_postscript=True, **args_dict)
+            run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
             subprocess.run(run_script, shell=False, check=False)
 
             try:
                 filename = (
-                    f"{le.output_directory}/"
-                    f"{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
+                    f"{light_source.output_directory}/"
+                    f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
                 )
                 fig = plot_simtel_ctapipe(
                     filename,
@@ -426,18 +426,19 @@ def main():
                         args_dict["picture_thresh"],
                         args_dict["min_neighbors"],
                     ],
-                    distance=le.default_le_config["z_pos"]["default"],
+                    distance=light_source.default_le_config["z_pos"]["default"],
                     return_cleaned=args_dict["return_cleaned"],
                 )
                 figures.append(fig)
             except AttributeError:
-                msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
+                msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
                 logger.warning(msg)
 
         save_figs_to_pdf(
             figures,
-            f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}_"
-            f"{le.le_application[1]}.pdf",
+            f"{light_source.output_directory}/{args_dict['telescope']}_"
+            f"{light_source.le_application[0]}_"
+            f"{light_source.le_application[1]}.pdf",
         )
 
     elif args_dict["light_source_setup"] == "layout":
@@ -460,7 +461,7 @@ def main():
             logger.error(f"Telescope {args_dict['telescope']} not found in array model")
             raise exc
 
-        le = SimulatorLightEmission.from_kwargs(
+        light_source = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
             site_model=site_model,
@@ -469,11 +470,12 @@ def main():
             simtel_source_path=args_dict["simtel_path"],
             light_source_type=args_dict["light_source_type"],
         )
-        run_script = le.prepare_script(generate_postscript=True, **args_dict)
+        run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
         subprocess.run(run_script, shell=False, check=False)
         try:
             filename = (
-                f"{le.output_directory}/" f"{le.le_application[0]}_{le.le_application[1]}.simtel.gz"
+                f"{light_source.output_directory}/"
+                f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
             )
             fig = plot_simtel_ctapipe(
                 filename,
@@ -482,16 +484,17 @@ def main():
                     args_dict["picture_thresh"],
                     args_dict["min_neighbors"],
                 ],
-                distance=le.default_le_config["z_pos"]["default"],
+                distance=light_source.default_le_config["z_pos"]["default"],
                 return_cleaned=args_dict["return_cleaned"],
             )
         except AttributeError:
-            msg = f"telescope not triggered at distance of {le.distance.to(u.meter)}"
+            msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
             logger.warning(msg)
         save_figs_to_pdf(
             [fig],
-            f"{le.output_directory}/{args_dict['telescope']}_{le.le_application[0]}_"
-            f"{le.le_application[1]}.pdf",
+            f"{light_source.output_directory}/{args_dict['telescope']}_"
+            f"{light_source.le_application[0]}_"
+            f"{light_source.le_application[1]}.pdf",
         )
 
 
