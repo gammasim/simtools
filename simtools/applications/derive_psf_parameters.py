@@ -151,6 +151,193 @@ def initialize_config():
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
+def add_parameters(
+    all_parameters,
+    mirror_reflection,
+    mirror_align,
+    mirror_reflection_fraction=0.15,
+    mirror_reflection_2=0.035,
+):
+    """
+    Transform the parameters to the proper format and add a new set of
+    parameters to the all_parameters list.
+    """
+    # If we want to start from values different than the ones currently in the model:
+    # align = 0.0046
+    # pars_to_change = {
+    #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
+    #     'mirror_align_random_horizontal': f'{align} 28 0 0',
+    #     'mirror_align_random_vertical': f'{align} 28 0 0',
+    # }
+    # tel_model.change_multiple_parameters(**pars_to_change)
+    pars = {
+        "mirror_reflection_random_angle": [
+            mirror_reflection,
+            mirror_reflection_fraction,
+            mirror_reflection_2,
+        ],
+        "mirror_align_random_horizontal": [mirror_align, 28.0, 0.0, 0.0],
+        "mirror_align_random_vertical": [mirror_align, 28.0, 0.0, 0.0],
+    }
+    all_parameters.append(pars)
+
+
+def get_previous_values(tel_model, logger):
+
+    # Grabbing the previous values of the parameters from the tel model.
+    #
+    # mrra -> mirror reflection random angle (first entry of mirror_reflection_random_angle)
+    # mfr -> mirror fraction random (second entry of mirror_reflection_random_angle)
+    # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
+    # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
+
+    split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
+    mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
+    mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
+
+    logger.debug(
+        "Previous parameter values:\n"
+        f"MRRA = {str(mrra_0)}\n"
+        f"MRF = {str(mfr_0)}\n"
+        f"MRRA2 = {str(mrra2_0)}\n"
+        f"MAR = {str(mar_0)}\n"
+    )
+
+    return mrra_0, mfr_0, mrra2_0, mar_0
+
+
+def generate_random_parameters(
+    all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, logger
+):
+    # Range around the previous values are hardcoded
+    # Number of runs is hardcoded
+    if args_dict["fixed"]:
+        logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
+
+    for _ in range(n_runs):
+        mrra_range = 0.004 if not args_dict["fixed"] else 0
+        mrf_range = 0.1
+        mrra2_range = 0.03
+        mar_range = 0.005
+        rng = np.random.default_rng()
+        mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
+        mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
+        mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
+        mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
+        add_parameters(all_parameters, mrra, mar, mrf, mrra2)
+
+
+def load_and_process_data(args_dict):
+    """
+    Load and process data if specified in the command-line arguments.
+
+    Returns:
+    - data_to_plot: OrderedDict containing loaded and processed data.
+    - radius: Radius data from loaded data (if available).
+    """
+    data_to_plot = OrderedDict()
+    radius = None
+
+    if args_dict["data"] is not None:
+        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+        data_to_plot["measured"] = load_data(data_file)
+        radius = data_to_plot["measured"]["Radius [cm]"]
+
+    return data_to_plot, radius
+
+
+def calculate_rmsd(data, sim):
+    """
+    Calculates the Root Mean Squared Deviation to be used
+    as metric to find the best parameters.
+    """
+    return np.sqrt(np.mean((data - sim) ** 2))
+
+
+def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
+    """
+    Runs the tuning for one set of parameters, add a plot to the pdfPages
+    (if plot=True) and returns the RMSD and the D80.
+    """
+    cumulative_psf = "Cumulative PSF"
+
+    if pars is not None:
+        tel_model.change_multiple_parameters(**pars)
+    else:
+        raise ValueError("No best parameters found")
+
+    ray = RayTracing.from_kwargs(
+        telescope_model=tel_model,
+        simtel_source_path=args_dict["simtel_path"],
+        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith"] * u.deg,
+        off_axis_angle=[0.0 * u.deg],
+    )
+
+    ray.simulate(test=args_dict["test"], force=True)
+    ray.analyze(force=True, use_rx=False)
+
+    # Plotting cumulative PSF
+    im = ray.images()[0]
+    d80 = im.get_psf()
+
+    if radius is not None:
+        # Simulated cumulative PSF
+        data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
+    else:
+        raise ValueError("Radius data is not available.")
+
+    rmsd = calculate_rmsd(
+        data_to_plot["measured"][cumulative_psf], data_to_plot["simulated"][cumulative_psf]
+    )
+
+    if args_dict["plot_all"]:
+        fig = visualize.plot_1d(
+            data_to_plot,
+            plot_difference=True,
+            no_markers=True,
+        )
+        ax = fig.get_axes()[0]
+        ax.set_ylim(0, 1.05)
+        ax.set_title(
+            f"refl_rnd={pars['mirror_reflection_random_angle']}, "
+            f"align_rnd={pars['mirror_align_random_vertical']}"
+        )
+
+        ax.text(
+            0.8,
+            0.3,
+            f"D80 = {d80:.3f} cm\nRMSD = {rmsd:.4f}",
+            verticalalignment="center",
+            horizontalalignment="center",
+            transform=ax.transAxes,
+        )
+        plt.tight_layout()
+        pdf_pages.savefig(fig)
+        plt.clf()
+
+    return d80, rmsd
+
+
+def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, radius, pdf_pages):
+    """
+    Find the best parameters from all parameter sets.
+
+    Returns:
+    - Tuple of best parameters and their D80 value.
+    """
+    min_rmsd = 100
+    best_pars = None
+
+    for pars in all_parameters:
+        _, rmsd = run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages)
+        if rmsd < min_rmsd:
+            min_rmsd = rmsd
+            best_pars = pars
+
+    return best_pars, min_rmsd
+
+
 # pylint: disable=too-many-statements
 def main():
     args_dict, db_config = initialize_config()
@@ -169,171 +356,28 @@ def main():
         model_version=args_dict["model_version"],
         label=label,
     )
-    # If we want to start from values different than the ones currently in the model:
-    # align = 0.0046
-    # pars_to_change = {
-    #     'mirror_reflection_random_angle': '0.0075 0.125 0.0037',
-    #     'mirror_align_random_horizontal': f'{align} 28 0 0',
-    #     'mirror_align_random_vertical': f'{align} 28 0 0',
-    # }
-    # tel_model.change_multiple_parameters(**pars_to_change)
+
     all_parameters = []
-
-    def add_parameters(
-        mirror_reflection, mirror_align, mirror_reflection_fraction=0.15, mirror_reflection_2=0.035
-    ):
-        """
-        Transform the parameters to the proper format and add a new set of
-        parameters to the all_parameters list.
-        """
-        pars = {
-            "mirror_reflection_random_angle": [
-                mirror_reflection,
-                mirror_reflection_fraction,
-                mirror_reflection_2,
-            ],
-            "mirror_align_random_horizontal": [mirror_align, 28.0, 0.0, 0.0],
-            "mirror_align_random_vertical": [mirror_align, 28.0, 0.0, 0.0],
-        }
-        all_parameters.append(pars)
-
-    # Grabbing the previous values of the parameters from the tel model.
-    #
-    # mrra -> mirror reflection random angle (first entry of mirror_reflection_random_angle)
-    # mfr -> mirror fraction random (second entry of mirror_reflection_random_angle)
-    # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
-    # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
-
-    def get_previous_values():
-        split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
-        mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
-        mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
-        return mrra_0, mfr_0, mrra2_0, mar_0
-
-    mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values()
-
-    logger.debug(
-        "Previous parameter values:\n"
-        f"MRRA = {str(mrra_0)}\n"
-        f"MRF = {str(mfr_0)}\n"
-        f"MRRA2 = {str(mrra2_0)}\n"
-        f"MAR = {str(mar_0)}\n"
-    )
-    if args_dict["fixed"]:
-        logger.debug("fixed=True - First entry of mirror_reflection_random_angle is kept fixed.")
-
-    def generate_random_parameters(n_runs):
-        # Range around the previous values are hardcoded
-        # Number of runs is hardcoded
-        for _ in range(n_runs):
-            mrra_range = 0.004 if not args_dict["fixed"] else 0
-            mrf_range = 0.1
-            mrra2_range = 0.03
-            mar_range = 0.005
-            rng = np.random.default_rng()
-            mrra = rng.uniform(max(mrra_0 - mrra_range, 0), mrra_0 + mrra_range)
-            mrf = rng.uniform(max(mfr_0 - mrf_range, 0), mfr_0 + mrf_range)
-            mrra2 = rng.uniform(max(mrra2_0 - mrra2_range, 0), mrra2_0 + mrra2_range)
-            mar = rng.uniform(max(mar_0 - mar_range, 0), mar_0 + mar_range)
-            add_parameters(mrra, mar, mrf, mrra2)
+    mrra_0, mfr_0, mrra2_0, mar_0 = get_previous_values(tel_model, logger)
 
     n_runs = 5 if args_dict["test"] else 50
-    generate_random_parameters(n_runs)
+    generate_random_parameters(
+        all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, logger
+    )
 
-    data_to_plot = OrderedDict()
-    radius = None
+    data_to_plot, radius = load_and_process_data(args_dict)
 
-    if args_dict["data"] is not None:
-        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
-        data_to_plot["measured"] = load_data(data_file)
-        radius = data_to_plot["measured"]["Radius [cm]"]
     # Preparing figure name
     plot_file_name = "_".join((label, tel_model.name + ".pdf"))
     plot_file = output_dir.joinpath(plot_file_name)
     pdf_pages = PdfPages(plot_file)
 
-    def calculate_rmsd(data, sim):
-        """
-        Calculates the Root Mean Squared Deviation to be used
-        as metric to find the best parameters.
-        """
-        return np.sqrt(np.mean((data - sim) ** 2))
+    best_pars, _ = find_best_parameters(
+        all_parameters, tel_model, args_dict, data_to_plot, radius, pdf_pages
+    )
 
-    def run_pars(pars, plot=True):
-        """
-        Runs the tuning for one set of parameters, add a plot to the pdfPages
-        (if plot=True) and returns the RMSD and the D80.
-        """
-        cumulative_psf = "Cumulative PSF"
-
-        if pars is not None:
-            tel_model.change_multiple_parameters(**pars)
-        else:
-            raise ValueError("No best parameters found")
-
-        ray = RayTracing.from_kwargs(
-            telescope_model=tel_model,
-            simtel_source_path=args_dict["simtel_path"],
-            source_distance=args_dict["src_distance"] * u.km,
-            zenith_angle=args_dict["zenith"] * u.deg,
-            off_axis_angle=[0.0 * u.deg],
-        )
-
-        ray.simulate(test=args_dict["test"], force=True)
-        ray.analyze(force=True, use_rx=False)
-
-        # Plotting cumulative PSF
-        im = ray.images()[0]
-        d80 = im.get_psf()
-
-        if radius is not None:
-            # Simulated cumulative PSF
-            data_to_plot["simulated"] = im.get_cumulative_data(radius * u.cm)
-        else:
-            raise ValueError("Radius data is not available.")
-
-        rmsd = calculate_rmsd(
-            data_to_plot["measured"][cumulative_psf], data_to_plot["simulated"][cumulative_psf]
-        )
-
-        if plot:
-            fig = visualize.plot_1d(
-                data_to_plot,
-                plot_difference=True,
-                no_markers=True,
-            )
-            ax = fig.get_axes()[0]
-            ax.set_ylim(0, 1.05)
-            ax.set_title(
-                f"refl_rnd={pars['mirror_reflection_random_angle']}, "
-                f"align_rnd={pars['mirror_align_random_vertical']}"
-            )
-
-            ax.text(
-                0.8,
-                0.3,
-                f"D80 = {d80:.3f} cm\nRMSD = {rmsd:.4f}",
-                verticalalignment="center",
-                horizontalalignment="center",
-                transform=ax.transAxes,
-            )
-            plt.tight_layout()
-            pdf_pages.savefig(fig)
-            plt.clf()
-
-        return d80, rmsd
-
-    # Running the tuning for all parameters in all_parameters
-    # and storing the best parameters in best_pars
-    min_rmsd = 100
-    best_pars = None
-    for pars in all_parameters:
-        _, rmsd = run_pars(pars, plot=args_dict["plot_all"])
-        if rmsd < min_rmsd:
-            min_rmsd = rmsd
-            best_pars = pars
     # Rerunning and plotting the best pars
-    run_pars(best_pars, plot=True)
+    run_pars(tel_model, args_dict, best_pars, data_to_plot, radius, pdf_pages)
     plt.close()
     pdf_pages.close()
 
