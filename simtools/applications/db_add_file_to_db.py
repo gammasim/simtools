@@ -50,39 +50,33 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def main():
+def initialize_config():
     _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
 
     config = configurator.Configurator(
         description="Add file to the DB.",
         usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
     )
+
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file_name",
-        help=(
-            "The file name to upload. "
-            "A list of files is also allowed, in which case only one -f is necessary, "
-            "i.e., python applications/db_add_file_to_db.py --file_name file_1.dat file_2.dat "
-            "file_3.dat. If no path is given, the file is assumed to be in the CWD."
-        ),
+        help=("The file name to upload. A list of files is also allowed, ..."),
         type=str,
         nargs="+",
     )
     group.add_argument(
         "--input_path",
-        help=(
-            "A directory with files to upload to the DB. "
-            "All files in the directory with the following extensions "
-            f"will be uploaded: {', '.join(_db_tmp.ALLOWED_FILE_EXTENSIONS)}"
-        ),
+        help=("A directory with files to upload to the DB. ..."),
         type=Path,
     )
+
     config.parser.add_argument(
         "--db",
         type=str,
         help=("The database to insert the files to."),
     )
+
     args_dict, db_config = config.initialize(paths=False, db_config=True)
 
     logger = logging.getLogger()
@@ -90,7 +84,12 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
+    return args_dict, db, logger
+
+
+def collect_files_to_insert(args_dict, logger, db):
     files_to_insert = []
+
     if args_dict.get("file_name", None) is not None:
         for file_now in args_dict["file_name"]:
             if Path(file_now).suffix in db.ALLOWED_FILE_EXTENSIONS:
@@ -107,17 +106,29 @@ def main():
     if not files_to_insert:
         raise ValueError("No files were provided to upload")
 
+    return files_to_insert
+
+
+def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
     plural = "" if len(files_to_insert) == 1 else "s"
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
     print(*files_to_insert, sep="\n")
     print()
+
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
             db.insert_file_to_db(file_to_insert_now, args_dict["db"])
             logger.info(f"File {file_to_insert_now} inserted to {args_dict['db']} DB")
     else:
-        logger.info(f"Aborted, did not insert file {plural} to the {args_dict['db']} DB")
+        logger.info(f"Aborted, did not insert file{plural} to the {args_dict['db']} DB")
+
+
+def main():
+    args_dict, db, logger = initialize_config()
+
+    files_to_insert = collect_files_to_insert(args_dict, logger, db)
+    confirm_and_insert_files(files_to_insert, args_dict, db, logger)
 
 
 if __name__ == "__main__":
