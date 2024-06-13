@@ -2,6 +2,7 @@
 
 import logging
 
+import numpy as np
 import pytest
 
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -63,3 +64,13 @@ def test_get_simtel_metadata(simtel_config_writer):
 
     with pytest.raises(ValueError):
         simtel_config_writer._get_simtel_metadata("unknown")
+
+
+def test_get_value_string_for_simtel(simtel_config_writer):
+
+    assert simtel_config_writer._get_value_string_for_simtel(None) == "none"
+    assert simtel_config_writer._get_value_string_for_simtel(True) == 1
+    assert simtel_config_writer._get_value_string_for_simtel(False) == 0
+    assert simtel_config_writer._get_value_string_for_simtel([1, 2, 3]) == "1 2 3"
+    assert simtel_config_writer._get_value_string_for_simtel(np.array([1, 2, 3])) == "1 2 3"
+    assert simtel_config_writer._get_value_string_for_simtel(5) == 5
