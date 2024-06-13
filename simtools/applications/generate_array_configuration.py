@@ -73,7 +73,6 @@ def main():
         site=args_dict.get("site"),
         layout_name=args_dict.get("array_layout_name"),
         array_elements=args_dict.get("array_elements"),
-        parameters_to_change=None,
     )
     array_model.print_telescope_list()
     array_model.export_all_simtel_config_files()
