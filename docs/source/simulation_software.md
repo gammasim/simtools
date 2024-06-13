@@ -20,3 +20,5 @@ The following executable are called in simtools from the [sim_telarray](https://
 - `rx`: optical PSF calculation (optional use)
 - `corsika_autoinputs`: generate CORSIKA input parameters
 - `pfp`: sim_telarray file pre processor
+- `xyzls`: light source at position xyz for calibration
+- `ls-beam` laser light source for calibration
