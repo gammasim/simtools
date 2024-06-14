@@ -18,7 +18,7 @@ def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
     camera_efficiency_lst = CameraEfficiency(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
@@ -30,7 +30,7 @@ def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
@@ -59,7 +59,7 @@ def test_from_kwargs(telescope_model_lst, site_model_north, simtel_path):
     ce = CameraEfficiency.from_kwargs(
         telescope_model=tel_model,
         site_model=site_model_north,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         label=label,
         zenith_angle=zenith_angle,
         test=True,
@@ -70,7 +70,7 @@ def test_from_kwargs(telescope_model_lst, site_model_north, simtel_path):
 def test_validate_telescope_model(simtel_path, site_model_north):
     with pytest.raises(ValueError):
         CameraEfficiency(
-            telescope_model="bla_bla", site_model=site_model_north, simtel_source_path=simtel_path
+            telescope_model="bla_bla", site_model=site_model_north, simtel_path=simtel_path
         )
 
 
@@ -136,7 +136,7 @@ def test_export_results(simtel_path, telescope_model_lst, site_model_north, capl
     camera_efficiency = CameraEfficiency(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         label="export_results",
         config_data=config_data,
     )

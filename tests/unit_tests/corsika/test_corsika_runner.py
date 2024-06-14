@@ -30,7 +30,7 @@ def corsika_config_data(tmp_test_directory):
 @pytest.fixture()
 def corsika_runner(corsika_config_data, io_handler, simtel_path, array_model_south):
     corsika_runner = CorsikaRunner(
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         label="test-corsika-runner",
         corsika_config_data=corsika_config_data,
         array_model=array_model_south,

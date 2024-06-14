@@ -25,7 +25,7 @@ def ray_tracing_sst(telescope_model_sst, simtel_path):
 
     ray_tracing_sst = RayTracing(
         telescope_model=telescope_model_sst,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         config_data=config_data,
         label="test-simtel-runner-ray-tracing",
     )
@@ -36,7 +36,7 @@ def ray_tracing_sst(telescope_model_sst, simtel_path):
 @pytest.fixture()
 def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
     simulator_ray_tracing = SimulatorRayTracing(
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
         config_data={
             "zenith_angle": ray_tracing_sst.config.zenith_angle * u.deg,

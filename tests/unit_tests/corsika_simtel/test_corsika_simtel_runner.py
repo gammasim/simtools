@@ -16,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 def common_args(simtel_path):
     return {
         "label": "test-corsika-simtel-runner",
-        "simtel_source_path": simtel_path,
+        "simtel_path": simtel_path,
     }
 
 

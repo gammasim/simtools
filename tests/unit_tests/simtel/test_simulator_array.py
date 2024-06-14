@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 def simtel_runner(array_model_north, simtel_path):
     simtel_runner = SimulatorArray(
         array_model=array_model_north,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         config_data={
             "primary": "proton",
             "zenith_angle": 20 * u.deg,
