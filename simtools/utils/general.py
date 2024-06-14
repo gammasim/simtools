@@ -56,7 +56,146 @@ class InvalidConfigDataError(Exception):
     """Exception for invalid configuration data."""
 
 
-def validate_config_data(config_data, parameters, ignore_unidentified=False):
+def _validate_and_convert_value(par_name, par_info, value):
+    """
+    Validate and convert the given value based on parameter information.
+
+    Parameters
+    ----------
+    par_name: str
+        Parameter name.
+    par_info: dict
+        Parameter information.
+    value:
+        Value to be validated and converted.
+
+    Returns
+    -------
+    Validated and converted value.
+
+    Raises
+    ------
+    InvalidConfigEntryError
+        If the value is invalid based on parameter constraints.
+    """
+    if "allowed" in par_info:
+        allowed_values = par_info["allowed"]
+        if value not in allowed_values:
+            msg = f"Invalid value {value} for parameter {par_name}. \
+                Allowed values are {allowed_values}."
+            raise InvalidConfigEntryError(msg)
+
+    if "unit" in par_info and not isinstance(value, u.Quantity):
+        value *= u.Unit(par_info["unit"])
+
+    return value
+
+
+def _process_identified_entry(parameters, key_data, value_data, out_data):
+    """
+    Process an identified entry in config_data based on parameters and validate the value.
+
+    Parameters
+    ----------
+    parameters: dict
+        Parameter information necessary for validation.
+    key_data: str
+        Key from config_data.
+    value_data:
+        Value associated with the key_data in config_data.
+    out_data: dict
+        Dictionary to store validated data.
+
+    Returns
+    -------
+    bool
+        True if the entry was identified and processed successfully, False otherwise.
+
+    Raises
+    ------
+    InvalidConfigEntryError
+        If the value associated with the key_data is invalid based on parameter constraints.
+    """
+    is_identified = False
+    for par_name, par_info in parameters.items():
+        names = par_info.get("names", [])
+        if key_data == par_name or key_data.lower() in map(str.lower, names):
+            validated_value = _validate_and_convert_value(par_name, par_info, value_data)
+            out_data[par_name] = validated_value
+            is_identified = True
+            break
+
+    return is_identified
+
+
+def _handle_unidentified_entry(key_data, ignore_unidentified, _logger):
+    """
+    Handle an unidentified entry in config_data based on the ignore_unidentified flag.
+
+    Parameters
+    ----------
+    key_data: str
+        Key from config_data that cannot be identified.
+    ignore_unidentified: bool
+        If set to True, unidentified parameters provided in config_data are ignored
+        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+    _logger: Logger
+        Logger object for logging messages.
+
+    Raises
+    ------
+    UnableToIdentifyConfigEntryError
+        If ignore_unidentified is False and an unidentified parameter leads to an error.
+    """
+    msg = f"Entry {key_data} in config_data cannot be identified"
+    if ignore_unidentified:
+        _logger.debug(f"{msg}, ignoring.")
+    else:
+        _logger.error(f"{msg}, stopping.")
+        raise UnableToIdentifyConfigEntryError(msg)
+
+
+def _process_default_value(par_name, par_info, out_data, _logger):
+    """
+    Process a default value for a parameter if it was not provided in config_data.
+
+    Parameters
+    ----------
+    par_name: str
+        Parameter name.
+    par_info: dict
+        Parameter information.
+    out_data: dict
+        Dictionary to store validated data.
+    _logger: Logger
+        Logger object for logging messages.
+
+    Raises
+    ------
+    MissingRequiredConfigEntryError
+        If a required parameter without default value is not given in config_data.
+    """
+    if "default" not in par_info:
+        msg = f"Required entry in config_data {par_name} was not given."
+        _logger.error(msg)
+        raise MissingRequiredConfigEntryError(msg)
+
+    default_value = par_info["default"]
+
+    if default_value is None:
+        out_data[par_name] = None
+    else:
+        if isinstance(default_value, dict):
+            default_value = default_value["value"]
+
+        if "unit" in par_info and not isinstance(default_value, u.Quantity):
+            default_value *= u.Unit(par_info["unit"])
+
+        validated_value = _validate_and_convert_value(par_name, par_info, default_value)
+        out_data[par_name] = validated_value
+
+
+def validate_config_data(config_data, parameters, ignore_unidentified=False, _logger=None):
     """
     Validate a generic config_data dict by using the info
     given by the parameters dict. The entries will be validated
@@ -71,9 +210,12 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         Input config data.
     parameters: dict
         Parameter information necessary for validation.
-    ignore_unidentified: bool
+    ignore_unidentified: bool, optional
         If set to True, unidentified parameters provided in config_data are ignored
         and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+        Default is False.
+    _logger: Logger, optional
+        Logger object for logging messages. If not provided, defaults to printing to console.
 
     Raises
     ------
@@ -90,44 +232,7 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         Containing the validated config data entries.
     """
 
-    def _process_identified_entry(key_data, value_data):
-        nonlocal is_identified
-        for par_name, par_info in parameters.items():
-            names = par_info.get("names", [])
-            if key_data == par_name or key_data.lower() in map(str.lower, names):
-                validated_value = _validate_and_convert_value(par_name, par_info, value_data)
-                out_data[par_name] = validated_value
-                is_identified = True
-                return True
-        return False
-
-    def handle_unidentified_entry(key_data):
-        msg = f"Entry {key_data} in config_data cannot be identified"
-        if ignore_unidentified:
-            _logger.debug(f"{msg}, ignoring.")
-        else:
-            _logger.error(f"{msg}, stopping.")
-            raise UnableToIdentifyConfigEntryError(msg)
-
-    def process_default_value(par_name, par_info):
-        if "default" not in par_info:
-            msg = f"Required entry in config_data {par_name} was not given."
-            _logger.error(msg)
-            raise MissingRequiredConfigEntryError(msg)
-
-        default_value = par_info["default"]
-
-        if default_value is None:
-            out_data[par_name] = None
-        else:
-            if isinstance(default_value, dict):
-                default_value = default_value["value"]
-
-            if "unit" in par_info and not isinstance(default_value, u.Quantity):
-                default_value *= u.Unit(par_info["unit"])
-
-            validated_value = _validate_and_convert_value(par_name, par_info, default_value)
-            out_data[par_name] = validated_value
+    _logger = logging.getLogger(__name__)
 
     out_data = {}
 
@@ -135,16 +240,16 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         config_data = {}
 
     for key_data, value_data in config_data.items():
-        is_identified = _process_identified_entry(key_data, value_data)
+        is_identified = _process_identified_entry(parameters, key_data, value_data, out_data)
 
         if not is_identified:
-            handle_unidentified_entry(key_data)
+            _handle_unidentified_entry(key_data, ignore_unidentified, _logger)
 
     for par_name, par_info in parameters.items():
         if par_name in out_data:
             continue
 
-        process_default_value(par_name, par_info)
+        _process_default_value(par_name, par_info, out_data, _logger)
 
     configuration_data = namedtuple("configuration_data", out_data)
     return configuration_data(**out_data)
