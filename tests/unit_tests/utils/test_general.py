@@ -23,6 +23,9 @@ from simtools.utils.general import (
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+url_desy = "https://www.desy.de"
+url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+
 
 def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
@@ -66,7 +69,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/test_parameters.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url = url_simtools
     _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
@@ -80,7 +83,7 @@ def test_collect_dict_from_url(io_handler) -> None:
         gen.collect_data_from_http(_url + _file)
 
     # yaml file with astropy header
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url = url_simtools
     _url_dict = gen.collect_data_from_http(
         _url + "tests/resources/corsikaConfigTest_astropy_headers.yml"
     )
@@ -88,7 +91,7 @@ def test_collect_dict_from_url(io_handler) -> None:
     assert len(_dict) > 0
 
     # simple list
-    _url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    _url = url_simtools
     _url_list = gen.collect_data_from_http(_url + "tests/resources/test_file.list")
     assert isinstance(_url_list, list)
     assert len(_url_list) == 2
@@ -523,11 +526,8 @@ def test_find_file_not_found(tmp_test_directory) -> None:
         gen.find_file(file_name, loc)
 
 
-base_url = "https://www.desy.de"
-
-
 def test_is_url():
-    url = base_url
+    url = url_desy
     assert gen.is_url(url) is True
 
     url = "sftp://www.desy.de"
@@ -554,7 +554,7 @@ def test_collect_data_dict_from_json():
 
 def test_collect_data_from_http():
     file = "tests/resources/test_parameters.yml"
-    url = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+    url = url_simtools
 
     data = gen.collect_data_from_http(url + file)
     assert isinstance(data, dict)
@@ -573,8 +573,8 @@ def test_collect_data_from_http():
 
 
 def test_join_url_or_path():
-    assert gen.join_url_or_path(base_url, "test") == "https://www.desy.de/test"
-    assert gen.join_url_or_path(base_url, "test", "test") == "https://www.desy.de/test/test"
+    assert gen.join_url_or_path(url_desy, "test") == "https://www.desy.de/test"
+    assert gen.join_url_or_path(url_desy, "test", "test") == "https://www.desy.de/test/test"
     assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
 
 
