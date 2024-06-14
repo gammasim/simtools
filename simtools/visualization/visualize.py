@@ -655,42 +655,60 @@ def plot_array(
     -------
     plt.figure
         Instance of plt.figure with the array of telescopes plotted.
-
     """
     fig, ax = plt.subplots(1)
     legend_objects = []
     legend_labels = []
-    tel_counters = {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
-    pos_x_rotated, pos_y_rotated = 0.0 * u.m, 0.0 * u.m
+    tel_counters = initialize_tel_counters()
+
+    pos_x_rotated, pos_y_rotated = get_rotated_positions(telescopes, rotate_angle)
+    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
+    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
+
+    fontsize, scale = get_plot_params(len(pos_x_rotated))
+    patches = create_patches(
+        telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters
+    )
+
+    update_legend(ax, tel_counters, legend_objects, legend_labels)
+    finalize_plot(ax, patches, x_title="Easting [m]", y_title="Northing [m]", axes_range=axes_range)
+
+    return fig
+
+
+def initialize_tel_counters():
+    return {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
+
+
+def get_rotated_positions(telescopes, rotate_angle):
+    pos_x_rotated = pos_y_rotated = None
     if "position_x" in telescopes.colnames and "position_y" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
         rotate_angle = rotate_angle + 90.0 * u.deg
     elif "utm_east" in telescopes.colnames and "utm_north" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
+    else:
+        raise ValueError(
+            "Telescopes table must contain either 'position_x'/'position_y'"
+            "or 'utm_east'/'utm_north' columns"
+        )
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
-    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
-    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
+    return pos_x_rotated, pos_y_rotated
 
-    if len(pos_x_rotated) > 30:
-        fontsize = 4
-        scale = 2
-    else:
-        fontsize = 8
-        scale = 1
 
+def get_plot_params(position_length):
+    if position_length > 30:
+        return 4, 2
+    return 8, 1
+
+
+def create_patches(telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters):
     patches = []
     for tel_now in telescopes:
-        try:
-            telescope_name = tel_now["telescope_name"]
-        except KeyError:
-            telescope_name = tel_now["asset_code"] + "-" + tel_now["sequence_number"]
-        for tel_type in tel_counters:
-            if tel_type in telescope_name:
-                tel_counters[tel_type] += 1
-        sphere_radius = (
-            1.0 * u.m if "sphere_radius" not in telescopes.colnames else tel_now["sphere_radius"]
-        )
+        telescope_name = get_telescope_name(tel_now)
+        update_tel_counters(tel_counters, telescope_name)
+        sphere_radius = get_sphere_radius(tel_now)
         i_tel_name = names.get_telescope_type_from_telescope_name(telescope_name)
         patches.append(
             get_telescope_patch(
@@ -709,32 +727,33 @@ def plot_array(
                 verticalalignment="bottom",
                 fontsize=fontsize,
             )
+    return patches
 
-    for _, one_telescope in enumerate(names.get_list_of_telescope_types()):
+
+def get_telescope_name(tel_now):
+    try:
+        return tel_now["telescope_name"]
+    except KeyError:
+        return tel_now["asset_code"] + "-" + tel_now["sequence_number"]
+
+
+def update_tel_counters(tel_counters, telescope_name):
+    for tel_type in tel_counters:
+        if tel_type in telescope_name:
+            tel_counters[tel_type] += 1
+
+
+def get_sphere_radius(tel_now):
+    return 1.0 * u.m if "sphere_radius" not in tel_now.colnames else tel_now["sphere_radius"]
+
+
+def update_legend(ax, tel_counters, legend_objects, legend_labels):
+    for one_telescope in names.get_list_of_telescope_types():
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
             legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
-
-    plt.gca().add_collection(PatchCollection(patches, match_original=True))
-
-    x_title = "Easting [m]"
-    y_title = "Northing [m]"
-    plt.axis("square")
-    if axes_range is not None:
-        plt.xlim(-axes_range, axes_range)
-        plt.ylim(-axes_range, axes_range)
-    plt.gca().set_axisbelow(True)
-    plt.xlabel(x_title, fontsize=12, labelpad=0)
-    plt.ylabel(y_title, fontsize=12, labelpad=0)
-    plt.tick_params(axis="both", which="major", labelsize=8)
-
-    legend_handler_map = {
-        list(leg_h.legend_handler_map.keys())[i_key]: list(leg_h.legend_handler_map.values())[
-            i_key
-        ]()
-        for i_key, _ in enumerate(leg_h.legend_handler_map)
-    }
-    plt.legend(
+    legend_handler_map = {k: v() for k, v in leg_h.legend_handler_map.items()}
+    ax.legend(
         legend_objects,
         legend_labels,
         handler_map=legend_handler_map,
@@ -742,9 +761,18 @@ def plot_array(
         loc="best",
     )
 
-    plt.tight_layout()
 
-    return fig
+def finalize_plot(ax, patches, x_title, y_title, axes_range):
+    ax.add_collection(PatchCollection(patches, match_original=True))
+    ax.set_xlabel(x_title, fontsize=12, labelpad=0)
+    ax.set_ylabel(y_title, fontsize=12, labelpad=0)
+    ax.tick_params(axis="both", which="major", labelsize=8)
+    ax.set_axisbelow(True)
+    ax.axis("square")
+    if axes_range is not None:
+        ax.set_xlim(-axes_range, axes_range)
+        ax.set_ylim(-axes_range, axes_range)
+    plt.tight_layout()
 
 
 def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
