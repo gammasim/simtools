@@ -69,7 +69,7 @@ def default_config_fixture():
 def mock_simulator(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_source_path = simtel_path
+    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -94,7 +94,7 @@ def mock_simulator(
         site_model=site_model_north,
         default_le_config=default_config,
         le_application=le_application,
-        simtel_source_path=simtel_source_path,
+        simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
         config_data={},
@@ -106,7 +106,7 @@ def mock_simulator(
 def mock_simulator_variable(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_source_path = simtel_path
+    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -131,7 +131,7 @@ def mock_simulator_variable(
         site_model=site_model_north,
         default_le_config=default_config,
         le_application=le_application,
-        simtel_source_path=simtel_source_path,
+        simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
         config_data={},
@@ -143,7 +143,7 @@ def mock_simulator_variable(
 def mock_simulator_laser(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_source_path = simtel_path
+    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -168,7 +168,7 @@ def mock_simulator_laser(
         site_model=site_model_north,
         default_le_config=default_config,
         le_application=le_application,
-        simtel_source_path=simtel_source_path,
+        simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
         config_data={},
@@ -219,7 +219,7 @@ def test_from_kwargs_with_all_args(
         "default_le_config": default_config,
         "le_application": "xyzls",
         "label": "test_label",
-        "simtel_source_path": simtel_path,
+        "simtel_path": simtel_path,
         "light_source_type": "layout",
         # "config_data": {"some_param": "value"},
     }
@@ -230,7 +230,7 @@ def test_from_kwargs_with_all_args(
     assert simulator._calibration_model == calibration_model_illn
     assert simulator.le_application == "xyzls"
     assert simulator.label == "test_label"
-    assert simulator._simtel_source_path == simtel_path
+    assert simulator._simtel_path == simtel_path
     assert simulator.light_source_type == "layout"
 
 
@@ -243,7 +243,7 @@ def test_from_kwargs_with_minimal_args(
         "site_model": site_model_north,
         "default_le_config": default_config,
         "le_application": "xyzls",
-        "simtel_source_path": simtel_path,
+        "simtel_path": simtel_path,
         "light_source_type": "led",
     }
     simulator = SimulatorLightEmission.from_kwargs(**kwargs)
@@ -254,7 +254,7 @@ def test_from_kwargs_with_minimal_args(
     assert simulator.default_le_config == default_config
     assert simulator.le_application == "xyzls", "layout"
     assert simulator.label == telescope_model_lst.label
-    assert simulator._simtel_source_path is not None
+    assert simulator._simtel_path is not None
     assert simulator.light_source_type == "led"
 
 
@@ -437,11 +437,11 @@ def test_make_simtel_script(mock_simulator):
         mock_file.reset_mock()
 
         # Mock the necessary attributes and methods used within _make_simtel_script
-        mock_simulator._simtel_source_path = MagicMock()
+        mock_simulator._simtel_path = MagicMock()
         mock_simulator._telescope_model = MagicMock()
         mock_simulator._site_model = MagicMock()
 
-        mock_simulator._simtel_source_path.joinpath.return_value = (
+        mock_simulator._simtel_path.joinpath.return_value = (
             "/path/to/sim_telarray/bin/sim_telarray/"
         )
         mock_simulator._telescope_model.get_config_file.return_value = "/path/to/config.cfg"

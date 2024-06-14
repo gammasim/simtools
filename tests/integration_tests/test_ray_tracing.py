@@ -31,9 +31,7 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, 
         mongo_db_config=db_config,
     )
 
-    ray = RayTracing(
-        telescope_model=tel, simtel_source_path=simtel_path_no_mock, config_data=config_data
-    )
+    ray = RayTracing(telescope_model=tel, simtel_path=simtel_path_no_mock, config_data=config_data)
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
@@ -47,7 +45,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
-        simtel_source_path=simtel_path_no_mock,
+        simtel_path=simtel_path_no_mock,
         config_data=config_data,
     )
 
@@ -95,7 +93,7 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
 
     ray = RayTracing(
         telescope_model=telescope_model_sst,
-        simtel_source_path=simtel_path_no_mock,
+        simtel_path=simtel_path_no_mock,
         config_data=config_data,
     )
 
@@ -121,7 +119,7 @@ def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_mod
 
     ray = RayTracing(
         telescope_model=telescope_model_mst,
-        simtel_source_path=simtel_path_no_mock,
+        simtel_path=simtel_path_no_mock,
         config_data=config_data,
     )
     ray.simulate(test=True, force=True)
@@ -148,7 +146,7 @@ def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_mo
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
-        simtel_source_path=simtel_path_no_mock,
+        simtel_path=simtel_path_no_mock,
         config_data=config_data,
     )
 
@@ -184,7 +182,7 @@ def test_process_rx(
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
-        simtel_source_path=simtel_path_no_mock,
+        simtel_path=simtel_path_no_mock,
         config_data=config_data,
         label="empty_file",
     )

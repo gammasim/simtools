@@ -18,7 +18,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
     camera_efficiency_sst = CameraEfficiency(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         test=True,
     )
     return camera_efficiency_sst
@@ -27,7 +27,7 @@ def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
 @pytest.fixture()
 def simulator_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
     simulator_camera_efficiency = SimulatorCameraEfficiency(
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
         file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
@@ -98,11 +98,11 @@ def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model
     camera_efficiency_sst_prod5 = CameraEfficiency(
         telescope_model=telescope_model_sst_prod5,
         site_model=site_model_south,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         test=True,
     )
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         telescope_model=telescope_model_sst_prod5,
         file_simtel=camera_efficiency_sst_prod5._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
