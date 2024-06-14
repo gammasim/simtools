@@ -1,4 +1,5 @@
-import copy
+"""CORSIKA configuration."""
+
 import logging
 from pathlib import Path
 
@@ -7,7 +8,6 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
-from simtools.utils.general import collect_data_from_file_or_dict
 
 __all__ = [
     "CorsikaConfig",
@@ -26,85 +26,44 @@ class InvalidCorsikaInputError(Exception):
 
 class CorsikaConfig:
     """
-    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \
-    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
-    follows below.
+    Configuration for the CORSIKA air shower simulations.
 
-    .. code-block:: python
+    Follows closely the CORSIKA definitions and output format.
 
-        corsika_config_data = {
-            'data_directory': .
-            'primary': 'proton',
-            'nshow': 10000,
-            'nrun': 1,
-            'zenith': 20 * u.deg,
-            'viewcone': 5 * u.deg,
-            'erange': [10 * u.GeV, 100 * u.TeV],
-            'eslope': -2,
-            'phi': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
-        }
+    The configuration is set as a dict corresponding to the command line configuration groups
+    (especially simulation_software, simulation_model, simulation_parameters).
 
     Parameters
     ----------
-    array_model: ArrayModel
+    array_model : ArrayModel
         Array model.
-    label: str
+    label : str
         Instance label.
-    corsika_config_data: dict
-        CORSIKA user parameters.
-    corsika_config_file: str
-        Name of the yaml configuration file. If not provided, \
-        data/parameters/corsika_parameters.yml will be used.
-    corsika_parameters_file: str
-        Name of the yaml file to set remaining CORSIKA parameters.
-    simtel_source_path: str or Path
-        Location of source of the sim_telarray/CORSIKA package.
+    args_dict : dict
+        Configuration dictionary \
+        includes simulation_software, simulation_model, simulation_parameters groups)
     """
 
-    def __init__(
-        self,
-        array_model,
-        label=None,
-        corsika_config_data=None,
-        corsika_config_file=None,
-        corsika_parameters_file=None,
-        simtel_source_path=None,
-    ):
-        """
-        Initialize CorsikaConfig.
-        """
-
+    def __init__(self, array_model, args_dict, label=None):
+        """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
         self.primary = None
-        self.eslope = None
+        self.args_dict = args_dict
         self.config_file_path = None
-        self._output_generic_file_name = None
-        self._simtel_source_path = simtel_source_path
+
+        print("FFFFFF", args_dict)
 
         self.io_handler = io_handler.IOHandler()
-
         self.array_model = array_model
-        self._logger.debug(f"Building ArrayLayout {self.array_model.layout_name}")
-
-        # Load parameters
-        if corsika_parameters_file is None:
-            corsika_parameters_file = self.io_handler.get_input_data_file(
-                "parameters", "corsika_parameters.yml"
-            )
-
-        self._corsika_parameters = self.load_corsika_parameters_file(corsika_parameters_file)
-
-        corsika_config_data = collect_data_from_file_or_dict(
-            corsika_config_file, corsika_config_data
-        )
-        self.set_user_parameters(corsika_config_data)
+        self._corsika_default_parameters = self._load_corsika_default_parameters_file()
+        self.config = self.setup_configuration()
         self._is_file_updated = False
 
     def __repr__(self):
+        """CorsikaConfig representation."""
         text = (
             f"<class {self.__class__.__name__}> "
             f"(site={self.array_model.site}, "
@@ -112,51 +71,31 @@ class CorsikaConfig:
         )
         return text
 
-    @staticmethod
-    def load_corsika_parameters_file(corsika_parameters_file):
+    def _load_corsika_default_parameters_file(self):
         """
-        Load CORSIKA parameters from the provided corsika_parameters_file.
+        Load CORSIKA parameters.
 
-        Parameters
-        ----------
-        corsika_parameters_file: str or Path
-            File with CORSIKA parameters.
+        TODO - will be replaced by getters to corsika configuration database.
 
         Returns
         -------
         corsika_parameters: dict
             Dictionary with CORSIKA parameters.
         """
-
-        logger = logging.getLogger(__name__)
-        logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
-        corsika_parameters = gen.collect_data_from_file_or_dict(
-            file_name=corsika_parameters_file, in_dict=None
+        corsika_parameters_file = self.io_handler.get_input_data_file(
+            "parameters", "corsika_parameters.yml"
         )
-        return corsika_parameters
+        self._logger.debug(f"Reading CORSIKA default parameters from {corsika_parameters_file}")
+        return gen.collect_data_from_file_or_dict(file_name=corsika_parameters_file, in_dict=None)
 
-    def set_user_parameters(self, corsika_config_data):
+    def setup_configuration(self):
         """
-        Set user parameters from a dict.
+        Set configuration parameters for CORSIKA.
 
-        Parameters
-        ----------
-        corsika_config_data: dict
-            Contains the user parameters. Ex.
+        Assumes that values are already converted to CORSIKA-consistent units.
 
-            .. code-block:: python
-
-                corsika_config_data = {
-                    'primary': 'proton',
-                    'nshow': 10000,
-                    'nrun': 1,
-                    'zenith': 20 * u.deg,
-                    'viewcone': 5 * u.deg,
-                    'erange': [10 * u.GeV, 100 * u.TeV],
-                    'eslope': -2,
-                    'phi': 0 * u.deg,
-                    'cscat': [10, 1500 * u.m, 0]
-                }
+        TODO - fix limits for azimuth and zenith
+        TODO - not clear if this is needed with or without units
 
         Raises
         ------
@@ -166,124 +105,71 @@ class CorsikaConfig:
         MissingRequiredInputInCorsikaConfigDataError
             If any required user parameter is missing.
         """
-
-        self._logger.debug("Setting user parameters from corsika_config_data")
-        self._user_parameters = {}
-
-        user_pars = self._corsika_parameters["USER_PARAMETERS"]
-
-        # Collecting all parameters given as arguments
-        for key_args, value_args in corsika_config_data.items():
-            # Looping over USER_PARAMETERS and searching for a match
-            is_identified = False
-            for par_name, par_info in user_pars.items():
-                if key_args.upper() != par_name and key_args.upper() not in par_info["names"]:
-                    continue
-                # Matched parameter
-                validated_value_args = self._validate_and_convert_argument(
-                    par_name, par_info, value_args
-                )
-                self._user_parameters[par_name] = validated_value_args
-                is_identified = True
-
-            # Raising error for an unidentified input.
-            if not is_identified:
-                msg = f"Argument {key_args} cannot be identified."
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-
-        # Checking for parameters with default option
-        # If it is not given, filling it with the default value
-        for par_name, par_info in user_pars.items():
-            if par_name in self._user_parameters:
-                continue
-            if "default" in par_info.keys():
-                validated_value = self._validate_and_convert_argument(
-                    par_name, par_info, par_info["default"]
-                )
-                self._user_parameters[par_name] = validated_value
-            else:
-                msg = f"Required parameters {par_name} was not given (there may be more)."
-                self._logger.error(msg)
-                raise MissingRequiredInputInCorsikaConfigDataError(msg)
-
-        # Converting AZM to CORSIKA reference (PHIP)
-        phip = 180.0 - self._user_parameters["AZM"][0]
-        phip = phip + 360.0 if phip < 0.0 else phip
-        phip = phip - 360.0 if phip >= 360.0 else phip
-        self._user_parameters["PHIP"] = [phip, phip]
-
+        if self.args_dict is None:
+            return None
+        self._logger.debug("Setting CORSIKA parameters ")
         self._is_file_updated = False
 
-    def _validate_and_convert_argument(self, par_name, par_info, value_args_in):
+        # lists provides as strings
+        e_range = self.args_dict["erange"].split(" ")
+        view_cone = self.args_dict["viewcone"].split(" ")
+        core_scatter = self.args_dict["core_scatter"].split(" ")
+
+        return {
+            "EVTNR": [1],
+            "RUNNR": [10],
+            "NSHOW": [self.args_dict["nshow"]],
+            "PRMPAR": [
+                self._convert_primary_input_and_store_primary_name(self.args_dict["primary"])
+            ],
+            "ESLOPE": [self.args_dict["eslope"]],
+            "ERANGE": [
+                float(e_range[0]) * u.Unit(e_range[1]).to("GeV"),
+                float(e_range[2]) * u.Unit(e_range[3]).to("GeV"),
+            ],
+            "THETAP": [
+                float(self.args_dict["zenith_angle"].to("deg").value),
+                float(self.args_dict["zenith_angle"].to("deg").value),
+            ],
+            "PHIP": [
+                self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
+                self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
+            ],
+            "VIEWCONE": [
+                float(view_cone[0]) * u.Unit(view_cone[1]).to("deg"),
+                float(view_cone[2]) * u.Unit(view_cone[3]).to("deg"),
+            ],
+            "CSCAT": [
+                int(core_scatter[0]),
+                float(core_scatter[1]) * u.Unit(core_scatter[2]).to("cm"),
+                0.0,
+            ],
+        }
+
+    def _rotate_azimuth_by_180deg(self, az):
         """
-        Validate input user parameter and convert it to the right units, if needed.
-        Returns the validated arguments in a list.
+        Convert azimuth angle to the CORSIKA coordinate system.
 
         Parameters
         ----------
-        par_name: str
-            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...).
-        par_info: dict
-            Dictionary with parameter data.
-        value_args_in: list
-            List of values for the parameter.
+        az: float
+            Azimuth angle in degrees.
+
+        Returns
+        -------
+        float
+            Azimuth angle in degrees in the CORSIKA coordinate system.
         """
-
-        # Turning value_args into a list, if it is not.
-        value_args = self._convert_to_quantities(value_args_in)
-
-        if len(value_args) == 1 and par_name in ["THETAP", "AZM"]:
-            # Fixing single value zenith or azimuth angle.
-            # THETAP and AZM should be written as a 2 values range in the CORSIKA input file
-            value_args = value_args * 2
-        elif len(value_args) == 1 and par_name == "VIEWCONE":
-            # Fixing single value viewcone.
-            # VIEWCONE should be written as a 2 values range in the CORSIKA input file
-            value_args = [0.0 * u.Unit(par_info["unit"][0]), value_args[0]]
-        elif par_name == "PRMPAR":
-            value_args = self._convert_primary_input_and_store_primary_name(value_args)
-        elif par_name == "ESLOPE":
-            self.eslope = value_args[0]
-
-        if len(value_args) != par_info["len"]:
-            msg = f"CORSIKA input entry with wrong len: {par_name}"
-            self._logger.error(msg)
-            raise InvalidCorsikaInputError(msg)
-
-        if "unit" not in par_info.keys():
-            return value_args
-
-        # Turning par_info['unit'] into a list, if it is not.
-        par_unit = gen.copy_as_list(par_info["unit"])
-
-        # Checking units and converting them, if needed.
-        value_args_with_units = []
-        for arg, unit in zip(value_args, par_unit):
-            if unit is None:
-                value_args_with_units.append(arg)
-                continue
-
-            if isinstance(arg, str):
-                arg = u.quantity.Quantity(arg)
-
-            if not isinstance(arg, u.quantity.Quantity):
-                msg = f"CORSIKA input given without unit: {par_name}"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-            if not arg.unit.is_equivalent(unit):
-                msg = f"CORSIKA input given with wrong unit: {par_name}"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-
-            value_args_with_units.append(arg.to(unit).value)
-
-        return value_args_with_units
+        phi = 180.0 - az
+        phi = phi + 360.0 if phi < 0.0 else phi
+        phi = phi - 360.0 if phi >= 360.0 else phi
+        return phi
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
-        Convert a primary name into the proper CORSIKA particle ID and store its name in \
-        the self.primary attribute.
+        Convert a primary name into the CORSIKA particle ID.
+
+        TODO - this should be replaced by using the appropriate package.
 
         Parameters
         ----------
@@ -300,17 +186,17 @@ class CorsikaConfig:
         int
             Respective number of the given primary.
         """
-        for prim_name, prim_info in self._corsika_parameters["PRIMARIES"].items():
-            if value[0].upper() == prim_name or value[0].upper() in prim_info["names"]:
+        for prim_name, prim_info in self._corsika_default_parameters["PRIMARIES"].items():
+            if value.upper() == prim_name or value.upper() in prim_info["names"]:
                 self.primary = prim_name.lower()
-                return [prim_info["number"]]
+                return prim_info["number"]
         msg = f"Primary not valid: {value}"
         self._logger.error(msg)
         raise InvalidCorsikaInputError(msg)
 
-    def get_user_parameter(self, par_name):
+    def get_config_parameter(self, par_name):
         """
-        Get the value of a user parameter.
+        Get value of CORSIKA configuration parameter.
 
         Parameters
         ----------
@@ -328,93 +214,90 @@ class CorsikaConfig:
             Value(s) of the parameter.
         """
         try:
-            par_value = self._user_parameters[par_name.upper()]
-        except KeyError:
-            self._logger.warning(f"Parameter {par_name} is not a user parameter")
-            raise
+            par_value = self.config[par_name.upper()]
+        except KeyError as exc:
+            self._logger.error(f"Parameter {par_name} is not a CORSIKA config parameter")
+            raise exc
 
         return par_value if len(par_value) > 1 else par_value[0]
 
-    def print_user_parameters(self):
-        """Print user parameters for inspection."""
-        for par, value in self._user_parameters.items():
+    def print_config_parameter(self):
+        """Print CORSIKA config parameters for inspection."""
+        for par, value in self.config.items():
             print(f"{par} = {value}")
+
+    @staticmethod
+    def _get_text_single_line(pars):
+        text = ""
+        for par, values in pars.items():
+            line = par + " "
+            for v in values:
+                line += str(v) + " "
+            line += "\n"
+            text += line
+        return text
+
+    def _get_text_multiple_lines(self, pars):
+        text = ""
+        for par, value_list in pars.items():
+            for value in value_list:
+                new_pars = {par: value}
+                text += self._get_text_single_line(new_pars)
+        return text
 
     def export_input_file(self, use_multipipe=False):
         """
-        Create and export CORSIKA input file.
+        Generate a CORSIKA input file.
 
         Parameters
         ----------
         use_multipipe: bool
             Whether to set the CORSIKA Inputs file to pipe
-            the output directly to sim_telarray or not.
+            the output directly to sim_telarray.
         """
-
         sub_dir = "corsika_simtel" if use_multipipe else "corsika"
-        self._set_output_file_and_directory(sub_dir)
+        _output_generic_file_name = self._set_output_file_and_directory(sub_dir)
         self._logger.debug(f"Exporting CORSIKA input file to {self.config_file_path}")
-
-        def _get_text_single_line(pars):
-            text = ""
-            for par, values in pars.items():
-                line = par + " "
-                for v in values:
-                    line += str(v) + " "
-                line += "\n"
-                text += line
-            return text
-
-        def _get_text_multiple_lines(pars):
-            text = ""
-            for par, value_list in pars.items():
-                for value in value_list:
-                    new_pars = {par: value}
-                    text += _get_text_single_line(new_pars)
-            return text
+        azm = int(self.args_dict["azimuth_angle"].to("deg").value)
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
-            # Removing AZM entry first
-            _user_pars_temp = copy.copy(self._user_parameters)
-            _user_pars_temp.pop("AZM")
-            text_parameters = _get_text_single_line(_user_pars_temp)
+            text_parameters = self._get_text_single_line(self.config)
             file.write(text_parameters)
 
             file.write("\n* [ SITE PARAMETERS ]\n")
-            text_site_parameters = _get_text_single_line(
+            text_site_parameters = self._get_text_single_line(
                 self.array_model.site_model.get_corsika_site_parameters(config_file_style=True)
             )
             file.write(text_site_parameters)
 
-            # Defining the IACT variables for the output file name
-            file.write("\n")
+            file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary}\n")
-            file.write(f"IACT setenv ZA {int(self._user_parameters['THETAP'][0])}\n")
-            file.write(f"IACT setenv AZM {int(self._user_parameters['AZM'][0])}\n")
+            file.write(f"IACT setenv ZA {int(self.config['THETAP'][0])}\n")
+            file.write(f"IACT setenv AZM {azm}\n")
 
             file.write("\n* [ SEEDS ]\n")
             self._write_seeds(file)
 
             file.write("\n* [ TELESCOPES ]\n")
-            telescope_list_text = self.get_corsika_input_list()
+            telescope_list_text = self.get_corsika_telescope_list()
             file.write(telescope_list_text)
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
-            text_interaction_flags = _get_text_single_line(
-                self._corsika_parameters["INTERACTION_FLAGS"]
+            text_interaction_flags = self._get_text_single_line(
+                self._corsika_default_parameters["INTERACTION_FLAGS"]
             )
             file.write(text_interaction_flags)
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
-            text_cherenkov = _get_text_single_line(
-                self._corsika_parameters["CHERENKOV_EMISSION_PARAMETERS"]
+            text_cherenkov = self._get_text_single_line(
+                self._corsika_default_parameters["CHERENKOV_EMISSION_PARAMETERS"]
             )
             file.write(text_cherenkov)
 
             file.write("\n* [ DEBUGGING OUTPUT PARAMETERS ]\n")
-            text_debugging = _get_text_single_line(
-                self._corsika_parameters["DEBUGGING_OUTPUT_PARAMETERS"]
+            text_debugging = self._get_text_single_line(
+                self._corsika_default_parameters["DEBUGGING_OUTPUT_PARAMETERS"]
             )
             file.write(text_debugging)
 
@@ -423,10 +306,12 @@ class CorsikaConfig:
                 run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
                 file.write(f"TELFIL |{str(run_cta_script)}\n")
             else:
-                file.write(f"TELFIL {self._output_generic_file_name}\n")
+                file.write(f"TELFIL {_output_generic_file_name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
-            text_iact = _get_text_multiple_lines(self._corsika_parameters["IACT_TUNING_PARAMETERS"])
+            text_iact = self._get_text_multiple_lines(
+                self._corsika_default_parameters["IACT_TUNING_PARAMETERS"]
+            )
             file.write(text_iact)
 
             file.write("\nEXIT")
@@ -463,21 +348,20 @@ class CorsikaConfig:
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
-
+        # azm of simtools is used (similar to sim_telarray)
+        azm = int(self.args_dict["azimuth_angle"].to("deg").value)
         file_label = f"_{self.label}" if self.label is not None else ""
         view_cone = ""
-        if self._user_parameters["VIEWCONE"][0] != 0 or self._user_parameters["VIEWCONE"][1] != 0:
+        if self.config["VIEWCONE"][0] != 0 or self.config["VIEWCONE"][1] != 0:
             view_cone = (
-                f"_cone{int(self._user_parameters['VIEWCONE'][0]):d}-"
-                f"{int(self._user_parameters['VIEWCONE'][1]):d}"
+                f"_cone{int(self.config['VIEWCONE'][0]):d}-" f"{int(self.config['VIEWCONE'][1]):d}"
             )
         file_name = (
             f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
-            f"za{int(self._user_parameters['THETAP'][0]):03}-"
-            f"azm{int(self._user_parameters['AZM'][0]):03}deg"
+            f"za{int(self.config['THETAP'][0]):03}-"
+            f"azm{azm:03}deg"
             f"{view_cone}{file_label}"
         )
-
         if file_type == "config_tmp":
             if run_number is not None:
                 return f"corsika_config_run{run_number:06}_{file_name}.txt"
@@ -488,8 +372,8 @@ class CorsikaConfig:
             # The XXXXXX will be replaced by the run number after the pfp step with sed
             file_name = (
                 f"corsika_runXXXXXX_"
-                f"{self.primary}_za{int(self._user_parameters['THETAP'][0]):03}deg_"
-                f"azm{int(self._user_parameters['AZM'][0]):03}deg"
+                f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
+                f"azm{azm:03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
             return file_name
@@ -499,13 +383,26 @@ class CorsikaConfig:
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     def _set_output_file_and_directory(self, sub_dir="corsika"):
+        """
+        Set output file names and directories.
+
+        Parameters
+        ----------
+        sub_dir: str
+            Sub-directory where the files will be stored.
+
+        Returns
+        -------
+        str
+            Output file name.
+        """
         config_file_name = self.get_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
         self._logger.info(f"Creating directory {file_directory}, if needed.")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)
 
-        self._output_generic_file_name = self.get_file_name(file_type="output_generic")
+        return self.get_file_name(file_type="output_generic")
 
     def _write_seeds(self, file):
         """
@@ -516,10 +413,9 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self._user_parameters["PRMPAR"][0] + self._user_parameters["RUNNR"][0]
+        random_seed = self.config["PRMPAR"][0] + self.config["RUNNR"][0]
         rng = np.random.default_rng(random_seed)
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
-
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
@@ -536,43 +432,7 @@ class CorsikaConfig:
             self.export_input_file(use_multipipe)
         return self.config_file_path
 
-    def _convert_to_quantities(self, value_args):
-        """
-        Convert a list of value, unit pairs into a list of astropy quantities.
-        (note similarity to simtools.general.validate_config_data; unfortunately
-        minor differences are required as CORSIKA is very specific about the
-        input parameter representation).
-
-        Parameters
-        ----------
-        value_args: list
-            List of value/unit pairs (e.g., ["10 m", "20 m"])
-        Returns
-        -------
-        list
-            List of astropy quantities (or strings)
-        """
-
-        if isinstance(value_args, str):
-            return [value_args]
-        if isinstance(value_args, dict) and "value" in value_args and "unit" in value_args:
-            return [value_args["value"] * u.Unit(value_args["unit"])]
-        if isinstance(value_args, list):
-            return [
-                (
-                    value
-                    if isinstance(value, u.Quantity)
-                    else (
-                        value["value"] * u.Unit(value["unit"])
-                        if isinstance(value, dict) and "value" in value and "unit" in value
-                        else value
-                    )
-                )
-                for value in value_args
-            ]
-        return [value_args]
-
-    def get_corsika_input_list(self):
+    def get_corsika_telescope_list(self):
         """
         List of telescope positions in the format required for the CORSIKA input file.
 
@@ -581,7 +441,6 @@ class CorsikaConfig:
         str
             Piece of text to be added to the CORSIKA input file.
         """
-
         corsika_input_list = ""
         for telescope_name, telescope in self.array_model.telescope_model.items():
             positions = telescope.get_parameter_value_with_unit("array_element_position_ground")

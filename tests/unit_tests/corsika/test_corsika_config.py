@@ -1,16 +1,11 @@
 #!/usr/bin/python3
 
 import logging
-from copy import copy
 
 import pytest
 from astropy import units as u
 
-from simtools.corsika.corsika_config import (
-    CorsikaConfig,
-    InvalidCorsikaInputError,
-    MissingRequiredInputInCorsikaConfigDataError,
-)
+from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputError
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -20,14 +15,16 @@ logger.setLevel(logging.DEBUG)
 def corsika_config_data():
     return {
         "nshow": 100,
+        "start_run": 0,
         "nrun": 10,
-        "zenith": 20 * u.deg,
-        "viewcone": 5 * u.deg,
-        "erange": [10 * u.GeV, 10 * u.TeV],
+        "zenith_angle": 20 * u.deg,
+        "azimuth_angle": 0.0 * u.deg,
+        "viewcone": "0.0 deg 5.0 deg",
+        "erange": "10.0 GeV 10.0 TeV",
         "eslope": -2,
-        "phi": 0 * u.deg,
-        "cscat": [10, 1500 * u.m, 0],
+        "core_scatter": "10 1400.0 m",
         "primary": "proton",
+        "data_directory": "simtools-output",
     }
 
 
@@ -36,30 +33,37 @@ def corsika_config(io_handler, corsika_config_data, array_model_south):
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
         label="test-corsika-config",
-        corsika_config_data=corsika_config_data,
+        args_dict=corsika_config_data,
     )
     return corsika_config
 
 
 def test_repr(corsika_config):
-    logger.info("test_repr")
-    text = repr(corsika_config)
-
-    assert "site" in text
+    assert "site" in repr(corsika_config)
 
 
-def test_user_parameters(corsika_config):
+def test_setup_configuration(io_handler, corsika_config_data, caplog):
     logger.info("test_user_parameters")
-
-    assert corsika_config.get_user_parameter("nshow") == 100
-    assert corsika_config.get_user_parameter("thetap") == [20, 20]
-    assert corsika_config.get_user_parameter("erange") == [10.0, 10000.0]
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=corsika_config_data,
+    )
+    assert cc.get_config_parameter("nshow") == 100
+    assert cc.get_config_parameter("thetap") == [20, 20]
+    assert cc.get_config_parameter("erange") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert corsika_config.get_user_parameter("azm") == [0.0, 0.0]
-    assert corsika_config.get_user_parameter("phip") == [180.0, 180.0]
-
+    assert cc.get_config_parameter("phip") == [180.0, 180.0]
+    assert cc.get_config_parameter("cscat") == [10, 140000.0, 0]
     with pytest.raises(KeyError):
-        corsika_config.get_user_parameter("inexistent_par")
+        cc.get_config_parameter("not_really_a_parameter")
+    assert "Parameter not_really_a_parameter" in caplog.text
+
+
+def test_print_config_parameter(corsika_config, capsys):
+    logger.info("test_print_config_parameter")
+    corsika_config.print_config_parameter()
+    assert "NSHOW" in capsys.readouterr().out
 
 
 def test_export_input_file(corsika_config):
@@ -78,106 +82,6 @@ def test_export_input_file_multipipe(corsika_config):
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" in f.read()
-
-
-def test_wrong_par_in_config_data(corsika_config, corsika_config_data, array_model_north):
-    logger.info("test_wrong_primary_name")
-    new_config_data = copy(corsika_config_data)
-    new_config_data["wrong_par"] = 20 * u.m
-    with pytest.raises(InvalidCorsikaInputError):
-        corsika_test_config = CorsikaConfig(
-            array_model=array_model_north,
-            label="test-corsika-config",
-            corsika_config_data=new_config_data,
-        )
-        corsika_test_config.print_user_parameters()
-
-
-def test_units_of_config_data(corsika_config, corsika_config_data, array_model_north):
-    logger.info("test_units_of_config_data")
-    new_config_data = copy(corsika_config_data)
-    new_config_data["zenith"] = 20 * u.m
-    with pytest.raises(InvalidCorsikaInputError):
-        corsika_test_config = CorsikaConfig(
-            array_model=array_model_north,
-            label="test-corsika-config",
-            corsika_config_data=new_config_data,
-        )
-        corsika_test_config.print_user_parameters()
-
-
-def test_len_of_config_data(corsika_config, corsika_config_data, array_model_north):
-    logger.info("test_len_of_config_data")
-    new_config_data = copy(corsika_config_data)
-    new_config_data["erange"] = [20 * u.TeV]
-    with pytest.raises(InvalidCorsikaInputError):
-        corsika_test_config = CorsikaConfig(
-            array_model=array_model_north,
-            label="test-corsika-config",
-            corsika_config_data=new_config_data,
-        )
-        corsika_test_config.print_user_parameters()
-
-
-def test_wrong_primary_name(corsika_config, corsika_config_data, array_model_north):
-    logger.info("test_wrong_primary_name")
-    new_config_data = copy(corsika_config_data)
-    new_config_data["primary"] = "rock"
-    with pytest.raises(InvalidCorsikaInputError):
-        corsika_test_config = CorsikaConfig(
-            array_model=array_model_north,
-            label="test-corsika-config",
-            corsika_config_data=new_config_data,
-        )
-        corsika_test_config.print_user_parameters()
-
-
-def test_missing_input(corsika_config, corsika_config_data, array_model_north):
-    logger.info("test_missing_input")
-    new_config_data = copy(corsika_config_data)
-    new_config_data.pop("primary")
-    with pytest.raises(MissingRequiredInputInCorsikaConfigDataError):
-        corsika_test_config = CorsikaConfig(
-            array_model=array_model_north,
-            label="test-corsika-config",
-            corsika_config_data=new_config_data,
-        )
-        corsika_test_config.print_user_parameters()
-
-
-def test_set_user_parameters(corsika_config_data, corsika_config):
-    logger.info("test_set_user_parameters")
-    new_config_data = copy(corsika_config_data)
-    new_config_data["zenith"] = 0 * u.deg
-    new_corsika_config = copy(corsika_config)
-    new_corsika_config.set_user_parameters(new_config_data)
-
-    assert new_corsika_config.get_user_parameter("thetap") == [0, 0]
-
-
-def test_config_data_from_yaml_file(io_handler, array_model_south):
-    logger.info("test_config_data_from_yaml_file")
-    cc = CorsikaConfig(
-        array_model=array_model_south,
-        label="test-corsika-config",
-        corsika_config_file="tests/resources/corsikaConfigTest.yml",
-    )
-    cc.print_user_parameters()
-
-    test_dict = {
-        "RUNNR": [10],
-        "NSHOW": [100],
-        "PRMPAR": [14],
-        "ERANGE": [0.01, 10.0],
-        "ESLOPE": [-2],
-        "THETAP": [20.0, 20.0],
-        "AZM": [0.0, 0.0],
-        "CSCAT": [10, 150000.0, 0],
-        "VIEWCONE": [0.0, 5.0],
-        "EVTNR": [1],
-        "PHIP": [180.0, 180.0],
-    }
-    assert test_dict == cc._user_parameters
 
 
 def test_get_file_name(corsika_config, io_handler):
@@ -204,19 +108,62 @@ def test_get_file_name(corsika_config, io_handler):
         corsika_config.get_file_name("foobar")
 
 
-def test_convert_to_quantities(corsika_config):
+def test_convert_primary_input_and_store_primary_name(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert cc._convert_primary_input_and_store_primary_name("Gamma") == 1
+    assert cc._convert_primary_input_and_store_primary_name("proton") == 14
+    assert cc._convert_primary_input_and_store_primary_name("Helium") == 402
+    assert cc._convert_primary_input_and_store_primary_name("IRON") == 5626
 
-    assert corsika_config._convert_to_quantities("10 m") == [10 * u.m]
-    assert corsika_config._convert_to_quantities("simple_string") == ["simple_string"]
-    assert corsika_config._convert_to_quantities({"value": 10, "unit": "m"}) == [10 * u.m]
-    assert corsika_config._convert_to_quantities({"not_value": 10, "not_unit": "m"}) == [
-        {"not_value": 10, "not_unit": "m"}
-    ]
-    assert corsika_config._convert_to_quantities(["10 m", "20 m", "simple_string"]) == [
-        10 * u.m,
-        20 * u.m,
-        "simple_string",
-    ]
-    assert corsika_config._convert_to_quantities(
-        [{"value": 10, "unit": "m"}, "20 m", "simple_string"]
-    ) == [10 * u.m, 20 * u.m, "simple_string"]
+    with pytest.raises(InvalidCorsikaInputError):
+        cc._convert_primary_input_and_store_primary_name("banana")
+
+
+def test_load_corsika_default_parameters_file(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    corsika_parameters = cc._load_corsika_default_parameters_file()
+    assert isinstance(corsika_parameters, dict)
+    assert "CHERENKOV_EMISSION_PARAMETERS" in corsika_parameters
+
+
+def test_rotate_azimuth_by_180deg(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(0.0)) == 180.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(360.0)) == 180.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(180.0)) == 0.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
+
+
+def test_get_text_single_line(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert cc._get_text_single_line({"EVTNR": [1], "RUNNR": [10]}) == "EVTNR 1 \nRUNNR 10 \n"
+
+
+def test_get_text_multiple_lines(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert (
+        cc._get_text_multiple_lines(
+            {"IACT": [["SPLIT_AUTO", "15M"], ["IO_BUFFER", "800MB"], ["MAX_BUNCHES", "1000000"]]}
+        )
+        == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
+    )
