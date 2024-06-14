@@ -408,7 +408,7 @@ def main():
                 site_model=site_model,
                 default_le_config=le_config,
                 le_application=le_application,
-                simtel_source_path=args_dict["simtel_path"],
+                simtel_path=args_dict["simtel_path"],
                 light_source_type=args_dict["light_source_type"],
             )
             run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
@@ -467,7 +467,7 @@ def main():
             site_model=site_model,
             default_le_config=default_le_config,
             le_application=le_application,
-            simtel_source_path=args_dict["simtel_path"],
+            simtel_path=args_dict["simtel_path"],
             light_source_type=args_dict["light_source_type"],
         )
         run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
