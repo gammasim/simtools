@@ -256,12 +256,40 @@ class RayTracing:
         cm_to_deg = 180.0 / pi / focal_length
 
         self._psf_images = {}
+
+        # Call the helper function to process off-axis angles and mirrors
+        _rows = self._process_off_axis_and_mirror(
+            self._get_all_mirrors(),
+            focal_length,
+            tel_transmission_pars,
+            cm_to_deg,
+            do_analyze,
+            use_rx,
+            containment_fraction,
+        )
+
+        if do_analyze:
+            self._store_results(_rows)
+        self._has_results = True
+        if export:
+            self.export_results()
+
+    def _process_off_axis_and_mirror(
+        self,
+        all_mirrors,
+        focal_length,
+        tel_transmission_pars,
+        cm_to_deg,
+        do_analyze,
+        use_rx,
+        containment_fraction,
+    ):
         _rows = []
 
-        all_mirrors = self._get_all_mirrors()
         for this_off_axis in self.config.off_axis_angle:
             for this_mirror in all_mirrors:
                 self._logger.debug(f"Analyzing RayTracing for off_axis={this_off_axis}")
+
                 if self.config.single_mirror_mode:
                     self._logger.debug(f"mirror_number={this_mirror}")
 
@@ -284,13 +312,10 @@ class RayTracing:
 
                     if self.config.single_mirror_mode:
                         _current_results += (this_mirror,)
+
                     _rows.append(_current_results)
 
-        if do_analyze:
-            self._store_results(_rows)
-        self._has_results = True
-        if export:
-            self.export_results()
+        return _rows
 
     def _get_telescope_transmission_params(self, no_tel_transmission):
         return (
