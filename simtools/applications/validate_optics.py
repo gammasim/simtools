@@ -85,10 +85,9 @@ from simtools.ray_tracing import RayTracing
 
 def _parse(label):
     """
-    Parse command line configuratio
+    Parse command line configuration.
 
     """
-
     config = configurator.Configurator(
         label=label,
         description=(
@@ -157,7 +156,7 @@ def main():
 
     ray = RayTracing.from_kwargs(
         telescope_model=tel_model,
-        simtel_source_path=args_dict["simtel_path"],
+        simtel_path=args_dict["simtel_path"],
         source_distance=args_dict["src_distance"] * u.km,
         zenith_angle=args_dict["zenith"] * u.deg,
         off_axis_angle=np.linspace(
