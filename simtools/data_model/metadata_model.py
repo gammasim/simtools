@@ -218,31 +218,60 @@ def _fill_defaults(schema, observatory="CTA"):
     -------
     dict
         Dictionary with default values.
-
     """
-
     defaults = {observatory: {}}
-    schema = _resolve_references(schema[observatory])
-
-    def process_property(prop, prop_schema, current_dict):
-        if "default" in prop_schema:
-            current_dict[prop] = prop_schema["default"]
-        elif "type" in prop_schema:
-            if prop_schema["type"] == "object":
-                current_dict[prop] = {}
-                _fill_defaults_recursive(prop_schema, current_dict[prop])
-            elif prop_schema["type"] == "array":
-                current_dict[prop] = [{}]
-                if "items" in prop_schema and isinstance(prop_schema["items"], dict):
-                    _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
-
-    def _fill_defaults_recursive(subschema, current_dict):
-        if "properties" not in subschema:
-            msg = "Missing 'properties' key in schema."
-            _logger.error(msg)
-            raise KeyError(msg)
-        for prop, prop_schema in subschema["properties"].items():
-            process_property(prop, prop_schema, current_dict)
-
-    _fill_defaults_recursive(schema, defaults[observatory])
+    resolved_schema = _resolve_references(schema[observatory])
+    _fill_defaults_recursive(resolved_schema, defaults[observatory])
     return defaults
+
+
+def _fill_defaults_recursive(subschema, current_dict):
+    """
+    Recursively fill default values from the subschema into the current dictionary.
+
+    Parameters
+    ----------
+    subschema: dict
+        Subschema describing part of the input data.
+    current_dict: dict
+        Current dictionary to fill with default values.
+    """
+    if "properties" not in subschema:
+        _raise_missing_properties_error()
+
+    for prop, prop_schema in subschema["properties"].items():
+        _process_property(prop, prop_schema, current_dict)
+
+
+def _process_property(prop, prop_schema, current_dict):
+    """
+    Process each property and fill the default values accordingly.
+
+    Parameters
+    ----------
+    prop: str
+        Property name.
+    prop_schema: dict
+        Schema of the property.
+    current_dict: dict
+        Current dictionary to fill with default values.
+    """
+    if "default" in prop_schema:
+        current_dict[prop] = prop_schema["default"]
+    elif "type" in prop_schema:
+        if prop_schema["type"] == "object":
+            current_dict[prop] = {}
+            _fill_defaults_recursive(prop_schema, current_dict[prop])
+        elif prop_schema["type"] == "array":
+            current_dict[prop] = [{}]
+            if "items" in prop_schema and isinstance(prop_schema["items"], dict):
+                _fill_defaults_recursive(prop_schema["items"], current_dict[prop][0])
+
+
+def _raise_missing_properties_error():
+    """
+    Raise an error when the 'properties' key is missing in the schema.
+    """
+    msg = "Missing 'properties' key in schema."
+    _logger.error(msg)
+    raise KeyError(msg)
