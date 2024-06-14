@@ -15,7 +15,7 @@ CTA_SIMPIPE:
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
     ERANGE: "3 GeV 330 TeV"
-    CSCAT: "10 1400 m"
+    CORE_SCATTER: "10 1400 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
