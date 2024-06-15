@@ -19,7 +19,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         Instance of TelescopeModel class.
     label: str
         Instance label. Important for output file naming.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of sim_telarray installation.
     file_simtel: str or Path
         Location of the sim_telarray testeff tool output file.
@@ -33,7 +33,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self,
         telescope_model,
         label=None,
-        simtel_source_path=None,
+        simtel_path=None,
         file_simtel=None,
         file_log=None,
         zenith_angle=None,
@@ -43,7 +43,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorCameraEfficiency")
 
-        super().__init__(label=label, simtel_source_path=simtel_source_path)
+        super().__init__(label=label, simtel_path=simtel_path)
 
         self._telescope_model = telescope_model
         self.label = label if label is not None else self._telescope_model.label
@@ -117,7 +117,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
-        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/testeff"))
+        command = str(self._simtel_path.joinpath("sim_telarray/bin/testeff"))
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
@@ -149,7 +149,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" >{self._file_simtel}"
 
         # Moving to sim_telarray directory before running
-        command = f"cd {self._simtel_source_path.joinpath('sim_telarray')} && {command}"
+        command = f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
 
         return command
 
