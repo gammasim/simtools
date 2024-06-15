@@ -28,7 +28,7 @@ class CameraEfficiency:
         Instance of the TelescopeModel class.
     site_model: SiteModel
         Instance of the SiteModel class.
-    simtel_source_path: str (or Path)
+    simtel_path: str (or Path)
         Location of sim_telarray installation.
     label: str
         Instance label, optional.
@@ -44,7 +44,7 @@ class CameraEfficiency:
         self,
         telescope_model,
         site_model,
-        simtel_source_path,
+        simtel_path,
         label=None,
         config_data=None,
         config_file=None,
@@ -53,7 +53,7 @@ class CameraEfficiency:
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_source_path = simtel_source_path
+        self._simtel_path = simtel_path
         self._telescope_model = self._validate_telescope_model(telescope_model)
         self._site_model = site_model
         self.label = label if label is not None else self._telescope_model.label
@@ -102,7 +102,7 @@ class CameraEfficiency:
                 "telescope_model",
                 "site_model",
                 "label",
-                "simtel_source_path",
+                "simtel_path",
                 "test",
             ],
             **kwargs,
@@ -167,7 +167,7 @@ class CameraEfficiency:
         self._logger.info("Simulating CameraEfficiency")
 
         simtel = SimulatorCameraEfficiency(
-            simtel_source_path=self._simtel_source_path,
+            simtel_path=self._simtel_path,
             telescope_model=self._telescope_model,
             zenith_angle=self.config.zenith_angle,
             file_simtel=self._file["simtel"],
