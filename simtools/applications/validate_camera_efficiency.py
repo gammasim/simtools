@@ -159,7 +159,7 @@ def main():
     ce = CameraEfficiency(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_source_path=args_dict["simtel_path"],
+        simtel_path=args_dict["simtel_path"],
         label=label,
         config_data={
             "zenith_angle": args_dict["zenith_angle"],
