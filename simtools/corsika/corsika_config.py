@@ -54,8 +54,6 @@ class CorsikaConfig:
         self.args_dict = args_dict
         self.config_file_path = None
 
-        print("FFFFFF", args_dict)
-
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
         self._corsika_default_parameters = self._load_corsika_default_parameters_file()
@@ -93,6 +91,7 @@ class CorsikaConfig:
         Set configuration parameters for CORSIKA.
 
         Assumes that values are already converted to CORSIKA-consistent units.
+        Add configuration used for file name generation.
 
         TODO - fix limits for azimuth and zenith
         TODO - not clear if this is needed with or without units
@@ -144,6 +143,7 @@ class CorsikaConfig:
                 float(core_scatter[1]) * u.Unit(core_scatter[2]).to("cm"),
                 0.0,
             ],
+            "azimuth_angle": [int(self.args_dict["azimuth_angle"].to("deg").value)],
         }
 
     def _rotate_azimuth_by_180deg(self, az):
@@ -214,7 +214,7 @@ class CorsikaConfig:
             Value(s) of the parameter.
         """
         try:
-            par_value = self.config[par_name.upper()]
+            par_value = self.config[par_name]
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} is not a CORSIKA config parameter")
             raise exc
@@ -258,7 +258,6 @@ class CorsikaConfig:
         sub_dir = "corsika_simtel" if use_multipipe else "corsika"
         _output_generic_file_name = self._set_output_file_and_directory(sub_dir)
         self._logger.debug(f"Exporting CORSIKA input file to {self.config_file_path}")
-        azm = int(self.args_dict["azimuth_angle"].to("deg").value)
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
@@ -274,7 +273,7 @@ class CorsikaConfig:
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary}\n")
             file.write(f"IACT setenv ZA {int(self.config['THETAP'][0])}\n")
-            file.write(f"IACT setenv AZM {azm}\n")
+            file.write(f"IACT setenv AZM {self.config['azimuth_angle'][0]}\n")
 
             file.write("\n* [ SEEDS ]\n")
             self._write_seeds(file)
@@ -348,8 +347,6 @@ class CorsikaConfig:
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
         """
-        # azm of simtools is used (similar to sim_telarray)
-        azm = int(self.args_dict["azimuth_angle"].to("deg").value)
         file_label = f"_{self.label}" if self.label is not None else ""
         view_cone = ""
         if self.config["VIEWCONE"][0] != 0 or self.config["VIEWCONE"][1] != 0:
@@ -359,7 +356,7 @@ class CorsikaConfig:
         file_name = (
             f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
             f"za{int(self.config['THETAP'][0]):03}-"
-            f"azm{azm:03}deg"
+            f"azm{self.config['azimuth_angle'][0]:03}deg"
             f"{view_cone}{file_label}"
         )
         if file_type == "config_tmp":
@@ -373,7 +370,7 @@ class CorsikaConfig:
             file_name = (
                 f"corsika_runXXXXXX_"
                 f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
-                f"azm{azm:03}deg"
+                f"azm{self.config['azimuth_angle'][0]:03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
             return file_name
@@ -398,7 +395,7 @@ class CorsikaConfig:
         """
         config_file_name = self.get_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
-        self._logger.info(f"Creating directory {file_directory}, if needed.")
+        self._logger.info(f"Creating directory {file_directory}.")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)
 
