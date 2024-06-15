@@ -35,7 +35,7 @@ class SimulatorLightEmission(SimtelRunner):
     le_application: str
         Name of the application. Default sim_telarray application running
         the sim_telarray LightEmission package is xyzls.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of sim_telarray installation.
     light_source_type: str
         The light source type.
@@ -56,7 +56,7 @@ class SimulatorLightEmission(SimtelRunner):
         site_model,
         default_le_config,
         le_application,
-        simtel_source_path,
+        simtel_path,
         light_source_type,
         label=None,
         config_data=None,
@@ -64,11 +64,11 @@ class SimulatorLightEmission(SimtelRunner):
         test=False,
     ):
         """Initialize SimtelRunner."""
-        super().__init__(label=label, simtel_source_path=simtel_source_path)
+        super().__init__(label=label, simtel_path=simtel_path)
 
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimtelRunnerLightEmission")
-        self._simtel_source_path = simtel_source_path
+        self._simtel_path = simtel_path
 
         self._telescope_model = telescope_model
 
@@ -124,7 +124,7 @@ class SimulatorLightEmission(SimtelRunner):
                 "site_model",
                 "default_le_config",
                 "le_application",
-                "simtel_source_path",
+                "simtel_path",
                 "label",
                 "light_source_type",
             ],
@@ -270,7 +270,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
-        command += str(self._simtel_source_path.joinpath("sim_telarray/LightEmission/"))
+        command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
         command += f"/{self.le_application[0]}"
 
         if self.light_source_type == "led":
@@ -377,7 +377,7 @@ class SimulatorLightEmission(SimtelRunner):
             The command to run simtel_array
         """
         # LightEmission
-        command = f"{self._simtel_source_path.joinpath('sim_telarray/bin/sim_telarray/')}"
+        command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
 
         def remove_line_from_config(file_path, line_prefix):
@@ -452,7 +452,7 @@ class SimulatorLightEmission(SimtelRunner):
         postscript_dir = self.output_directory.joinpath("postscripts")
         postscript_dir.mkdir(parents=True, exist_ok=True)
 
-        command = str(self._simtel_source_path.joinpath("hessioxxx/bin/read_cta"))
+        command = str(self._simtel_path.joinpath("hessioxxx/bin/read_cta"))
         command += " --min-tel 1 --min-trg-tel 1"
         command += " -q --integration-scheme 4"
         command += " --integration-window "
