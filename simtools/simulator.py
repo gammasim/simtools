@@ -3,20 +3,17 @@
 import logging
 import re
 from collections import defaultdict
-from copy import copy
 from pathlib import Path
 
-import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.corsika.corsika_runner import CorsikaRunner
 from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
-from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.simtel.simulator_array import SimulatorArray
-from simtools.utils import names
 
 __all__ = [
     "Simulator",
@@ -34,109 +31,51 @@ class Simulator:
 
     It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.
 
-    The configuration is set as a dict config_data or a yaml \
-    file config_file.
-
-    Example of config_data for shower simulations:
-
-    .. code-block:: python
-
-        config_data = {
-            'data_directory': '.',
-            'site': 'South',
-            'layout_name': 'Prod5',
-            'run_range': [1, 100],
-            'nshow': 10,
-            'primary': 'gamma',
-            'erange': [100 * u.GeV, 1 * u.TeV],
-            'eslope': -2,
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
-        }
-
-    Example of config_data for array simulations:
-
-    .. code-block:: python
-
-        config_data = {
-            'data_directory': '(..)/data',
-            'primary': 'gamma',
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            # ArrayModel
-            'site': 'North',
-            'layout_name': '1LST',
-            'model_version': 'Prod5',
-            'default': {
-                'LST': '1'
-            },
-            'MST-01': 'FlashCam-D'
-        }
+    The configuration is set as a dict corresponding to the command line configuration groups
+    (especially simulation_software, simulation_model, simulation_parameters).
 
     Parameters
     ----------
-    simulation_software: str
-        Simulation software to be used (choices: [corsika, simtel, corsika_simtel])
-    simulator_source_path: str or Path
-        Location of executables for simulation software \
-            (e.g. path with CORSIKA or sim_telarray)
+    args_dict : dict
+        Configuration dictionary \
+        (includes simulation_software, simulation_model, simulation_parameters groups)
     label: str
         Instance label.
-    config_data: dict
-        Simulator configuration data.
     submit_command: str
         Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command,
     mongo_db_config: dict
         MongoDB configuration.
-    model_version: str
-        Simulation model version.
     test: bool
         If True, no jobs are submitted; only run scripts are prepared
     """
 
     def __init__(
         self,
-        simulation_software,
-        simulator_source_path,
-        config_data,
+        args_dict,
         label=None,
         submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
-        model_version=None,
         test=False,
     ):
         """Initialize Simulator class."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug(f"Init Simulator {simulation_software}")
+        self.args_dict = args_dict
 
+        self.simulation_software = self.args_dict["simulation_software"]
+        self._logger.debug(f"Init Simulator {self.simulation_software}")
         self.label = label
-        self.simulation_software = simulation_software
-        self.runs = []
+
+        self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
-        self.test = test
-
-        self._corsika_config_data = None
-        self.config = None
-        self._simulation_runner = None
-
-        self.io_handler = io_handler.IOHandler()
-        self._output_directory = self.io_handler.get_output_directory(
-            self.label, self.simulation_software
-        )
-        self._simulator_source_path = Path(simulator_source_path)
+        self._test = test
         self._submit_command = submit_command
         self._extra_commands = extra_commands
-        self._mongo_db_config = mongo_db_config
-        self._model_version = model_version
 
-        self.array_model = self._load_configuration_and_simulation_model(config_data)
-        self._set_simulation_runner()
+        self.array_model = self._initialize_array_model(mongo_db_config)
+        self._simulation_runner = self._set_simulation_runner()
 
     @property
     def simulation_software(self):
@@ -163,69 +102,45 @@ class Simulator:
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
 
-    def _load_configuration_and_simulation_model(self, config_data):
+    def _initialize_array_model(self, mongo_db_config):
         """
-        Load configuration data and initialize simulation models.
+        Initialize array simulation model.
 
         Parameters
         ----------
-        config_data: dict
-            Simulator configuration data.
+        mongo_db_config: dict
+            Database configuration.
 
+        Returns
+        -------
+        ArrayModel
+            ArrayModel object.
         """
-        self._load_corsika_config_and_model(config_data)
-        self._load_sim_tel_config_and_model(config_data)
-
         return ArrayModel(
             label=self.label,
-            site=config_data["common"]["site"],
-            layout_name=config_data["common"]["layout_name"],
-            mongo_db_config=self._mongo_db_config,
-            model_version=self._model_version,
+            site=self.args_dict.get("site"),
+            layout_name=self.args_dict.get("layout_name"),
+            mongo_db_config=mongo_db_config,
+            model_version=self.args_dict.get("model_version", None),
         )
 
-    def _load_corsika_config_and_model(self, config_data):
+    def _initialize_run_list(self):
         """
-        Load configuration data for CORSIKA shower simulation.
+        Initialize run list.
 
-        Validate configuration data for CORSIKA shower simulation and
-        remove entries not needed for CorsikaRunner.
-
-        Parameters
-        ----------
-        config_data: dict
-            Simulator configuration data.
-
+        Returns
+        -------
+        list
+            List of run numbers.
         """
-        self._corsika_config_data = copy(config_data["common"])
-        self._corsika_config_data.update(copy(config_data["showers"]))
-        self.runs = self._validate_run_list_and_range(
-            self._corsika_config_data.pop("run_list", None),
-            self._corsika_config_data.pop("run_range", None),
-        )
-        for key in ("site", "layout_name"):
-            try:
-                self._corsika_config_data.pop(key)
-            except KeyError:
-                pass
-
-    def _load_sim_tel_config_and_model(self, config_data):
-        """
-        Load array model and configuration parameters for array simulations.
-
-        Parameters
-        ----------
-        config_data: dict
-            Simulator configuration data.
-
-        """
-        _rest_config = self._collect_array_model_parameters(config_data)
-
-        _parameter_file = self.io_handler.get_input_data_file(
-            "parameters", "array-simulator_parameters.yml"
-        )
-        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
+        try:
+            return self._validate_run_list_and_range(
+                self.args_dict["start_run"] + self.args_dict["run"],
+                self.args_dict.get("run_range", None),
+            )
+        except KeyError as exc:
+            self._logger.error(f"Error in initializing run list: {exc}")
+            raise exc
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
@@ -275,70 +190,32 @@ class Simulator:
         validated_runs_unique = sorted(set(validated_runs))
         return list(validated_runs_unique)
 
-    def _collect_array_model_parameters(self, config_data):
-        """
-        Separate configuration and model parameters from configuration data.
-
-        Parameters
-        ----------
-        config_data: dict
-
-
-        """
-        _merged_config = copy(config_data["common"])
-        if "array" in config_data:
-            _merged_config.update(copy(config_data["array"]))
-        _rest_data = copy(_merged_config)
-
-        # Reading telescope keys
-        tel_keys = []
-        for key in _rest_data.keys():
-            try:
-                names.validate_telescope_name(key)
-                tel_keys.append(key)
-            except ValueError:
-                pass
-        return _rest_data
-
     def _set_simulation_runner(self):
-        """Set simulation runners."""
-        common_args = {
-            "label": self.label,
-            "simtel_source_path": self._simulator_source_path,
-            "array_model": self.array_model,
-        }
-        corsika_args = {
-            "corsika_config_data": self._corsika_config_data,
-        }
-        simtel_args = {}
-        if self.simulation_software in ["simtel", "corsika_simtel"]:
-            simtel_args = {
-                "config_data": {
-                    "simtel_data_directory": self.config.data_directory,
-                    "primary": self.config.primary,
-                    "zenith_angle": self.config.zenith_angle * u.deg,
-                    "azimuth_angle": self.config.azimuth_angle * u.deg,
-                },
-            }
+        """
+        Set simulation runners.
 
+        Returns
+        -------
+        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
+            Simulation runner object.
+        """
         if self.simulation_software == "corsika":
-            self._set_corsika_runner(common_args | corsika_args)
+            return CorsikaRunner(
+                label=self.label,
+                corsika_config=CorsikaConfig(
+                    array_model=self.array_model,
+                    label=self.label,
+                    args_dict=self.args_dict,
+                ),
+                simtel_path=self.args_dict.get("simtel_path"),
+                keep_seeds=False,
+                use_multipipe=False,
+            )
         if self.simulation_software == "simtel":
-            self._set_simtel_runner(common_args | simtel_args)
+            return SimulatorArray(self.args_dict)
         if self.simulation_software == "corsika_simtel":
-            self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
-
-    def _set_corsika_runner(self, simulator_args):
-        """Create CorsikaRunner."""
-        self._simulation_runner = CorsikaRunner(**simulator_args)
-
-    def _set_simtel_runner(self, simulator_args):
-        """Create a SimulatorArray."""
-        self._simulation_runner = SimulatorArray(**simulator_args)
-
-    def _set_corsika_simtel_runner(self, common_args, corsika_args, simtel_args):
-        """Create CorsikaRunner."""
-        self._simulation_runner = CorsikaSimtelRunner(common_args, corsika_args, simtel_args)
+            return CorsikaSimtelRunner(self.args_dict)
+        return None
 
     def _fill_results_without_run(self, input_file_list):
         """
@@ -370,9 +247,11 @@ class Simulator:
         """
         self._logger.info(f"Submission command: {self._submit_command}")
 
+        print("FFFF", input_file_list)
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
+        print("FFFF", runs_and_files_to_submit)
         self._logger.info(
             f"Starting submission for {len(runs_and_files_to_submit)} "
             f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
@@ -383,7 +262,7 @@ class Simulator:
                 run_number=run, input_file=file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(submit_command=self._submit_command, test=self.test)
+            job_manager = JobManager(submit_command=self._submit_command, test=self._test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
@@ -438,6 +317,7 @@ class Simulator:
 
         """
         _runs_and_files = {}
+        self._logger.debug("Getting runs and files to submit ({input_file_list})")
 
         if self.simulation_software == "simtel":
             _file_list = self._enforce_list_type(input_file_list)
@@ -447,7 +327,6 @@ class Simulator:
             _run_list = self._get_runs_to_simulate()
             for run in _run_list:
                 _runs_and_files[run] = None
-
         return _runs_and_files
 
     @staticmethod
@@ -706,12 +585,10 @@ class Simulator:
         """
         if run_list is None and run_range is None:
             if self.runs is None:
-                msg = "Runs to simulate were not given as arguments nor in config_data - aborting"
+                msg = "Runs to simulate were not given - aborting"
                 self._logger.error(msg)
                 return []
-
             return self.runs
-
         return self._validate_run_list_and_range(run_list, run_range)
 
     def _print_list_of_files(self, which):
