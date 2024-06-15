@@ -1,21 +1,20 @@
 #!/usr/bin/python3
 
 """
-    Generate simulation configuration and run simulations for productions (if required).
+    Generate simulation configuration and run simulations (if required).
 
-    It allows to run array layout simulation including shower and detector simulations
+    Produces configuration files for CORSIKA and sim_telarray before running simulation.
+
+    Multipipe scripts will be produced as part of this application.
+    Allows to run array layout simulation including shower and detector simulations
     with the provided "prod_tag" simulation configuration (e.g., Prod6)
     for a given primary particle, azimuth, and zenith angle.
 
-    The entire simulation chain or parts of it is performed:
+    The entire simulation chain, parts of it, or nothing is executed:
 
     - shower simulations with CORSIKA only
     - shower simulations with CORSIKA which are piped directly to sim_telarray using
       the sim_telarray multipipe mechanism.
-
-    This application produces all the necessary configuration files for CORSIKA and
-    sim_telarray before running simulation.
-    The multipipe scripts will be produced as part of this application.
 
     TODO - check if this is still correct
     This application does not provide a mechanism to submit jobs to a batch system like others
@@ -78,32 +77,12 @@
     to a different location via the option --data_directory,
     but the label is always added to the data_directory, such that the output
     will be written to data_directory/label/simtel-data.
-
-    Expected final print-out message:
-
-    .. code-block:: console
-
-        INFO::array_layout(l569)::read_telescope_list_file::Reading array elements from ...
-        WARNING::corsika_runner(l127)::_load_corsika_config_data::data_directory not given
-        in corsika_config - default output directory will be set.
-        INFO::array_layout(l569)::read_telescope_list_file::Reading array elements from ...
-        INFO::corsika_config(l493)::_set_output_file_and_directory::Creating directory
-        INFO::simulator(l405)::simulate::Submission command: local
-        INFO::simulator(l410)::simulate::Starting submission for 1 run
-        INFO::array_model(l315)::export_simtel_array_config_file::Writing array config file into
-        INFO::job_manager(l95)::submit::Submitting script
-        INFO::job_manager(l96)::submit::Job output stream
-        INFO::job_manager(l97)::submit::Job error stream
-        INFO::job_manager(l98)::submit::Job log stream
-        INFO::job_manager(l119)::_submit_local::Running script locally
 """
 
 import logging
 import shutil
 import tarfile
 from pathlib import Path
-
-import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -126,7 +105,6 @@ def _parse(description=None):
         Command line parser object.
 
     """
-
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
         "--production_config",
@@ -225,7 +203,7 @@ def _parse(description=None):
         default=["0 deg 0 deg"],
     )
     shower_config.add_argument(
-        "--cscatter",
+        "--core_scatter",
         help="Scatter area for shower cores (number of use; scatter radius).",
         type=CommandLineParser.core_scatter,
         required=False,
@@ -258,53 +236,23 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    config_data = {}
-    config_data["showers"] = {}
-    config_data["common"] = {}
-
-    # Overwrite default and optional settings
-    config_data["showers"]["run_list"] = args_dict["run"] + args_dict["start_run"]
-    config_data["common"]["primary"] = args_dict["primary"]
-    config_data["common"]["site"] = args_dict["site"]
-    config_data["common"]["layout_name"] = args_dict["array_layout_name"]
-    config_data["common"]["zenith"] = args_dict["zenith_angle"]
-    config_data["common"]["phi"] = args_dict["azimuth_angle"]
-    label = config_data["common"].pop("label", "test-production")
-    config_data["common"]["data_directory"] = Path(args_dict["data_directory"]) / label
-
-    config_data["showers"]["nshow"] = args_dict.get("nshow", None)
-    config_data["showers"]["primary"] = args_dict["primary"]
-    config_data["showers"]["eslope"] = args_dict.get("eslope", None)
-    e_range = args_dict["erange"].split(" ")
-    config_data["showers"]["erange"] = [
-        float(e_range[0]) * u.Unit(e_range[1]),
-        float(e_range[2]) * u.Unit(e_range[3]),
-    ]
-    view_cone = args_dict["viewcone"].split(" ")
-    config_data["showers"]["viewcone"] = [
-        float(view_cone[0]) * u.Unit(view_cone[1]),
-        float(view_cone[2]) * u.Unit(view_cone[3]),
-    ]
-    cscat = args_dict["cscatter"].split(" ")
-    config_data["showers"]["cscat"] = [int(cscat[0]), float(cscat[1]) * u.Unit(cscat[2]), 0.0]
+    # TODO - remember viewcone, erange, cscat split (improve??)
+    # TODO - introduce more groups in command line
 
     simulator = Simulator(
-        label=label,
-        simulation_software=args_dict["simulation_software"],
-        simulator_source_path=args_dict["simtel_path"],
-        config_data=config_data,
+        label=args_dict.get("label"),
+        args_dict=args_dict,
         submit_command="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
     )
 
     simulator.simulate()
 
     logger.info(
-        f"Production run is complete for primary {config_data['showers']['primary']} showers "
-        f"coming from {config_data['common']['phi']} azimuth and zenith angle of "
-        f"{config_data['common']['zenith']} at the {args_dict['site']} site, "
+        f"Production run is complete for primary {args_dict['primary']} showers "
+        f"coming from {args_dict['azimuth_angle']} azimuth and zenith angle of "
+        f"{args_dict['zenith_angle']} at the {args_dict['site']} site, "
         f"using the {args_dict['model_version']} simulation model."
     )
 
