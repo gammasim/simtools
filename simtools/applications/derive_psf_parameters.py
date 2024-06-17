@@ -3,7 +3,7 @@
 """
     Summary
     -------
-    This applications tunes the parameters mirror_reflection_random_angle, \
+    This applications derives the parameters mirror_reflection_random_angle, \
     mirror_align_random_horizontal and mirror_align_random_vertical using \
     cumulative PSF measurement.
 
@@ -13,7 +13,7 @@
     A file name is expected, in which the file should contain 3 columns: radial distance in mm, \
     differential value of photon intensity and its integral value.
 
-    The tuning is performed through a random search. A number of random combination of the \
+    The derivation is performed through a random search. A number of random combination of the \
     parameters are tested and the best ones are selected based on the minimum value of \
     the Root Mean Squared Deviation between data and simulations. The range in which the \
     parameter are drawn uniformly are defined based on the previous value on the telescope model.
@@ -63,7 +63,7 @@
 
     .. code-block:: console
 
-        simtools-get-file-from_db --file_name PSFcurve_data_v2.txt
+        simtools-db-get-file-from_db --file_name PSFcurve_data_v2.txt
 
     Run the application:
 
