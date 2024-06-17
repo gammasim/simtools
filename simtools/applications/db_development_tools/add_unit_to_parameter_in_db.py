@@ -43,7 +43,7 @@ def main():
                 db.update_parameter_field(
                     db_name=None,
                     site=site,
-                    version=version_now,
+                    model_version=version_now,
                     parameter=par_now,
                     field="units",
                     new_value=unit_now,

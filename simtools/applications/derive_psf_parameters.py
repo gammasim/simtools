@@ -118,7 +118,7 @@ def load_data(data_file):
     return data
 
 
-def initialize_config():
+def _parse():
     config = configurator.Configurator(
         description=(
             "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "
@@ -340,7 +340,7 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
 
 # pylint: disable=too-many-statements
 def main():
-    args_dict, db_config = initialize_config()
+    args_dict, db_config = _parse()
 
     label = "tune_psf"
     logger = logging.getLogger()
