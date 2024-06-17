@@ -11,13 +11,8 @@ from simtools.io_operations import io_handler
 
 __all__ = [
     "CorsikaConfig",
-    "MissingRequiredInputInCorsikaConfigDataError",
     "InvalidCorsikaInputError",
 ]
-
-
-class MissingRequiredInputInCorsikaConfigDataError(Exception):
-    """Exception for missing required input in corsika config data."""
 
 
 class InvalidCorsikaInputError(Exception):
@@ -26,9 +21,9 @@ class InvalidCorsikaInputError(Exception):
 
 class CorsikaConfig:
     """
-    Configuration for the CORSIKA air shower simulations.
+    Configuration for the CORSIKA air shower simulation software.
 
-    Follows closely the CORSIKA definitions and output format.
+    Follows closely the CORSIKA definitions and output format (see CORSIKA manual).
 
     The configuration is set as a dict corresponding to the command line configuration groups
     (especially simulation_software, simulation_model, simulation_parameters).
@@ -40,7 +35,7 @@ class CorsikaConfig:
     label : str
         Instance label.
     args_dict : dict
-        Configuration dictionary \
+        Configuration dictionary
         includes simulation_software, simulation_model, simulation_parameters groups)
     """
 
@@ -73,7 +68,8 @@ class CorsikaConfig:
         """
         Load CORSIKA parameters.
 
-        TODO - will be replaced by getters to corsika configuration database.
+        TODO - will be replaced by a call to the CORSIKA configuration collection
+        in the simtools database.
 
         Returns
         -------
@@ -88,21 +84,14 @@ class CorsikaConfig:
 
     def setup_configuration(self):
         """
-        Set configuration parameters for CORSIKA.
+        Set configuration parameters for CORSIKA and CorsikaConfig.
 
-        Assumes that values are already converted to CORSIKA-consistent units.
-        Add configuration used for file name generation.
+        Converted values to CORSIKA-consistent units.
 
-        TODO - fix limits for azimuth and zenith
-        TODO - not clear if this is needed with or without units
-
-        Raises
-        ------
-        InvalidCorsikaInputError
-            If any parameter given as input has wrong len, unit or
-            an invalid name.
-        MissingRequiredInputInCorsikaConfigDataError
-            If any required user parameter is missing.
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA parameters.
         """
         if self.args_dict is None:
             return None
@@ -115,8 +104,8 @@ class CorsikaConfig:
         core_scatter = self.args_dict["core_scatter"].split(" ")
 
         return {
-            "EVTNR": [1],
-            "RUNNR": [10],
+            "EVTNR": [1],  # TODO
+            "RUNNR": [10],  # TODO
             "NSHOW": [self.args_dict["nshow"]],
             "PRMPAR": [
                 self._convert_primary_input_and_store_primary_name(self.args_dict["primary"])
@@ -169,8 +158,6 @@ class CorsikaConfig:
         """
         Convert a primary name into the CORSIKA particle ID.
 
-        TODO - this should be replaced by using the appropriate package.
-
         Parameters
         ----------
         value: str
@@ -185,6 +172,10 @@ class CorsikaConfig:
         -------
         int
             Respective number of the given primary.
+
+        Notes
+        -----
+        TODO - this will be replaced using the 'particle' PDG package.
         """
         for prim_name, prim_info in self._corsika_default_parameters["PRIMARIES"].items():
             if value.upper() == prim_name or value.upper() in prim_info["names"]:
@@ -218,7 +209,6 @@ class CorsikaConfig:
         except KeyError as exc:
             self._logger.error(f"Parameter {par_name} is not a CORSIKA config parameter")
             raise exc
-
         return par_value if len(par_value) > 1 else par_value[0]
 
     def print_config_parameter(self):
@@ -227,22 +217,27 @@ class CorsikaConfig:
             print(f"{par} = {value}")
 
     @staticmethod
-    def _get_text_single_line(pars):
+    def _get_text_single_line(pars, line_begin=""):
+        """
+        Return one parameter per line for each input parameter.
+
+        Parameters
+        ----------
+        pars: dict
+            Dictionary with the parameters to be written in the file.
+
+        Returns
+        -------
+        str
+            Text with the parameters.
+        """
         text = ""
         for par, values in pars.items():
-            line = par + " "
+            line = line_begin + par + " "
             for v in values:
                 line += str(v) + " "
             line += "\n"
             text += line
-        return text
-
-    def _get_text_multiple_lines(self, pars):
-        text = ""
-        for par, value_list in pars.items():
-            for value in value_list:
-                new_pars = {par: value}
-                text += self._get_text_single_line(new_pars)
         return text
 
     def export_input_file(self, use_multipipe=False):
@@ -308,8 +303,9 @@ class CorsikaConfig:
                 file.write(f"TELFIL {_output_generic_file_name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
-            text_iact = self._get_text_multiple_lines(
-                self._corsika_default_parameters["IACT_TUNING_PARAMETERS"]
+            text_iact = self._get_text_single_line(
+                self._corsika_default_parameters["IACT_TUNING_PARAMETERS"],
+                "IACT ",
             )
             file.write(text_iact)
 
