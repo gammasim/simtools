@@ -112,6 +112,21 @@ def _parse(label, description):
 
 
 def build_histogram_files(config_parser, logger):
+    """
+    Build a list of histogram files from command line arguments.
+
+    Parameters
+    ----------
+    config_parser: dict
+        Parsed command line arguments.
+    logger: logging.Logger
+        Logger object for logging messages.
+
+    Returns
+    -------
+    list
+        List of histogram file paths.
+    """
     histogram_files = []
     for one_file in config_parser["hist_file_names"]:
         try:
@@ -129,6 +144,21 @@ def build_histogram_files(config_parser, logger):
 
 
 def check_and_log_overwrite(config_parser, logger):
+    """
+    Check if the output hdf5 file already exists and log a warning if it does.
+
+    Parameters
+    ----------
+    config_parser: dict
+        Parsed command line arguments.
+    logger: logging.Logger
+        Logger object for logging messages.
+
+    Returns
+    -------
+    bool
+        True if the hdf5 file exists and should be overwritten, False otherwise.
+    """
     if Path(f"{config_parser['output_file_name']}.hdf5").exists() and config_parser["hdf5"]:
         msg = (
             f"Output hdf5 file {config_parser['output_file_name']}.hdf5 already exists. "
@@ -140,6 +170,20 @@ def check_and_log_overwrite(config_parser, logger):
 
 
 def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
+    """
+    Create a PDF file containing histograms.
+
+    Parameters
+    ----------
+    simtel_histograms: SimtelIOHistograms
+        SimtelIOHistograms object containing histograms to plot.
+    output_file_name: str
+        Base name for the output PDF file.
+    config_parser: dict
+        Parsed command line arguments.
+    logger: logging.Logger
+        Logger object for logging messages.
+    """
     if config_parser["pdf"]:
         logger.debug(f"Creating the pdf file {output_file_name}.pdf")
         pdf_pages = PdfPages(f"{output_file_name}.pdf")
@@ -157,6 +201,9 @@ def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
 
 
 def export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger):
+    """
+    Export histograms to an HDF5 file.
+    """
     if config_parser["hdf5"]:
         logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
