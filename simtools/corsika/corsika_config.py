@@ -221,76 +221,77 @@ class CorsikaConfig:
 
         self._is_file_updated = False
 
+    def _fix_single_value_parameters(self, par_name, par_info, values):
+        if len(values) == 1 and par_name in ["THETAP", "AZM"]:
+            return values * 2
+        if len(values) == 1 and par_name == "VIEWCONE":
+            return [0.0 * u.Unit(par_info["unit"][0]), values[0]]
+        return values
+
+    def _handle_special_parameters(self, par_name, values):
+        if par_name == "PRMPAR":
+            return self._convert_primary_input_and_store_primary_name(values)
+        if par_name == "ESLOPE":
+            self.eslope = values[0]
+        return values
+
+    def _validate_length(self, par_name, par_info, values):
+        if len(values) != par_info["len"]:
+            msg = f"CORSIKA input entry with wrong len: {par_name}"
+            self._logger.error(msg)
+            raise InvalidCorsikaInputError(msg)
+
+    def _convert_units(self, par_name, values, units):
+        result = []
+        for value, unit in zip(values, units):
+            if unit is None:
+                result.append(value)
+                continue
+            value = self._convert_to_quantity(value)
+            if not value.unit.is_equivalent(unit):
+                msg = f"CORSIKA input given with wrong unit: {par_name}"
+                self._logger.error(msg)
+                raise InvalidCorsikaInputError(msg)
+            result.append(value.to(unit).value)
+        return result
+
+    def _convert_to_quantity(self, value):
+        if isinstance(value, str):
+            value = u.Quantity(value)
+        if not isinstance(value, u.Quantity):
+            msg = "CORSIKA input given without unit"
+            self._logger.error(msg)
+            raise InvalidCorsikaInputError(msg)
+        return value
+
     def _validate_and_convert_argument(self, par_name, par_info, value_args_in):
         """
         Validate input user parameter and convert it to the right units, if needed.
+
         Returns the validated arguments in a list.
 
         Parameters
         ----------
         par_name: str
             Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...).
+
         par_info: dict
             Dictionary with parameter data.
+
         value_args_in: list
             List of values for the parameter.
         """
 
-        def fix_single_value_parameters(par_name, par_info, values):
-            if len(values) == 1 and par_name in ["THETAP", "AZM"]:
-                return values * 2
-            if len(values) == 1 and par_name == "VIEWCONE":
-                return [0.0 * u.Unit(par_info["unit"][0]), values[0]]
-            return values
-
-        def handle_special_parameters(par_name, values):
-            if par_name == "PRMPAR":
-                return self._convert_primary_input_and_store_primary_name(values)
-            if par_name == "ESLOPE":
-                self.eslope = values[0]
-            return values
-
-        def validate_length(par_name, par_info, values):
-            if len(values) != par_info["len"]:
-                msg = f"CORSIKA input entry with wrong len: {par_name}"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-
-        def convert_units(par_name, values, units):
-            result = []
-            for value, unit in zip(values, units):
-                if unit is None:
-                    result.append(value)
-                    continue
-
-                value = convert_to_quantity(value)
-                if not value.unit.is_equivalent(unit):
-                    msg = f"CORSIKA input given with wrong unit: {par_name}"
-                    self._logger.error(msg)
-                    raise InvalidCorsikaInputError(msg)
-
-                result.append(value.to(unit).value)
-            return result
-
-        def convert_to_quantity(value):
-            if isinstance(value, str):
-                value = u.Quantity(value)
-            if not isinstance(value, u.Quantity):
-                msg = "CORSIKA input given without unit"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-            return value
-
         value_args = self._convert_to_quantities(value_args_in)
-        value_args = fix_single_value_parameters(par_name, par_info, value_args)
-        value_args = handle_special_parameters(par_name, value_args)
-        validate_length(par_name, par_info, value_args)
+        value_args = self._fix_single_value_parameters(par_name, par_info, value_args)
+        value_args = self._handle_special_parameters(par_name, value_args)
+        self._validate_length(par_name, par_info, value_args)
 
         if "unit" not in par_info:
             return value_args
 
         par_unit = gen.copy_as_list(par_info["unit"])
-        return convert_units(par_name, value_args, par_unit)
+        return self._convert_units(par_name, value_args, par_unit)
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
