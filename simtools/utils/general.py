@@ -800,6 +800,25 @@ def program_is_executable(program):
     return None
 
 
+def _search_directory(directory, filename, rec=False):
+    if not Path(directory).exists():
+        _logger.debug(f"Directory {directory} does not exist")
+        return None
+
+    file = Path(directory).joinpath(filename)
+    if file.exists():
+        _logger.debug(f"File {filename} found in {directory}")
+        return file
+
+    if rec:
+        for subdir in Path(directory).iterdir():
+            if subdir.is_dir():
+                file = _search_directory(subdir, filename, True)
+                if file:
+                    return file
+    return None
+
+
 def find_file(name, loc):
     """
     Search for files inside of given directories, recursively, and return its full path.
@@ -808,7 +827,7 @@ def find_file(name, loc):
     ----------
     name: str
         File name to be searched for.
-    loc: Path
+    loc: Path or list of Path
         Location of where to search for the file.
 
     Returns
@@ -821,26 +840,7 @@ def find_file(name, loc):
     FileNotFoundError
         If the desired file is not found.
     """
-
     all_locations = [loc] if not isinstance(loc, list) else loc
-
-    def _search_directory(directory, filename, rec=False):
-        if not Path(directory).exists():
-            _logger.debug(f"Directory {directory} does not exist")
-            return None
-
-        file = Path(directory).joinpath(filename)
-        if file.exists():
-            _logger.debug(f"File {filename} found in {directory}")
-            return file
-
-        if rec:
-            for subdir in Path(directory).iterdir():
-                if subdir.is_dir():
-                    file = _search_directory(subdir, filename, True)
-                    if file:
-                        return file
-        return None
 
     # Searching file locally
     file = _search_directory(".", name)
