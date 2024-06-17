@@ -231,8 +231,8 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False, _lo
     namedtuple:
         Containing the validated config data entries.
     """
-
-    _logger = logging.getLogger(__name__)
+    if _logger is None:
+        _logger = logging.getLogger(__name__)
 
     out_data = {}
 
