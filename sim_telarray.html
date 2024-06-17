@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g152629c Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g41dbd1e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d614a1f3"></script>
+    <script src="_static/documentation_options.js?v=d3e0acf1"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g152629c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41dbd1e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -848,7 +848,8 @@ This calculation assumes the simulated spectrum is given by a single power law.<
 </section>
 <section id="simtel-io-histogram">
 <h2>simtel_io_histogram<a class="headerlink" href="#simtel-io-histogram" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simtel_io_histogram"><span id="simtel-io-histogram-1"></span>Handle a single histogram (or simtel_array output) file.</p>
+<p id="module-simtel.simtel_io_histogram"><span id="simtel-io-histogram-1"></span>This module reads the content of either a single histogram (.hdata, or .hdata.zst) or a single
+simtel_array output file (.simtel or .simtel.zst).</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="simtel.simtel_io_histogram.HistogramIdNotFoundError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">HistogramIdNotFoundError</span></span><a class="reference internal" href="_modules/simtel/simtel_io_histogram.html#HistogramIdNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.HistogramIdNotFoundError" title="Link to this definition">#</a></dt>
@@ -864,7 +865,8 @@ This calculation assumes the simulated spectrum is given by a single power law.<
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">SimtelIOHistogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_from_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram" title="Link to this definition">#</a></dt>
-<dd><p>Handle a single histogram (or simtel_array output) file.</p>
+<dd><p>Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
+output file (.simtel or .simtel.zst)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1186,12 +1188,15 @@ distribution assumed is not necessarily the reference cosmic-ray spectra.</p>
 </section>
 <section id="simtel-io-histograms">
 <h2>simtel_io_histograms<a class="headerlink" href="#simtel-io-histograms" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simtel_io_histograms"><span id="simtel-io-histograms-1"></span>Read and analyse of sim_telarray histogram files.</p>
+<p id="module-simtel.simtel_io_histograms"><span id="simtel-io-histograms-1"></span>This module reads the content of either multiple histogram (.hdata, or .hdata.zst) or
+simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
+simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_io_histograms.SimtelIOHistograms">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histograms.</span></span><span class="sig-name descname"><span class="pre">SimtelIOHistograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_from_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simtel/simtel_io_histograms.html#SimtelIOHistograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histograms.SimtelIOHistograms" title="Link to this definition">#</a></dt>
-<dd><p>Handle histograms sim_telarray files especially for trigger rate calculations.</p>
-<p>Allow both the .hdata.zst histogram and the .simtel.zst output file type.
+<dd><p>Read the content of either multiple histogram (.hdata, or .hdata.zst) or simtel_array
+output files.
+Allow both the .hdata.zst histogram and the .simtel.zst output file type.
 It uses the SimtelIOHistogram class to deal with individual files.
 Histogram files are ultimately handled by using eventio library.</p>
 <dl class="field-list simple">
