@@ -546,9 +546,9 @@ class ArrayLayout:
 
         return table
 
-    def export_telescope_list_as_json(self, crs_name):
+    def export_one_telescope_as_json(self, crs_name):
         """
-        Return a single-telescope list as simtools-DB-style json.
+        Return a list containing a single telescope in simtools-DB-style json.
 
         Parameters
         ----------
