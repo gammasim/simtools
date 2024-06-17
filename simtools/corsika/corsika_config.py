@@ -135,6 +135,48 @@ class CorsikaConfig:
         )
         return corsika_parameters
 
+    def _collect_parameters(self, corsika_config_data, user_pars):
+        for key_args, value_args in corsika_config_data.items():
+            is_identified = False
+            for par_name, par_info in user_pars.items():
+                if key_args.upper() != par_name and key_args.upper() not in par_info["names"]:
+                    continue
+                validated_value_args = self._validate_and_convert_argument(
+                    par_name, par_info, value_args
+                )
+                self._user_parameters[par_name] = validated_value_args
+                is_identified = True
+                break  # Break the inner loop if a match is found
+            if not is_identified:
+                self._raise_invalid_input_error(key_args)
+
+    def _fill_default_parameters(self, user_pars):
+        for par_name, par_info in user_pars.items():
+            if par_name not in self._user_parameters:
+                if "default" in par_info.keys():
+                    validated_value = self._validate_and_convert_argument(
+                        par_name, par_info, par_info["default"]
+                    )
+                    self._user_parameters[par_name] = validated_value
+                else:
+                    self._raise_missing_required_error(par_name)
+
+    def _convert_azm_to_phip(self):
+        phip = 180.0 - self._user_parameters["AZM"][0]
+        phip = phip + 360.0 if phip < 0.0 else phip
+        phip = phip - 360.0 if phip >= 360.0 else phip
+        self._user_parameters["PHIP"] = [phip, phip]
+
+    def _raise_invalid_input_error(self, key_args):
+        msg = f"Argument {key_args} cannot be identified."
+        self._logger.error(msg)
+        raise InvalidCorsikaInputError(msg)
+
+    def _raise_missing_required_error(self, par_name):
+        msg = f"Required parameters {par_name} was not given (there may be more)."
+        self._logger.error(msg)
+        raise MissingRequiredInputInCorsikaConfigDataError(msg)
+
     def set_user_parameters(self, corsika_config_data):
         """
         Set user parameters from a dict.
@@ -171,51 +213,12 @@ class CorsikaConfig:
         self._user_parameters = {}
         user_pars = self._corsika_parameters["USER_PARAMETERS"]
 
-        def collect_parameters():
-            for key_args, value_args in corsika_config_data.items():
-                is_identified = False
-                for par_name, par_info in user_pars.items():
-                    if key_args.upper() != par_name and key_args.upper() not in par_info["names"]:
-                        continue
-                    validated_value_args = self._validate_and_convert_argument(
-                        par_name, par_info, value_args
-                    )
-                    self._user_parameters[par_name] = validated_value_args
-                    is_identified = True
-                    break  # Break the inner loop if a match is found
-                if not is_identified:
-                    raise_invalid_input_error(key_args)
+        self._collect_parameters(corsika_config_data, user_pars)
+        self._fill_default_parameters(user_pars)
 
-        def fill_default_parameters():
-            for par_name, par_info in user_pars.items():
-                if par_name not in self._user_parameters:
-                    if "default" in par_info.keys():
-                        validated_value = self._validate_and_convert_argument(
-                            par_name, par_info, par_info["default"]
-                        )
-                        self._user_parameters[par_name] = validated_value
-                    else:
-                        raise_missing_required_error(par_name)
+        if "AZM" in self._user_parameters:
+            self._convert_azm_to_phip()
 
-        def convert_azm_to_phip():
-            phip = 180.0 - self._user_parameters["AZM"][0]
-            phip = phip + 360.0 if phip < 0.0 else phip
-            phip = phip - 360.0 if phip >= 360.0 else phip
-            self._user_parameters["PHIP"] = [phip, phip]
-
-        def raise_invalid_input_error(key_args):
-            msg = f"Argument {key_args} cannot be identified."
-            self._logger.error(msg)
-            raise InvalidCorsikaInputError(msg)
-
-        def raise_missing_required_error(par_name):
-            msg = f"Required parameters {par_name} was not given (there may be more)."
-            self._logger.error(msg)
-            raise MissingRequiredInputInCorsikaConfigDataError(msg)
-
-        collect_parameters()
-        fill_default_parameters()
-        convert_azm_to_phip()
         self._is_file_updated = False
 
     def _validate_and_convert_argument(self, par_name, par_info, value_args_in):
