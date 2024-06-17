@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_config_reader import JsonNumpyEncoder, SimtelConfigReader
+from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -343,18 +343,3 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
         with pytest.raises(ValueError):
             _config._validate_parameter_dict(_temp_dict)
         assert "out of range" in caplog.text
-
-
-def test_jsonnumpy_encoder():
-
-    encoder = JsonNumpyEncoder()
-    assert isinstance(encoder.default(np.float64(3.14)), float)
-    assert isinstance(encoder.default(np.int64(3.14)), int)
-    assert isinstance(encoder.default(np.array([])), list)
-    assert isinstance(encoder.default(u.Unit("m")), str)
-    assert encoder.default(u.Unit("")) is None
-    assert isinstance(encoder.default(u.Unit("m/s")), str)
-    assert isinstance(encoder.default(np.bool_(True)), bool)
-
-    with pytest.raises(TypeError):
-        encoder.default("abc")

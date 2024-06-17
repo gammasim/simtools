@@ -1,35 +1,17 @@
 #!/usr/bin/python3
 """Read model parameters and configuration from sim_telarray configuration files."""
 
-import json
 import logging
 import re
 
-import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
 from simtools.data_model import validate_data
+from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
-
-
-class JsonNumpyEncoder(json.JSONEncoder):
-    """Convert numpy to python types as accepted by json.dump."""
-
-    def default(self, o):
-        if isinstance(o, np.floating):
-            return float(o)
-        if isinstance(o, np.integer):
-            return int(o)
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
-            return str(o) if o != u.dimensionless_unscaled else None
-        if np.issubdtype(type(o), np.bool_):
-            return bool(o)
-        return super().default(o)
 
 
 class SimtelConfigReader:
@@ -37,8 +19,8 @@ class SimtelConfigReader:
     Reads model parameters from configuration files and converts to the simtools representation.
 
     The output format are simtool-db-style json dicts.
-
-    The sim_telarray configuration can be generated using e.g., the following simtel_array command:
+    Model parameters are read from sim_telarray configuration files.
+    The sim_telarray configuration can be generated using e.g., the following sim_telarray command:
 
     ... code-block:: console
 
@@ -151,15 +133,9 @@ class SimtelConfigReader:
             pass
 
         self._logger.info(f"Exporting parameter dictionary to {file_name}")
-        with open(file_name, "w", encoding="utf-8") as file:
-            json.dump(
-                dict_to_write,
-                file,
-                indent=4,
-                sort_keys=False,
-                cls=JsonNumpyEncoder,
-            )
-            file.write("\n")
+        ModelDataWriter.write_dict_to_model_parameter_json(
+            file_name=file_name, data_dict=dict_to_write
+        )
 
     def compare_simtel_config_with_schema(self):
         """
