@@ -1,0 +1,5 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-db-inspect-databases
+  TEST_NAME: db_inspect_databases
+  CONFIGURATION:
+    DB_NAME: all
