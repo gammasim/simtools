@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db_add_model_parameters_from_repository_to_db &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
+    <title>convert_geo_coordinates_of_array_elements &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db_add_model_parameters_from_repository_to_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/convert_geo_coordinates_of_array_elements';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -287,7 +287,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/db_add_model_parameters_from_repository_to_db.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/convert_geo_coordinates_of_array_elements.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -361,54 +361,71 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for db_add_model_parameters_from_repository_to_db</h1><div class="highlight"><pre>
+  <h1>Source code for convert_geo_coordinates_of_array_elements</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Add parameters found in a model parameter repository to a new database.</span>
+<span class="sd">&quot;&quot;&quot;Convert and print a list of array element positions in different coordinate systems.</span>
 
-<span class="sd">    Generates a new database with all required collections.</span>
-<span class="sd">    Follows the structure of the CTAO gitlab model parameters repository.</span>
-<span class="sd">    file as input.</span>
+<span class="sd">    Description</span>
+<span class="sd">    -----------</span>
 
-<span class="sd">    This is an application for experts and should not be used by the general user.</span>
+<span class="sd">    Convert array element positions in different CTAO coordinate systems.</span>
+<span class="sd">    Available coordinate systems are:</span>
+
+<span class="sd">    1. UTM system</span>
+<span class="sd">    2. ground system (similar to sim_telarray system with x-axis pointing toward geographic north</span>
+<span class="sd">       and y-axis pointing towards the west); altitude relative to the CORSIKA observation level.</span>
+<span class="sd">       Altitude is the height of the elevation rotation axis (plus some possible mirror offset).</span>
+<span class="sd">    3. Mercator system</span>
 
 <span class="sd">    Command line arguments</span>
+<span class="sd">    ----------------------</span>
+<span class="sd">    input (str)</span>
+<span class="sd">        File name with list of array element positions.</span>
+<span class="sd">        Input can be given as astropy table file (ecsv) or a single array element in</span>
+<span class="sd">        a json file.</span>
+<span class="sd">    print (str)</span>
+<span class="sd">        Print in requested coordinate system; possible are ground, utm, mercator</span>
+<span class="sd">    export (str)</span>
+<span class="sd">        Export array element list to file in requested coordinate system;</span>
+<span class="sd">          possible are ground, utm, mercator</span>
+<span class="sd">    select_assets (str)</span>
+<span class="sd">        Select a subset of array elements / telescopes (e.g., MSTN, LSTN)</span>
 
-<span class="sd">    input_path (str, required)</span>
-<span class="sd">        Path of local copy of model parameter repository.</span>
-<span class="sd">    db_name (str, required)</span>
-<span class="sd">        Name of new DB to be created.</span>
-<span class="sd">    type (str, required)</span>
-<span class="sd">        Type of data to be uploaded to the DB. Options are: model_parameters, metadata</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    Upload model data repository to the DB:</span>
-
-<span class="sd">    .. code-block:: console</span>
-
-<span class="sd">        simtools-db-add_model-parameters-from-repository-to-db \</span>
-<span class="sd">            --input_path /path/to/repository \</span>
-<span class="sd">            --db_name new_db_name \</span>
-<span class="sd">            --type model_parameters</span>
-
-<span class="sd">    Upload metadata from repository to the DB:</span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    Convert a list of array elements using a list of telescope positions in UTM coordinates.</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-db-add_model-parameters-from-repository-to-db \</span>
-<span class="sd">            --input_path /path/to/repository/metadata \</span>
-<span class="sd">            --db_name new_db_name \</span>
-<span class="sd">            --type metadata</span>
+<span class="sd">        simtools-convert-geo-coordinates-of-array-elements</span>
+<span class="sd">            --input tests/resources/telescope_positions-North-utm.ecsv</span>
+<span class="sd">            --print ground</span>
+
+<span class="sd">    The converted list of telescope positions in ground coordinates is printed to the screen.</span>
+
+<span class="sd">    The following example converts a list of telescope positions in UTM coordinates</span>
+<span class="sd">    and writes the output to a file in ground (sim_telarray) coordinates. Also selects</span>
+<span class="sd">    only a subset of the array elements (telescopes; ignore calibration devices):</span>
+
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        simtools-convert-geo-coordinates-of-array-elements</span>
+<span class="sd">            --input tests/resources/telescope_positions-North-utm.ecsv</span>
+<span class="sd">            --export ground</span>
+<span class="sd">            --select_assets LSTN</span>
+
+<span class="sd">    Expected output is a ecsv file in the directory printed to the screen.</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="k">as</span> <span class="nn">writer</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span> <span class="nn">simtools.data_model.metadata_collector</span> <span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span> <span class="nn">simtools.layout</span> <span class="kn">import</span> <span class="n">array_layout</span>
 
 
 <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -417,168 +434,123 @@ document.write(`
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    label : str</span>
+<span class="sd">    label: str</span>
 <span class="sd">        Label describing application.</span>
-<span class="sd">    description : str</span>
+<span class="sd">    description: str</span>
 <span class="sd">        Description of application.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    CommandLineParser</span>
-<span class="sd">        Command line parser object.</span>
+<span class="sd">        Command line parser object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--input_path&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to model parameter repository.&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;list of array element positions&quot;</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--db_name&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the new DB to be created.&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--type&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of data to be uploaded to the DB.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--input_meta&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;meta data file associated to input data&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">],</span>
     <span class="p">)</span>
-
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--print&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;print list of positions in requested coordinate system&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;ground&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;utm&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mercator&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--export&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;export array element list to file (in requested coordinate system)&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;ground&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;utm&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mercator&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--select_assets&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;select a subset of assets (e.g., MSTN, LSTN)&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--skip_input_validation&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;skip input data validation against schema&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
-        <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="s2">&quot;version&quot;</span>
+        <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">]</span>
     <span class="p">)</span>
-
-
-<div class="viewcode-block" id="add_values_from_json_to_db">
-<a class="viewcode-back" href="../db_add_model_parameters_from_repository_to_db.html#db_add_model_parameters_from_repository_to_db.add_values_from_json_to_db">[docs]</a>
-<span class="k">def</span> <span class="nf">add_values_from_json_to_db</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Upload data from json files to db.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file : list</span>
-<span class="sd">        Json file to be uploaded to the DB.</span>
-<span class="sd">    collection : str</span>
-<span class="sd">        The DB collection to which to add the file.</span>
-<span class="sd">    db : DatabaseHandler</span>
-<span class="sd">        Database handler object.</span>
-<span class="sd">    db_name : str</span>
-<span class="sd">        Name of the database to be created.</span>
-<span class="sd">    file_prefix : str</span>
-<span class="sd">        Path to location of all additional files to be uploaded.</span>
-<span class="sd">    logger : logging.Logger</span>
-<span class="sd">        Logger object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">par_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding the following parameter to the DB: </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_new_parameter</span><span class="p">(</span>
-        <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">,</span>
-        <span class="n">telescope</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">],</span>
-        <span class="n">parameter</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">],</span>
-        <span class="n">version</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">],</span>
-        <span class="n">value</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="nb">type</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-        <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-        <span class="n">applicable</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;applicable&quot;</span><span class="p">],</span>
-        <span class="n">file</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">],</span>
-        <span class="n">unit</span><span class="o">=</span><span class="n">par_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
-<span class="k">def</span> <span class="nf">_add_metadata_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Add metadata to the DB.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
-<span class="sd">    db_name : str</span>
-<span class="sd">        Name of the database to be created.</span>
-<span class="sd">    logger : logging.Logger</span>
-<span class="sd">        Logger object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding metadata to the DB&quot;</span><span class="p">)</span>
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
-    <span class="n">simulation_model_tags</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-        <span class="n">file_name</span><span class="o">=</span><span class="n">input_path</span> <span class="o">/</span> <span class="s2">&quot;simulation_model_tags.json&quot;</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding simulation model tags to the DB </span><span class="si">{</span><span class="n">simulation_model_tags</span><span class="p">[</span><span class="s1">&#39;Tags&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_tagged_version</span><span class="p">(</span>
-        <span class="n">tags</span><span class="o">=</span><span class="n">simulation_model_tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">],</span>
-        <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Add model parameters to the DB.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
-<span class="sd">    db : DatabaseHandler</span>
-<span class="sd">        Database handler object.</span>
-<span class="sd">    logger : logging.Logger</span>
-<span class="sd">        Logger object.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
-    <span class="n">array_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">input_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
-    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">collection</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">):</span>
-                <span class="n">collection</span> <span class="o">=</span> <span class="s2">&quot;sites&quot;</span>
-            <span class="k">elif</span> <span class="n">element</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">:</span>
-                <span class="n">collection</span> <span class="o">=</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span>
-            <span class="k">elif</span> <span class="n">element</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;Files&quot;</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Files are uploaded with the corresponding model parameters&quot;</span><span class="p">)</span>
-                <span class="k">continue</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading model parameters for </span><span class="si">{</span><span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> into collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">files_to_insert</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">element</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*json&quot;</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files_to_insert</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;files&quot;</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not yet implemented files&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">add_values_from_json_to_db</span><span class="p">(</span>
-                    <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
-                    <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-                    <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
-                    <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
-                    <span class="n">file_prefix</span><span class="o">=</span><span class="n">input_path</span> <span class="o">/</span> <span class="s2">&quot;Files&quot;</span><span class="p">,</span>
-                    <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
-                <span class="p">)</span>
 
 
 <div class="viewcode-block" id="main">
-<a class="viewcode-back" href="../db_add_model_parameters_from_repository_to_db.html#db_add_model_parameters_from_repository_to_db.main">[docs]</a>
+<a class="viewcode-back" href="../convert_geo_coordinates_of_array_elements.html#convert_geo_coordinates_of_array_elements.main">[docs]</a>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Application main.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Print a list of array elements.&quot;&quot;&quot;</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+    <span class="n">data_model_name</span> <span class="o">=</span> <span class="s2">&quot;array_coordinates&quot;</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Add or update a model parameter database to the DB&quot;</span>
+        <span class="n">label</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Print a list of array element positions (</span><span class="si">{</span><span class="n">data_model_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
-    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span>
-        <span class="n">_add_metadata_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">json_type</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+    <span class="c1"># simplified metadata treatment for model parameter json files</span>
+    <span class="k">if</span> <span class="n">json_type</span><span class="p">:</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">top_level_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">validate_schema_file</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">_add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data_model_name</span><span class="o">=</span><span class="n">data_model_name</span><span class="p">)</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_site</span><span class="p">(</span><span class="n">from_input_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">top_level_meta</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">top_level_meta</span>
+        <span class="n">validate_schema_file</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_data_model_schema_file_name</span><span class="p">()</span>
+
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">array_layout</span><span class="o">.</span><span class="n">ArrayLayout</span><span class="p">(</span>
+        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+        <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+        <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span>
+        <span class="n">validate</span><span class="o">=</span><span class="ow">not</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;skip_input_validation&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">select_assets</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;select_assets&quot;</span><span class="p">])</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">convert_coordinates</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">product_data</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">export_one_telescope_as_json</span><span class="p">(</span><span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">json_type</span>
+            <span class="k">else</span> <span class="n">layout</span><span class="o">.</span><span class="n">export_telescope_list_table</span><span class="p">(</span><span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">top_level_meta</span><span class="p">,</span>
+            <span class="n">product_data</span><span class="o">=</span><span class="n">product_data</span><span class="p">,</span>
+            <span class="n">validate_schema_file</span><span class="o">=</span><span class="n">validate_schema_file</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">print_telescope_list</span><span class="p">(</span>
+            <span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;print&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
 
 
 

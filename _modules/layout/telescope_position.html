@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.telescope_position &#8212; simtools v0.1.dev1+g2a0b645 Manual</title>
+    <title>layout.telescope_position &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=804ffe97"></script>
+    <script src="../../_static/documentation_options.js?v=4d9d8293"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2a0b645 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb2abe13 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -188,6 +188,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../calculate_trigger_rate.html">calculate_trigger_rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
@@ -204,7 +205,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../plot_array_layout.html">plot_array_layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../print_array_elements.html">print_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
@@ -362,7 +362,9 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for layout.telescope_position</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="sd">&quot;&quot;&quot;Telescope positions and coordinate transformations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -397,10 +399,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize TelescopePosition.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize TelescopePosition.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -410,10 +409,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_coordinates</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        String representation of TelescopePosition.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of TelescopePosition.&quot;&quot;&quot;</span>
         <span class="n">tel_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_coordinates</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
             <span class="n">tel_str</span> <span class="o">+=</span> <span class="p">(</span>
@@ -462,7 +458,6 @@ document.write(`
 <span class="sd">        InvalidCoordSystemErrorError</span>
 <span class="sd">           if coordinate system is not defined.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_zz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
             <span class="n">_zz_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
@@ -554,12 +549,12 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_coordinate_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a value of a coordinate variable</span>
+<span class="sd">        Return a value of a coordinate variable.</span>
+
 <span class="sd">        i) converted to the given unit, if input value has a unit</span>
 <span class="sd">        ii) return input value without change, if no unit is given</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
@@ -592,7 +587,6 @@ document.write(`
 <span class="sd">            If coordinate system is not known.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;xx&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coordinate_value</span><span class="p">(</span>
                 <span class="n">xx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">[</span><span class="n">crs_name</span><span class="p">][</span><span class="s2">&quot;xx&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span>
@@ -612,8 +606,8 @@ document.write(`
 <div class="viewcode-block" id="TelescopePosition.get_altitude">
 <a class="viewcode-back" href="../../array_layout.html#layout.telescope_position.TelescopePosition.get_altitude">[docs]</a>
     <span class="k">def</span> <span class="nf">get_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;</span>
-<span class="sd">        Get altitude of an array element</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get altitude of an array element.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -632,14 +626,15 @@ document.write(`
 <a class="viewcode-back" href="../../array_layout.html#layout.telescope_position.TelescopePosition.set_altitude">[docs]</a>
     <span class="k">def</span> <span class="nf">set_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_altitude</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set altitude of an array element. Assume that all coordinate system have same altitude \</span>
-<span class="sd">        definition, meaning altitude is set for all systems here.</span>
+<span class="sd">        Set altitude of an array element.</span>
+
+<span class="sd">        Assume that all coordinate system have same altitude definition, meaning altitude</span>
+<span class="sd">        is set for all systems here.</span>
 
 <span class="sd">        Attributes</span>
 <span class="sd">        ----------</span>
 <span class="sd">        tel_altitude: astropy.Quantity</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">for</span> <span class="n">_crs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_crs</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coordinate_value</span><span class="p">(</span><span class="n">tel_altitude</span><span class="p">,</span> <span class="n">_crs</span><span class="p">[</span><span class="s2">&quot;zz&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
@@ -649,8 +644,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crs_from</span><span class="p">,</span> <span class="n">crs_to</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Coordinate transformation of telescope positions. Returns np.nan for failed transformations\</span>
-<span class="sd">        (and not inf, as pyproj does)</span>
+<span class="sd">        Coordinate transformation of telescope positions.</span>
+
+<span class="sd">        Returns np.nan for failed transformations (and not inf, as pyproj does).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -690,8 +686,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_reference_system_from</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return coordinate system and coordinates for a fully defined system. The first fully\</span>
-<span class="sd">        defined system from self.crs is returned.</span>
+<span class="sd">        Return coordinate system and coordinates for a fully defined system.</span>
+
+<span class="sd">        The first fully defined system from self.crs is returned.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -701,7 +698,6 @@ document.write(`
 <span class="sd">            Project of coordinate system</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">for</span> <span class="n">_crs_name</span><span class="p">,</span> <span class="n">_crs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_coordinates</span><span class="p">(</span><span class="n">_crs_name</span><span class="p">,</span> <span class="n">crs_check</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">_crs_name</span><span class="p">,</span> <span class="n">_crs</span>
@@ -868,7 +864,6 @@ document.write(`
 <span class="sd">        astropy.units.m</span>
 <span class="sd">            Z-position of a telescope in CORSIKA system.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">(</span><span class="n">tel_altitude</span> <span class="o">-</span> <span class="n">corsika_observation_level</span> <span class="o">+</span> <span class="n">telescope_axis_height</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span></div>
 
 
@@ -915,7 +910,6 @@ document.write(`
 <span class="sd">            Pyproj CRS of the utm coordinate system.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="n">crs_local</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;utm&quot;</span><span class="p">,</span> <span class="n">crs_utm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_coordinate_system</span><span class="p">(</span><span class="s2">&quot;mercator&quot;</span><span class="p">,</span> <span class="n">crs_wgs84</span><span class="p">)</span>
@@ -994,9 +988,11 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_default_coordinates</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Coordinate definition for a telescope position. Includes all coordinate systems and</span>
-<span class="sd">        auxiliary information. Includes axes and default axes units. Naming convention follows</span>
-<span class="sd">        pyproj for x and y coordinates. Includes auxiliary telescope data required for CORSIKA.</span>
+<span class="sd">        Coordinate definition for a telescope position.</span>
+
+<span class="sd">        Includes all coordinate systems and auxiliary information. Includes axes and</span>
+<span class="sd">        default axes units. Naming convention follows pyproj for x and y coordinates.</span>
+<span class="sd">        Includes auxiliary telescope data required for CORSIKA.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1004,7 +1000,6 @@ document.write(`
 <span class="sd">           coordinate system definition</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;ground&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>

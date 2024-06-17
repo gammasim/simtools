@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g2a0b645 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=804ffe97"></script>
+    <script src="_static/documentation_options.js?v=4d9d8293"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2a0b645 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb2abe13 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -189,6 +189,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
@@ -205,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
@@ -465,6 +465,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_dict_to_model_parameter_json()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_metadata_to_yml"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_metadata_to_yml()</span></code></a></li>
 </ul>
 </li>
@@ -709,6 +710,7 @@ Follows the CTA Top-Level Data Model.</p>
 </section>
 <section id="module-data_model.model_data_writer">
 <span id="model-data-writer"></span><span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#module-data_model.model_data_writer" title="Link to this heading">#</a></h2>
+<p>Model data writer module.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">#</a></dt>
@@ -750,8 +752,8 @@ Follows the CTA Top-Level Data Model.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.validate_and_transform">
 <span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform" title="Link to this definition">#</a></dt>
-<dd><p>Validate product data using jsonschema given in metadata.
-If necessary, transform product data to match schema.</p>
+<dd><p>Validate product data using jsonschema given in metadata.</p>
+<p>If necessary, transform product data to match schema.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -767,13 +769,35 @@ If necessary, transform product data to match schema.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write">
 <span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write" title="Link to this definition">#</a></dt>
-<dd><p>Write model data and metadata</p>
+<dd><p>Write model data and metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>product_data: astropy Table</strong></dt><dd><p>Model data to be written</p>
 </dd>
 <dt><strong>metadata: dict</strong></dt><dd><p>Metadata to be written.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>if data writing was not successful.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_dict_to_model_parameter_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/model_data_writer.html#ModelDataWriter.write_dict_to_model_parameter_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json" title="Link to this definition">#</a></dt>
+<dd><p>Write dictionary to model-parameter-style json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name</strong><span class="classifier">str</span></dt><dd><p>Name of output file.</p>
+</dd>
+<dt><strong>data_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary to be written.</p>
 </dd>
 </dl>
 </dd>
@@ -960,6 +984,7 @@ file validation).</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_dict_to_model_parameter_json()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_metadata_to_yml"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_metadata_to_yml()</span></code></a></li>
 </ul>
 </li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+g2a0b645 Manual</title>
+    <title>Layout &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=804ffe97"></script>
+    <script src="_static/documentation_options.js?v=4d9d8293"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g2a0b645 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb2abe13 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -189,6 +189,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
@@ -205,7 +206,6 @@
 <li class="toctree-l2"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="print_array_elements.html">print_array_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
@@ -444,6 +444,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout"><code class="docutils literal notranslate"><span class="pre">ArrayLayout</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_one_telescope_as_json"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_one_telescope_as_json()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
@@ -500,6 +501,7 @@ document.write(`
 It is used within CORSIKA Config and Array Model in order to encapsulate the information about the telescope positions.</p>
 <section id="module-layout.array_layout">
 <span id="array-layout"></span><span id="layoutarraymodule"></span><h2>array_layout<a class="headerlink" href="#module-layout.array_layout" title="Link to this heading">#</a></h2>
+<p>Prepare layout for coordinate transformations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">ArrayLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list_metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout" title="Link to this definition">#</a></dt>
@@ -557,6 +559,26 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.export_one_telescope_as_json">
+<span class="sig-name descname"><span class="pre">export_one_telescope_as_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_one_telescope_as_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_one_telescope_as_json" title="Link to this definition">#</a></dt>
+<dd><p>Return a list containing a single telescope in simtools-DB-style json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system to be used for export.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with array element information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="layout.array_layout.ArrayLayout.export_telescope_list_table">
 <span class="sig-name descname"><span class="pre">export_telescope_list_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/array_layout.html#ArrayLayout.export_telescope_list_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.ArrayLayout.export_telescope_list_table" title="Link to this definition">#</a></dt>
 <dd><p>Export array elements positions to astropy table.</p>
@@ -564,8 +586,6 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system to be used for export.</p>
-</dd>
-<dt><strong>corsika_z: bool</strong></dt><dd><p>Write telescope height in CORSIKA coordinates (for CORSIKA system).</p>
 </dd>
 </dl>
 </dd>
@@ -637,6 +657,7 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 </section>
 <section id="module-layout.telescope_position">
 <span id="telescope-position"></span><span id="telescopedatamodule"></span><h2>telescope_position<a class="headerlink" href="#module-layout.telescope_position" title="Link to this heading">#</a></h2>
+<p>Telescope positions and coordinate transformations.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="layout.telescope_position.InvalidCoordSystemErrorError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.telescope_position.</span></span><span class="sig-name descname"><span class="pre">InvalidCoordSystemErrorError</span></span><a class="reference internal" href="_modules/layout/telescope_position.html#InvalidCoordSystemErrorError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.InvalidCoordSystemErrorError" title="Link to this definition">#</a></dt>
@@ -726,8 +747,7 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.get_altitude">
 <span class="sig-name descname"><span class="pre">get_altitude</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.get_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.get_altitude" title="Link to this definition">#</a></dt>
-<dd><p>”
-Get altitude of an array element</p>
+<dd><p>Get altitude of an array element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -900,7 +920,9 @@ Get altitude of an array element</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.telescope_position.TelescopePosition.set_altitude">
 <span class="sig-name descname"><span class="pre">set_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_altitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/telescope_position.html#TelescopePosition.set_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_altitude" title="Link to this definition">#</a></dt>
-<dd><p>Set altitude of an array element. Assume that all coordinate system have same altitude         definition, meaning altitude is set for all systems here.</p>
+<dd><p>Set altitude of an array element.</p>
+<p>Assume that all coordinate system have same altitude definition, meaning altitude
+is set for all systems here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -957,16 +979,17 @@ Get altitude of an array element</p>
 </section>
 <section id="module-layout.geo_coordinates">
 <span id="geo-coordinates"></span><span id="geocoordinatesmodule"></span><h2>geo_coordinates<a class="headerlink" href="#module-layout.geo_coordinates" title="Link to this heading">#</a></h2>
+<p>Definition of geospatial coordinate systems.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.geo_coordinates.</span></span><span class="sig-name descname"><span class="pre">GeoCoordinates</span></span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates" title="Link to this definition">#</a></dt>
-<dd><p>Geospatial Coordinate systems.
-Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.</p>
+<dd><p>Geospatial Coordinate systems.</p>
+<p>Defines UTM, WGS84 and ground (sim_telarray) coordinate systems.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="layout.geo_coordinates.GeoCoordinates.crs_local">
 <span class="sig-name descname"><span class="pre">crs_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/layout/geo_coordinates.html#GeoCoordinates.crs_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.geo_coordinates.GeoCoordinates.crs_local" title="Link to this definition">#</a></dt>
-<dd><p>Local coordinate system definition.
-This is a cartesian coordinate system with the origin at the array center.
+<dd><p>Local coordinate system definition.</p>
+<p>This is a cartesian coordinate system with the origin at the array center.
 X-axis points towards geographic North, y-axis towards geographic West.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1072,6 +1095,7 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout"><code class="docutils literal notranslate"><span class="pre">ArrayLayout</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.add_telescope"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.add_telescope()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_one_telescope_as_json"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_one_telescope_as_json()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.export_telescope_list_table"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.export_telescope_list_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.get_number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.get_number_of_telescopes()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.print_telescope_list()</span></code></a></li>
