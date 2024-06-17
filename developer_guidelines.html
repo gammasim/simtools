@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gb2abe13 Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g6111ef1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=4d9d8293"></script>
+    <script src="_static/documentation_options.js?v=162c95ff"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2abe13 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6111ef1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -527,6 +527,9 @@ and can be used to run unit and integration tests in parallel (e.g., <code class
 <a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
 <p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span> <span class="pre">--cov</span></code>.
 Add the <code class="docutils literal notranslate"><span class="pre">--cov-report</span> <span class="pre">html</span></code> option to generate a coverage report in HTML format.</p>
+<p>It might be quite useful to test a single application while developing.
+This can be done with e.g. <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run all the integrations tests for the <code class="docutils literal notranslate"><span class="pre">simtools-convert-all-model-parameters-from-simtel</span></code> application.
+Alternatively, run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel_num_gains&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run the tool for the specific test called <code class="docutils literal notranslate"><span class="pre">num_gains</span></code>. Test names are found in the yml files in the <code class="docutils literal notranslate"><span class="pre">tests/integration_tests/config</span></code> directory.</p>
 </section>
 <section id="writing-applications">
 <h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">#</a></h2>
