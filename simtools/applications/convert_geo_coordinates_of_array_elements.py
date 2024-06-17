@@ -85,7 +85,7 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--input",
         help="list of array element positions",
-        required=False,
+        required=True,
     )
     config.parser.add_argument(
         "--input_meta",
