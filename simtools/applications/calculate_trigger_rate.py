@@ -29,7 +29,7 @@ Example
 -------
 .. code-block:: console
 
-    simtools-calculate-trigger-rate --simtel_file_names tests/resources/
+    simtools-calculate-trigger-rate --simtel_file_names tests/resources/ \\
     run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst
 """
 
