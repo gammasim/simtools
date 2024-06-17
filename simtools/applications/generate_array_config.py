@@ -70,7 +70,7 @@
 
     .. code-block:: console
 
-        simtools-get-file-from-db --file_name array_config_test.yml
+        simtools-db-get-file-from-db --file_name array_config_test.yml
 
     Run the application. Runtime < 1 min.
 
