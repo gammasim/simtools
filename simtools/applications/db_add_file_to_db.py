@@ -60,13 +60,13 @@ def _parse():
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file_name",
-        help=("The file name to upload. A list of files is also allowed, ..."),
+        help=("The file name to upload. A list of files is also allowed."),
         type=str,
         nargs="+",
     )
     group.add_argument(
         "--input_path",
-        help=("A directory with files to upload to the DB. ..."),
+        help=("A directory with files to upload to the DB."),
         type=Path,
     )
 
@@ -80,6 +80,28 @@ def _parse():
 
 
 def collect_files_to_insert(args_dict, logger, db):
+    """
+    Collect the files to insert into the database based on the provided arguments.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary of parsed command-line arguments.
+    logger : logging.Logger
+        Logger object for logging messages.
+    db : DatabaseHandler
+        Database handler object.
+
+    Returns
+    -------
+    list
+        List of files to be inserted into the database.
+
+    Raises
+    ------
+    ValueError
+        If no valid files are provided for uploading.
+    """
     files_to_insert = []
 
     if args_dict.get("file_name", None) is not None:
@@ -102,6 +124,20 @@ def collect_files_to_insert(args_dict, logger, db):
 
 
 def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
+    """
+    Confirm the files to be inserted and insert them into the database.
+
+    Parameters
+    ----------
+    files_to_insert : list
+        List of files to be inserted into the database.
+    args_dict : dict
+        Dictionary of parsed command-line arguments.
+    db : DatabaseHandler
+        Database handler object.
+    logger : logging.Logger
+        Logger object for logging messages.
+    """
     plural = "" if len(files_to_insert) == 1 else "s"
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
