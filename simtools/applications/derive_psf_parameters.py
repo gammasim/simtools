@@ -102,12 +102,17 @@ from simtools.visualization import visualize
 
 def load_data(data_file):
     """
-    Load data from file txt file.
+    Load data from a text file containing cumulative PSF measurements.
 
     Parameters
     ----------
-    data_file: str
+    data_file : str
         Name of the data file with the measured cumulative PSF.
+
+    Returns
+    -------
+    numpy.ndarray
+        Loaded and processed data from the file.
     """
     radius_cm = "Radius [cm]"
     cumulative_psf = "Cumulative PSF"
@@ -161,6 +166,18 @@ def add_parameters(
     """
     Transform the parameters to the proper format and add a new set of
     parameters to the all_parameters list.
+    Parameters
+    ----------
+    all_parameters : list
+        List to store all parameter sets.
+    mirror_reflection : float
+        Mirror reflection random angle parameter value.
+    mirror_align : float
+        Mirror alignment random horizontal and vertical parameter value.
+    mirror_reflection_fraction : float, optional
+        Mirror reflection fraction parameter value (default is 0.15).
+    mirror_reflection_2 : float, optional
+        Second mirror reflection random angle parameter value (default is 0.035).
     """
     # If we want to start from values different than the ones currently in the model:
     # align = 0.0046
@@ -183,14 +200,23 @@ def add_parameters(
 
 
 def get_previous_values(tel_model, logger):
+    """
+    Retrieve previous parameter values from the telescope model.
 
-    # Grabbing the previous values of the parameters from the tel model.
-    #
-    # mrra -> mirror reflection random angle (first entry of mirror_reflection_random_angle)
-    # mfr -> mirror fraction random (second entry of mirror_reflection_random_angle)
-    # mrra2 -> mirror reflection random angle 2 (third entry of mirror_reflection_random_angle)
-    # mar -> mirror align random (first entry of mirror_align_random_horizontal/vertical)
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model object.
+    logger : logging.Logger
+        Logger object for logging messages.
 
+    Returns
+    -------
+    tuple
+        Tuple containing the previous values of mirror_reflection_random_angle (first entry),
+        mirror_reflection_fraction, second entry), mirror_reflection_random_angle (third entry),
+        and mirror_align_random_horizontal/vertical.
+    """
     split_par = tel_model.get_parameter_value("mirror_reflection_random_angle")
     mrra_0, mfr_0, mrra2_0 = split_par[0], split_par[1], split_par[2]
     mar_0 = tel_model.get_parameter_value("mirror_align_random_horizontal")[0]
@@ -209,6 +235,28 @@ def get_previous_values(tel_model, logger):
 def generate_random_parameters(
     all_parameters, n_runs, args_dict, mrra_0, mfr_0, mrra2_0, mar_0, logger
 ):
+    """
+    Generate random parameters for tuning.
+
+    Parameters
+    ----------
+    all_parameters : list
+        List to store all parameter sets.
+    n_runs : int
+        Number of random parameter combinations to test.
+    args_dict : dict
+        Dictionary containing parsed command-line arguments.
+    mrra_0 : float
+        Initial value of mirror_reflection_random_angle.
+    mfr_0 : float
+        Initial value of mirror_reflection_fraction.
+    mrra2_0 : float
+        Initial value of the second mirror_reflection_random_angle.
+    mar_0 : float
+        Initial value of mirror_align_random_horizontal/vertical.
+    logger : logging.Logger
+        Logger object for logging messages.
+    """
     # Range around the previous values are hardcoded
     # Number of runs is hardcoded
     if args_dict["fixed"]:
