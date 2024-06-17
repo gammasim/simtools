@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import logging
+import pathlib
+from unittest.mock import Mock, patch
 
 import pytest
 from astropy import units as u
@@ -42,19 +44,32 @@ def test_repr(corsika_config):
     assert "site" in repr(corsika_config)
 
 
-def test_setup_configuration(io_handler, corsika_config_data, caplog):
-    logger.info("test_user_parameters")
+def test_setup_configuration(io_handler, corsika_config_data):
     cc = CorsikaConfig(
         array_model=None,
         label="test-corsika-config",
         args_dict=corsika_config_data,
     )
-    assert cc.get_config_parameter("nshow") == 100
-    assert cc.get_config_parameter("thetap") == [20, 20]
-    assert cc.get_config_parameter("erange") == [10.0, 10000.0]
+    assert cc.get_config_parameter("NSHOW") == 100
+    assert cc.get_config_parameter("THETAP") == [20, 20]
+    assert cc.get_config_parameter("ERANGE") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert cc.get_config_parameter("phip") == [180.0, 180.0]
-    assert cc.get_config_parameter("cscat") == [10, 140000.0, 0]
+    assert cc.get_config_parameter("PHIP") == [180.0, 180.0]
+    assert cc.get_config_parameter("CSCAT") == [10, 140000.0, 0]
+
+    assert isinstance(cc.setup_configuration(), dict)
+    cc.args_dict = None
+    assert cc.setup_configuration() is None
+
+
+def test_get_config_parameter(io_handler, corsika_config_data, caplog):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=corsika_config_data,
+    )
+    assert isinstance(cc.get_config_parameter("NSHOW"), int)
+    assert isinstance(cc.get_config_parameter("THETAP"), list)
     with pytest.raises(KeyError):
         cc.get_config_parameter("not_really_a_parameter")
     assert "Parameter not_really_a_parameter" in caplog.text
@@ -167,3 +182,55 @@ def test_get_text_multiple_lines(io_handler):
         )
         == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
     )
+
+
+def test_set_output_file_and_directory(corsika_config):
+    cc = corsika_config
+    output_file = cc._set_output_file_and_directory()
+    assert (
+        str(output_file)
+        == "corsika_runXXXXXX_proton_za020deg_azm000deg_South_test_layout_test-corsika-config.zst"
+    )
+    assert isinstance(cc.config_file_path, pathlib.Path)
+
+
+def test_write_seeds(io_handler):
+    mock_file = Mock()
+    corsika_config = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    corsika_config.config = {"PRMPAR": [14], "RUNNR": [10]}
+    with patch("io.open", return_value=mock_file):
+        corsika_config._write_seeds(mock_file)
+    assert mock_file.write.call_count == 4
+
+    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
+    for _call in expected_calls:
+        assert _call.startswith("SEED ")
+        assert _call.endswith(" 0 0\n")
+
+
+def test_get_input_file(corsika_config):
+    empty_config = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert not empty_config._is_file_updated
+
+    cc = corsika_config
+
+    assert not cc._is_file_updated
+    input_file = cc.get_input_file()
+
+    assert isinstance(input_file, pathlib.Path)
+    assert cc._is_file_updated
+
+
+def test_get_corsika_telescope_list(corsika_config):
+    cc = corsika_config
+    telescope_list_str = cc.get_corsika_telescope_list()
+    assert telescope_list_str.count("TELESCOPE") > 0
+    assert telescope_list_str.count("LSTS") > 0
