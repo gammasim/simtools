@@ -50,8 +50,7 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def initialize_config():
-    _db_tmp = db_handler.DatabaseHandler(mongo_db_config=None)
+def _parse():
 
     config = configurator.Configurator(
         description="Add file to the DB.",
@@ -77,14 +76,7 @@ def initialize_config():
         help=("The database to insert the files to."),
     )
 
-    args_dict, db_config = config.initialize(paths=False, db_config=True)
-
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-
-    return args_dict, db, logger
+    return config.initialize(paths=False, db_config=True)
 
 
 def collect_files_to_insert(args_dict, logger, db):
@@ -125,7 +117,12 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 
 
 def main():
-    args_dict, db, logger = initialize_config()
+    args_dict, db_config = _parse()
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     files_to_insert = collect_files_to_insert(args_dict, logger, db)
     confirm_and_insert_files(files_to_insert, args_dict, db, logger)
