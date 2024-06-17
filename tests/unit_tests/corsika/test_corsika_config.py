@@ -168,17 +168,9 @@ def test_get_text_single_line(io_handler):
         args_dict=None,
     )
     assert cc._get_text_single_line({"EVTNR": [1], "RUNNR": [10]}) == "EVTNR 1 \nRUNNR 10 \n"
-
-
-def test_get_text_multiple_lines(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
     assert (
-        cc._get_text_multiple_lines(
-            {"IACT": [["SPLIT_AUTO", "15M"], ["IO_BUFFER", "800MB"], ["MAX_BUNCHES", "1000000"]]}
+        cc._get_text_single_line(
+            {"SPLIT_AUTO": ["15M"], "IO_BUFFER": ["800MB"], "MAX_BUNCHES": ["1000000"]}, "IACT "
         )
         == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
     )
