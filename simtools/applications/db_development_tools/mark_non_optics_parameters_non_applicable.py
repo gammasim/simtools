@@ -21,7 +21,7 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def initialize_config():
+def _parse():
     config = configurator.Configurator(
         description=(
             "Mark all non-structure related parameters in the MST-Structure "
@@ -86,7 +86,7 @@ def process_site_version(db, db_config, non_optic_parameters, site, version):
 
 
 def main():
-    args_dict, db_config = initialize_config()
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
