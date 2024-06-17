@@ -69,7 +69,7 @@
 
     .. code-block:: console
 
-        simtools-derive-psf-parameters --site North --telescope LSTN-01 \
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
             --model_version prod6 --data PSFcurve_data_v2.txt --plot_all --test
 
     The output is saved in simtools-output/derive_psf_parameters.
