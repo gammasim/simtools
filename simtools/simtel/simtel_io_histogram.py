@@ -1,4 +1,5 @@
-"""Handle a single histogram (or simtel_array output) file."""
+"""This module reads the content of either a single histogram (.hdata, or .hdata.zst) or a single
+simtel_array output file (.simtel or .simtel.zst)."""
 
 import copy
 import logging
@@ -30,7 +31,8 @@ class HistogramIdNotFoundError(Exception):
 
 class SimtelIOHistogram:
     """
-    Handle a single histogram (or simtel_array output) file.
+    Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
+    output file (.simtel or .simtel.zst)
 
     Parameters
     ----------
