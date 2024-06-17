@@ -171,7 +171,7 @@ def main():
 
     if args_dict["export"] is not None:
         product_data = (
-            layout.export_telescope_list_as_json(crs_name=args_dict["export"])
+            layout.export_one_telescope_as_json(crs_name=args_dict["export"])
             if json_type
             else layout.export_telescope_list_table(crs_name=args_dict["export"])
         )

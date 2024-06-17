@@ -448,7 +448,7 @@ def test_export_telescope_list_table(
         pytest.fail("IndexError raised")
 
 
-def test_export_telescope_list_as_json(db_config, model_version, telescope_north_utm_test_file):
+def test_export_one_telescope_as_json(db_config, model_version, telescope_north_utm_test_file):
 
     layout = ArrayLayout(
         mongo_db_config=db_config,
@@ -457,15 +457,15 @@ def test_export_telescope_list_as_json(db_config, model_version, telescope_north
         telescope_list_file="tests/resources/array_element_position_ground.json",
     )
 
-    ground_dict = layout.export_telescope_list_as_json(crs_name="ground")
+    ground_dict = layout.export_one_telescope_as_json(crs_name="ground")
     assert isinstance(ground_dict, dict)
     assert ground_dict["instrument"] == "SSTS-09"
     assert ground_dict["parameter"] == "array_element_position_ground"
 
-    utm_dict = layout.export_telescope_list_as_json(crs_name="utm")
+    utm_dict = layout.export_one_telescope_as_json(crs_name="utm")
     assert utm_dict["parameter"] == "array_element_position_utm"
 
-    mercator_dict = layout.export_telescope_list_as_json(crs_name="mercator")
+    mercator_dict = layout.export_one_telescope_as_json(crs_name="mercator")
     assert mercator_dict["parameter"] == "array_element_position_mercator"
 
     layout_utm = ArrayLayout(
@@ -475,7 +475,7 @@ def test_export_telescope_list_as_json(db_config, model_version, telescope_north
         telescope_list_file=telescope_north_utm_test_file,
     )
     with pytest.raises(ValueError, match=r"Only one telescope can be exported to json"):
-        layout_utm.export_telescope_list_as_json(crs_name="ground")
+        layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
 def test_read_table_from_json_file(db_config, model_version):
