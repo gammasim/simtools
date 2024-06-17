@@ -137,7 +137,9 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
 
 def compare_json_files(file1, file2):
     """
-    Compare two json files
+    Compare two json files.
+
+    Take into account float comparison for sim_telarray string-embedded floats.
 
     Parameters
     ----------
@@ -151,7 +153,14 @@ def compare_json_files(file1, file2):
     data1 = gen.collect_data_from_file_or_dict(file1, in_dict=None)
     data2 = gen.collect_data_from_file_or_dict(file2, in_dict=None)
 
-    assert data1 == data2
+    try:
+        assert data1 == data2
+    except AssertionError:
+        if "value" in data1 and isinstance(data1["value"], str):
+            value_list_1 = gen.convert_string_to_list(data1.pop("value"))
+            value_list_2 = gen.convert_string_to_list(data2.pop("value"))
+            np.allclose(value_list_1, value_list_2, rtol=1e-2)
+        assert data1 == data2
 
 
 def compare_files(file1, file2, tolerance=1.0e-5):

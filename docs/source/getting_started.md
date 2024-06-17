@@ -98,7 +98,7 @@ docker run --rm -it --env-file .env \
     ghcr.io/gammasim/simtools-prod:latest bash
 ```
 
-In the container, simtools applications are installed and can be called directly (e.g., `simtools-print-array-elements -h`).
+In the container, simtools applications are installed and can be called directly (e.g., `simtools-convert-geo-coordinates-of-array-elements -h`).
 This example uses the docker syntax to mount your local directory.
 
 The following example runs an application inside the container and writes the output into a directory of the local files system,
@@ -107,7 +107,7 @@ The following example runs an application inside the container and writes the ou
 docker run --rm -it --env-file .env \
     -v "$(pwd):/workdir/external" \
     ghcr.io/gammasim/simtools-prod:latest \
-    simtools-print-array-elements \
+    simtools-convert-geo-coordinates-of-array-elements \
     --array_element_list ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export corsika --use_corsika_telescope_height \
     --output_path /workdir/external/

@@ -12,7 +12,7 @@
 #     ACTIVITY:
 #       END: '2024-01-17T08:18:14'
 #       ID: 2f5a2ee4-32c9-4302-bc71-9ea418f9e385
-#       NAME: print_array_elements
+#       NAME: convert_geo_coordinates_of_array_elements
 #       SOFTWARE: {NAME: simtools, VERSION: 0.5.2.dev1253+g8e35ba20}
 #       START: '2024-01-17T08:18:14'
 #       TYPE: software
