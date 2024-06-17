@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g152629c Manual</title>
+    <title>db_inspect_databases &#8212; simtools v0.1.dev1+g152629c Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'validate_file_using_schema';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'db_inspect_databases';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="validate_optics" href="validate_optics.html" />
-    <link rel="prev" title="validate_cumulative_psf" href="validate_cumulative_psf.html" />
+    <link rel="next" title="derive_mirror_rnda" href="derive_mirror_rnda.html" />
+    <link rel="prev" title="db_get_parameter_from_db" href="db_get_parameter_from_db.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -196,7 +196,7 @@
 <li class="toctree-l2"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_inspect_databases.html">db_inspect_databases</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">db_inspect_databases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="derive_psf_parameters.html">derive_psf_parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generate_array_config.html">generate_array_config</a></li>
@@ -213,7 +213,7 @@
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_cumulative_psf.html">validate_cumulative_psf</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">validate_file_using_schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
 </ul>
 </details></li>
@@ -299,7 +299,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/validate_file_using_schema.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/db_inspect_databases.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -316,7 +316,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fvalidate_file_using_schema.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdb_inspect_databases.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -346,7 +346,7 @@
       
       
       
-      <li><a href="_sources/validate_file_using_schema.rst" target="_blank"
+      <li><a href="_sources/db_inspect_databases.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -430,7 +430,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>validate_file_using_schema</h1>
+    <h1>db_inspect_databases</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -440,13 +440,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -458,60 +452,16 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-validate_file_using_schema">
-<span id="validate-file-using-schema"></span><h1>validate_file_using_schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>Validate a file using a schema.
-Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</p>
-</section>
+  <section id="db-inspect-databases">
+<span id="id1"></span><h1>db_inspect_databases<a class="headerlink" href="#db-inspect-databases" title="Link to this heading">#</a></h1>
+<p id="module-db_inspect_databases">Inspect databases and print (available database names and collections).</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>file_name (str)</dt><dd><p>input file to be validated</p>
-</dd>
-<dt>schema (str)</dt><dd><p>schema file (jsonschema format) used for validation</p>
-</dd>
-<dt>data_type (str)</dt><dd><p>type of input data (allowed types: metadata, schema, data)</p>
+<dt>db_name (str, optional)</dt><dd><p>Inspect a specific database.</p>
 </dd>
 </dl>
 </section>
-<section id="raises">
-<h2>Raises<a class="headerlink" href="#raises" title="Link to this heading">#</a></h2>
-<dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>if file to be validated is not found</p>
-</dd>
-</dl>
-</section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema \</span>
-<span class="go"> --file_name tests/resources/MLTdata-preproduction.meta.yml \</span>
-<span class="go"> --schema simtools/schemas/metadata.metaschema.yml \</span>
-<span class="go"> --data_type metadata</span>
-</pre></div>
-</div>
-</section>
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_data_file">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_file" title="Link to this definition">#</a></dt>
-<dd><p>Validate a data file (e.g., in ecsv, json, yaml format)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">#</a></dt>
-<dd><p>Validate metadata.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_schema">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validate_file_using_schema.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_schema" title="Link to this definition">#</a></dt>
-<dd><p>Validate a schema file given in yaml or json format.
-Schema is either given as command line argument, read from the meta_schema_url or from
-the metadata section of the data dictionary.</p>
-</dd></dl>
-
 </section>
 
 
@@ -526,20 +476,20 @@ the metadata section of the data dictionary.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="validate_cumulative_psf.html"
+       href="db_get_parameter_from_db.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">validate_cumulative_psf</p>
+        <p class="prev-next-title">db_get_parameter_from_db</p>
       </div>
     </a>
     <a class="right-next"
-       href="validate_optics.html"
+       href="derive_mirror_rnda.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">validate_optics</p>
+        <p class="prev-next-title">derive_mirror_rnda</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -559,13 +509,7 @@ the metadata section of the data dictionary.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
   </nav></div>
 
