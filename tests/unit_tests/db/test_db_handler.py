@@ -345,7 +345,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         telescope="LSTN-test",
-        version="Released",
+        model_version="Released",
         parameter="camera_pixels",
         field="applicable",
         new_value=False,
@@ -366,7 +366,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
             db_name=f"sandbox_{random_id}",
             telescope=None,
             site=None,
-            version="2024-02-01",
+            model_version="2024-02-01",
             parameter="not_important",
             field="applicable",
             new_value=False,
