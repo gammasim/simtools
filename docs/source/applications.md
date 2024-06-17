@@ -45,6 +45,7 @@ db_add_value_from_json_to_db
 db_get_array_layouts_from_db
 db_get_file_from_db
 db_get_parameter_from_db
+db_inspect_databases
 derive_mirror_rnda
 derive_psf_parameters
 generate_array_config
