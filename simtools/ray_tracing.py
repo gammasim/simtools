@@ -284,6 +284,31 @@ class RayTracing:
         use_rx,
         containment_fraction,
     ):
+        """
+        Process off-axis angles and mirrors for RayTracing analysis.
+
+        Parameters
+        ----------
+        all_mirrors: list
+            List of mirror numbers to analyze.
+        focal_length: float
+            Focal length of the telescope.
+        tel_transmission_pars: list
+            Telescope transmission parameters.
+        cm_to_deg: float
+            Conversion factor from centimeters to degrees.
+        do_analyze: bool
+            Flag indicating whether to perform analysis or not.
+        use_rx: bool
+            Flag indicating whether to use the RX method for analysis.
+        containment_fraction: float
+            Containment fraction for PSF containment calculation.
+
+        Returns
+        -------
+        list
+            List of results for each combination of off-axis angle and mirror.
+        """
         _rows = []
 
         for this_off_axis in self.config.off_axis_angle:
@@ -318,6 +343,19 @@ class RayTracing:
         return _rows
 
     def _get_telescope_transmission_params(self, no_tel_transmission):
+        """
+        Get telescope transmission parameters.
+
+        Parameters
+        ----------
+        no_tel_transmission: bool
+            Flag indicating whether to apply telescope transmission or not.
+
+        Returns
+        -------
+        list
+            Telescope transmission parameters.
+        """
         return (
             self._telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
@@ -325,9 +363,32 @@ class RayTracing:
         )
 
     def _get_all_mirrors(self):
+        """
+        Get number of mirrors.
+
+        Returns
+        -------
+        list
+            List of number of mirrors.
+        """
         return self._mirror_numbers if self.config.single_mirror_mode else [0]
 
     def _get_photons_file(self, this_off_axis, this_mirror):
+        """
+        Get path to photons file for a given off-axis angle and mirror.
+
+        Parameters
+        ----------
+        this_off_axis: float
+            Off-axis angle.
+        this_mirror: int or None
+            Mirror number.
+
+        Returns
+        -------
+        Path
+            Path to the photons file.
+        """
         photons_file_name = names.generate_file_name(
             file_type="photons",
             suffix=".lis",
@@ -342,6 +403,23 @@ class RayTracing:
         return self._output_directory.joinpath(photons_file_name + ".gz")
 
     def _create_psf_image(self, photons_file, focal_length, this_off_axis):
+        """
+        Create PSF image from photons file.
+
+        Parameters
+        ----------
+        photons_file: Path
+            Path to the photons file.
+        focal_length: float
+            Focal length of the telescope.
+        this_off_axis: float
+            Off-axis angle.
+
+        Returns
+        -------
+        PSFImage
+            PSF image object.
+        """
         image = PSFImage(focal_length, None)
         image.read_photon_list_from_simtel_file(photons_file)
         self._psf_images[this_off_axis] = copy(image)
@@ -357,6 +435,31 @@ class RayTracing:
         containment_fraction,
         tel_transmission,
     ):
+        """
+        Analyze PSF image.
+
+        Parameters
+        ----------
+        image: PSFImage
+            PSF image object.
+        photons_file: Path
+            Path to the photons file.
+        this_off_axis: float
+            Off-axis angle.
+        use_rx: bool
+            Flag indicating whether to use the RX method for analysis.
+        cm_to_deg: float
+            Conversion factor from centimeters to degrees.
+        containment_fraction: float
+            Containment fraction for PSF containment calculation.
+        tel_transmission: float
+            Telescope transmission factor.
+
+        Returns
+        -------
+        tuple
+            Tuple containing analyzed results.
+        """
         if use_rx:
             containment_diameter_cm, centroid_x, centroid_y, eff_area = self._process_rx(
                 photons_file
@@ -383,6 +486,14 @@ class RayTracing:
         )
 
     def _store_results(self, _rows):
+        """
+        Store analysis results.
+
+        Parameters
+        ----------
+        _rows: list
+            List of rows containing analysis results.
+        """
         _columns = ["Off-axis angle"]
         _columns.extend(list(self.YLABEL.keys()))
         if self.config.single_mirror_mode:
