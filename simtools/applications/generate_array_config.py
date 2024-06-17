@@ -70,13 +70,13 @@
 
     .. code-block:: console
 
-        simtools-get-file-from-db --file_name array_config_test.yml
+        simtools-db-get-file-from-db --file_name array_config_test.yml
 
     Run the application. Runtime < 1 min.
 
     .. code-block:: console
 
-        simtools-produce-array-config --label test --array_config array_config_test.yml
+        simtools-generate-array-config --label test --array_config array_config_test.yml
 
     The output is saved in simtools-output/test/model.
 """
@@ -93,7 +93,7 @@ def main():
     """Generate sim_telarray config files for a given array."""
     config = configurator.Configurator(
         label=Path(__file__).stem,
-        description=("Example of how to produce sim_telarray config files for a given array."),
+        description=("Example of how to generate sim_telarray config files for a given array."),
     )
     config.parser.add_argument(
         "--array_config",
