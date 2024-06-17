@@ -63,7 +63,7 @@
 
     .. code-block:: console
 
-        simtools-get-file-from_db --file_name PSFcurve_data_v2.txt
+        simtools-db-get-file-from-db --file_name PSFcurve_data_v2.txt
 
     Run the application:
 
