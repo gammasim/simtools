@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g41dbd1e Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g2a0b645 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=d3e0acf1"></script>
+    <script src="../../_static/documentation_options.js?v=804ffe97"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g41dbd1e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g2a0b645 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -829,15 +829,15 @@ document.write(`
 
         <span class="n">reference_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reference_unit</span><span class="p">(</span><span class="n">col_name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">unit</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">unit</span>
+            <span class="n">column_unit</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">unit</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="ow">or</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">column_unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="k">if</span> <span class="n">column_unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">column_unit</span> <span class="o">==</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="ow">or</span> <span class="n">column_unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39; with reference unit &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39; and data unit &#39;</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39; and data unit &#39;</span><span class="si">{</span><span class="n">column_unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span> <span class="o">|</span> <span class="n">Column</span><span class="p">):</span>
@@ -850,14 +850,14 @@ document.write(`
                         <span class="k">if</span> <span class="n">_to_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
                         <span class="k">else</span> <span class="n">d</span>
                     <span class="p">)</span>
-                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">_to_unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">_to_unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">column_unit</span><span class="p">)</span>
                 <span class="p">],</span> <span class="n">reference_unit</span>
             <span class="c1"># ensure that the data type is preserved (e.g., integers)</span>
-            <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span><span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span> <span class="o">*</span> <span class="n">data</span><span class="p">),</span> <span class="n">reference_unit</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span><span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">column_unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span> <span class="o">*</span> <span class="n">data</span><span class="p">),</span> <span class="n">reference_unit</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Invalid unit in data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Expected type &#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39;, found &#39;</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected type &#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39;, found &#39;</span><span class="si">{</span><span class="n">column_unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span>
 
