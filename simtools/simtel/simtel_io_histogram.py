@@ -86,7 +86,6 @@ class SimtelIOHistogram:
         self.energy_axis = None
         self.radius_axis = None
         self.area_from_distribution = area_from_distribution
-        self.suffix = "".join(Path(self.histogram_file).suffixes)
 
         self.view_cone = view_cone
         self._set_view_cone()
