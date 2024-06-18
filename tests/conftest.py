@@ -425,6 +425,7 @@ def corsika_config(io_handler, corsika_config_data, array_model_south):
         label="test-corsika-config",
         args_dict=corsika_config_data,
     )
+    corsika_config.run_number = 1
     return corsika_config
 
 

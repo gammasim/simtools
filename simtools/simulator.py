@@ -27,9 +27,9 @@ class InvalidRunsToSimulateError(Exception):
 
 class Simulator:
     """
-    Simulator is responsible for managing simulation of showers and array of telescopes.
+    Simulator is managing the simulation of showers and of the array of telescopes.
 
-    It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.
+    It interfaces with simulation software packages (e.g., CORSIKA or sim_telarray).
 
     The configuration is set as a dict corresponding to the command line configuration groups
     (especially simulation_software, simulation_model, simulation_parameters).

@@ -216,16 +216,3 @@ def test_get_run_directory(corsika_runner):
     assert run_directory == "run123456"
     with pytest.raises(ValueError, match=r"^Run number cannot have more than 6 digits"):
         run_directory = corsika_runner._get_run_directory(1234567)
-
-
-def test_validate_run_number(corsika_runner):
-    assert corsika_runner._validate_run_number(1)
-    assert corsika_runner._validate_run_number(123456)
-    with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        corsika_runner._validate_run_number("test")
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        corsika_runner._validate_run_number(1.5)
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        corsika_runner._validate_run_number(-1)
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        corsika_runner._validate_run_number(123456789)
