@@ -53,7 +53,7 @@ class SimtelIOHistogram:
 
     """
 
-    def __init__(self, histogram_file, area_from_distribution=False):
+    def __init__(self, histogram_file, area_from_distribution=False, energy_range=None):
         """Initialize SimtelIOHistogram class."""
         self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
@@ -65,7 +65,8 @@ class SimtelIOHistogram:
         self._view_cone = None
         self._total_area = None
         self._solid_angle = None
-        self._energy_range = None
+        self.energy_range = energy_range
+        self._set_energy_range()
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
         self._histogram = None
@@ -221,7 +222,14 @@ class SimtelIOHistogram:
             view cone used in the simulation [min, max]
         """
         if self._view_cone is None:
-            self._view_cone = self.config["viewcone"] * u.deg
+            try:
+                self._view_cone = self.config["viewcone"] * u.deg
+            except (
+                TypeError
+            ):  # self.config is None because a .hdata file has no config saved in it.
+                if self._view_cone is None:
+                    msg = "view_cone not found in the config."
+                    self._logger.debug(msg)
         return self._view_cone
 
     @property
@@ -269,22 +277,32 @@ class SimtelIOHistogram:
                 )
         return self._total_area
 
-    @property
-    def energy_range(self):
+    def _set_energy_range(self):
         """
         Energy range used in the simulation.
+        If the input file is a .simtel.zst, the energy range is taken from its configuration,
+        written in the file itself.
+        If the input file is a .hdata.zst, the energy range has to be passed as argument to the
+        class. An error is raised in case the argument is missing.
 
-        Returns
-        -------
-        list:
-            Energy range used in the simulation [min, max]
+        Raises
+        ------
+        ValueError:
+            if input parameter is missing.
         """
-        if self._energy_range is None:
-            self._energy_range = [
-                self.config["E_range"][0] * u.TeV,
-                self.config["E_range"][1] * u.TeV,
-            ]
-        return self._energy_range
+        if self.energy_range is None:
+            try:
+                self.energy_range = [
+                    self.config["E_range"][0] * u.TeV,
+                    self.config["E_range"][1] * u.TeV,
+                ]
+            except KeyError as exc:  # E_range not in self.config
+                msg = "energy_range needs to be passed as argument (a list of energies in TeV)."
+                self._logger.error(msg)
+                raise ValueError from exc
+        else:
+            if not isinstance(self.energy_range, u.Quantity):
+                self.energy_range = self.energy_range * u.TeV
 
     @staticmethod
     def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
