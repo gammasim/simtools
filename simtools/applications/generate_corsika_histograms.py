@@ -3,19 +3,19 @@
 """
     Summary
     -------
-    This application produces a set of histograms of the distribution of Cherenkov photons on the
+    This application generates a set of histograms of the distribution of Cherenkov photons on the
     ground (at observation level) read from the CORSIKA IACT output file provided as input.
 
     The histograms can be saved both into pdfs and in a hdf5 file.
 
-    The following 2D histograms are produced:
+    The following 2D histograms are generated:
         - Number of Cherenkov photons on the ground;
         - Density of Cherenkov photons on the ground;
         - Incoming direction (directive cosines) of the Cherenkov photons;
         - Time of arrival (ns) vs altitude of production (km);
         - Number of Cherenkov photons per event per telescope.
 
-    The following 1D histograms are produced:
+    The following 1D histograms are generated:
         - Wavelength;
         - Counts;
         - Density;
@@ -130,19 +130,19 @@
 
 
     event_1d_histograms (str, optional)
-        Produce 1D histograms for elements given in --event_1d_histograms from the CORSIKA event
+        Generate 1D histograms for elements given in --event_1d_histograms from the CORSIKA event
         header and save into hdf5/pdf files.
         It allows more than one argument, separated by simple spaces.
         Usage: --event_1d_histograms first_interaction_height total_energy.
 
     event_2d_histograms (str, optional)
-        Produce 2D histograms for elements given in --event_2d_histograms from the CORSIKA event
+        Generate 2D histograms for elements given in --event_2d_histograms from the CORSIKA event
         header and save into hdf5/pdf files.
         It allows more than one argument, separated by simple spaces.
-        The elements are grouped into pairs and the 2D histograms are produced always for two
+        The elements are grouped into pairs and the 2D histograms are generated always for two
         subsequent elements.
         For example, --event_2d_histograms first_interaction_height total_energy zenith azimuth
-        will produce one 2D histogram for first_interaction_height total_energy and another 2D
+        will generate one 2D histogram for first_interaction_height total_energy and another 2D
         histogram for zenith and azimuth.
 
     Example
@@ -151,10 +151,10 @@
 
      .. code-block:: console
 
-        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/tests/\
-            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5
+        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/\\
+        testsresources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
+            --pdf --hdf5 \\
             --event_2d_histograms zenith azimuth --event_1d_histograms total_energy
-
 
     Expected final print-out message:
 
@@ -329,7 +329,7 @@ def _derive_event_1d_histograms(
     corsika_histograms_instance: CorsikaHistograms instance.
         The CorsikaHistograms instance created in main.
     event_1d_header_keys: str
-        Produce 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
+        Generate 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
         header and save into hdf5/pdf files.
     pdf: bool
         If true, histograms are saved into a pdf file.
@@ -369,7 +369,7 @@ def _derive_event_2d_histograms(
     corsika_histograms_instance: CorsikaHistograms instance.
         The CorsikaHistograms instance created in main.
     event_2d_header_keys: str
-        Produce 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
+        Generate 1D histograms for elements given in event_1d_header_keys from the CORSIKA event
         header and save into hdf5/pdf files.
     pdf: bool
         If true, histograms are saved into a pdf file.
@@ -384,7 +384,7 @@ def _derive_event_2d_histograms(
 
         if len(event_2d_header_keys) % 2 == 1:  # if odd number of keys
             msg = (
-                "An odd number of keys was passed to produce 2D histograms."
+                "An odd number of keys was passed to generate 2D histograms."
                 "The last key is being ignored."
             )
             logger.warning(msg)
