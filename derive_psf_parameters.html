@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+gef6979c Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g7a49aa1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=4c1fc832"></script>
+    <script src="_static/documentation_options.js?v=64e5a68e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7a49aa1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -509,20 +509,20 @@ document.write(`
 <p>LST-1 Prod5</p>
 <p>Runtime &lt; 3 min.</p>
 <p>Get PSF data from the DB:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-file-from_db --file_name PSFcurve_data_v2.txt</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-file-from-db --file_name PSFcurve_data_v2.txt</span>
 </pre></div>
 </div>
 <p>Run the application:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-tune-psf --site North --telescope LST-1 \</span>
-<span class="go">    --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-psf-parameters --site North --telescope LSTN-01 \</span>
+<span class="go">    --model_version prod6 --data PSFcurve_data_v2.txt --plot_all --test</span>
 </pre></div>
 </div>
 <p>The output is saved in simtools-output/derive_psf_parameters.</p>
 <p>Expected final print-out message:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Best parameters:</span>
-<span class="go">mirror_reflection_random_angle = 0.0043,0.08,0.0470</span>
-<span class="go">mirror_align_random_horizontal = 0.0047,28.,0.,0.</span>
-<span class="go">mirror_align_random_vertical = 0.0047,28.,0.,0.</span>
+<span class="go">mirror_reflection_random_angle = [0.006, 0.133, 0.005]</span>
+<span class="go">mirror_align_random_horizontal = [0.005, 28.0, 0.0, 0.0]</span>
+<span class="go">mirror_align_random_vertical = [0.005, 28.0, 0.0, 0.0]</span>
 </pre></div>
 </div>
 </section>

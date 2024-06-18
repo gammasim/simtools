@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>generate_corsika_histograms &#8212; simtools v0.1.dev1+gef6979c Manual</title>
+    <title>generate_corsika_histograms &#8212; simtools v0.1.dev1+g7a49aa1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=4c1fc832"></script>
+    <script src="_static/documentation_options.js?v=64e5a68e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7a49aa1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -458,11 +458,11 @@ document.write(`
 <span id="generate-corsika-histograms"></span><h1>generate_corsika_histograms<a class="headerlink" href="#module-generate_corsika_histograms" title="Link to this heading">#</a></h1>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>This application produces a set of histograms of the distribution of Cherenkov photons on the
+<p>This application generates a set of histograms of the distribution of Cherenkov photons on the
 ground (at observation level) read from the CORSIKA IACT output file provided as input.</p>
 <p>The histograms can be saved both into pdfs and in a hdf5 file.</p>
 <dl class="simple">
-<dt>The following 2D histograms are produced:</dt><dd><ul class="simple">
+<dt>The following 2D histograms are generated:</dt><dd><ul class="simple">
 <li><p>Number of Cherenkov photons on the ground;</p></li>
 <li><p>Density of Cherenkov photons on the ground;</p></li>
 <li><p>Incoming direction (directive cosines) of the Cherenkov photons;</p></li>
@@ -470,7 +470,7 @@ ground (at observation level) read from the CORSIKA IACT output file provided as
 <li><p>Number of Cherenkov photons per event per telescope.</p></li>
 </ul>
 </dd>
-<dt>The following 1D histograms are produced:</dt><dd><ul class="simple">
+<dt>The following 1D histograms are generated:</dt><dd><ul class="simple">
 <li><p>Wavelength;</p></li>
 <li><p>Counts;</p></li>
 <li><p>Density;</p></li>
@@ -577,18 +577,18 @@ If the output hdf5_file_name file already exists, the tables associated to the c
 flags (e.g. hdf5, event_1d_histograms, event_2d_histograms) will be overwritten. The
 remaining tables, if any, will stay untouched.</p>
 </dd>
-<dt>event_1d_histograms (str, optional)</dt><dd><p>Produce 1D histograms for elements given in –event_1d_histograms from the CORSIKA event
+<dt>event_1d_histograms (str, optional)</dt><dd><p>Generate 1D histograms for elements given in –event_1d_histograms from the CORSIKA event
 header and save into hdf5/pdf files.
 It allows more than one argument, separated by simple spaces.
 Usage: –event_1d_histograms first_interaction_height total_energy.</p>
 </dd>
-<dt>event_2d_histograms (str, optional)</dt><dd><p>Produce 2D histograms for elements given in –event_2d_histograms from the CORSIKA event
+<dt>event_2d_histograms (str, optional)</dt><dd><p>Generate 2D histograms for elements given in –event_2d_histograms from the CORSIKA event
 header and save into hdf5/pdf files.
 It allows more than one argument, separated by simple spaces.
-The elements are grouped into pairs and the 2D histograms are produced always for two
+The elements are grouped into pairs and the 2D histograms are generated always for two
 subsequent elements.
 For example, –event_2d_histograms first_interaction_height total_energy zenith azimuth
-will produce one 2D histogram for first_interaction_height total_energy and another 2D
+will generate one 2D histogram for first_interaction_height total_energy and another 2D
 histogram for zenith and azimuth.</p>
 </dd>
 </dl>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+gef6979c Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g7a49aa1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=4c1fc832"></script>
+    <script src="../_static/documentation_options.js?v=64e5a68e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7a49aa1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -427,14 +427,14 @@ document.write(`
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-db-get-file-from_db --file_name PSFcurve_data_v2.txt</span>
+<span class="sd">        simtools-db-get-file-from-db --file_name PSFcurve_data_v2.txt</span>
 
 <span class="sd">    Run the application:</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-tune-psf --site North --telescope LST-1 \\</span>
-<span class="sd">            --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test</span>
+<span class="sd">        simtools-derive-psf-parameters --site North --telescope LSTN-01 \\</span>
+<span class="sd">            --model_version prod6 --data PSFcurve_data_v2.txt --plot_all --test</span>
 
 <span class="sd">    The output is saved in simtools-output/derive_psf_parameters.</span>
 
@@ -443,9 +443,9 @@ document.write(`
 <span class="sd">    .. code-block:: console</span>
 
 <span class="sd">        Best parameters:</span>
-<span class="sd">        mirror_reflection_random_angle = 0.0043,0.08,0.0470</span>
-<span class="sd">        mirror_align_random_horizontal = 0.0047,28.,0.,0.</span>
-<span class="sd">        mirror_align_random_vertical = 0.0047,28.,0.,0.</span>
+<span class="sd">        mirror_reflection_random_angle = [0.006, 0.133, 0.005]</span>
+<span class="sd">        mirror_align_random_horizontal = [0.005, 28.0, 0.0, 0.0]</span>
+<span class="sd">        mirror_align_random_vertical = [0.005, 28.0, 0.0, 0.0]</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -493,7 +493,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">_parse</span><span class="p">():</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">&quot;Tune mirror_reflection_random_angle, mirror_align_random_horizontal &quot;</span>
+            <span class="s2">&quot;Derive mirror_reflection_random_angle, mirror_align_random_horizontal &quot;</span>
             <span class="s2">&quot;and mirror_align_random_vertical using cumulative PSF measurement.&quot;</span>
         <span class="p">)</span>
     <span class="p">)</span>
