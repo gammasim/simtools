@@ -181,12 +181,11 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ax.text(
         0.02,
         0.88,
-        f"FoV = {fov:.3f} deg",
+        f"FoV = {fov:.3f}",
         transform=ax.transAxes,
         color="black",
         fontsize=12,
     )
-
     plt.legend(
         legend_objects,
         legend_labels,
