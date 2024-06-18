@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=d9897387"></script>
+    <script src="../../_static/documentation_options.js?v=4c1fc832"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -432,9 +432,148 @@ document.write(`
 
 
 
+<span class="k">def</span> <span class="nf">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate and convert the given value based on parameter information.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    par_name: str</span>
+<span class="sd">        Parameter name.</span>
+<span class="sd">    par_info: dict</span>
+<span class="sd">        Parameter information.</span>
+<span class="sd">    value:</span>
+<span class="sd">        Value to be validated and converted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Validated and converted value.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    InvalidConfigEntryError</span>
+<span class="sd">        If the value is invalid based on parameter constraints.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;allowed&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">:</span>
+        <span class="n">allowed_values</span> <span class="o">=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;allowed&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_values</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> for parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">. </span><span class="se">\</span>
+<span class="s2">                Allowed values are </span><span class="si">{</span><span class="n">allowed_values</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">in</span> <span class="n">par_info</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">*=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span> <span class="nf">_process_identified_entry</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">key_data</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">out_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process an identified entry in config_data based on parameters and validate the value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parameters: dict</span>
+<span class="sd">        Parameter information necessary for validation.</span>
+<span class="sd">    key_data: str</span>
+<span class="sd">        Key from config_data.</span>
+<span class="sd">    value_data:</span>
+<span class="sd">        Value associated with the key_data in config_data.</span>
+<span class="sd">    out_data: dict</span>
+<span class="sd">        Dictionary to store validated data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the entry was identified and processed successfully, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    InvalidConfigEntryError</span>
+<span class="sd">        If the value associated with the key_data is invalid based on parameter constraints.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">par_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;names&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">key_data</span> <span class="o">==</span> <span class="n">par_name</span> <span class="ow">or</span> <span class="n">key_data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+            <span class="n">validated_value</span> <span class="o">=</span> <span class="n">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_data</span><span class="p">)</span>
+            <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value</span>
+            <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">is_identified</span>
+
+
+<span class="k">def</span> <span class="nf">_handle_unidentified_entry</span><span class="p">(</span><span class="n">key_data</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="p">,</span> <span class="n">_logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle an unidentified entry in config_data based on the ignore_unidentified flag.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    key_data: str</span>
+<span class="sd">        Key from config_data that cannot be identified.</span>
+<span class="sd">    ignore_unidentified: bool</span>
+<span class="sd">        If set to True, unidentified parameters provided in config_data are ignored</span>
+<span class="sd">        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.</span>
+<span class="sd">    _logger: Logger</span>
+<span class="sd">        Logger object for logging messages.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    UnableToIdentifyConfigEntryError</span>
+<span class="sd">        If ignore_unidentified is False and an unidentified parameter leads to an error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Entry </span><span class="si">{</span><span class="n">key_data</span><span class="si">}</span><span class="s2"> in config_data cannot be identified&quot;</span>
+    <span class="k">if</span> <span class="n">ignore_unidentified</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">, ignoring.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">, stopping.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">UnableToIdentifyConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_process_default_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">out_data</span><span class="p">,</span> <span class="n">_logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process a default value for a parameter if it was not provided in config_data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    par_name: str</span>
+<span class="sd">        Parameter name.</span>
+<span class="sd">    par_info: dict</span>
+<span class="sd">        Parameter information.</span>
+<span class="sd">    out_data: dict</span>
+<span class="sd">        Dictionary to store validated data.</span>
+<span class="sd">    _logger: Logger</span>
+<span class="sd">        Logger object for logging messages.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    MissingRequiredConfigEntryError</span>
+<span class="sd">        If a required parameter without default value is not given in config_data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required entry in config_data </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not given.&quot;</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">MissingRequiredConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">default_value</span> <span class="o">=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">default_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">default_value</span> <span class="o">=</span> <span class="n">default_value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">in</span> <span class="n">par_info</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">default_value</span> <span class="o">*=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+
+        <span class="n">validated_value</span> <span class="o">=</span> <span class="n">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">default_value</span><span class="p">)</span>
+        <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value</span>
+
+
 <div class="viewcode-block" id="validate_config_data">
 <a class="viewcode-back" href="../../utils.html#utils.general.validate_config_data">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_config_data</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">validate_config_data</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate a generic config_data dict by using the info</span>
 <span class="sd">    given by the parameters dict. The entries will be validated</span>
@@ -449,9 +588,12 @@ document.write(`
 <span class="sd">        Input config data.</span>
 <span class="sd">    parameters: dict</span>
 <span class="sd">        Parameter information necessary for validation.</span>
-<span class="sd">    ignore_unidentified: bool</span>
+<span class="sd">    ignore_unidentified: bool, optional</span>
 <span class="sd">        If set to True, unidentified parameters provided in config_data are ignored</span>
 <span class="sd">        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    _logger: Logger, optional</span>
+<span class="sd">        Logger object for logging messages. If not provided, defaults to printing to console.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -467,60 +609,25 @@ document.write(`
 <span class="sd">    namedtuple:</span>
 <span class="sd">        Containing the validated config data entries.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">_logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-    <span class="c1"># Dict to be filled and returned</span>
     <span class="n">out_data</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">if</span> <span class="n">config_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config_data</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="c1"># Collecting all entries given as in config_data.</span>
     <span class="k">for</span> <span class="n">key_data</span><span class="p">,</span> <span class="n">value_data</span> <span class="ow">in</span> <span class="n">config_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="c1"># Searching for the key in the parameters.</span>
-        <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">par_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;names&quot;</span><span class="p">,</span> <span class="p">[])</span>
-            <span class="k">if</span> <span class="n">key_data</span> <span class="o">!=</span> <span class="n">par_name</span> <span class="ow">and</span> <span class="n">key_data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]:</span>
-                <span class="k">continue</span>
-            <span class="c1"># Matched parameter</span>
-            <span class="n">validated_value</span> <span class="o">=</span> <span class="n">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_data</span><span class="p">)</span>
-            <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value</span>
-            <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">is_identified</span> <span class="o">=</span> <span class="n">_process_identified_entry</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">key_data</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">out_data</span><span class="p">)</span>
 
-        <span class="c1"># Raising error for an unidentified input.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_identified</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Entry </span><span class="si">{</span><span class="n">key_data</span><span class="si">}</span><span class="s2"> in config_data cannot be identified&quot;</span>
-            <span class="k">if</span> <span class="n">ignore_unidentified</span><span class="p">:</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">, ignoring.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">, stopping.&quot;</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">UnableToIdentifyConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">_handle_unidentified_entry</span><span class="p">(</span><span class="n">key_data</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="p">,</span> <span class="n">_logger</span><span class="p">)</span>
 
-    <span class="c1"># Checking for parameters with default option.</span>
-    <span class="c1"># If it is not given, filling it with the default value.</span>
     <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="n">out_data</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">default_value</span> <span class="o">=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-                <span class="n">default_value</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">default_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
-                    <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
-                    <span class="k">else</span> <span class="n">default_value</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">default_value</span> <span class="o">=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">:</span>
-                <span class="n">default_value</span> <span class="o">*=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
-            <span class="n">validated_value</span> <span class="o">=</span> <span class="n">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">default_value</span><span class="p">)</span>
-            <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validated_value</span>
-        <span class="k">elif</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">out_data</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required entry in config_data </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not given (there may be more).&quot;</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">MissingRequiredConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">_process_default_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">out_data</span><span class="p">,</span> <span class="n">_logger</span><span class="p">)</span>
 
     <span class="n">configuration_data</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;configuration_data&quot;</span><span class="p">,</span> <span class="n">out_data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">configuration_data</span><span class="p">(</span><span class="o">**</span><span class="n">out_data</span><span class="p">)</span></div>
@@ -810,37 +917,56 @@ document.write(`
 <span class="sd">    data: dict or list</span>
 <span class="sd">        Data as dict or list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">in_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Both in_dict and file_name were given - file_name will be used&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_url</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_name</span><span class="p">)):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">collect_data_from_http</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
-                    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># try plain yaml first for efficiency reason</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
-                        <span class="n">data</span> <span class="o">=</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">in_dict</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">in_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">in_dict</span><span class="p">)</span>
 
-    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input has not been provided (neither by file, nor by dict)&quot;</span>
     <span class="k">if</span> <span class="n">allow_empty</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Input has not been provided (neither by file, nor by dict)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input has not been provided (neither by file, nor by dict)&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="n">InvalidConfigDataError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span> <span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">in_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect data from file based on its extension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_name: str</span>
+<span class="sd">        Name of the yaml/json/ascii file.</span>
+<span class="sd">    in_dict: dict</span>
+<span class="sd">        Data as dict.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data: dict or list</span>
+<span class="sd">        Data as dict or list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">in_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Both in_dict and file_name were given - file_name will be used&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_url</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">collect_data_from_http</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="collect_kwargs">
@@ -1071,6 +1197,25 @@ document.write(`
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<span class="k">def</span> <span class="nf">_search_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> found in </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file</span>
+
+    <span class="k">if</span> <span class="n">rec</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">subdir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">file</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
 <span class="k">def</span> <span class="nf">find_file</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Search for files inside of given directories, recursively, and return its full path.</span>
@@ -1079,7 +1224,7 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
 <span class="sd">        File name to be searched for.</span>
-<span class="sd">    loc: Path</span>
+<span class="sd">    loc: Path or list of Path</span>
 <span class="sd">        Location of where to search for the file.</span>
 
 <span class="sd">    Returns</span>
@@ -1092,40 +1237,19 @@ document.write(`
 <span class="sd">    FileNotFoundError</span>
 <span class="sd">        If the desired file is not found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">all_locations</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
-    <span class="n">all_locations</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_locations</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">all_locations</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">all_locations</span>
-
-    <span class="k">def</span> <span class="nf">_search_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> does not exist&quot;</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> found in </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">file</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">rec</span><span class="p">:</span>  <span class="c1"># Not recursively</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">subdir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="k">continue</span>
-            <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">file</span>
-        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">all_locations</span> <span class="o">=</span> <span class="p">[</span><span class="n">loc</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">loc</span>
 
     <span class="c1"># Searching file locally</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">file</span>
+
     <span class="c1"># Searching file in given locations</span>
-    <span class="k">for</span> <span class="n">location_now</span> <span class="ow">in</span> <span class="n">all_locations</span><span class="p">:</span>
-        <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">location_now</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">all_locations</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">_search_directory</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">file</span>
+
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> could not be found in </span><span class="si">{</span><span class="n">all_locations</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>

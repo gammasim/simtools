@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d9897387"></script>
+    <script src="_static/documentation_options.js?v=4c1fc832"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -734,7 +734,7 @@ validate_config_data system.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.general.validate_config_data">
-<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">validate_config_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_unidentified</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#validate_config_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.validate_config_data" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">validate_config_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_unidentified</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils/general.html#validate_config_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.validate_config_data" title="Link to this definition">#</a></dt>
 <dd><p>Validate a generic config_data dict by using the info
 given by the parameters dict. The entries will be validated
 in terms of length, units and names.</p>
@@ -747,8 +747,11 @@ of the parameters dict.</p>
 </dd>
 <dt><strong>parameters: dict</strong></dt><dd><p>Parameter information necessary for validation.</p>
 </dd>
-<dt><strong>ignore_unidentified: bool</strong></dt><dd><p>If set to True, unidentified parameters provided in config_data are ignored
-and a debug message is printed. Otherwise, an unidentified parameter leads to an error.</p>
+<dt><strong>ignore_unidentified: bool, optional</strong></dt><dd><p>If set to True, unidentified parameters provided in config_data are ignored
+and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+Default is False.</p>
+</dd>
+<dt><strong>_logger: Logger, optional</strong></dt><dd><p>Logger object for logging messages. If not provided, defaults to printing to console.</p>
 </dd>
 </dl>
 </dd>

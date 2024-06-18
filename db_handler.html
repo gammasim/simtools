@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d9897387"></script>
+    <script src="_static/documentation_options.js?v=4c1fc832"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -1071,7 +1071,7 @@ mostly these are unnecessary though.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.update_parameter_field">
-<span class="sig-name descname"><span class="pre">update_parameter_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.update_parameter_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.update_parameter_field" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_parameter_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db/db_handler.html#DatabaseHandler.update_parameter_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.update_parameter_field" title="Link to this definition">#</a></dt>
 <dd><p>Update a parameter field value for a specific telescope/version.</p>
 <p>This function only modifies the value of one of the following
 DB entries: Applicable, units, Type, items, minimum, maximum.
@@ -1083,7 +1083,7 @@ they are generally “harmless”.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
 </dd>
-<dt><strong>version: str</strong></dt><dd><p>Which version to update</p>
+<dt><strong>model_version: str</strong></dt><dd><p>Which model version to update</p>
 </dd>
 <dt><strong>parameter: str</strong></dt><dd><p>Which parameter to update</p>
 </dd>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=d9897387"></script>
+    <script src="../../_static/documentation_options.js?v=4c1fc832"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -1127,7 +1127,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">update_parameter_field</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
-        <span class="n">version</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
         <span class="n">parameter</span><span class="p">,</span>
         <span class="n">field</span><span class="p">,</span>
         <span class="n">new_value</span><span class="p">,</span>
@@ -1148,8 +1148,8 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        db_name: str</span>
 <span class="sd">            the name of the DB</span>
-<span class="sd">        version: str</span>
-<span class="sd">            Which version to update</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Which model version to update</span>
 <span class="sd">        parameter: str</span>
 <span class="sd">            Which parameter to update</span>
 <span class="sd">        field: str</span>
@@ -1176,7 +1176,7 @@ document.write(`
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The field </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">allowed_fields</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
-        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
+        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">_model_version</span><span class="p">,</span>

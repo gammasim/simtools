@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>ray_tracing &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=d9897387"></script>
+    <script src="../_static/documentation_options.js?v=4c1fc832"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -622,91 +622,258 @@ document.write(`
 <span class="sd">            interval [0,1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">do_analyze</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">force</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">do_analyze</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_results</span><span class="p">()</span>
 
         <span class="n">focal_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;focal_length&quot;</span><span class="p">))</span>
-        <span class="n">tel_transmission_pars</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">tel_transmission_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_transmission_params</span><span class="p">(</span><span class="n">no_tel_transmission</span><span class="p">)</span>
+        <span class="n">cm_to_deg</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">/</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">focal_length</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Call the helper function to process off-axis angles and mirrors</span>
+        <span class="n">_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_off_axis_and_mirror</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_mirrors</span><span class="p">(),</span>
+            <span class="n">focal_length</span><span class="p">,</span>
+            <span class="n">tel_transmission_pars</span><span class="p">,</span>
+            <span class="n">cm_to_deg</span><span class="p">,</span>
+            <span class="n">do_analyze</span><span class="p">,</span>
+            <span class="n">use_rx</span><span class="p">,</span>
+            <span class="n">containment_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_analyze</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store_results</span><span class="p">(</span><span class="n">_rows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_process_off_axis_and_mirror</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">all_mirrors</span><span class="p">,</span>
+        <span class="n">focal_length</span><span class="p">,</span>
+        <span class="n">tel_transmission_pars</span><span class="p">,</span>
+        <span class="n">cm_to_deg</span><span class="p">,</span>
+        <span class="n">do_analyze</span><span class="p">,</span>
+        <span class="n">use_rx</span><span class="p">,</span>
+        <span class="n">containment_fraction</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process off-axis angles and mirrors for RayTracing analysis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        all_mirrors: list</span>
+<span class="sd">            List of mirror numbers to analyze.</span>
+<span class="sd">        focal_length: float</span>
+<span class="sd">            Focal length of the telescope.</span>
+<span class="sd">        tel_transmission_pars: list</span>
+<span class="sd">            Telescope transmission parameters.</span>
+<span class="sd">        cm_to_deg: float</span>
+<span class="sd">            Conversion factor from centimeters to degrees.</span>
+<span class="sd">        do_analyze: bool</span>
+<span class="sd">            Flag indicating whether to perform analysis or not.</span>
+<span class="sd">        use_rx: bool</span>
+<span class="sd">            Flag indicating whether to use the RX method for analysis.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of results for each combination of off-axis angle and mirror.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">this_mirror</span> <span class="ow">in</span> <span class="n">all_mirrors</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzing RayTracing for off_axis=</span><span class="si">{</span><span class="n">this_off_axis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mirror_number=</span><span class="si">{</span><span class="n">this_mirror</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">photons_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_photons_file</span><span class="p">(</span><span class="n">this_off_axis</span><span class="p">,</span> <span class="n">this_mirror</span><span class="p">)</span>
+                <span class="n">tel_transmission</span> <span class="o">=</span> <span class="n">compute_telescope_transmission</span><span class="p">(</span>
+                    <span class="n">tel_transmission_pars</span><span class="p">,</span> <span class="n">this_off_axis</span>
+                <span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_psf_image</span><span class="p">(</span><span class="n">photons_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">,</span> <span class="n">this_off_axis</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">do_analyze</span><span class="p">:</span>
+                    <span class="n">_current_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_image</span><span class="p">(</span>
+                        <span class="n">image</span><span class="p">,</span>
+                        <span class="n">photons_file</span><span class="p">,</span>
+                        <span class="n">this_off_axis</span><span class="p">,</span>
+                        <span class="n">use_rx</span><span class="p">,</span>
+                        <span class="n">cm_to_deg</span><span class="p">,</span>
+                        <span class="n">containment_fraction</span><span class="p">,</span>
+                        <span class="n">tel_transmission</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+                        <span class="n">_current_results</span> <span class="o">+=</span> <span class="p">(</span><span class="n">this_mirror</span><span class="p">,)</span>
+
+                    <span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_current_results</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_rows</span>
+
+    <span class="k">def</span> <span class="nf">_get_telescope_transmission_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_tel_transmission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get telescope transmission parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        no_tel_transmission: bool</span>
+<span class="sd">            Flag indicating whether to apply telescope transmission or not.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Telescope transmission parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">no_tel_transmission</span>
             <span class="k">else</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="n">cm_to_deg</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">/</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">focal_length</span>
+    <span class="k">def</span> <span class="nf">_get_all_mirrors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get number of mirrors.</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">_rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">do_analyze</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_read_results</span><span class="p">()</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of number of mirrors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mirror_numbers</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">all_mirrors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mirror_numbers</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">this_off_axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">this_mirror</span> <span class="ow">in</span> <span class="n">all_mirrors</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzing RayTracing for off_axis=</span><span class="si">{</span><span class="n">this_off_axis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mirror_number=</span><span class="si">{</span><span class="n">this_mirror</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_photons_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this_off_axis</span><span class="p">,</span> <span class="n">this_mirror</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get path to photons file for a given off-axis angle and mirror.</span>
 
-                <span class="n">photons_file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;photons&quot;</span><span class="p">,</span>
-                    <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.lis&quot;</span><span class="p">,</span>
-                    <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-                    <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">source_distance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_distance</span><span class="p">,</span>
-                    <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
-                    <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">this_off_axis</span><span class="p">,</span>
-                    <span class="n">mirror_number</span><span class="o">=</span><span class="n">this_mirror</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-                <span class="p">)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        this_off_axis: float</span>
+<span class="sd">            Off-axis angle.</span>
+<span class="sd">        this_mirror: int or None</span>
+<span class="sd">            Mirror number.</span>
 
-                <span class="n">photons_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">photons_file_name</span> <span class="o">+</span> <span class="s2">&quot;.gz&quot;</span><span class="p">)</span>
-                <span class="n">tel_transmission</span> <span class="o">=</span> <span class="n">compute_telescope_transmission</span><span class="p">(</span>
-                    <span class="n">tel_transmission_pars</span><span class="p">,</span> <span class="n">this_off_axis</span>
-                <span class="p">)</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">PSFImage</span><span class="p">(</span><span class="n">focal_length</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">image</span><span class="o">.</span><span class="n">read_photon_list_from_simtel_file</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">[</span><span class="n">this_off_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            Path to the photons file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">photons_file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
+            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;photons&quot;</span><span class="p">,</span>
+            <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.lis&quot;</span><span class="p">,</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">source_distance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_distance</span><span class="p">,</span>
+            <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">this_off_axis</span><span class="p">,</span>
+            <span class="n">mirror_number</span><span class="o">=</span><span class="n">this_mirror</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">photons_file_name</span> <span class="o">+</span> <span class="s2">&quot;.gz&quot;</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">do_analyze</span><span class="p">:</span>
-                    <span class="k">continue</span>
+    <span class="k">def</span> <span class="nf">_create_psf_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">,</span> <span class="n">this_off_axis</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create PSF image from photons file.</span>
 
-                <span class="k">if</span> <span class="n">use_rx</span><span class="p">:</span>
-                    <span class="n">containment_diameter_cm</span><span class="p">,</span> <span class="n">centroid_x</span><span class="p">,</span> <span class="n">centroid_y</span><span class="p">,</span> <span class="n">eff_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_rx</span><span class="p">(</span>
-                        <span class="n">photons_file</span>
-                    <span class="p">)</span>
-                    <span class="n">containment_diameter_deg</span> <span class="o">=</span> <span class="n">containment_diameter_cm</span> <span class="o">*</span> <span class="n">cm_to_deg</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">set_psf</span><span class="p">(</span><span class="n">containment_diameter_cm</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;cm&quot;</span><span class="p">)</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span> <span class="o">=</span> <span class="n">centroid_x</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">centroid_y</span> <span class="o">=</span> <span class="n">centroid_y</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">set_effective_area</span><span class="p">(</span><span class="n">eff_area</span> <span class="o">*</span> <span class="n">tel_transmission</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">containment_diameter_cm</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;cm&quot;</span><span class="p">)</span>
-                    <span class="n">containment_diameter_deg</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;deg&quot;</span><span class="p">)</span>
-                    <span class="n">centroid_x</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span>
-                    <span class="n">eff_area</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_effective_area</span><span class="p">()</span> <span class="o">*</span> <span class="n">tel_transmission</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file: Path</span>
+<span class="sd">            Path to the photons file.</span>
+<span class="sd">        focal_length: float</span>
+<span class="sd">            Focal length of the telescope.</span>
+<span class="sd">        this_off_axis: float</span>
+<span class="sd">            Off-axis angle.</span>
 
-                <span class="n">eff_flen</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">this_off_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">centroid_x</span> <span class="o">/</span> <span class="n">tan</span><span class="p">(</span><span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">_current_results</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                    <span class="n">containment_diameter_cm</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                    <span class="n">containment_diameter_deg</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                    <span class="n">eff_area</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
-                    <span class="n">eff_flen</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
-                    <span class="n">_current_results</span> <span class="o">+=</span> <span class="p">(</span><span class="n">this_mirror</span><span class="p">,)</span>
-                <span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_current_results</span><span class="p">)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        PSFImage</span>
+<span class="sd">            PSF image object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">PSFImage</span><span class="p">(</span><span class="n">focal_length</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">read_photon_list_from_simtel_file</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">[</span><span class="n">this_off_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span>
 
-        <span class="k">if</span> <span class="n">do_analyze</span><span class="p">:</span>
-            <span class="n">_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">]</span>
-            <span class="n">_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">YLABEL</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
-                <span class="n">_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;mirror_number&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">_rows</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">_columns</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_analyze_image</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">,</span>
+        <span class="n">photons_file</span><span class="p">,</span>
+        <span class="n">this_off_axis</span><span class="p">,</span>
+        <span class="n">use_rx</span><span class="p">,</span>
+        <span class="n">cm_to_deg</span><span class="p">,</span>
+        <span class="n">containment_fraction</span><span class="p">,</span>
+        <span class="n">tel_transmission</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze PSF image.</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image: PSFImage</span>
+<span class="sd">            PSF image object.</span>
+<span class="sd">        photons_file: Path</span>
+<span class="sd">            Path to the photons file.</span>
+<span class="sd">        this_off_axis: float</span>
+<span class="sd">            Off-axis angle.</span>
+<span class="sd">        use_rx: bool</span>
+<span class="sd">            Flag indicating whether to use the RX method for analysis.</span>
+<span class="sd">        cm_to_deg: float</span>
+<span class="sd">            Conversion factor from centimeters to degrees.</span>
+<span class="sd">        containment_fraction: float</span>
+<span class="sd">            Containment fraction for PSF containment calculation.</span>
+<span class="sd">        tel_transmission: float</span>
+<span class="sd">            Telescope transmission factor.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Tuple containing analyzed results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">use_rx</span><span class="p">:</span>
+            <span class="n">containment_diameter_cm</span><span class="p">,</span> <span class="n">centroid_x</span><span class="p">,</span> <span class="n">centroid_y</span><span class="p">,</span> <span class="n">eff_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_rx</span><span class="p">(</span>
+                <span class="n">photons_file</span>
+            <span class="p">)</span>
+            <span class="n">containment_diameter_deg</span> <span class="o">=</span> <span class="n">containment_diameter_cm</span> <span class="o">*</span> <span class="n">cm_to_deg</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">set_psf</span><span class="p">(</span><span class="n">containment_diameter_cm</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;cm&quot;</span><span class="p">)</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span> <span class="o">=</span> <span class="n">centroid_x</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">centroid_y</span> <span class="o">=</span> <span class="n">centroid_y</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">set_effective_area</span><span class="p">(</span><span class="n">eff_area</span> <span class="o">*</span> <span class="n">tel_transmission</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">containment_diameter_cm</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;cm&quot;</span><span class="p">)</span>
+            <span class="n">containment_diameter_deg</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">containment_fraction</span><span class="p">,</span> <span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+            <span class="n">centroid_x</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span>
+            <span class="n">centroid_y</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">centroid_y</span>
+            <span class="n">eff_area</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_effective_area</span><span class="p">()</span> <span class="o">*</span> <span class="n">tel_transmission</span>
+
+        <span class="n">eff_flen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">this_off_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">centroid_x</span> <span class="o">/</span> <span class="n">tan</span><span class="p">(</span><span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="n">containment_diameter_cm</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
+            <span class="n">containment_diameter_deg</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="n">eff_area</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
+            <span class="n">eff_flen</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_store_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_rows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store analysis results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        _rows: list</span>
+<span class="sd">            List of rows containing analysis results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">]</span>
+        <span class="n">_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">YLABEL</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+            <span class="n">_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;mirror_number&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">_rows</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">_columns</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_process_rx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">containment_fraction</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

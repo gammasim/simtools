@@ -1,0 +1,683 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+gef6979c Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
+
+    <script src="../_static/documentation_options.js?v=4c1fc832"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/generate_simtel_array_histograms';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simtools-configuration.html">Configuration</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_add_file_to_db.html">db_add_file_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_inspect_databases.html">db_inspect_databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_array_config.html">generate_array_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generate_regular_arrays.html">generate_regular_arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulate_light_emission.html">simulate_light_emission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_cumulative_psf.html">validate_cumulative_psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validate_optics.html">validate_optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../library.html">API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker_files.html">Containers (docker files)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Generating Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pull_requests.html">Pull requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/generate_simtel_array_histograms.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
+   title="Open an issue"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for generate_simtel_array_histograms</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Summary</span>
+<span class="sd">    -------</span>
+<span class="sd">    This application allows to write sim_telarray histograms into pdf and hdf5 files.</span>
+<span class="sd">    It accepts multiple lists of histograms files, a single list or a histogram file.</span>
+<span class="sd">    Each histogram is plotted in a page of the pdf file if the --pdf option is activated.</span>
+
+
+<span class="sd">    Command line arguments</span>
+<span class="sd">    ----------------------</span>
+<span class="sd">    hist_file_names (str, optional)</span>
+<span class="sd">        Name of the histogram files to be plotted.</span>
+<span class="sd">        It can be given as the histogram file names (more than one option allowed) or as a text</span>
+<span class="sd">        file with the names of the histogram files in it.</span>
+<span class="sd">    figure_name (str, required)</span>
+<span class="sd">        File name for the pdf output (without extension).</span>
+<span class="sd">    pdf (bool, optional)</span>
+<span class="sd">        If set, histograms are saved into pdf files.</span>
+<span class="sd">        One pdf file contains all the histograms found in the file.</span>
+<span class="sd">        The name of the file is controlled via output_file_name.</span>
+<span class="sd">    hdf5: bool</span>
+<span class="sd">        If true, histograms are saved into hdf5 files.</span>
+<span class="sd">        At least one of pdf and hdf5 has to be activated.</span>
+<span class="sd">    output_file_name (str, optional)</span>
+<span class="sd">        The name of the output hdf5 (and/or pdf) files (without the path).</span>
+<span class="sd">        If not given, output_file_name takes the name from the (first) input file</span>
+<span class="sd">        (hist_file_names).</span>
+<span class="sd">        If the output output_file_name.hdf5 file already exists and hdf5 is set, the tables</span>
+<span class="sd">        associated to hdf5 will be overwritten. The remaining tables, if any, will stay</span>
+<span class="sd">        untouched.</span>
+<span class="sd">    verbosity (str, optional)</span>
+<span class="sd">        Log level to print.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError:</span>
+<span class="sd">        if argument passed through hist_file_names is not a file.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/</span>
+<span class="sd">            run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst</span>
+<span class="sd">            --output_file_name test_hist_hdata --hdf5 --pdf</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="kn">import</span> <span class="n">PdfPages</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_io_histograms</span> <span class="kn">import</span> <span class="n">SimtelIOHistograms</span>
+
+
+<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse command line configuration</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Label describing the application.</span>
+<span class="sd">    description: str</span>
+<span class="sd">        Description of the application.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CommandLineParser</span>
+<span class="sd">        Command line parser object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hist_file_names&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the histogram files to be plotted or the text file containing the list of &quot;</span>
+        <span class="s2">&quot;histogram files.&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hdf5&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save histograms into a hdf5 file.&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--pdf&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save histograms into a pdf file.&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--output_file_name&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the hdf5 (and/or pdf) file where to save the histograms.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config_parser</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;At least one argument is required: --pdf or --hdf5.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">config_parser</span>
+
+
+<div class="viewcode-block" id="build_histogram_files">
+<a class="viewcode-back" href="../generate_simtel_array_histograms.html#generate_simtel_array_histograms.build_histogram_files">[docs]</a>
+<span class="k">def</span> <span class="nf">build_histogram_files</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a list of histogram files from command line arguments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config_parser: dict</span>
+<span class="sd">        Parsed command line arguments.</span>
+<span class="sd">    logger: logging.Logger</span>
+<span class="sd">        Logger object for logging messages.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of histogram file paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">histogram_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">one_file</span> <span class="ow">in</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hist_file_names&quot;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.zst&quot;</span><span class="p">,</span> <span class="s2">&quot;.simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdata&quot;</span><span class="p">]:</span>
+                <span class="n">histogram_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">one_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                        <span class="n">histogram_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">one_file</span><span class="si">}</span><span class="s2"> is not a file.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span> <span class="kn">from</span> <span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">histogram_files</span></div>
+
+
+
+<div class="viewcode-block" id="check_and_log_overwrite">
+<a class="viewcode-back" href="../generate_simtel_array_histograms.html#generate_simtel_array_histograms.check_and_log_overwrite">[docs]</a>
+<span class="k">def</span> <span class="nf">check_and_log_overwrite</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the output hdf5 file already exists and log a warning if it does.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config_parser: dict</span>
+<span class="sd">        Parsed command line arguments.</span>
+<span class="sd">    logger: logging.Logger</span>
+<span class="sd">        Logger object for logging messages.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the hdf5 file exists and should be overwritten, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_parser</span><span class="p">[</span><span class="s1">&#39;output_file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Output hdf5 file </span><span class="si">{</span><span class="n">config_parser</span><span class="p">[</span><span class="s1">&#39;output_file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.hdf5 already exists. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Overwriting it.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="create_pdf">
+<a class="viewcode-back" href="../generate_simtel_array_histograms.html#generate_simtel_array_histograms.create_pdf">[docs]</a>
+<span class="k">def</span> <span class="nf">create_pdf</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a PDF file containing histograms.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simtel_histograms: SimtelIOHistograms</span>
+<span class="sd">        SimtelIOHistograms object containing histograms to plot.</span>
+<span class="sd">    output_file_name: str</span>
+<span class="sd">        Base name for the output PDF file.</span>
+<span class="sd">    config_parser: dict</span>
+<span class="sd">        Parsed command line arguments.</span>
+<span class="sd">    logger: logging.Logger</span>
+<span class="sd">        Logger object for logging messages.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating the pdf file </span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+        <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+        <span class="n">number_of_histograms</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="o">.</span><span class="n">combined_hists</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i_hist</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_histograms</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing: </span><span class="si">{</span><span class="n">i_hist</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> histogram.&quot;</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+            <span class="n">simtel_histograms</span><span class="o">.</span><span class="n">plot_one_histogram</span><span class="p">(</span><span class="n">i_hist</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+            <span class="n">pdf_pages</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote histograms to the pdf file </span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="export_to_hdf5">
+<a class="viewcode-back" href="../generate_simtel_array_histograms.html#generate_simtel_array_histograms.export_to_hdf5">[docs]</a>
+<span class="k">def</span> <span class="nf">export_to_hdf5</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export histograms to an HDF5 file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote histograms to the hdf5 file </span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">)</span>
+        <span class="n">simtel_histograms</span><span class="o">.</span><span class="n">export_histograms</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;Display the simtel_array histograms.&quot;</span>
+    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+    <span class="n">config_parser</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;application-plots&quot;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting the application.&quot;</span><span class="p">)</span>
+
+    <span class="n">histogram_files</span> <span class="o">=</span> <span class="n">build_histogram_files</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># If no output name is passed, the tool gets the name of the first histogram of the list</span>
+    <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;output_file_name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;output_file_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">output_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_parser</span><span class="p">[</span><span class="s1">&#39;output_file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If the hdf5 output file already exists, it is overwritten</span>
+    <span class="n">overwrite</span> <span class="o">=</span> <span class="n">check_and_log_overwrite</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">simtel_histograms</span> <span class="o">=</span> <span class="n">SimtelIOHistograms</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">)</span>
+    <span class="n">create_pdf</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">export_to_hdf5</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

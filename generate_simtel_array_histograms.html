@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d9897387"></script>
+    <script src="_static/documentation_options.js?v=4c1fc832"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -444,6 +444,10 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.build_histogram_files"><code class="docutils literal notranslate"><span class="pre">build_histogram_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.export_to_hdf5"><code class="docutils literal notranslate"><span class="pre">export_to_hdf5()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -505,6 +509,76 @@ untouched.</p>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="generate_simtel_array_histograms.build_histogram_files">
+<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">build_histogram_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_simtel_array_histograms.html#build_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.build_histogram_files" title="Link to this definition">#</a></dt>
+<dd><p>Build a list of histogram files from command line arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_parser: dict</strong></dt><dd><p>Parsed command line arguments.</p>
+</dd>
+<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object for logging messages.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of histogram file paths.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="generate_simtel_array_histograms.check_and_log_overwrite">
+<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">check_and_log_overwrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_simtel_array_histograms.html#check_and_log_overwrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.check_and_log_overwrite" title="Link to this definition">#</a></dt>
+<dd><p>Check if the output hdf5 file already exists and log a warning if it does.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_parser: dict</strong></dt><dd><p>Parsed command line arguments.</p>
+</dd>
+<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object for logging messages.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the hdf5 file exists and should be overwritten, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="generate_simtel_array_histograms.create_pdf">
+<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">create_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_histograms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_simtel_array_histograms.html#create_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.create_pdf" title="Link to this definition">#</a></dt>
+<dd><p>Create a PDF file containing histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simtel_histograms: SimtelIOHistograms</strong></dt><dd><p>SimtelIOHistograms object containing histograms to plot.</p>
+</dd>
+<dt><strong>output_file_name: str</strong></dt><dd><p>Base name for the output PDF file.</p>
+</dd>
+<dt><strong>config_parser: dict</strong></dt><dd><p>Parsed command line arguments.</p>
+</dd>
+<dt><strong>logger: logging.Logger</strong></dt><dd><p>Logger object for logging messages.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="generate_simtel_array_histograms.export_to_hdf5">
+<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">export_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_histograms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_simtel_array_histograms.html#export_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.export_to_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Export histograms to an HDF5 file.</p>
+</dd></dl>
+
 </section>
 
 
@@ -556,6 +630,10 @@ untouched.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.build_histogram_files"><code class="docutils literal notranslate"><span class="pre">build_histogram_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.export_to_hdf5"><code class="docutils literal notranslate"><span class="pre">export_to_hdf5()</span></code></a></li>
 </ul>
   </nav></div>
 

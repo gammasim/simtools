@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_add_file_to_db &#8212; simtools v0.1.dev1+gb2d7447 Manual</title>
+    <title>db_add_file_to_db &#8212; simtools v0.1.dev1+gef6979c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d9897387"></script>
+    <script src="_static/documentation_options.js?v=4c1fc832"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb2d7447 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef6979c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -443,6 +443,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_add_file_to_db.collect_files_to_insert"><code class="docutils literal notranslate"><span class="pre">collect_files_to_insert()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_add_file_to_db.confirm_and_insert_files"><code class="docutils literal notranslate"><span class="pre">confirm_and_insert_files()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -487,6 +489,56 @@ This application should complement the ones for updating parameters,     adding 
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="db_add_file_to_db.collect_files_to_insert">
+<span class="sig-prename descclassname"><span class="pre">db_add_file_to_db.</span></span><span class="sig-name descname"><span class="pre">collect_files_to_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db_add_file_to_db.html#collect_files_to_insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db_add_file_to_db.collect_files_to_insert" title="Link to this definition">#</a></dt>
+<dd><p>Collect the files to insert into the database based on the provided arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of parsed command-line arguments.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Logger object for logging messages.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of files to be inserted into the database.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If no valid files are provided for uploading.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db_add_file_to_db.confirm_and_insert_files">
+<span class="sig-prename descclassname"><span class="pre">db_add_file_to_db.</span></span><span class="sig-name descname"><span class="pre">confirm_and_insert_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files_to_insert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/db_add_file_to_db.html#confirm_and_insert_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db_add_file_to_db.confirm_and_insert_files" title="Link to this definition">#</a></dt>
+<dd><p>Confirm the files to be inserted and insert them into the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>files_to_insert</strong><span class="classifier">list</span></dt><dd><p>List of files to be inserted into the database.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of parsed command-line arguments.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Logger object for logging messages.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -537,6 +589,8 @@ This application should complement the ones for updating parameters,     adding 
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_add_file_to_db.collect_files_to_insert"><code class="docutils literal notranslate"><span class="pre">collect_files_to_insert()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db_add_file_to_db.confirm_and_insert_files"><code class="docutils literal notranslate"><span class="pre">confirm_and_insert_files()</span></code></a></li>
 </ul>
   </nav></div>
 
