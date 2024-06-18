@@ -112,6 +112,39 @@ def _parse(label, description):
     return config_parser
 
 
+def _get_simulation_parameters(config_parser):
+    """
+    Get the energy range and view cone in the correct form to use in the simtel classes.
+
+    Parameters
+    ----------
+    CommandLineParser:
+        Command line parser object as derived by the _parse function.
+
+    Returns
+    -------
+    list:
+        The energy range used in the simulation.
+    list:
+        The view cone used in the simulation.
+
+    """
+    if config_parser["energy_range"] is not None:
+        emin = float(config_parser["energy_range"][0])
+        emax = float(config_parser["energy_range"][1])
+        energy_range = [emin, emax]
+    else:
+        energy_range = None
+    if config_parser["view_cone"] is not None:
+        cone_min = float(config_parser["view_cone"][0])
+        cone_max = float(config_parser["view_cone"][1])
+        view_cone = [cone_min, cone_max]
+    else:
+        view_cone = None
+
+    return energy_range, view_cone
+
+
 def main():
     label = Path(__file__).stem
     description = (
@@ -139,18 +172,7 @@ def main():
             logger.error(msg)
             raise FileNotFoundError from exc
 
-    if config_parser["energy_range"] is not None:
-        emin = float(config_parser["energy_range"][0])
-        emax = float(config_parser["energy_range"][1])
-        energy_range = [emin, emax]
-    else:
-        energy_range = None
-    if config_parser["view_cone"] is not None:
-        cone_min = float(config_parser["view_cone"][0])
-        cone_max = float(config_parser["view_cone"][1])
-        view_cone = [cone_min, cone_max]
-    else:
-        view_cone = None
+    energy_range, view_cone = _get_simulation_parameters(config_parser)
 
     histograms = SimtelIOHistograms(
         simtel_array_files,
