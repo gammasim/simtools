@@ -135,6 +135,48 @@ class CorsikaConfig:
         )
         return corsika_parameters
 
+    def _collect_parameters(self, corsika_config_data, user_pars):
+        for key_args, value_args in corsika_config_data.items():
+            is_identified = False
+            for par_name, par_info in user_pars.items():
+                if key_args.upper() != par_name and key_args.upper() not in par_info["names"]:
+                    continue
+                validated_value_args = self._validate_and_convert_argument(
+                    par_name, par_info, value_args
+                )
+                self._user_parameters[par_name] = validated_value_args
+                is_identified = True
+                break  # Break the inner loop if a match is found
+            if not is_identified:
+                self._raise_invalid_input_error(key_args)
+
+    def _fill_default_parameters(self, user_pars):
+        for par_name, par_info in user_pars.items():
+            if par_name not in self._user_parameters:
+                if "default" in par_info.keys():
+                    validated_value = self._validate_and_convert_argument(
+                        par_name, par_info, par_info["default"]
+                    )
+                    self._user_parameters[par_name] = validated_value
+                else:
+                    self._raise_missing_required_error(par_name)
+
+    def _convert_azm_to_phip(self):
+        phip = 180.0 - self._user_parameters["AZM"][0]
+        phip = phip + 360.0 if phip < 0.0 else phip
+        phip = phip - 360.0 if phip >= 360.0 else phip
+        self._user_parameters["PHIP"] = [phip, phip]
+
+    def _raise_invalid_input_error(self, key_args):
+        msg = f"Argument {key_args} cannot be identified."
+        self._logger.error(msg)
+        raise InvalidCorsikaInputError(msg)
+
+    def _raise_missing_required_error(self, par_name):
+        msg = f"Required parameters {par_name} was not given (there may be more)."
+        self._logger.error(msg)
+        raise MissingRequiredInputInCorsikaConfigDataError(msg)
+
     def set_user_parameters(self, corsika_config_data):
         """
         Set user parameters from a dict.
@@ -169,116 +211,87 @@ class CorsikaConfig:
 
         self._logger.debug("Setting user parameters from corsika_config_data")
         self._user_parameters = {}
-
         user_pars = self._corsika_parameters["USER_PARAMETERS"]
 
-        # Collecting all parameters given as arguments
-        for key_args, value_args in corsika_config_data.items():
-            # Looping over USER_PARAMETERS and searching for a match
-            is_identified = False
-            for par_name, par_info in user_pars.items():
-                if key_args.upper() != par_name and key_args.upper() not in par_info["names"]:
-                    continue
-                # Matched parameter
-                validated_value_args = self._validate_and_convert_argument(
-                    par_name, par_info, value_args
-                )
-                self._user_parameters[par_name] = validated_value_args
-                is_identified = True
+        self._collect_parameters(corsika_config_data, user_pars)
+        self._fill_default_parameters(user_pars)
 
-            # Raising error for an unidentified input.
-            if not is_identified:
-                msg = f"Argument {key_args} cannot be identified."
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-
-        # Checking for parameters with default option
-        # If it is not given, filling it with the default value
-        for par_name, par_info in user_pars.items():
-            if par_name in self._user_parameters:
-                continue
-            if "default" in par_info.keys():
-                validated_value = self._validate_and_convert_argument(
-                    par_name, par_info, par_info["default"]
-                )
-                self._user_parameters[par_name] = validated_value
-            else:
-                msg = f"Required parameters {par_name} was not given (there may be more)."
-                self._logger.error(msg)
-                raise MissingRequiredInputInCorsikaConfigDataError(msg)
-
-        # Converting AZM to CORSIKA reference (PHIP)
-        phip = 180.0 - self._user_parameters["AZM"][0]
-        phip = phip + 360.0 if phip < 0.0 else phip
-        phip = phip - 360.0 if phip >= 360.0 else phip
-        self._user_parameters["PHIP"] = [phip, phip]
+        if "AZM" in self._user_parameters:
+            self._convert_azm_to_phip()
 
         self._is_file_updated = False
+
+    def _fix_single_value_parameters(self, par_name, par_info, values):
+        if len(values) == 1 and par_name in ["THETAP", "AZM"]:
+            return values * 2
+        if len(values) == 1 and par_name == "VIEWCONE":
+            return [0.0 * u.Unit(par_info["unit"][0]), values[0]]
+        return values
+
+    def _handle_special_parameters(self, par_name, values):
+        if par_name == "PRMPAR":
+            return self._convert_primary_input_and_store_primary_name(values)
+        if par_name == "ESLOPE":
+            self.eslope = values[0]
+        return values
+
+    def _validate_length(self, par_name, par_info, values):
+        if len(values) != par_info["len"]:
+            msg = f"CORSIKA input entry with wrong len: {par_name}"
+            self._logger.error(msg)
+            raise InvalidCorsikaInputError(msg)
+
+    def _convert_units(self, par_name, values, units):
+        result = []
+        for value, unit in zip(values, units):
+            if unit is None:
+                result.append(value)
+                continue
+            value = self._convert_to_quantity(value)
+            if not value.unit.is_equivalent(unit):
+                msg = f"CORSIKA input given with wrong unit: {par_name}"
+                self._logger.error(msg)
+                raise InvalidCorsikaInputError(msg)
+            result.append(value.to(unit).value)
+        return result
+
+    def _convert_to_quantity(self, value):
+        if isinstance(value, str):
+            value = u.Quantity(value)
+        if not isinstance(value, u.Quantity):
+            msg = "CORSIKA input given without unit"
+            self._logger.error(msg)
+            raise InvalidCorsikaInputError(msg)
+        return value
 
     def _validate_and_convert_argument(self, par_name, par_info, value_args_in):
         """
         Validate input user parameter and convert it to the right units, if needed.
+
         Returns the validated arguments in a list.
 
         Parameters
         ----------
         par_name: str
             Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...).
+
         par_info: dict
             Dictionary with parameter data.
+
         value_args_in: list
             List of values for the parameter.
         """
 
-        # Turning value_args into a list, if it is not.
         value_args = self._convert_to_quantities(value_args_in)
+        value_args = self._fix_single_value_parameters(par_name, par_info, value_args)
+        value_args = self._handle_special_parameters(par_name, value_args)
+        self._validate_length(par_name, par_info, value_args)
 
-        if len(value_args) == 1 and par_name in ["THETAP", "AZM"]:
-            # Fixing single value zenith or azimuth angle.
-            # THETAP and AZM should be written as a 2 values range in the CORSIKA input file
-            value_args = value_args * 2
-        elif len(value_args) == 1 and par_name == "VIEWCONE":
-            # Fixing single value viewcone.
-            # VIEWCONE should be written as a 2 values range in the CORSIKA input file
-            value_args = [0.0 * u.Unit(par_info["unit"][0]), value_args[0]]
-        elif par_name == "PRMPAR":
-            value_args = self._convert_primary_input_and_store_primary_name(value_args)
-        elif par_name == "ESLOPE":
-            self.eslope = value_args[0]
-
-        if len(value_args) != par_info["len"]:
-            msg = f"CORSIKA input entry with wrong len: {par_name}"
-            self._logger.error(msg)
-            raise InvalidCorsikaInputError(msg)
-
-        if "unit" not in par_info.keys():
+        if "unit" not in par_info:
             return value_args
 
-        # Turning par_info['unit'] into a list, if it is not.
         par_unit = gen.copy_as_list(par_info["unit"])
-
-        # Checking units and converting them, if needed.
-        value_args_with_units = []
-        for arg, unit in zip(value_args, par_unit):
-            if unit is None:
-                value_args_with_units.append(arg)
-                continue
-
-            if isinstance(arg, str):
-                arg = u.quantity.Quantity(arg)
-
-            if not isinstance(arg, u.quantity.Quantity):
-                msg = f"CORSIKA input given without unit: {par_name}"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-            if not arg.unit.is_equivalent(unit):
-                msg = f"CORSIKA input given with wrong unit: {par_name}"
-                self._logger.error(msg)
-                raise InvalidCorsikaInputError(msg)
-
-            value_args_with_units.append(arg.to(unit).value)
-
-        return value_args_with_units
+        return self._convert_units(par_name, value_args, par_unit)
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
