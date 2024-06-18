@@ -17,9 +17,13 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def main():
+def _parse():
     config = configurator.Configurator(description="Add a unit field to a parameter in the DB.")
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model="telescope")
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
