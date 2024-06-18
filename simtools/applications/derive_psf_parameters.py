@@ -164,21 +164,26 @@ def add_parameters(
     mirror_reflection_2=0.035,
 ):
     """
-    Transform the parameters to the proper format and add a new set of
-    parameters to the all_parameters list.
+    Transforms and add parameters to the all_parameters list.
 
-    Parameters
-    ----------
-    all_parameters : list
-        List to store all parameter sets.
+    Parameters:
+    -----------
     mirror_reflection : float
-        Mirror reflection random angle parameter value.
+        The random angle of mirror reflection.
+
     mirror_align : float
-        Mirror alignment random horizontal and vertical parameter value.
+        The random angle for mirror alignment (both horizontal and vertical).
+
     mirror_reflection_fraction : float, optional
-        Mirror reflection fraction parameter value (default is 0.15).
+        The fraction of the mirror reflection. Default is 0.15.
+
     mirror_reflection_2 : float, optional
-        Second mirror reflection random angle parameter value (default is 0.035).
+        A secondary random angle for mirror reflection. Default is 0.035.
+
+    Returns:
+    --------
+    None
+        Updates the all_parameters list in place.
     """
     # If we want to start from values different than the ones currently in the model:
     # align = 0.0046
