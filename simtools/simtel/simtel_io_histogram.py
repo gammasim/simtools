@@ -50,7 +50,16 @@ class SimtelIOHistogram:
         calculating trigger rate for individual telescopes.
         If false, the area thrown is estimated based on the maximum distance as given in
         the simulation configuration.
-
+    energy_range: list
+        The energy range used in the simulation. It must be passed as a list of floats and the
+        energy must be in TeV (as in the CORSIKA configuration).
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        energy range cannot be retrieved directly from the file.
+    view_cone: list
+        The view cone used in the simulation. It must be passed as a list of floats and the
+        view cone must be in deg (as in the CORSIKA configuration).
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        view cone cannot be retrieved directly from the file.
     """
 
     def __init__(
@@ -63,13 +72,14 @@ class SimtelIOHistogram:
             msg = f"File {histogram_file} does not exist."
             self._logger.error(msg)
             raise FileNotFoundError
-        self._config = None
         self.view_cone = view_cone
         self._set_view_cone()
-        self._total_area = None
-        self._solid_angle = None
         self.energy_range = energy_range
         self._set_energy_range()
+
+        self._config = None
+        self._total_area = None
+        self._solid_angle = None
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
         self._histogram = None
@@ -129,7 +139,7 @@ class SimtelIOHistogram:
         if self._config is None:
             # If the file is a .hdata or .hdata.zst, config will continue to be None.
             with EventIOFile(self.histogram_file) as f:
-                # Try to find configuration from .simtel file.
+                # Try to find configuration from .simtel file. If .hdata, config will be None
                 for obj in f:
                     if isinstance(obj, MCRunHeader):
                         self._config = obj.parse()
