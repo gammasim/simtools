@@ -38,7 +38,7 @@ Expected final print-out message:
 
 .. code-block:: console
 
-    System trigger rate (Hz): 9.0064e+03 ± 9.0087e+03 Hz
+    System trigger rate (Hz): 9.0064e+03 pm 9.0087e+03 Hz
 
 """
 
