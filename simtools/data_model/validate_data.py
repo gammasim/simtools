@@ -454,15 +454,15 @@ class DataValidator:
 
         reference_unit = self._get_reference_unit(col_name)
         try:
-            unit = data.unit
+            column_unit = data.unit
         except AttributeError:
-            pass
-        if unit is None or unit == "dimensionless" or unit == "":
+            column_unit = unit
+        if column_unit is None or column_unit == "dimensionless" or column_unit == "":
             return data, u.dimensionless_unscaled
 
         self._logger.debug(
             f"Data column '{col_name}' with reference unit "
-            f"'{reference_unit}' and data unit '{unit}'"
+            f"'{reference_unit}' and data unit '{column_unit}'"
         )
         try:
             if isinstance(data, u.Quantity | Column):
@@ -475,14 +475,14 @@ class DataValidator:
                         if _to_unit not in (None, "dimensionless", "")
                         else d
                     )
-                    for d, _to_unit in zip(data, unit)
+                    for d, _to_unit in zip(data, column_unit)
                 ], reference_unit
             # ensure that the data type is preserved (e.g., integers)
-            return (type(data)(u.Unit(unit).to(reference_unit) * data), reference_unit)
+            return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
         except u.core.UnitConversionError:
             self._logger.error(
                 f"Invalid unit in data column '{col_name}'. "
-                f"Expected type '{reference_unit}', found '{unit}'"
+                f"Expected type '{reference_unit}', found '{column_unit}'"
             )
             raise
 

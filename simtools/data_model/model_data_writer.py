@@ -1,14 +1,36 @@
+"""Model data writer module."""
+
+import json
 import logging
 from pathlib import Path
 
-import astropy
+import astropy.units as u
+import numpy as np
 import yaml
+from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
 
 __all__ = ["ModelDataWriter"]
+
+
+class JsonNumpyEncoder(json.JSONEncoder):
+    """Convert numpy to python types as accepted by json.dump."""
+
+    def default(self, o):
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
+            return str(o) if o != u.dimensionless_unscaled else None
+        if np.issubdtype(type(o), np.bool_):
+            return bool(o)
+        return super().default(o)
 
 
 class ModelDataWriter:
@@ -26,10 +48,7 @@ class ModelDataWriter:
     """
 
     def __init__(self, product_data_file=None, product_data_format=None, args_dict=None):
-        """
-        Initialize model data writer.
-        """
-
+        """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         if args_dict is not None:
@@ -66,7 +85,6 @@ class ModelDataWriter:
             Schema file used in validation of output data.
 
         """
-
         writer = ModelDataWriter(
             product_data_file=(
                 args_dict.get("output_file", None) if output_file is None else output_file
@@ -84,6 +102,7 @@ class ModelDataWriter:
     def validate_and_transform(self, product_data=None, validate_schema_file=None):
         """
         Validate product data using jsonschema given in metadata.
+
         If necessary, transform product data to match schema.
 
         Parameters
@@ -94,7 +113,6 @@ class ModelDataWriter:
             Schema file used in validation of output data.
 
         """
-
         _validator = validate_data.DataValidator(
             schema_file=validate_schema_file,
             data_table=product_data,
@@ -103,7 +121,7 @@ class ModelDataWriter:
 
     def write(self, product_data=None, metadata=None):
         """
-        Write model data and metadata
+        Write model data and metadata.
 
         Parameters
         ----------
@@ -118,21 +136,47 @@ class ModelDataWriter:
             if data writing was not successful.
 
         """
-
         if product_data is None:
             return
 
         if metadata is not None:
             product_data.meta.update(gen.change_dict_keys_case(metadata, False))
 
+        self._logger.info(f"Writing data to {self.product_data_file}")
+        if isinstance(product_data, dict) and Path(self.product_data_file).suffix == ".json":
+            self.write_dict_to_model_parameter_json(self.product_data_file, product_data)
+            return
         try:
-            self._logger.info(f"Writing data to {self.product_data_file}")
             product_data.write(
                 self.product_data_file, format=self.product_data_format, overwrite=True
             )
-        except astropy.io.registry.base.IORegistryError:
+        except IORegistryError:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
+
+    @staticmethod
+    def write_dict_to_model_parameter_json(file_name, data_dict):
+        """
+        Write dictionary to model-parameter-style json file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of output file.
+        data_dict : dict
+            Dictionary to be written.
+
+        Raises
+        ------
+        FileNotFoundError
+            if data writing was not successful.
+        """
+        try:
+            with open(file_name, "w", encoding="UTF-8") as file:
+                json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
+                file.write("\n")
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Error writing model data to {file_name}") from exc
 
     def write_metadata_to_yml(self, metadata, yml_file=None, keys_lower_case=False):
         """
@@ -159,7 +203,6 @@ class ModelDataWriter:
         TypeError
             If yml_file is not defined.
         """
-
         try:
             yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
             with open(yml_file, "w", encoding="UTF-8") as file:
@@ -191,7 +234,6 @@ class ModelDataWriter:
             format identifier
 
         """
-
         if product_data_format == "ecsv":
             product_data_format = "ascii.ecsv"
         return product_data_format

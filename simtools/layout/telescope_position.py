@@ -1,3 +1,5 @@
+"""Telescope positions and coordinate transformations."""
+
 import logging
 
 import astropy.units as u
@@ -28,10 +30,7 @@ class TelescopePosition:
     """
 
     def __init__(self, name=None):
-        """
-        Initialize TelescopePosition.
-        """
-
+        """Initialize TelescopePosition."""
         self._logger = logging.getLogger(__name__)
 
         self.name = name
@@ -41,10 +40,7 @@ class TelescopePosition:
         self.crs = self._default_coordinates()
 
     def __str__(self):
-        """
-        String representation of TelescopePosition.
-
-        """
+        """Return string representation of TelescopePosition."""
         tel_str = self.name
         if self.has_coordinates("ground"):
             tel_str += (
@@ -91,7 +87,6 @@ class TelescopePosition:
         InvalidCoordSystemErrorError
            if coordinate system is not defined.
         """
-
         try:
             _zz = self.crs[crs_name]["zz"]["value"]
             _zz_header = self.crs[crs_name]["zz"]["name"]
@@ -179,12 +174,12 @@ class TelescopePosition:
 
     def _get_coordinate_value(self, value, unit):
         """
-        Return a value of a coordinate variable
+        Return a value of a coordinate variable.
+
         i) converted to the given unit, if input value has a unit
         ii) return input value without change, if no unit is given
 
         """
-
         if isinstance(value, u.Quantity):
             try:
                 return value.to(unit).value
@@ -215,7 +210,6 @@ class TelescopePosition:
             If coordinate system is not known.
 
         """
-
         try:
             self.crs[crs_name]["xx"]["value"] = self._get_coordinate_value(
                 xx, self.crs[crs_name]["xx"]["unit"]
@@ -232,8 +226,8 @@ class TelescopePosition:
             raise InvalidCoordSystemErrorError from e
 
     def get_altitude(self):
-        """ "
-        Get altitude of an array element
+        """
+        Get altitude of an array element.
 
         Returns
         -------
@@ -249,14 +243,15 @@ class TelescopePosition:
 
     def set_altitude(self, tel_altitude):
         """
-        Set altitude of an array element. Assume that all coordinate system have same altitude \
-        definition, meaning altitude is set for all systems here.
+        Set altitude of an array element.
+
+        Assume that all coordinate system have same altitude definition, meaning altitude
+        is set for all systems here.
 
         Attributes
         ----------
         tel_altitude: astropy.Quantity
         """
-
         for _crs in self.crs.values():
             try:
                 _crs["zz"]["value"] = self._get_coordinate_value(tel_altitude, _crs["zz"]["unit"])
@@ -265,8 +260,9 @@ class TelescopePosition:
 
     def _convert(self, crs_from, crs_to, xx, yy):
         """
-        Coordinate transformation of telescope positions. Returns np.nan for failed transformations\
-        (and not inf, as pyproj does)
+        Coordinate transformation of telescope positions.
+
+        Returns np.nan for failed transformations (and not inf, as pyproj does).
 
         Parameters
         ----------
@@ -306,8 +302,9 @@ class TelescopePosition:
 
     def _get_reference_system_from(self):
         """
-        Return coordinate system and coordinates for a fully defined system. The first fully\
-        defined system from self.crs is returned.
+        Return coordinate system and coordinates for a fully defined system.
+
+        The first fully defined system from self.crs is returned.
 
         Returns
         -------
@@ -317,7 +314,6 @@ class TelescopePosition:
             Project of coordinate system
 
         """
-
         for _crs_name, _crs in self.crs.items():
             if self.has_coordinates(_crs_name, crs_check=True):
                 return _crs_name, _crs
@@ -473,7 +469,6 @@ class TelescopePosition:
         astropy.units.m
             Z-position of a telescope in CORSIKA system.
         """
-
         return (tel_altitude - corsika_observation_level + telescope_axis_height).to(u.m)
 
     @staticmethod
@@ -514,7 +509,6 @@ class TelescopePosition:
             Pyproj CRS of the utm coordinate system.
 
         """
-
         self._set_coordinate_system("ground", crs_local)
         self._set_coordinate_system("utm", crs_utm)
         self._set_coordinate_system("mercator", crs_wgs84)
@@ -583,9 +577,11 @@ class TelescopePosition:
     @staticmethod
     def _default_coordinates():
         """
-        Coordinate definition for a telescope position. Includes all coordinate systems and
-        auxiliary information. Includes axes and default axes units. Naming convention follows
-        pyproj for x and y coordinates. Includes auxiliary telescope data required for CORSIKA.
+        Coordinate definition for a telescope position.
+
+        Includes all coordinate systems and auxiliary information. Includes axes and
+        default axes units. Naming convention follows pyproj for x and y coordinates.
+        Includes auxiliary telescope data required for CORSIKA.
 
         Returns
         -------
@@ -593,7 +589,6 @@ class TelescopePosition:
            coordinate system definition
 
         """
-
         return {
             "ground": {
                 "crs": None,
