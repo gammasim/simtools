@@ -56,7 +56,146 @@ class InvalidConfigDataError(Exception):
     """Exception for invalid configuration data."""
 
 
-def validate_config_data(config_data, parameters, ignore_unidentified=False):
+def _validate_and_convert_value(par_name, par_info, value):
+    """
+    Validate and convert the given value based on parameter information.
+
+    Parameters
+    ----------
+    par_name: str
+        Parameter name.
+    par_info: dict
+        Parameter information.
+    value:
+        Value to be validated and converted.
+
+    Returns
+    -------
+    Validated and converted value.
+
+    Raises
+    ------
+    InvalidConfigEntryError
+        If the value is invalid based on parameter constraints.
+    """
+    if "allowed" in par_info:
+        allowed_values = par_info["allowed"]
+        if value not in allowed_values:
+            msg = f"Invalid value {value} for parameter {par_name}. \
+                Allowed values are {allowed_values}."
+            raise InvalidConfigEntryError(msg)
+
+    if "unit" in par_info and not isinstance(value, u.Quantity):
+        value *= u.Unit(par_info["unit"])
+
+    return value
+
+
+def _process_identified_entry(parameters, key_data, value_data, out_data):
+    """
+    Process an identified entry in config_data based on parameters and validate the value.
+
+    Parameters
+    ----------
+    parameters: dict
+        Parameter information necessary for validation.
+    key_data: str
+        Key from config_data.
+    value_data:
+        Value associated with the key_data in config_data.
+    out_data: dict
+        Dictionary to store validated data.
+
+    Returns
+    -------
+    bool
+        True if the entry was identified and processed successfully, False otherwise.
+
+    Raises
+    ------
+    InvalidConfigEntryError
+        If the value associated with the key_data is invalid based on parameter constraints.
+    """
+    is_identified = False
+    for par_name, par_info in parameters.items():
+        names = par_info.get("names", [])
+        if key_data == par_name or key_data.lower() in map(str.lower, names):
+            validated_value = _validate_and_convert_value(par_name, par_info, value_data)
+            out_data[par_name] = validated_value
+            is_identified = True
+            break
+
+    return is_identified
+
+
+def _handle_unidentified_entry(key_data, ignore_unidentified, _logger):
+    """
+    Handle an unidentified entry in config_data based on the ignore_unidentified flag.
+
+    Parameters
+    ----------
+    key_data: str
+        Key from config_data that cannot be identified.
+    ignore_unidentified: bool
+        If set to True, unidentified parameters provided in config_data are ignored
+        and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+    _logger: Logger
+        Logger object for logging messages.
+
+    Raises
+    ------
+    UnableToIdentifyConfigEntryError
+        If ignore_unidentified is False and an unidentified parameter leads to an error.
+    """
+    msg = f"Entry {key_data} in config_data cannot be identified"
+    if ignore_unidentified:
+        _logger.debug(f"{msg}, ignoring.")
+    else:
+        _logger.error(f"{msg}, stopping.")
+        raise UnableToIdentifyConfigEntryError(msg)
+
+
+def _process_default_value(par_name, par_info, out_data, _logger):
+    """
+    Process a default value for a parameter if it was not provided in config_data.
+
+    Parameters
+    ----------
+    par_name: str
+        Parameter name.
+    par_info: dict
+        Parameter information.
+    out_data: dict
+        Dictionary to store validated data.
+    _logger: Logger
+        Logger object for logging messages.
+
+    Raises
+    ------
+    MissingRequiredConfigEntryError
+        If a required parameter without default value is not given in config_data.
+    """
+    if "default" not in par_info:
+        msg = f"Required entry in config_data {par_name} was not given."
+        _logger.error(msg)
+        raise MissingRequiredConfigEntryError(msg)
+
+    default_value = par_info["default"]
+
+    if default_value is None:
+        out_data[par_name] = None
+    else:
+        if isinstance(default_value, dict):
+            default_value = default_value["value"]
+
+        if "unit" in par_info and not isinstance(default_value, u.Quantity):
+            default_value *= u.Unit(par_info["unit"])
+
+        validated_value = _validate_and_convert_value(par_name, par_info, default_value)
+        out_data[par_name] = validated_value
+
+
+def validate_config_data(config_data, parameters, ignore_unidentified=False, _logger=None):
     """
     Validate a generic config_data dict by using the info
     given by the parameters dict. The entries will be validated
@@ -71,9 +210,12 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
         Input config data.
     parameters: dict
         Parameter information necessary for validation.
-    ignore_unidentified: bool
+    ignore_unidentified: bool, optional
         If set to True, unidentified parameters provided in config_data are ignored
         and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+        Default is False.
+    _logger: Logger, optional
+        Logger object for logging messages. If not provided, defaults to printing to console.
 
     Raises
     ------
@@ -89,60 +231,25 @@ def validate_config_data(config_data, parameters, ignore_unidentified=False):
     namedtuple:
         Containing the validated config data entries.
     """
+    if _logger is None:
+        _logger = logging.getLogger(__name__)
 
-    # Dict to be filled and returned
     out_data = {}
 
     if config_data is None:
         config_data = {}
 
-    # Collecting all entries given as in config_data.
     for key_data, value_data in config_data.items():
-        is_identified = False
-        # Searching for the key in the parameters.
-        for par_name, par_info in parameters.items():
-            names = par_info.get("names", [])
-            if key_data != par_name and key_data.lower() not in [n.lower() for n in names]:
-                continue
-            # Matched parameter
-            validated_value = _validate_and_convert_value(par_name, par_info, value_data)
-            out_data[par_name] = validated_value
-            is_identified = True
+        is_identified = _process_identified_entry(parameters, key_data, value_data, out_data)
 
-        # Raising error for an unidentified input.
         if not is_identified:
-            msg = f"Entry {key_data} in config_data cannot be identified"
-            if ignore_unidentified:
-                _logger.debug(f"{msg}, ignoring.")
-            else:
-                _logger.error(f"{msg}, stopping.")
-                raise UnableToIdentifyConfigEntryError(msg)
+            _handle_unidentified_entry(key_data, ignore_unidentified, _logger)
 
-    # Checking for parameters with default option.
-    # If it is not given, filling it with the default value.
     for par_name, par_info in parameters.items():
         if par_name in out_data:
             continue
-        if "default" in par_info.keys() and par_info["default"] is not None:
-            if isinstance(par_info["default"], dict):
-                default_value = par_info["default"]["value"]
-                default_value = (
-                    default_value * u.Unit(par_info["default"]["unit"])
-                    if "unit" in par_info["default"]
-                    else default_value
-                )
-            else:
-                default_value = par_info["default"]
-            if not isinstance(default_value, u.Quantity) and "unit" in par_info:
-                default_value *= u.Unit(par_info["unit"])
-            validated_value = _validate_and_convert_value(par_name, par_info, default_value)
-            out_data[par_name] = validated_value
-        elif "default" in par_info.keys() and par_info["default"] is None:
-            out_data[par_name] = None
-        else:
-            msg = f"Required entry in config_data {par_name} was not given (there may be more)."
-            _logger.error(msg)
-            raise MissingRequiredConfigEntryError(msg)
+
+        _process_default_value(par_name, par_info, out_data, _logger)
 
     configuration_data = namedtuple("configuration_data", out_data)
     return configuration_data(**out_data)
@@ -429,36 +536,55 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
     data: dict or list
         Data as dict or list.
     """
-
     if file_name is not None:
-        if in_dict is not None:
-            _logger.warning("Both in_dict and file_name were given - file_name will be used")
-        if is_url(str(file_name)):
-            data = collect_data_from_http(file_name)
-        else:
-            with open(file_name, encoding="utf-8") as file:
-                if Path(file_name).suffix.lower() == ".json":
-                    data = json.load(file)
-                elif Path(file_name).suffix.lower() == ".list":
-                    lines = file.readlines()
-                    data = [line.strip() for line in lines]
-                else:
-                    # try plain yaml first for efficiency reason
-                    try:
-                        data = yaml.safe_load(file)
-                    except yaml.constructor.ConstructorError:
-                        data = _load_yaml_using_astropy(file)
-        return data
+        return collect_data_from_file(file_name, in_dict)
+
     if in_dict is not None:
         return dict(in_dict)
 
-    msg = "Input has not been provided (neither by file, nor by dict)"
     if allow_empty:
-        _logger.debug(msg)
+        _logger.debug("Input has not been provided (neither by file, nor by dict)")
         return None
 
+    msg = "Input has not been provided (neither by file, nor by dict)"
     _logger.debug(msg)
     raise InvalidConfigDataError(msg)
+
+
+def collect_data_from_file(file_name, in_dict):
+    """
+    Collect data from file based on its extension.
+
+    Parameters
+    ----------
+    file_name: str
+        Name of the yaml/json/ascii file.
+    in_dict: dict
+        Data as dict.
+
+    Returns
+    -------
+    data: dict or list
+        Data as dict or list.
+    """
+    if in_dict is not None:
+        _logger.warning("Both in_dict and file_name were given - file_name will be used")
+
+    if is_url(file_name):
+        return collect_data_from_http(file_name)
+
+    with open(file_name, encoding="utf-8") as file:
+        if Path(file_name).suffix.lower() == ".json":
+            return json.load(file)
+
+        if Path(file_name).suffix.lower() == ".list":
+            lines = file.readlines()
+            return [line.strip() for line in lines]
+
+        try:
+            return yaml.safe_load(file)
+        except yaml.constructor.ConstructorError:
+            return _load_yaml_using_astropy(file)
 
 
 def collect_kwargs(label, in_kwargs):
@@ -674,6 +800,25 @@ def program_is_executable(program):
     return None
 
 
+def _search_directory(directory, filename, rec=False):
+    if not Path(directory).exists():
+        _logger.debug(f"Directory {directory} does not exist")
+        return None
+
+    file = Path(directory).joinpath(filename)
+    if file.exists():
+        _logger.debug(f"File {filename} found in {directory}")
+        return file
+
+    if rec:
+        for subdir in Path(directory).iterdir():
+            if subdir.is_dir():
+                file = _search_directory(subdir, filename, True)
+                if file:
+                    return file
+    return None
+
+
 def find_file(name, loc):
     """
     Search for files inside of given directories, recursively, and return its full path.
@@ -682,7 +827,7 @@ def find_file(name, loc):
     ----------
     name: str
         File name to be searched for.
-    loc: Path
+    loc: Path or list of Path
         Location of where to search for the file.
 
     Returns
@@ -695,40 +840,19 @@ def find_file(name, loc):
     FileNotFoundError
         If the desired file is not found.
     """
-
-    all_locations = copy.copy(loc)
-    all_locations = [all_locations] if not isinstance(all_locations, list) else all_locations
-
-    def _search_directory(directory, filename, rec=False):
-        if not Path(directory).exists():
-            msg = f"Directory {directory} does not exist"
-            _logger.debug(msg)
-            return None
-
-        file = Path(directory).joinpath(filename)
-        if file.exists():
-            _logger.debug(f"File {filename} found in {directory}")
-            return file
-        if not rec:  # Not recursively
-            return None
-
-        for subdir in Path(directory).iterdir():
-            if not subdir.is_dir():
-                continue
-            file = _search_directory(subdir, filename, True)
-            if file is not None:
-                return file
-        return None
+    all_locations = [loc] if not isinstance(loc, list) else loc
 
     # Searching file locally
     file = _search_directory(".", name)
-    if file is not None:
+    if file:
         return file
+
     # Searching file in given locations
-    for location_now in all_locations:
-        file = _search_directory(location_now, name, True)
-        if file is not None:
+    for location in all_locations:
+        file = _search_directory(location, name, True)
+        if file:
             return file
+
     msg = f"File {name} could not be found in {all_locations}"
     _logger.error(msg)
     raise FileNotFoundError(msg)

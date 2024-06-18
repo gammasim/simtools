@@ -194,9 +194,7 @@ def set_style(palette="default", big_plot=False):
 
     fontsize = {"default": 17, "big_plot": 30}
     markersize = {"default": 8, "big_plot": 18}
-    plot_size = "default"
-    if big_plot:
-        plot_size = "big_plot"
+    plot_size = "big_plot" if big_plot else "default"
 
     plt.rc("lines", linewidth=2, markersize=markersize[plot_size])
     plt.rc(
@@ -204,9 +202,6 @@ def set_style(palette="default", big_plot=False):
         prop_cycle=(
             cycler(color=COLORS[palette]) + cycler(linestyle=LINES) + cycler(marker=MARKERS)
         ),
-    )
-    plt.rc(
-        "axes",
         titlesize=fontsize[plot_size],
         labelsize=fontsize[plot_size],
         labelpad=5,
@@ -270,11 +265,36 @@ def get_lines():
     return LINES
 
 
+def filter_plot_kwargs(kwargs):
+    """Filter out kwargs that are not valid for plt.plot."""
+    valid_keys = {
+        "color",
+        "linestyle",
+        "linewidth",
+        "marker",
+        "markersize",
+        "markerfacecolor",
+        "markeredgecolor",
+        "markeredgewidth",
+        "alpha",
+        "label",
+        "zorder",
+        "dashes",
+        "gapcolor",
+        "solid_capstyle",
+        "solid_joinstyle",
+        "dash_capstyle",
+        "dash_joinstyle",
+        "antialiased",
+    }
+    return {k: v for k, v in kwargs.items() if k in valid_keys}
+
+
 def plot_1d(data, **kwargs):
     """
     Produce a high contrast one dimensional plot from multiple data sets.
 
-    A ratio plot can be  added at the bottom to allow easy comparison. Additional options,
+    A ratio plot can be added at the bottom to allow easy comparison. Additional options,
     such as plot title, plot legend, etc., are given in kwargs. Any option that can be
     changed after plotting (e.g., axes limits, log scale, etc.) should be done using the
     returned plt instance.
@@ -291,7 +311,7 @@ def plot_1d(data, **kwargs):
           Choose a colour palette (see set_style for additional information).
         * title: string
           Set a plot title.
-        * np_legend: bool
+        * no_legend: bool
           Do not print a legend for the plot.
         * big_plot: bool
           Increase marker and font sizes (like in a wide light curve).
@@ -319,113 +339,124 @@ def plot_1d(data, **kwargs):
     ValueError
         if asked to plot a ratio or difference with just one set of data
     """
-    palette = kwargs.get("palette", "default")
-    kwargs.pop("palette", None)
-    big_plot = kwargs.get("big_plot", False)
-    kwargs.pop("big_plot", None)
-    title = kwargs.get("title", "")
-    kwargs.pop("title", None)
-    no_legend = kwargs.get("no_legend", False)
-    kwargs.pop("no_legend", None)
-    no_markers = kwargs.get("no_markers", False)
-    kwargs.pop("no_markers", None)
-    empty_markers = kwargs.get("empty_markers", False)
-    kwargs.pop("empty_markers", None)
+    kwargs = handle_kwargs(kwargs)
+    data_dict, plot_ratio, plot_difference = prepare_data(data, kwargs)
+    fig, ax1, gs = setup_plot(kwargs, plot_ratio, plot_difference)
+    plot_args = filter_plot_kwargs(kwargs)
+    plot_main_data(data_dict, kwargs, plot_args)
 
-    if no_markers:
+    if plot_ratio or plot_difference:
+        plot_ratio_difference(ax1, data_dict, plot_ratio, gs, plot_args)
+
+    if not (plot_ratio or plot_difference):
+        plt.tight_layout()
+
+    return fig
+
+
+def handle_kwargs(kwargs):
+    """Extract and handle keyword arguments."""
+    kwargs_defaults = {
+        "palette": "default",
+        "big_plot": False,
+        "title": "",
+        "no_legend": False,
+        "no_markers": False,
+        "empty_markers": False,
+        "plot_ratio": False,
+        "plot_difference": False,
+    }
+    for key, default in kwargs_defaults.items():
+        kwargs[key] = kwargs.pop(key, default)
+
+    if kwargs["no_markers"]:
         kwargs["marker"] = "None"
         kwargs["linewidth"] = 4
-    if empty_markers:
+    if kwargs["empty_markers"]:
         kwargs["markerfacecolor"] = "None"
-        kwargs.pop("empty_markers", None)
 
-    set_style(palette, big_plot)
+    return kwargs
 
+
+def prepare_data(data, kwargs):
+    """Prepare data for plotting."""
     if not isinstance(data, dict):
-        data_dict = {}
-        data_dict["_default"] = data
+        data_dict = {"_default": data}
     else:
         data_dict = data
 
-    plot_ratio = kwargs.get("plot_ratio", False)
-    kwargs.pop("plot_ratio", None)
-    plot_difference = kwargs.get("plot_difference", False)
-    kwargs.pop("plot_difference", None)
-    if plot_ratio or plot_difference:
-        if len(data_dict) < 2:
-            raise ValueError("Asked to plot a ratio or difference with just one set of data")
+    if (kwargs["plot_ratio"] or kwargs["plot_difference"]) and len(data_dict) < 2:
+        raise ValueError("Asked to plot a ratio or difference with just one set of data")
+
+    return data_dict, kwargs["plot_ratio"], kwargs["plot_difference"]
+
+
+def setup_plot(kwargs, plot_ratio, plot_difference):
+    """Set up the plot style, figure, and gridspec."""
+    set_style(kwargs["palette"], kwargs["big_plot"])
 
     if plot_ratio or plot_difference:
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         fig = plt.figure(figsize=(8, 8))
+        gs.update(hspace=0.02)
     else:
         gs = gridspec.GridSpec(1, 1)
         fig = plt.figure(figsize=(8, 6))
 
-    ##########################################################################################
-    # Plot the data
-    ##########################################################################################
-
     plt.subplot(gs[0])
     ax1 = plt.gca()
 
+    return fig, ax1, gs
+
+
+def plot_main_data(data_dict, kwargs, plot_args):
+    """Plot the main data."""
     for label, data_now in data_dict.items():
         assert len(data_now.dtype.names) == 2, "Input array must have two columns with titles."
         x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
         x_title_unit = _add_unit(x_title, data_now[x_title])
         y_title_unit = _add_unit(y_title, data_now[y_title])
-        plt.plot(data_now[x_title], data_now[y_title], label=label, **kwargs)
+        plt.plot(data_now[x_title], data_now[y_title], label=label, **plot_args)
 
-    if plot_ratio or plot_difference:
-        gs.update(hspace=0.02)
-    else:
-        plt.xlabel(x_title_unit)
     plt.ylabel(y_title_unit)
-
-    if len(title) > 0:
-        plt.title(title, y=1.02)
-    if "_default" not in list(data_dict.keys()) and not no_legend:
-        plt.legend()
-    if not (plot_ratio or plot_difference):
-        plt.tight_layout()
-
-    ##########################################################################################
-    # Plot a ratio
-    ##########################################################################################
-
-    if plot_ratio or plot_difference:
-        plt.subplot(gs[1], sharex=ax1)
-        # In order to advance the cycler one color/style,
-        # so the colors stay consistent in the ratio, plot null data first.
-        plt.plot([], [])
-
-        # Use the first entry as the reference for the ratio.
-        # If data_dict is not an OrderedDict, the reference will be random.
-        data_ref_name = next(iter(data_dict))
-        for label, data_now in data_dict.items():
-            if label == data_ref_name:
-                continue
-            x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
-            x_title_unit = _add_unit(x_title, data_now[x_title])
-            if plot_ratio:
-                y_values = data_now[y_title] / data_dict[data_ref_name][y_title]
-            else:
-                y_values = data_now[y_title] - data_dict[data_ref_name][y_title]
-            plt.plot(data_now[x_title], y_values, **kwargs)
-
+    if not (kwargs["plot_ratio"] or kwargs["plot_difference"]):
         plt.xlabel(x_title_unit)
-        y_title_ratio = f"Ratio to {data_ref_name}"
-        if len(y_title_ratio) > 20:
-            y_title_ratio = "Ratio"
-        if plot_difference:
+    if kwargs["title"]:
+        plt.title(kwargs["title"], y=1.02)
+    if "_default" not in list(data_dict.keys()) and not kwargs["no_legend"]:
+        plt.legend()
+
+
+def plot_ratio_difference(ax1, data_dict, plot_ratio, gs, plot_args):
+    """Plot the ratio or difference plot."""
+    plt.subplot(gs[1], sharex=ax1)
+    plt.plot([], [])  # Advance cycler for consistent colors/styles
+
+    data_ref_name = next(iter(data_dict))
+    for label, data_now in data_dict.items():
+        if label == data_ref_name:
+            continue
+        x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
+        x_title_unit = _add_unit(x_title, data_now[x_title])
+
+        if plot_ratio:
+            y_values = data_now[y_title] / data_dict[data_ref_name][y_title]
+            y_title_ratio = f"Ratio to {data_ref_name}"
+        else:
+            y_values = data_now[y_title] - data_dict[data_ref_name][y_title]
             y_title_ratio = f"Difference to {data_ref_name}"
-        plt.ylabel(y_title_ratio)
 
-        ylim = plt.gca().get_ylim()
-        nbins = min(int((ylim[1] - ylim[0]) / 0.05 + 1), 6)
-        plt.locator_params(axis="y", nbins=nbins)
+        plt.plot(data_now[x_title], y_values, **plot_args)
 
-    return fig
+    plt.xlabel(x_title_unit)
+
+    if len(y_title_ratio) > 20 and plot_ratio:
+        y_title_ratio = "Ratio"
+
+    plt.ylabel(y_title_ratio)
+    ylim = plt.gca().get_ylim()
+    nbins = min(int((ylim[1] - ylim[0]) / 0.05 + 1), 6)
+    plt.locator_params(axis="y", nbins=nbins)
 
 
 def plot_table(table, y_title, **kwargs):
@@ -624,42 +655,60 @@ def plot_array(
     -------
     plt.figure
         Instance of plt.figure with the array of telescopes plotted.
-
     """
     fig, ax = plt.subplots(1)
     legend_objects = []
     legend_labels = []
-    tel_counters = {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
-    pos_x_rotated, pos_y_rotated = 0.0 * u.m, 0.0 * u.m
+    tel_counters = initialize_tel_counters()
+
+    pos_x_rotated, pos_y_rotated = get_rotated_positions(telescopes, rotate_angle)
+    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
+    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
+
+    fontsize, scale = get_plot_params(len(pos_x_rotated))
+    patches = create_patches(
+        telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters
+    )
+
+    update_legend(ax, tel_counters, legend_objects, legend_labels)
+    finalize_plot(ax, patches, x_title="Easting [m]", y_title="Northing [m]", axes_range=axes_range)
+
+    return fig
+
+
+def initialize_tel_counters():
+    return {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
+
+
+def get_rotated_positions(telescopes, rotate_angle):
+    pos_x_rotated = pos_y_rotated = None
     if "position_x" in telescopes.colnames and "position_y" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["position_x"], telescopes["position_y"]
         rotate_angle = rotate_angle + 90.0 * u.deg
     elif "utm_east" in telescopes.colnames and "utm_north" in telescopes.colnames:
         pos_x_rotated, pos_y_rotated = telescopes["utm_east"], telescopes["utm_north"]
+    else:
+        raise ValueError(
+            "Telescopes table must contain either 'position_x'/'position_y'"
+            "or 'utm_east'/'utm_north' columns"
+        )
     if rotate_angle != 0:
         pos_x_rotated, pos_y_rotated = transf.rotate(pos_x_rotated, pos_y_rotated, rotate_angle)
-    telescopes.add_column(Column(pos_x_rotated, name="pos_x_rotated"))
-    telescopes.add_column(Column(pos_y_rotated, name="pos_y_rotated"))
+    return pos_x_rotated, pos_y_rotated
 
-    if len(pos_x_rotated) > 30:
-        fontsize = 4
-        scale = 2
-    else:
-        fontsize = 8
-        scale = 1
 
+def get_plot_params(position_length):
+    if position_length > 30:
+        return 4, 2
+    return 8, 1
+
+
+def create_patches(telescopes, scale, marker_scaling, show_tel_label, ax, fontsize, tel_counters):
     patches = []
     for tel_now in telescopes:
-        try:
-            telescope_name = tel_now["telescope_name"]
-        except KeyError:
-            telescope_name = tel_now["asset_code"] + "-" + tel_now["sequence_number"]
-        for tel_type in tel_counters:
-            if tel_type in telescope_name:
-                tel_counters[tel_type] += 1
-        sphere_radius = (
-            1.0 * u.m if "sphere_radius" not in telescopes.colnames else tel_now["sphere_radius"]
-        )
+        telescope_name = get_telescope_name(tel_now)
+        update_tel_counters(tel_counters, telescope_name)
+        sphere_radius = get_sphere_radius(tel_now)
         i_tel_name = names.get_telescope_type_from_telescope_name(telescope_name)
         patches.append(
             get_telescope_patch(
@@ -678,32 +727,33 @@ def plot_array(
                 verticalalignment="bottom",
                 fontsize=fontsize,
             )
+    return patches
 
-    for _, one_telescope in enumerate(names.get_list_of_telescope_types()):
+
+def get_telescope_name(tel_now):
+    try:
+        return tel_now["telescope_name"]
+    except KeyError:
+        return tel_now["asset_code"] + "-" + tel_now["sequence_number"]
+
+
+def update_tel_counters(tel_counters, telescope_name):
+    for tel_type in tel_counters:
+        if tel_type in telescope_name:
+            tel_counters[tel_type] += 1
+
+
+def get_sphere_radius(tel_now):
+    return 1.0 * u.m if "sphere_radius" not in tel_now.colnames else tel_now["sphere_radius"]
+
+
+def update_legend(ax, tel_counters, legend_objects, legend_labels):
+    for one_telescope in names.get_list_of_telescope_types():
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
             legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")
-
-    plt.gca().add_collection(PatchCollection(patches, match_original=True))
-
-    x_title = "Easting [m]"
-    y_title = "Northing [m]"
-    plt.axis("square")
-    if axes_range is not None:
-        plt.xlim(-axes_range, axes_range)
-        plt.ylim(-axes_range, axes_range)
-    plt.gca().set_axisbelow(True)
-    plt.xlabel(x_title, fontsize=12, labelpad=0)
-    plt.ylabel(y_title, fontsize=12, labelpad=0)
-    plt.tick_params(axis="both", which="major", labelsize=8)
-
-    legend_handler_map = {
-        list(leg_h.legend_handler_map.keys())[i_key]: list(leg_h.legend_handler_map.values())[
-            i_key
-        ]()
-        for i_key, _ in enumerate(leg_h.legend_handler_map)
-    }
-    plt.legend(
+    legend_handler_map = {k: v() for k, v in leg_h.legend_handler_map.items()}
+    ax.legend(
         legend_objects,
         legend_labels,
         handler_map=legend_handler_map,
@@ -711,9 +761,18 @@ def plot_array(
         loc="best",
     )
 
-    plt.tight_layout()
 
-    return fig
+def finalize_plot(ax, patches, x_title, y_title, axes_range):
+    ax.add_collection(PatchCollection(patches, match_original=True))
+    ax.set_xlabel(x_title, fontsize=12, labelpad=0)
+    ax.set_ylabel(y_title, fontsize=12, labelpad=0)
+    ax.tick_params(axis="both", which="major", labelsize=8)
+    ax.set_axisbelow(True)
+    ax.axis("square")
+    if axes_range is not None:
+        ax.set_xlim(-axes_range, axes_range)
+        ax.set_ylim(-axes_range, axes_range)
+    plt.tight_layout()
 
 
 def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):

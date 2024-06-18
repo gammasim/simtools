@@ -729,7 +729,7 @@ class DatabaseHandler:
     def update_parameter_field(
         self,
         db_name,
-        version,
+        model_version,
         parameter,
         field,
         new_value,
@@ -750,8 +750,8 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        version: str
-            Which version to update
+        model_version: str
+            Which model version to update
         parameter: str
             Which parameter to update
         field: str
@@ -778,7 +778,7 @@ class DatabaseHandler:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
         collection = DatabaseHandler.db_client[db_name][collection_name]
-        _model_version = self.model_version(version, db_name)
+        _model_version = self.model_version(model_version, db_name)
 
         query = {
             "version": _model_version,
