@@ -503,10 +503,11 @@ class SimtelIOHistogram:
         Get the particle distribution function.
 
         This depends  on whether one wants the reference CR distribution or the distribution
-        used in the simulation.This is controlled by label.
+        used in the simulation. This is controlled by label.
         By using label="reference", one gets the distribution function according to a pre-defined CR
         distribution, while by using label="simulation", the spectral index of the distribution
-        function from the simulation is used.
+        function from the simulation is used. Naturally, label="simulation" only works when the
+        input file is a .simtel file and not a .hdata file.
 
         Parameters
         ----------
@@ -537,9 +538,21 @@ class SimtelIOHistogram:
         -------
         ctao_cr_spectra.spectral.PowerLaw
             The function describing the spectral distribution.
+        Raises
+        ------
+        ValueError:
+            if input parameter is missing.
         """
         spectral_distribution = copy.copy(IRFDOC_PROTON_SPECTRUM)
-        spectral_distribution.index = self.config["spectral_index"]
+        try:
+            spectral_distribution.index = self.config["spectral_index"]
+        except KeyError as exc:
+            msg = (
+                "spectral_index not found in the configuration of the file. "
+                "Consider using a .simtel file instead."
+            )
+            self._logger.error(msg)
+            raise ValueError from exc
         return spectral_distribution
 
     def estimate_observation_time(self, stacked_num_simulated_events=None):
