@@ -89,8 +89,7 @@ from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
 
-def main():
-    """Generate sim_telarray config files for a given array."""
+def _parse():
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=("Example of how to produce sim_telarray config files for a given array."),
@@ -101,7 +100,11 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="version")
+    return config.initialize(db_config=True, simulation_model="version")
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
