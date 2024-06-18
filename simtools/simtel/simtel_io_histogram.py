@@ -53,7 +53,9 @@ class SimtelIOHistogram:
 
     """
 
-    def __init__(self, histogram_file, area_from_distribution=False, energy_range=None):
+    def __init__(
+        self, histogram_file, area_from_distribution=False, energy_range=None, view_cone=None
+    ):
         """Initialize SimtelIOHistogram class."""
         self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
@@ -62,7 +64,8 @@ class SimtelIOHistogram:
             self._logger.error(msg)
             raise FileNotFoundError
         self._config = None
-        self._view_cone = None
+        self.view_cone = view_cone
+        self._set_view_cone()
         self._total_area = None
         self._solid_angle = None
         self.energy_range = energy_range
@@ -211,26 +214,25 @@ class SimtelIOHistogram:
         self._logger.error(msg)
         raise HistogramIdNotFoundError
 
-    @property
-    def view_cone(self):
+    def _set_view_cone(self):
         """
         View cone used in the simulation.
 
-        Returns
+        Raises
         -------
-        list:
-            view cone used in the simulation [min, max]
+        ValueError:
+            if input parameter is missing.
         """
-        if self._view_cone is None:
+        if self.view_cone is None:
             try:
-                self._view_cone = self.config["viewcone"] * u.deg
-            except (
-                TypeError
-            ):  # self.config is None because a .hdata file has no config saved in it.
-                if self._view_cone is None:
-                    msg = "view_cone not found in the config."
-                    self._logger.debug(msg)
-        return self._view_cone
+                self.view_cone = self.config["viewcone"] * u.deg
+            except KeyError as exc:
+                msg = "view_cone needs to be passed as argument (a list of cone in deg)."
+                self._logger.error(msg)
+                raise ValueError from exc
+        else:
+            if not isinstance(self.view_cone, u.Quantity):
+                self.view_cone = self.view_cone * u.deg
 
     @property
     def solid_angle(self):
