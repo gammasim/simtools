@@ -491,18 +491,21 @@ class Camera:
         """
 
         self._logger.debug("Searching for edge pixels")
-
         edge_pixel_indices = []
 
+        def is_edge_pixel(i_pix):
+            pixel_shape = pixels["pixel_shape"]
+            pix_on = pixels["pix_on"][i_pix]
+            num_neighbours = len(neighbours[i_pix])
+
+            shape_condition = (pixel_shape in [1, 3] and num_neighbours < 6) or (
+                pixel_shape == 2 and num_neighbours < 4
+            )
+            return pix_on and shape_condition
+
         for i_pix, _ in enumerate(pixels["x"]):
-            if (pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3) and pixels["pix_on"][
-                i_pix
-            ]:
-                if len(neighbours[i_pix]) < 6:
-                    edge_pixel_indices.append(i_pix)
-            elif pixels["pixel_shape"] == 2 and pixels["pix_on"][i_pix]:
-                if len(neighbours[i_pix]) < 4:
-                    edge_pixel_indices.append(i_pix)
+            if is_edge_pixel(i_pix):
+                edge_pixel_indices.append(i_pix)
 
         return edge_pixel_indices
 

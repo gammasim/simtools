@@ -77,6 +77,9 @@ Tests might pass just because they run after an unrelated test. In order to test
 Check the test coverage with `pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov`.
 Add the `--cov-report html` option to generate a coverage report in HTML format.
 
+It might be quite useful to test a single application while developing.
+This can be done with e.g. `pytest -v -k "simtools-convert-all-model-parameters-from-simtel" tests/integration_tests/test_applications_from_config.py` to run all the integrations tests for the `simtools-convert-all-model-parameters-from-simtel` application.
+Alternatively, run `pytest -v -k "simtools-convert-all-model-parameters-from-simtel_num_gains" tests/integration_tests/test_applications_from_config.py` to run the tool for the specific test called `num_gains`. Test names are found in the yml files in the `tests/integration_tests/config` directory.
 ## Writing Applications
 
 Applications are command-line tools that should be built of the simtools library.

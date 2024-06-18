@@ -1,35 +1,17 @@
 #!/usr/bin/python3
 """Read model parameters and configuration from sim_telarray configuration files."""
 
-import json
 import logging
 import re
 
-import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
 from simtools.data_model import validate_data
+from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
-
-
-class JsonNumpyEncoder(json.JSONEncoder):
-    """Convert numpy to python types as accepted by json.dump."""
-
-    def default(self, o):
-        if isinstance(o, np.floating):
-            return float(o)
-        if isinstance(o, np.integer):
-            return int(o)
-        if isinstance(o, np.ndarray):
-            return o.tolist()
-        if isinstance(o, u.core.CompositeUnit | u.core.IrreducibleUnit | u.core.Unit):
-            return str(o) if o != u.dimensionless_unscaled else None
-        if np.issubdtype(type(o), np.bool_):
-            return bool(o)
-        return super().default(o)
 
 
 class SimtelConfigReader:
@@ -37,8 +19,8 @@ class SimtelConfigReader:
     Reads model parameters from configuration files and converts to the simtools representation.
 
     The output format are simtool-db-style json dicts.
-
-    The sim_telarray configuration can be generated using e.g., the following simtel_array command:
+    Model parameters are read from sim_telarray configuration files.
+    The sim_telarray configuration can be generated using e.g., the following sim_telarray command:
 
     ... code-block:: console
 
@@ -151,66 +133,71 @@ class SimtelConfigReader:
             pass
 
         self._logger.info(f"Exporting parameter dictionary to {file_name}")
-        with open(file_name, "w", encoding="utf-8") as file:
-            json.dump(
-                dict_to_write,
-                file,
-                indent=4,
-                sort_keys=False,
-                cls=JsonNumpyEncoder,
-            )
-            file.write("\n")
+        ModelDataWriter.write_dict_to_model_parameter_json(
+            file_name=file_name, data_dict=dict_to_write
+        )
 
     def compare_simtel_config_with_schema(self):
         """
         Compare limits and defaults reported by simtel_array with schema.
-
         This is mostly for debugging purposes and includes simple printing.
         Check for differences in 'default' and 'limits' entries.
         """
-        for data_type in ["default", "limits"]:
-            _from_simtel = self.parameter_dict.get(data_type)
-            # ignore limits checks for boolean
-            if data_type == "limits" and self.parameter_dict.get("type") == "bool":
-                continue
+
+        def _should_skip_limits_check(data_type):
+            return data_type == "limits" and self.parameter_dict.get("type") == "bool"
+
+        def _get_schema_values(data_type):
             try:
                 if data_type == "limits":
                     _from_schema = [
                         self.schema_dict["data"][0]["allowed_range"].get("min"),
                         self.schema_dict["data"][0]["allowed_range"].get("max"),
                     ]
-                    _from_schema = _from_schema[0] if _from_schema[1] is None else _from_schema
-                else:
-                    if len(self.schema_dict["data"]) == 1:
-                        _from_schema = self.schema_dict["data"][0]["default"]
-                    else:
-                        _from_schema = [data.get("default") for data in self.schema_dict["data"]]
+                    return _from_schema[0] if _from_schema[1] is None else _from_schema
+                if len(self.schema_dict["data"]) == 1:
+                    return self.schema_dict["data"][0]["default"]
+                return [data.get("default") for data in self.schema_dict["data"]]
             except (KeyError, IndexError):
-                _from_schema = None
+                return None
 
-            if isinstance(_from_schema, list):
-                _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
-
+        def _values_match(_from_simtel, _from_schema):
             try:
                 if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
-                    self._logger.debug(f"Values for {data_type} match")
-                    continue
+                    return True
             except ValueError:
                 pass
+
             try:
                 if np.all(np.isclose(_from_simtel, _from_schema)):
-                    self._logger.debug(f"Values for {data_type} match")
-                    continue
+                    return True
             except (TypeError, ValueError):
                 pass
+
+            return False
+
+        def _log_mismatch_warning(data_type, _from_simtel, _from_schema):
             self._logger.warning(f"Values for {data_type} do not match:")
             self._logger.warning(
-                f"  from simtel: {self.simtel_parameter_name} {_from_simtel}"
-                f" ({type(_from_simtel)})"
+                f"  from simtel: {self.simtel_parameter_name} {_from_simtel} ({type(_from_simtel)})"
             )
             self._logger.warning(
                 f"  from schema: {self.parameter_name} {_from_schema} ({type(_from_schema)})"
             )
+
+        for data_type in ["default", "limits"]:
+            _from_simtel = self.parameter_dict.get(data_type)
+            if _should_skip_limits_check(data_type):
+                continue
+
+            _from_schema = _get_schema_values(data_type)
+            if isinstance(_from_schema, list):
+                _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
+
+            if _values_match(_from_simtel, _from_schema):
+                self._logger.debug(f"Values for {data_type} match")
+            else:
+                _log_mismatch_warning(data_type, _from_simtel, _from_schema)
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -356,11 +343,10 @@ class SimtelConfigReader:
             column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            processed_value = (
-                np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
-                if column[0] is not None
-                else None
-            )
+            if column[0] is not None:
+                processed_value = np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
+            else:
+                processed_value = None
             return processed_value, 1
 
         if len(column) > 1:
