@@ -5,39 +5,11 @@ import pathlib
 from unittest.mock import Mock, patch
 
 import pytest
-from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputError
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-@pytest.fixture()
-def corsika_config_data():
-    return {
-        "nshow": 100,
-        "start_run": 0,
-        "nrun": 10,
-        "zenith_angle": 20 * u.deg,
-        "azimuth_angle": 0.0 * u.deg,
-        "viewcone": "0.0 deg 5.0 deg",
-        "erange": "10.0 GeV 10.0 TeV",
-        "eslope": -2,
-        "core_scatter": "10 1400.0 m",
-        "primary": "proton",
-        "data_directory": "simtools-output",
-    }
-
-
-@pytest.fixture()
-def corsika_config(io_handler, corsika_config_data, array_model_south):
-    corsika_config = CorsikaConfig(
-        array_model=array_model_south,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
-    )
-    return corsika_config
 
 
 def test_repr(corsika_config):
@@ -84,7 +56,7 @@ def test_print_config_parameter(corsika_config, capsys):
 def test_export_input_file(corsika_config):
     logger.info("test_export_input_file")
     corsika_config.export_input_file()
-    input_file = corsika_config.get_input_file()
+    input_file = corsika_config.get_corsika_input_file()
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" not in f.read()
@@ -93,7 +65,7 @@ def test_export_input_file(corsika_config):
 def test_export_input_file_multipipe(corsika_config):
     logger.info("test_export_input_file")
     corsika_config.export_input_file(use_multipipe=True)
-    input_file = corsika_config.get_input_file()
+    input_file = corsika_config.get_corsika_input_file()
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" in f.read()
@@ -204,7 +176,7 @@ def test_write_seeds(io_handler):
         assert _call.endswith(" 0 0\n")
 
 
-def test_get_input_file(corsika_config):
+def test_get_corsika_input_file(corsika_config):
     empty_config = CorsikaConfig(
         array_model=None,
         label="test-corsika-config",
@@ -215,7 +187,7 @@ def test_get_input_file(corsika_config):
     cc = corsika_config
 
     assert not cc._is_file_updated
-    input_file = cc.get_input_file()
+    input_file = cc.get_corsika_input_file()
 
     assert isinstance(input_file, pathlib.Path)
     assert cc._is_file_updated

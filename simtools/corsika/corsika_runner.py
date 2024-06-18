@@ -15,29 +15,13 @@ class MissingRequiredEntryInCorsikaConfigError(Exception):
 
 class CorsikaRunner:
     """
-    Generate run scripts and directories for CORSIKA simulations. Run simulations if requests.
+    Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.
 
-    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \
-    provided by the sim_telarray package. It provides shell scripts to be run externally or by \
+    CorsikaRunner is responsible for configuring and running CORSIKA, using corsika_autoinputs
+    provided by the sim_telarray package. It provides shell scripts to be run externally or by
     the module simulator. Same instance can be used to generate scripts for any given run number.
 
-    It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the\
-    corsika_config_data argument. An example of corsika_config_data follows below.
-
-    .. code-block:: python
-
-        corsika_config_data = {
-            'data_directory': .
-            'primary': 'proton',
-            'nshow': 10000,
-            'nrun': 1,
-            'zenith': 20 * u.deg,
-            'viewcone': 5 * u.deg,
-            'erange': [10 * u.GeV, 100 * u.TeV],
-            'eslope': -2,
-            'phi': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
-        }
+    CorsikaRunner is configured through a CorsikaConfig instance.
 
     The CORSIKA output directory must be set by the data_directory entry. The following directories\
     will be created to store the logs and input file:
@@ -46,14 +30,14 @@ class CorsikaRunner:
 
     Parameters
     ----------
+    corsika_config_data: CorsikaConfig
+        CORSIKA configuration.
     simtel_path: str or Path
         Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
     keep_seeds: bool
         Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
-    corsika_config_data: dict
-        Dict with CORSIKA config data.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
     """
@@ -77,52 +61,43 @@ class CorsikaRunner:
 
         self._simtel_path = Path(simtel_path)
         self.io_handler = io_handler.IOHandler()
-        _runner_directory = "corsika_simtel" if use_multipipe else "corsika"
-        self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
-        self._logger.debug(f"Creating output dir {self._output_directory}.")
 
         self.corsika_config = corsika_config
-        self._corsika_data_directory = self._get_corsika_data_directory(None)  # TODO
-        self._corsika_input_file = self.corsika_config.get_input_file(use_multipipe)
-        self._load_corsika_data_directories()
+        self._directory = self._load_corsika_data_directories()
+        self._corsika_input_file = self.corsika_config.get_corsika_input_file(use_multipipe)
 
-    def _get_corsika_data_directory(self, corsika_data_directory_name):
+    def _load_corsika_data_directories(self, use_multipipe=False):
         """
-        Get (and create if necessary) the CORSIKA data directory.
+        Create and return CORSIKA directories for output, data, log and input.
 
         Parameters
         ----------
-        corsika_data_directory_name: str
-            Name of the directory to store the CORSIKA data.
+        use_multipipe: bool
+            Use multipipe to run CORSIKA and simtelarray.
 
         Returns
         -------
-        Path:
-            Full path of the CORSIKA data directory.
+        dict
+            Dictionary containing paths to output, data, input, and log directories.
         """
-        if corsika_data_directory_name is None:
-            msg = (
-                "data_directory not given in corsika_config "
-                "- default output directory will be set."
-            )
-            self._logger.warning(msg)
-            return self._output_directory.joinpath("corsika-data")
-        return Path(corsika_data_directory_name).joinpath("corsika-data")
 
-    def _load_corsika_data_directories(self):
-        """Create CORSIKA directories for data, log and input."""
-        corsika_base_dir = self._corsika_data_directory.joinpath(
-            self.corsika_config.array_model.site
+        directory = {}
+        directory["output"] = self.io_handler.get_output_directory(
+            self.label, "corsika_simtel" if use_multipipe else "corsika"
         )
-        corsika_base_dir = corsika_base_dir.joinpath(self.corsika_config.primary)
-        corsika_base_dir = corsika_base_dir.absolute()
+        self._logger.debug(f"Creating output dir {directory['output']}.")
+        corsika_base_dir = (
+            directory["output"]
+            .joinpath(
+                "corsika-data", self.corsika_config.array_model.site, self.corsika_config.primary
+            )
+            .absolute()
+        )
+        for dir_name in ["data", "input", "log"]:
+            directory[dir_name] = corsika_base_dir.joinpath(dir_name)
+            directory[dir_name].mkdir(parents=True, exist_ok=True)
 
-        self._corsika_data_dir = corsika_base_dir.joinpath("data")
-        self._corsika_data_dir.mkdir(parents=True, exist_ok=True)
-        self._corsika_input_dir = corsika_base_dir.joinpath("input")
-        self._corsika_input_dir.mkdir(parents=True, exist_ok=True)
-        self._corsika_log_dir = corsika_base_dir.joinpath("log")
-        self._corsika_log_dir.mkdir(parents=True, exist_ok=True)
+        return directory
 
     def prepare_run_script(self, use_pfp=True, **kwargs):
         """
@@ -159,7 +134,7 @@ class CorsikaRunner:
         corsika_input_tmp_name = self.corsika_config.get_file_name(
             file_type="config_tmp", run_number=run_number
         )
-        corsika_input_tmp_file = self._corsika_input_dir.joinpath(corsika_input_tmp_name)
+        corsika_input_tmp_file = self._directory["input"].joinpath(corsika_input_tmp_name)
 
         if use_pfp:
             pfp_command = self._get_pfp_command(corsika_input_tmp_file)
@@ -184,10 +159,10 @@ class CorsikaRunner:
                 file.write(f"{extra_commands}\n")
                 file.write("# End of extras\n\n")
 
-            file.write(f"export CORSIKA_DATA={self._corsika_data_dir}\n")
+            file.write(f"export CORSIKA_DATA={self._directory['data']}\n")
             file.write("\n# Creating CORSIKA_DATA\n")
-            file.write(f"mkdir -p {self._corsika_data_dir}\n")
-            file.write(f"cd {self._corsika_data_dir} || exit 2\n")
+            file.write(f"mkdir -p {self._directory['data']}\n")
+            file.write(f"cd {self._directory['data']} || exit 2\n")
             if use_pfp:
                 file.write("\n# Running pfp\n")
                 file.write(pfp_command)
@@ -208,14 +183,45 @@ class CorsikaRunner:
         return script_file_path
 
     def _get_pfp_command(self, input_tmp_file):
-        """Get pfp pre-processor command."""
+        """
+        Get pfp pre-processor command.
+
+        pfp is a pre-processor tool and part of sim_telarray.
+
+        Parameters
+        ----------
+        input_tmp_file: Path
+            Temporary input file.
+
+        Returns
+        -------
+        str
+            pfp command.
+        """
         cmd = self._simtel_path.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
         cmd += f" > {input_tmp_file} || exit\n"
         return cmd
 
     def _get_autoinputs_command(self, run_number, input_tmp_file):
-        """Get autoinputs command."""
+        """
+        Get autoinputs command.
+
+        corsika_autoinputs is a tool to generate random and user/host dependent
+        parameters for CORSIKA configuration.
+
+        Parameters
+        ----------
+        run_number: int
+            Run number.
+        input_tmp_file: Path
+            Temporary input file.
+
+        Returns
+        -------
+        str
+            autoinputs command.
+        """
         corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
 
         log_file = self.get_file_name(
@@ -225,7 +231,7 @@ class CorsikaRunner:
         cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
         cmd += f" -R {run_number}"
-        cmd += f" -p {self._corsika_data_dir}"
+        cmd += f" -p {self._directory['data']}"
         if self._keep_seeds:
             cmd += " --keep-seeds"
         cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
@@ -292,12 +298,12 @@ class CorsikaRunner:
         )
 
         if file_type == "corsika_autoinputs_log":
-            return self._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
+            return self._directory["log"].joinpath(f"log_{file_name}.log.gz")
         if file_type == "corsika_log":
             run_dir = self._get_run_directory(kwargs["run"])
-            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
+            return self._directory["data"].joinpath(run_dir).joinpath(f"run{kwargs['run']}.log")
         if file_type == "script":
-            script_file_dir = self._output_directory.joinpath("scripts")
+            script_file_dir = self._directory["output"].joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
             return script_file_dir.joinpath(f"{file_name}.sh")
         if file_type == "output":
@@ -309,12 +315,12 @@ class CorsikaRunner:
                 f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
             )
             run_dir = self._get_run_directory(kwargs["run"])
-            return self._corsika_data_dir.joinpath(run_dir).joinpath(f"{file_name}.zst")
+            return self._directory["data"].joinpath(run_dir).joinpath(f"{file_name}.zst")
         if file_type == "sub_log":
             suffix = ".log"
             if "mode" in kwargs and kwargs["mode"] != "":
                 suffix = f".{kwargs['mode']}"
-            sub_log_file_dir = self._output_directory.joinpath("logs")
+            sub_log_file_dir = self._directory["output"].joinpath("logs")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
             return sub_log_file_dir.joinpath(f"log_sub_{file_name}{suffix}")
 
@@ -351,7 +357,6 @@ class CorsikaRunner:
         -------
         dict
             run time and number of simulated events
-
         """
         sub_log_file = self.get_file_name(
             file_type="sub_log", **self.get_info_for_file_name(run_number), mode="out"
@@ -380,6 +385,8 @@ class CorsikaRunner:
     def _get_run_directory(run_number):
         """Get run directory created by sim_telarray (ex. run000014)."""
         nn = str(run_number)
+        if len(nn) > 6:
+            raise ValueError("Run number cannot have more than 6 digits")
         return "run" + nn.zfill(6)
 
     def _validate_run_number(self, run_number):
@@ -403,8 +410,8 @@ class CorsikaRunner:
         """
         if run_number is None:
             return self.corsika_config.get_config_parameter("RUNNR")
-        if not float(run_number).is_integer() or run_number < 1:
-            msg = f"Invalid type of run number ({run_number}) - it must be an uint."
+        if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
+            msg = f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
             self._logger.error(msg)
             raise ValueError(msg)
         return run_number
