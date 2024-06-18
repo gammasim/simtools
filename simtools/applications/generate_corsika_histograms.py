@@ -151,10 +151,10 @@
 
      .. code-block:: console
 
-        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/tests/\
-            resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio --pdf --hdf5
+        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/\\
+        testsresources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
+            --pdf --hdf5 \\
             --event_2d_histograms zenith azimuth --event_1d_histograms total_energy
-
 
     Expected final print-out message:
 

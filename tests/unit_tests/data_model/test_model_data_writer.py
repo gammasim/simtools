@@ -3,10 +3,14 @@
 import logging
 from pathlib import Path
 
-import astropy
+import astropy.units as u
+import numpy as np
 import pytest
+from astropy.io.registry.base import IORegistryError
+from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
+from simtools.data_model.model_data_writer import JsonNumpyEncoder
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -23,31 +27,51 @@ def test_write(tmp_test_directory):
     w_1.write(metadata=_metadata, product_data=None)
 
     # product_data not none
-    empty_table = astropy.table.Table()
+    empty_table = Table()
     w_1.write(metadata=None, product_data=empty_table)
 
     assert Path(w_1.product_data_file).exists()
 
     # both not none
     data = {"pixel": [25, 30, 28]}
-    small_table = astropy.table.Table(data)
+    small_table = Table(data)
     w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
     w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
 
     # check that table and metadata is good
-    table = astropy.table.Table.read(w_1.product_data_file, format="ascii.ecsv")
+    table = Table.read(w_1.product_data_file, format="ascii.ecsv")
     assert "pixel" in table.colnames
     assert "NAME" in table.meta.keys()
 
     w_1.product_data_format = "not_an_astropy_format"
-    with pytest.raises(astropy.io.registry.base.IORegistryError):
+    with pytest.raises(IORegistryError):
         w_1.write(metadata=None, product_data=empty_table)
+
+    # test json format
+    dict_data = {"value": 5.5}
+    w_1.product_data_file = tmp_test_directory.join("test_file.json")
+    w_1.write(metadata=None, product_data=dict_data)
+    assert Path(w_1.product_data_file).is_file()
+
+
+def test_write_dict_to_model_parameter_json(tmp_test_directory):
+    w1 = writer.ModelDataWriter()
+    data_dict = {"value": 5.5}
+    data_file = tmp_test_directory.join("test_file.json")
+    w1.write_dict_to_model_parameter_json(file_name=data_file, data_dict=data_dict)
+    assert Path(data_file).is_file()
+
+    this_directory_is_not_there = "./this_directory_is_not_there/test_file.json"
+    with pytest.raises(FileNotFoundError, match=r"^Error writing model data to"):
+        w1.write_dict_to_model_parameter_json(
+            file_name=this_directory_is_not_there, data_dict=data_dict
+        )
 
 
 def test_dump(args_dict, tmp_test_directory):
     _metadata = {"name": "test_metadata"}
-    empty_table = astropy.table.Table()
+    empty_table = Table()
 
     args_dict["use_plain_output_path"] = True
     args_dict["output_file"] = "test_file.ecsv"
@@ -88,9 +112,7 @@ def test_validate_and_transform(tmp_test_directory):
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data=None, validate_schema_file=None)
 
-    _table = astropy.table.Table.read(
-        "tests/resources/MLTdata-preproduction.ecsv", format="ascii.ecsv"
-    )
+    _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format="ascii.ecsv")
     return_table = w_1.validate_and_transform(
         product_data=_table,
         validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
@@ -129,3 +151,18 @@ def test_astropy_data_format():
     assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
     assert writer.ModelDataWriter._astropy_data_format("ecsv") == "ascii.ecsv"
     assert writer.ModelDataWriter._astropy_data_format("ascii.ecsv") == "ascii.ecsv"
+
+
+def test_jsonnumpy_encoder():
+
+    encoder = JsonNumpyEncoder()
+    assert isinstance(encoder.default(np.float64(3.14)), float)
+    assert isinstance(encoder.default(np.int64(3.14)), int)
+    assert isinstance(encoder.default(np.array([])), list)
+    assert isinstance(encoder.default(u.Unit("m")), str)
+    assert encoder.default(u.Unit("")) is None
+    assert isinstance(encoder.default(u.Unit("m/s")), str)
+    assert isinstance(encoder.default(np.bool_(True)), bool)
+
+    with pytest.raises(TypeError):
+        encoder.default("abc")

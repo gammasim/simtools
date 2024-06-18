@@ -75,7 +75,7 @@ jobs:
           flavor: latest=true
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: matrix.type == 'prod'
         with:
           context: .
@@ -104,7 +104,7 @@ jobs:
         shell: /usr/bin/bash -e {0}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
