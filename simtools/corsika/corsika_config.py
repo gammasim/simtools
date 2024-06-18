@@ -412,7 +412,7 @@ class CorsikaConfig:
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
-    def get_input_file(self, use_multipipe=False):
+    def get_corsika_input_file(self, use_multipipe=False):
         """
         Get the full path of the CORSIKA input file.
 

@@ -11,6 +11,7 @@ from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
@@ -344,6 +345,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
     return corsika_histograms_instance
 
 
+# TODO remove
 @pytest.fixture()
 def simulator_config_data_north(tmp_test_directory):
     return {
@@ -368,16 +370,13 @@ def simulator_config_data_north(tmp_test_directory):
     }
 
 
-@pytest.fixture()
-def array_config_data(simulator_config_data):
-    return simulator_config_data["common"] | simulator_config_data["array"]
-
-
+# TODO remove
 @pytest.fixture()
 def shower_config_data_north(simulator_config_data_north):
     return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
 
 
+# TODO remove
 @pytest.fixture()
 def simulator_config_data_south(tmp_test_directory):
     return {
@@ -400,6 +399,33 @@ def simulator_config_data_south(tmp_test_directory):
         },
         "array": {},
     }
+
+
+@pytest.fixture()
+def corsika_config_data():
+    return {
+        "nshow": 100,
+        "start_run": 0,
+        "nrun": 10,
+        "zenith_angle": 20 * u.deg,
+        "azimuth_angle": 0.0 * u.deg,
+        "viewcone": "0.0 deg 5.0 deg",
+        "erange": "10.0 GeV 10.0 TeV",
+        "eslope": -2,
+        "core_scatter": "10 1400.0 m",
+        "primary": "proton",
+        "data_directory": "simtools-output",
+    }
+
+
+@pytest.fixture()
+def corsika_config(io_handler, corsika_config_data, array_model_south):
+    corsika_config = CorsikaConfig(
+        array_model=array_model_south,
+        label="test-corsika-config",
+        args_dict=corsika_config_data,
+    )
+    return corsika_config
 
 
 @pytest.fixture()
