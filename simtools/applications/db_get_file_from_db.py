@@ -45,7 +45,7 @@ from simtools.db import db_handler
 from simtools.io_operations import io_handler
 
 
-def main():
+def _parse():
     config = configurator.Configurator(
         description="Get file(s) from the DB.",
         usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
@@ -53,11 +53,15 @@ def main():
 
     config.parser.add_argument(
         "--file_name",
-        help=("The name of the file to be downloaded."),
+        help="The name of the file to be downloaded.",
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True, output=True)
+    return config.initialize(db_config=True, output=True)
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
