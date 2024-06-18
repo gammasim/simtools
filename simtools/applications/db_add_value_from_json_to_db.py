@@ -37,7 +37,7 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def main():
+def _parse():
     config = configurator.Configurator(description="Add a new parameter to the DB.")
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="file to be added", type=str)
@@ -49,10 +49,12 @@ def main():
     config.parser.add_argument(
         "--db_collection", help="DB collection to which to add new values.", required=True
     )
-    config.parser.add_argument(
-        "--db",
-    )
-    args_dict, db_config = config.initialize(db_config=True)
+    config.parser.add_argument("--db", help="Database name", type=str, required=True)
+    return config.initialize(db_config=True)
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
