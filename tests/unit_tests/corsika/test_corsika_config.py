@@ -165,7 +165,8 @@ def test_write_seeds(io_handler):
         label="test-corsika-config",
         args_dict=None,
     )
-    corsika_config.config = {"PRMPAR": [14], "RUNNR": [10]}
+    corsika_config.run_number = 10
+    corsika_config.config = {"PRMPAR": [14]}
     with patch("io.open", return_value=mock_file):
         corsika_config._write_seeds(mock_file)
     assert mock_file.write.call_count == 4
@@ -198,3 +199,16 @@ def test_get_corsika_telescope_list(corsika_config):
     telescope_list_str = cc.get_corsika_telescope_list()
     assert telescope_list_str.count("TELESCOPE") > 0
     assert telescope_list_str.count("LSTS") > 0
+
+
+def test_validate_run_number(corsika_config):
+    assert corsika_config.validate_run_number(1)
+    assert corsika_config.validate_run_number(123456)
+    with pytest.raises(ValueError, match=r"^could not convert string to float"):
+        corsika_config.validate_run_number("test")
+    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+        corsika_config.validate_run_number(1.5)
+    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+        corsika_config.validate_run_number(-1)
+    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+        corsika_config.validate_run_number(123456789)

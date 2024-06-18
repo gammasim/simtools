@@ -124,21 +124,23 @@ class CorsikaRunner:
             "extra_commands": None,
             **kwargs,
         }
-        run_number = self._validate_run_number(kwargs["run_number"])
+        self.corsika_config.run_number = kwargs["run_number"]
 
         script_file_path = self.get_file_name(
-            file_type="script", **self.get_info_for_file_name(run_number)
+            file_type="script", **self.get_info_for_file_name(self.corsika_config.run_number)
         )
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
         corsika_input_tmp_name = self.corsika_config.get_file_name(
-            file_type="config_tmp", run_number=run_number
+            file_type="config_tmp", run_number=self.corsika_config.run_number
         )
         corsika_input_tmp_file = self._directory["input"].joinpath(corsika_input_tmp_name)
 
         if use_pfp:
             pfp_command = self._get_pfp_command(corsika_input_tmp_file)
-        autoinputs_command = self._get_autoinputs_command(run_number, corsika_input_tmp_file)
+        autoinputs_command = self._get_autoinputs_command(
+            self.corsika_config.run_number, corsika_input_tmp_file
+        )
 
         extra_commands = kwargs["extra_commands"]
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
@@ -167,7 +169,10 @@ class CorsikaRunner:
                 file.write("\n# Running pfp\n")
                 file.write(pfp_command)
                 file.write("\n# Replacing the XXXXXX placeholder with the run number\n")
-                file.write(f"sed -i 's/XXXXXX/{run_number:06}/g' {corsika_input_tmp_file}\n")
+                file.write(
+                    f"sed -i 's/XXXXXX/{self.corsika_config.run_number:06}/g' "
+                    f"{corsika_input_tmp_file}\n"
+                )
             else:
                 file.write("\n# Copying CORSIKA input file to run location\n")
                 file.write(f"cp {self._corsika_input_file} {corsika_input_tmp_file}")
@@ -248,7 +253,7 @@ class CorsikaRunner:
             Dictionary with the keys necessary for building the CORSIKA runner file names.
         """
         return {
-            "run": self._validate_run_number(run_number),
+            "run": self.corsika_config.validate_run_number(run_number),
             "primary": self.corsika_config.primary,
             "array_name": self.corsika_config.array_model.layout_name,
             "site": self.corsika_config.array_model.site,
@@ -388,30 +393,3 @@ class CorsikaRunner:
         if len(nn) > 6:
             raise ValueError("Run number cannot have more than 6 digits")
         return "run" + nn.zfill(6)
-
-    def _validate_run_number(self, run_number):
-        """
-        Return the run number from corsika_config in case run_number is None.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
-
-        Returns
-        -------
-        int
-            Run number.
-
-        Raises
-        ------
-        ValueError
-            If run_number is not a valid value (e.g., < 1).
-        """
-        if run_number is None:
-            return self.corsika_config.get_config_parameter("RUNNR")
-        if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
-            msg = f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
-            self._logger.error(msg)
-            raise ValueError(msg)
-        return run_number

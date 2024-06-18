@@ -46,6 +46,7 @@ class CorsikaConfig:
 
         self.label = label
         self.primary = None
+        self._run_number = None
         self.args_dict = args_dict
         self.config_file_path = None
 
@@ -105,7 +106,7 @@ class CorsikaConfig:
 
         return {
             "EVTNR": [1],  # TODO
-            "RUNNR": [10],  # TODO
+            "RUNNR": [self.run_number],
             "NSHOW": [self.args_dict["nshow"]],
             "PRMPAR": [
                 self._convert_primary_input_and_store_primary_name(self.args_dict["primary"])
@@ -406,7 +407,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self.config["PRMPAR"][0] + self.config["RUNNR"][0]
+        random_seed = self.config["PRMPAR"][0] + self._run_number
         rng = np.random.default_rng(random_seed)
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
@@ -447,3 +448,49 @@ class CorsikaConfig:
             corsika_input_list += f"\t # {telescope_name}\n"
 
         return corsika_input_list
+
+    @property
+    def run_number(self):
+        """Set run number."""
+        return self._run_number
+
+    @run_number.setter
+    def run_number(self, run_number):
+        """
+        Set run number and validate it.
+
+        Parameters
+        ----------
+        run_number: int
+            Run number.
+        """
+        self._run_number = self.validate_run_number(run_number)
+
+    def validate_run_number(self, run_number):
+        """
+        Validate run number and return it.
+
+        Return run number from configuration if None.
+
+        Parameters
+        ----------
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        int
+            Run number.
+
+        Raises
+        ------
+        ValueError
+            If run_number is not a valid value (e.g., < 1).
+        """
+        if run_number is None:
+            return self.run_number
+        if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
+            msg = f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
+            self._logger.error(msg)
+            raise ValueError(msg)
+        return run_number
