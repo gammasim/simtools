@@ -166,6 +166,7 @@ def add_parameters(
     """
     Transform the parameters to the proper format and add a new set of
     parameters to the all_parameters list.
+
     Parameters
     ----------
     all_parameters : list
