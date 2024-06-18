@@ -72,10 +72,6 @@ class SimtelIOHistogram:
             msg = f"File {histogram_file} does not exist."
             self._logger.error(msg)
             raise FileNotFoundError
-        self.view_cone = view_cone
-        self._set_view_cone()
-        self.energy_range = energy_range
-        self._set_energy_range()
 
         self._config = None
         self._total_area = None
@@ -91,6 +87,11 @@ class SimtelIOHistogram:
         self.radius_axis = None
         self.area_from_distribution = area_from_distribution
         self.suffix = "".join(Path(self.histogram_file).suffixes)
+
+        self.view_cone = view_cone
+        self._set_view_cone()
+        self.energy_range = energy_range
+        self._set_energy_range()
 
     def _initialize_histogram(self):
         """
@@ -157,14 +158,8 @@ class SimtelIOHistogram:
             total number of simulated events.
         """
         if self._total_num_simulated_events is None:
-            self._total_num_simulated_events = []
-            logging.debug(
-                f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}"
-            )
-            logging.debug(
-                "Number of times each simulated shower is used: " f"{self.config['n_use']}"
-            )
-            self._total_num_simulated_events = self.config["n_showers"] * self.config["n_use"]
+            events_histogram, _ = self.fill_event_histogram_dicts()
+            self._total_num_simulated_events = np.sum(events_histogram["data"])
             logging.debug(f"Number of total simulated showers: {self._total_num_simulated_events}")
         return self._total_num_simulated_events
 
@@ -183,9 +178,9 @@ class SimtelIOHistogram:
             total number of simulated events.
         """
         if self._total_num_triggered_events is None:
-            _, triggered_hist = self.fill_event_histogram_dicts()
-            self._total_num_triggered_events = np.round(np.sum(triggered_hist["data"]))
-            logging.debug(f"Number of triggered events: {self._total_num_triggered_events}")
+            _, trigger_histogram = self.fill_event_histogram_dicts()
+            self._total_num_triggered_events = np.sum(trigger_histogram["data"])
+            logging.debug(f"Number of total triggered showers: {self._total_num_triggered_events}")
         return self._total_num_triggered_events
 
     def fill_event_histogram_dicts(self):
@@ -373,7 +368,6 @@ class SimtelIOHistogram:
             # Get the simulated and triggered 2D histograms from the simtel_array output file
             if events_histogram is None and triggered_events_histogram is None:
                 events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
-
             # Calculate triggered/simulated event 1D histogram (energy dependent)
             triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
                 events_histogram, triggered_events_histogram
