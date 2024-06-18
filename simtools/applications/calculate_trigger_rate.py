@@ -27,10 +27,19 @@ area_from_distribution (bool):
 
 Example
 -------
+Calculate trigger rate from simtel_array file
+
 .. code-block:: console
 
-    simtools-calculate-trigger-rate --simtel_file_names tests/resources/
+    simtools-calculate-trigger-rate --simtel_file_names tests/resources/ \\
     run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst
+
+Expected final print-out message:
+
+.. code-block:: console
+
+    System trigger rate (Hz): 9.0064e+03 pm 9.0087e+03 Hz
+
 """
 
 import logging

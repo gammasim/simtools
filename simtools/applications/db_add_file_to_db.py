@@ -31,7 +31,7 @@
 
     .. code-block:: console
 
-        simtools-add-file-to-db --file_name test_application.dat --db test-data
+        simtools-db-add-file-to-db --file_name test_application.dat --db test-data
 
     Expected final print-out message:
 

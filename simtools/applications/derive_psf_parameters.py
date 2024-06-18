@@ -63,14 +63,14 @@
 
     .. code-block:: console
 
-        simtools-db-get-file-from_db --file_name PSFcurve_data_v2.txt
+        simtools-db-get-file-from-db --file_name PSFcurve_data_v2.txt
 
     Run the application:
 
     .. code-block:: console
 
-        simtools-tune-psf --site North --telescope LST-1 \\
-            --model_version prod5 --data PSFcurve_data_v2.txt --plot_all --test
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
+            --model_version prod6 --data PSFcurve_data_v2.txt --plot_all --test
 
     The output is saved in simtools-output/derive_psf_parameters.
 
@@ -79,9 +79,9 @@
     .. code-block:: console
 
         Best parameters:
-        mirror_reflection_random_angle = 0.0043,0.08,0.0470
-        mirror_align_random_horizontal = 0.0047,28.,0.,0.
-        mirror_align_random_vertical = 0.0047,28.,0.,0.
+        mirror_reflection_random_angle = [0.006, 0.133, 0.005]
+        mirror_align_random_horizontal = [0.005, 28.0, 0.0, 0.0]
+        mirror_align_random_vertical = [0.005, 28.0, 0.0, 0.0]
 
 """
 import logging
@@ -126,7 +126,7 @@ def load_data(data_file):
 def _parse():
     config = configurator.Configurator(
         description=(
-            "Tune mirror_reflection_random_angle, mirror_align_random_horizontal "
+            "Derive mirror_reflection_random_angle, mirror_align_random_horizontal "
             "and mirror_align_random_vertical using cumulative PSF measurement."
         )
     )
