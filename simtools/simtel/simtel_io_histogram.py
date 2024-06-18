@@ -69,7 +69,6 @@ class SimtelIOHistogram:
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
         self._histogram = None
-        self._histogram_file = None
         self._initialize_histogram()
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
@@ -77,6 +76,7 @@ class SimtelIOHistogram:
         self.energy_axis = None
         self.radius_axis = None
         self.area_from_distribution = area_from_distribution
+        self.suffix = "".join(Path(self.histogram_file).suffixes)
 
     def _initialize_histogram(self):
         """
@@ -123,10 +123,13 @@ class SimtelIOHistogram:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
+            # If the file is a .hdata or .hdata.zst, config will continue to be None.
             with EventIOFile(self.histogram_file) as f:
+                # Try to find configuration from .simtel file.
                 for obj in f:
                     if isinstance(obj, MCRunHeader):
                         self._config = obj.parse()
+
         return self._config
 
     @property
@@ -248,10 +251,10 @@ class SimtelIOHistogram:
             Total area covered on the ground covered by the simulation.
         """
         if self._total_area is None:
+            events_histogram, _ = self.fill_event_histogram_dicts()
+            self._initialize_histogram_axes(events_histogram)
 
             if self.area_from_distribution is True:
-                events_histogram, _ = self.fill_event_histogram_dicts()
-                self._initialize_histogram_axes(events_histogram)
                 area_from_distribution_max_radius = 1.5 * np.average(
                     self.radius_axis[:-1], weights=np.sum(events_histogram["data"], axis=0)
                 )
@@ -259,14 +262,10 @@ class SimtelIOHistogram:
                     u.cm**2
                 )
             else:
+                # The max of the core range is always half the upper edge:
+                # self.radius_axis[-1]/2 is equal to self.config["core_range"][1]
                 self._total_area = (
-                    np.pi
-                    * (
-                        ((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(
-                            u.cm
-                        )
-                    )
-                    ** 2
+                    np.pi * (((self.radius_axis[-1] / 2 - self.radius_axis[0]) * u.m).to(u.cm)) ** 2
                 )
         return self._total_area
 
