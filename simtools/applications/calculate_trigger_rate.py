@@ -88,6 +88,25 @@ def _parse(label, description):
         action="store_true",
     )
 
+    config.parser.add_argument(
+        "--energy_range",
+        help="Energy range (TeV) passed as a list of floats, the minimum and maximum, "
+        "respectively.",
+        required=False,
+        nargs=2,
+        type=str,
+        default=None,
+    )
+
+    config.parser.add_argument(
+        "--view_cone",
+        help="View cone (deg) passed as two floats, the minimum and maximum, respectively.",
+        nargs=2,
+        required=False,
+        type=str,
+        default=None,
+    )
+
     config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
@@ -120,8 +139,24 @@ def main():
             logger.error(msg)
             raise FileNotFoundError from exc
 
+    if config_parser["energy_range"] is not None:
+        emin = float(config_parser["energy_range"][0])
+        emax = float(config_parser["energy_range"][1])
+        energy_range = [emin, emax]
+    else:
+        energy_range = None
+    if config_parser["view_cone"] is not None:
+        cone_min = float(config_parser["view_cone"][0])
+        cone_max = float(config_parser["view_cone"][1])
+        view_cone = [cone_min, cone_max]
+    else:
+        view_cone = None
+
     histograms = SimtelIOHistograms(
-        simtel_array_files, area_from_distribution=config_parser["area_from_distribution"]
+        simtel_array_files,
+        area_from_distribution=config_parser["area_from_distribution"],
+        energy_range=energy_range,
+        view_cone=view_cone,
     )
 
     logger.info("Calculating simulated and triggered event rate")

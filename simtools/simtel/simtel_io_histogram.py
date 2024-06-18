@@ -230,10 +230,10 @@ class SimtelIOHistogram:
         if self.view_cone is None:
             try:
                 self.view_cone = self.config["viewcone"] * u.deg
-            except KeyError as exc:
+            except TypeError as exc:
                 msg = "view_cone needs to be passed as argument (a list of cone in deg)."
                 self._logger.error(msg)
-                raise ValueError from exc
+                raise ValueError(msg) from exc
         else:
             if not isinstance(self.view_cone, u.Quantity):
                 self.view_cone = self.view_cone * u.deg
@@ -302,10 +302,10 @@ class SimtelIOHistogram:
                     self.config["E_range"][0] * u.TeV,
                     self.config["E_range"][1] * u.TeV,
                 ]
-            except KeyError as exc:  # E_range not in self.config
+            except TypeError as exc:  # E_range not in self.config
                 msg = "energy_range needs to be passed as argument (a list of energies in TeV)."
                 self._logger.error(msg)
-                raise ValueError from exc
+                raise ValueError(msg) from exc
         else:
             if not isinstance(self.energy_range, u.Quantity):
                 self.energy_range = self.energy_range * u.TeV
