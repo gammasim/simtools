@@ -165,7 +165,7 @@ def test_view_cone(simtel_hist_io_instance, simtel_hist_hdata_io_instance):
     view_cone = simtel_hist_io_instance.view_cone
     assert (view_cone == [0, 10] * u.deg).all()
 
-    assert simtel_hist_hdata_io_instance.view_cone == [0, 10] * u.deg
+    assert (simtel_hist_hdata_io_instance.view_cone == [0, 10] * u.deg).all()
 
 
 def test_compute_system_trigger_rate_and_table(simtel_hist_io_instance):
@@ -239,7 +239,7 @@ def test_energy_range(simtel_hist_io_instance, simtel_hist_hdata_io_instance):
     assert energy_range[0].unit == u.TeV
     assert energy_range[1].value > energy_range[0].value
 
-    assert simtel_hist_hdata_io_instance.energy_range == [0.008, 300] * u.TeV
+    assert (simtel_hist_hdata_io_instance.energy_range == [0.008, 300] * u.TeV).all()
 
 
 def test_solid_angle(simtel_hist_io_instance):
