@@ -36,12 +36,12 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.utils import names
 
+# Telescope distances for 4 tel square arrays
+# !HARDCODED
+telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
 
-def main():
-    """Create layout array files (ecsv) of regular arrays."""
-    # Telescope distances for 4 tel square arrays
-    # !HARDCODED
-    telescope_distance = {"LST": 57.5 * u.m, "MST": 70 * u.m, "SST": 80 * u.m}
+
+def _parse():
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(
@@ -52,7 +52,13 @@ def main():
             f"  SST: {telescope_distance['SST']}\n"
         ),
     )
-    args_dict, _ = config.initialize(db_config=False, simulation_model="site", output=True)
+    return config.initialize(db_config=False, simulation_model="site", output=True)
+
+
+def main():
+    """Create layout array files (ecsv) of regular arrays."""
+
+    args_dict, _ = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))

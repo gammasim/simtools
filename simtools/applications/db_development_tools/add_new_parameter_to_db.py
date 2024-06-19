@@ -20,11 +20,15 @@ from simtools.db import db_handler
 from simtools.utils import names
 
 
-def main():
+def _parse():
     config = configurator.Configurator(
-        description=("Add a new parameter to the sites collection in the DB.")
+        description="Add a new parameter to the sites collection in the DB."
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model="telescope")
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
