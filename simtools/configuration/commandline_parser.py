@@ -34,6 +34,7 @@ class CommandLineParser(argparse.ArgumentParser):
         paths=True,
         output=False,
         simulation_model=None,
+        simulation_configuration=None,
         db_config=False,
         job_submission=False,
     ):
@@ -49,12 +50,15 @@ class CommandLineParser(argparse.ArgumentParser):
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
             (use: 'version', 'telescope', 'site')
+        simulation_configuration: list
+            List of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
             Add job submission configuration parameters to list of args.
         """
         self.initialize_simulation_model_arguments(simulation_model)
+        self.initialize_simulation_configuration_arguments(simulation_configuration)
         if job_submission:
             self.initialize_job_submission_arguments()
         if db_config:
@@ -257,6 +261,134 @@ class CommandLineParser(argparse.ArgumentParser):
 
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
+
+    def initialize_simulation_configuration_arguments(self, simulation_configuration):
+        """
+        Initialize default arguments for simulation configuration and simulation software.
+
+
+        Parameters
+        ----------
+        simulation_configuration: list
+            List of simulation software configuration parameters.
+        """
+        if simulation_configuration is None:
+            return
+
+        if "software" in simulation_configuration:
+            self._initialize_simulation_software()
+        if "corsika_configuration" in simulation_configuration:
+            self._initialize_simulation_configuration()
+            self._initialize_shower_configuration()
+
+    def _initialize_simulation_software(self):
+        """Initialize simulation software arguments."""
+        _software_group = self.add_argument_group("simulation software")
+        _software_group.add_argument(
+            "--simulation_software",
+            help="Simulation software steps.",
+            type=str,
+            choices=["corsika", "simtel", "corsika_simtel"],
+            required=True,
+            default="corsika_simtel",
+        )
+
+    def _initialize_simulation_configuration(self):
+        """Initialize simulation configuration arguments."""
+        _configuration_group = self.add_argument_group("simulation configuration")
+        _configuration_group.add_argument(
+            "--primary",
+            help="Primary particle to simulate.",
+            type=str.lower,
+            required=True,
+            choices=[
+                "gamma",
+                "gamma_diffuse",
+                "electron",
+                "proton",
+                "muon",
+                "helium",
+                "nitrogen",
+                "silicon",
+                "iron",
+            ],
+        )
+        _configuration_group.add_argument(
+            "--azimuth_angle",
+            help=(
+                "Telescope pointing direction in azimuth. "
+                "It can be in degrees between 0 and 360 or one of north, south, east or west "
+                "(case insensitive). Note that North is 0 degrees and "
+                "the azimuth grows clockwise, so East is 90 degrees."
+            ),
+            type=CommandLineParser.azimuth_angle,
+            required=True,
+        )
+        _configuration_group.add_argument(
+            "--zenith_angle",
+            help="Zenith angle in degrees (between 0 and 180).",
+            type=CommandLineParser.zenith_angle,
+            required=True,
+        )
+        _configuration_group.add_argument(
+            "--nshow",
+            help="Number of showers to simulate.",
+            type=int,
+            required=False,
+        )
+        _configuration_group.add_argument(
+            "--run_number_start",
+            help="Run number for the first run.",
+            type=int,
+            required=True,
+            default=1,
+        )
+        _configuration_group.add_argument(
+            "--number_of_runs",
+            help="Number of runs to be simulated.",
+            type=int,
+            required=True,
+            default=1,
+        )
+        _configuration_group.add_argument(
+            "--event_number_first_shower",
+            help="Event number of first shower",
+            type=int,
+            required=False,
+            default=1,
+        )
+
+    def _initialize_shower_configuration(self):
+        """Initialize shower configuration arguments."""
+        shower_config = self.add_argument_group("shower parameters")
+        shower_config.add_argument(
+            "--eslope",
+            help="Slope of the energy spectrum.",
+            type=float,
+            required=False,
+            default=-2.0,
+        )
+        shower_config.add_argument(
+            "--erange",
+            help="Energy range of the primary particle (min/max value).",
+            type=CommandLineParser.energy_range,
+            required=False,
+            default=["3 GeV 330 TeV"],
+        )
+        shower_config.add_argument(
+            "--viewcone",
+            help="Viewcone for primary arrival directions (min/max value in degrees).",
+            type=CommandLineParser.viewcone,
+            required=False,
+            default=["0 deg 0 deg"],
+        )
+        shower_config.add_argument(
+            "--core_scatter",
+            help="Scatter area for shower cores (number of use; scatter radius).",
+            type=CommandLineParser.core_scatter,
+            required=False,
+            default=["10 1400 m"],
+        )
 
     @staticmethod
     def _add_model_option_layout(job_group, add_layout_file):

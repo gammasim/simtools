@@ -86,7 +86,6 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.simulator import Simulator
 
 
@@ -107,113 +106,6 @@ def _parse(description=None):
     """
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
-        "--production_config",
-        help=(
-            "Simulation configuration file "
-            "(contains the default setup which can be overwritten by the command line options)"
-        ),
-        type=str,
-        required=True,
-    )
-    config.parser.add_argument(
-        "--simulation_software",
-        help="Simulation software steps.",
-        type=str,
-        choices=["corsika", "simtel", "corsika_simtel"],
-        required=True,
-        default="corsika_simtel",
-    )
-    config.parser.add_argument(
-        "--primary",
-        help="Primary particle to simulate.",
-        type=str.lower,
-        required=True,
-        choices=[
-            "gamma",
-            "gamma_diffuse",
-            "electron",
-            "proton",
-            "muon",
-            "helium",
-            "nitrogen",
-            "silicon",
-            "iron",
-        ],
-    )
-    config.parser.add_argument(
-        "--azimuth_angle",
-        help=(
-            "Telescope pointing direction in azimuth. "
-            "It can be in degrees between 0 and 360 or one of north, south, east or west "
-            "(case insensitive). Note that North is 0 degrees and "
-            "the azimuth grows clockwise, so East is 90 degrees."
-        ),
-        type=CommandLineParser.azimuth_angle,
-        required=True,
-    )
-    config.parser.add_argument(
-        "--zenith_angle",
-        help="Zenith angle in degrees (between 0 and 180).",
-        type=CommandLineParser.zenith_angle,
-        required=True,
-    )
-    config.parser.add_argument(
-        "--nshow",
-        help="Number of showers to simulate.",
-        type=int,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--run_number_start",
-        help="Run number for the first run.",
-        type=int,
-        required=True,
-        default=1,
-    )
-    config.parser.add_argument(
-        "--number_of_runs",
-        help="Number of runs to be simulated.",
-        type=int,
-        required=True,
-        default=1,
-    )
-    config.parser.add_argument(
-        "--event_number_first_shower",
-        help="Event number of first shower",
-        type=int,
-        required=False,
-        default=1,
-    )
-    shower_config = config.parser.add_argument_group("shower parameters")
-    shower_config.add_argument(
-        "--eslope",
-        help="Slope of the energy spectrum.",
-        type=float,
-        required=False,
-        default=-2.0,
-    )
-    shower_config.add_argument(
-        "--erange",
-        help="Energy range of the primary particle (min/max value).",
-        type=CommandLineParser.energy_range,
-        required=False,
-        default=["3 GeV 330 TeV"],
-    )
-    shower_config.add_argument(
-        "--viewcone",
-        help="Viewcone for primary arrival directions (min/max value in degrees).",
-        type=CommandLineParser.viewcone,
-        required=False,
-        default=["0 deg 0 deg"],
-    )
-    shower_config.add_argument(
-        "--core_scatter",
-        help="Scatter area for shower cores (number of use; scatter radius).",
-        type=CommandLineParser.core_scatter,
-        required=False,
-        default=["10 1400 m"],
-    )
-    config.parser.add_argument(
         "--data_directory",
         help=(
             "The directory where to save the corsika-data and simtel-data output directories."
@@ -231,7 +123,11 @@ def _parse(description=None):
         required=False,
         default=False,
     )
-    return config.initialize(db_config=True, simulation_model=["site", "layout", "telescope"])
+    return config.initialize(
+        db_config=True,
+        simulation_model=["site", "layout", "telescope"],
+        simulation_configuration=["software", "corsika_configuration"],
+    )
 
 
 def main():
