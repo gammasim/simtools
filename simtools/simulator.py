@@ -168,9 +168,6 @@ class Simulator:
             self._logger.debug("Nothing to validate - run_list and run_range not given.")
             return None
 
-        print("AAAA", run_list)
-        print("BBB", run_range)
-
         validated_runs = []
         if run_list is not None:
             if not isinstance(run_list, list):
