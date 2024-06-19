@@ -103,6 +103,7 @@ class Configurator:
         paths=True,
         output=False,
         simulation_model=None,
+        simulation_configuration=None,
         db_config=False,
         job_submission=False,
     ):
@@ -126,6 +127,8 @@ class Configurator:
             Add output file configuration to list of args.
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
+        simulation_configuration: list
+            List of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -143,6 +146,7 @@ class Configurator:
             paths=paths,
             output=output,
             simulation_model=simulation_model,
+            simulation_configuration=simulation_configuration,
             db_config=db_config,
             job_submission=job_submission,
         )
