@@ -45,6 +45,17 @@ def simtel_hist_hdata_io_instance(simtel_io_file_hdata):
     return instance
 
 
+def test_init_errors(simtel_io_file_hdata, caplog):
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
+    assert "view_cone needs to be passed as argument (a list of cone in deg)" in caplog.text
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
+    assert "energy_range needs to be passed as argument (a list of energies in TeV)" in caplog.text
+
+
 def test_file_does_not_exist(caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(FileNotFoundError):
@@ -134,7 +145,9 @@ def test_initialize_histogram_axes(simtel_hist_io_instance):
     assert np.array_equal(simtel_hist_io_instance.energy_axis, expected_energy_axis)
 
 
-def test_get_particle_distribution_function(simtel_hist_io_instance):
+def test_get_particle_distribution_function(
+    simtel_hist_io_instance, simtel_hist_hdata_io_instance, caplog
+):
     # Test reference distribution function
     reference_function = simtel_hist_io_instance.get_particle_distribution_function(
         label="reference"
@@ -148,10 +161,19 @@ def test_get_particle_distribution_function(simtel_hist_io_instance):
         label="simulation"
     )
     assert simulation_function.index == -2.0
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
+    assert (
+        "spectral_index not found in the configuration of the file. Consider using a .simtel file instead."
+        in caplog.text
+    )
 
     # Test invalid label
-    with pytest.raises(ValueError):
-        simtel_hist_io_instance.get_particle_distribution_function(label="invalid_label")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            simtel_hist_io_instance.get_particle_distribution_function(label="invalid_label")
+    assert "Please use either 'reference' or 'simulation'" in caplog.text
 
 
 def test_integrate_in_energy_bin(simtel_hist_io_instance):
