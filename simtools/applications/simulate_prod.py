@@ -164,21 +164,25 @@ def _parse(description=None):
         required=False,
     )
     config.parser.add_argument(
-        "--start_run",
-        help=(
-            "Start run number such that the actual run number will be 'start_run' + 'run'. "
-            "This is useful in case a new transform is submitted for the same production. "
-            "It allows the transformation system to keep using sequential run numbers without "
-            "repetition."
-        ),
+        "--run_number_start",
+        help="Run number for the first run.",
         type=int,
         required=True,
+        default=1,
     )
     config.parser.add_argument(
-        "--run",
-        help="Run number (actual run number will be 'start_run' + 'run')",
+        "--number_of_runs",
+        help="Number of runs to be simulated.",
         type=int,
         required=True,
+        default=1,
+    )
+    config.parser.add_argument(
+        "--event_number_first_shower",
+        help="Event number of first shower",
+        type=int,
+        required=False,
+        default=1,
     )
     shower_config = config.parser.add_argument_group("shower parameters")
     shower_config.add_argument(
@@ -238,7 +242,6 @@ def main():
 
     # TODO - remember viewcone, erange, cscat split (improve??)
     # TODO - introduce more groups in command line
-
     simulator = Simulator(
         label=args_dict.get("label"),
         args_dict=args_dict,
