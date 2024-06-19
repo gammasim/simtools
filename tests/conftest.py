@@ -405,8 +405,9 @@ def simulator_config_data_south(tmp_test_directory):
 def corsika_config_data():
     return {
         "nshow": 100,
-        "start_run": 0,
-        "nrun": 10,
+        "run_number_start": 0,
+        "number_of_runs": 10,
+        "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,
         "viewcone": "0.0 deg 5.0 deg",

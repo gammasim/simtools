@@ -53,19 +53,20 @@ def test_print_config_parameter(corsika_config, capsys):
     assert "NSHOW" in capsys.readouterr().out
 
 
-def test_export_input_file(corsika_config):
-    logger.info("test_export_input_file")
-    corsika_config.export_input_file()
-    input_file = corsika_config.get_corsika_input_file()
+def test_generate_corsika_input_file(corsika_config):
+    logger.info("test_generate_corsika_input_file")
+    input_file = corsika_config.generate_corsika_input_file()
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
+    assert corsika_config._is_file_updated
+    assert input_file == corsika_config.generate_corsika_input_file()
 
-def test_export_input_file_multipipe(corsika_config):
-    logger.info("test_export_input_file")
-    corsika_config.export_input_file(use_multipipe=True)
-    input_file = corsika_config.get_corsika_input_file()
+
+def test_generate_corsika_input_file_multipipe(corsika_config):
+    logger.info("test_generate_corsika_input_file")
+    input_file = corsika_config.generate_corsika_input_file(use_multipipe=True)
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" in f.read()
@@ -177,23 +178,6 @@ def test_write_seeds(io_handler):
         assert _call.endswith(" 0 0\n")
 
 
-def test_get_corsika_input_file(corsika_config):
-    empty_config = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert not empty_config._is_file_updated
-
-    cc = corsika_config
-
-    assert not cc._is_file_updated
-    input_file = cc.get_corsika_input_file()
-
-    assert isinstance(input_file, pathlib.Path)
-    assert cc._is_file_updated
-
-
 def test_get_corsika_telescope_list(corsika_config):
     cc = corsika_config
     telescope_list_str = cc.get_corsika_telescope_list()
@@ -201,7 +185,20 @@ def test_get_corsika_telescope_list(corsika_config):
     assert telescope_list_str.count("LSTS") > 0
 
 
+def test_run_number(io_handler):
+    empty_corsika_config = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert empty_corsika_config.run_number is None
+    empty_corsika_config.run_number = 25
+    assert empty_corsika_config.run_number == 25
+
+
 def test_validate_run_number(corsika_config):
+    # default value from corsika_config
+    assert corsika_config.validate_run_number(None) == 1
     assert corsika_config.validate_run_number(1)
     assert corsika_config.validate_run_number(123456)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):

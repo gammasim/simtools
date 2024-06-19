@@ -18,8 +18,8 @@ class CorsikaRunner:
     Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.
 
     CorsikaRunner is responsible for configuring and running CORSIKA, using corsika_autoinputs
-    provided by the sim_telarray package. It provides shell scripts to be run externally or by
-    the module simulator. Same instance can be used to generate scripts for any given run number.
+    provided by the sim_telarray package. CorsikaRunner generates shell scripts to be run
+    externally or by the simulator module simulator.
 
     CorsikaRunner is configured through a CorsikaConfig instance.
 
@@ -58,13 +58,13 @@ class CorsikaRunner:
 
         self.corsika_config = corsika_config
         self._keep_seeds = keep_seeds
+        self._use_multipipe = use_multipipe
 
         self._simtel_path = Path(simtel_path)
         self.io_handler = io_handler.IOHandler()
 
         self.corsika_config = corsika_config
         self._directory = self._load_corsika_data_directories()
-        self._corsika_input_file = self.corsika_config.get_corsika_input_file(use_multipipe)
 
     def _load_corsika_data_directories(self, use_multipipe=False):
         """
@@ -129,6 +129,7 @@ class CorsikaRunner:
         script_file_path = self.get_file_name(
             file_type="script", **self.get_info_for_file_name(self.corsika_config.run_number)
         )
+        corsika_input_file = self.corsika_config.generate_corsika_input_file(self._use_multipipe)
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
         corsika_input_tmp_name = self.corsika_config.get_file_name(
@@ -137,7 +138,7 @@ class CorsikaRunner:
         corsika_input_tmp_file = self._directory["input"].joinpath(corsika_input_tmp_name)
 
         if use_pfp:
-            pfp_command = self._get_pfp_command(corsika_input_tmp_file)
+            pfp_command = self._get_pfp_command(corsika_input_tmp_file, corsika_input_file)
         autoinputs_command = self._get_autoinputs_command(
             self.corsika_config.run_number, corsika_input_tmp_file
         )
@@ -146,10 +147,7 @@ class CorsikaRunner:
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         with open(script_file_path, "w", encoding="utf-8") as file:
-            # shebang
             file.write("#!/usr/bin/env bash\n")
-
-            # Make sure to exit on failed commands and report their error code
             file.write("set -e\n")
             file.write("set -o pipefail\n")
 
@@ -175,7 +173,7 @@ class CorsikaRunner:
                 )
             else:
                 file.write("\n# Copying CORSIKA input file to run location\n")
-                file.write(f"cp {self._corsika_input_file} {corsika_input_tmp_file}")
+                file.write(f"cp {corsika_input_file} {corsika_input_tmp_file}")
             file.write("\n# Running corsika_autoinputs\n")
             file.write(autoinputs_command)
 
@@ -187,7 +185,7 @@ class CorsikaRunner:
 
         return script_file_path
 
-    def _get_pfp_command(self, input_tmp_file):
+    def _get_pfp_command(self, input_tmp_file, corsika_input_file):
         """
         Get pfp pre-processor command.
 
@@ -204,7 +202,7 @@ class CorsikaRunner:
             pfp command.
         """
         cmd = self._simtel_path.joinpath("sim_telarray/bin/pfp")
-        cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
+        cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {corsika_input_file}"
         cmd += f" > {input_tmp_file} || exit\n"
         return cmd
 
@@ -313,7 +311,7 @@ class CorsikaRunner:
             return script_file_dir.joinpath(f"{file_name}.sh")
         if file_type == "output":
             zenith = self.corsika_config.get_config_parameter("THETAP")[0]
-            azimuth = self.corsika_config.get_config_parameter("azimuth_angle")
+            azimuth = self.corsika_config.azimuth_angle
             file_name = (
                 f"corsika_run{kwargs['run']:06}_{kwargs['primary']}_"
                 f"za{round(zenith):03}deg_azm{azimuth:03}deg_"

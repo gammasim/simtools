@@ -46,6 +46,7 @@ class CorsikaConfig:
 
         self.label = label
         self.primary = None
+        self.azimuth_angle = None
         self._run_number = None
         self.args_dict = args_dict
         self.config_file_path = None
@@ -98,6 +99,7 @@ class CorsikaConfig:
             return None
         self._logger.debug("Setting CORSIKA parameters ")
         self._is_file_updated = False
+        self.azimuth_angle = int(self.args_dict["azimuth_angle"].to("deg").value)
 
         # lists provides as strings
         e_range = self.args_dict["erange"].split(" ")
@@ -105,8 +107,7 @@ class CorsikaConfig:
         core_scatter = self.args_dict["core_scatter"].split(" ")
 
         return {
-            "EVTNR": [1],  # TODO
-            "RUNNR": [self.run_number],
+            "EVTNR": [self.args_dict["event_number_first_shower"]],
             "NSHOW": [self.args_dict["nshow"]],
             "PRMPAR": [
                 self._convert_primary_input_and_store_primary_name(self.args_dict["primary"])
@@ -133,7 +134,6 @@ class CorsikaConfig:
                 float(core_scatter[1]) * u.Unit(core_scatter[2]).to("cm"),
                 0.0,
             ],
-            "azimuth_angle": [int(self.args_dict["azimuth_angle"].to("deg").value)],
         }
 
     def _rotate_azimuth_by_180deg(self, az):
@@ -241,7 +241,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def export_input_file(self, use_multipipe=False):
+    def generate_corsika_input_file(self, use_multipipe=False):
         """
         Generate a CORSIKA input file.
 
@@ -251,9 +251,12 @@ class CorsikaConfig:
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray.
         """
+        if self._is_file_updated:
+            self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}.")
+            return self.config_file_path
         sub_dir = "corsika_simtel" if use_multipipe else "corsika"
         _output_generic_file_name = self._set_output_file_and_directory(sub_dir)
-        self._logger.debug(f"Exporting CORSIKA input file to {self.config_file_path}")
+        self._logger.info(f"Exporting CORSIKA input file to {self.config_file_path}")
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
@@ -269,7 +272,7 @@ class CorsikaConfig:
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary}\n")
             file.write(f"IACT setenv ZA {int(self.config['THETAP'][0])}\n")
-            file.write(f"IACT setenv AZM {self.config['azimuth_angle'][0]}\n")
+            file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
             self._write_seeds(file)
@@ -309,10 +312,10 @@ class CorsikaConfig:
                 "IACT ",
             )
             file.write(text_iact)
-
             file.write("\nEXIT")
 
         self._is_file_updated = True
+        return self.config_file_path
 
     def get_file_name(self, file_type, run_number=None):
         """
@@ -353,7 +356,7 @@ class CorsikaConfig:
         file_name = (
             f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
             f"za{int(self.config['THETAP'][0]):03}-"
-            f"azm{self.config['azimuth_angle'][0]:03}deg"
+            f"azm{self.azimuth_angle:03}deg"
             f"{view_cone}{file_label}"
         )
         if file_type == "config_tmp":
@@ -367,7 +370,7 @@ class CorsikaConfig:
             file_name = (
                 f"corsika_runXXXXXX_"
                 f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
-                f"azm{self.config['azimuth_angle'][0]:03}deg"
+                f"azm{self.azimuth_angle:03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
             return file_name
@@ -392,7 +395,7 @@ class CorsikaConfig:
         """
         config_file_name = self.get_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
-        self._logger.info(f"Creating directory {file_directory}.")
+        self._logger.debug(f"Creating directory {file_directory}.")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)
 
@@ -412,19 +415,6 @@ class CorsikaConfig:
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
-
-    def get_corsika_input_file(self, use_multipipe=False):
-        """
-        Get the full path of the CORSIKA input file.
-
-        Returns
-        -------
-        Path:
-            Full path of the CORSIKA input file.
-        """
-        if not self._is_file_updated:
-            self.export_input_file(use_multipipe)
-        return self.config_file_path
 
     def get_corsika_telescope_list(self):
         """

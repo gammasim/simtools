@@ -98,7 +98,7 @@ def test_prepare_run_script_without_pfp(corsika_runner):
 
 
 def test_get_pfp_command(corsika_runner):
-    pfp_command = corsika_runner._get_pfp_command("input_tmp_file")
+    pfp_command = corsika_runner._get_pfp_command("input_tmp_file", "corsika_input_file")
     assert "sim_telarray/bin/pfp" in pfp_command
     assert "> input_tmp_file" in pfp_command
 
