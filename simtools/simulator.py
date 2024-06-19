@@ -75,7 +75,7 @@ class Simulator:
         self._extra_commands = extra_commands
 
         self.array_model = self._initialize_array_model(mongo_db_config)
-        self._simulation_runner = self._set_simulation_runner()
+        self._simulation_runner = self._initialize_simulation_runner()
 
     @property
     def simulation_software(self):
@@ -119,7 +119,7 @@ class Simulator:
         return ArrayModel(
             label=self.label,
             site=self.args_dict.get("site"),
-            layout_name=self.args_dict.get("layout_name"),
+            layout_name=self.args_dict.get("array_layout_name"),
             mongo_db_config=mongo_db_config,
             model_version=self.args_dict.get("model_version", None),
         )
@@ -135,8 +135,11 @@ class Simulator:
         """
         try:
             return self._validate_run_list_and_range(
-                self.args_dict["start_run"] + self.args_dict["run"],
-                self.args_dict.get("run_range", None),
+                run_list=None,
+                run_range=[
+                    self.args_dict["run_number_start"],
+                    self.args_dict["run_number_start"] + self.args_dict["number_of_runs"],
+                ],
             )
         except KeyError as exc:
             self._logger.error(f"Error in initializing run list: {exc}")
@@ -165,6 +168,9 @@ class Simulator:
             self._logger.debug("Nothing to validate - run_list and run_range not given.")
             return None
 
+        print("AAAA", run_list)
+        print("BBB", run_range)
+
         validated_runs = []
         if run_list is not None:
             if not isinstance(run_list, list):
@@ -173,8 +179,6 @@ class Simulator:
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulateError
-
-            self._logger.debug(f"run_list: {run_list}")
             validated_runs = list(run_list)
 
         if run_range is not None:
@@ -188,11 +192,12 @@ class Simulator:
             validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
+        self._logger.info(f"run_list: {validated_runs_unique}")
         return list(validated_runs_unique)
 
-    def _set_simulation_runner(self):
+    def _initialize_simulation_runner(self):
         """
-        Set simulation runners.
+        Initialize simulation runners.
 
         Returns
         -------
@@ -247,11 +252,9 @@ class Simulator:
         """
         self._logger.info(f"Submission command: {self._submit_command}")
 
-        print("FFFF", input_file_list)
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
         )
-        print("FFFF", runs_and_files_to_submit)
         self._logger.info(
             f"Starting submission for {len(runs_and_files_to_submit)} "
             f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
