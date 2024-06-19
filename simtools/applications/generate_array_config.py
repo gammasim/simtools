@@ -76,7 +76,7 @@
 
     .. code-block:: console
 
-        simtools-produce-array-config --label test --array_config array_config_test.yml
+        simtools-generate-array-config --label test --array_config array_config_test.yml
 
     The output is saved in simtools-output/test/model.
 """
@@ -89,11 +89,10 @@ from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
 
-def main():
-    """Generate sim_telarray config files for a given array."""
+def _parse():
     config = configurator.Configurator(
         label=Path(__file__).stem,
-        description=("Example of how to produce sim_telarray config files for a given array."),
+        description=("Example of how to generate sim_telarray config files for a given array."),
     )
     config.parser.add_argument(
         "--array_config",
@@ -101,7 +100,11 @@ def main():
         type=str,
         required=True,
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="version")
+    return config.initialize(db_config=True, simulation_model="version")
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
