@@ -545,7 +545,7 @@ class SimtelIOHistogram:
         spectral_distribution = copy.copy(IRFDOC_PROTON_SPECTRUM)
         try:
             spectral_distribution.index = self.config["spectral_index"]
-        except KeyError as exc:
+        except TypeError as exc:
             msg = (
                 "spectral_index not found in the configuration of the file. "
                 "Consider using a .simtel file instead."
