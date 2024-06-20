@@ -9,10 +9,10 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.corsika.corsika_runner import CorsikaRunner
-from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
+from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
 __all__ = [
@@ -76,6 +76,7 @@ class Simulator:
 
         self.array_model = self._initialize_array_model(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner()
+        self.runner_services = self._simulation_runner.runner_service
 
     @property
     def simulation_software(self):
@@ -216,7 +217,17 @@ class Simulator:
         if self.simulation_software == "simtel":
             return SimulatorArray(self.args_dict)
         if self.simulation_software == "corsika_simtel":
-            return CorsikaSimtelRunner(self.args_dict)
+            return CorsikaSimtelRunner(
+                label=self.label,
+                corsika_config=CorsikaConfig(
+                    array_model=self.array_model,
+                    label=self.label,
+                    args_dict=self.args_dict,
+                ),
+                simtel_path=self.args_dict.get("simtel_path"),
+                keep_seeds=False,
+                use_multipipe=False,
+            )
         return None
 
     def _fill_results_without_run(self, input_file_list):
@@ -265,14 +276,12 @@ class Simulator:
             job_manager = JobManager(submit_command=self._submit_command, test=self._test)
             job_manager.submit(
                 run_script=run_script,
-                run_out_file=self._simulation_runner.get_file_name(
-                    file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
+                run_out_file=self.runner_services.get_file_name(
+                    file_type="sub_log", **self.runner_services.get_info_for_file_name(run)
                 ),
-                log_file=self._simulation_runner.get_file_name(
-                    file_type=(
-                        "corsika_autoinputs_log" if self.simulation_software == "corsika" else "log"
-                    ),
-                    **self._simulation_runner.get_info_for_file_name(run),
+                log_file=self.runner_services.get_file_name(
+                    file_type=("log"),
+                    **self.runner_services.get_info_for_file_name(run),
                 ),
             )
 
@@ -294,7 +303,7 @@ class Simulator:
 
         for run, _ in runs_and_files_to_submit.items():
             output_file_name = self._simulation_runner.get_file_name(
-                file_type="output", **self._simulation_runner.get_info_for_file_name(run)
+                file_type="output", **self.runner_services.get_info_for_file_name(run)
             )
             print(f"{str(output_file_name)} (file exists: {Path.exists(output_file_name)})")
 
@@ -378,36 +387,28 @@ class Simulator:
             run number
 
         """
-        info_for_file_name = self._simulation_runner.get_info_for_file_name(run)
+        info_for_file_name = self.runner_services.get_info_for_file_name(run)
         self._results["output"].append(
-            str(self._simulation_runner.get_file_name(file_type="output", **info_for_file_name))
+            str(self.runner_services.get_file_name(file_type="output", **info_for_file_name))
         )
         self._results["sub_out"].append(
             str(
-                self._simulation_runner.get_file_name(
+                self.runner_services.get_file_name(
                     file_type="sub_log", **info_for_file_name, mode="out"
                 )
             )
         )
         if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._results["log"].append(
-                str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
+                str(self.runner_services.get_file_name(file_type="log", **info_for_file_name))
             )
             self._results["input"].append(str(file))
             self._results["hist"].append(
-                str(
-                    self._simulation_runner.get_file_name(
-                        file_type="histogram", **info_for_file_name
-                    )
-                )
+                str(self.runner_services.get_file_name(file_type="histogram", **info_for_file_name))
             )
         else:
             self._results["corsika_autoinputs_log"].append(
-                str(
-                    self._simulation_runner.get_file_name(
-                        file_type="corsika_autoinputs_log", **info_for_file_name
-                    )
-                )
+                str(self.runner_services.get_file_name(file_type="log", **info_for_file_name))
             )
             self._results["input"].append(None)
             self._results["hist"].append(None)
@@ -437,7 +438,7 @@ class Simulator:
 
             for run in runs_to_list:
                 output_file_name = self._simulation_runner.get_file_name(
-                    file_type="output", **self._simulation_runner.get_info_for_file_name(run)
+                    file_type="output", **self.runner_services.get_info_for_file_name(run)
                 )
                 self._results["output"].append(str(output_file_name))
         return self._results["output"]
@@ -480,7 +481,7 @@ class Simulator:
         self._logger.info("Getting list of log files")
         if self.simulation_software in ["simtel", "corsika_simtel"]:
             return self._results["log"]
-        return self._results["corsika_autoinputs_log"]
+        return self._results["log"]
 
     def print_list_of_output_files(self):
         """Print list of output files."""
