@@ -255,5 +255,8 @@ filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
 [tool.coverage.run]
 relative_files = true
 source = [
+  "simtools",
+]
+include = [
   "simtools/*",
 ]
