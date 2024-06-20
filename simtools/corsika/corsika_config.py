@@ -136,6 +136,16 @@ class CorsikaConfig:
         return corsika_parameters
 
     def _collect_parameters(self, corsika_config_data, user_pars):
+        """
+        Collect and validate user-provided parameters.
+
+        Parameters
+        ----------
+        corsika_config_data: dict
+            User-provided configuration data.
+        user_pars: dict
+            CORSIKA user parameters.
+        """
         for key_args, value_args in corsika_config_data.items():
             is_identified = False
             for par_name, par_info in user_pars.items():
@@ -151,6 +161,14 @@ class CorsikaConfig:
                 self._raise_invalid_input_error(key_args)
 
     def _fill_default_parameters(self, user_pars):
+        """
+        Fill in default parameters for any missing user-provided parameters.
+
+        Parameters
+        ----------
+        user_pars: dict
+            CORSIKA user parameters.
+        """
         for par_name, par_info in user_pars.items():
             if par_name not in self._user_parameters:
                 if "default" in par_info.keys():
@@ -162,17 +180,36 @@ class CorsikaConfig:
                     self._raise_missing_required_error(par_name)
 
     def _convert_azm_to_phip(self):
+        """
+        Convert azimuthal angle to phi prime angle.
+        """
         phip = 180.0 - self._user_parameters["AZM"][0]
         phip = phip + 360.0 if phip < 0.0 else phip
         phip = phip - 360.0 if phip >= 360.0 else phip
         self._user_parameters["PHIP"] = [phip, phip]
 
     def _raise_invalid_input_error(self, key_args):
+        """
+        Raise an error for an invalid input parameter.
+
+        Parameters
+        ----------
+        key_args: str
+            Invalid input parameter name.
+        """
         msg = f"Argument {key_args} cannot be identified."
         self._logger.error(msg)
         raise InvalidCorsikaInputError(msg)
 
     def _raise_missing_required_error(self, par_name):
+        """
+        Raise an error for a missing required parameter.
+
+        Parameters
+        ----------
+        par_name: str
+            Missing parameter name.
+        """
         msg = f"Required parameters {par_name} was not given (there may be more)."
         self._logger.error(msg)
         raise MissingRequiredInputInCorsikaConfigDataError(msg)
@@ -222,6 +259,23 @@ class CorsikaConfig:
         self._is_file_updated = False
 
     def _fix_single_value_parameters(self, par_name, par_info, values):
+        """
+        Fix single value parameters by duplicating them if necessary.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+        par_info: dict
+            Parameter information.
+        values: list
+            Parameter values.
+
+        Returns
+        -------
+        list
+            Fixed parameter values.
+        """
         if len(values) == 1 and par_name in ["THETAP", "AZM"]:
             return values * 2
         if len(values) == 1 and par_name == "VIEWCONE":
@@ -229,6 +283,21 @@ class CorsikaConfig:
         return values
 
     def _handle_special_parameters(self, par_name, values):
+        """
+        Handle special parameters with specific processing.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+        values: list
+            Parameter values.
+
+        Returns
+        -------
+        list
+            Processed parameter values.
+        """
         if par_name == "PRMPAR":
             return self._convert_primary_input_and_store_primary_name(values)
         if par_name == "ESLOPE":
@@ -242,6 +311,28 @@ class CorsikaConfig:
             raise InvalidCorsikaInputError(msg)
 
     def _convert_units(self, par_name, values, units):
+        """
+        Convert a list of values to the specified units.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter as used in the CORSIKA input file.
+        values: list
+            List of values to be converted.
+        units: list
+            List of units to which the values should be converted.
+
+        Returns
+        -------
+        list
+            List of values converted to the specified units.
+
+        Raises
+        ------
+        InvalidCorsikaInputError
+            If the unit conversion is not possible.
+        """
         result = []
         for value, unit in zip(values, units):
             if unit is None:
@@ -280,6 +371,16 @@ class CorsikaConfig:
 
         value_args_in: list
             List of values for the parameter.
+
+        Returns
+        -------
+        any
+            Validated and converted parameter value.
+
+        Raises
+        ------
+        InvalidCorsikaInputError
+            If the input value has the wrong length or unit.
         """
 
         value_args = self._convert_to_quantities(value_args_in)
