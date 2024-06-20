@@ -124,6 +124,12 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
 
 
+def print_list_into_file(list_of_files, file_name):
+    with open(file_name, "w", encoding="utf-8") as f:
+        for line in list_of_files:
+            f.write(line + "\n")
+
+
 def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(
@@ -148,10 +154,10 @@ def main():
             "azimuth": args_dict["azimuth"] * u.deg,
         },
         "showers": {
-            "erange": [10 * u.GeV, 300 * u.TeV],
+            "erange": [100 * u.GeV, 300 * u.TeV],
             "eslope": -2,
-            "viewcone": 10 * u.deg,
-            "cscat": [20, 1500 * u.m, 0],
+            "viewcone": 0 * u.deg,
+            "cscat": [20, 0 * u.m, 0],
         },
     }
 
@@ -176,11 +182,6 @@ def main():
     # Exporting the list of output/log/input files into the application folder
     output_file_list = output_dir.joinpath(f"output_files_{args_dict['primary']}.list")
     log_file_list = output_dir.joinpath(f"log_files_{args_dict['primary']}.list")
-
-    def print_list_into_file(list_of_files, file_name):
-        with open(file_name, "w", encoding="utf-8") as f:
-            for line in list_of_files:
-                f.write(line + "\n")
 
     logger.info(f"List of output files exported to {output_file_list}")
     print_list_into_file(shower_simulator.get_list_of_output_files(), output_file_list)
