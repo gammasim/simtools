@@ -107,6 +107,23 @@ def _parse(label=None, description=None):
     config.parser.add_argument("--nevents", help="Number of events/run", type=int, default=100000)
     config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument("--azimuth", help="Azimuth angle in deg", type=float, default=0)
+    config.parser.add_argument("--view_cone", help="View cone in deg", type=float, default=10)
+    config.parser.add_argument(
+        "--scatter_x", help="Scatter distance (X axis) in m", type=float, default=1500
+    )
+    config.parser.add_argument(
+        "--scatter_y", help="Scatter radius  (Y axis) in m", type=float, default=0
+    )
+    config.parser.add_argument(
+        "--num_use", help="Number of use for each shower", type=int, default=20
+    )
+    config.parser.add_argument(
+        "--energy_min", help="Energy threshold (TeV)", type=float, default=0.01
+    )
+    config.parser.add_argument("--energy_max", help="Maximum energy (TeV)", type=float, default=300)
+    config.parser.add_argument(
+        "--e_slope", help="Energy slope (spectral index)", type=float, default=-2
+    )
     config.parser.add_argument(
         "--data_directory",
         help=(
@@ -151,10 +168,14 @@ def main():
             "azimuth": args_dict["azimuth"] * u.deg,
         },
         "showers": {
-            "erange": [100 * u.GeV, 300 * u.TeV],
-            "eslope": -2,
-            "viewcone": 0 * u.deg,
-            "cscat": [20, 0 * u.m, 0],
+            "erange": [args_dict["energy_min"] * u.TeV, args_dict["energy_max"] * u.TeV],
+            "eslope": args_dict["e_slope"],
+            "viewcone": args_dict["view_cone"] * u.deg,
+            "cscat": [
+                args_dict["num_use"],
+                args_dict["scatter_x"] * u.m,
+                args_dict["scatter_y"] * u.m,
+            ],
         },
     }
 
