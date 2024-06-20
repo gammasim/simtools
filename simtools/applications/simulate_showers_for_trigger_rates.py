@@ -36,9 +36,6 @@
         The location of the output directories corsika-data.
         the label is added to the data_directory, such that the output
         will be written to data_directory/label/corsika-data.
-    test (activation mode, optional)
-        If activated, no job will be submitted. Instead, an example of the \
-        run script will be printed.
     verbosity (str, optional)
         Log level to print.
 
@@ -49,7 +46,7 @@
     .. code-block:: console
 
         simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \\
-        proton --nruns 2 --nevents 10000 --test --submit_command local
+        proton --nruns 2 --nevents 10000 --submit_command local
 
     The output is saved in simtools-output/simulate_showers_for_trigger_rates.
 
@@ -167,17 +164,11 @@ def main():
         simulator_source_path=args_dict.get("simtel_path", None),
         config_data=shower_config_data,
         submit_command=args_dict.get("submit_command", ""),
-        test=args_dict["test"],
         mongo_db_config=db_config,
         model_version=args_dict.get("model_version", None),
     )
 
-    if not args_dict["test"]:
-        shower_simulator.simulate()
-    else:
-        logger.info("Test flag is on - it will not submit any job.")
-        logger.info("This is an example of the run script:")
-        shower_simulator.simulate()
+    shower_simulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
     output_file_list = output_dir.joinpath(f"output_files_{args_dict['primary']}.list")
