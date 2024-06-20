@@ -225,8 +225,6 @@ class Simulator:
                     args_dict=self.args_dict,
                 ),
                 simtel_path=self.args_dict.get("simtel_path"),
-                keep_seeds=False,
-                use_multipipe=False,
             )
         return None
 
