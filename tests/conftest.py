@@ -12,6 +12,7 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika_simtel.corsika_runner import CorsikaRunner
 from simtools.db import db_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
@@ -428,6 +429,17 @@ def corsika_config(io_handler, corsika_config_data, array_model_south):
     )
     corsika_config.run_number = 1
     return corsika_config
+
+
+@pytest.fixture()
+def corsika_runner(corsika_config, io_handler, simtel_path):
+    corsika_runner = CorsikaRunner(
+        corsika_config=corsika_config,
+        simtel_path=simtel_path,
+        label="test-corsika-runner",
+        use_multipipe=False,
+    )
+    return corsika_runner
 
 
 @pytest.fixture()
