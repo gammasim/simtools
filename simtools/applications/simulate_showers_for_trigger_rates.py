@@ -32,6 +32,20 @@
         Zenith angle in deg.
     azimuth (float, optional)
         Azimuth angle in deg.
+    view_cone (float, optional)
+        View cone in deg.
+    scatter_x (float, optional)
+        Scatter distance (X axis) in m.
+    scatter_y (float, optional)
+        Scatter distance (Y axis) in m.
+    num_use (int, optional)
+        Number of use for each shower.
+    energy_min (float, optional)
+        Energy threshold (TeV).
+    energy_max (float, optional)
+        Maximum energy (TeV).
+    e_slope (int, optional)
+        Energy slope (spectral index).
     data_directory (str, optional)
         The location of the output directories corsika-data.
         the label is added to the data_directory, such that the output
