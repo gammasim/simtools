@@ -6,7 +6,7 @@ import shutil
 
 import pytest
 
-import simtools.corsika_simtel.runner_services as runner_services
+import simtools.runners.runner_services as runner_services
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

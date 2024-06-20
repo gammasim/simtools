@@ -72,28 +72,33 @@ def test_generate_corsika_input_file_multipipe(corsika_config):
         assert "TELFIL |" in f.read()
 
 
-def test_get_file_name(corsika_config, io_handler):
+def test_get_corsika_config_file_name(corsika_config, io_handler):
     file_name = "proton_South_test_layout_za020-azm000deg_cone0-5_test-corsika-config"
 
     assert (
-        corsika_config.get_file_name("config_tmp", run_number=1)
+        corsika_config.get_corsika_config_file_name("config_tmp", run_number=1)
         == f"corsika_config_run000001_{file_name}.txt"
     )
     with pytest.raises(ValueError):
         assert (
-            corsika_config.get_file_name("config_tmp")
+            corsika_config.get_corsika_config_file_name("config_tmp")
             == f"corsika_config_run000001_{file_name}.txt"
         )
 
-    assert corsika_config.get_file_name("config") == f"corsika_config_{file_name}.input"
+    assert (
+        corsika_config.get_corsika_config_file_name("config") == f"corsika_config_{file_name}.input"
+    )
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
-    assert corsika_config.get_file_name("output_generic") == (
+    assert corsika_config.get_corsika_config_file_name("output_generic") == (
         "corsika_runXXXXXX_proton_za020deg_azm000deg_South_test_layout_test-corsika-config.zst"
     )
-    assert corsika_config.get_file_name("multipipe") == "multi_cta-South-test_layout.cfg"
+    assert (
+        corsika_config.get_corsika_config_file_name("multipipe")
+        == "multi_cta-South-test_layout.cfg"
+    )
     with pytest.raises(ValueError):
-        corsika_config.get_file_name("foobar")
+        corsika_config.get_corsika_config_file_name("foobar")
 
 
 def test_convert_primary_input_and_store_primary_name(io_handler):
