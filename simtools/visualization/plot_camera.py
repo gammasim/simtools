@@ -174,7 +174,6 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         color="black",
         fontsize=12,
     )
-
     plt.legend(
         legend_objects,
         legend_labels,
