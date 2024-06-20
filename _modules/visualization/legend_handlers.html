@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+g19723d1 Manual</title>
+    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+g1504c24 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a94e3e9e"></script>
+    <script src="../../_static/documentation_options.js?v=cb89028a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g19723d1 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1504c24 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -400,6 +400,29 @@ document.write(`
 <span class="n">veritas</span> <span class="o">=</span> <span class="s2">&quot;VERITAS&quot;</span>
 
 
+<span class="k">def</span> <span class="nf">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">width_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">height_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the center of the handlebox based on given factors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    handlebox: matplotlib.legend.Legend</span>
+<span class="sd">        The handlebox object from the legend.</span>
+<span class="sd">    width_factor: int, optional</span>
+<span class="sd">        The factor to adjust the width.</span>
+<span class="sd">    height_factor: int, optional</span>
+<span class="sd">        The factor to adjust the height.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        The calculated (x0, y0) position.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">width_factor</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="n">height_factor</span>
+    <span class="k">return</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span>
+
+
 <div class="viewcode-block" id="TelescopeHandler">
 <a class="viewcode-back" href="../../visualization.html#visualization.legend_handlers.TelescopeHandler">[docs]</a>
 <span class="k">class</span> <span class="nc">TelescopeHandler</span><span class="p">:</span>
@@ -512,13 +535,8 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -542,16 +560,8 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -575,16 +585,8 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -608,12 +610,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -637,12 +634,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -666,12 +658,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -694,19 +681,11 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an LST in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
@@ -724,19 +703,11 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an MST in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">],</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">mst</span><span class="p">],</span>
@@ -754,19 +725,11 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an SST in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">radius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_dict</span><span class="p">[</span><span class="n">lst</span><span class="p">],</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">],</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">sst</span><span class="p">],</span>
@@ -784,13 +747,8 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an SCT in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
             <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">],</span>
@@ -810,16 +768,8 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an HESS in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -839,16 +789,8 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an MAGIC in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -868,16 +810,8 @@ document.write(`
 <span class="sd">    Legend handler class to plot a representation of an VERITAS in an array layout.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -900,19 +834,11 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">handlebox</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;handlebox&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">handlebox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handlebox is expected, return None if not provided</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-            <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">xy</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
             <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
             <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span>
