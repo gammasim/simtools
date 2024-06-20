@@ -1,6 +1,5 @@
 import logging
 
-import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -24,73 +23,65 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ----------
     camera : Camera
         Camera object to plot.
-    camera_in_sky_coor : bool
+    camera_in_sky_coor : bool, optional
         Flag to plot the camera in the sky coordinate system.
-    pixels_id_to_print : int
+    pixels_id_to_print : int, optional
         Number of pixel IDs to print in the plot.
 
     Returns
     -------
-    fig: plt.figure instance
+    fig : plt.Figure
         Figure with the pixel layout.
     """
-
     logger.info(f"Plotting the {camera.telescope_model_name} camera")
 
-    fig, ax = plt.subplots()
-    plt.gcf().set_size_inches(8, 8)
+    fig, ax = plt.subplots(figsize=(8, 8))
 
-    if not is_two_mirror_telescope(camera.telescope_model_name):
-        if not camera_in_sky_coor:
-            camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
+    if not is_two_mirror_telescope(camera.telescope_model_name) and not camera_in_sky_coor:
+        camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
 
     on_pixels, edge_pixels, off_pixels = [], [], []
 
-    for i_pix, xy_pix_pos in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        if camera.pixels["pixel_shape"] == 1 or camera.pixels["pixel_shape"] == 3:
-            hexagon = mpatches.RegularPolygon(
-                (xy_pix_pos[0], xy_pix_pos[1]),
+    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
+        shape = None
+        if camera.pixels["pixel_shape"] in (1, 3):
+            shape = mpatches.RegularPolygon(
+                (x, y),
                 numVertices=6,
                 radius=camera.pixels["pixel_diameter"] / np.sqrt(3),
                 orientation=np.deg2rad(camera.pixels["orientation"]),
             )
-            if camera.pixels["pix_on"][i_pix]:
-                if len(camera.get_neighbour_pixels()[i_pix]) < 6:
-                    edge_pixels.append(hexagon)
-                else:
-                    on_pixels.append(hexagon)
-            else:
-                off_pixels.append(hexagon)
         elif camera.pixels["pixel_shape"] == 2:
-            square = mpatches.Rectangle(
+            shape = mpatches.Rectangle(
                 (
-                    xy_pix_pos[0] - camera.pixels["pixel_diameter"] / 2.0,
-                    xy_pix_pos[1] - camera.pixels["pixel_diameter"] / 2.0,
+                    x - camera.pixels["pixel_diameter"] / 2.0,
+                    y - camera.pixels["pixel_diameter"] / 2.0,
                 ),
                 width=camera.pixels["pixel_diameter"],
                 height=camera.pixels["pixel_diameter"],
             )
-            if camera.pixels["pix_on"][i_pix]:
-                if len(camera.get_neighbour_pixels()[i_pix]) < 4:
-                    edge_pixels.append(square)
-                else:
-                    on_pixels.append(square)
+
+        if camera.pixels["pix_on"][i_pix]:
+            neighbors = camera.get_neighbour_pixels()[i_pix]
+            if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
+                edge_pixels.append(shape)
+            elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:
+                edge_pixels.append(shape)
             else:
-                off_pixels.append(square)
+                on_pixels.append(shape)
+        else:
+            off_pixels.append(shape)
 
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
-            font_size = 4
-            if "SCT" in names.get_telescope_type_from_telescope_name(camera.telescope_model_name):
-                font_size = 2
-            plt.text(
-                xy_pix_pos[0],
-                xy_pix_pos[1],
-                camera.pixels["pix_id"][i_pix],
-                horizontalalignment="center",
-                verticalalignment="center",
-                fontsize=font_size,
+            font_size = (
+                4
+                if "SCT"
+                in names.get_telescope_type_from_telescope_name(camera.telescope_model_name)
+                else 2
             )
-
+            plt.text(
+                x, y, camera.pixels["pix_id"][i_pix], ha="center", va="center", fontsize=font_size
+            )
     ax.add_collection(
         PatchCollection(on_pixels, facecolor="none", edgecolor="black", linewidth=0.2)
     )
@@ -105,22 +96,25 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ax.add_collection(
         PatchCollection(off_pixels, facecolor="black", edgecolor="black", linewidth=0.2)
     )
-
     legend_objects = [leg_h.PixelObject(), leg_h.EdgePixelObject()]
     legend_labels = ["Pixel", "Edge pixel"]
-    legend_handler_map = {}
-    if isinstance(on_pixels[0], mpl.patches.RegularPolygon):
-        legend_handler_map = {
-            leg_h.PixelObject: leg_h.HexPixelHandler(),
-            leg_h.EdgePixelObject: leg_h.HexEdgePixelHandler(),
-            leg_h.OffPixelObject: leg_h.HexOffPixelHandler(),
-        }
-    elif isinstance(on_pixels[0], mpl.patches.Rectangle):
-        legend_handler_map = {
-            leg_h.PixelObject: leg_h.SquarePixelHandler(),
-            leg_h.EdgePixelObject: leg_h.SquareEdgePixelHandler(),
-            leg_h.OffPixelObject: leg_h.SquareOffPixelHandler(),
-        }
+    legend_handler_map = {
+        leg_h.PixelObject: (
+            leg_h.HexPixelHandler()
+            if isinstance(on_pixels[0], mpatches.RegularPolygon)
+            else leg_h.SquarePixelHandler()
+        ),
+        leg_h.EdgePixelObject: (
+            leg_h.HexEdgePixelHandler()
+            if isinstance(on_pixels[0], mpatches.RegularPolygon)
+            else leg_h.SquareEdgePixelHandler()
+        ),
+        leg_h.OffPixelObject: (
+            leg_h.HexOffPixelHandler()
+            if isinstance(on_pixels[0], mpatches.RegularPolygon)
+            else leg_h.SquareOffPixelHandler()
+        ),
+    }
 
     if len(off_pixels) > 0:
         legend_objects.append(leg_h.OffPixelObject())
@@ -147,25 +141,19 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     plt.tick_params(axis="both", which="major", labelsize=15)
 
     _plot_axes_def(camera, plt, camera.pixels["rotate_angle"])
-    description = "For an observer facing the camera"
-    if camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_model_name):
-        description = "For an observer behind the camera looking through"
-    if is_two_mirror_telescope(camera.telescope_model_name):
-        description = "For an observer looking from secondary to camera"
-    ax.text(
-        0.02,
-        0.02,
-        description,
-        transform=ax.transAxes,
-        color="black",
-        fontsize=12,
-    )
+
+    description = {
+        False: "For an observer facing the camera",
+        True: "For an observer behind the camera looking through",
+        None: "For an observer looking from secondary to camera",
+    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_model_name)]
+    ax.text(0.02, 0.02, description, transform=ax.transAxes, color="black", fontsize=12)
 
     fov, r_edge_avg = camera.calc_fov()
     ax.text(
         0.02,
         0.96,
-        r"$f_{\mathrm{eff}}$ = " + f"{camera.focal_length:.3f} cm",
+        rf"$f_{{\mathrm{{eff}}}} = {camera.focal_length:.3f}\,\mathrm{{cm}}$",
         transform=ax.transAxes,
         color="black",
         fontsize=12,
@@ -173,7 +161,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ax.text(
         0.02,
         0.92,
-        f"Avg. edge radius = {r_edge_avg:.3f} cm",
+        rf"Avg. edge radius = {r_edge_avg:.3f}$\,\mathrm{{cm}}$",
         transform=ax.transAxes,
         color="black",
         fontsize=12,
@@ -181,7 +169,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ax.text(
         0.02,
         0.88,
-        f"FoV = {fov:.3f}",
+        rf"FoV = {fov:.3f}$\,\mathrm{{deg}}$",
         transform=ax.transAxes,
         color="black",
         fontsize=12,
@@ -193,7 +181,6 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         prop={"size": 11},
         loc="upper right",
     )
-
     ax.set_aspect("equal", "datalim")
     plt.tight_layout()
 
@@ -207,6 +194,8 @@ def _plot_axes_def(camera, plot, rotate_angle):
 
     Parameters
     ----------
+    camera : Camera
+        Camera object.
     plot: pyplot.plt instance
         A pyplot.plt instance where to add the axes definitions.
     rotate_angle: float
