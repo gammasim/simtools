@@ -90,6 +90,39 @@ from simtools.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
+def _parse(label):
+    config = configurator.Configurator(
+        label=label,
+        description=(
+            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "of the telescope requested."
+        ),
+    )
+    config.parser.add_argument(
+        "--src_distance",
+        help="Source distance in km",
+        type=float,
+        default=10,
+    )
+    config.parser.add_argument(
+        "--zenith",
+        help="Zenith angle in deg",
+        type=float,
+        default=20.0,
+    )
+    config.parser.add_argument(
+        "--data",
+        help="Data file name with the measured PSF vs radius [cm]",
+        type=str,
+    )
+    config.parser.add_argument(
+        "--mc_parameter_file",
+        help="Yaml file with the model parameters to be replaced",
+        type=str,
+    )
+    return config.initialize(db_config=True, simulation_model="telescope")
+
+
 def load_data(datafile):
     """
     Load the data file with the measured PSF vs radius [cm].
@@ -107,28 +140,7 @@ def load_data(datafile):
 
 def main():
     label = Path(__file__).stem
-    config = configurator.Configurator(
-        label=label,
-        description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
-            "of the telescope requested."
-        ),
-    )
-    config.parser.add_argument(
-        "--src_distance",
-        help="Source distance in km",
-        type=float,
-        default=10,
-    )
-    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20.0)
-    config.parser.add_argument(
-        "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
-    )
-    config.parser.add_argument(
-        "--mc_parameter_file", help="Yaml file with the model parameters to be replaced", type=str
-    )
-
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+    args_dict, db_config = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))

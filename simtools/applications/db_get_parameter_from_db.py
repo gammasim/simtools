@@ -57,23 +57,28 @@ from simtools.configuration import configurator
 from simtools.db import db_handler
 
 
-def main():
+def _parse():
     config = configurator.Configurator(
         description=(
             "Get a parameter entry from DB for a specific telescope or a site. "
-            "The application receives a parameter name a site, a telescope (if applicable), "
-            " and optionally a version. It then prints out the parameter entry. "
-            "If no version is provided, the value of the released model is printed. "
+            "The application receives a parameter name, a site, a telescope (if applicable), "
+            "and optionally a version. It then prints out the parameter entry. "
+            "If no version is provided, the value of the released model is printed."
         )
     )
+
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
     config.parser.add_argument(
         "--db_collection",
-        help="DB collection to which to add the file ",
+        help="DB collection to which to add the file",
         default="telescopes",
         required=False,
     )
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model="telescope")
+
+
+def main():
+    args_dict, db_config = _parse()
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
