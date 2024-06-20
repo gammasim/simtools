@@ -80,7 +80,7 @@ class SimtelRunner:
 
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
-        command = self._make_run_command(input_file=input_file, run_number=run_number)
+        command = self._make_run_command(run_number=run_number, input_file=input_file)
         with self._script_file.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
@@ -128,7 +128,7 @@ class SimtelRunner:
             self._logger.info("Skipping because output exists and force = False")
             return
 
-        command = self._make_run_command(input_file=input_file, run_number=run_number)
+        command = self._make_run_command(run_number=run_number, input_file=input_file)
 
         if test:
             self._logger.info(f"Running (test) with command: {command}")
@@ -189,11 +189,13 @@ class SimtelRunner:
         )
         return False
 
-    def _make_run_command(self, input_file=None, run_number=None):
+    def _make_run_command(self, run_number=None, input_file=None):
         self._logger.debug(
             "make_run_command is being called from the base class - "
             "it should be implemented in the sub class"
         )
+        input_file = input_file if input_file else "nofile"
+        run_number = run_number if run_number else 1
         return f"{input_file}-{run_number}"
 
     @staticmethod
