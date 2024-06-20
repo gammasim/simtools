@@ -12,11 +12,11 @@ from dotenv import dotenv_values, load_dotenv
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.corsika_simtel.corsika_runner import CorsikaRunner
 from simtools.db import db_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 

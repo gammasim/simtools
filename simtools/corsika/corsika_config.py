@@ -46,6 +46,7 @@ class CorsikaConfig:
 
         self.label = label
         self.primary = None
+        self.zenith_angle = None
         self.azimuth_angle = None
         self._run_number = None
         self.args_dict = args_dict
@@ -100,6 +101,7 @@ class CorsikaConfig:
         self._logger.debug("Setting CORSIKA parameters ")
         self._is_file_updated = False
         self.azimuth_angle = int(self.args_dict["azimuth_angle"].to("deg").value)
+        self.zenith_angle = self.args_dict["zenith_angle"].to("deg").value
 
         # lists provides as strings
         e_range = self.args_dict["erange"].split(" ")
@@ -317,7 +319,7 @@ class CorsikaConfig:
         self._is_file_updated = True
         return self.config_file_path
 
-    def get_file_name(self, file_type, run_number=None):
+    def get_corsika_config_file_name(self, file_type, run_number=None):
         """
         Get a CORSIKA config style file name for various file types.
 
@@ -393,13 +395,13 @@ class CorsikaConfig:
         str
             Output file name.
         """
-        config_file_name = self.get_file_name(file_type="config")
+        config_file_name = self.get_corsika_config_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
         self._logger.debug(f"Creating directory {file_directory}.")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)
 
-        return self.get_file_name(file_type="output_generic")
+        return self.get_corsika_config_file_name(file_type="output_generic")
 
     def _write_seeds(self, file):
         """
