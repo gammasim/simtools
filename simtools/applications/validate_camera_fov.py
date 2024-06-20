@@ -61,7 +61,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import plot_camera
 
 
-def main():
+def _parse():
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(
@@ -87,8 +87,12 @@ def main():
         ),
         default=50,
     )
+    return config.initialize(db_config=True, simulation_model="telescope")
 
-    args_dict, db_config = config.initialize(db_config=True, simulation_model="telescope")
+
+def main():
+    args_dict, db_config = _parse()
+
     label = "validate_camera_fov"
 
     logger = logging.getLogger()

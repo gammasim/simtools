@@ -256,3 +256,9 @@ filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
 exclude_also = [
   "if __name__ == \"__main__\":",
 ]
+
+[tool.coverage.run]
+relative_files = true
+source = [
+  "simtools",
+]
