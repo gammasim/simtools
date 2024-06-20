@@ -41,6 +41,7 @@ class SimtelRunner:
         self.label = label
         self._script_dir = None
         self._script_file = None
+        self._base_directory = None
 
         self.runs_per_set = 1
 
@@ -123,11 +124,6 @@ class SimtelRunner:
         """
         self._logger.debug("Running sim_telarray")
 
-        if not hasattr(self, "_make_run_command"):
-            msg = "run method cannot be executed without the _make_run_command method"
-            self._logger.error(msg)
-            raise RuntimeError(msg)
-
         if not self._shall_run() and not force:
             self._logger.info("Skipping because output exists and force = False")
             return
@@ -139,9 +135,7 @@ class SimtelRunner:
             self._run_simtel_and_check_output(command)
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
-            self._run_simtel_and_check_output(command)
-
-            for _ in range(self.runs_per_set - 1):
+            for _ in range(self.runs_per_set):
                 self._run_simtel_and_check_output(command)
 
         self._check_run_result(run_number=run_number)
@@ -194,6 +188,13 @@ class SimtelRunner:
             "it should be implemented in the sub class"
         )
         return False
+
+    def _make_run_command(self, input_file=None, run_number=None):
+        self._logger.debug(
+            "make_run_command is being called from the base class - "
+            "it should be implemented in the sub class"
+        )
+        return f"{input_file}-{run_number}"
 
     @staticmethod
     def _config_option(par, value=None, weak_option=False):
