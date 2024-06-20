@@ -71,7 +71,7 @@ class RunnerServices:
             ),
         )
         _logger.debug(f"Creating output dir {self.directory['output']}.")
-        corsika_base_dir = (
+        base_dir = (
             self.directory["output"]
             .joinpath(
                 f"{simulation_software}-data",
@@ -81,7 +81,7 @@ class RunnerServices:
             .absolute()
         )
         for dir_name in ["data", "input", "log"]:
-            self.directory[dir_name] = corsika_base_dir.joinpath(dir_name)
+            self.directory[dir_name] = base_dir.joinpath(dir_name)
             self.directory[dir_name].mkdir(parents=True, exist_ok=True)
 
         return self.directory
@@ -157,7 +157,7 @@ class RunnerServices:
             script_file_dir = self.directory["output"].joinpath("scripts")
             script_file_dir.mkdir(parents=True, exist_ok=True)
             return script_file_dir.joinpath(f"{file_name}.sh")
-        if file_type in ("corsika_output", "simtel_ouput"):
+        if file_type in ["output", "corsika_output", "simtel_output"]:
             suffix = ".zst" if file_type == "corsika_output" else ".simtel.zst"
             return self.directory["data"].joinpath(run_dir).joinpath(f"{file_name}{suffix}")
         if file_type == "sub_log":
