@@ -52,7 +52,7 @@ class SimtelIOHistogram:
         the simulation configuration.
     energy_range: list
         The energy range used in the simulation. It must be passed as a list of floats and the
-        energy must be in TeV (as in the CORSIKA configuration).
+        energy must be in TeV.
         This argument is only needed and used if histogram_file is a .hdata file, in which case the
         energy range cannot be retrieved directly from the file.
     view_cone: list
@@ -87,10 +87,8 @@ class SimtelIOHistogram:
         self.radius_axis = None
         self.area_from_distribution = area_from_distribution
 
-        self.view_cone = view_cone
-        self._set_view_cone()
-        self.energy_range = energy_range
-        self._set_energy_range()
+        self._set_view_cone(view_cone)
+        self._set_energy_range(energy_range)
 
     def _initialize_histogram(self):
         """
@@ -218,25 +216,36 @@ class SimtelIOHistogram:
         self._logger.error(msg)
         raise HistogramIdNotFoundError
 
-    def _set_view_cone(self):
+    def _set_view_cone(self, view_cone):
         """
         View cone used in the simulation.
+
+        Parameters
+        ----------
+        view_cone: list
+        The view cone used in the simulation. It must be passed as a list of floats and the
+        view cone must be in deg (as in the CORSIKA configuration).
 
         Raises
         -------
         ValueError:
             if input parameter is missing.
         """
-        if self.view_cone is None:
+        if view_cone is None:
             try:
                 self.view_cone = self.config["viewcone"] * u.deg
             except TypeError as exc:
-                msg = "view_cone needs to be passed as argument (a list of cone in deg)."
+                msg = (
+                    "view_cone needs to be passed as argument (minimum and maximum of the "
+                    "viewcone radius in deg)."
+                )
                 self._logger.error(msg)
                 raise ValueError(msg) from exc
         else:
-            if not isinstance(self.view_cone, u.Quantity):
-                self.view_cone = self.view_cone * u.deg
+            if isinstance(view_cone, u.Quantity):
+                self.view_cone = view_cone.to(u.deg)
+            else:
+                self.view_cone = view_cone * u.deg
 
     @property
     def solid_angle(self):
@@ -283,32 +292,37 @@ class SimtelIOHistogram:
                 )
         return self._total_area
 
-    def _set_energy_range(self):
+    def _set_energy_range(self, energy_range):
         """
-        Energy range used in the simulation.
-        If the input file is a .simtel.zst, the energy range is taken from its configuration,
-        written in the file itself.
-        If the input file is a .hdata.zst, the energy range has to be passed as argument to the
-        class. An error is raised in case the argument is missing.
+        Parameters
+        ----------
+        energy_range: list
+        The energy range used in the simulation. It must be passed as a list of floats and the
+        energy must be in TeV.
 
         Raises
         ------
         ValueError:
             if input parameter is missing.
         """
-        if self.energy_range is None:
+        if energy_range is None:
             try:
                 self.energy_range = [
                     self.config["E_range"][0] * u.TeV,
                     self.config["E_range"][1] * u.TeV,
                 ]
             except TypeError as exc:  # E_range not in self.config
-                msg = "energy_range needs to be passed as argument (a list of energies in TeV)."
+                msg = (
+                    "energy_range needs to be passed as argument (minimum and maximum"
+                    " energies in TeV)."
+                )
                 self._logger.error(msg)
                 raise ValueError(msg) from exc
         else:
-            if not isinstance(self.energy_range, u.Quantity):
-                self.energy_range = self.energy_range * u.TeV
+            if isinstance(energy_range, u.Quantity):
+                self.energy_range = energy_range.to(u.TeV)
+            else:
+                self.energy_range = energy_range * u.TeV
 
     @staticmethod
     def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
