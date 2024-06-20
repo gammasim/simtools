@@ -65,8 +65,9 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         Path:
             Full path of the run script file.
         """
+        run_script = CorsikaRunner.prepare_run_script(self, use_pfp=use_pfp, **kwargs)
         self.export_multipipe_script(**kwargs)
-        return CorsikaRunner.prepare_run_script(self, use_pfp=use_pfp, **kwargs)
+        return run_script
 
     def export_multipipe_script(self, **kwargs):
         """
@@ -95,7 +96,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
             input_file="-",  # instruct sim_telarray to take input from standard output
         )
         multipipe_file = Path(self.corsika_config.config_file_path.parent).joinpath(
-            self.corsika_config.get_file_name("multipipe")
+            self.corsika_config.get_corsika_config_file_name("multipipe")
         )
         with open(multipipe_file, "w", encoding="utf-8") as file:
             file.write(f"{run_command}")
