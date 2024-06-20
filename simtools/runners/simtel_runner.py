@@ -23,7 +23,7 @@ class InvalidOutputFileError(Exception):
 
 class SimtelRunner:
     """
-    SimtelRunner is the base class of the sim_telarray interfaces.
+    Base class for running sim_telarray simulations.
 
     Parameters
     ----------
