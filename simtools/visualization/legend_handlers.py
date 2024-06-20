@@ -36,6 +36,29 @@ magic = "MAGIC"
 veritas = "VERITAS"
 
 
+def calculate_center(handlebox, width_factor=3, height_factor=3):
+    """
+    Calculate the center of the handlebox based on given factors.
+
+    Parameters
+    ----------
+    handlebox: matplotlib.legend.Legend
+        The handlebox object from the legend.
+    width_factor: int, optional
+        The factor to adjust the width.
+    height_factor: int, optional
+        The factor to adjust the height.
+
+    Returns
+    -------
+    tuple
+        The calculated (x0, y0) position.
+    """
+    x0 = handlebox.xdescent + handlebox.width / width_factor
+    y0 = handlebox.ydescent + handlebox.height / height_factor
+    return x0, y0
+
+
 class TelescopeHandler:
     """
     Telescope handler that centralizes the telescope information. Individual telescopes handlers
@@ -120,7 +143,7 @@ class HexPixelHandler:
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
-        x0, y0 = handlebox.xdescent + handlebox.width / 3, handlebox.ydescent + handlebox.height / 3
+        x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -142,10 +165,7 @@ class HexEdgePixelHandler:
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
-        x0, y0 = (
-            handlebox.xdescent + handlebox.width / 3,
-            handlebox.ydescent + handlebox.height / 3,
-        )
+        x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -167,10 +187,7 @@ class HexOffPixelHandler:
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
-        x0, y0 = (
-            handlebox.xdescent + handlebox.width / 3,
-            handlebox.ydescent + handlebox.height / 3,
-        )
+        x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -254,13 +271,10 @@ class LSTHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        center = (
-            handlebox.xdescent + 0.3 * handlebox.width,
-            handlebox.ydescent + 0.5 * handlebox.height,
-        )
+        x0, y0 = calculate_center(handlebox, 10 / 3, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
-            xy=center,
+            xy=(x0, y0),
             radius=radius * self.radius_dict[lst] / self.radius_dict[lst],
             facecolor="none",
             edgecolor=self.colors_dict[lst],
@@ -276,13 +290,10 @@ class MSTHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        center = (
-            handlebox.xdescent + 0.25 * handlebox.width,
-            handlebox.ydescent + 0.5 * handlebox.height,
-        )
+        x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
-            xy=center,
+            xy=(x0, y0),
             radius=radius * self.radius_dict[mst] / self.radius_dict[lst],
             facecolor=self.colors_dict[mst],
             edgecolor=self.colors_dict[mst],
@@ -298,13 +309,10 @@ class SSTHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        center = (
-            handlebox.xdescent + 0.25 * handlebox.width,
-            handlebox.ydescent + 0.5 * handlebox.height,
-        )
+        x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
-            xy=center,
+            xy=(x0, y0),
             radius=radius * self.radius_dict[sst] / self.radius_dict[lst],
             facecolor=self.colors_dict[sst],
             edgecolor=self.colors_dict[sst],
@@ -320,7 +328,7 @@ class SCTHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        x0, y0 = handlebox.xdescent + 0.1 * handlebox.width, handlebox.ydescent
+        x0, y0 = calculate_center(handlebox, 10, 1)
         width = height = handlebox.height
         patch = mpatches.Rectangle(
             [x0, y0],
@@ -340,10 +348,7 @@ class HESSHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        x0, y0 = (
-            handlebox.xdescent + handlebox.width / 3,
-            handlebox.ydescent + handlebox.height / 3,
-        )
+        x0, y0 = calculate_center(handlebox)
         radius = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -364,10 +369,7 @@ class MAGICHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        x0, y0 = (
-            handlebox.xdescent + handlebox.width / 3,
-            handlebox.ydescent + handlebox.height / 3,
-        )
+        x0, y0 = calculate_center(handlebox)
         radius = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -388,10 +390,7 @@ class VERITASHandler(TelescopeHandler):
     """
 
     def legend_artist(self, _, __, ___, handlebox):
-        x0, y0 = (
-            handlebox.xdescent + handlebox.width / 3,
-            handlebox.ydescent + handlebox.height / 3,
-        )
+        x0, y0 = calculate_center(handlebox)
         radius = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
@@ -413,13 +412,10 @@ class MeanRadiusOuterEdgeHandler:
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
-        center = (
-            handlebox.xdescent + 0.25 * handlebox.width,
-            handlebox.ydescent + 0.25 * handlebox.height,
-        )
+        x0, y0 = calculate_center(handlebox, 4, 4)
         radius = handlebox.height
         patch = mpatches.Circle(
-            xy=center,
+            xy=(x0, y0),
             radius=radius,
             facecolor="none",
             edgecolor="darkorange",
