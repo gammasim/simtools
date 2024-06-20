@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.model.array_model import ArrayModel
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -166,7 +166,7 @@ def test_get_file_name(corsika_simtel_runner, io_handler):
     # Test one case of a CORSIKA file. Other cases are tested in the corsika_runner tests
     file_name = "corsika_run000001_gamma_North_test_layout_test-corsika-simtel-runner"
     assert corsika_simtel_runner.get_file_name(
-        "corsika_autoinputs_log", **info_for_file_name
+        "log", **info_for_file_name
     ) == corsika_simtel_runner._corsika_log_dir.joinpath(f"log_{file_name}.log.gz")
 
     # Test the histogram case which calls the simulator_array internally

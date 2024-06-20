@@ -3,7 +3,7 @@
 import stat
 from pathlib import Path
 
-from simtools.corsika.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
 __all__ = ["CorsikaSimtelRunner"]
@@ -13,23 +13,8 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
     """
     Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.
 
-    CORSIKA is set up using corsika_autoinputs program
-    provided by the sim_telarray package. It creates the multipipe script and sim_telarray command
-    corresponding to the requested configuration.
-
-    It uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
-    for the sim_telarray configuration. User parameters must be given by the
-    common_args, corsika_args and simtel_args arguments.
-    The corsika_args and simtel_args are explained in
-    CorsikaRunner and SimulatorArray respectively.
-    An example of the common_args is given below.
-
-    .. code-block:: python
-
-        common_args = {
-            'label': 'test-production',
-            'simtel_path': '/workdir/sim_telarray/',
-        }
+    Uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
+    for the sim_telarray configuration.
 
     Parameters
     ----------
@@ -41,9 +26,26 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         Arguments for the sim_telarray runner (see full list in SimulatorArray documentation).
     """
 
-    def __init__(self, common_args=None, corsika_args=None, simtel_args=None):
-        CorsikaRunner.__init__(self, use_multipipe=True, **(common_args | corsika_args))
-        SimulatorArray.__init__(self, **(common_args | simtel_args))
+    def __init__(
+        self,
+        corsika_config,
+        simtel_path,
+        label=None,
+        keep_seeds=False,
+        use_multipipe=False,
+    ):
+        self.corsika_config = corsika_config
+        CorsikaRunner.__init__(
+            self,
+            corsika_config=corsika_config,
+            simtel_path=simtel_path,
+            label=label,
+            keep_seeds=keep_seeds,
+            use_multipipe=use_multipipe,
+        )
+        SimulatorArray.__init__(
+            self, corsika_config=corsika_config, simtel_path=simtel_path, label=label
+        )
 
     def prepare_run_script(self, use_pfp=False, **kwargs):
         """
@@ -86,11 +88,11 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
             "run_number": None,
             **kwargs,
         }
-        run_number = self._validate_run_number(kwargs["run_number"])
+        run_number = kwargs["run_number"]
 
         run_command = self._make_run_command(
             run_number=run_number,
-            input_file="-",  # Tell sim_telarray to take the input from standard output
+            input_file="-",  # instruct sim_telarray to take input from standard output
         )
         multipipe_file = Path(self.corsika_config.config_file_path.parent).joinpath(
             self.corsika_config.get_file_name("multipipe")
@@ -101,7 +103,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
 
     def _export_multipipe_executable(self, multipipe_file):
         """
-        Write the multipipe executable used to call the multipipe_corsika command.
+        Write multipipe executable used to call the multipipe_corsika command.
 
         Parameters
         ----------
@@ -121,7 +123,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
 
         multipipe_executable.chmod(multipipe_executable.stat().st_mode | stat.S_IEXEC)
 
-    def _make_run_command(self, **kwargs):
+    def _make_run_command(self, run_number=None, input_file=None):
         """
         Build and return the command to run simtel_array.
 
@@ -136,61 +138,34 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
                     run number
 
         """
-        info_for_file_name = SimulatorArray.get_info_for_file_name(self, kwargs["run_number"])
-        weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
+        info_for_file_name = self.runner_service.get_info_for_file_name(run_number)
+        try:
+            weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
+        except TypeError:  # allow for sel.label to be None
+            weak_pointing = False
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += f" -c {self.array_model.get_config_file()}"
-        command += f" -I{self.array_model.get_config_directory()}"
+        command += f" -c {self.corsika_config.array_model.get_config_file()}"
+        command += f" -I{self.corsika_config.array_model.get_config_directory()}"
         command += super()._config_option(
-            "telescope_theta", self.config.zenith_angle, weak_option=weak_pointing
+            "telescope_theta", self.corsika_config.zenith_angle, weak_option=weak_pointing
         )
         command += super()._config_option(
-            "telescope_phi", self.config.azimuth_angle, weak_option=weak_pointing
-        )
-        command += super()._config_option("power_law", abs(self.corsika_config.eslope))
-        command += super()._config_option(
-            "histogram_file", self.get_file_name("histogram", **info_for_file_name)
+            "telescope_phi", self.corsika_config.azimuth_angle, weak_option=weak_pointing
         )
         command += super()._config_option(
-            "output_file", self.get_file_name("output", **info_for_file_name)
+            "power_law", abs(self.corsika_config.get_config_parameter("ESLOPE"))
+        )
+        command += super()._config_option(
+            "histogram_file", self.runner_service.get_file_name("histogram", **info_for_file_name)
+        )
+        command += super()._config_option(
+            "output_file", self.runner_service.get_file_name("output", **info_for_file_name)
         )
         command += super()._config_option("random_state", "none")
         command += super()._config_option("show", "all")
-        command += f" {kwargs['input_file']}"
-        command += f" | gzip > {self.get_file_name('log', **info_for_file_name)} 2>&1 || exit"
+        command += f" {input_file}"
+        _log_file = self.runner_service.get_file_name("log", **info_for_file_name)
+        command += f" | gzip > {_log_file} 2>&1 || exit"
 
         return command
-
-    def get_file_name(self, file_type, run_number=None, **kwargs):
-        """
-        Get a CORSIKA or sim_telarray style file name for various file types.
-
-        See the implementations in CorsikaRunner and SimulatorArray for details.
-        """
-        if file_type in ["output", "log", "histogram"]:
-            return SimulatorArray.get_file_name(self, file_type=file_type, **kwargs)
-        return CorsikaRunner.get_file_name(
-            self, file_type=file_type, run_number=run_number, **kwargs
-        )
-
-    def get_info_for_file_name(self, run_number):
-        """
-        Get a dictionary necessary for building a CORSIKA or sim_telarray runner file names.
-
-        Returns
-        -------
-        dict
-            Dictionary with the keys necessary for building
-            a CORSIKA or sim_telarray runner file names.
-        """
-        run_number = self._validate_run_number(run_number)
-        return {
-            "run": run_number,
-            "primary": self.corsika_config.primary,
-            "array_name": self.array_model.layout_name,
-            "site": self.array_model.site,
-            "label": self.label,
-            "zenith": self.config.zenith_angle,
-            "azimuth": self.config.azimuth_angle,
-        }
