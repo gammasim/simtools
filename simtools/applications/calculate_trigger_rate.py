@@ -109,7 +109,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--view_cone",
-        help="View cone (deg) passed as two floats, the minimum and maximum, respectively.",
+        help="View cone radius (deg) passed as two floats, the minimum and maximum, respectively.",
         nargs=2,
         required=False,
         type=str,
@@ -128,7 +128,7 @@ def _get_simulation_parameters(config_parser):
     Parameters
     ----------
     CommandLineParser:
-        Command line parser object as derived by the _parse function.
+        Command line parser object as defined by the _parse function.
 
     Returns
     -------
