@@ -141,7 +141,7 @@ def main():
             "data_directory": Path(args_dict["data_directory"]) / label,
             "site": args_dict["site"],
             "layout_name": args_dict["array_layout_name"],
-            "run_range": [1, args_dict["nruns"] + 1],
+            "run_range": [1, args_dict["nruns"]],
             "nshow": args_dict["nevents"],
             "primary": args_dict["primary"],
             "zenith": args_dict["zenith"] * u.deg,
