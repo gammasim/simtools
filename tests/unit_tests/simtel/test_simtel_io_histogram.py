@@ -49,11 +49,11 @@ def test_init_errors(simtel_io_file_hdata, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
             _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
-    assert "view_cone needs to be passed as argument (a list of cone in deg)" in caplog.text
+    assert "view_cone needs to be passed as argument" in caplog.text
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError):
             _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
-    assert "energy_range needs to be passed as argument (a list of energies in TeV)" in caplog.text
+    assert "energy_range needs to be passed as argument" in caplog.text
 
 
 def test_file_does_not_exist(caplog):

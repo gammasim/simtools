@@ -237,7 +237,7 @@ class SimtelIOHistogram:
             except TypeError as exc:
                 msg = (
                     "view_cone needs to be passed as argument (minimum and maximum of the "
-                    "viewcone radius in deg)."
+                    "view cone radius in deg)."
                 )
                 self._logger.error(msg)
                 raise ValueError(msg) from exc
