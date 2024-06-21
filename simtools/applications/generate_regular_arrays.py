@@ -21,7 +21,7 @@
 
     .. code-block:: console
 
-        simtools-make-regular-arrays --site=North
+        simtools-generate-regular-arrays --site=North
 """
 
 import logging
@@ -45,7 +45,7 @@ def _parse():
     config = configurator.Configurator(
         label=Path(__file__).stem,
         description=(
-            "Make a regular array of telescope and save as astropy table.\n"
+            "Generate a regular array of telescope and save as astropy table.\n"
             "Default telescope distances for 4 telescope square arrays are: \n"
             f"  LST: {telescope_distance['LST']}\n"
             f"  MST: {telescope_distance['MST']}\n"

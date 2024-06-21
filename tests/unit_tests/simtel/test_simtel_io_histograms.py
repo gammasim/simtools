@@ -3,6 +3,7 @@
 import copy
 import logging
 
+import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -22,7 +23,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def simtel_array_histograms_file(io_handler):
+def simtel_io_file(io_handler):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
         test=True,
@@ -30,7 +31,15 @@ def simtel_array_histograms_file(io_handler):
 
 
 @pytest.fixture()
-def simtel_array_histograms_file_list(io_handler):
+def simtel_io_file_hdata(io_handler):
+    return io_handler.get_input_data_file(
+        file_name="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+        test=True,
+    )
+
+
+@pytest.fixture()
+def simtel_io_file_list(io_handler):
     return io_handler.get_input_data_file(
         file_name="simtel_output_files.txt",
         test=True,
@@ -38,16 +47,22 @@ def simtel_array_histograms_file_list(io_handler):
 
 
 @pytest.fixture()
-def simtel_array_histograms_instance(simtel_array_histograms_file):
+def simtel_hists_hdata_io_instance(simtel_io_file_hdata):
     instance = SimtelIOHistograms(
-        histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
+        histogram_files=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.001, 300]
     )
     return instance
 
 
 @pytest.fixture()
-def simtel_array_histograms_instance_file_list(simtel_array_histograms_file_list):
-    instance = SimtelIOHistograms(histogram_files=simtel_array_histograms_file_list, test=True)
+def simtel_array_histograms_instance(simtel_io_file):
+    instance = SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
+    return instance
+
+
+@pytest.fixture()
+def simtel_array_histograms_instance_file_list(simtel_io_file_list):
+    instance = SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
     return instance
 
 
@@ -59,9 +74,11 @@ def test_file_does_not_exist(caplog):
 
 
 def test_calculate_trigger_rates(
-    simtel_array_histograms_instance, simtel_array_histograms_instance_file_list, caplog
+    simtel_array_histograms_instance,
+    simtel_array_histograms_instance_file_list,
+    simtel_hists_hdata_io_instance,
+    caplog,
 ):
-    import astropy.units as u
 
     with caplog.at_level(logging.INFO):
         (
@@ -80,6 +97,8 @@ def test_calculate_trigger_rates(
     assert "Estimated equivalent observation time corresponding to the number of" in caplog.text
     assert "System trigger event rate" in caplog.text
 
+
+def test_calculate_trigger_rates_file_list(simtel_array_histograms_instance, caplog):
     with caplog.at_level(logging.INFO):
         (
             sim_event_rates,
@@ -92,6 +111,20 @@ def test_calculate_trigger_rates(
         second_sim_event_rates, _, _, _ = simtel_array_histograms_instance._rates_for_each_file()
         assert second_sim_event_rates == [sim_event_rates, sim_event_rates]
     assert "System trigger event rate for stacked files" in caplog.text
+
+
+def test_calculate_trigger_rates_hdata(simtel_hists_hdata_io_instance):
+    # Test the trigger rate estimate for input hdata file
+    (
+        sim_event_rates,
+        triggered_event_rates,
+        triggered_event_rate_uncertainties,
+        trigger_rate_in_tables,
+    ) = simtel_hists_hdata_io_instance.calculate_trigger_rates(print_info=False)
+    assert pytest.approx(sim_event_rates[0].value, 0.2) == 2.5e9
+    assert sim_event_rates[0].unit == 1 / u.s
+    assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 70000
+    assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
 
 
 def test_rates_for_each_file(simtel_array_histograms_instance):
@@ -177,14 +210,12 @@ def test_list_of_histograms(simtel_array_histograms_instance):
     assert len(list_of_histograms) == 2
 
 
-def test_combine_histogram_files(simtel_array_histograms_file, caplog):
+def test_combine_histogram_files(simtel_io_file, caplog):
     # Reading one histogram file
-    instance_alone = SimtelIOHistograms(histogram_files=simtel_array_histograms_file, test=True)
+    instance_alone = SimtelIOHistograms(histogram_files=simtel_io_file, test=True)
 
     # Passing the same file twice
-    instance_all = SimtelIOHistograms(
-        histogram_files=[simtel_array_histograms_file, simtel_array_histograms_file], test=True
-    )
+    instance_all = SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
     assert (
         2 * instance_alone.combined_hists[0]["data"] == instance_all.combined_hists[0]["data"]
     ).all()
