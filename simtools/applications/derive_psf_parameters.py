@@ -166,8 +166,8 @@ def add_parameters(
     """
     Transforms and add parameters to the all_parameters list.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     mirror_reflection : float
         The random angle of mirror reflection.
 
@@ -180,8 +180,8 @@ def add_parameters(
     mirror_reflection_2 : float, optional
         A secondary random angle for mirror reflection. Default is 0.035.
 
-    Returns:
-    --------
+    Returns
+    -------
     None
         Updates the all_parameters list in place.
     """

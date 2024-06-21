@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from simtools.model.model_parameter import InvalidModelParameterError
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner
 
 __all__ = ["SimulatorCameraEfficiency"]
 
