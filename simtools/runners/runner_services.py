@@ -26,7 +26,7 @@ class RunnerServices:
         """
         Get a dictionary with the info necessary for building the CORSIKA runner file names.
 
-        Parameters:
+        Parameters
         ----------
         run_number : int
             Run number.

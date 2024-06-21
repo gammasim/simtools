@@ -49,15 +49,6 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_runner
-
-(simtel-runner-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simtel_runner
-   :members:
-```
-
 ## simulator_array
 
 (simulate-array-1)=

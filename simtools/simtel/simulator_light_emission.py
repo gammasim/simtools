@@ -8,7 +8,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner
 
 __all__ = ["SimulatorLightEmission"]
 
