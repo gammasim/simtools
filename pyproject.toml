@@ -257,6 +257,3 @@ relative_files = true
 source = [
   "simtools",
 ]
-include = [
-  "simtools/*",
-]
