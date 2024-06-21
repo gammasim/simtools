@@ -26,6 +26,8 @@
         Name of the primary particle (proton, helium ...).
     nruns (int, optional)
         Number of runs to be simulated.
+    run_number (int, optional)
+        Run number of the starting run.
     nevents (int, optional)
         Number of events simulated per run.
     zenith (float, optional)
@@ -118,6 +120,9 @@ def _parse(label=None, description=None):
         required=True,
     )
     config.parser.add_argument("--nruns", help="Number of runs", type=int, default=100)
+    config.parser.add_argument(
+        "--run_number", help="Run number of the starting run", type=int, default=1
+    )
     config.parser.add_argument("--nevents", help="Number of events/run", type=int, default=100000)
     config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument("--azimuth", help="Azimuth angle in deg", type=float, default=0)
@@ -175,7 +180,7 @@ def main():
             "data_directory": Path(args_dict["data_directory"]) / label,
             "site": args_dict["site"],
             "layout_name": args_dict["array_layout_name"],
-            "run_range": [1, args_dict["nruns"]],
+            "run_range": [args_dict["run_number"], args_dict["nruns"]],
             "nshow": args_dict["nevents"],
             "primary": args_dict["primary"],
             "zenith": args_dict["zenith"] * u.deg,
