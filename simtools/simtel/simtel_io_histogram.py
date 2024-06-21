@@ -50,10 +50,21 @@ class SimtelIOHistogram:
         calculating trigger rate for individual telescopes.
         If false, the area thrown is estimated based on the maximum distance as given in
         the simulation configuration.
-
+    energy_range: list
+        The energy range used in the simulation. It must be passed as a list of floats and the
+        energy must be in TeV.
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        energy range cannot be retrieved directly from the file.
+    view_cone: list
+        The view cone used in the simulation. It must be passed as a list of floats and the
+        view cone must be in deg.
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        view cone cannot be retrieved directly from the file.
     """
 
-    def __init__(self, histogram_file, area_from_distribution=False):
+    def __init__(
+        self, histogram_file, area_from_distribution=False, energy_range=None, view_cone=None
+    ):
         """Initialize SimtelIOHistogram class."""
         self._logger = logging.getLogger(__name__)
         self.histogram_file = histogram_file
@@ -61,15 +72,13 @@ class SimtelIOHistogram:
             msg = f"File {histogram_file} does not exist."
             self._logger.error(msg)
             raise FileNotFoundError
+
         self._config = None
-        self._view_cone = None
         self._total_area = None
         self._solid_angle = None
-        self._energy_range = None
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
         self._histogram = None
-        self._histogram_file = None
         self._initialize_histogram()
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
@@ -77,6 +86,9 @@ class SimtelIOHistogram:
         self.energy_axis = None
         self.radius_axis = None
         self.area_from_distribution = area_from_distribution
+
+        self._set_view_cone(view_cone)
+        self._set_energy_range(energy_range)
 
     def _initialize_histogram(self):
         """
@@ -123,10 +135,13 @@ class SimtelIOHistogram:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
+            # If the file is a .hdata or .hdata.zst, config will continue to be None.
             with EventIOFile(self.histogram_file) as f:
+                # Try to find configuration from .simtel file. If .hdata, config will be None
                 for obj in f:
                     if isinstance(obj, MCRunHeader):
                         self._config = obj.parse()
+
         return self._config
 
     @property
@@ -140,14 +155,8 @@ class SimtelIOHistogram:
             total number of simulated events.
         """
         if self._total_num_simulated_events is None:
-            self._total_num_simulated_events = []
-            logging.debug(
-                f"Number of simulated showers (CORSIKA NSHOW): {self.config['n_showers']}"
-            )
-            logging.debug(
-                "Number of times each simulated shower is used: " f"{self.config['n_use']}"
-            )
-            self._total_num_simulated_events = self.config["n_showers"] * self.config["n_use"]
+            events_histogram, _ = self.fill_event_histogram_dicts()
+            self._total_num_simulated_events = np.sum(events_histogram["data"])
             logging.debug(f"Number of total simulated showers: {self._total_num_simulated_events}")
         return self._total_num_simulated_events
 
@@ -166,9 +175,9 @@ class SimtelIOHistogram:
             total number of simulated events.
         """
         if self._total_num_triggered_events is None:
-            _, triggered_hist = self.fill_event_histogram_dicts()
-            self._total_num_triggered_events = np.round(np.sum(triggered_hist["data"]))
-            logging.debug(f"Number of triggered events: {self._total_num_triggered_events}")
+            _, trigger_histogram = self.fill_event_histogram_dicts()
+            self._total_num_triggered_events = np.sum(trigger_histogram["data"])
+            logging.debug(f"Number of total triggered showers: {self._total_num_triggered_events}")
         return self._total_num_triggered_events
 
     def fill_event_histogram_dicts(self):
@@ -207,19 +216,36 @@ class SimtelIOHistogram:
         self._logger.error(msg)
         raise HistogramIdNotFoundError
 
-    @property
-    def view_cone(self):
+    def _set_view_cone(self, view_cone):
         """
         View cone used in the simulation.
 
-        Returns
+        Parameters
+        ----------
+        view_cone: list
+        The view cone used in the simulation. It must be passed as a list of floats and the
+        view cone must be in deg (as in the CORSIKA configuration).
+
+        Raises
         -------
-        list:
-            view cone used in the simulation [min, max]
+        ValueError:
+            if input parameter is missing.
         """
-        if self._view_cone is None:
-            self._view_cone = self.config["viewcone"] * u.deg
-        return self._view_cone
+        if view_cone is None:
+            try:
+                self.view_cone = self.config["viewcone"] * u.deg
+            except TypeError as exc:
+                msg = (
+                    "view_cone needs to be passed as argument (minimum and maximum of the "
+                    "view cone radius in deg)."
+                )
+                self._logger.error(msg)
+                raise ValueError(msg) from exc
+        else:
+            if isinstance(view_cone, u.Quantity):
+                self.view_cone = view_cone.to(u.deg)
+            else:
+                self.view_cone = view_cone * u.deg
 
     @property
     def solid_angle(self):
@@ -248,10 +274,10 @@ class SimtelIOHistogram:
             Total area covered on the ground covered by the simulation.
         """
         if self._total_area is None:
+            events_histogram, _ = self.fill_event_histogram_dicts()
+            self._initialize_histogram_axes(events_histogram)
 
             if self.area_from_distribution is True:
-                events_histogram, _ = self.fill_event_histogram_dicts()
-                self._initialize_histogram_axes(events_histogram)
                 area_from_distribution_max_radius = 1.5 * np.average(
                     self.radius_axis[:-1], weights=np.sum(events_histogram["data"], axis=0)
                 )
@@ -259,33 +285,44 @@ class SimtelIOHistogram:
                     u.cm**2
                 )
             else:
+                # The max of the core range is always half the upper edge:
+                # self.radius_axis[-1]/2 is equal to self.config["core_range"][1]
                 self._total_area = (
-                    np.pi
-                    * (
-                        ((self.config["core_range"][1] - self.config["core_range"][0]) * u.m).to(
-                            u.cm
-                        )
-                    )
-                    ** 2
+                    np.pi * (((self.radius_axis[-1] / 2 - self.radius_axis[0]) * u.m).to(u.cm)) ** 2
                 )
         return self._total_area
 
-    @property
-    def energy_range(self):
+    def _set_energy_range(self, energy_range):
         """
-        Energy range used in the simulation.
+        Parameters
+        ----------
+        energy_range: list
+        The energy range used in the simulation. It must be passed as a list of floats and the
+        energy must be in TeV.
 
-        Returns
-        -------
-        list:
-            Energy range used in the simulation [min, max]
+        Raises
+        ------
+        ValueError:
+            if input parameter is missing.
         """
-        if self._energy_range is None:
-            self._energy_range = [
-                self.config["E_range"][0] * u.TeV,
-                self.config["E_range"][1] * u.TeV,
-            ]
-        return self._energy_range
+        if energy_range is None:
+            try:
+                self.energy_range = [
+                    self.config["E_range"][0] * u.TeV,
+                    self.config["E_range"][1] * u.TeV,
+                ]
+            except TypeError as exc:  # E_range not in self.config
+                msg = (
+                    "energy_range needs to be passed as argument (minimum and maximum"
+                    " energies in TeV)."
+                )
+                self._logger.error(msg)
+                raise ValueError(msg) from exc
+        else:
+            if isinstance(energy_range, u.Quantity):
+                self.energy_range = energy_range.to(u.TeV)
+            else:
+                self.energy_range = energy_range * u.TeV
 
     @staticmethod
     def _produce_triggered_to_sim_fraction_hist(events_histogram, triggered_events_histogram):
@@ -344,7 +381,6 @@ class SimtelIOHistogram:
             # Get the simulated and triggered 2D histograms from the simtel_array output file
             if events_histogram is None and triggered_events_histogram is None:
                 events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
-
             # Calculate triggered/simulated event 1D histogram (energy dependent)
             triggered_to_sim_fraction_hist = self._produce_triggered_to_sim_fraction_hist(
                 events_histogram, triggered_events_histogram
@@ -480,10 +516,11 @@ class SimtelIOHistogram:
         Get the particle distribution function.
 
         This depends  on whether one wants the reference CR distribution or the distribution
-        used in the simulation.This is controlled by label.
+        used in the simulation. This is controlled by label.
         By using label="reference", one gets the distribution function according to a pre-defined CR
         distribution, while by using label="simulation", the spectral index of the distribution
-        function from the simulation is used.
+        function from the simulation is used. Naturally, label="simulation" only works when the
+        input file is a .simtel file and not a .hdata file.
 
         Parameters
         ----------
@@ -514,9 +551,21 @@ class SimtelIOHistogram:
         -------
         ctao_cr_spectra.spectral.PowerLaw
             The function describing the spectral distribution.
+        Raises
+        ------
+        ValueError:
+            if input parameter is missing.
         """
         spectral_distribution = copy.copy(IRFDOC_PROTON_SPECTRUM)
-        spectral_distribution.index = self.config["spectral_index"]
+        try:
+            spectral_distribution.index = self.config["spectral_index"]
+        except TypeError as exc:
+            msg = (
+                "spectral_index not found in the configuration of the file. "
+                "Consider using a .simtel file instead."
+            )
+            self._logger.error(msg)
+            raise ValueError from exc
         return spectral_distribution
 
     def estimate_observation_time(self, stacked_num_simulated_events=None):
