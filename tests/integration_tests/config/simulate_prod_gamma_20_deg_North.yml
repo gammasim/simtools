@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg_north
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
+    LABEL: test-production-North
     MODEL_VERSION: prod6
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
@@ -18,6 +19,7 @@ CTA_SIMPIPE:
     CORE_SCATTER: "10 1400 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
         test-production/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.simtel.zst
