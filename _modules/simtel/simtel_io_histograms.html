@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_histograms &#8212; simtools v0.1.dev1+g7b6545a Manual</title>
+    <title>simtel.simtel_io_histograms &#8212; simtools v0.1.dev1+gdf8faf2 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=8080ab81"></script>
+    <script src="../../_static/documentation_options.js?v=4a1844a1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7b6545a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gdf8faf2 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -417,14 +417,33 @@ document.write(`
 <span class="sd">        calculating trigger rate for individual telescopes.</span>
 <span class="sd">        If false, the area thrown is estimated based on the maximum distance as given in</span>
 <span class="sd">        the simulation configuration.</span>
+<span class="sd">    energy_range: list</span>
+<span class="sd">        The energy range used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        energy must be in TeV (as in the CORSIKA configuration).</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        energy range cannot be retrieved directly from the file.</span>
+<span class="sd">    view_cone: list</span>
+<span class="sd">        The view cone used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        view cone must be in deg (as in the CORSIKA configuration).</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        view cone cannot be retrieved directly from the file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_files</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">histogram_files</span><span class="p">,</span>
+        <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">energy_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">view_cone</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelIOHistograms.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">histogram_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">histogram_files</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span> <span class="o">=</span> <span class="n">histogram_files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="o">=</span> <span class="n">test</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_combined_hists</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_list_of_histograms</span> <span class="o">=</span> <span class="kc">None</span>
@@ -535,7 +554,10 @@ document.write(`
         <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">):</span>
             <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
-                <span class="n">file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+                <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+                <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">stacked_num_simulated_events</span> <span class="o">+=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_simulated_events</span>
             <span class="n">stacked_num_triggered_events</span> <span class="o">+=</span> <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">total_num_triggered_events</span>
@@ -563,7 +585,10 @@ document.write(`
         <span class="c1"># Using a dummy instance of SimtelIOHistogram to calculate the trigger rate for the</span>
         <span class="c1"># stacked files</span>
         <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+            <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+            <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">stacked_num_simulated_events</span><span class="p">,</span> <span class="n">stacked_num_triggered_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stacked_num_events</span><span class="p">()</span>
@@ -617,7 +642,10 @@ document.write(`
         <span class="n">triggered_event_rate_uncertainties</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i_file</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_files</span><span class="p">):</span>
             <span class="n">simtel_hist_instance</span> <span class="o">=</span> <span class="n">SimtelIOHistogram</span><span class="p">(</span>
-                <span class="n">file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">area_from_distribution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span><span class="p">,</span>
+                <span class="n">energy_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span><span class="p">,</span>
+                <span class="n">view_cone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">print_info</span><span class="p">:</span>
                 <span class="n">simtel_hist_instance</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>

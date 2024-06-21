@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_histogram &#8212; simtools v0.1.dev1+g7b6545a Manual</title>
+    <title>simtel.simtel_io_histogram &#8212; simtools v0.1.dev1+gdf8faf2 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=8080ab81"></script>
+    <script src="../../_static/documentation_options.js?v=4a1844a1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7b6545a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gdf8faf2 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -422,10 +422,21 @@ document.write(`
 <span class="sd">        calculating trigger rate for individual telescopes.</span>
 <span class="sd">        If false, the area thrown is estimated based on the maximum distance as given in</span>
 <span class="sd">        the simulation configuration.</span>
-
+<span class="sd">    energy_range: list</span>
+<span class="sd">        The energy range used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        energy must be in TeV.</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        energy range cannot be retrieved directly from the file.</span>
+<span class="sd">    view_cone: list</span>
+<span class="sd">        The view cone used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        view cone must be in deg.</span>
+<span class="sd">        This argument is only needed and used if histogram_file is a .hdata file, in which case the</span>
+<span class="sd">        view cone cannot be retrieved directly from the file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">energy_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view_cone</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelIOHistogram class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">histogram_file</span> <span class="o">=</span> <span class="n">histogram_file</span>
@@ -433,15 +444,13 @@ document.write(`
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">histogram_file</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_view_cone</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_solid_angle</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_energy_range</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_histogram</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_file</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_histogram</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">trigger_rate_uncertainty</span> <span class="o">=</span> <span class="kc">None</span>
@@ -449,6 +458,9 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_axis</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radius_axis</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span> <span class="o">=</span> <span class="n">area_from_distribution</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_view_cone</span><span class="p">(</span><span class="n">view_cone</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_energy_range</span><span class="p">(</span><span class="n">energy_range</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_initialize_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -498,10 +510,13 @@ document.write(`
 <span class="sd">            dictionary with information about the simulation (pyeventio MCRunHeader object).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If the file is a .hdata or .hdata.zst, config will continue to be None.</span>
             <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="c1"># Try to find configuration from .simtel file. If .hdata, config will be None</span>
                 <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">):</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
 
     <span class="nd">@property</span>
@@ -515,14 +530,8 @@ document.write(`
 <span class="sd">            total number of simulated events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Number of simulated showers (CORSIKA NSHOW): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;n_showers&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Number of times each simulated shower is used: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;n_use&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;n_showers&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;n_use&quot;</span><span class="p">]</span>
+            <span class="n">events_histogram</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of total simulated showers: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span>
 
@@ -541,9 +550,9 @@ document.write(`
 <span class="sd">            total number of simulated events.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">triggered_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">triggered_hist</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]))</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of triggered events: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">trigger_histogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">trigger_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of total triggered showers: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_triggered_events</span>
 
 <div class="viewcode-block" id="SimtelIOHistogram.fill_event_histogram_dicts">
@@ -585,19 +594,36 @@ document.write(`
         <span class="k">raise</span> <span class="n">HistogramIdNotFoundError</span></div>
 
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">view_cone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_set_view_cone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_cone</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        View cone used in the simulation.</span>
 
-<span class="sd">        Returns</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        view_cone: list</span>
+<span class="sd">        The view cone used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        view cone must be in deg (as in the CORSIKA configuration).</span>
+
+<span class="sd">        Raises</span>
 <span class="sd">        -------</span>
-<span class="sd">        list:</span>
-<span class="sd">            view cone used in the simulation [min, max]</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            if input parameter is missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cone</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_view_cone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_cone</span>
+        <span class="k">if</span> <span class="n">view_cone</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;view_cone needs to be passed as argument (minimum and maximum of the &quot;</span>
+                    <span class="s2">&quot;view cone radius in deg).&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">view_cone</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -626,10 +652,10 @@ document.write(`
 <span class="sd">            Total area covered on the ground covered by the simulation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">events_histogram</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_histogram_axes</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">area_from_distribution</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">events_histogram</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_histogram_axes</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">)</span>
                 <span class="n">area_from_distribution_max_radius</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">radius_axis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span>
@@ -637,33 +663,44 @@ document.write(`
                     <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">**</span><span class="mi">2</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># The max of the core range is always half the upper edge:</span>
+                <span class="c1"># self.radius_axis[-1]/2 is equal to self.config[&quot;core_range&quot;][1]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-                    <span class="o">*</span> <span class="p">(</span>
-                        <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;core_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;core_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
-                            <span class="n">u</span><span class="o">.</span><span class="n">cm</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="o">**</span> <span class="mi">2</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(((</span><span class="bp">self</span><span class="o">.</span><span class="n">radius_axis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">energy_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_set_energy_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_range</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Energy range used in the simulation.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        energy_range: list</span>
+<span class="sd">        The energy range used in the simulation. It must be passed as a list of floats and the</span>
+<span class="sd">        energy must be in TeV.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        list:</span>
-<span class="sd">            Energy range used in the simulation [min, max]</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            if input parameter is missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_energy_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_energy_range</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
-            <span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_energy_range</span>
+        <span class="k">if</span> <span class="n">energy_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># E_range not in self.config</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;energy_range needs to be passed as argument (minimum and maximum&quot;</span>
+                    <span class="s2">&quot; energies in TeV).&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_range</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="p">):</span>
@@ -724,7 +761,6 @@ document.write(`
             <span class="c1"># Get the simulated and triggered 2D histograms from the simtel_array output file</span>
             <span class="k">if</span> <span class="n">events_histogram</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">triggered_events_histogram</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_event_histogram_dicts</span><span class="p">()</span>
-
             <span class="c1"># Calculate triggered/simulated event 1D histogram (energy dependent)</span>
             <span class="n">triggered_to_sim_fraction_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span>
                 <span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span>
@@ -869,10 +905,11 @@ document.write(`
 <span class="sd">        Get the particle distribution function.</span>
 
 <span class="sd">        This depends  on whether one wants the reference CR distribution or the distribution</span>
-<span class="sd">        used in the simulation.This is controlled by label.</span>
+<span class="sd">        used in the simulation. This is controlled by label.</span>
 <span class="sd">        By using label=&quot;reference&quot;, one gets the distribution function according to a pre-defined CR</span>
 <span class="sd">        distribution, while by using label=&quot;simulation&quot;, the spectral index of the distribution</span>
-<span class="sd">        function from the simulation is used.</span>
+<span class="sd">        function from the simulation is used. Naturally, label=&quot;simulation&quot; only works when the</span>
+<span class="sd">        input file is a .simtel file and not a .hdata file.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -904,9 +941,21 @@ document.write(`
 <span class="sd">        -------</span>
 <span class="sd">        ctao_cr_spectra.spectral.PowerLaw</span>
 <span class="sd">            The function describing the spectral distribution.</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            if input parameter is missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">spectral_distribution</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">IRFDOC_PROTON_SPECTRUM</span><span class="p">)</span>
-        <span class="n">spectral_distribution</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;spectral_index&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">spectral_distribution</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;spectral_index&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;spectral_index not found in the configuration of the file. &quot;</span>
+                <span class="s2">&quot;Consider using a .simtel file instead.&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="k">return</span> <span class="n">spectral_distribution</span>
 
 <div class="viewcode-block" id="SimtelIOHistogram.estimate_observation_time">
