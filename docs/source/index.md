@@ -13,6 +13,7 @@ auxiliary_files.md
 model_parameters.md
 databases.md
 simulation_software.md
+running_simulations.md
 docker_files.md
 documentation.md
 developer_guidelines.md
