@@ -64,7 +64,9 @@ class CorsikaRunner:
         self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories("corsika", self._use_multipipe)
+        self._directory = self.runner_service.load_data_directories(
+            "corsika_simtel" if use_multipipe else "corsika"
+        )
 
     def prepare_run_script(self, use_pfp=True, **kwargs):
         """
@@ -94,7 +96,7 @@ class CorsikaRunner:
         self.corsika_config.run_number = kwargs["run_number"]
 
         script_file_path = self.runner_service.get_file_name(
-            file_type="script",
+            file_type="sub_script",
             **self.runner_service.get_info_for_file_name(self.corsika_config.run_number),
         )
         corsika_input_file = self.corsika_config.generate_corsika_input_file(self._use_multipipe)
@@ -103,7 +105,7 @@ class CorsikaRunner:
         corsika_input_tmp_name = self.corsika_config.get_corsika_config_file_name(
             file_type="config_tmp", run_number=self.corsika_config.run_number
         )
-        corsika_input_tmp_file = self._directory["input"].joinpath(corsika_input_tmp_name)
+        corsika_input_tmp_file = self._directory["inputs"].joinpath(corsika_input_tmp_name)
 
         if use_pfp:
             pfp_command = self._get_pfp_command(corsika_input_tmp_file, corsika_input_file)
@@ -129,8 +131,8 @@ class CorsikaRunner:
 
             file.write(f"export CORSIKA_DATA={self._directory['data']}\n")
             file.write("\n# Creating CORSIKA_DATA\n")
-            file.write(f"mkdir -p {self._directory['data']}\n")
-            file.write(f"cd {self._directory['data']} || exit 2\n")
+            file.write('mkdir -p "$CORSIKA_DATA"\n')
+            file.write('cd "$CORSIKA_DATA" || exit 2\n')
             if use_pfp:
                 file.write("\n# Running pfp\n")
                 file.write(pfp_command)
@@ -145,13 +147,16 @@ class CorsikaRunner:
             file.write("\n# Running corsika_autoinputs\n")
             file.write(autoinputs_command)
 
-            # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
         # Changing permissions
         os.system(f"chmod ug+x {script_file_path}")
 
         return script_file_path
+
+    def get_resources(self, run_number=None):
+        """Return computing resources used."""
+        return self.runner_service.get_resources(run_number)
 
     def _get_pfp_command(self, input_tmp_file, corsika_input_file):
         """
@@ -202,7 +207,7 @@ class CorsikaRunner:
         cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
         cmd += f" -R {run_number}"
-        cmd += f" -p {self._directory['data']}"
+        cmd += ' -p "$CORSIKA_DATA"'
         if self._keep_seeds:
             cmd += " --keep-seeds"
         cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"

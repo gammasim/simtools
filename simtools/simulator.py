@@ -202,29 +202,33 @@ class Simulator:
         CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
             Simulation runner object.
         """
+        corsika_config = CorsikaConfig(
+            array_model=self.array_model,
+            label=self.label,
+            args_dict=self.args_dict,
+        )
+        # TODO - repetitive - simplify
         if self.simulation_software == "corsika":
             return CorsikaRunner(
                 label=self.label,
-                corsika_config=CorsikaConfig(
-                    array_model=self.array_model,
-                    label=self.label,
-                    args_dict=self.args_dict,
-                ),
+                corsika_config=corsika_config,
                 simtel_path=self.args_dict.get("simtel_path"),
                 keep_seeds=False,
                 use_multipipe=False,
             )
         if self.simulation_software == "simtel":
-            return SimulatorArray(self.args_dict)
+            return SimulatorArray(
+                label=self.label,
+                corsika_config=corsika_config,
+                simtel_path=self.args_dict.get("simtel_path"),
+                use_multipipe=False,
+            )
         if self.simulation_software == "corsika_simtel":
             return CorsikaSimtelRunner(
                 label=self.label,
-                corsika_config=CorsikaConfig(
-                    array_model=self.array_model,
-                    label=self.label,
-                    args_dict=self.args_dict,
-                ),
+                corsika_config=corsika_config,
                 simtel_path=self.args_dict.get("simtel_path"),
+                use_multipipe=True,
             )
         return None
 
@@ -300,7 +304,7 @@ class Simulator:
         )
 
         for run, _ in runs_and_files_to_submit.items():
-            output_file_name = self._simulation_runner.get_file_name(
+            output_file_name = self.runner_services.get_file_name(
                 file_type="output", **self.runner_services.get_info_for_file_name(run)
             )
             print(f"{str(output_file_name)} (file exists: {Path.exists(output_file_name)})")
@@ -435,7 +439,7 @@ class Simulator:
             runs_to_list = self._get_runs_to_simulate(run_list=run_list, run_range=run_range)
 
             for run in runs_to_list:
-                output_file_name = self._simulation_runner.get_file_name(
+                output_file_name = self.runner_services.get_file_name(
                     file_type="output", **self.runner_services.get_info_for_file_name(run)
                 )
                 self._results["output"].append(str(output_file_name))

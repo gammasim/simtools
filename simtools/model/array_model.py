@@ -108,8 +108,6 @@ class ArrayModel:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
             )
-
-        self._set_config_file_directory()
         telescope_model = self._build_telescope_models(site_model, array_elements)
         return array_elements, site_model, telescope_model
 
@@ -136,10 +134,6 @@ class ArrayModel:
             Site name.
         """
         return self.site_model.site
-
-    def _set_config_file_directory(self):
-        """Define and create config file directory."""
-        self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
 
     def _build_telescope_models(self, site_model, array_elements):
         """
@@ -206,7 +200,7 @@ class ArrayModel:
             model_version=self.model_version,
             label=self.label,
         )
-        self._config_file_path = self._config_file_directory.joinpath(config_file_name)
+        self._config_file_path = self.get_config_directory().joinpath(config_file_name)
 
         # Writing parameters to the file
         self._logger.info(f"Writing array configuration file into {self._config_file_path}")
@@ -257,6 +251,8 @@ class ArrayModel:
         Path
             Path of the config directory path for sim_telarray.
         """
+        if self._config_file_directory is None:
+            self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
         return self._config_file_directory
 
     def _load_array_element_positions_from_file(self, array_elements_file, site):
