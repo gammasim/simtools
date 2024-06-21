@@ -35,6 +35,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         use_multipipe=False,
     ):
         self.corsika_config = corsika_config
+        self.corsika_config.set_output_file_and_directory(use_multipipe)
         CorsikaRunner.__init__(
             self,
             corsika_config=corsika_config,
@@ -44,7 +45,11 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
             use_multipipe=use_multipipe,
         )
         SimulatorArray.__init__(
-            self, corsika_config=corsika_config, simtel_path=simtel_path, label=label
+            self,
+            corsika_config=corsika_config,
+            simtel_path=simtel_path,
+            label=label,
+            use_multipipe=use_multipipe,
         )
 
     def prepare_run_script(self, use_pfp=False, **kwargs):
@@ -65,9 +70,8 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         Path:
             Full path of the run script file.
         """
-        run_script = CorsikaRunner.prepare_run_script(self, use_pfp=use_pfp, **kwargs)
         self.export_multipipe_script(**kwargs)
-        return run_script
+        return CorsikaRunner.prepare_run_script(self, use_pfp=use_pfp, **kwargs)
 
     def export_multipipe_script(self, **kwargs):
         """
@@ -100,6 +104,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         )
         with open(multipipe_file, "w", encoding="utf-8") as file:
             file.write(f"{run_command}")
+        self._logger.info(f"Multipipe script - {multipipe_file}")
         self._export_multipipe_executable(multipipe_file)
 
     def _export_multipipe_executable(self, multipipe_file):

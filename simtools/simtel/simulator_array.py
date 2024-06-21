@@ -28,6 +28,7 @@ class SimulatorArray(SimtelRunner):
         corsika_config,
         simtel_path,
         label=None,
+        use_multipipe=False,
     ):
         """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
@@ -39,7 +40,9 @@ class SimulatorArray(SimtelRunner):
         self._log_file = None
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories("simtel")
+        self._directory = self.runner_service.load_data_directories(
+            "corsika_simtel" if use_multipipe else "simtel"
+        )
 
     def _shall_run(self, **kwargs):
         """Tells if simulations should be run again based on the existence of output files."""
@@ -94,3 +97,7 @@ class SimulatorArray(SimtelRunner):
             self._logger.error(msg)
             raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
+
+    def get_resources(self, run_number=None):
+        """Return computing resources used."""
+        return self.runner_service.get_resources(run_number)

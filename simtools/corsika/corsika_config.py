@@ -252,12 +252,12 @@ class CorsikaConfig:
         use_multipipe: bool
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray.
+
         """
         if self._is_file_updated:
-            self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}.")
+            self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}")
             return self.config_file_path
-        sub_dir = "corsika_simtel" if use_multipipe else "corsika"
-        _output_generic_file_name = self._set_output_file_and_directory(sub_dir)
+        _output_generic_file_name = self.set_output_file_and_directory(use_multipipe=use_multipipe)
         self._logger.info(f"Exporting CORSIKA input file to {self.config_file_path}")
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
@@ -323,6 +323,8 @@ class CorsikaConfig:
         """
         Get a CORSIKA config style file name for various file types.
 
+        TODO - overlap with runner_services.get_file_name
+
         Parameters
         ----------
         file_type: str
@@ -370,7 +372,7 @@ class CorsikaConfig:
         if file_type == "output_generic":
             # The XXXXXX will be replaced by the run number after the pfp step with sed
             file_name = (
-                f"corsika_runXXXXXX_"
+                f"runXXXXXX_"
                 f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
                 f"azm{self.azimuth_angle:03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
@@ -381,23 +383,25 @@ class CorsikaConfig:
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
-    def _set_output_file_and_directory(self, sub_dir="corsika"):
+    def set_output_file_and_directory(self, use_multipipe=False):
         """
         Set output file names and directories.
 
         Parameters
         ----------
-        sub_dir: str
-            Sub-directory where the files will be stored.
+        use_multipipe: bool
+            Whether to set the CORSIKA Inputs file to pipe
+            the output directly to sim_telarray. Defines directory names.
 
         Returns
         -------
         str
             Output file name.
         """
+        sub_dir = "corsika_simtel" if use_multipipe else "corsika"
         config_file_name = self.get_corsika_config_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
-        self._logger.debug(f"Creating directory {file_directory}.")
+        self._logger.debug(f"Creating directory {file_directory}")
         file_directory.mkdir(parents=True, exist_ok=True)
         self.config_file_path = file_directory.joinpath(config_file_name)
 
