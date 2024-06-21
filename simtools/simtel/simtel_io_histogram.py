@@ -57,7 +57,7 @@ class SimtelIOHistogram:
         energy range cannot be retrieved directly from the file.
     view_cone: list
         The view cone used in the simulation. It must be passed as a list of floats and the
-        view cone must be in deg (as in the CORSIKA configuration).
+        view cone must be in deg.
         This argument is only needed and used if histogram_file is a .hdata file, in which case the
         view cone cannot be retrieved directly from the file.
     """
