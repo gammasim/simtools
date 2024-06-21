@@ -180,7 +180,10 @@ def main():
             "data_directory": Path(args_dict["data_directory"]) / label,
             "site": args_dict["site"],
             "layout_name": args_dict["array_layout_name"],
-            "run_range": [args_dict["run_number"], args_dict["run_number"] + args_dict["nruns"]],
+            "run_range": [
+                args_dict["run_number"],
+                args_dict["run_number"] + args_dict["nruns"] - 1,
+            ],
             "nshow": args_dict["nevents"],
             "primary": args_dict["primary"],
             "zenith": args_dict["zenith"] * u.deg,
@@ -207,6 +210,11 @@ def main():
         mongo_db_config=db_config,
         model_version=args_dict.get("model_version", None),
     )
+
+    if args_dict["array_layout_name"] in ["1MST", "1LST", "1SST"]:
+        shower_simulator.array_model.site_model.change_parameter(
+            "array_triggers", "array_trigger_1MST_lapalma.dat"
+        )
 
     shower_simulator.simulate()
 
