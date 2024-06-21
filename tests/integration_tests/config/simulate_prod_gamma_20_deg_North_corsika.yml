@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg_corsika
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika
+    LABEL: test-production-North-corsika
     MODEL_VERSION: prod6
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
