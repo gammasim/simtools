@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application validate the camera efficiency by simulating it using \
     the testeff program provided by sim_telarray.
 
@@ -76,10 +74,7 @@ from simtools.model.telescope_model import TelescopeModel
 
 
 def _parse(label):
-    """
-    Parse command line configuration
-
-    """
+    """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
         description=(

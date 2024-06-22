@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application adds a new parameter / value to a collection in the DB using a json
     file as input.
 

@@ -25,9 +25,7 @@ class Mirrors:
     """
 
     def __init__(self, mirror_list_file, parameters=None):
-        """
-        Initialize Mirrors.
-        """
+        """Initialize Mirrors."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
 
@@ -43,7 +41,7 @@ class Mirrors:
     def _read_mirror_list(self):
         """
         Read the mirror lists from disk and store the data. Allow reading of mirror lists in \
-        sim_telarray and ecsv format
+        sim_telarray and ecsv format.
         """
         if str(self._mirror_list_file).find("ecsv") > 0:
             self._read_mirror_list_from_ecsv()
@@ -234,6 +232,4 @@ class Mirrors:
         return return_values
 
     def plot_mirror_layout(self):
-        """
-        Plot the mirror layout (not implemented yet).
-        """
+        """Plot the mirror layout (not implemented yet)."""

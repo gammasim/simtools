@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application validates the optical model parameters through ray tracing simulations \
     of the whole telescope, assuming a point-like light source. The output includes PSF (D80), \
     effective mirror area and effective focal length as a function of the off-axis angle. \
@@ -84,10 +82,7 @@ from simtools.ray_tracing import RayTracing
 
 
 def _parse(label):
-    """
-    Parse command line configuratio
-
-    """
+    """Parse command line configuratio."""
     config = configurator.Configurator(
         label=label,
         description=(

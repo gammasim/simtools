@@ -44,10 +44,7 @@ class MetadataCollector:
     """
 
     def __init__(self, args_dict, metadata_file_name=None, data_model_name=None):
-        """
-        Initialize metadata collector.
-
-        """
+        """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
         self.observatory = "cta"
         self.io_handler = io_handler.IOHandler()
@@ -65,10 +62,7 @@ class MetadataCollector:
         self.collect_meta_data()
 
     def collect_meta_data(self):
-        """
-        Collect and verify product metadata from different sources.
-
-        """
+        """Collect and verify product metadata from different sources."""
         self._fill_contact_meta(self.top_level_meta[self.observatory]["contact"])
         self._fill_product_meta(self.top_level_meta[self.observatory]["product"])
         self._fill_activity_meta(self.top_level_meta[self.observatory]["activity"])
@@ -146,7 +140,7 @@ class MetadataCollector:
 
     def get_site(self, from_input_meta=False):
         """
-        Get site entry from metadata. Allow to get from collected or from input metadata
+        Get site entry from metadata. Allow to get from collected or from input metadata.
 
         Parameters
         ----------
@@ -389,7 +383,7 @@ class MetadataCollector:
 
     def _fill_activity_meta(self, activity_dict):
         """
-        Fill activity (software) related metadata
+        Fill activity (software) related metadata.
 
         Parameters
         ----------
@@ -500,7 +494,7 @@ class MetadataCollector:
     @staticmethod
     def _remove_line_feed(string):
         """
-        Remove all line feeds from a string
+        Remove all line feeds from a string.
 
         Parameters
         ----------

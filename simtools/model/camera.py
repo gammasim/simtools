@@ -240,7 +240,7 @@ class Camera:
 
     def get_camera_fill_factor(self):
         """
-        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2
+        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2.
 
         Returns
         -------
@@ -323,7 +323,7 @@ class Camera:
     def _find_neighbours(x_pos, y_pos, radius):
         """
         use a KD-Tree to quickly find nearest neighbours (e.g., of the pixels in a camera or mirror\
-        facets)
+        facets).
 
         Parameters
         ----------

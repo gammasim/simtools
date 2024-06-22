@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This applications derives the parameters mirror_reflection_random_angle, \
     mirror_align_random_horizontal and mirror_align_random_vertical using \
     cumulative PSF measurement.
