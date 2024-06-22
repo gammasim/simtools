@@ -39,7 +39,6 @@ class PSFImage:
         """
         Initialize PSFImage class.
         """
-
         self._logger = logging.getLogger(__name__)
 
         self._total_photons = None
@@ -419,7 +418,6 @@ class PSFImage:
         -------
         (radius, intensity)
         """
-
         if radius is not None:
             radius_all = radius.to(u.cm).value
         else:
@@ -440,7 +438,8 @@ class PSFImage:
         Parameters
         ----------
         **kwargs:
-            image_* for the histogram plot and psf_* for the psf circle."""
+            image_* for the histogram plot and psf_* for the psf circle.
+        """
         data = self.get_cumulative_data()
         plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
 

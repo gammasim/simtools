@@ -63,7 +63,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(

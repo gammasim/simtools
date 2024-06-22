@@ -120,7 +120,6 @@ def _parse(description=None):
         Command line parser object.
 
     """
-
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
         "--production_config",
