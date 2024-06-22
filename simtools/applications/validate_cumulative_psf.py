@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-    This application simulates the cumulative PSF and compare with data (if available).
+    Simulate the cumulative PSF and compare with data (if available).
 
     The telescope zenith angle and the source distance can be set by command line arguments.
 
