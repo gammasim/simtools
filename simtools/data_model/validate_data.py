@@ -54,7 +54,7 @@ class DataValidator:
 
     def validate_and_transform(self, is_model_parameter=False):
         """
-        Data and data file validation.
+        Validate data and data file.
 
         Parameters
         ----------

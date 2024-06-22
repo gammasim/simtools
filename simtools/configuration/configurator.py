@@ -68,7 +68,7 @@ class Configurator:
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
-        Returns dictionary of default configuration.
+        Return dictionary of default configuration.
 
         Parameters
         ----------

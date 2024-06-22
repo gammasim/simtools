@@ -461,7 +461,7 @@ class ModelParameter:
         shutil.copy(file_path, self.config_file_directory)
 
     def export_model_files(self):
-        """Exports the model files into the config file directory."""
+        """Export the model files into the config file directory."""
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
         if self._added_parameter_files is not None:
