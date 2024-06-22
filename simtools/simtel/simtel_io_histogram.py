@@ -1,5 +1,6 @@
 """This module reads the content of either a single histogram (.hdata, or .hdata.zst) or a single
-simtel_array output file (.simtel or .simtel.zst)."""
+simtel_array output file (.simtel or .simtel.zst).
+"""
 
 import copy
 import logging
@@ -227,7 +228,7 @@ class SimtelIOHistogram:
         view cone must be in deg (as in the CORSIKA configuration).
 
         Raises
-        -------
+        ------
         ValueError:
             if input parameter is missing.
         """
@@ -551,6 +552,7 @@ class SimtelIOHistogram:
         -------
         ctao_cr_spectra.spectral.PowerLaw
             The function describing the spectral distribution.
+
         Raises
         ------
         ValueError:

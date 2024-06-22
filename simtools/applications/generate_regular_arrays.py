@@ -57,7 +57,6 @@ def _parse():
 
 def main():
     """Create layout array files (ecsv) of regular arrays."""
-
     args_dict, _ = _parse()
 
     logger = logging.getLogger()

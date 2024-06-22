@@ -118,7 +118,6 @@ class CorsikaDefaultConfig:
         energy_ranges: dict
             Dictionary with the default energy ranges for the various primaries.
         """
-
         energy_ranges = defaultdict(dict)
         energy_ranges["gamma"][20] = [3 * u.GeV, 330 * u.TeV]
         energy_ranges["gamma"][40] = [6 * u.GeV, 660 * u.TeV]
@@ -159,7 +158,6 @@ class CorsikaDefaultConfig:
         number_of_showers: dict
             Dictionary with the default number of showers for the various primaries.
         """
-
         number_of_showers = defaultdict(dict)
         number_of_showers["gamma"][20] = 5000
         number_of_showers["gamma"][40] = 5000
@@ -225,7 +223,6 @@ class CorsikaDefaultConfig:
         energy_range: list
             List with the energy range for the primary particle for the given zenith angle.
         """
-
         zenith_angles_to_interpolate = [*self.energy_ranges[self.primary].keys()]
         min_energy_to_interpolate = [
             energy[0].to_value(u.GeV) for energy in self.energy_ranges[self.primary].values()
@@ -256,7 +253,6 @@ class CorsikaDefaultConfig:
         number_of_showers: int
             Number of showers for the primary particle for the given zenith angle.
         """
-
         zenith_angles_to_interpolate = [*self.energy_ranges[self.primary].keys()]
         number_of_showers = [*self.number_of_showers[self.primary].values()]
 

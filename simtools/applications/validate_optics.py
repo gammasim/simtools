@@ -88,7 +88,6 @@ def _parse(label):
     Parse command line configuratio
 
     """
-
     config = configurator.Configurator(
         label=label,
         description=(

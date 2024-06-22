@@ -46,7 +46,6 @@ marker_scaling : float, optional.
 
 Examples
 --------
-
 Plot layout with the name "test_layout":
 
 .. code-block:: console

@@ -1,6 +1,7 @@
 """This module reads the content of either multiple histogram (.hdata, or .hdata.zst) or
 simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
-simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files."""
+simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.
+"""
 
 import copy
 import logging
