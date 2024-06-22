@@ -770,7 +770,7 @@ def separate_args_and_config_data(expected_args, **kwargs):
 
 def program_is_executable(program):
     """
-    Checks if program exists and is executable.
+    Check if program exists and is executable.
 
     Follows https://stackoverflow.com/questions/377017/
 

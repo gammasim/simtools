@@ -154,7 +154,7 @@ def get_list_of_simtel_parameters(simtel_config_file, logger):
 
 def read_simtel_config_file(args_dict, logger, schema_file, camera_pixels=None):
     """
-    Reads the simtel configuration file.
+    Read the simtel configuration file.
 
     Parameters
     ----------

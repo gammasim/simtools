@@ -163,7 +163,7 @@ def add_parameters(
     mirror_reflection_2=0.035,
 ):
     """
-    Transforms and add parameters to the all_parameters list.
+    Transform and add parameters to the all_parameters list.
 
     Parameters
     ----------
@@ -301,15 +301,13 @@ def load_and_process_data(args_dict):
 
 
 def calculate_rmsd(data, sim):
-    """
-    Calculates the Root Mean Squared Deviation to be used as metric to find the best parameters.
-    """
+    """Calculate Root Mean Squared Deviation to be used as metric to find the best parameters."""
     return np.sqrt(np.mean((data - sim) ** 2))
 
 
 def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     """
-    Runs the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.
+    Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.
 
     Plotting is optional (if plot=True).
     """
