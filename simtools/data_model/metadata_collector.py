@@ -26,11 +26,10 @@ __all__ = ["MetadataCollector"]
 
 class MetadataCollector:
     """
-    Collects and combines metadata associated to describe the current
-    simtools activity and its data products. Collect as much metadata
-    as possible from command line configuration, input data, environment,
-    schema descriptions.
-    Depends on the CTAO top-level metadata definition.
+    Collects and combines metadata to describe the current simtools activity and its data products.
+
+    Collect as much metadata as possible from command line configuration, input data, environment,
+    schema descriptions.  Depends on the CTAO top-level metadata definition.
 
     Parameters
     ----------
@@ -75,6 +74,7 @@ class MetadataCollector:
     def get_data_model_schema_file_name(self):
         """
         Return data model schema file name.
+
         The schema file name is taken (in this order) from the command line,
         from the metadata file, from the data model name, or from the input
         metadata file.
@@ -251,9 +251,10 @@ class MetadataCollector:
 
     def _read_input_metadata_from_file(self, metadata_file_name=None):
         """
-        Read and validate input metadata from file. In case of an ecsv file including a
-        table, the metadata is read from the table meta data. Returns empty dict in case
-        no file is given.
+        Read and validate input metadata from file.
+
+        In case of an ecsv file including a table, the metadata is read from the table meta data.
+        Returns empty dict in case no file is given.
 
         Parameter
         ---------
@@ -330,8 +331,10 @@ class MetadataCollector:
 
     def _fill_product_meta(self, product_dict):
         """
-        Fill metadata for data products fields. If a schema file is given for the data products,
-        try and read product:data:model metadata from there.
+        Fill metadata for data products fields.
+
+        If a schema file is given for the data products, try and read product:data:model metadata
+        from there.
 
         Parameters
         ----------
@@ -401,8 +404,9 @@ class MetadataCollector:
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """
-        Merge two config dicts and replace values in dict_high which are Nonetype. Priority to \
-         dict_high in case of conflicting entries.
+        Merge two config dicts and replace values in dict_high which are Nonetype.
+
+        Priority to dict_high in case of conflicting entries.
 
         Parameters
         ----------
@@ -438,8 +442,9 @@ class MetadataCollector:
 
     def _fill_context_sim_list(self, meta_list, new_entry_dict):
         """
-        Fill list-type entries into metadata. Take into account the first list entry is the default
-        value filled with Nones.
+        Fill list-type entries into metadata.
+
+        Take into account the first list entry is the default value filled with Nones.
 
         Parameters
         ----------
@@ -468,6 +473,7 @@ class MetadataCollector:
     def _process_metadata_from_file(self, meta_dict):
         """
         Process metadata from file to ensure compatibility with metadata model.
+
         Changes keys to lower case and removes line feeds from description fields.
 
         Parameters
@@ -511,6 +517,7 @@ class MetadataCollector:
     def _copy_list_type_metadata(self, context_dict, _input_metadata, key):
         """
         Copy list-type metadata from file.
+
         Very fine tuned.
 
         Parameters

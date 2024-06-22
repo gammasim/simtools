@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
 r"""
-    This application simulates showers to be used in trigger rate calculations.
+    Simulate showers to be used in trigger rate calculations.
+
     Arrays with one or four telescopes can be used, in case of \
     mono or stereo trigger configurations, respectively.
 

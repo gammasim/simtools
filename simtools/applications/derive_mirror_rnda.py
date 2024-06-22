@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-    Derive the simulation model parameter **mirror_reflection_random_angle**
-    (sometimes called mirror roughness) to match the measured containment diameter
-    of the optical point-spread function (PSF) of individual mirror panels.
+    Derive the simulation model parameter mirror_reflection_random_angle.
+
+    This parameter is sometimes called mirror roughness and used  to match the measured
+    containment diameter of the optical point-spread function (PSF) of individual mirror panels.
 
     Description
     -----------
@@ -214,8 +215,9 @@ def _parse(label):
 
 def _define_telescope_model(label, args_dict, db_config):
     """
-    Define telescope model and update configuration
-    with mirror list and/or random focal length given
+    Define telescope model.
+
+    This includes updating the configuration with mirror list and/or random focal length given
     as input.
 
     Attributes
@@ -254,8 +256,7 @@ def _print_and_write_results(
     args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
     """
-    Print results to screen and write metadata and data files
-    in the requested format.
+    Print results to screen and write metadata and data files in the requested format.
 
     """
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
@@ -304,8 +305,7 @@ def _print_and_write_results(
 
 def _get_psf_containment(logger, args_dict):
     """
-    Read measured single-mirror point-spread function (containment)
-    from file and return mean and sigma.
+    Read measured single-mirror point-spread function from file and return mean and sigma.
 
     """
     # If this is a test, read just the first few lines since we only simulate those mirrors

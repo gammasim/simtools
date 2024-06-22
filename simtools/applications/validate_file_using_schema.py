@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 r"""
     Validate a file using a schema.
+
     Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
 
     Command line arguments
@@ -102,6 +103,7 @@ def _get_schema_file_name(args_dict, data_dict=None):
 def validate_schema(args_dict, logger):
     """
     Validate a schema file given in yaml or json format.
+
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
