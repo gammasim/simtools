@@ -6,8 +6,9 @@ from scipy.interpolate import interp1d
 
 class CorsikaDefaultConfig:
     """
-    This class contains the default configuration for CORSIKA parameters for
-    the various primary particles. It includes all basic dependencies on zenith angles, etc.
+    Default configuration for CORSIKA parameters for the various primary particles.
+
+    It includes all basic dependencies on zenith angles, etc.
     The default values defined in this class assume the full CTAO arrays are simulated,
     including full CTAO energy range and number of events optimized to run for roughly 24 hours
     on a single node on the grid.
@@ -109,6 +110,7 @@ class CorsikaDefaultConfig:
     def _define_hardcoded_energy_ranges(self):
         """
         Define the hardcoded energy ranges for the various primaries.
+
         These energy ranges are for the full CTAO energy range (for both sites).
 
         Returns
@@ -263,6 +265,7 @@ class CorsikaDefaultConfig:
     def view_cone_for_primary(self):
         """
         Get the view cone for the primary particle.
+
         All diffuse primaries have a view cone of 10 deg by default.
 
         Returns

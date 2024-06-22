@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-    This applications derives the parameters mirror_reflection_random_angle, \
-    mirror_align_random_horizontal and mirror_align_random_vertical using \
-    cumulative PSF measurement.
+    Derives the mirror alignment parameters using cumulative PSF measurement.
+
+    This includes parameters mirror_reflection_random_angle, \
+    mirror_align_random_horizontal and mirror_align_random_vertical.
 
     The telescope zenith angle and the source distance can be set by command line arguments.
 
@@ -301,16 +302,16 @@ def load_and_process_data(args_dict):
 
 def calculate_rmsd(data, sim):
     """
-    Calculates the Root Mean Squared Deviation to be used
-    as metric to find the best parameters.
+    Calculates the Root Mean Squared Deviation to be used as metric to find the best parameters.
     """
     return np.sqrt(np.mean((data - sim) ** 2))
 
 
 def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     """
-    Runs the tuning for one set of parameters, add a plot to the pdfPages
-    (if plot=True) and returns the RMSD and the D80.
+    Runs the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.
+
+    Plotting is optional (if plot=True).
     """
     cumulative_psf = "Cumulative PSF"
 

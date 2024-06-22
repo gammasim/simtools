@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 r"""
-    This application calculate the camera FoV of the telescope requested and plot the camera \
-    as seen for an observer facing the camera.
+    Calculate the camera FoV of the telescope requested and plot the camera.
+
+    The orientation for the plotting is "as seen for an observer facing the camera".
 
     An example of the camera plot can be found below.
 

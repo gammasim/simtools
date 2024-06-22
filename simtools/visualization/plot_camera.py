@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     """
-    Plot the pixel layout for an observer facing the camera. Including in the plot edge pixels,\
-    off pixels, pixel ID for the first 50 pixels, coordinate systems, FOV, focal length and the\
-    average edge radius.
+    Plot the pixel layout for an observer facing the camera.
+
+    Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
+    coordinate systems, FOV, focal length and the average edge radius.
 
     Parameters
     ----------
@@ -189,8 +190,10 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
 
 def _plot_axes_def(camera, plot, rotate_angle):
     """
-    Plot three axes definitions on the pyplot.plt instance provided. The three axes are Alt/Az,\
-    the camera coordinate system and the original coordinate system the pixel list was provided.
+    Plot three axes definitions on the pyplot.plt instance provided.
+
+    The three axes are Alt/Az, the camera coordinate system and the original coordinate
+    system the pixel list was provided.
 
     Parameters
     ----------

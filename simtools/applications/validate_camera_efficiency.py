@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    This application validate the camera efficiency by simulating it using \
-    the testeff program provided by sim_telarray.
+    Validate the camera efficiency by simulating it using the sim_telarray testeff program.
 
     The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.

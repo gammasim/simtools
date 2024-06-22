@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 r"""
-This application calculates the trigger rate from a simtel_array output file, a list of
+Calculates array or single-telescope trigger rates.
+
+The applications reads from a simtel_array output file, a list of
 simtel_array output files ou from a file containing a list of simtel_array files.
 
 

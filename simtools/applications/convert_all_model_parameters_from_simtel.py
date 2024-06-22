@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 r"""
-    Convert all simulation model parameters exported from sim_telarray format using
-    schema files. Check value, type, and range, convert units, and write json files
+    Convert all simulation model parameters exported from sim_telarray format using schema files.
+
+    Check value, type, and range, convert units, and write json files
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
@@ -182,7 +183,8 @@ def read_simtel_config_file(args_dict, logger, schema_file, camera_pixels=None):
 
 def get_number_of_camera_pixel(args_dict, logger):
     """
-    Get the number of camera pixels from the simtel configuration file
+    Get the number of camera pixels from the simtel configuration file.
+
     Required to set the dimension some of the parameter correctly, as simtel
     in some cases does not provide the dimension ('all:' in the parameter files).
 
@@ -218,6 +220,7 @@ def get_number_of_camera_pixel(args_dict, logger):
 def read_and_export_parameters(args_dict, logger):
     """
     Read and export parameters from simtel configuration file to json files.
+
     Only applicable parameters are exported to json.
     Provide extensive logging information on the parameters found in the simtel
     configuration file.
@@ -284,8 +287,9 @@ def read_and_export_parameters(args_dict, logger):
 
 def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger):
     """
-    Print simtel parameters not found in schema files and simtools parameters not found in simtel
-    configuration file. For simtel parameters not found, check if the setting for the chose
+    Print simtel/simtools parameter not found in schema and ocnfiguration files.
+
+    For simtel parameters not found, check if the setting for the chose
     telescope is different from the default values.
 
     Parameters
@@ -337,6 +341,7 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
 def print_list_of_files(args_dict, logger):
     """
     Print model parameters which describe a file name.
+
     This is useful to find files which are part of the model.
 
     Parameters

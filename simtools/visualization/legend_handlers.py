@@ -61,8 +61,9 @@ def calculate_center(handlebox, width_factor=3, height_factor=3):
 
 class TelescopeHandler:
     """
-    Telescope handler that centralizes the telescope information. Individual telescopes handlers
-    inherit from this class.
+    Telescope handler that centralizes the telescope information.
+
+    Individual telescopes handlers inherit from this class.
     """
 
     def __init__(self, radius=None):

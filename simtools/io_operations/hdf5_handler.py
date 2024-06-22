@@ -19,6 +19,7 @@ _logger = logging.getLogger(__name__)
 def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data):
     """
     Create and fill an hdf5 table with the histogram information.
+
     It works for both 1D and 2D distributions.
 
     Parameters
