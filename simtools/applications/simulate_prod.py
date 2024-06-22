@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application is used to run simulations for productions (typically on the grid).
     It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
     with the provided "prod_tag" simulation configuration (e.g., Prod6)
@@ -107,7 +105,7 @@ from simtools.simulator import Simulator
 
 def _parse(description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

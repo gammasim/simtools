@@ -43,10 +43,7 @@ class DataValidator:
         data_dict=None,
         check_exact_data_type=True,
     ):
-        """
-        Initialize validation class and read required reference data columns
-
-        """
+        """Initialize validation class and read required reference data columns."""
         self._logger = logging.getLogger(__name__)
 
         self.data_file_name = data_file
@@ -107,10 +104,7 @@ class DataValidator:
             pass
 
     def validate_parameter_and_file_name(self):
-        """
-        Validate that file name and key 'parameter_name' in data dict are the same.
-
-        """
+        """Validate that file name and key 'parameter_name' in data dict are the same."""
         if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
             self._logger.error(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
@@ -161,10 +155,7 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
 
     def _validate_data_table(self):
-        """
-        Validate tabulated data.
-
-        """
+        """Validate tabulated data."""
         try:
             self._data_description = self._read_validation_schema(self.schema_file_name)[0].get(
                 "table_columns", None
@@ -222,7 +213,7 @@ class DataValidator:
     def _sort_data(self):
         """
         Sort data according to one data column (if required by any column attribute). Data is
-         either sorted or reverse sorted
+         either sorted or reverse sorted.
 
         Raises
         ------
@@ -660,10 +651,7 @@ class DataValidator:
             raise
 
     def _prepare_model_parameter(self):
-        """
-        Apply data preparation for model parameters.
-
-        """
+        """Apply data preparation for model parameters."""
         if isinstance(self.data_dict["value"], str):
             try:
                 _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(

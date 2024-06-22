@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-Summary
--------
+r"""
 This application calculates the trigger rate from a simtel_array output file, a list of
 simtel_array output files ou from a file containing a list of simtel_array files.
 
@@ -53,7 +51,7 @@ from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

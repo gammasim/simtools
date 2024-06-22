@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
+r"""
     Convert simulation model parameter from sim_telarray format using the corresponding
     schema file. Check value, type, and range and write a json file
     ready to be submitted to the model database.
@@ -48,7 +46,7 @@ from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

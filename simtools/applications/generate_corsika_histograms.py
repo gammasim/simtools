@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application generates a set of histograms of the distribution of Cherenkov photons on the
     ground (at observation level) read from the CORSIKA IACT output file provided as input.
 
@@ -182,7 +180,7 @@ logger = logging.getLogger()
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

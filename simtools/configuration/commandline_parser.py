@@ -65,10 +65,7 @@ class CommandLineParser(argparse.ArgumentParser):
         self.initialize_application_execution_arguments()
 
     def initialize_config_files(self):
-        """
-        Initialize configuration files.
-
-        """
+        """Initialize configuration files."""
         _job_group = self.add_argument_group("configuration")
         _job_group.add_argument(
             "--config",
@@ -86,9 +83,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_path_arguments(self):
-        """
-        Initialize paths.
-        """
+        """Initialize paths."""
         _job_group = self.add_argument_group("paths")
         _job_group.add_argument(
             "--data_path",
@@ -125,9 +120,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_output_arguments(self):
-        """
-        Initialize application output files(s)
-        """
+        """Initialize application output files(s)."""
         _job_group = self.add_argument_group("output")
         _job_group.add_argument(
             "--output_file",
@@ -151,9 +144,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_application_execution_arguments(self):
-        """
-        Initialize application execution arguments.
-        """
+        """Initialize application execution arguments."""
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
             "--test",
@@ -178,9 +169,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_db_config_arguments(self):
-        """
-        Initialize DB configuration parameters.
-        """
+        """Initialize DB configuration parameters."""
         _job_group = self.add_argument_group("MongoDB configuration")
         _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
         _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
@@ -211,10 +200,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
     def initialize_job_submission_arguments(self):
-        """
-        Initialize job submission arguments for simulator.
-
-        """
+        """Initialize job submission arguments for simulator."""
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
             "--submit_command",
@@ -266,7 +252,7 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def site(value):
         """
-        Argument parser type to check that a valid site name is given
+        Argument parser type to check that a valid site name is given.
 
         Parameters
         ----------
@@ -290,7 +276,7 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def telescope(value):
         """
-        Argument parser type to check that a valid telescope name is given
+        Argument parser type to check that a valid telescope name is given.
 
         Parameters
         ----------
@@ -315,7 +301,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def efficiency_interval(value):
         """
         Argument parser type to check that value is an efficiency
-        in the interval [0,1]
+        in the interval [0,1].
 
         Parameters
         ----------
@@ -346,7 +332,7 @@ class CommandLineParser(argparse.ArgumentParser):
         Argument parser type to check that the zenith angle provided is in the interval [0, 180].
         We allow here zenith angles larger than 90 degrees in the improbable case
         such simulations are requested. It is not guaranteed that the actual simulation software
-        supports such angles!
+        supports such angles!.
 
         Parameters
         ----------

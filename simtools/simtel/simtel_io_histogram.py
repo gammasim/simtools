@@ -33,7 +33,7 @@ class HistogramIdNotFoundError(Exception):
 class SimtelIOHistogram:
     """
     Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
-    output file (.simtel or .simtel.zst)
+    output file (.simtel or .simtel.zst).
 
     Parameters
     ----------

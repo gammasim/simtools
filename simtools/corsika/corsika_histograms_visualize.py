@@ -299,7 +299,7 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
 
 def plot_wavelength_distr(histograms_instance, log_y=True):
     """
-    Plots the 1D distribution of the photon wavelengths
+    Plots the 1D distribution of the photon wavelengths.
 
     Parameters
     ----------

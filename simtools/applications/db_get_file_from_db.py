@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
     Get a file from the DB.
 
     The name of the file is required.

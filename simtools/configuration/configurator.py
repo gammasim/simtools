@@ -51,9 +51,7 @@ class Configurator:
     """
 
     def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
-        """
-        Initialize Configurator.
-        """
+        """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
@@ -70,7 +68,7 @@ class Configurator:
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
-        Returns dictionary of default configuration
+        Returns dictionary of default configuration.
 
         Parameters
         ----------
@@ -325,10 +323,7 @@ class Configurator:
         self._fill_from_config_dict(_env_dict)
 
     def _initialize_io_handler(self):
-        """
-        Initialize IOHandler with input and output paths.
-
-        """
+        """Initialize IOHandler with input and output paths."""
         _io_handler = io_handler.IOHandler()
         _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
@@ -338,10 +333,7 @@ class Configurator:
         )
 
     def _initialize_output(self):
-        """
-        Initialize default output file names (in case output_file is not configured).
-
-        """
+        """Initialize default output file names (in case output_file is not configured)."""
         if self.config.get("output_file", None) is None:
             self.config["output_file_from_default"] = True
             prefix = "TEST"
@@ -437,7 +429,7 @@ class Configurator:
 
     def _get_db_parameters(self):
         """
-        Return parameters for DB configuration
+        Return parameters for DB configuration.
 
         Parameters
         ----------
