@@ -15,24 +15,22 @@ logger.setLevel(logging.DEBUG)
 def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
 
     telescope_model_sst.export_model_files()
-    camera_efficiency_sst = CameraEfficiency(
+    return CameraEfficiency(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
         simtel_source_path=simtel_path,
         test=True,
     )
-    return camera_efficiency_sst
 
 
 @pytest.fixture()
 def simulator_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
-    simulator_camera_efficiency = SimulatorCameraEfficiency(
+    return SimulatorCameraEfficiency(
         simtel_source_path=simtel_path,
         telescope_model=telescope_model_sst,
         file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
-    return simulator_camera_efficiency
 
 
 def test_shall_run(simulator_camera_efficiency):
