@@ -134,6 +134,7 @@ lint.extend-select = [
   "NPY", # numpy
   "PT",  # pytest
   "RET", # return statements
+  "RUF", # ruff
   "UP",  # pyupgrade
 ]
 lint.ignore = [
@@ -145,6 +146,7 @@ lint.ignore = [
   "ISC001", # incompatible with ruff format
   "PT011",  # TODO - fix
   "PT012",  # TODO - fix
+  "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
   "D",

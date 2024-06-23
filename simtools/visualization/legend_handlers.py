@@ -171,8 +171,8 @@ class HexEdgePixelHandler:
             numVertices=6,
             radius=0.7 * handlebox.height,
             orientation=np.deg2rad(30),
-            facecolor=mcolors.to_rgb("brown") + (0.5,),
-            edgecolor=mcolors.to_rgb("black") + (1,),
+            facecolor=(*mcolors.to_rgb("brown"), 0.5),
+            edgecolor=(*mcolors.to_rgb("black"), 1),
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -229,8 +229,8 @@ class SquareEdgePixelHandler:
             [x0, y0],
             width,
             height,
-            facecolor=mcolors.to_rgb("brown") + (0.5,),
-            edgecolor=mcolors.to_rgb("black") + (1,),
+            facecolor=(*mcolors.to_rgb("brown"), 0.5),
+            edgecolor=(*mcolors.to_rgb("black"), 1),
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
