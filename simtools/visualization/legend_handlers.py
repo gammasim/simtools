@@ -143,7 +143,7 @@ class HexPixelHandler:
     """Legend handler class to plot a hexagonal "on" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -163,7 +163,7 @@ class HexEdgePixelHandler:
     """Legend handler class to plot a hexagonal "edge" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -183,7 +183,7 @@ class HexOffPixelHandler:
     """Legend handler class to plot a hexagonal "off" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -203,7 +203,7 @@ class SquarePixelHandler:
     """Legend handler class to plot a square "on" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -222,7 +222,7 @@ class SquareEdgePixelHandler:
     """Legend handler class to plot a square "edge" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -241,7 +241,7 @@ class SquareOffPixelHandler:
     """Legend handler class to plot a square "off" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -259,7 +259,7 @@ class SquareOffPixelHandler:
 class LSTHandler(TelescopeHandler):
     """Legend handler class to plot a representation of an LST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 10 / 3, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -276,7 +276,7 @@ class LSTHandler(TelescopeHandler):
 class MSTHandler(TelescopeHandler):
     """Legend handler class to plot a representation of an MST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -293,7 +293,7 @@ class MSTHandler(TelescopeHandler):
 class SSTHandler(TelescopeHandler):
     """Legend handler class to plot a representation of an SST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -310,7 +310,7 @@ class SSTHandler(TelescopeHandler):
 class SCTHandler(TelescopeHandler):
     """Legend handler class to plot a representation of an SCT in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 10, 1)
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -386,7 +386,7 @@ class MeanRadiusOuterEdgeHandler:
     """Legend handler class to plot a the mean radius outer edge of the dish."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 4)
         radius = handlebox.height
         patch = mpatches.Circle(
