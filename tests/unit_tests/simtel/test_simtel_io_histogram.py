@@ -33,16 +33,14 @@ def simtel_io_file_hdata(io_handler):
 
 @pytest.fixture()
 def simtel_hist_io_instance(simtel_io_file):
-    instance = SimtelIOHistogram(histogram_file=simtel_io_file)
-    return instance
+    return SimtelIOHistogram(histogram_file=simtel_io_file)
 
 
 @pytest.fixture()
 def simtel_hist_hdata_io_instance(simtel_io_file_hdata):
-    instance = SimtelIOHistogram(
+    return SimtelIOHistogram(
         histogram_file=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.008, 300]
     )
-    return instance
 
 
 def test_init_errors(simtel_io_file_hdata, caplog):

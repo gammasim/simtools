@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture()
 def test_files(io_handler):
-    test_files = list()
+    test_files = []
     test_files.append(
         io_handler.get_input_data_file(
             file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
