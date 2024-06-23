@@ -119,7 +119,7 @@ def _parse(label):
     return config.initialize(db_config=True, simulation_model=["telescope"])
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 

@@ -121,7 +121,7 @@ def _parse(label):
     return _args_dict, _db_config
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, _db_config = _parse(label)
 

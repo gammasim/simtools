@@ -206,7 +206,7 @@ def export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = "Display the simtel_array histograms."
     io_handler_instance = io_handler.IOHandler()

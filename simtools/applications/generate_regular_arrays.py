@@ -55,7 +55,7 @@ def _parse():
     return config.initialize(db_config=False, simulation_model="site", output=True)
 
 
-def main():
+def main():  # noqa: D103
     """Create layout array files (ecsv) of regular arrays."""
     args_dict, _ = _parse()
 

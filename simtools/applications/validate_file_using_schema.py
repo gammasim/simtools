@@ -138,7 +138,7 @@ def validate_metadata(args_dict, logger):
     logger.info(f"Successful validation of metadata {args_dict['file_name']}")
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label, description="Validate a file (metadata, schema, or data file) using a schema."

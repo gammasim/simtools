@@ -87,7 +87,7 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
 
     args_dict, _ = _parse(
         label=Path(__file__).stem,
