@@ -1,3 +1,5 @@
+"""Visualize Cherenkov photon distributions from CORSIKA."""
+
 import logging
 from pathlib import Path
 

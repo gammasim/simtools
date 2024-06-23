@@ -1,3 +1,5 @@
+"""Interface to workload managers like gridengine or HTCondor."""
+
 import logging
 import os
 from copy import copy

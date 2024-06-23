@@ -1,3 +1,5 @@
+"""Configuration of CORSIKA simulations."""
+
 import copy
 import logging
 from pathlib import Path

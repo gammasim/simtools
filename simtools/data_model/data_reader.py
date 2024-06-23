@@ -1,3 +1,5 @@
+"""Helper module for reading of standardized simtools data products."""
+
 import logging
 
 import astropy.units as u
