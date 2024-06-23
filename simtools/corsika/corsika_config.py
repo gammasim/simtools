@@ -426,7 +426,7 @@ class CorsikaConfig:
             file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
                 run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
-                file.write(f"TELFIL |{str(run_cta_script)}\n")
+                file.write(f"TELFIL |{run_cta_script!s}\n")
             else:
                 file.write(f"TELFIL {self._output_generic_file_name}\n")
 

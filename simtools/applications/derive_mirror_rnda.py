@@ -278,11 +278,11 @@ def _print_and_write_results(
     result_table = QTable(
         [
             [True] + [False] * len(results_rnda),
-            ([rnda_opt] + results_rnda) * u.deg,
+            [rnda_opt, *results_rnda] * u.deg,
             ([0.0] * (len(results_rnda) + 1)),
             ([0.0] * (len(results_rnda) + 1)) * u.deg,
-            ([mean_d80] + results_mean) * u.cm,
-            ([sig_d80] + results_sig) * u.cm,
+            [mean_d80, *results_mean] * u.cm,
+            [sig_d80, *results_sig] * u.cm,
         ],
         names=(
             "best_fit",

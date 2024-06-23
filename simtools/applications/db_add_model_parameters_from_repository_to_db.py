@@ -195,7 +195,7 @@ def _add_model_parameters_to_db(args_dict, db, logger):
                 )
 
 
-def main():  # noqa: D103
+def main():
     """Application main."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(

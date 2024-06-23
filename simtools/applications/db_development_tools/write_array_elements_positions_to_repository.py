@@ -162,7 +162,7 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
             file.write("\n")
 
 
-def main():  # noqa: D103
+def main():
     """Application main."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(

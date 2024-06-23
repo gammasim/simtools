@@ -286,7 +286,7 @@ def main():  # noqa: D103
             # It should be fine for normal production since each run is on a separate node
             # so no files are expected there.
             shutil.move(source_file, destination_file)
-        logger.info(f"Output files for the grid placed in {str(directory_for_grid_upload)}")
+        logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
 
 
 if __name__ == "__main__":
