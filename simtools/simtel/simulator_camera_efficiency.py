@@ -149,9 +149,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" >{self._file_simtel}"
 
         # Moving to sim_telarray directory before running
-        command = f"cd {self._simtel_source_path.joinpath('sim_telarray')} && {command}"
-
-        return command
+        return f"cd {self._simtel_source_path.joinpath('sim_telarray')} && {command}"
 
     def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
         """Check run results.
@@ -212,11 +210,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         new_file_name = (
             f"weighted_average_1D_{self._telescope_model.get_parameter_value(two_dim_parameter)}"
         )
-        one_dim_file = self._telescope_model.export_table_to_model_directory(
+        return self._telescope_model.export_table_to_model_directory(
             new_file_name, distribution_to_export
         )
-
-        return one_dim_file
 
     def _validate_or_fix_nsb_spectrum_file_format(self, nsb_spectrum_file):
         """

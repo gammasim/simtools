@@ -397,7 +397,7 @@ class CorsikaHistograms:
         x_axis = "x axis"
         y_axis = "y axis"
         z_axis = "z axis"
-        histogram_config = {
+        return {
             "hist_position": {
                 x_axis: {
                     "bins": xy_bin,
@@ -442,7 +442,6 @@ class CorsikaHistograms:
                 y_axis: {"bins": 100, "start": 120 * u.km, "stop": 0 * u.km, "scale": "linear"},
             },
         }
-        return histogram_config
 
     def _create_regular_axes(self, label):
         """
