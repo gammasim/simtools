@@ -134,7 +134,7 @@ def _add_array_elements(key, schema):
         Schema dictionary with added array elements.
 
     """
-    _list_of_array_elements = sorted(list(names.array_elements().keys()))
+    _list_of_array_elements = sorted(names.array_elements().keys())
 
     def recursive_search(sub_schema, key):
         if key in sub_schema:

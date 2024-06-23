@@ -121,8 +121,11 @@ format.line-ending = "auto"
 # no documentation linting for test files
 format.skip-magic-trailing-comma = false
 lint.extend-select = [
+  "A",   # built-in shadowing
+  "C4",  # comprehension
   "COM", # flake8-commas
-  "D",   # pydocstyle (temporary off: use in 2nd step)
+  "D",   # pydocstyle
+  "F",   # pyflakes
   "G",   # logging
   "I",   # isort
   "ICN", # import name conventions
