@@ -86,7 +86,7 @@ def _parse(label, description):
     return config.initialize(output=True)
 
 
-def main():
+def main():  # noqa: D103
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Submit and validate data (e.g., input data to tools, model parameters).",

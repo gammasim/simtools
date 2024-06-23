@@ -140,7 +140,7 @@ def _layout_from_db(args_dict, db_config):
     )
 
 
-def main():
+def main():  # noqa: D103
     """Get list of array elements as defined in the db (array layout)."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(

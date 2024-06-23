@@ -412,7 +412,7 @@ def _derive_event_2d_histograms(
         corsika_histograms_visualize.save_figs_to_pdf(figures_list, output_file_name)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
     io_handler_instance = io_handler.IOHandler()

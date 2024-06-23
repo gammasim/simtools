@@ -324,7 +324,7 @@ def _get_psf_containment(logger, args_dict):
     )
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
 
     args_dict, db_config = _parse(label)
