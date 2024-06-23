@@ -1,3 +1,5 @@
+"""Helper functions for legend handlers used for plotting."""
+
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np

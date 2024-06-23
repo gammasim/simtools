@@ -1,3 +1,5 @@
+"""Helper module for reading and writing in hd5 format."""
+
 import logging
 from pathlib import PosixPath
 

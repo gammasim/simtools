@@ -1,3 +1,5 @@
+"""Default configuration for CORSIKA parameters for the various primary particles."""
+
 from collections import defaultdict
 
 import astropy.units as u

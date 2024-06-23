@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Helper functions calculations related to model parameters."""
 
 import math
 

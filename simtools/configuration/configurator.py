@@ -1,3 +1,5 @@
+"""Configuration of applications."""
+
 import argparse
 import logging
 import os
