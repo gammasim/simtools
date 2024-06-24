@@ -14,8 +14,5 @@ model_parameters.md
 databases.md
 simulation_software.md
 docker_files.md
-documentation.md
-developer_guidelines.md
-pull_requests.md
-coding_guidelines.md
+Developer Guide <developer-guide/index>
 ```
