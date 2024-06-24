@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>job_execution.job_manager &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>job_execution.job_manager &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -432,7 +432,6 @@ document.write(`
 <span class="sd">        MissingWorkloadManagerError</span>
 <span class="sd">            if workflow manager is not found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit_command</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit_command</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;qsub&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
@@ -493,7 +492,6 @@ document.write(`
 <span class="sd">            The log file of the actual simulator (CORSIKA or sim_telarray).</span>
 <span class="sd">            Provided in order to print the log excerpt in case of run time error.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running script locally&quot;</span><span class="p">)</span>
 
         <span class="n">shell_command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_script</span><span class="si">}</span><span class="s2"> &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="si">}</span><span class="s2">.out 2&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="si">}</span><span class="s2">.err&quot;</span>
@@ -515,7 +513,6 @@ document.write(`
 <span class="sd">        Submit a job described by a shell script to HTcondor</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_condor_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_script</span> <span class="o">+</span> <span class="s2">&quot;.condor&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Submitting script to HTCondor (</span><span class="si">{</span><span class="n">_condor_file</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -539,7 +536,6 @@ document.write(`
 <span class="sd">        Submit a job described by a shell script to gridengine</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">this_sub_cmd</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_command</span><span class="p">)</span>
         <span class="n">this_sub_cmd</span> <span class="o">=</span> <span class="n">this_sub_cmd</span> <span class="o">+</span> <span class="s2">&quot; -o &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span> <span class="o">+</span> <span class="s2">&quot;.out&quot;</span>
         <span class="n">this_sub_cmd</span> <span class="o">=</span> <span class="n">this_sub_cmd</span> <span class="o">+</span> <span class="s2">&quot; -e &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span> <span class="o">+</span> <span class="s2">&quot;.err&quot;</span>

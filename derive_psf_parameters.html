@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="_static/documentation_options.js?v=fabcadde"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -530,6 +530,26 @@ document.write(`
 <dt class="sig sig-object py" id="derive_psf_parameters.add_parameters">
 <span class="sig-prename descclassname"><span class="pre">derive_psf_parameters.</span></span><span class="sig-name descname"><span class="pre">add_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_reflection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_align</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_reflection_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_reflection_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.035</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/derive_psf_parameters.html#add_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_psf_parameters.add_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Transforms and add parameters to the all_parameters list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirror_reflection</strong><span class="classifier">float</span></dt><dd><p>The random angle of mirror reflection.</p>
+</dd>
+<dt><strong>mirror_align</strong><span class="classifier">float</span></dt><dd><p>The random angle for mirror alignment (both horizontal and vertical).</p>
+</dd>
+<dt><strong>mirror_reflection_fraction</strong><span class="classifier">float, optional</span></dt><dd><p>The fraction of the mirror reflection. Default is 0.15.</p>
+</dd>
+<dt><strong>mirror_reflection_2</strong><span class="classifier">float, optional</span></dt><dd><p>A secondary random angle for mirror reflection. Default is 0.035.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>Updates the all_parameters list in place.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -543,8 +563,16 @@ as metric to find the best parameters.</p>
 <dt class="sig sig-object py" id="derive_psf_parameters.find_best_parameters">
 <span class="sig-prename descclassname"><span class="pre">derive_psf_parameters.</span></span><span class="sig-name descname"><span class="pre">find_best_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/derive_psf_parameters.html#find_best_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_psf_parameters.find_best_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Find the best parameters from all parameter sets.</p>
-<p>Returns:
-- Tuple of best parameters and their D80 value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><dl class="simple">
+<dt>Tuple of best parameters and their D80 value.</dt><dd></dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -603,9 +631,20 @@ and mirror_align_random_horizontal/vertical.</p>
 <dt class="sig sig-object py" id="derive_psf_parameters.load_and_process_data">
 <span class="sig-prename descclassname"><span class="pre">derive_psf_parameters.</span></span><span class="sig-name descname"><span class="pre">load_and_process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/derive_psf_parameters.html#load_and_process_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_psf_parameters.load_and_process_data" title="Link to this definition">#</a></dt>
 <dd><p>Load and process data if specified in the command-line arguments.</p>
-<p>Returns:
-- data_to_plot: OrderedDict containing loaded and processed data.
-- radius: Radius data from loaded data (if available).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><dl class="simple">
+<dt>data_to_plot: OrderedDict containing loaded and processed data.</dt><dd></dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>radius: Radius data from loaded data (if available).</dt><dd></dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

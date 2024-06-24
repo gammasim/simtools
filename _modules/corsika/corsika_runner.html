@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -450,7 +450,6 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        CorsikaRunner init.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CorsikaRunner&quot;</span><span class="p">)</span>
 
@@ -473,7 +472,6 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_load_corsika_config_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reads corsika_config_data, creates corsika_config and corsika_input_file.&quot;&quot;&quot;</span>
-
         <span class="n">corsika_data_directory_from_config</span> <span class="o">=</span> <span class="n">corsika_config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_directory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">corsika_data_directory_from_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># corsika_data_directory not given (or None).</span>
@@ -499,7 +497,6 @@ document.write(`
 <span class="sd">        Create the CORSIKA config instance.</span>
 <span class="sd">        This validates the input given in corsika_config_data as well.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span> <span class="o">=</span> <span class="n">CorsikaConfig</span><span class="p">(</span>
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
@@ -696,7 +693,6 @@ document.write(`
 <span class="sd">        ValueError</span>
 <span class="sd">            If file_type is unknown.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">file_label</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="s2">&quot;label&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="p">)</span>
@@ -750,7 +746,6 @@ document.write(`
 <span class="sd">            Run number.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">info_for_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
         <span class="n">run_sub_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="o">**</span><span class="n">info_for_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking if </span><span class="si">{</span><span class="n">run_sub_file</span><span class="si">}</span><span class="s2"> exists&quot;</span><span class="p">)</span>
@@ -774,7 +769,6 @@ document.write(`
 <span class="sd">            run time and number of simulated events</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">sub_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run_number</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span>
         <span class="p">)</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -516,7 +516,6 @@ document.write(`
 <span class="sd">        KeyError</span>
 <span class="sd">            If par_name does not match any parameter in this model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">parameter_dict</span> <span class="o">=</span> <span class="n">parameter_dict</span> <span class="k">if</span> <span class="n">parameter_dict</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_parameter</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
@@ -638,7 +637,6 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write to disk a file from the derived values DB.&quot;&quot;&quot;</span>
-
         <span class="k">for</span> <span class="n">par_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;File&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_file_db</span><span class="p">(</span>
@@ -660,7 +658,6 @@ document.write(`
 <span class="sd">        Set and create the directory and the name of the config file.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -687,7 +684,6 @@ document.write(`
 <span class="sd">        Read parameters from DB and store them in _parameters.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -735,7 +731,6 @@ document.write(`
 <span class="sd">        extra_label: str</span>
 <span class="sd">            Extra label to be appended to the original label.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="o">=</span> <span class="n">extra_label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span></div>
 
@@ -879,7 +874,6 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.export_model_files">[docs]</a>
     <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Exports the model files into the config file directory.&quot;&quot;&quot;</span>
-
         <span class="c1"># Removing parameter files added manually (which are not in DB)</span>
         <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -894,7 +888,6 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.export_config_file">[docs]</a>
     <span class="k">def</span> <span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
-
         <span class="c1"># Exporting model file</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -655,7 +655,6 @@ document.write(`
 <span class="sd">        validated and converted input data</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">_</span><span class="p">,</span> <span class="n">undefined_length</span> <span class="o">=</span> <span class="n">_check_value_entry_length</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">)</span>
 
     <span class="c1"># Checking if values have unit and raising error, if so.</span>
@@ -694,7 +693,6 @@ document.write(`
 <span class="sd">        state of input list</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="c1"># Checking the entry length</span>
     <span class="n">value_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value len of </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value_length</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -732,7 +730,6 @@ document.write(`
 <span class="sd">        validated and converted input data</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">value_length</span><span class="p">,</span> <span class="n">undefined_length</span> <span class="o">=</span> <span class="n">_check_value_entry_length</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">)</span>
 
     <span class="n">par_unit</span> <span class="o">=</span> <span class="n">copy_as_list</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
@@ -782,7 +779,6 @@ document.write(`
 <span class="sd">    Validate input user parameter and convert it to the right units, if needed.</span>
 <span class="sd">    Returns the validated arguments in a list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_in</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value_in</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
         <span class="n">value_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value_in</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
@@ -835,7 +831,6 @@ document.write(`
 <span class="sd">        True if url is a valid URL.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">result</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">netloc</span><span class="p">])</span>
@@ -866,7 +861,6 @@ document.write(`
 <span class="sd">        If downloading the yaml file fails.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w+t&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp_file</span><span class="p">:</span>
             <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">tmp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -981,6 +975,7 @@ document.write(`
 <span class="sd">        Label to be collected in kwargs.</span>
 <span class="sd">    in_kwargs: dict</span>
 <span class="sd">        kwargs.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
@@ -1096,7 +1091,6 @@ document.write(`
 <span class="sd">    logging.LEVEL</span>
 <span class="sd">        The requested logging level to be used as input to logging.setLevel().</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">possible_levels</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
         <span class="s2">&quot;debug&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -1273,7 +1267,6 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Excerpt from log file with header/footer</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">return</span> <span class="p">(</span>
         <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Runtime error - See below the relevant part of the log/err file.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -1313,7 +1306,6 @@ document.write(`
 <span class="sd">    lower_case: bool</span>
 <span class="sd">        Change keys to lower (upper) case if True (False).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">_return_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -1393,12 +1385,12 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    *args</span>
 <span class="sd">        Arguments to be sorted.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
 <span class="sd">        Sorted args.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">args</span>
     <span class="n">order_array</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -1450,7 +1442,6 @@ document.write(`
 <span class="sd">        Value, unit in string representation (to_string())),</span>
 <span class="sd">        and string representation of the type of the value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">base_unit</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1635,7 +1626,6 @@ document.write(`
 <span class="sd">        Return data_string if conversion fails.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">is_float</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_string</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>

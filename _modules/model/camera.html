@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -402,7 +402,6 @@ document.write(`
 <span class="sd">        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,</span>
 <span class="sd">        calculating FoV and plotting the camera.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
@@ -444,7 +443,6 @@ document.write(`
 <span class="sd">        The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated</span>
 <span class="sd">        clockwise by 30 degrees with respect to those denoted as 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">pixels</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999</span>
         <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999</span>
@@ -513,7 +511,6 @@ document.write(`
 <span class="sd">            The pixels orientation for plotting is added to the dictionary in pixels[&#39;orientation&#39;].</span>
 <span class="sd">            The orientation is determined by the pixel shape (see read_pixel_list for details).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">rotate_angle</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span>  <span class="c1"># So not to change the original angle</span>
         <span class="c1"># The original pixel list is given such that</span>
         <span class="c1"># x -&gt; North, y -&gt; West, z -&gt; Up in the ground system.</span>
@@ -550,7 +547,6 @@ document.write(`
 <span class="sd">        int</span>
 <span class="sd">            number of pixels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span></div>
 
 
@@ -565,7 +561,6 @@ document.write(`
 <span class="sd">        float</span>
 <span class="sd">            Pixel diameter (usually in cm).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span></div>
 
 
@@ -580,7 +575,6 @@ document.write(`
 <span class="sd">        float</span>
 <span class="sd">            active solid angle of a pixel in sr.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">pixel_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_diameter</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="c1"># In case we have hexagonal pixels:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_shape</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
@@ -614,7 +608,6 @@ document.write(`
 <span class="sd">        str</span>
 <span class="sd">            File name of the light guide efficiency as a function of incidence angle.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span></div>
 
 
@@ -671,7 +664,6 @@ document.write(`
 <span class="sd">        -----</span>
 <span class="sd">        The x,y pixel positions and focal length are assumed to have the same unit (usually cm)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating the FoV&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_fov</span><span class="p">(</span>
@@ -709,7 +701,6 @@ document.write(`
 <span class="sd">        -----</span>
 <span class="sd">        The x,y pixel positions and focal length are assumed to have the same unit (usually cm)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating the FoV&quot;</span><span class="p">)</span>
 
         <span class="n">average_edge_distance</span> <span class="o">=</span> <span class="mi">0</span>
@@ -742,7 +733,6 @@ document.write(`
 <span class="sd">        neighbours: numpy.array_like</span>
 <span class="sd">            Array of neighbour indices in a list for each e.g., pixel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_pos</span><span class="p">))</span>
         <span class="n">kdtree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
@@ -776,7 +766,6 @@ document.write(`
 <span class="sd">        neighbours: numpy.array_like</span>
 <span class="sd">            Array of neighbour indices in a list for each pixel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="c1"># First find the neighbours with the usual method and the original radius</span>
         <span class="c1"># which does not allow for diagonal neighbours.</span>
         <span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbours</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
@@ -819,7 +808,6 @@ document.write(`
 <span class="sd">        neighbours: numpy.array_like</span>
 <span class="sd">            Array of neighbour indices in a list for each pixel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching for neighbour pixels&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
@@ -860,7 +848,6 @@ document.write(`
 <span class="sd">        neighbours: numpy.array_like</span>
 <span class="sd">            Array of neighbour indices in a list for each pixel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>
@@ -885,7 +872,6 @@ document.write(`
 <span class="sd">        edge_pixel_indices: numpy.array_like</span>
 <span class="sd">            Array of edge pixel indices.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching for edge pixels&quot;</span><span class="p">)</span>
         <span class="n">edge_pixel_indices</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -923,7 +909,6 @@ document.write(`
 <span class="sd">        edge_pixel_indices: numpy.array_like</span>
 <span class="sd">            Array of edge pixel indices.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>

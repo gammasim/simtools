@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gb5df154 Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gd49ecbb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=f3d1220a"></script>
+    <script src="../../_static/documentation_options.js?v=fabcadde"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb5df154 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd49ecbb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -413,7 +413,6 @@ document.write(`
 <span class="sd">        Initialize validation class and read required reference data columns</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span> <span class="o">=</span> <span class="n">data_file</span>
@@ -445,7 +444,6 @@ document.write(`
 <span class="sd">            if no data or data table is available</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validate_data_file</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -469,7 +467,6 @@ document.write(`
 <span class="sd">        file validation).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -488,7 +485,6 @@ document.write(`
 <span class="sd">        Validate that file name and key &#39;parameter_name&#39; in data dict are the same.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Parameter name in data dict </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameter&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> and &quot;</span>
@@ -508,7 +504,6 @@ document.write(`
 <span class="sd">            if data dict does not contain a &#39;name&#39; or &#39;parameter&#39; key.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">_name</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Data dict does not contain a &#39;name&#39; or &#39;parameter&#39; key.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_validation_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file_name</span><span class="p">,</span> <span class="n">_name</span><span class="p">)</span>
@@ -545,7 +540,6 @@ document.write(`
 <span class="sd">        Validate tabulated data.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_validation_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
                 <span class="s2">&quot;table_columns&quot;</span><span class="p">,</span> <span class="kc">None</span>
@@ -569,7 +563,6 @@ document.write(`
 <span class="sd">        This is not applied to columns of type &#39;string&#39;.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_required_columns</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
@@ -594,7 +587,6 @@ document.write(`
 <span class="sd">            if a required data column is missing</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -613,7 +605,6 @@ document.write(`
 <span class="sd">            if no table is defined for sorting</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_columns_by_which_to_sort</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">_columns_by_which_to_reverse_sort</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="p">:</span>
@@ -648,7 +639,6 @@ document.write(`
 <span class="sd">            checked for unique values.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_column_with_unique_requirement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_column_requirement</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_column_with_unique_requirement</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No data columns with unique value requirement&quot;</span><span class="p">)</span>
@@ -681,7 +671,6 @@ document.write(`
 <span class="sd">            list of data column with unique value requirement</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">_unique_required_column</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="p">:</span>
@@ -712,7 +701,6 @@ document.write(`
 <span class="sd">            if column name is not found in reference data columns</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">reference_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data_description</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">reference_unit</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
@@ -736,7 +724,6 @@ document.write(`
 <span class="sd">            if data type is not correct</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">reference_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data_description</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_data_type</span><span class="p">(</span>
             <span class="n">reference_dtype</span><span class="o">=</span><span class="n">reference_dtype</span><span class="p">,</span>
@@ -824,7 +811,6 @@ document.write(`
 <span class="sd">            If unit conversions fails</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
         <span class="n">reference_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_reference_unit</span><span class="p">(</span><span class="n">col_name</span><span class="p">)</span>
@@ -939,7 +925,6 @@ document.write(`
 <span class="sd">            True if range test is passed</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">range_type</span> <span class="o">==</span> <span class="s2">&quot;allowed_range&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                 <span class="k">return</span> <span class="kc">True</span>
@@ -974,7 +959,6 @@ document.write(`
 <span class="sd">            if &#39;data&#39; can not be read from dict in schema file</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">schema_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
                 <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
@@ -1014,7 +998,6 @@ document.write(`
 <span class="sd">            If data column is not found.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Getting reference data column </span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2"> from schema </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_description</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
