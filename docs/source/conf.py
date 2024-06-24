@@ -48,7 +48,7 @@ def get_python_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
-copyright = "2024, gammasim-tools, simtools developers"
+copyright = "2024, gammasim-tools, simtools developers"  # noqa A001
 author = get_authors_from_citation_file()
 rst_epilog = f"""
 .. |author| replace:: {author}
