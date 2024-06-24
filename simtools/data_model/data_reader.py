@@ -42,7 +42,6 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         If file does not exist.
 
     """
-
     try:
         data_table = QTable.read(file_name)
     except (FileNotFoundError, IORegistryError) as exc:
@@ -100,7 +99,6 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
         If file does not exist.
 
     """
-
     try:
         data = gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
     except FileNotFoundError as exc:

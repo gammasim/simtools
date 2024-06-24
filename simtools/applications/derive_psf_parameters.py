@@ -285,7 +285,8 @@ def load_and_process_data(args_dict):
     """
     Load and process data if specified in the command-line arguments.
 
-    Returns:
+    Returns
+    -------
     - data_to_plot: OrderedDict containing loaded and processed data.
     - radius: Radius data from loaded data (if available).
     """
@@ -377,7 +378,8 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     """
     Find the best parameters from all parameter sets.
 
-    Returns:
+    Returns
+    -------
     - Tuple of best parameters and their D80 value.
     """
     min_rmsd = 100
