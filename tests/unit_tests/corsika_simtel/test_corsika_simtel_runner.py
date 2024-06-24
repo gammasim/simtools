@@ -62,10 +62,9 @@ def simtel_args(array_model, simtel_config_data):
 
 @pytest.fixture()
 def corsika_simtel_runner(common_args, corsika_args, simtel_args):
-    corsika_simtel_runner = CorsikaSimtelRunner(
+    return CorsikaSimtelRunner(
         common_args=common_args, corsika_args=corsika_args, simtel_args=simtel_args
     )
-    return corsika_simtel_runner
 
 
 def test_prepare_run_script(corsika_simtel_runner):
