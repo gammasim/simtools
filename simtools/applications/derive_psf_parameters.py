@@ -166,8 +166,8 @@ def add_parameters(
     """
     Transforms and add parameters to the all_parameters list.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     mirror_reflection : float
         The random angle of mirror reflection.
 
@@ -180,8 +180,8 @@ def add_parameters(
     mirror_reflection_2 : float, optional
         A secondary random angle for mirror reflection. Default is 0.035.
 
-    Returns:
-    --------
+    Returns
+    -------
     None
         Updates the all_parameters list in place.
     """
@@ -285,7 +285,8 @@ def load_and_process_data(args_dict):
     """
     Load and process data if specified in the command-line arguments.
 
-    Returns:
+    Returns
+    -------
     - data_to_plot: OrderedDict containing loaded and processed data.
     - radius: Radius data from loaded data (if available).
     """
@@ -377,7 +378,8 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     """
     Find the best parameters from all parameter sets.
 
-    Returns:
+    Returns
+    -------
     - Tuple of best parameters and their D80 value.
     """
     min_rmsd = 100
