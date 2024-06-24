@@ -33,12 +33,11 @@ def corsika_config_data():
 
 @pytest.fixture()
 def corsika_config(io_handler, corsika_config_data, array_model_south):
-    corsika_config = CorsikaConfig(
+    return CorsikaConfig(
         array_model=array_model_south,
         label="test-corsika-config",
         corsika_config_data=corsika_config_data,
     )
-    return corsika_config
 
 
 def test_repr(corsika_config):
