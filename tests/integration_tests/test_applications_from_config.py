@@ -66,7 +66,7 @@ def get_list_of_test_configurations(get_test_names=False):
     """
 
     # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
-    config_files = sorted(list(Path(__file__).parent.glob("config/*.yml")))
+    config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
     logger.debug(f"Configuration files: {config_files}")
 
     configs = []
@@ -81,9 +81,7 @@ def get_list_of_test_configurations(get_test_names=False):
 
     # list of all applications
     # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
-    _applications = sorted(
-        list(set(item["APPLICATION"] for item in configs if "APPLICATION" in item))
-    )
+    _applications = sorted({item["APPLICATION"] for item in configs if "APPLICATION" in item})
     for _app in _applications:
         # add for all applications "--help" call
         configs.append(
@@ -302,7 +300,7 @@ def prepare_configuration(config, output_path, model_version=None):
     """
 
     if len(config) == 1 and next(iter(config.values())) is True:
-        return None, "--" + list(config.keys())[0].lower(), None
+        return None, "--" + next(iter(config.keys())).lower(), None
 
     tmp_config_file = output_path / "tmp_config.yml"
     config_file_model_version = config.get("MODEL_VERSION")

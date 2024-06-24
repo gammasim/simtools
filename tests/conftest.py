@@ -177,8 +177,7 @@ def simulation_model_url(db_config):
 
 @pytest.fixture()
 def db(db_config):
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
-    return db
+    return db_handler.DatabaseHandler(mongo_db_config=db_config)
 
 
 @pytest.fixture()
@@ -189,8 +188,7 @@ def db_no_config_file():
     Otherwise it creates a conflict between the config file
     set by set_db and the one set by set_simtools
     """
-    db = db_handler.DatabaseHandler(mongo_db_config=None)
-    return db
+    return db_handler.DatabaseHandler(mongo_db_config=None)
 
 
 def pytest_addoption(parser):
@@ -207,26 +205,24 @@ def model_version():
 
 @pytest.fixture()
 def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
-    array_model = ArrayModel(
+    return ArrayModel(
         label="test-lst-array",
         site=simulator_config_data_north["common"]["site"],
         layout_name=simulator_config_data_north["common"]["layout_name"],
         mongo_db_config=db_config,
         model_version=model_version,
     )
-    return array_model
 
 
 @pytest.fixture()
 def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
-    array_model = ArrayModel(
+    return ArrayModel(
         label="test-lst-array",
         site=simulator_config_data_south["common"]["site"],
         layout_name=simulator_config_data_south["common"]["layout_name"],
         mongo_db_config=db_config,
         model_version=model_version,
     )
-    return array_model
 
 
 @pytest.fixture()
@@ -251,19 +247,18 @@ def site_model_north(db_config, model_version):
 
 @pytest.fixture()
 def telescope_model_lst(db_config, io_handler, model_version):
-    telescope_model_lst = TelescopeModel(
+    return TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )
-    return telescope_model_lst
 
 
 @pytest.fixture()
 def telescope_model_mst(db_config, io_handler, model_version):
-    tel = TelescopeModel(
+    return TelescopeModel(
         site="South",
         telescope_name="MSTS-design",
         model_version=model_version,
@@ -271,32 +266,28 @@ def telescope_model_mst(db_config, io_handler, model_version):
         mongo_db_config=db_config,
     )
 
-    return tel
-
 
 @pytest.fixture()
 def telescope_model_sst(db_config, io_handler, model_version):
-    telescope_model_sst = TelescopeModel(
+    return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_sst
 
 
 # TODO - keep prod5 until a complete prod6 model is in the DB
 @pytest.fixture()
 def telescope_model_sst_prod5(db_config, io_handler):
-    telescope_model_sst = TelescopeModel(
+    return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version="Prod5",
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )
-    return telescope_model_sst
 
 
 @pytest.fixture()
@@ -350,7 +341,7 @@ def simulator_config_data_north(tmp_test_directory):
         "common": {
             "site": "North",
             "layout_name": "test_layout",
-            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "data_directory": f"{tmp_test_directory!s}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,
             "primary": "gamma",
@@ -384,7 +375,7 @@ def simulator_config_data_south(tmp_test_directory):
         "common": {
             "site": "South",
             "layout_name": "test_layout",
-            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "data_directory": f"{tmp_test_directory!s}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,
             "primary": "gamma",
