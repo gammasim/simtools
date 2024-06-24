@@ -1,6 +1,7 @@
 """This module reads the content of either multiple histogram (.hdata, or .hdata.zst) or
 simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
-simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files."""
+simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.
+"""
 
 import copy
 import logging
@@ -51,14 +52,33 @@ class SimtelIOHistograms:
         calculating trigger rate for individual telescopes.
         If false, the area thrown is estimated based on the maximum distance as given in
         the simulation configuration.
+    energy_range: list
+        The energy range used in the simulation. It must be passed as a list of floats and the
+        energy must be in TeV (as in the CORSIKA configuration).
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        energy range cannot be retrieved directly from the file.
+    view_cone: list
+        The view cone used in the simulation. It must be passed as a list of floats and the
+        view cone must be in deg (as in the CORSIKA configuration).
+        This argument is only needed and used if histogram_file is a .hdata file, in which case the
+        view cone cannot be retrieved directly from the file.
     """
 
-    def __init__(self, histogram_files, test=False, area_from_distribution=False):
+    def __init__(
+        self,
+        histogram_files,
+        test=False,
+        area_from_distribution=False,
+        energy_range=None,
+        view_cone=None,
+    ):
         """Initialize SimtelIOHistograms."""
         self._logger = logging.getLogger(__name__)
         if not isinstance(histogram_files, list):
             histogram_files = [histogram_files]
         self.histogram_files = histogram_files
+        self.view_cone = view_cone
+        self.energy_range = energy_range
         self._is_test = test
         self._combined_hists = None
         self._list_of_histograms = None
@@ -164,7 +184,10 @@ class SimtelIOHistograms:
         stacked_num_triggered_events = 0
         for _, file in enumerate(self.histogram_files):
             simtel_hist_instance = SimtelIOHistogram(
-                file, area_from_distribution=self.area_from_distribution
+                file,
+                area_from_distribution=self.area_from_distribution,
+                energy_range=self.energy_range,
+                view_cone=self.view_cone,
             )
             stacked_num_simulated_events += simtel_hist_instance.total_num_simulated_events
             stacked_num_triggered_events += simtel_hist_instance.total_num_triggered_events
@@ -191,7 +214,10 @@ class SimtelIOHistograms:
         # Using a dummy instance of SimtelIOHistogram to calculate the trigger rate for the
         # stacked files
         simtel_hist_instance = SimtelIOHistogram(
-            self.histogram_files[0], area_from_distribution=self.area_from_distribution
+            self.histogram_files[0],
+            area_from_distribution=self.area_from_distribution,
+            energy_range=self.energy_range,
+            view_cone=self.view_cone,
         )
 
         stacked_num_simulated_events, stacked_num_triggered_events = self.get_stacked_num_events()
@@ -245,7 +271,10 @@ class SimtelIOHistograms:
         triggered_event_rate_uncertainties = []
         for i_file, file in enumerate(self.histogram_files):
             simtel_hist_instance = SimtelIOHistogram(
-                file, area_from_distribution=self.area_from_distribution
+                file,
+                area_from_distribution=self.area_from_distribution,
+                energy_range=self.energy_range,
+                view_cone=self.view_cone,
             )
             if print_info:
                 simtel_hist_instance.print_info()

@@ -295,7 +295,6 @@ def _plot_figures(corsika_histograms_instance, test=False):
     test: bool
         If true plots the figures for the first two functions only.
     """
-
     plot_function_names = [
         plotting_method
         for plotting_method in dir(corsika_histograms_visualize)
