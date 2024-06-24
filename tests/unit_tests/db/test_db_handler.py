@@ -13,8 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture()
 def random_id():
-    random_id = uuid.uuid4().hex
-    return random_id
+    return uuid.uuid4().hex
 
 
 @pytest.fixture()

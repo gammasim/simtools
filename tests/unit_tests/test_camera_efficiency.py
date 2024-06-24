@@ -15,26 +15,24 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture()
 def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
-    camera_efficiency_lst = CameraEfficiency(
+    return CameraEfficiency(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
         simtel_source_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
-    return camera_efficiency_lst
 
 
 @pytest.fixture()
 def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
-    camera_efficiency_sst = CameraEfficiency(
+    return CameraEfficiency(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
         simtel_source_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
     )
-    return camera_efficiency_sst
 
 
 @pytest.fixture()
