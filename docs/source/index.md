@@ -8,7 +8,7 @@
 getting_started.md
 simtools-configuration.md
 applications
-library.md
+API Docs <api-reference/index>
 auxiliary_files.md
 model_parameters.md
 databases.md
