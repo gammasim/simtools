@@ -4,15 +4,8 @@
 ## Table of Contents
 
 ```{toctree}
-:maxdepth: 2
-getting_started.md
-simtools-configuration.md
-applications
+:maxdepth: 1
+User Guide <user-guide/index>
 API Docs <api-reference/index>
-auxiliary_files.md
-model_parameters.md
-databases.md
-simulation_software.md
-docker_files.md
 Developer Guide <developer-guide/index>
 ```
