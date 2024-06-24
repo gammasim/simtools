@@ -391,5 +391,3 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
             validate_application_output(config)
-
-    assert True  ## need to end tests with an assert statement
