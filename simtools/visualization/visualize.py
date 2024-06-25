@@ -731,6 +731,7 @@ def create_patches(telescopes, scale, marker_scaling, show_tel_label, ax, fontsi
 
 
 def get_telescope_name(tel_now):
+    """Get the telescope name from the table row."""
     try:
         return tel_now["telescope_name"]
     except KeyError:
@@ -738,16 +739,19 @@ def get_telescope_name(tel_now):
 
 
 def update_tel_counters(tel_counters, telescope_name):
+    """Update the counter for the given telescope type."""
     for tel_type in tel_counters:
         if tel_type in telescope_name:
             tel_counters[tel_type] += 1
 
 
 def get_sphere_radius(tel_now):
+    """Get the sphere radius of the telescope."""
     return 1.0 * u.m if "sphere_radius" not in tel_now.colnames else tel_now["sphere_radius"]
 
 
 def update_legend(ax, tel_counters, legend_objects, legend_labels):
+    """Update the legend with the telescope counts."""
     for one_telescope in names.get_list_of_telescope_types():
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
@@ -763,6 +767,7 @@ def update_legend(ax, tel_counters, legend_objects, legend_labels):
 
 
 def finalize_plot(ax, patches, x_title, y_title, axes_range):
+    """Finalize the plot by adding titles, setting limits, and adding patches."""
     ax.add_collection(PatchCollection(patches, match_original=True))
     ax.set_xlabel(x_title, fontsize=12, labelpad=0)
     ax.set_ylabel(y_title, fontsize=12, labelpad=0)
