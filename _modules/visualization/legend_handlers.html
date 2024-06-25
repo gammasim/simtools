@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+g81f0342 Manual</title>
+    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+g1399cbc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=1f33cd18"></script>
+    <script src="../../_static/documentation_options.js?v=8955b29e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g81f0342 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1399cbc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -536,7 +536,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;on&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -559,7 +559,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -582,7 +582,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="c1"># width = height = handlebox.height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -605,7 +605,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;on&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -627,7 +627,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -649,7 +649,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -670,7 +670,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">LSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an LST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -690,7 +690,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">MSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an MST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -710,7 +710,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">SSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -730,7 +730,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">SCTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SCT in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -809,7 +809,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a the mean radius outer edge of the dish.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
