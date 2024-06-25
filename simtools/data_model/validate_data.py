@@ -1,3 +1,5 @@
+"""Validation of data using schema."""
+
 import logging
 import os
 import re

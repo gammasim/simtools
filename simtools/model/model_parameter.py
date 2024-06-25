@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Base class for simulation model parameters."""
 
 import logging
 import shutil
@@ -21,7 +22,7 @@ class InvalidModelParameterError(Exception):
 
 class ModelParameter:
     """
-    Base class for model parameters.
+    Base class for simulation model parameters.
 
     Provides methods to read and manipulate parameters from DB.
 

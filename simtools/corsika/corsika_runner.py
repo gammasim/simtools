@@ -1,3 +1,5 @@
+"""Generate scripts for running CORSIKA air shower simulations."""
+
 import logging
 import os
 from copy import copy

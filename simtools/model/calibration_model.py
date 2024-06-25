@@ -1,3 +1,5 @@
+"""Definition and modeling of a calibration device."""
+
 import logging
 
 from simtools.model.model_parameter import ModelParameter

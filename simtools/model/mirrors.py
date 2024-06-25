@@ -1,3 +1,5 @@
+"""Definition and modeling of mirror panels."""
+
 import logging
 
 import astropy.io.ascii
