@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-    This application is used to add a unit to parameters in the DB.
+    Add a unit to parameters in the DB.
 
     This application should not be used by anyone but expert users and only in unusual cases.
     Therefore, no additional documentation about this applications will be given.
