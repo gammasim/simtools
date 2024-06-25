@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g39e723b Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g81f0342 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d8e2cccf"></script>
+    <script src="_static/documentation_options.js?v=1f33cd18"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g39e723b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g81f0342 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -497,6 +497,7 @@ document.write(`
 Data products ingested or produced by simtools generally follows the CTA data model.</p>
 <section id="module-data_model.data_reader">
 <span id="data-reader"></span><span id="datareader"></span><h2>data_reader<a class="headerlink" href="#module-data_model.data_reader" title="Link to this heading">#</a></h2>
+<p>Helper module for reading of standardized simtools data products.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.data_reader.read_table_from_file">
 <span class="sig-prename descclassname"><span class="pre">data_model.data_reader.</span></span><span class="sig-name descname"><span class="pre">read_table_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/data_reader.html#read_table_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.data_reader.read_table_from_file" title="Link to this definition">#</a></dt>
@@ -846,6 +847,7 @@ metadata file.</p>
 </section>
 <section id="module-data_model.validate_data">
 <span id="validate-data"></span><span id="datamodelvalidatedata"></span><h2>validate_data<a class="headerlink" href="#module-data_model.validate_data" title="Link to this heading">#</a></h2>
+<p>Validation of data using schema.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_exact_data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Link to this definition">#</a></dt>

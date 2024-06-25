@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g39e723b Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g81f0342 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=d8e2cccf"></script>
+    <script src="_static/documentation_options.js?v=1f33cd18"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g39e723b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g81f0342 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -703,7 +703,8 @@ the array element positions).</p>
 </section>
 <section id="calibration-model">
 <h2>calibration_model<a class="headerlink" href="#calibration-model" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.calibration_model"><span id="id2"></span></span><dl class="py class">
+<p id="module-model.calibration_model"><span id="id2"></span>Definition and modeling of a calibration device.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="model.calibration_model.CalibrationModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.calibration_model.</span></span><span class="sig-name descname"><span class="pre">CalibrationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_device_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/calibration_model.html#CalibrationModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.calibration_model.CalibrationModel" title="Link to this definition">#</a></dt>
 <dd><p>CalibrationModel represents the MC model of an individual calibration device.</p>
@@ -729,7 +730,8 @@ the array element positions).</p>
 </section>
 <section id="camera">
 <h2>camera<a class="headerlink" href="#camera" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.camera"><span id="camera-1"></span></span><dl class="py class">
+<p id="module-model.camera"><span id="camera-1"></span>Definition and modeling of camera.</p>
+<dl class="py class">
 <dt class="sig sig-object py" id="model.camera.Camera">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera" title="Link to this definition">#</a></dt>
 <dd><p>Camera class, defining pixel layout.</p>
@@ -935,7 +937,8 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </section>
 <section id="mirrors">
 <h2>mirrors<a class="headerlink" href="#mirrors" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.mirrors"><span id="mirrors-1"></span></span><dl class="py exception">
+<p id="module-model.mirrors"><span id="mirrors-1"></span>Definition and modeling of mirror panels.</p>
+<dl class="py exception">
 <dt class="sig sig-object py" id="model.mirrors.InvalidMirrorListFileError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.mirrors.</span></span><span class="sig-name descname"><span class="pre">InvalidMirrorListFileError</span></span><a class="reference internal" href="_modules/model/mirrors.html#InvalidMirrorListFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.mirrors.InvalidMirrorListFileError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid mirror list file.</p>
@@ -986,7 +989,8 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 </section>
 <section id="model-parameter">
 <h2>model_parameter<a class="headerlink" href="#model-parameter" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.model_parameter"><span id="model-parameters"></span></span><dl class="py exception">
+<p id="module-model.model_parameter"><span id="model-parameters"></span>Base class for simulation model parameters.</p>
+<dl class="py exception">
 <dt class="sig sig-object py" id="model.model_parameter.InvalidModelParameterError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">InvalidModelParameterError</span></span><a class="reference internal" href="_modules/model/model_parameter.html#InvalidModelParameterError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.InvalidModelParameterError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for invalid model parameter.</p>
@@ -995,7 +999,7 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">ModelParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter" title="Link to this definition">#</a></dt>
-<dd><p>Base class for model parameters.</p>
+<dd><p>Base class for simulation model parameters.</p>
 <p>Provides methods to read and manipulate parameters from DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1270,7 +1274,8 @@ of the database structure is needed when accessing the model parameters.</p>
 </section>
 <section id="model-utilities">
 <h2>model utilities<a class="headerlink" href="#model-utilities" title="Link to this heading">#</a></h2>
-<span class="target" id="module-model.model_utils"><span id="model-utils"></span></span><dl class="py function">
+<p id="module-model.model_utils"><span id="model-utils"></span>Helper functions calculations related to model parameters.</p>
+<dl class="py function">
 <dt class="sig sig-object py" id="model.model_utils.compute_telescope_transmission">
 <span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">compute_telescope_transmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#compute_telescope_transmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.compute_telescope_transmission" title="Link to this definition">#</a></dt>
 <dd><p>Compute telescope transmission (0 &lt; T &lt; 1) for a given off-axis angle.</p>
