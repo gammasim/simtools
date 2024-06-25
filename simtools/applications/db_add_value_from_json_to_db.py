@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    This application adds a new parameter / value to a collection in the DB using a json
-    file as input.
+    Add a new parameter / value to a collection in the DB using a json file as input.
 
     Command line arguments
     ----------------------

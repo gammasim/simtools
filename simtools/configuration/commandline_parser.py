@@ -223,6 +223,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_simulation_model_arguments(self, model_options):
         """
         Initialize default arguments for simulation model definition.
+
         Note that the model version is always required.
 
         Parameters
@@ -300,8 +301,7 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def efficiency_interval(value):
         """
-        Argument parser type to check that value is an efficiency
-        in the interval [0,1].
+        Argument parser type to check that value is an efficiency in the interval [0,1].
 
         Parameters
         ----------
@@ -330,6 +330,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def zenith_angle(angle):
         """
         Argument parser type to check that the zenith angle provided is in the interval [0, 180].
+
         We allow here zenith angles larger than 90 degrees in the improbable case
         such simulations are requested. It is not guaranteed that the actual simulation software
         supports such angles!.
@@ -375,6 +376,7 @@ class CommandLineParser(argparse.ArgumentParser):
     def azimuth_angle(angle):
         """
         Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
+
         Other allowed options are north, south, east or west which will be translated to an angle
         where north corresponds to zero.
 

@@ -40,8 +40,9 @@ class Mirrors:
 
     def _read_mirror_list(self):
         """
-        Read the mirror lists from disk and store the data. Allow reading of mirror lists in \
-        sim_telarray and ecsv format.
+        Read the mirror lists from disk and store the data.
+
+        Allow reading of mirror lists in sim_telarray and ecsv format.
         """
         if str(self._mirror_list_file).find("ecsv") > 0:
             self._read_mirror_list_from_ecsv()
@@ -119,6 +120,7 @@ class Mirrors:
     def _read_mirror_list_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
+
         Allow to read mirror lists with different number of columns.
 
         Raises

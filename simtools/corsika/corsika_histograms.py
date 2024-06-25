@@ -27,8 +27,8 @@ class HistogramNotCreatedError(Exception):
 
 
 class CorsikaHistograms:
-    """CorsikaHistograms extracts the Cherenkov photons information from a CORSIKA IACT file
-     using pyeventio.
+    """
+    Extracts the Cherenkov photons information from a CORSIKA IACT file.
 
     Parameters
     ----------
@@ -109,6 +109,7 @@ class CorsikaHistograms:
     def hdf5_file_name(self):
         """
         Property for the hdf5 file name.
+
         The idea of this property is to allow setting (or changing) the name of the hdf5 file
         even after creating the class instance.
         """
@@ -189,6 +190,7 @@ class CorsikaHistograms:
     def read_event_information(self):
         """
         Read the information about the events from their headers and save as a class instance.
+
         The main information can also be fetched individually through the functions below.
         For the remaining information (such as px, py, pz), use this function.
 
@@ -272,6 +274,7 @@ class CorsikaHistograms:
     def telescope_indices(self, telescope_new_indices):
         """
         Set the telescope index (or indices).
+
         If self.individual_telescopes is True, the indices of the telescopes passed are analyzed
         individually (different histograms for each telescope) even if all telescopes are listed.
 
@@ -322,6 +325,7 @@ class CorsikaHistograms:
     def hist_config(self, input_config):
         """
         Set the configuration for the histograms (e.g., bin size, min and max values, etc).
+
         The input is allowed either through a yaml file or a dictionary. If nothing is given,
         the dictionary is created with default values.
 
@@ -359,8 +363,9 @@ class CorsikaHistograms:
 
     def _create_histogram_default_config(self):
         """
-        Create a dictionary with the configuration necessary to create the histograms. It is used
-        only in case the configuration is not provided in a yaml file or dict.
+        Create a dictionary with the configuration necessary to create the histograms.
+
+        It is used only in case the configuration is not provided in a yaml file or dict.
 
         Three histograms are created: hist_position with 3 dimensions (x, y positions and the
         wavelength), hist_direction with 2 dimensions (direction cosines in x and y directions),
@@ -521,10 +526,11 @@ class CorsikaHistograms:
             )
 
     def _fill_histograms(self, photons, rotation_around_z_axis=None, rotation_around_y_axis=None):
-        """Fill all the histograms created by self._create_histogram with the information of the
-         photons on the ground.
-         If the azimuth and zenith angles are provided, the Cherenkov photon's coordinates are
-         filled in the plane perpendicular to the incoming direction of the particle.
+        """
+        Fill histograms with the information of the photons on the ground.
+
+        if the azimuth and zenith angles are provided, the Cherenkov photon's coordinates are
+        filled in the plane perpendicular to the incoming direction of the particle.
 
         Parameters
         ----------
@@ -596,8 +602,7 @@ class CorsikaHistograms:
 
     def set_histograms(self, telescope_indices=None, individual_telescopes=None, hist_config=None):
         """
-        Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
-         and fill the histograms.
+        Create and fill Cherenkov photons histograms using information from the CORSIKA IACT file.
 
         Parameters
         ----------
@@ -662,8 +667,7 @@ class CorsikaHistograms:
     @individual_telescopes.setter
     def individual_telescopes(self, new_individual_telescopes: bool):
         """
-        The following lines allow individual_telescopes to be defined before using this function
-        but if any parameter is passed in this function, it overwrites the class attribute.
+        Define individual telescopes.
 
         Parameters
         ----------
@@ -765,8 +769,9 @@ class CorsikaHistograms:
 
     def get_2d_photon_density_distr(self):
         """
-        Get 2D histograms of position of the Cherenkov photons on the ground. It returns the photon
-        density per square meter.
+        Get 2D histograms of position of the Cherenkov photons on the ground.
+
+        It returns the photon density per square meter.
 
         Returns
         -------
@@ -811,8 +816,10 @@ class CorsikaHistograms:
 
     def get_2d_num_photons_distr(self):
         """
-        Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array
-        accounting for the events from the telescopes given by self.telescope_indices.
+        Get the distribution of Cherenkov photons per event per telescope.
+
+        It returns the 2D array accounting for the events from the telescopes given
+        by self.telescope_indices.
 
         Returns
         -------
@@ -875,8 +882,8 @@ class CorsikaHistograms:
         return np.array(hist_1d_list), np.array(x_bin_edges_list)
 
     def _get_bins_max_dist(self, bins=None, max_dist=None):
-        """Auxiliary function to get the number of bins and the max distance to generate the
-        radial and the density histograms.
+        """
+        Get the number of bins and the max distance to generate the radial and density histograms.
 
         Parameters
         ----------
@@ -912,8 +919,7 @@ class CorsikaHistograms:
 
     def get_photon_radial_distr(self, bins=None, max_dist=None):
         """
-        Get the radial distribution of the photons on the ground in relation to the center of the
-        array.
+        Get the phton radial distribution on the ground in relation to the center of the array.
 
         Parameters
         ----------
@@ -949,8 +955,7 @@ class CorsikaHistograms:
 
     def get_photon_density_distr(self, bins=None, max_dist=None):
         """
-        Get the density distribution of the photons on the ground in relation to the center of the
-        array.
+        Get the photon density distribution on the ground in relation to the center of the array.
 
         Parameters
         ----------
@@ -1001,9 +1006,10 @@ class CorsikaHistograms:
 
     def get_photon_time_of_emission_distr(self):
         """
-        Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the
-         particle crosses the top of the atmosphere (CORSIKA-defined) if
-         self.event_first_interaction_heights is positive or at first interaction if otherwise.
+        Get the distribution of the emitted time of the Cherenkov photons.
+
+        The clock starts when the particle crosses the top of the atmosphere (CORSIKA-defined) if
+        self.event_first_interaction_heights is positive or at first interaction if otherwise.
 
         Returns
         -------
@@ -1046,8 +1052,9 @@ class CorsikaHistograms:
     @property
     def num_photons_per_event(self):
         """
-        Get the distribution of the number of photons amongst the events,
-         including the telescopes indicated by self.telescope_indices.
+        Get the the number of photons per events.
+
+        Includes the telescopes indicated by self.telescope_indices.
 
         Returns
         -------
@@ -1377,8 +1384,7 @@ class CorsikaHistograms:
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
         """
-        Export to a hdf5 file the 1D histogram for the key 'event_header_element' from the CORSIKA
-        event header.
+        Exports 'event_header_element' from CORSIKA to hd5 for a 1D histogram.
 
         Parameters
         ----------
@@ -1425,7 +1431,9 @@ class CorsikaHistograms:
         overwrite=False,
     ):
         """
-        Export to a hdf5 file the 2D histogram for the key 'event_header_element_1' and
+        Export event_header of a 2D histogram to a hdf5 file.
+
+        Searches the 2D histogram for the key 'event_header_element_1' and
         'event_header_element_2'from the CORSIKA event header.
 
         Parameters
@@ -1474,8 +1482,7 @@ class CorsikaHistograms:
     @property
     def num_photons_per_telescope(self):
         """
-        The number of photons per event, considering the telescopes given by
-        self.telescope_indices.
+        The number of photons per event, considering the telescopes given by self.telescope_indices.
 
         Returns
         -------
@@ -1504,6 +1511,7 @@ class CorsikaHistograms:
     def telescope_positions(self):
         """
         The telescope positions found in the CORSIKA output file.
+
         It does not depend on the telescope_indices attribute.
 
         Returns
@@ -1586,8 +1594,9 @@ class CorsikaHistograms:
     def event_first_interaction_heights(self):
         """
         Get the height of the first interaction in astropy units of km.
-        If negative, tracking starts at margin of atmosphere, see TSTART in the CORSIKA 7 user guide
-        .
+
+        If negative, tracking starts at margin of atmosphere,
+        see TSTART in the CORSIKA 7 user guide.
 
         Returns
         -------
@@ -1605,6 +1614,7 @@ class CorsikaHistograms:
     def magnetic_field(self):
         """
         Get the Earth magnetic field from the events header in astropy units of microT.
+
         A tuple with Earth's magnetic field in the x and z directions are returned.
 
         Returns
@@ -1622,8 +1632,10 @@ class CorsikaHistograms:
 
     def get_event_parameter_info(self, parameter):
         """
-        Get specific information (i.e. any parameter) of the events. The parameter is passed through
-        the key word parameter. Available options are to be found under self.all_event_keys.
+        Get specific information (i.e. any parameter) of the events.
+
+        The parameter is passed through the key word parameter.
+        Available options are to be found under self.all_event_keys.
         The unit of the parameter, if any, is given according to the CORSIKA version
         (please see user guide in this case).
 
@@ -1651,8 +1663,10 @@ class CorsikaHistograms:
 
     def get_run_info(self, parameter):
         """
-        Get specific information (i.e. any parameter) of the run. The parameter is passed through
-        the key word parameter. Available options are to be found under self.all_run_keys.
+        Get specific information (i.e. any parameter) of the run.
+
+        The parameter is passed through the key word parameter.
+        Available options are to be found under self.all_run_keys.
         The unit of the parameter, if any, is given according to the CORSIKA version
         (please see user guide in this case).
 
@@ -1676,6 +1690,7 @@ class CorsikaHistograms:
     def event_1d_histogram(self, key, bins=50, hist_range=None):
         """
         Create a histogram for the all events using key as parameter.
+
         Valid keys are stored in self.all_event_keys (CORSIKA defined).
 
         Parameters
@@ -1715,6 +1730,7 @@ class CorsikaHistograms:
     def event_2d_histogram(self, key_1, key_2, bins=50, hist_range=None):
         """
         Create a 2D histogram for the all events using key_1 and key_2 as parameters.
+
         Valid keys are stored in self.all_event_keys (CORSIKA defined).
 
         Parameters

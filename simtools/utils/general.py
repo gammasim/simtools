@@ -195,9 +195,9 @@ def _process_default_value(par_name, par_info, out_data, _logger):
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False, _logger=None):
     """
-    Validate a generic config_data dict by using the info
-    given by the parameters dict. The entries will be validated
-    in terms of length, units and names.
+    Validate a generic config_data dict by using the info given by the parameters dict.
+
+    The entries will be validated in terms of length, units and names.
 
     See ./tests/resources/test_parameters.yml for an example of the structure
     of the parameters dict.
@@ -396,6 +396,7 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
 def _validate_and_convert_value(par_name, par_info, value_in):
     """
     Validate input user parameter and convert it to the right units, if needed.
+
     Returns the validated arguments in a list.
     """
     if isinstance(value_in, dict):
@@ -414,6 +415,7 @@ def _validate_and_convert_value(par_name, par_info, value_in):
 def join_url_or_path(url_or_path, *args):
     """
     Join URL or path with additional subdirectories and file.
+
     This is the equivalent to Path.join(), with extended functionality
     working also for URLs.
 
@@ -460,6 +462,7 @@ def is_url(url):
 def collect_data_from_http(url):
     """
     Download yaml or json file from url and return it contents as dict.
+
     File is downloaded as a temporary file and deleted afterwards.
 
     Parameters
@@ -738,9 +741,10 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and the dict to be given as
-    config_data. This function is specific for methods from_kwargs in classes which use the
-    validate_config_data system.
+    Separate kwargs into arguments expected for class instancing class and the config_data dict.
+
+    This function is specific for methods from_kwargs in classes which use the validate_config_data
+    system.
 
     Parameters
     ----------
@@ -890,8 +894,10 @@ def get_file_age(file_path):
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
-    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case.
+
+    Crawls through the dictionary and changes all keys.
+    Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
@@ -927,8 +933,10 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
     """
-    Remove substrings from all strings in a dictionary. Recursively crawls through the dictionary
-    This e.g., allows to remove all newline characters from a dictionary.
+    Remove substrings from all strings in a dictionary.
+
+    Recursively crawls through the dictionary This e.g., allows to remove all newline characters
+    from a dictionary.
 
     Parameters
     ----------
@@ -992,6 +1000,7 @@ def sort_arrays(*args):
 def extract_type_of_value(value) -> str:
     """
     Extract the string representation of the the type of a value.
+
     For example, for a string, it returns 'str' rather than '<class 'str'>'.
     Take into account also the case where the value is a numpy type.
     """
@@ -1008,6 +1017,7 @@ def extract_type_of_value(value) -> str:
 def get_value_unit_type(value, unit_str=None):
     """
     Get the value, unit and type of a value.
+
     The value is stripped of its unit and the unit is returned
     in its string form (i.e., to_string()).
     The type is returned as a string representation of the type.
@@ -1117,10 +1127,10 @@ def user_confirm():
 
 def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
     """
-    Validate data type of value (scalar, list, np array) or type object against a
-    reference data type. Allow to check for exact data type or allow sub types
-    (e.g. uint is accepted for int).  Take into account 'file' type as used in the
-    model parameter database.
+    Validate data type of value or type object against a reference data type.
+
+    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).
+    Take into account 'file' type as used in the model parameter database.
 
     Parameters
     ----------
@@ -1199,6 +1209,7 @@ def convert_list_to_string(data, comma_separated=False):
 def convert_string_to_list(data_string, is_float=True):
     """
     Convert string (as used e.g. in sim_telarray) to list.
+
     Allow coma or space separated strings.
 
     Parameters

@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-    This application generates a set of histograms of the distribution of Cherenkov photons on the
-    ground (at observation level) read from the CORSIKA IACT output file provided as input.
+    Generates a set of histograms Cherenkov photon distributions from CORSIKA output.
+
+    The Cherenkov photons (from observation level) are read from a CORSIKA IACT
+    output file provided as input.
 
     The histograms can be saved both into pdfs and in a hdf5 file.
 
@@ -359,6 +361,7 @@ def _derive_event_2d_histograms(
 ):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1d_histograms.
+
     If an odd number of event header keys are given, the last one is discarded.
 
     Parameters

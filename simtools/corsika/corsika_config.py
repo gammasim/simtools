@@ -26,9 +26,10 @@ class InvalidCorsikaInputError(Exception):
 
 class CorsikaConfig:
     """
-    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \
-    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data
-    follows below.
+    Configuration of CORSIKA simulations.
+
+    User parameters must be given by  the corsika_config_data or corsika_config_file arguments.
+    An example of corsika_config_data follows below.
 
     .. code-block:: python
 
@@ -289,8 +290,7 @@ class CorsikaConfig:
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
-        Convert a primary name into the proper CORSIKA particle ID and store its name in \
-        the self.primary attribute.
+        Convert a primary name into the proper CORSIKA particle ID.
 
         Parameters
         ----------
@@ -544,6 +544,7 @@ class CorsikaConfig:
     def _convert_to_quantities(self, value_args):
         """
         Convert a list of value, unit pairs into a list of astropy quantities.
+
         (note similarity to simtools.general.validate_config_data; unfortunately
         minor differences are required as CORSIKA is very specific about the
         input parameter representation).

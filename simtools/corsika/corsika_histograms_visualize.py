@@ -12,8 +12,7 @@ _logger = logging.getLogger(__name__)
 
 def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     """
-    The next functions below are used by the the CorsikaHistograms class to plot all sort of
-    information from the Cherenkov photons saved.
+    Helper functions for plotting of distributions of Cherenkov photons saved in CorsikaHistograms.
 
     Create the figure of a 2D plot. The parameter name indicate which plot.
     Choices are "counts", "density", "direction", "time_altitude", and "num_photons_per_telescope".

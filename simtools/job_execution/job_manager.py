@@ -103,8 +103,7 @@ class JobManager:
 
     def _submit_local(self, log_file):
         """
-        Run a job script on the command line
-        (no submission to a workload manager).
+        Run a job script on the command line (no submission to a workload manager).
 
         Parameters
         ----------

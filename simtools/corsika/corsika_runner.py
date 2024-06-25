@@ -18,8 +18,10 @@ class MissingRequiredEntryInCorsikaConfigError(Exception):
 
 class CorsikaRunner:
     """
-    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \
-    provided by the sim_telarray package. It provides shell scripts to be run externally or by \
+    CorsikaRunner is responsible for running CORSIKA.
+
+    Uses the corsika_autoinputs program provided by the sim_telarray package.
+    It provides shell scripts to be run externally or by \
     the module simulator. Same instance can be used to generate scripts for any given run number.
 
     It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the\
@@ -124,6 +126,7 @@ class CorsikaRunner:
     def _define_corsika_config(self, use_multipipe=False):
         """
         Create the CORSIKA config instance.
+
         This validates the input given in corsika_config_data as well.
         """
         try:
@@ -415,8 +418,10 @@ class CorsikaRunner:
 
     def _validate_run_number(self, run_number):
         """
-        Returns the run number from corsika_config in case run_number is None, Raise ValueError if\
-        run_number is not valid (< 1) or returns run_number if it is a valid value.
+        Returns the run number from corsika_config in case run_number is None.
+
+        Raise ValueError if run_number is not valid (< 1) or returns run_number
+        if it is a valid value.
         """
         if run_number is None:
             return self.corsika_config.get_user_parameter("RUNNR")
