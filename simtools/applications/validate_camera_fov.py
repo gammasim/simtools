@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     This application calculate the camera FoV of the telescope requested and plot the camera \
     as seen for an observer facing the camera.
 

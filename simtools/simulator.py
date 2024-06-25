@@ -142,13 +142,13 @@ class Simulator:
 
     @property
     def simulation_software(self):
-        """The attribute simulation_software"""
+        """The attribute simulation_software."""
         return self._simulation_software
 
     @simulation_software.setter
     def simulation_software(self, simulation_software):
         """
-        Set and test simulation_software type
+        Set and test simulation_software type.
 
         Parameters
         ----------

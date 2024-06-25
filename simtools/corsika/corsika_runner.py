@@ -78,9 +78,7 @@ class CorsikaRunner:
         corsika_config_data=None,
         use_multipipe=False,
     ):
-        """
-        CorsikaRunner init.
-        """
+        """CorsikaRunner init."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaRunner")
 

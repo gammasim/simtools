@@ -1,6 +1,4 @@
-"""
-A collection of functions related to geometrical transformations.
-"""
+"""A collection of functions related to geometrical transformations."""
 
 import logging
 

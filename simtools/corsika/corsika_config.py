@@ -71,9 +71,7 @@ class CorsikaConfig:
         corsika_parameters_file=None,
         simtel_source_path=None,
     ):
-        """
-        Initialize CorsikaConfig.
-        """
+        """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
 

@@ -7,13 +7,11 @@ __all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
 class IncompleteIOHandlerInitError(Exception):
-    """Exception raised when IOHandler is not initialized"""
+    """Exception raised when IOHandler is not initialized."""
 
 
 class IOHandlerSingleton(type):
-    """
-    Singleton base class
-    """
+    """Singleton base class."""
 
     _instances = {}
 
@@ -24,15 +22,10 @@ class IOHandlerSingleton(type):
 
 
 class IOHandler(metaclass=IOHandlerSingleton):
-    """
-    Handle input and output paths.
-    """
+    """Handle input and output paths."""
 
     def __init__(self):
-        """
-        Initialize IOHandler.
-
-        """
+        """Initialize IOHandler."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init IOHandler")
 
@@ -66,7 +59,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     def get_output_directory(self, label=None, sub_dir=None, dir_type="simtools"):
         """
-        Return path to output directory
+        Return path to output directory.
 
         Parameters
         ----------
@@ -151,7 +144,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     def get_input_data_file(self, parent_dir=None, file_name=None, test=False):
         """
-        Get path of a data file, using data_path
+        Get path of a data file, using data_path.
 
         Parameters
         ----------

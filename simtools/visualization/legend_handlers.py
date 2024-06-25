@@ -137,9 +137,7 @@ class MeanRadiusOuterEdgeObject:
 
 
 class HexPixelHandler:
-    """
-    Legend handler class to plot a hexagonal "on" pixel.
-    """
+    """Legend handler class to plot a hexagonal "on" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -159,9 +157,7 @@ class HexPixelHandler:
 
 
 class HexEdgePixelHandler:
-    """
-    Legend handler class to plot a hexagonal "edge" pixel.
-    """
+    """Legend handler class to plot a hexagonal "edge" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -181,9 +177,7 @@ class HexEdgePixelHandler:
 
 
 class HexOffPixelHandler:
-    """
-    Legend handler class to plot a hexagonal "off" pixel.
-    """
+    """Legend handler class to plot a hexagonal "off" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -203,9 +197,7 @@ class HexOffPixelHandler:
 
 
 class SquarePixelHandler:
-    """
-    Legend handler class to plot a square "on" pixel.
-    """
+    """Legend handler class to plot a square "on" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -224,9 +216,7 @@ class SquarePixelHandler:
 
 
 class SquareEdgePixelHandler:
-    """
-    Legend handler class to plot a square "edge" pixel.
-    """
+    """Legend handler class to plot a square "edge" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -245,9 +235,7 @@ class SquareEdgePixelHandler:
 
 
 class SquareOffPixelHandler:
-    """
-    Legend handler class to plot a square "off" pixel.
-    """
+    """Legend handler class to plot a square "off" pixel."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
@@ -266,9 +254,7 @@ class SquareOffPixelHandler:
 
 
 class LSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an LST in an array layout.
-    """
+    """Legend handler class to plot a representation of an LST in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox, 10 / 3, 2)
@@ -285,9 +271,7 @@ class LSTHandler(TelescopeHandler):
 
 
 class MSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an MST in an array layout.
-    """
+    """Legend handler class to plot a representation of an MST in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox, 4, 2)
@@ -304,9 +288,7 @@ class MSTHandler(TelescopeHandler):
 
 
 class SSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an SST in an array layout.
-    """
+    """Legend handler class to plot a representation of an SST in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox, 4, 2)
@@ -323,9 +305,7 @@ class SSTHandler(TelescopeHandler):
 
 
 class SCTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an SCT in an array layout.
-    """
+    """Legend handler class to plot a representation of an SCT in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox, 10, 1)
@@ -343,9 +323,7 @@ class SCTHandler(TelescopeHandler):
 
 
 class HESSHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an HESS in an array layout.
-    """
+    """Legend handler class to plot a representation of an HESS in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -364,9 +342,7 @@ class HESSHandler(TelescopeHandler):
 
 
 class MAGICHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an MAGIC in an array layout.
-    """
+    """Legend handler class to plot a representation of an MAGIC in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -385,9 +361,7 @@ class MAGICHandler(TelescopeHandler):
 
 
 class VERITASHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an VERITAS in an array layout.
-    """
+    """Legend handler class to plot a representation of an VERITAS in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -406,9 +380,7 @@ class VERITASHandler(TelescopeHandler):
 
 
 class MeanRadiusOuterEdgeHandler:
-    """
-    Legend handler class to plot a the mean radius outer edge of the dish.
-    """
+    """Legend handler class to plot a the mean radius outer edge of the dish."""
 
     @staticmethod
     def legend_artist(_, __, ___, handlebox):
