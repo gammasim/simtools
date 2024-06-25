@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbc78938"></script>
+    <script src="_static/documentation_options.js?v=4748ec0b"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -500,8 +500,8 @@ Data products ingested or produced by simtools generally follows the CTA data mo
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.data_reader.read_table_from_file">
 <span class="sig-prename descclassname"><span class="pre">data_model.data_reader.</span></span><span class="sig-name descname"><span class="pre">read_table_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/data_reader.html#read_table_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.data_reader.read_table_from_file" title="Link to this definition">#</a></dt>
-<dd><p>Read astropy table from file and validate against schema.
-Metadata is read from metadata file or from the metadata section of the data file.
+<dd><p>Read astropy table from file and validate against schema.</p>
+<p>Metadata is read from metadata file or from the metadata section of the data file.
 Schema for validation can be given as argument, or is determined
 from the metadata associated to the file.</p>
 <dl class="field-list simple">
@@ -535,7 +535,8 @@ from the metadata associated to the file.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.data_reader.read_value_from_file">
 <span class="sig-prename descclassname"><span class="pre">data_model.data_reader.</span></span><span class="sig-name descname"><span class="pre">read_value_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/data_reader.html#read_value_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.data_reader.read_value_from_file" title="Link to this definition">#</a></dt>
-<dd><p>Read value from file and validate against schema. Expect data to follow the convention for
+<dd><p>Read value from file and validate against schema.</p>
+<p>Expect data to follow the convention for
 how simulation model parameters are stored in the simulation model database: to be a single
 value stored in the ‘value’ field (with possible units in the ‘units’ field).
 Metadata is read from metadata file or from the metadata section of the data file.
@@ -577,11 +578,9 @@ implementation of the metadata model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">#</a></dt>
-<dd><p>Collects and combines metadata associated to describe the current
-simtools activity and its data products. Collect as much metadata
-as possible from command line configuration, input data, environment,
-schema descriptions.
-Depends on the CTAO top-level metadata definition.</p>
+<dd><p>Collects and combines metadata to describe the current simtools activity and its data products.</p>
+<p>Collect as much metadata as possible from command line configuration, input data, environment,
+schema descriptions.  Depends on the CTAO top-level metadata definition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -617,8 +616,8 @@ Depends on the CTAO top-level metadata definition.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.metadata_collector.MetadataCollector.get_data_model_schema_file_name">
 <span class="sig-name descname"><span class="pre">get_data_model_schema_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_collector.html#MetadataCollector.get_data_model_schema_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector.get_data_model_schema_file_name" title="Link to this definition">#</a></dt>
-<dd><p>Return data model schema file name.
-The schema file name is taken (in this order) from the command line,
+<dd><p>Return data model schema file name.</p>
+<p>The schema file name is taken (in this order) from the command line,
 from the metadata file, from the data model name, or from the input
 metadata file.</p>
 <dl class="field-list simple">
@@ -656,8 +655,8 @@ metadata file.</p>
 </section>
 <section id="module-data_model.metadata_model">
 <span id="metadata-model"></span><span id="datamodelmetadatamodel"></span><h2>metadata_model<a class="headerlink" href="#module-data_model.metadata_model" title="Link to this heading">#</a></h2>
-<p>Definition of metadata model for input to and output of simtools.
-Follows CTAO top-level data model definition.</p>
+<p>Definition of metadata model for input to and output of simtools.</p>
+<p>Follows CTAO top-level data model definition.</p>
 <ul class="simple">
 <li><p>data products submitted to SimPipe (‘input’)</p></li>
 <li><p>data products generated by SimPipe (‘output’)</p></li>
@@ -665,8 +664,8 @@ Follows CTAO top-level data model definition.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.metadata_model.get_default_metadata_dict">
 <span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">get_default_metadata_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CTA'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/metadata_model.html#get_default_metadata_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.get_default_metadata_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns metadata schema with default values.
-Follows the CTA Top-Level Data Model.</p>
+<dd><p>Returns metadata schema with default values.</p>
+<p>Follows the CTA Top-Level Data Model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -850,8 +849,7 @@ Follows the CTA Top-Level Data Model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.validate_data.</span></span><span class="sig-name descname"><span class="pre">DataValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_exact_data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator" title="Link to this definition">#</a></dt>
-<dd><p>Validate data for type and units following a describing schema; converts or
-transform data if required.</p>
+<dd><p>Validate data for type and units following a describing schema; converts or transform data.</p>
 <p>Data can be of table or dict format (internally, all data is converted to astropy tables).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -898,9 +896,8 @@ transform data if required.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_data_file">
 <span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Link to this definition">#</a></dt>
-<dd><p>Open data file and read data from file
-(doing this successfully is understood as
-file validation).</p>
+<dd><p>Open data file and read data from file.</p>
+<p>Doing this successfully is understood as file validation.</p>
 </dd></dl>
 
 <dl class="py method">

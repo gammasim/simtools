@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -364,8 +364,9 @@ document.write(`
   <h1>Source code for convert_all_model_parameters_from_simtel</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert all simulation model parameters exported from sim_telarray format using</span>
-<span class="sd">    schema files. Check value, type, and range, convert units, and write json files</span>
+<span class="sd">    Convert all simulation model parameters exported from sim_telarray format using schema files.</span>
+
+<span class="sd">    Check value, type, and range, convert units, and write json files</span>
 <span class="sd">    ready to be submitted to the model database. Prints out parameters which are not found</span>
 <span class="sd">    in simtel configuration file and parameters which are not found in simtools schema files.</span>
 
@@ -557,7 +558,8 @@ document.write(`
 <a class="viewcode-back" href="../convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel">[docs]</a>
 <span class="k">def</span> <span class="nf">get_number_of_camera_pixel</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the number of camera pixels from the simtel configuration file</span>
+<span class="sd">    Get the number of camera pixels from the simtel configuration file.</span>
+
 <span class="sd">    Required to set the dimension some of the parameter correctly, as simtel</span>
 <span class="sd">    in some cases does not provide the dimension (&#39;all:&#39; in the parameter files).</span>
 
@@ -596,6 +598,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">read_and_export_parameters</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read and export parameters from simtel configuration file to json files.</span>
+
 <span class="sd">    Only applicable parameters are exported to json.</span>
 <span class="sd">    Provide extensive logging information on the parameters found in the simtel</span>
 <span class="sd">    configuration file.</span>
@@ -665,8 +668,9 @@ document.write(`
 <a class="viewcode-back" href="../convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.print_parameters_not_found">[docs]</a>
 <span class="k">def</span> <span class="nf">print_parameters_not_found</span><span class="p">(</span><span class="n">_parameters_not_in_simtel</span><span class="p">,</span> <span class="n">_simtel_parameters</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Print simtel parameters not found in schema files and simtools parameters not found in simtel</span>
-<span class="sd">    configuration file. For simtel parameters not found, check if the setting for the chose</span>
+<span class="sd">    Print simtel/simtools parameter not found in schema and ocnfiguration files.</span>
+
+<span class="sd">    For simtel parameters not found, check if the setting for the chose</span>
 <span class="sd">    telescope is different from the default values.</span>
 
 <span class="sd">    Parameters</span>
@@ -721,6 +725,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">print_list_of_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print model parameters which describe a file name.</span>
+
 <span class="sd">    This is useful to find files which are part of the model.</span>
 
 <span class="sd">    Parameters</span>

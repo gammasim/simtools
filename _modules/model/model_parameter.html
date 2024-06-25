@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -391,6 +391,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">ModelParameter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for model parameters.</span>
+
 <span class="sd">    Provides methods to read and manipulate parameters from DB.</span>
 
 <span class="sd">    Parameters</span>
@@ -460,6 +461,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_get_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameter dictionary as stored in the DB.</span>
+
 <span class="sd">        No conversion to values are applied for the use in simtools</span>
 <span class="sd">        (e.g., no conversion from the string representation of lists</span>
 <span class="sd">        to lists).</span>
@@ -494,10 +496,10 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_value">[docs]</a>
     <span class="k">def</span> <span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the value of a model parameter. List of values stored</span>
-<span class="sd">        in strings are returns as lists, so that no knowledge</span>
-<span class="sd">        of the database structure is needed when accessing the</span>
-<span class="sd">        model parameters.</span>
+<span class="sd">        Get the value of a model parameter.</span>
+
+<span class="sd">        List of values stored in strings are returns as lists, so that no knowledge</span>
+<span class="sd">        of the database structure is needed when accessing the model parameters.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -538,7 +540,8 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">[docs]</a>
     <span class="k">def</span> <span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\</span>
+<span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.</span>
+
 <span class="sd">        If no unit is provided in the model, the value is returned without a unit.</span>
 
 <span class="sd">        Parameters</span>
@@ -564,8 +567,7 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_type">[docs]</a>
     <span class="k">def</span> <span class="nf">get_parameter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the type of existing parameter of the model</span>
-<span class="sd">        (value of &#39;type&#39; field of DB entry).</span>
+<span class="sd">        Get the type of existing parameter of the model (value of &#39;type&#39; field of DB entry).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -590,8 +592,7 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_parameter_file_flag">[docs]</a>
     <span class="k">def</span> <span class="nf">get_parameter_file_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get value of parameter file flag of this database entry</span>
-<span class="sd">        (boolean &#39;file&#39; field of DB entry).</span>
+<span class="sd">        Get value of parameter file flag of this database entry (boolean &#39;file&#39; field of DB entry).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -769,8 +770,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.change_parameter">[docs]</a>
     <span class="k">def</span> <span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Change the value of an existing parameter. This function does not modify the \</span>
-<span class="sd">        DB, it affects only the current instance.</span>
+<span class="sd">        Change the value of an existing parameter.</span>
+
+<span class="sd">        This function does not modify the  DB, it affects only the current instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -821,8 +823,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.change_multiple_parameters">[docs]</a>
     <span class="k">def</span> <span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Change the value of multiple existing parameters in the model. This function does not \</span>
-<span class="sd">        modify the DB, it affects only the current instance.</span>
+<span class="sd">        Change the value of multiple existing parameters in the model.</span>
+
+<span class="sd">        This function does not modify the DB, it affects only the current instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -905,8 +908,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.model_parameter.ModelParameter.get_config_file">[docs]</a>
     <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the path of the config file for sim_telarray. The config file is produced if the file\</span>
-<span class="sd">        is not up to date.</span>
+<span class="sd">        Get the path of the config file for sim_telarray.</span>
+
+<span class="sd">        The config file is produced if the file is not up to date.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbc78938"></script>
+    <script src="_static/documentation_options.js?v=4748ec0b"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -706,7 +706,8 @@ the array element positions).</p>
 <span class="target" id="module-model.calibration_model"><span id="id2"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.calibration_model.CalibrationModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.calibration_model.</span></span><span class="sig-name descname"><span class="pre">CalibrationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_device_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/calibration_model.html#CalibrationModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.calibration_model.CalibrationModel" title="Link to this definition">#</a></dt>
-<dd><p>CalibrationModel represents the MC model of an individual calibration device.     It provides functionality to read the required parameters from the DB.</p>
+<dd><p>CalibrationModel represents the MC model of an individual calibration device.</p>
+<p>It provides functionality to read the required parameters from the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -731,7 +732,8 @@ the array element positions).</p>
 <span class="target" id="module-model.camera"><span id="camera-1"></span></span><dl class="py class">
 <dt class="sig sig-object py" id="model.camera.Camera">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera" title="Link to this definition">#</a></dt>
-<dd><p>Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating    FoV and plotting the camera.</p>
+<dd><p>Camera class, defining pixel layout.</p>
+<p>This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -829,7 +831,9 @@ the array element positions).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.camera.Camera.get_neighbour_pixels">
 <span class="sig-name descname"><span class="pre">get_neighbour_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_neighbour_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_neighbour_pixels" title="Link to this definition">#</a></dt>
-<dd><p>Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The         purpose of this function is to ensure the calculation occurs only once and only when         necessary.</p>
+<dd><p>Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.</p>
+<p>The purpose of this function is to ensure the calculation occurs only once and only when
+necessary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -891,7 +895,8 @@ the array element positions).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.camera.Camera.get_pixel_shape">
 <span class="sig-name descname"><span class="pre">get_pixel_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/camera.html#Camera.get_pixel_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.get_pixel_shape" title="Link to this definition">#</a></dt>
-<dd><p>Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by        30 degrees with respect to the other. A square pixel is denoted as 2.</p>
+<dd><p>Get pixel shape code 1, 2 or 3.</p>
+<p>Where 1 and 3 are hexagonal pixels, where one is rotated by        30 degrees with respect to the other. A square pixel is denoted as 2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -990,8 +995,8 @@ clockwise by 30 degrees with respect to those denoted as 1.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">ModelParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter" title="Link to this definition">#</a></dt>
-<dd><p>Base class for model parameters.
-Provides methods to read and manipulate parameters from DB.</p>
+<dd><p>Base class for model parameters.</p>
+<p>Provides methods to read and manipulate parameters from DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1016,7 +1021,8 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.change_multiple_parameters">
 <span class="sig-name descname"><span class="pre">change_multiple_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.change_multiple_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.change_multiple_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Change the value of multiple existing parameters in the model. This function does not         modify the DB, it affects only the current instance.</p>
+<dd><p>Change the value of multiple existing parameters in the model.</p>
+<p>This function does not modify the DB, it affects only the current instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1030,7 +1036,8 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.change_parameter">
 <span class="sig-name descname"><span class="pre">change_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.change_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.change_parameter" title="Link to this definition">#</a></dt>
-<dd><p>Change the value of an existing parameter. This function does not modify the         DB, it affects only the current instance.</p>
+<dd><p>Change the value of an existing parameter.</p>
+<p>This function does not modify the  DB, it affects only the current instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1104,7 +1111,8 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_config_file">
 <span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">no_export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Get the path of the config file for sim_telarray. The config file is produced if the file        is not up to date.</p>
+<dd><p>Get the path of the config file for sim_telarray.</p>
+<p>The config file is produced if the file is not up to date.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1124,8 +1132,7 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_parameter_file_flag">
 <span class="sig-name descname"><span class="pre">get_parameter_file_flag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.get_parameter_file_flag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_parameter_file_flag" title="Link to this definition">#</a></dt>
-<dd><p>Get value of parameter file flag of this database entry
-(boolean ‘file’ field of DB entry).</p>
+<dd><p>Get value of parameter file flag of this database entry (boolean ‘file’ field of DB entry).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1145,8 +1152,7 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_parameter_type">
 <span class="sig-name descname"><span class="pre">get_parameter_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.get_parameter_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_parameter_type" title="Link to this definition">#</a></dt>
-<dd><p>Get the type of existing parameter of the model
-(value of ‘type’ field of DB entry).</p>
+<dd><p>Get the type of existing parameter of the model (value of ‘type’ field of DB entry).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1166,10 +1172,9 @@ as stored under collection in the DB.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_parameter_value">
 <span class="sig-name descname"><span class="pre">get_parameter_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.get_parameter_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_parameter_value" title="Link to this definition">#</a></dt>
-<dd><p>Get the value of a model parameter. List of values stored
-in strings are returns as lists, so that no knowledge
-of the database structure is needed when accessing the
-model parameters.</p>
+<dd><p>Get the value of a model parameter.</p>
+<p>List of values stored in strings are returns as lists, so that no knowledge
+of the database structure is needed when accessing the model parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1197,7 +1202,8 @@ model parameters.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_parameter_value_with_unit">
 <span class="sig-name descname"><span class="pre">get_parameter_value_with_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_parameter.html#ModelParameter.get_parameter_value_with_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit" title="Link to this definition">#</a></dt>
-<dd><p>Get the value of an existing parameter of the model as an Astropy Quantity with its unit.        If no unit is provided in the model, the value is returned without a unit.</p>
+<dd><p>Get the value of an existing parameter of the model as an Astropy Quantity with its unit.</p>
+<p>If no unit is provided in the model, the value is returned without a unit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1267,7 +1273,8 @@ model parameters.</p>
 <span class="target" id="module-model.model_utils"><span id="model-utils"></span></span><dl class="py function">
 <dt class="sig sig-object py" id="model.model_utils.compute_telescope_transmission">
 <span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">compute_telescope_transmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model/model_utils.html#compute_telescope_transmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.compute_telescope_transmission" title="Link to this definition">#</a></dt>
-<dd><p>Compute telescope transmission (0 &lt; T &lt; 1) for a given set of parameters as defined by     the MC model and for a given off-axis angle.</p>
+<dd><p>Compute telescope transmission (0 &lt; T &lt; 1) for a given off-axis angle.</p>
+<p>The telescope transmission depends on the MC model used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

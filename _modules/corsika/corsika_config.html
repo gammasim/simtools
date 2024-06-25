@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -398,9 +398,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig">[docs]</a>
 <span class="k">class</span> <span class="nc">CorsikaConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    CorsikaConfig deals with configuration for running CORSIKA. User parameters must be given by \</span>
-<span class="sd">    the corsika_config_data or corsika_config_file arguments. An example of corsika_config_data</span>
-<span class="sd">    follows below.</span>
+<span class="sd">    Configuration of CORSIKA simulations.</span>
+
+<span class="sd">    User parameters must be given by  the corsika_config_data or corsika_config_file arguments.</span>
+<span class="sd">    An example of corsika_config_data follows below.</span>
 
 <span class="sd">    .. code-block:: python</span>
 
@@ -667,8 +668,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert a primary name into the proper CORSIKA particle ID and store its name in \</span>
-<span class="sd">        the self.primary attribute.</span>
+<span class="sd">        Convert a primary name into the proper CORSIKA particle ID.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -937,6 +937,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_convert_to_quantities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert a list of value, unit pairs into a list of astropy quantities.</span>
+
 <span class="sd">        (note similarity to simtools.general.validate_config_data; unfortunately</span>
 <span class="sd">        minor differences are required as CORSIKA is very specific about the</span>
 <span class="sd">        input parameter representation).</span>

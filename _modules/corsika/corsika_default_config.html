@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_default_config &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>corsika.corsika_default_config &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -372,8 +372,9 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_default_config.CorsikaDefaultConfig">[docs]</a>
 <span class="k">class</span> <span class="nc">CorsikaDefaultConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This class contains the default configuration for CORSIKA parameters for</span>
-<span class="sd">    the various primary particles. It includes all basic dependencies on zenith angles, etc.</span>
+<span class="sd">    Default configuration for CORSIKA parameters for the various primary particles.</span>
+
+<span class="sd">    It includes all basic dependencies on zenith angles, etc.</span>
 <span class="sd">    The default values defined in this class assume the full CTAO arrays are simulated,</span>
 <span class="sd">    including full CTAO energy range and number of events optimized to run for roughly 24 hours</span>
 <span class="sd">    on a single node on the grid.</span>
@@ -475,6 +476,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_define_hardcoded_energy_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define the hardcoded energy ranges for the various primaries.</span>
+
 <span class="sd">        These energy ranges are for the full CTAO energy range (for both sites).</span>
 
 <span class="sd">        Returns</span>
@@ -640,6 +642,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">view_cone_for_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the view cone for the primary particle.</span>
+
 <span class="sd">        All diffuse primaries have a view cone of 10 deg by default.</span>
 
 <span class="sd">        Returns</span>

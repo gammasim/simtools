@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -381,8 +381,7 @@ document.write(`
 <a class="viewcode-back" href="../../data_model.html#data_model.validate_data.DataValidator">[docs]</a>
 <span class="k">class</span> <span class="nc">DataValidator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate data for type and units following a describing schema; converts or</span>
-<span class="sd">    transform data if required.</span>
+<span class="sd">    Validate data for type and units following a describing schema; converts or transform data.</span>
 
 <span class="sd">    Data can be of table or dict format (internally, all data is converted to astropy tables).</span>
 
@@ -459,10 +458,9 @@ document.write(`
 <a class="viewcode-back" href="../../data_model.html#data_model.validate_data.DataValidator.validate_data_file">[docs]</a>
     <span class="k">def</span> <span class="nf">validate_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Open data file and read data from file</span>
-<span class="sd">        (doing this successfully is understood as</span>
-<span class="sd">        file validation).</span>
+<span class="sd">        Open data file and read data from file.</span>
 
+<span class="sd">        Doing this successfully is understood as file validation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">):</span>
@@ -489,8 +487,10 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_validate_data_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate values in a dictionary. Handles different types of naming in data dicts</span>
-<span class="sd">        (using &#39;name&#39; or &#39;parameter&#39; keys for name fields).</span>
+<span class="sd">        Validate values in a dictionary.</span>
+
+<span class="sd">        Handles different types of naming in data dicts (using &#39;name&#39; or &#39;parameter&#39;</span>
+<span class="sd">        keys for name fields).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -546,7 +546,10 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_validate_data_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate that</span>
+<span class="sd">        Validate that data columns.</span>
+
+<span class="sd">        This includes:</span>
+
 <span class="sd">        - required data columns are available</span>
 <span class="sd">        - columns are in the correct units (if necessary apply a unit conversion)</span>
 <span class="sd">        - ranges (minimum, maximum) are correct.</span>
@@ -587,8 +590,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_sort_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sort data according to one data column (if required by any column attribute). Data is</span>
-<span class="sd">         either sorted or reverse sorted.</span>
+<span class="sd">        Sort data according to one data column (if required by any column attribute).</span>
+
+<span class="sd">        Data is either sorted or reverse sorted.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -773,8 +777,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_check_and_convert_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check that input data have an allowed unit. Convert to reference unit (e.g., Angstrom to</span>
-<span class="sd">        nm).</span>
+<span class="sd">        Check that input data have an allowed unit.</span>
+
+<span class="sd">        Convert to reference unit (e.g., Angstrom to nm).</span>
 
 <span class="sd">        Note on dimensionless columns:</span>
 
@@ -840,8 +845,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_check_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_min</span><span class="p">,</span> <span class="n">col_max</span><span class="p">,</span> <span class="n">range_type</span><span class="o">=</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check that column data is within allowed range or required range. Assumes that column and</span>
-<span class="sd">        ranges have the same units.</span>
+<span class="sd">        Check that column data is within allowed range or required range.</span>
+
+<span class="sd">        Assumes that column and ranges have the same units.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -898,8 +904,10 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_interval_check</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis_range</span><span class="p">,</span> <span class="n">range_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check that values are inside allowed range (range_type=&#39;allowed_range&#39;) or span at least</span>
-<span class="sd">         the given interval (range_type=&#39;required_range&#39;).</span>
+<span class="sd">        Range checking for a given set of data.</span>
+
+<span class="sd">        Check that values are inside allowed range or interval. This(range_type=&#39;allowed_range&#39;)</span>
+<span class="sd">        or span at least the given interval (range_type=&#39;required_range&#39;).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -964,6 +972,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_get_data_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">status_test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return data description as provided by the schema file.</span>
+
 <span class="sd">        For tables (type: &#39;data_table&#39;), return the description of</span>
 <span class="sd">        the column named &#39;column_name&#39;. For other types, return</span>
 <span class="sd">        all data descriptions.</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -387,8 +387,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner">[docs]</a>
 <span class="k">class</span> <span class="nc">CorsikaRunner</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \</span>
-<span class="sd">    provided by the sim_telarray package. It provides shell scripts to be run externally or by \</span>
+<span class="sd">    CorsikaRunner is responsible for running CORSIKA.</span>
+
+<span class="sd">    Uses the corsika_autoinputs program provided by the sim_telarray package.</span>
+<span class="sd">    It provides shell scripts to be run externally or by \</span>
 <span class="sd">    the module simulator. Same instance can be used to generate scripts for any given run number.</span>
 
 <span class="sd">    It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the\</span>
@@ -493,6 +495,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_define_corsika_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the CORSIKA config instance.</span>
+
 <span class="sd">        This validates the input given in corsika_config_data as well.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -799,8 +802,10 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_validate_run_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the run number from corsika_config in case run_number is None, Raise ValueError if\</span>
-<span class="sd">        run_number is not valid (&lt; 1) or returns run_number if it is a valid value.</span>
+<span class="sd">        Returns the run number from corsika_config in case run_number is None.</span>
+
+<span class="sd">        Raise ValueError if run_number is not valid (&lt; 1) or returns run_number</span>
+<span class="sd">        if it is a valid value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">run_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_user_parameter</span><span class="p">(</span><span class="s2">&quot;RUNNR&quot;</span><span class="p">)</span>

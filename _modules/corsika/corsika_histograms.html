@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -396,8 +396,8 @@ document.write(`
 <div class="viewcode-block" id="CorsikaHistograms">
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms">[docs]</a>
 <span class="k">class</span> <span class="nc">CorsikaHistograms</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CorsikaHistograms extracts the Cherenkov photons information from a CORSIKA IACT file</span>
-<span class="sd">     using pyeventio.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the Cherenkov photons information from a CORSIKA IACT file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -478,6 +478,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">hdf5_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Property for the hdf5 file name.</span>
+
 <span class="sd">        The idea of this property is to allow setting (or changing) the name of the hdf5 file</span>
 <span class="sd">        even after creating the class instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -560,6 +561,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">read_event_information</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the information about the events from their headers and save as a class instance.</span>
+
 <span class="sd">        The main information can also be fetched individually through the functions below.</span>
 <span class="sd">        For the remaining information (such as px, py, pz), use this function.</span>
 
@@ -644,6 +646,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">telescope_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_new_indices</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the telescope index (or indices).</span>
+
 <span class="sd">        If self.individual_telescopes is True, the indices of the telescopes passed are analyzed</span>
 <span class="sd">        individually (different histograms for each telescope) even if all telescopes are listed.</span>
 
@@ -694,6 +697,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">hist_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the configuration for the histograms (e.g., bin size, min and max values, etc).</span>
+
 <span class="sd">        The input is allowed either through a yaml file or a dictionary. If nothing is given,</span>
 <span class="sd">        the dictionary is created with default values.</span>
 
@@ -734,8 +738,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_create_histogram_default_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a dictionary with the configuration necessary to create the histograms. It is used</span>
-<span class="sd">        only in case the configuration is not provided in a yaml file or dict.</span>
+<span class="sd">        Create a dictionary with the configuration necessary to create the histograms.</span>
+
+<span class="sd">        It is used only in case the configuration is not provided in a yaml file or dict.</span>
 
 <span class="sd">        Three histograms are created: hist_position with 3 dimensions (x, y positions and the</span>
 <span class="sd">        wavelength), hist_direction with 2 dimensions (direction cosines in x and y directions),</span>
@@ -896,10 +901,11 @@ document.write(`
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fill_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rotation_around_z_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotation_around_y_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill all the histograms created by self._create_histogram with the information of the</span>
-<span class="sd">         photons on the ground.</span>
-<span class="sd">         If the azimuth and zenith angles are provided, the Cherenkov photon&#39;s coordinates are</span>
-<span class="sd">         filled in the plane perpendicular to the incoming direction of the particle.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill histograms with the information of the photons on the ground.</span>
+
+<span class="sd">        if the azimuth and zenith angles are provided, the Cherenkov photon&#39;s coordinates are</span>
+<span class="sd">        filled in the plane perpendicular to the incoming direction of the particle.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -973,8 +979,7 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.set_histograms">[docs]</a>
     <span class="k">def</span> <span class="nf">set_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">individual_telescopes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create</span>
-<span class="sd">         and fill the histograms.</span>
+<span class="sd">        Create and fill Cherenkov photons histograms using information from the CORSIKA IACT file.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1040,8 +1045,7 @@ document.write(`
     <span class="nd">@individual_telescopes</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">individual_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_individual_telescopes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The following lines allow individual_telescopes to be defined before using this function</span>
-<span class="sd">        but if any parameter is passed in this function, it overwrites the class attribute.</span>
+<span class="sd">        Define individual telescopes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1148,8 +1152,9 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_2d_photon_density_distr">[docs]</a>
     <span class="k">def</span> <span class="nf">get_2d_photon_density_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get 2D histograms of position of the Cherenkov photons on the ground. It returns the photon</span>
-<span class="sd">        density per square meter.</span>
+<span class="sd">        Get 2D histograms of position of the Cherenkov photons on the ground.</span>
+
+<span class="sd">        It returns the photon density per square meter.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1203,8 +1208,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_2d_num_photons_distr">[docs]</a>
     <span class="k">def</span> <span class="nf">get_2d_num_photons_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the distribution of Cherenkov photons per event per telescope. It returns the 2D array</span>
-<span class="sd">        accounting for the events from the telescopes given by self.telescope_indices.</span>
+<span class="sd">        Get the distribution of Cherenkov photons per event per telescope.</span>
+
+<span class="sd">        It returns the 2D array accounting for the events from the telescopes given</span>
+<span class="sd">        by self.telescope_indices.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1268,8 +1275,8 @@ document.write(`
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hist_1d_list</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_bin_edges_list</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_bins_max_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Auxiliary function to get the number of bins and the max distance to generate the</span>
-<span class="sd">        radial and the density histograms.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of bins and the max distance to generate the radial and density histograms.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1307,8 +1314,7 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_photon_radial_distr">[docs]</a>
     <span class="k">def</span> <span class="nf">get_photon_radial_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the radial distribution of the photons on the ground in relation to the center of the</span>
-<span class="sd">        array.</span>
+<span class="sd">        Get the phton radial distribution on the ground in relation to the center of the array.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1347,8 +1353,7 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_photon_density_distr">[docs]</a>
     <span class="k">def</span> <span class="nf">get_photon_density_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the density distribution of the photons on the ground in relation to the center of the</span>
-<span class="sd">        array.</span>
+<span class="sd">        Get the photon density distribution on the ground in relation to the center of the array.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1405,9 +1410,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_photon_time_of_emission_distr">[docs]</a>
     <span class="k">def</span> <span class="nf">get_photon_time_of_emission_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the distribution of the emitted time of the Cherenkov photons. The clock starts when the</span>
-<span class="sd">         particle crosses the top of the atmosphere (CORSIKA-defined) if</span>
-<span class="sd">         self.event_first_interaction_heights is positive or at first interaction if otherwise.</span>
+<span class="sd">        Get the distribution of the emitted time of the Cherenkov photons.</span>
+
+<span class="sd">        The clock starts when the particle crosses the top of the atmosphere (CORSIKA-defined) if</span>
+<span class="sd">        self.event_first_interaction_heights is positive or at first interaction if otherwise.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1454,8 +1460,9 @@ document.write(`
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_photons_per_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the distribution of the number of photons amongst the events,</span>
-<span class="sd">         including the telescopes indicated by self.telescope_indices.</span>
+<span class="sd">        Get the the number of photons per events.</span>
+
+<span class="sd">        Includes the telescopes indicated by self.telescope_indices.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1796,8 +1803,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span> <span class="n">event_header_element</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Export to a hdf5 file the 1D histogram for the key &#39;event_header_element&#39; from the CORSIKA</span>
-<span class="sd">        event header.</span>
+<span class="sd">        Exports &#39;event_header_element&#39; from CORSIKA to hd5 for a 1D histogram.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1847,7 +1853,9 @@ document.write(`
         <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Export to a hdf5 file the 2D histogram for the key &#39;event_header_element_1&#39; and</span>
+<span class="sd">        Export event_header of a 2D histogram to a hdf5 file.</span>
+
+<span class="sd">        Searches the 2D histogram for the key &#39;event_header_element_1&#39; and</span>
 <span class="sd">        &#39;event_header_element_2&#39;from the CORSIKA event header.</span>
 
 <span class="sd">        Parameters</span>
@@ -1897,8 +1905,7 @@ document.write(`
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_photons_per_telescope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The number of photons per event, considering the telescopes given by</span>
-<span class="sd">        self.telescope_indices.</span>
+<span class="sd">        The number of photons per event, considering the telescopes given by self.telescope_indices.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1927,6 +1934,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">telescope_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The telescope positions found in the CORSIKA output file.</span>
+
 <span class="sd">        It does not depend on the telescope_indices attribute.</span>
 
 <span class="sd">        Returns</span>
@@ -2009,8 +2017,9 @@ document.write(`
     <span class="k">def</span> <span class="nf">event_first_interaction_heights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the height of the first interaction in astropy units of km.</span>
-<span class="sd">        If negative, tracking starts at margin of atmosphere, see TSTART in the CORSIKA 7 user guide</span>
-<span class="sd">        .</span>
+
+<span class="sd">        If negative, tracking starts at margin of atmosphere,</span>
+<span class="sd">        see TSTART in the CORSIKA 7 user guide.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2028,6 +2037,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">magnetic_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the Earth magnetic field from the events header in astropy units of microT.</span>
+
 <span class="sd">        A tuple with Earth&#39;s magnetic field in the x and z directions are returned.</span>
 
 <span class="sd">        Returns</span>
@@ -2047,8 +2057,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_event_parameter_info">[docs]</a>
     <span class="k">def</span> <span class="nf">get_event_parameter_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get specific information (i.e. any parameter) of the events. The parameter is passed through</span>
-<span class="sd">        the key word parameter. Available options are to be found under self.all_event_keys.</span>
+<span class="sd">        Get specific information (i.e. any parameter) of the events.</span>
+
+<span class="sd">        The parameter is passed through the key word parameter.</span>
+<span class="sd">        Available options are to be found under self.all_event_keys.</span>
 <span class="sd">        The unit of the parameter, if any, is given according to the CORSIKA version</span>
 <span class="sd">        (please see user guide in this case).</span>
 
@@ -2079,8 +2091,10 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_run_info">[docs]</a>
     <span class="k">def</span> <span class="nf">get_run_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get specific information (i.e. any parameter) of the run. The parameter is passed through</span>
-<span class="sd">        the key word parameter. Available options are to be found under self.all_run_keys.</span>
+<span class="sd">        Get specific information (i.e. any parameter) of the run.</span>
+
+<span class="sd">        The parameter is passed through the key word parameter.</span>
+<span class="sd">        Available options are to be found under self.all_run_keys.</span>
 <span class="sd">        The unit of the parameter, if any, is given according to the CORSIKA version</span>
 <span class="sd">        (please see user guide in this case).</span>
 
@@ -2107,6 +2121,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">event_1d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a histogram for the all events using key as parameter.</span>
+
 <span class="sd">        Valid keys are stored in self.all_event_keys (CORSIKA defined).</span>
 
 <span class="sd">        Parameters</span>
@@ -2149,6 +2164,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">event_2d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_1</span><span class="p">,</span> <span class="n">key_2</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a 2D histogram for the all events using key_1 and key_2 as parameters.</span>
+
 <span class="sd">        Valid keys are stored in self.all_event_keys (CORSIKA defined).</span>
 
 <span class="sd">        Parameters</span>

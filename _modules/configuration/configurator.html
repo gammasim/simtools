@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.configurator &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>configuration.configurator &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -479,8 +479,9 @@ document.write(`
         <span class="n">job_submission</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize configuration from command line, configuration file, class config, or \</span>
-<span class="sd">        environmental variable.</span>
+<span class="sd">        Initialize application configuration.</span>
+
+<span class="sd">        Configure from command line, configuration file, class config, or environmental variable.</span>
 
 <span class="sd">        Priorities in parameter settings.</span>
 <span class="sd">        1. command line; 2. yaml file; 3. class init; 4. env variables.</span>
@@ -542,6 +543,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_fill_from_command_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill configuration parameters from command line arguments.</span>
+
 <span class="sd">        Triggers a print of the help if no command line arguments are given and</span>
 <span class="sd">        require_command_line is set.</span>
 
@@ -568,6 +570,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_reset_required_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset required parser arguments (i.e., arguments added with &quot;required=True&quot;).</span>
+
 <span class="sd">        Includes also mutually exclusive groups.</span>
 
 <span class="sd">        Access protected attributes of parser (no public method available).</span>
@@ -580,8 +583,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_fill_from_config_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill configuration parameters from dictionary. Enforce that configuration parameter names\</span>
-<span class="sd">         are lower case.</span>
+<span class="sd">        Fill configuration parameters from dictionary.</span>
+
+<span class="sd">        Enforce that configuration parameter names are lower case.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -604,8 +608,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_check_parameter_configuration_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if a parameter is already configured and not still set to the default value. Allow \</span>
-<span class="sd">        configuration with None values.</span>
+<span class="sd">        Check if a parameter is already configured and not still set to the default value.</span>
+
+<span class="sd">        Allow configuration with None values.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -677,8 +682,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_fill_from_environmental_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill any configuration parameters which is not already configured (i.e., parameter is None)</span>
-<span class="sd">        from environmental variables or from file (default: &quot;.env&quot;).</span>
+<span class="sd">        Fill any configuration parameters from environmental variables or from file (e.g., &quot;.env&quot;).</span>
+
+<span class="sd">        Only parameters shich are not already configured are changed (i.e., parameter is None).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_env_dict</span> <span class="o">=</span> <span class="p">{}</span>

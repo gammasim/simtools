@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -612,6 +612,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">initialize_simulation_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize default arguments for simulation model definition.</span>
+
 <span class="sd">        Note that the model version is always required.</span>
 
 <span class="sd">        Parameters</span>
@@ -698,8 +699,7 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Argument parser type to check that value is an efficiency</span>
-<span class="sd">        in the interval [0,1].</span>
+<span class="sd">        Argument parser type to check that value is an efficiency in the interval [0,1].</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -731,6 +731,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">zenith_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the zenith angle provided is in the interval [0, 180].</span>
+
 <span class="sd">        We allow here zenith angles larger than 90 degrees in the improbable case</span>
 <span class="sd">        such simulations are requested. It is not guaranteed that the actual simulation software</span>
 <span class="sd">        supports such angles!.</span>
@@ -779,6 +780,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">azimuth_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].</span>
+
 <span class="sd">        Other allowed options are north, south, east or west which will be translated to an angle</span>
 <span class="sd">        where north corresponds to zero.</span>
 

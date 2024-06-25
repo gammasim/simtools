@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -378,8 +378,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.camera.Camera">[docs]</a>
 <span class="k">class</span> <span class="nc">Camera</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating\</span>
-<span class="sd">    FoV and plotting the camera.</span>
+<span class="sd">    Camera class, defining pixel layout.</span>
+
+<span class="sd">    This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -399,8 +400,9 @@ document.write(`
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,</span>
-<span class="sd">        calculating FoV and plotting the camera.</span>
+<span class="sd">        Initialize Camera class, defining pixel layout.</span>
+
+<span class="sd">        This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -495,6 +497,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rotate the pixels according to the rotation angle given in pixels[&#39;rotate_angle&#39;].</span>
+
 <span class="sd">        Additional rotation is added to get to the camera view of an observer facing the camera.</span>
 <span class="sd">        The angle for the axes rotation depends on the coordinate system in which the original</span>
 <span class="sd">        data was provided.</span>
@@ -586,7 +589,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_pixel_shape">[docs]</a>
     <span class="k">def</span> <span class="nf">get_pixel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by\</span>
+<span class="sd">        Get pixel shape code 1, 2 or 3.</span>
+
+<span class="sd">        Where 1 and 3 are hexagonal pixels, where one is rotated by\</span>
 <span class="sd">        30 degrees with respect to the other. A square pixel is denoted as 2.</span>
 
 <span class="sd">        Returns</span>
@@ -715,8 +720,9 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_find_neighbours</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        use a KD-Tree to quickly find nearest neighbours (e.g., of the pixels in a camera or mirror\</span>
-<span class="sd">        facets).</span>
+<span class="sd">        Use a KD-Tree to quickly find nearest neighbours.</span>
+
+<span class="sd">        This applies to e.g., of the pixels in a camera or mirror facets.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -745,8 +751,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_find_adjacent_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find adjacent neighbour pixels in cameras with square pixels. Only directly adjacent \</span>
-<span class="sd">        neighbours are allowed, no diagonals.</span>
+<span class="sd">        Find adjacent neighbour pixels in cameras with square pixels.</span>
+
+<span class="sd">        Only directly adjacent neighbours are allowed, no diagonals.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -795,8 +802,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_calc_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find adjacent neighbour pixels in cameras with hexagonal or square pixels. Only directly \</span>
-<span class="sd">        adjacent neighbours are searched for, no diagonals.</span>
+<span class="sd">        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.</span>
+
+<span class="sd">        Only directly  adjacent neighbours are searched for, no diagonals.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -834,8 +842,9 @@ document.write(`
 <a class="viewcode-back" href="../../mc_model.html#model.camera.Camera.get_neighbour_pixels">[docs]</a>
     <span class="k">def</span> <span class="nf">get_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The \</span>
-<span class="sd">        purpose of this function is to ensure the calculation occurs only once and only when \</span>
+<span class="sd">        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.</span>
+
+<span class="sd">        The purpose of this function is to ensure the calculation occurs only once and only when</span>
 <span class="sd">        necessary.</span>
 
 <span class="sd">        Parameters</span>

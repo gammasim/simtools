@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=fbc78938"></script>
+    <script src="_static/documentation_options.js?v=4748ec0b"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -462,8 +462,8 @@ document.write(`
                   
   <section id="module-convert_all_model_parameters_from_simtel">
 <span id="convert-all-model-parameters-from-simtel"></span><h1>convert_all_model_parameters_from_simtel<a class="headerlink" href="#module-convert_all_model_parameters_from_simtel" title="Link to this heading">#</a></h1>
-<p>Convert all simulation model parameters exported from sim_telarray format using
-schema files. Check value, type, and range, convert units, and write json files
+<p>Convert all simulation model parameters exported from sim_telarray format using schema files.</p>
+<p>Check value, type, and range, convert units, and write json files
 ready to be submitted to the model database. Prints out parameters which are not found
 in simtel configuration file and parameters which are not found in simtools schema files.</p>
 <section id="command-line-arguments">
@@ -551,8 +551,8 @@ in simtel configuration file and parameters which are not found in simtools sche
 <dl class="py function">
 <dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.get_number_of_camera_pixel">
 <span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">get_number_of_camera_pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#get_number_of_camera_pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel" title="Link to this definition">#</a></dt>
-<dd><p>Get the number of camera pixels from the simtel configuration file
-Required to set the dimension some of the parameter correctly, as simtel
+<dd><p>Get the number of camera pixels from the simtel configuration file.</p>
+<p>Required to set the dimension some of the parameter correctly, as simtel
 in some cases does not provide the dimension (‘all:’ in the parameter files).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -575,8 +575,8 @@ in some cases does not provide the dimension (‘all:’ in the parameter files)
 <dl class="py function">
 <dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.print_list_of_files">
 <span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">print_list_of_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#print_list_of_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.print_list_of_files" title="Link to this definition">#</a></dt>
-<dd><p>Print model parameters which describe a file name.
-This is useful to find files which are part of the model.</p>
+<dd><p>Print model parameters which describe a file name.</p>
+<p>This is useful to find files which are part of the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -592,8 +592,8 @@ This is useful to find files which are part of the model.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.print_parameters_not_found">
 <span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">print_parameters_not_found</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_parameters_not_in_simtel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_simtel_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#print_parameters_not_found"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.print_parameters_not_found" title="Link to this definition">#</a></dt>
-<dd><p>Print simtel parameters not found in schema files and simtools parameters not found in simtel
-configuration file. For simtel parameters not found, check if the setting for the chose
+<dd><p>Print simtel/simtools parameter not found in schema and ocnfiguration files.</p>
+<p>For simtel parameters not found, check if the setting for the chose
 telescope is different from the default values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -614,8 +614,8 @@ telescope is different from the default values.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.read_and_export_parameters">
 <span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">read_and_export_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convert_all_model_parameters_from_simtel.html#read_and_export_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.read_and_export_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Read and export parameters from simtel configuration file to json files.
-Only applicable parameters are exported to json.
+<dd><p>Read and export parameters from simtel configuration file to json files.</p>
+<p>Only applicable parameters are exported to json.
 Provide extensive logging information on the parameters found in the simtel
 configuration file.</p>
 <dl class="field-list simple">

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -392,11 +392,10 @@ document.write(`
 <a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector">[docs]</a>
 <span class="k">class</span> <span class="nc">MetadataCollector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Collects and combines metadata associated to describe the current</span>
-<span class="sd">    simtools activity and its data products. Collect as much metadata</span>
-<span class="sd">    as possible from command line configuration, input data, environment,</span>
-<span class="sd">    schema descriptions.</span>
-<span class="sd">    Depends on the CTAO top-level metadata definition.</span>
+<span class="sd">    Collects and combines metadata to describe the current simtools activity and its data products.</span>
+
+<span class="sd">    Collect as much metadata as possible from command line configuration, input data, environment,</span>
+<span class="sd">    schema descriptions.  Depends on the CTAO top-level metadata definition.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -446,6 +445,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">get_data_model_schema_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return data model schema file name.</span>
+
 <span class="sd">        The schema file name is taken (in this order) from the command line,</span>
 <span class="sd">        from the metadata file, from the data model name, or from the input</span>
 <span class="sd">        metadata file.</span>
@@ -629,9 +629,10 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_read_input_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Read and validate input metadata from file. In case of an ecsv file including a</span>
-<span class="sd">        table, the metadata is read from the table meta data. Returns empty dict in case</span>
-<span class="sd">        no file is given.</span>
+<span class="sd">        Read and validate input metadata from file.</span>
+
+<span class="sd">        In case of an ecsv file including a table, the metadata is read from the table meta data.</span>
+<span class="sd">        Returns empty dict in case no file is given.</span>
 
 <span class="sd">        Parameter</span>
 <span class="sd">        ---------</span>
@@ -708,8 +709,10 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">product_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill metadata for data products fields. If a schema file is given for the data products,</span>
-<span class="sd">        try and read product:data:model metadata from there.</span>
+<span class="sd">        Fill metadata for data products fields.</span>
+
+<span class="sd">        If a schema file is given for the data products, try and read product:data:model metadata</span>
+<span class="sd">        from there.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -779,8 +782,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_merge_config_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_high</span><span class="p">,</span> <span class="n">dict_low</span><span class="p">,</span> <span class="n">add_new_fields</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge two config dicts and replace values in dict_high which are Nonetype. Priority to \</span>
-<span class="sd">         dict_high in case of conflicting entries.</span>
+<span class="sd">        Merge two config dicts and replace values in dict_high which are Nonetype.</span>
+
+<span class="sd">        Priority to dict_high in case of conflicting entries.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -816,8 +820,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_fill_context_sim_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_list</span><span class="p">,</span> <span class="n">new_entry_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill list-type entries into metadata. Take into account the first list entry is the default</span>
-<span class="sd">        value filled with Nones.</span>
+<span class="sd">        Fill list-type entries into metadata.</span>
+
+<span class="sd">        Take into account the first list entry is the default value filled with Nones.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -846,6 +851,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_process_metadata_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process metadata from file to ensure compatibility with metadata model.</span>
+
 <span class="sd">        Changes keys to lower case and removes line feeds from description fields.</span>
 
 <span class="sd">        Parameters</span>
@@ -889,6 +895,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_copy_list_type_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_dict</span><span class="p">,</span> <span class="n">_input_metadata</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copy list-type metadata from file.</span>
+
 <span class="sd">        Very fine tuned.</span>
 
 <span class="sd">        Parameters</span>

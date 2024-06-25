@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
+    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -573,9 +573,9 @@ document.write(`
 <a class="viewcode-back" href="../../utils.html#utils.general.validate_config_data">[docs]</a>
 <span class="k">def</span> <span class="nf">validate_config_data</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ignore_unidentified</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a generic config_data dict by using the info</span>
-<span class="sd">    given by the parameters dict. The entries will be validated</span>
-<span class="sd">    in terms of length, units and names.</span>
+<span class="sd">    Validate a generic config_data dict by using the info given by the parameters dict.</span>
+
+<span class="sd">    The entries will be validated in terms of length, units and names.</span>
 
 <span class="sd">    See ./tests/resources/test_parameters.yml for an example of the structure</span>
 <span class="sd">    of the parameters dict.</span>
@@ -775,6 +775,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_in</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate input user parameter and convert it to the right units, if needed.</span>
+
 <span class="sd">    Returns the validated arguments in a list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_in</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -793,6 +794,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">join_url_or_path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Join URL or path with additional subdirectories and file.</span>
+
 <span class="sd">    This is the equivalent to Path.join(), with extended functionality</span>
 <span class="sd">    working also for URLs.</span>
 
@@ -839,6 +841,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">collect_data_from_http</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Download yaml or json file from url and return it contents as dict.</span>
+
 <span class="sd">    File is downloaded as a temporary file and deleted afterwards.</span>
 
 <span class="sd">    Parameters</span>
@@ -1134,9 +1137,10 @@ document.write(`
 <a class="viewcode-back" href="../../utils.html#utils.general.separate_args_and_config_data">[docs]</a>
 <span class="k">def</span> <span class="nf">separate_args_and_config_data</span><span class="p">(</span><span class="n">expected_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Separate kwargs into the arguments expected for instancing a class and the dict to be given as</span>
-<span class="sd">    config_data. This function is specific for methods from_kwargs in classes which use the</span>
-<span class="sd">    validate_config_data system.</span>
+<span class="sd">    Separate kwargs into arguments expected for class instancing class and the config_data dict.</span>
+
+<span class="sd">    This function is specific for methods from_kwargs in classes which use the validate_config_data</span>
+<span class="sd">    system.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1292,8 +1296,10 @@ document.write(`
 <a class="viewcode-back" href="../../utils.html#utils.general.change_dict_keys_case">[docs]</a>
 <span class="k">def</span> <span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\</span>
-<span class="sd">    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.</span>
+<span class="sd">    Change keys of a dictionary to lower or upper case.</span>
+
+<span class="sd">    Crawls through the dictionary and changes all keys.</span>
+<span class="sd">    Takes into account list of dictionaries, as e.g. found in the top level data model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1332,8 +1338,10 @@ document.write(`
 <a class="viewcode-back" href="../../utils.html#utils.general.remove_substring_recursively_from_dict">[docs]</a>
 <span class="k">def</span> <span class="nf">remove_substring_recursively_from_dict</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Remove substrings from all strings in a dictionary. Recursively crawls through the dictionary</span>
-<span class="sd">    This e.g., allows to remove all newline characters from a dictionary.</span>
+<span class="sd">    Remove substrings from all strings in a dictionary.</span>
+
+<span class="sd">    Recursively crawls through the dictionary This e.g., allows to remove all newline characters</span>
+<span class="sd">    from a dictionary.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1401,6 +1409,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">extract_type_of_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract the string representation of the the type of a value.</span>
+
 <span class="sd">    For example, for a string, it returns &#39;str&#39; rather than &#39;&lt;class &#39;str&#39;&gt;&#39;.</span>
 <span class="sd">    Take into account also the case where the value is a numpy type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1417,6 +1426,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">get_value_unit_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit_str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the value, unit and type of a value.</span>
+
 <span class="sd">    The value is stripped of its unit and the unit is returned</span>
 <span class="sd">    in its string form (i.e., to_string()).</span>
 <span class="sd">    The type is returned as a string representation of the type.</span>
@@ -1526,10 +1536,10 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">validate_data_type</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate data type of value (scalar, list, np array) or type object against a</span>
-<span class="sd">    reference data type. Allow to check for exact data type or allow sub types</span>
-<span class="sd">    (e.g. uint is accepted for int).  Take into account &#39;file&#39; type as used in the</span>
-<span class="sd">    model parameter database.</span>
+<span class="sd">    Validate data type of value or type object against a reference data type.</span>
+
+<span class="sd">    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).</span>
+<span class="sd">    Take into account &#39;file&#39; type as used in the model parameter database.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1608,6 +1618,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert string (as used e.g. in sim_telarray) to list.</span>
+
 <span class="sd">    Allow coma or space separated strings.</span>
 
 <span class="sd">    Parameters</span>
