@@ -27,17 +27,17 @@ class SimtelRunner:
 
     Parameters
     ----------
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of sim_telarray installation.
     label: str
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, simtel_source_path, label=None):
+    def __init__(self, simtel_path, label=None):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_source_path = Path(simtel_source_path)
+        self._simtel_path = Path(simtel_path)
         self.label = label
         self._script_dir = None
         self._script_file = None

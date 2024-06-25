@@ -61,7 +61,7 @@ class CorsikaConfig:
         data/parameters/corsika_parameters.yml will be used.
     corsika_parameters_file: str
         Name of the yaml file to set remaining CORSIKA parameters.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of source of the sim_telarray/CORSIKA package.
     """
 
@@ -72,7 +72,7 @@ class CorsikaConfig:
         corsika_config_data=None,
         corsika_config_file=None,
         corsika_parameters_file=None,
-        simtel_source_path=None,
+        simtel_path=None,
     ):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class CorsikaConfig:
         self.eslope = None
         self.config_file_path = None
         self._output_generic_file_name = None
-        self._simtel_source_path = simtel_source_path
+        self._simtel_path = simtel_path
 
         self.io_handler = io_handler.IOHandler()
 
@@ -176,9 +176,7 @@ class CorsikaConfig:
                     self._raise_missing_required_error(par_name)
 
     def _convert_azm_to_phip(self):
-        """
-        Convert azimuthal angle to phi prime angle.
-        """
+        """Convert azimuthal angle to phi prime angle."""
         phip = 180.0 - self._user_parameters["AZM"][0]
         phip = phip + 360.0 if phip < 0.0 else phip
         phip = phip - 360.0 if phip >= 360.0 else phip
