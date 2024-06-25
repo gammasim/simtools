@@ -777,7 +777,7 @@ def finalize_plot(ax, patches, x_title, y_title, axes_range):
 
 def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False):
     """
-    Reads in a simtel file and plots reconstructed photoelectrons via ctapipe.
+    Read in a simtel file and plots reconstructed photoelectrons via ctapipe.
 
     Parameters
     ----------

@@ -61,7 +61,7 @@ def validate_schema(data, schema_file):
 
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
     """
-    Returns metadata schema with default values.
+    Return metadata schema with default values.
 
     Follows the CTA Top-Level Data Model.
 

@@ -118,7 +118,7 @@ class CorsikaHistograms:
     @hdf5_file_name.setter
     def hdf5_file_name(self, hdf5_file_name):
         """
-        Sets the hdf5_file_name to the argument passed.
+        Set the hdf5_file_name to the argument passed.
 
         Parameters
         ----------
@@ -444,7 +444,7 @@ class CorsikaHistograms:
 
     def _create_regular_axes(self, label):
         """
-        Helper function to _create_histograms.
+        Create regular axis for histograms.
 
         Parameters
         ----------
@@ -700,7 +700,7 @@ class CorsikaHistograms:
 
     def _get_hist_2d_projection(self, label):
         """
-        Helper function to get 2D distributions.
+        Get 2D distributions.
 
         Parameters
         ----------
@@ -842,7 +842,7 @@ class CorsikaHistograms:
 
     def _get_hist_1d_projection(self, label):
         """
-        Helper function to get 1D distributions.
+        Get 1D distributions.
 
         Parameters
         ----------
@@ -1384,7 +1384,7 @@ class CorsikaHistograms:
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
         """
-        Exports 'event_header_element' from CORSIKA to hd5 for a 1D histogram.
+        Export 'event_header_element' from CORSIKA to hd5 for a 1D histogram.
 
         Parameters
         ----------
