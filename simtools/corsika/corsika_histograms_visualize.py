@@ -1,3 +1,5 @@
+"""Visualize Cherenkov photon distributions from CORSIKA."""
+
 import logging
 from pathlib import Path
 
@@ -12,8 +14,7 @@ _logger = logging.getLogger(__name__)
 
 def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
     """
-    The next functions below are used by the the CorsikaHistograms class to plot all sort of
-    information from the Cherenkov photons saved.
+    Provide helper functions for plotting Cherenkov photon distributions saved in CorsikaHistograms.
 
     Create the figure of a 2D plot. The parameter name indicate which plot.
     Choices are "counts", "density", "direction", "time_altitude", and "num_photons_per_telescope".
@@ -299,7 +300,7 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
 
 def plot_wavelength_distr(histograms_instance, log_y=True):
     """
-    Plots the 1D distribution of the photon wavelengths
+    Plot the 1D distribution of the photon wavelengths.
 
     Parameters
     ----------
@@ -318,7 +319,7 @@ def plot_wavelength_distr(histograms_instance, log_y=True):
 
 def plot_counts_distr(histograms_instance, log_y=True):
     """
-    Plots the 1D distribution, i.e. the radial distribution, of the photons on the ground.
+    Plot the 1D distribution, i.e. the radial distribution, of the photons on the ground.
 
     Parameters
     ----------
@@ -337,7 +338,7 @@ def plot_counts_distr(histograms_instance, log_y=True):
 
 def plot_density_distr(histograms_instance, log_y=True):
     """
-    Plots the photon density distribution on the ground.
+    Plot the photon density distribution on the ground.
 
     Parameters
     ----------
@@ -356,7 +357,7 @@ def plot_density_distr(histograms_instance, log_y=True):
 
 def plot_time_distr(histograms_instance, log_y=True):
     """
-    Plots the distribution times in which the photons were generated in ns.
+    Plot the distribution times in which the photons were generated in ns.
 
     Parameters
     ----------
@@ -375,7 +376,7 @@ def plot_time_distr(histograms_instance, log_y=True):
 
 def plot_altitude_distr(histograms_instance, log_y=True):
     """
-    Plots the distribution of altitude in which the photons were generated in km.
+    Plot the distribution of altitude in which the photons were generated in km.
 
     Parameters
     ----------
@@ -394,7 +395,7 @@ def plot_altitude_distr(histograms_instance, log_y=True):
 
 def plot_photon_per_event_distr(histograms_instance, log_y=True):
     """
-    Plots the distribution of the number of Cherenkov photons per event.
+    Plot the distribution of the number of Cherenkov photons per event.
 
     Parameters
     ----------
@@ -414,7 +415,7 @@ def plot_photon_per_event_distr(histograms_instance, log_y=True):
 
 def plot_photon_per_telescope_distr(histograms_instance, log_y=True):
     """
-    Plots the distribution of the number of Cherenkov photons per telescope.
+    Plot the distribution of the number of Cherenkov photons per telescope.
 
     Parameters
     ----------
@@ -436,7 +437,7 @@ def plot_1d_event_header_distribution(
     histograms_instance, event_header_element, log_y=True, bins=50, hist_range=None
 ):
     """
-    Plots the distribution of the quantity given by .
+    Plot the distribution of the quantity given by .
 
     Parameters
     ----------
@@ -494,7 +495,7 @@ def plot_2d_event_header_distribution(
     hist_range=None,
 ):
     """
-    Plots the distribution of the quantity given by .
+    Plot the distribution of the quantity given by CorsikaHistograms.
 
     Parameters
     ----------

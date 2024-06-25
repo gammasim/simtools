@@ -1,4 +1,7 @@
-"""This module reads the content of either multiple histogram (.hdata, or .hdata.zst) or
+"""
+Reads the content of multiples files from sim_telarray.
+
+Reads the content of either multiple histogram (.hdata, or .hdata.zst) or
 simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
 simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.
 """
@@ -27,8 +30,8 @@ __all__ = [
 
 class SimtelIOHistograms:
     """
-    Read the content of either multiple histogram (.hdata, or .hdata.zst) or simtel_array
-    output files.
+    Read the content of either multiple histogram (.hdata, or .hdata.zst) or simtel_array files.
+
     Allow both the .hdata.zst histogram and the .simtel.zst output file type.
     It uses the SimtelIOHistogram class to deal with individual files.
     Histogram files are ultimately handled by using eventio library.

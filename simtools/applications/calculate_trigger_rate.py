@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-"""
-Summary
--------
-This application calculates the trigger rate from a simtel_array output file, a list of
+r"""
+Calculates array or single-telescope trigger rates.
+
+The applications reads from a simtel_array output file, a list of
 simtel_array output files ou from a file containing a list of simtel_array files.
 
 
@@ -53,7 +53,7 @@ from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -154,7 +154,7 @@ def _get_simulation_parameters(config_parser):
     return energy_range, view_cone
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = (
         "Calculates the simulated and triggered event rate based on simtel_array output files."

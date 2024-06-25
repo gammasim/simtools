@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Base class for simulation model parameters."""
 
 import logging
 import shutil
@@ -21,7 +22,8 @@ class InvalidModelParameterError(Exception):
 
 class ModelParameter:
     """
-    Base class for model parameters.
+    Base class for simulation model parameters.
+
     Provides methods to read and manipulate parameters from DB.
 
     Parameters
@@ -91,6 +93,7 @@ class ModelParameter:
     def _get_parameter_dict(self, par_name):
         """
         Get model parameter dictionary as stored in the DB.
+
         No conversion to values are applied for the use in simtools
         (e.g., no conversion from the string representation of lists
         to lists).
@@ -123,10 +126,10 @@ class ModelParameter:
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
-        Get the value of a model parameter. List of values stored
-        in strings are returns as lists, so that no knowledge
-        of the database structure is needed when accessing the
-        model parameters.
+        Get the value of a model parameter.
+
+        List of values stored in strings are returns as lists, so that no knowledge
+        of the database structure is needed when accessing the model parameters.
 
         Parameters
         ----------
@@ -164,7 +167,8 @@ class ModelParameter:
 
     def get_parameter_value_with_unit(self, par_name):
         """
-        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
+        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
+
         If no unit is provided in the model, the value is returned without a unit.
 
         Parameters
@@ -187,8 +191,7 @@ class ModelParameter:
 
     def get_parameter_type(self, par_name):
         """
-        Get the type of existing parameter of the model
-        (value of 'type' field of DB entry)
+        Get the type of existing parameter of the model (value of 'type' field of DB entry).
 
         Parameters
         ----------
@@ -210,8 +213,7 @@ class ModelParameter:
 
     def get_parameter_file_flag(self, par_name):
         """
-        Get value of parameter file flag of this database entry
-        (boolean 'file' field of DB entry).
+        Get value of parameter file flag of this database entry (boolean 'file' field of DB entry).
 
         Parameters
         ----------
@@ -234,19 +236,14 @@ class ModelParameter:
 
     @property
     def derived(self):
-        """
-        Load the derived values and export them if the class instance hasn't done it yet.
-        """
+        """Load the derived values and export them if the class instance hasn't done it yet."""
         if self._derived is None:
             self._load_derived_values()
             self._export_derived_files()
         return self._derived
 
     def _load_derived_values(self):
-        """
-        Load derived values from the DB
-
-        """
+        """Load derived values from the DB."""
         self._logger.debug("Reading derived values from DB")
         self._derived = self.db.get_derived_values(
             self.site,
@@ -270,10 +267,7 @@ class ModelParameter:
             print(f"{par} = {self.get_parameter_value(par)}")
 
     def _set_config_file_directory_and_name(self):
-        """
-        Set and create the directory and the name of the config file.
-
-        """
+        """Set and create the directory and the name of the config file."""
         if self.name is None:
             return
 
@@ -295,11 +289,7 @@ class ModelParameter:
         self._logger.debug(f"Config file path: {self._config_file_path}")
 
     def _load_parameters_from_db(self):
-        """
-
-        Read parameters from DB and store them in _parameters.
-
-        """
+        """Read parameters from DB and store them in _parameters."""
         if self.db is None:
             return
 
@@ -345,9 +335,7 @@ class ModelParameter:
 
     @property
     def extra_label(self):
-        """
-        Return the extra label if defined, if not return ''.
-        """
+        """Return the extra label if defined, if not return ''."""
         return self._extra_label if self._extra_label is not None else ""
 
     def get_simtel_parameters(self, parameters=None, telescope_model=True, site_model=True):
@@ -386,8 +374,9 @@ class ModelParameter:
 
     def change_parameter(self, par_name, value):
         """
-        Change the value of an existing parameter. This function does not modify the \
-        DB, it affects only the current instance.
+        Change the value of an existing parameter.
+
+        This function does not modify the  DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -435,8 +424,9 @@ class ModelParameter:
 
     def change_multiple_parameters(self, **kwargs):
         """
-        Change the value of multiple existing parameters in the model. This function does not \
-        modify the DB, it affects only the current instance.
+        Change the value of multiple existing parameters in the model.
+
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -467,7 +457,7 @@ class ModelParameter:
         shutil.copy(file_path, self.config_file_directory)
 
     def export_model_files(self):
-        """Exports the model files into the config file directory."""
+        """Export the model files into the config file directory."""
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self._parameters)
         if self._added_parameter_files is not None:
@@ -493,28 +483,23 @@ class ModelParameter:
 
     @property
     def config_file_directory(self):
-        """
-        Directory for configure files. Configure, if necessary.
-
-        """
+        """Directory for configure files. Configure, if necessary."""
         if self._config_file_directory is None:
             self._set_config_file_directory_and_name()
         return self._config_file_directory
 
     @property
     def config_file_path(self):
-        """
-        Path of the config file. Configure, if necessary.
-
-        """
+        """Path of the config file. Configure, if necessary."""
         if self._config_file_path is None:
             self._set_config_file_directory_and_name()
         return self._config_file_path
 
     def get_config_file(self, no_export=False):
         """
-        Get the path of the config file for sim_telarray. The config file is produced if the file\
-        is not up to date.
+        Get the path of the config file for sim_telarray.
+
+        The config file is produced if the file is not up to date.
 
         Parameters
         ----------
@@ -531,10 +516,7 @@ class ModelParameter:
         return self.config_file_path
 
     def _load_simtel_config_writer(self):
-        """
-        Load the SimtelConfigWriter object.
-
-        """
+        """Load the SimtelConfigWriter object."""
         if self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,

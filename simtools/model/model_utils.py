@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Helper functions calculations related to model parameters."""
 
 import math
 
@@ -12,8 +13,9 @@ __all__ = [
 
 def compute_telescope_transmission(pars, off_axis):
     """
-    Compute telescope transmission (0 < T < 1) for a given set of parameters as defined by \
-    the MC model and for a given off-axis angle.
+    Compute telescope transmission (0 < T < 1) for a given off-axis angle.
+
+    The telescope transmission depends on the MC model used.
 
     Parameters
     ----------

@@ -103,7 +103,7 @@ def _parse():
     return config.initialize(db_config=True, simulation_model="version")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger("simtools")

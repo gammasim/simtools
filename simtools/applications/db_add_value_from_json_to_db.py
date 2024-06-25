@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application adds a new parameter / value to a collection in the DB using a json
-    file as input.
+r"""
+    Add a new parameter / value to a collection in the DB using a json file as input.
 
     Command line arguments
     ----------------------
@@ -53,7 +50,7 @@ def _parse():
     return config.initialize(db_config=True)
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger()

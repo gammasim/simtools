@@ -1,3 +1,5 @@
+"""Definition and modeling of camera."""
+
 import logging
 
 import astropy.units as u
@@ -12,8 +14,9 @@ __all__ = ["Camera"]
 
 class Camera:
     """
-    Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating\
-    FoV and plotting the camera.
+    Camera class, defining pixel layout.
+
+    This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
 
     Parameters
     ----------
@@ -33,8 +36,9 @@ class Camera:
 
     def __init__(self, telescope_model_name, camera_config_file, focal_length):
         """
-        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,
-        calculating FoV and plotting the camera.
+        Initialize Camera class, defining pixel layout.
+
+        This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
         """
         self._logger = logging.getLogger(__name__)
 
@@ -126,6 +130,7 @@ class Camera:
     def _rotate_pixels(self, pixels):
         """
         Rotate the pixels according to the rotation angle given in pixels['rotate_angle'].
+
         Additional rotation is added to get to the camera view of an observer facing the camera.
         The angle for the axes rotation depends on the coordinate system in which the original
         data was provided.
@@ -206,7 +211,9 @@ class Camera:
 
     def get_pixel_shape(self):
         """
-        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by\
+        Get pixel shape code 1, 2 or 3.
+
+        Where 1 and 3 are hexagonal pixels, where one is rotated by\
         30 degrees with respect to the other. A square pixel is denoted as 2.
 
         Returns
@@ -240,7 +247,7 @@ class Camera:
 
     def get_camera_fill_factor(self):
         """
-        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2
+        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2.
 
         Returns
         -------
@@ -322,8 +329,9 @@ class Camera:
     @staticmethod
     def _find_neighbours(x_pos, y_pos, radius):
         """
-        use a KD-Tree to quickly find nearest neighbours (e.g., of the pixels in a camera or mirror\
-        facets)
+        Use a KD-Tree to quickly find nearest neighbours.
+
+        This applies to e.g., of the pixels in a camera or mirror facets.
 
         Parameters
         ----------
@@ -352,8 +360,9 @@ class Camera:
 
     def _find_adjacent_neighbour_pixels(self, x_pos, y_pos, radius, row_coloumn_dist):
         """
-        Find adjacent neighbour pixels in cameras with square pixels. Only directly adjacent \
-        neighbours are allowed, no diagonals.
+        Find adjacent neighbour pixels in cameras with square pixels.
+
+        Only directly adjacent neighbours are allowed, no diagonals.
 
         Parameters
         ----------
@@ -402,8 +411,9 @@ class Camera:
 
     def _calc_neighbour_pixels(self, pixels):
         """
-        Find adjacent neighbour pixels in cameras with hexagonal or square pixels. Only directly \
-        adjacent neighbours are searched for, no diagonals.
+        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
+
+        Only directly  adjacent neighbours are searched for, no diagonals.
 
         Parameters
         ----------
@@ -439,8 +449,9 @@ class Camera:
 
     def get_neighbour_pixels(self, pixels=None):
         """
-        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The \
-        purpose of this function is to ensure the calculation occurs only once and only when \
+        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.
+
+        The purpose of this function is to ensure the calculation occurs only once and only when
         necessary.
 
         Parameters

@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    Derive the simulation model parameter **mirror_reflection_random_angle**
-    (sometimes called mirror roughness) to match the measured containment diameter
-    of the optical point-spread function (PSF) of individual mirror panels.
+r"""
+    Derive the simulation model parameter mirror_reflection_random_angle.
+
+    This parameter is sometimes called mirror roughness and used  to match the measured
+    containment diameter of the optical point-spread function (PSF) of individual mirror panels.
 
     Description
     -----------
@@ -149,9 +148,7 @@ from simtools.ray_tracing import RayTracing
 
 
 def _parse(label):
-    """
-    Parse command line configuration
-    """
+    """Parse command line configuration."""
     config = configurator.Configurator(
         description="Derive mirror random reflection angle.", label=label
     )
@@ -218,9 +215,10 @@ def _parse(label):
 
 def _define_telescope_model(label, args_dict, db_config):
     """
-    Define telescope model and update configuration
-    with mirror list and/or random focal length given
-    as input
+    Define telescope model.
+
+    This includes updating the configuration with mirror list and/or random focal length given
+    as input.
 
     Attributes
     ----------
@@ -257,11 +255,7 @@ def _define_telescope_model(label, args_dict, db_config):
 def _print_and_write_results(
     args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
-    """
-    Print results to screen and write metadata and data files
-    in the requested format
-
-    """
+    """Print results to screen and write metadata and data files in the requested format."""
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
@@ -284,11 +278,11 @@ def _print_and_write_results(
     result_table = QTable(
         [
             [True] + [False] * len(results_rnda),
-            ([rnda_opt] + results_rnda) * u.deg,
+            [rnda_opt, *results_rnda] * u.deg,
             ([0.0] * (len(results_rnda) + 1)),
             ([0.0] * (len(results_rnda) + 1)) * u.deg,
-            ([mean_d80] + results_mean) * u.cm,
-            ([sig_d80] + results_sig) * u.cm,
+            [mean_d80, *results_mean] * u.cm,
+            [sig_d80, *results_sig] * u.cm,
         ],
         names=(
             "best_fit",
@@ -307,11 +301,7 @@ def _print_and_write_results(
 
 
 def _get_psf_containment(logger, args_dict):
-    """
-    Read measured single-mirror point-spread function (containment)
-    from file and return mean and sigma
-
-    """
+    """Read measured single-mirror point-spread function from file and return mean and sigma."""
     # If this is a test, read just the first few lines since we only simulate those mirrors
     data_end = args_dict["number_of_mirrors_to_test"] + 1 if args_dict["test"] else None
     _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end)
@@ -334,7 +324,7 @@ def _get_psf_containment(logger, args_dict):
     )
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
 
     args_dict, db_config = _parse(label)
@@ -354,7 +344,7 @@ def main():
         raise ValueError
 
     def run(rnda):
-        """Runs the simulations for one given value of rnda"""
+        """Run the simulations for one given value of rnda."""
         tel.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing.from_kwargs(
             telescope_model=tel,

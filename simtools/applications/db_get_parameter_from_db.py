@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Get a parameter entry from DB for a specific telescope or a site.
+
     The application receives a parameter name, a site, a telescope (if applicable) and \
     optionally a version. It then prints out the parameter entry.
     If no version is provided, the value of the released model is printed..
@@ -77,7 +78,7 @@ def _parse():
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger()

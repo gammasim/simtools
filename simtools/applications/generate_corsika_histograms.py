@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application generates a set of histograms of the distribution of Cherenkov photons on the
-    ground (at observation level) read from the CORSIKA IACT output file provided as input.
+r"""
+    Generates a set of histograms Cherenkov photon distributions from CORSIKA output.
+
+    The Cherenkov photons (from observation level) are read from a CORSIKA IACT
+    output file provided as input.
 
     The histograms can be saved both into pdfs and in a hdf5 file.
 
@@ -182,7 +182,7 @@ logger = logging.getLogger()
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -361,6 +361,7 @@ def _derive_event_2d_histograms(
 ):
     """
     Auxiliary function to derive the histograms for the arguments given by event_1d_histograms.
+
     If an odd number of event header keys are given, the last one is discarded.
 
     Parameters
@@ -411,7 +412,7 @@ def _derive_event_2d_histograms(
         corsika_histograms_visualize.save_figs_to_pdf(figures_list, output_file_name)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = "Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file."
     io_handler_instance = io_handler.IOHandler()

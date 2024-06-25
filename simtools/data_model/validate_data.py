@@ -1,3 +1,5 @@
+"""Validation of data using schema."""
+
 import logging
 import os
 import re
@@ -15,8 +17,7 @@ __all__ = ["DataValidator"]
 
 class DataValidator:
     """
-    Validate data for type and units following a describing schema; converts or
-    transform data if required.
+    Validate data for type and units following a describing schema; converts or transform data.
 
     Data can be of table or dict format (internally, all data is converted to astropy tables).
 
@@ -43,10 +44,7 @@ class DataValidator:
         data_dict=None,
         check_exact_data_type=True,
     ):
-        """
-        Initialize validation class and read required reference data columns
-
-        """
+        """Initialize validation class and read required reference data columns."""
         self._logger = logging.getLogger(__name__)
 
         self.data_file_name = data_file
@@ -58,7 +56,7 @@ class DataValidator:
 
     def validate_and_transform(self, is_model_parameter=False):
         """
-        Data and data file validation.
+        Validate data and data file.
 
         Parameters
         ----------
@@ -91,10 +89,9 @@ class DataValidator:
 
     def validate_data_file(self):
         """
-        Open data file and read data from file
-        (doing this successfully is understood as
-        file validation).
+        Open data file and read data from file.
 
+        Doing this successfully is understood as file validation.
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
@@ -107,10 +104,7 @@ class DataValidator:
             pass
 
     def validate_parameter_and_file_name(self):
-        """
-        Validate that file name and key 'parameter_name' in data dict are the same.
-
-        """
+        """Validate that file name and key 'parameter_name' in data dict are the same."""
         if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
             self._logger.error(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
@@ -120,8 +114,10 @@ class DataValidator:
 
     def _validate_data_dict(self):
         """
-        Validate values in a dictionary. Handles different types of naming in data dicts
-        (using 'name' or 'parameter' keys for name fields).
+        Validate values in a dictionary.
+
+        Handles different types of naming in data dicts (using 'name' or 'parameter'
+        keys for name fields).
 
         Raises
         ------
@@ -161,10 +157,7 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
 
     def _validate_data_table(self):
-        """
-        Validate tabulated data.
-
-        """
+        """Validate tabulated data."""
         try:
             self._data_description = self._read_validation_schema(self.schema_file_name)[0].get(
                 "table_columns", None
@@ -180,7 +173,10 @@ class DataValidator:
 
     def _validate_data_columns(self):
         """
-        Validate that
+        Validate that data columns.
+
+        This includes:
+
         - required data columns are available
         - columns are in the correct units (if necessary apply a unit conversion)
         - ranges (minimum, maximum) are correct.
@@ -221,8 +217,9 @@ class DataValidator:
 
     def _sort_data(self):
         """
-        Sort data according to one data column (if required by any column attribute). Data is
-         either sorted or reverse sorted
+        Sort data according to one data column (if required by any column attribute).
+
+        Data is either sorted or reverse sorted.
 
         Raises
         ------
@@ -407,8 +404,9 @@ class DataValidator:
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
-        Check that input data have an allowed unit. Convert to reference unit (e.g., Angstrom to
-        nm).
+        Check that input data have an allowed unit.
+
+        Convert to reference unit (e.g., Angstrom to nm).
 
         Note on dimensionless columns:
 
@@ -474,8 +472,9 @@ class DataValidator:
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range or required range. Assumes that column and
-        ranges have the same units.
+        Check that column data is within allowed range or required range.
+
+        Assumes that column and ranges have the same units.
 
         Parameters
         ----------
@@ -509,7 +508,7 @@ class DataValidator:
 
         _entry = self._get_data_description(col_name)
         if range_type not in _entry:
-            return None
+            return
 
         try:
             if not self._interval_check(
@@ -527,13 +526,13 @@ class DataValidator:
             )
             raise
 
-        return None
-
     @staticmethod
     def _interval_check(data, axis_range, range_type):
         """
-        Check that values are inside allowed range (range_type='allowed_range') or span at least
-         the given interval (range_type='required_range').
+        Range checking for a given set of data.
+
+        Check that values are inside allowed range or interval. This(range_type='allowed_range')
+        or span at least the given interval (range_type='required_range').
 
         Parameters
         ----------
@@ -598,6 +597,7 @@ class DataValidator:
     def _get_data_description(self, column_name=None, status_test=False):
         """
         Return data description as provided by the schema file.
+
         For tables (type: 'data_table'), return the description of
         the column named 'column_name'. For other types, return
         all data descriptions.
@@ -660,10 +660,7 @@ class DataValidator:
             raise
 
     def _prepare_model_parameter(self):
-        """
-        Apply data preparation for model parameters.
-
-        """
+        """Apply data preparation for model parameters."""
         if isinstance(self.data_dict["value"], str):
             try:
                 _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(

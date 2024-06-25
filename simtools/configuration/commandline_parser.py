@@ -533,7 +533,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         We allow here zenith angles larger than 90 degrees in the improbable case
         such simulations are requested. It is not guaranteed that the actual simulation software
-        supports such angles!
+        supports such angles!.
 
         Parameters
         ----------

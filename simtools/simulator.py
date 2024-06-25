@@ -80,13 +80,13 @@ class Simulator:
 
     @property
     def simulation_software(self):
-        """The attribute simulation_software"""
+        """The attribute simulation_software."""
         return self._simulation_software
 
     @simulation_software.setter
     def simulation_software(self, simulation_software):
         """
-        Set and test simulation_software type
+        Set and test simulation_software type.
 
         Parameters
         ----------
@@ -307,7 +307,7 @@ class Simulator:
             output_file_name = self.runner_services.get_file_name(
                 file_type="output", **self.runner_services.get_info_for_file_name(run)
             )
-            print(f"{str(output_file_name)} (file exists: {Path.exists(output_file_name)})")
+            print(f"{output_file_name!s} (file exists: {Path.exists(output_file_name)})")
 
     def _get_runs_and_files_to_submit(self, input_file_list=None):
         """
@@ -535,7 +535,7 @@ class Simulator:
         _resources = {}
         for run in self.runs:
             _resources = self._simulation_runner.get_resources(run_number=run)
-            if "runtime" in _resources and _resources["runtime"]:
+            if _resources.get("runtime"):
                 runtime.append(_resources["runtime"])
 
         mean_runtime = np.mean(runtime)

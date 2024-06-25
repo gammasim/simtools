@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to add a new parameter to the sites collection in the DB.
+    Add a new parameter to the sites collection in the DB.
 
     This application should not be used by anyone but expert users and not often.
     Therefore, no additional documentation about this applications will be given.
@@ -27,7 +25,7 @@ def _parse():
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger()

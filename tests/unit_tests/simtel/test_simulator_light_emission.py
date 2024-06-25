@@ -88,7 +88,7 @@ def mock_simulator(
     # default_le_config = default_config
     le_application = "xyzls", "layout"
     light_source_type = "led"
-    mock_simulator = SimulatorLightEmission(
+    return SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
@@ -99,7 +99,6 @@ def mock_simulator(
         label=label,
         config_data={},
     )
-    return mock_simulator
 
 
 @pytest.fixture()
@@ -125,7 +124,7 @@ def mock_simulator_variable(
     # default_le_config = default_config
     le_application = "xyzls", "variable"
     light_source_type = "led"
-    mock_simulator_variable = SimulatorLightEmission(
+    return SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
@@ -136,7 +135,6 @@ def mock_simulator_variable(
         label=label,
         config_data={},
     )
-    return mock_simulator_variable
 
 
 @pytest.fixture()
@@ -162,7 +160,7 @@ def mock_simulator_laser(
     # default_le_config = default_config
     le_application = "ls-beam", "layout"
     light_source_type = "laser"
-    mock_simulator_laser = SimulatorLightEmission(
+    return SimulatorLightEmission(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
@@ -173,25 +171,22 @@ def mock_simulator_laser(
         label=label,
         config_data={},
     )
-    return mock_simulator_laser
 
 
 @pytest.fixture()
 def mock_output_path(label, io_handler):
-    path = io_handler.get_output_directory(label)
-    return path
+    return io_handler.get_output_directory(label)
 
 
 @pytest.fixture()
 def calibration_model_illn(db_config, io_handler, model_version):
-    calibration_model_illn = CalibrationModel(
+    return CalibrationModel(
         site="North",
         calibration_device_model_name="ILLN-01",
         mongo_db_config=db_config,
         model_version=model_version,
         label="test-simtel-light-emission",
     )
-    return calibration_model_illn
 
 
 def test_initialization(mock_simulator, default_config):

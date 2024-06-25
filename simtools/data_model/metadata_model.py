@@ -1,5 +1,6 @@
 """
 Definition of metadata model for input to and output of simtools.
+
 Follows CTAO top-level data model definition.
 
 * data products submitted to SimPipe ('input')
@@ -22,10 +23,12 @@ _logger = logging.getLogger(__name__)
 
 @jsonschema.Draft7Validator.FORMAT_CHECKER.checks("astropy_unit", ValueError)
 def check_astropy_unit(unit_string):
-    if unit_string == "dimensionless":
+    """Validate astropy units (including dimensionless) for jsonschema."""
+    try:
+        u.Unit(unit_string)
         return True
-    u.Unit(unit_string)
-    return True
+    except ValueError:
+        return unit_string == "dimensionless"
 
 
 def validate_schema(data, schema_file):
@@ -59,7 +62,8 @@ def validate_schema(data, schema_file):
 
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
     """
-    Returns metadata schema with default values.
+    Return metadata schema with default values.
+
     Follows the CTA Top-Level Data Model.
 
     Parameters
@@ -115,6 +119,7 @@ def _load_schema(schema_file=None):
 def _add_array_elements(key, schema):
     """
     Add list of array elements to schema.
+
     This assumes an element [key]['enum'] is a list of elements.
 
     Parameters
@@ -130,7 +135,7 @@ def _add_array_elements(key, schema):
         Schema dictionary with added array elements.
 
     """
-    _list_of_array_elements = sorted(list(names.array_elements().keys()))
+    _list_of_array_elements = sorted(names.array_elements().keys())
 
     def recursive_search(sub_schema, key):
         if key in sub_schema:
@@ -265,9 +270,7 @@ def _process_property(prop, prop_schema, current_dict):
 
 
 def _raise_missing_properties_error():
-    """
-    Raise an error when the 'properties' key is missing in the schema.
-    """
+    """Raise an error when the 'properties' key is missing in the schema."""
     msg = "Missing 'properties' key in schema."
     _logger.error(msg)
     raise KeyError(msg)

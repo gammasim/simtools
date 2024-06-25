@@ -1,14 +1,10 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Generate simulation configuration and run simulations (if required).
-
-    Produces configuration files for CORSIKA and sim_telarray before running simulation.
 
     Multipipe scripts will be produced as part of this application.
     Allows to run array layout simulation including shower and detector simulations
-    with the provided "prod_tag" simulation configuration (e.g., Prod6)
-    for a given primary particle, azimuth, and zenith angle.
 
     The entire simulation chain, parts of it, or nothing is executed:
 
@@ -91,7 +87,7 @@ from simtools.simulator import Simulator
 
 def _parse(description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -130,7 +126,7 @@ def _parse(description=None):
     )
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse(description="Run simulations for productions")
 
     logger = logging.getLogger()
@@ -176,7 +172,7 @@ def main():
             # It should be fine for normal production since each run is on a separate node
             # so no files are expected there.
             shutil.move(source_file, destination_file)
-        logger.info(f"Output files for the grid placed in {str(directory_for_grid_upload)}")
+        logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
 
 
 if __name__ == "__main__":
