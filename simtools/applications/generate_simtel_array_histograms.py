@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application allows to write sim_telarray histograms into pdf and hdf5 files.
+r"""
+    Write sim_telarray histograms into pdf and hdf5 files.
+
     It accepts multiple lists of histograms files, a single list or a histogram file.
     Each histogram is plotted in a page of the pdf file if the --pdf option is activated.
 
@@ -62,7 +61,7 @@ from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -201,15 +200,13 @@ def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
 
 
 def export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger):
-    """
-    Export histograms to an HDF5 file.
-    """
+    """Export histograms to an HDF5 file."""
     if config_parser["hdf5"]:
         logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
         simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = "Display the simtel_array histograms."
     io_handler_instance = io_handler.IOHandler()

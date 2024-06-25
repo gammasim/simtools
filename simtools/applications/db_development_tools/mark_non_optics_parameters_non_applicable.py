@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application is used to modify all non-optics parameters \
-    in the MST-Structure entries in the DB to non-applicable.
+    Modify all non-optics parameters in the MST-Structure entries in the DB to non-applicable.
 
     This application should not be used anymore by anyone.
 
@@ -114,7 +111,7 @@ def process_site_version(db, db_config, non_optic_parameters, site, model_versio
             assert pars[par_now]["Applicable"] is False
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger()

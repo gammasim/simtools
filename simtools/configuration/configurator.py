@@ -108,7 +108,9 @@ class Configurator:
         job_submission=False,
     ):
         """
-        Initialize configuration from command line, file, class config, or environmental variable.
+        Initialize application configuration.
+
+        Configure from command line, configuration file, class config, or environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -307,10 +309,9 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any configuration parameters from environment variables.
+        Fill any configuration parameters from environmental variables or from file (e.g., ".env").
 
-        Only variables which are not already configured (i.e., parameter is None) are updated.
-        Values are read from environmental variables or from  a file (default: ".env").
+        Only parameters shich are not already configured are changed (i.e., parameter is None).
 
         """
         _env_dict = {}

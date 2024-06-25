@@ -1,3 +1,5 @@
+"""Helper functions for legend handlers used for plotting."""
+
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
@@ -61,8 +63,9 @@ def calculate_center(handlebox, width_factor=3, height_factor=3):
 
 class TelescopeHandler:
     """
-    Telescope handler that centralizes the telescope information. Individual telescopes handlers
-    inherit from this class.
+    Telescope handler that centralizes the telescope information.
+
+    Individual telescopes handlers inherit from this class.
     """
 
     def __init__(self, radius=None):
@@ -137,12 +140,10 @@ class MeanRadiusOuterEdgeObject:
 
 
 class HexPixelHandler:
-    """
-    Legend handler class to plot a hexagonal "on" pixel.
-    """
+    """Legend handler class to plot a hexagonal "on" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -159,12 +160,10 @@ class HexPixelHandler:
 
 
 class HexEdgePixelHandler:
-    """
-    Legend handler class to plot a hexagonal "edge" pixel.
-    """
+    """Legend handler class to plot a hexagonal "edge" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -172,8 +171,8 @@ class HexEdgePixelHandler:
             numVertices=6,
             radius=0.7 * handlebox.height,
             orientation=np.deg2rad(30),
-            facecolor=mcolors.to_rgb("brown") + (0.5,),
-            edgecolor=mcolors.to_rgb("black") + (1,),
+            facecolor=(*mcolors.to_rgb("brown"), 0.5),
+            edgecolor=(*mcolors.to_rgb("black"), 1),
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -181,12 +180,10 @@ class HexEdgePixelHandler:
 
 
 class HexOffPixelHandler:
-    """
-    Legend handler class to plot a hexagonal "off" pixel.
-    """
+    """Legend handler class to plot a hexagonal "off" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
         # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
@@ -203,12 +200,10 @@ class HexOffPixelHandler:
 
 
 class SquarePixelHandler:
-    """
-    Legend handler class to plot a square "on" pixel.
-    """
+    """Legend handler class to plot a square "on" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -224,20 +219,18 @@ class SquarePixelHandler:
 
 
 class SquareEdgePixelHandler:
-    """
-    Legend handler class to plot a square "edge" pixel.
-    """
+    """Legend handler class to plot a square "edge" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
             [x0, y0],
             width,
             height,
-            facecolor=mcolors.to_rgb("brown") + (0.5,),
-            edgecolor=mcolors.to_rgb("black") + (1,),
+            facecolor=(*mcolors.to_rgb("brown"), 0.5),
+            edgecolor=(*mcolors.to_rgb("black"), 1),
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch)
@@ -245,12 +238,10 @@ class SquareEdgePixelHandler:
 
 
 class SquareOffPixelHandler:
-    """
-    Legend handler class to plot a square "off" pixel.
-    """
+    """Legend handler class to plot a square "off" pixel."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -266,11 +257,9 @@ class SquareOffPixelHandler:
 
 
 class LSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an LST in an array layout.
-    """
+    """Legend handler class to plot a representation of an LST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 10 / 3, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -285,11 +274,9 @@ class LSTHandler(TelescopeHandler):
 
 
 class MSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an MST in an array layout.
-    """
+    """Legend handler class to plot a representation of an MST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -304,11 +291,9 @@ class MSTHandler(TelescopeHandler):
 
 
 class SSTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an SST in an array layout.
-    """
+    """Legend handler class to plot a representation of an SST in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 2)
         radius = handlebox.height
         patch = mpatches.Circle(
@@ -323,11 +308,9 @@ class SSTHandler(TelescopeHandler):
 
 
 class SCTHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an SCT in an array layout.
-    """
+    """Legend handler class to plot a representation of an SCT in an array layout."""
 
-    def legend_artist(self, _, __, ___, handlebox):
+    def legend_artist(self, _, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 10, 1)
         width = height = handlebox.height
         patch = mpatches.Rectangle(
@@ -343,9 +326,7 @@ class SCTHandler(TelescopeHandler):
 
 
 class HESSHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an HESS in an array layout.
-    """
+    """Legend handler class to plot a representation of an HESS in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -364,9 +345,7 @@ class HESSHandler(TelescopeHandler):
 
 
 class MAGICHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an MAGIC in an array layout.
-    """
+    """Legend handler class to plot a representation of an MAGIC in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -385,9 +364,7 @@ class MAGICHandler(TelescopeHandler):
 
 
 class VERITASHandler(TelescopeHandler):
-    """
-    Legend handler class to plot a representation of an VERITAS in an array layout.
-    """
+    """Legend handler class to plot a representation of an VERITAS in an array layout."""
 
     def legend_artist(self, _, __, ___, handlebox):
         x0, y0 = calculate_center(handlebox)
@@ -406,12 +383,10 @@ class VERITASHandler(TelescopeHandler):
 
 
 class MeanRadiusOuterEdgeHandler:
-    """
-    Legend handler class to plot a the mean radius outer edge of the dish.
-    """
+    """Legend handler class to plot a the mean radius outer edge of the dish."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):
+    def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox, 4, 4)
         radius = handlebox.height
         patch = mpatches.Circle(

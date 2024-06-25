@@ -48,22 +48,19 @@ def simtel_io_file_list(io_handler):
 
 @pytest.fixture()
 def simtel_hists_hdata_io_instance(simtel_io_file_hdata):
-    instance = SimtelIOHistograms(
+    return SimtelIOHistograms(
         histogram_files=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.001, 300]
     )
-    return instance
 
 
 @pytest.fixture()
 def simtel_array_histograms_instance(simtel_io_file):
-    instance = SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
-    return instance
+    return SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
 
 
 @pytest.fixture()
 def simtel_array_histograms_instance_file_list(simtel_io_file_list):
-    instance = SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
-    return instance
+    return SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
 
 
 def test_file_does_not_exist(caplog):

@@ -23,19 +23,17 @@ def ray_tracing_sst(telescope_model_sst, simtel_path):
         "single_mirror_mode": False,
     }
 
-    ray_tracing_sst = RayTracing(
+    return RayTracing(
         telescope_model=telescope_model_sst,
         simtel_path=simtel_path,
         config_data=config_data,
         label="test-simtel-runner-ray-tracing",
     )
 
-    return ray_tracing_sst
-
 
 @pytest.fixture()
 def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
-    simulator_ray_tracing = SimulatorRayTracing(
+    return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
         config_data={
@@ -48,7 +46,6 @@ def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
         },
         label="test-simtel-runner-ray-tracing",
     )
-    return simulator_ray_tracing
 
 
 def test_load_required_files(simulator_ray_tracing):

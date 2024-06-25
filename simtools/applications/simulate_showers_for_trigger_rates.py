@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application simulates showers to be used in trigger rate calculations.
+r"""
+    Simulate showers to be used in trigger rate calculations.
+
     Arrays with one or four telescopes can be used, in case of \
     mono or stereo trigger configurations, respectively.
 
@@ -77,7 +76,7 @@ from simtools.utils import general as gen
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -123,7 +122,7 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"

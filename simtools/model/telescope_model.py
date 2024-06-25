@@ -212,8 +212,7 @@ class TelescopeModel(ModelParameter):
 
         file = self.config_file_directory.joinpath(file_name)
         with open(file, encoding="utf-8") as f:
-            is_2d = "@RPOL@" in f.read()
-        return is_2d
+            return "@RPOL@" in f.read()
 
     def read_two_dim_wavelength_angle(self, file_name):
         """
@@ -281,10 +280,7 @@ class TelescopeModel(ModelParameter):
             "Reading incidence angle distribution from %s",
             self.config_file_directory.joinpath(incidence_angle_dist_file),
         )
-        incidence_angle_dist = astropy.io.ascii.read(
-            self.config_file_directory.joinpath(incidence_angle_dist_file)
-        )
-        return incidence_angle_dist
+        return astropy.io.ascii.read(self.config_file_directory.joinpath(incidence_angle_dist_file))
 
     @staticmethod
     def calc_average_curve(curves, incidence_angle_dist):
@@ -317,12 +313,10 @@ class TelescopeModel(ModelParameter):
                 ]
             )
 
-        average_curve = Table(
+        return Table(
             [curves["Wavelength"], np.average(curves["z"], weights=weights, axis=0)],
             names=("Wavelength", "z"),
         )
-
-        return average_curve
 
     def export_table_to_model_directory(self, file_name, table):
         """
