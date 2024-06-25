@@ -14,9 +14,7 @@ class CorsikaDefaultConfig:
     """
 
     def __init__(self, primary=None, zenith_angle=None):
-        """
-        Initialize CorsikaDefaultConfig.
-        """
+        """Initialize CorsikaDefaultConfig."""
         self.primary = primary
         self.zenith_angle = zenith_angle
         self._energy_slope = -2.0

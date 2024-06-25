@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
+r"""
     Convert all simulation model parameters exported from sim_telarray format using
     schema files. Check value, type, and range, convert units, and write json files
     ready to be submitted to the model database. Prints out parameters which are not found
@@ -65,7 +63,7 @@ from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -186,7 +184,7 @@ def get_number_of_camera_pixel(args_dict, logger):
     """
     Get the number of camera pixels from the simtel configuration file
     Required to set the dimension some of the parameter correctly, as simtel
-    in some cases does not provide the dimension ('all:' in the parameter files)
+    in some cases does not provide the dimension ('all:' in the parameter files).
 
     Parameters
     ----------

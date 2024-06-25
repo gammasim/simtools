@@ -1,6 +1,4 @@
-"""
-General functions useful across different parts of the code.
-"""
+"""General functions useful across different parts of the code."""
 
 import copy
 import json
@@ -295,7 +293,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
 def _check_value_entry_length(value, par_name, par_info):
     """
-    Validate length of user input parameters
+    Validate length of user input parameters.
 
     Parameters
     ----------
@@ -768,7 +766,7 @@ def separate_args_and_config_data(expected_args, **kwargs):
 
 def program_is_executable(program):
     """
-    Checks if program exists and is executable
+    Checks if program exists and is executable.
 
     Follows https://stackoverflow.com/questions/377017/
 
@@ -878,9 +876,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
 
 
 def get_file_age(file_path):
-    """
-    Get the age of a file in seconds since the last modification.
-    """
+    """Get the age of a file in seconds since the last modification."""
     if not Path(file_path).is_file():
         raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
 
@@ -971,7 +967,7 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
 
 
 def sort_arrays(*args):
-    """Sort arrays
+    """Sort arrays.
 
     Parameters
     ----------
@@ -1124,7 +1120,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     Validate data type of value (scalar, list, np array) or type object against a
     reference data type. Allow to check for exact data type or allow sub types
     (e.g. uint is accepted for int).  Take into account 'file' type as used in the
-    model parameter database
+    model parameter database.
 
     Parameters
     ----------
@@ -1178,7 +1174,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
 
 def convert_list_to_string(data, comma_separated=False):
     """
-    Convert arrays to string (if required)
+    Convert arrays to string (if required).
 
     Parameters
     ----------

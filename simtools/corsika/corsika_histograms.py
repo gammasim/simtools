@@ -157,9 +157,7 @@ class CorsikaHistograms:
         return self._corsika_version
 
     def _initialize_header(self):
-        """
-        Initialize the header.
-        """
+        """Initialize the header."""
         self.all_run_keys = list(
             run_header.run_header_types[np.around(self.corsika_version, 1)].names
         )
@@ -599,7 +597,7 @@ class CorsikaHistograms:
     def set_histograms(self, telescope_indices=None, individual_telescopes=None, hist_config=None):
         """
         Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create
-         and fill the histograms
+         and fill the histograms.
 
         Parameters
         ----------
@@ -658,9 +656,7 @@ class CorsikaHistograms:
 
     @property
     def individual_telescopes(self):
-        """
-        Return the individual telescopes as property.
-        """
+        """Return the individual telescopes as property."""
         return self._individual_telescopes
 
     @individual_telescopes.setter
@@ -880,7 +876,7 @@ class CorsikaHistograms:
 
     def _get_bins_max_dist(self, bins=None, max_dist=None):
         """Auxiliary function to get the number of bins and the max distance to generate the
-        radial and the density histograms
+        radial and the density histograms.
 
         Parameters
         ----------
@@ -1035,16 +1031,12 @@ class CorsikaHistograms:
 
     @property
     def num_photons_per_event_per_telescope(self):
-        """
-        The number of photons per event per telescope.
-        """
+        """The number of photons per event per telescope."""
         return self._num_photons_per_event_per_telescope
 
     @num_photons_per_event_per_telescope.setter
     def num_photons_per_event_per_telescope(self, num_photons_per_event_per_telescope_to_set):
-        """
-        Set the number of photons per event per telescope.
-        """
+        """Set the number of photons per event per telescope."""
         self._num_photons_per_event_per_telescope = (
             np.array(num_photons_per_event_per_telescope_to_set)
             .reshape(self.num_events, len(self.telescope_indices))

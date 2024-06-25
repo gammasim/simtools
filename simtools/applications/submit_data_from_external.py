@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
+r"""
     Submit model parameter (value, table) through the command line.
 
     Input data and metadata is validated, and if necessary enriched
@@ -50,7 +48,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

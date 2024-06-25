@@ -266,9 +266,7 @@ def _process_property(prop, prop_schema, current_dict):
 
 
 def _raise_missing_properties_error():
-    """
-    Raise an error when the 'properties' key is missing in the schema.
-    """
+    """Raise an error when the 'properties' key is missing in the schema."""
     msg = "Missing 'properties' key in schema."
     _logger.error(msg)
     raise KeyError(msg)

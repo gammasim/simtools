@@ -34,9 +34,7 @@ class JobManager:
     """
 
     def __init__(self, submit_command=None, test=False):
-        """
-        Initialize JobManager
-        """
+        """Initialize JobManager."""
         self._logger = logging.getLogger(__name__)
         self.submit_command = submit_command
         self.test = test
@@ -106,7 +104,7 @@ class JobManager:
     def _submit_local(self, log_file):
         """
         Run a job script on the command line
-        (no submission to a workload manager)
+        (no submission to a workload manager).
 
         Parameters
         ----------
@@ -131,10 +129,7 @@ class JobManager:
             self._logger.info("Testing (local)")
 
     def _submit_htcondor(self):
-        """
-        Submit a job described by a shell script to HTcondor
-
-        """
+        """Submit a job described by a shell script to HTcondor."""
         _condor_file = self.run_script + ".condor"
         self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
@@ -154,10 +149,7 @@ class JobManager:
             self._logger.info("Testing (HTcondor)")
 
     def _submit_gridengine(self):
-        """
-        Submit a job described by a shell script to gridengine
-
-        """
+        """Submit a job described by a shell script to gridengine."""
         this_sub_cmd = copy(self.submit_command)
         this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
         this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"

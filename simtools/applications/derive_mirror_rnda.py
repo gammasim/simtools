@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
+r"""
     Derive the simulation model parameter **mirror_reflection_random_angle**
     (sometimes called mirror roughness) to match the measured containment diameter
     of the optical point-spread function (PSF) of individual mirror panels.
@@ -149,9 +147,7 @@ from simtools.ray_tracing import RayTracing
 
 
 def _parse(label):
-    """
-    Parse command line configuration
-    """
+    """Parse command line configuration."""
     config = configurator.Configurator(
         description="Derive mirror random reflection angle.", label=label
     )
@@ -220,7 +216,7 @@ def _define_telescope_model(label, args_dict, db_config):
     """
     Define telescope model and update configuration
     with mirror list and/or random focal length given
-    as input
+    as input.
 
     Attributes
     ----------
@@ -259,7 +255,7 @@ def _print_and_write_results(
 ):
     """
     Print results to screen and write metadata and data files
-    in the requested format
+    in the requested format.
 
     """
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
@@ -309,7 +305,7 @@ def _print_and_write_results(
 def _get_psf_containment(logger, args_dict):
     """
     Read measured single-mirror point-spread function (containment)
-    from file and return mean and sigma
+    from file and return mean and sigma.
 
     """
     # If this is a test, read just the first few lines since we only simulate those mirrors
@@ -354,7 +350,7 @@ def main():
         raise ValueError
 
     def run(rnda):
-        """Runs the simulations for one given value of rnda"""
+        """Runs the simulations for one given value of rnda."""
         tel.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing.from_kwargs(
             telescope_model=tel,

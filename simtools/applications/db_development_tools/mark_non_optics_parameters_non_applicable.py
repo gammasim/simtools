@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
     This application is used to modify all non-optics parameters \
     in the MST-Structure entries in the DB to non-applicable.
 

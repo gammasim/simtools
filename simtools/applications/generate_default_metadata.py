@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
+r"""
     Generate a default simtools metadata file from a json schema.
 
     Command line arguments
@@ -37,7 +35,7 @@ from simtools.io_operations import io_handler
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------

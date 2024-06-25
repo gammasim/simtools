@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
     This application adds a file to a DB.
 
     The name and location of the file are required.

@@ -36,9 +36,7 @@ class PSFImage:
     """
 
     def __init__(self, focal_length=None, total_scattered_area=None):
-        """
-        Initialize PSFImage class.
-        """
+        """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
 
         self._total_photons = None
@@ -150,7 +148,7 @@ class PSFImage:
 
     def get_effective_area(self):
         """
-        Return effective area pre calculated
+        Return effective area pre calculated.
 
         Returns
         -------
@@ -166,7 +164,7 @@ class PSFImage:
 
     def set_effective_area(self, value):
         """
-        Set effective area
+        Set effective area.
 
         Parameters
         ----------
@@ -178,7 +176,7 @@ class PSFImage:
 
     def get_psf(self, fraction=0.8, unit="cm"):
         """
-        Return PSF
+        Return PSF.
 
         Parameters
         ----------
@@ -340,9 +338,7 @@ class PSFImage:
         return radius
 
     def _sum_photons_in_radius(self, radius):
-        """
-        Return the number of photons inside a certain radius.
-        """
+        """Return the number of photons inside a certain radius."""
         return np.searchsorted(self.photon_r, radius)
 
     def get_image_data(self, centralized=True):
