@@ -311,7 +311,7 @@ class Simulator:
         """Set simulation runners."""
         common_args = {
             "label": self.label,
-            "simtel_source_path": self._simulator_source_path,
+            "simtel_path": self._simulator_source_path,
             "array_model": self.array_model,
         }
         corsika_args = {

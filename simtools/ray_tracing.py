@@ -37,7 +37,7 @@ class RayTracing:
         Instance of the TelescopeModel class.
     label: str
         Instance label.
-    simtel_source_path: str (or Path)
+    simtel_path: str (or Path)
         Location of sim_telarray installation.
     config_data: dict.
         Dict containing the configurable parameters.
@@ -55,7 +55,7 @@ class RayTracing:
     def __init__(
         self,
         telescope_model,
-        simtel_source_path,
+        simtel_path,
         label=None,
         config_data=None,
         config_file=None,
@@ -64,7 +64,7 @@ class RayTracing:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing RayTracing class")
 
-        self._simtel_source_path = Path(simtel_source_path)
+        self._simtel_path = Path(simtel_path)
         self._io_handler = io_handler.IOHandler()
 
         self._telescope_model = self._validate_telescope_model(telescope_model)
@@ -142,7 +142,7 @@ class RayTracing:
             expected_args=[
                 "telescope_model",
                 "label",
-                "simtel_source_path",
+                "simtel_path",
             ],
             **kwargs,
         )
@@ -180,7 +180,7 @@ class RayTracing:
                     f"Simulating RayTracing for off_axis={this_off_axis}, mirror={this_mirror}"
                 )
                 simtel = SimulatorRayTracing(
-                    simtel_source_path=self._simtel_source_path,
+                    simtel_path=self._simtel_path,
                     telescope_model=self._telescope_model,
                     test=test,
                     config_data={
@@ -520,8 +520,7 @@ class RayTracing:
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
-                    f"{self._simtel_source_path}/sim_telarray/bin/rx "
-                    f"-f {containment_fraction:.2f} -v"
+                    f"{self._simtel_path}/sim_telarray/bin/rx " f"-f {containment_fraction:.2f} -v"
                 ),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
