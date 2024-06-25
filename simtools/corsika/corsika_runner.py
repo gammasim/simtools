@@ -102,7 +102,7 @@ class CorsikaRunner:
         self._load_corsika_data_directories()
 
     def _load_corsika_config_data(self, corsika_config_data):
-        """Reads corsika_config_data, creates corsika_config and corsika_input_file."""
+        """Read corsika_config_data, creates corsika_config and corsika_input_file."""
         corsika_data_directory_from_config = corsika_config_data.get("data_directory", None)
         if corsika_data_directory_from_config is None:
             # corsika_data_directory not given (or None).
@@ -356,7 +356,7 @@ class CorsikaRunner:
 
     def has_file(self, file_type, run_number=None, mode="out"):
         """
-        Checks that the file of file_type for the specified run number exists.
+        Check that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
@@ -418,7 +418,7 @@ class CorsikaRunner:
 
     def _validate_run_number(self, run_number):
         """
-        Returns the run number from corsika_config in case run_number is None.
+        Return the run number from corsika_config in case run_number is None.
 
         Raise ValueError if run_number is not valid (< 1) or returns run_number
         if it is a valid value.

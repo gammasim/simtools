@@ -255,10 +255,7 @@ def _define_telescope_model(label, args_dict, db_config):
 def _print_and_write_results(
     args_dict, rnda_start, rnda_opt, mean_d80, sig_d80, results_rnda, results_mean, results_sig
 ):
-    """
-    Print results to screen and write metadata and data files in the requested format.
-
-    """
+    """Print results to screen and write metadata and data files in the requested format."""
     containment_fraction_percent = int(args_dict["containment_fraction"] * 100)
 
     # Printing results to stdout
@@ -304,10 +301,7 @@ def _print_and_write_results(
 
 
 def _get_psf_containment(logger, args_dict):
-    """
-    Read measured single-mirror point-spread function from file and return mean and sigma.
-
-    """
+    """Read measured single-mirror point-spread function from file and return mean and sigma."""
     # If this is a test, read just the first few lines since we only simulate those mirrors
     data_end = args_dict["number_of_mirrors_to_test"] + 1 if args_dict["test"] else None
     _psf_list = Table.read(args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end)
@@ -350,7 +344,7 @@ def main():
         raise ValueError
 
     def run(rnda):
-        """Runs the simulations for one given value of rnda."""
+        """Run the simulations for one given value of rnda."""
         tel.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing.from_kwargs(
             telescope_model=tel,
