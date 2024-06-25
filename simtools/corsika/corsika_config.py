@@ -26,7 +26,7 @@ class CorsikaConfig:
     Follows closely the CORSIKA definitions and output format (see CORSIKA manual).
 
     The configuration is set as a dict corresponding to the command line configuration groups
-    (especially simulation_software, simulation_model, simulation_parameters).
+    (especially simulation_software, simulation configuration, simulation parameters).
 
     Parameters
     ----------
@@ -35,8 +35,7 @@ class CorsikaConfig:
     label : str
         Instance label.
     args_dict : dict
-        Configuration dictionary
-        includes simulation_software, simulation_model, simulation_parameters groups)
+        Configuration dictionary.
     """
 
     def __init__(self, array_model, args_dict, label=None):
@@ -71,13 +70,15 @@ class CorsikaConfig:
         """
         Load CORSIKA parameters.
 
-        TODO - will be replaced by a call to the CORSIKA configuration collection
-        in the simtools database.
-
         Returns
         -------
         corsika_parameters: dict
             Dictionary with CORSIKA parameters.
+
+        Notes
+        -----
+        TODO - will be replaced by a call to the CORSIKA configuration collection
+        in the simtools database.
         """
         corsika_parameters_file = self.io_handler.get_input_data_file(
             "parameters", "corsika_parameters.yml"
@@ -89,7 +90,7 @@ class CorsikaConfig:
         """
         Set configuration parameters for CORSIKA and CorsikaConfig.
 
-        Converted values to CORSIKA-consistent units.
+        Convert values to CORSIKA-consistent units.
 
         Returns
         -------
@@ -195,7 +196,7 @@ class CorsikaConfig:
         Parameters
         ----------
         par_name: str
-            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...)
+            Name of the parameter as used in the CORSIKA input file (e.g. PRMPAR, THETAP ...).
 
         Raises
         ------
@@ -323,8 +324,6 @@ class CorsikaConfig:
         """
         Get a CORSIKA config style file name for various file types.
 
-        TODO - overlap with runner_services.get_file_name
-
         Parameters
         ----------
         file_type: str
@@ -350,6 +349,9 @@ class CorsikaConfig:
         ------
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
+        Notes
+        -----
+        TODO - overlap with runner_services.get_file_name
         """
         file_label = f"_{self.label}" if self.label is not None else ""
         view_cone = ""
