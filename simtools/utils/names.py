@@ -53,7 +53,7 @@ def site_names():
         Site names.
     """
     _array_elements = array_elements()
-    _sites = set(entry["site"] for entry in _array_elements.values())
+    _sites = {entry["site"] for entry in _array_elements.values()}
     return {site: [site.lower()] for site in _sites}
 
 

@@ -121,8 +121,11 @@ format.line-ending = "auto"
 # no documentation linting for test files
 format.skip-magic-trailing-comma = false
 lint.extend-select = [
+  "A",   # built-in shadowing
+  "C4",  # comprehension
   "COM", # flake8-commas
-  #  "D",   # pydocstyle (temporary off: use in 2nd step)
+  "D",   # pydocstyle
+  "F",   # pyflakes
   "G",   # logging
   "I",   # isort
   "ICN", # import name conventions
@@ -131,6 +134,7 @@ lint.extend-select = [
   "NPY", # numpy
   "PT",  # pytest
   "RET", # return statements
+  "RUF", # ruff
   "UP",  # pyupgrade
 ]
 lint.ignore = [
@@ -142,6 +146,7 @@ lint.ignore = [
   "ISC001", # incompatible with ruff format
   "PT011",  # TODO - fix
   "PT012",  # TODO - fix
+  "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
   "D",

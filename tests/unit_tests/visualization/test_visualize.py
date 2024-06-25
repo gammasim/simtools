@@ -42,7 +42,7 @@ def test_plot_1d(db, io_handler):
     if "%" in y_title:
         if np.max(data_in[y_title]) <= 1:
             data_in[y_title] = 100 * data_in[y_title]
-    data = dict()
+    data = {}
     data["Reflectivity"] = data_in
     for i in range(5):
         new_data = np.copy(data_in)

@@ -408,7 +408,7 @@ def test_separating_get_and_write(db, io_handler, model_version):
     logger.info("----Testing getting parameters and exporting model files-----")
     pars = db.get_model_parameters("North", "LSTN-01", model_version, collection="telescopes")
 
-    file_list = list()
+    file_list = []
     for par_now in pars.values():
         if par_now["file"] and par_now["value"] is not None:
             file_list.append(par_now["value"])

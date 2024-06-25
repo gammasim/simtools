@@ -255,7 +255,7 @@ def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotat
 
     return (
         f"array_layout_{layout_name}_{site}_{coordinate_system}_"
-        f"{str(round(rotate_angle.to(u.deg).value))}deg"
+        f"{round(rotate_angle.to(u.deg).value)!s}deg"
     )
 
 
@@ -394,7 +394,7 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
     return layouts
 
 
-def main():  # noqa: D103
+def main():
     """Plot array layout application."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(

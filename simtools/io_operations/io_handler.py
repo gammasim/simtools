@@ -116,7 +116,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
-            self._logger.error(f"Error creating directory {str(path)}")
+            self._logger.error(f"Error creating directory {path!s}")
             raise
 
         return path.absolute()
