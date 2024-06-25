@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>validate_camera_fov &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>validate_camera_fov &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
@@ -456,13 +455,10 @@ document.write(`
                   
   <section id="module-validate_camera_fov">
 <span id="validate-camera-fov"></span><h1>validate_camera_fov<a class="headerlink" href="#module-validate_camera_fov" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>This application calculate the camera FoV of the telescope requested and plot the camera     as seen for an observer facing the camera.</p>
+<p>This application calculate the camera FoV of the telescope requested and plot the camera as seen for an observer facing the camera.</p>
 <p>An example of the camera plot can be found below.</p>
 <a class="reference internal image-reference" href="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot"><img alt="_images/validate_camera_fov_North-LST-1_pixelLayout.png" id="camera-fov-plot" src="_images/validate_camera_fov_North-LST-1_pixelLayout.png" style="width: 50%;" />
 </a>
-</section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -472,9 +468,15 @@ document.write(`
 </dd>
 <dt>model_version (str, optional)</dt><dd><p>Model version</p>
 </dd>
-<dt>camera_in_sky_coor (bool, optional)</dt><dd><p>Plot the camera layout in sky coordinates akin to looking at it from behind for single          mirror telescopes</p>
+<dt>camera_in_sky_coor (bool, optional)</dt><dd><dl class="simple">
+<dt>Plot the camera layout in sky coordinates akin to looking at it from behind for single </dt><dd><p>mirror telescopes</p>
 </dd>
-<dt>print_pixels_id (bool, optional)</dt><dd><p>Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero         (–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
+</dl>
+</dd>
+<dt>print_pixels_id (bool, optional)</dt><dd><dl class="simple">
+<dt>Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero</dt><dd><p>(–print_pixels_id 0). To print all pixels, set to ‘All’.”</p>
+</dd>
+</dl>
 </dd>
 <dt>verbosity (str, optional)</dt><dd><p>Log level to print</p>
 </dd>
@@ -483,13 +485,13 @@ document.write(`
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>LST - Prod5</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-camera-fov --site North \\</span>
 <span class="go">    --telescope LST-1 --model_version prod5</span>
 </pre></div>
 </div>
 <p>The output is saved in simtools-output/validate_camera_fov.</p>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\\</span>
 <span class="go">/application-plots/validate_camera_fov_LST-1_pixel_layout.png</span>
 </pre></div>
 </div>
@@ -541,7 +543,6 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>

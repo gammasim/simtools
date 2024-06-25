@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>derive_mirror_rnda &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>derive_mirror_rnda &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
@@ -457,12 +456,9 @@ document.write(`
                   
   <section id="module-derive_mirror_rnda">
 <span id="derive-mirror-rnda"></span><h1>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>Derive the simulation model parameter <strong>mirror_reflection_random_angle</strong>
 (sometimes called mirror roughness) to match the measured containment diameter
 of the optical point-spread function (PSF) of individual mirror panels.</p>
-</section>
 <section id="description">
 <h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
 <p>This application derives the value of the simulation model parameter
@@ -558,13 +554,13 @@ used to replace the default random_focal_length from the model.</p>
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Derive mirror random reflection angle for a mid-sized telescope (MST),
 simulation production Prod5.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \</span>
-<span class="go">    --site South \</span>
-<span class="go">    --telescope MSTS-design \</span>
-<span class="go">    --containment_fraction 0.8 \</span>
-<span class="go">    --mirror_list MLTdata-preproduction.ecsv \</span>
-<span class="go">    --psf_measurement MLTdata-preproduction.ecsv \</span>
-<span class="go">    --rnda 0.0063 \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \\</span>
+<span class="go">    --site South \\</span>
+<span class="go">    --telescope MSTS-design \\</span>
+<span class="go">    --containment_fraction 0.8 \\</span>
+<span class="go">    --mirror_list MLTdata-preproduction.ecsv \\</span>
+<span class="go">    --psf_measurement MLTdata-preproduction.ecsv \\</span>
+<span class="go">    --rnda 0.0063 \\</span>
 <span class="go">    --test</span>
 </pre></div>
 </div>
@@ -631,7 +627,6 @@ Use the parameter <code class="docutils literal notranslate"><span class="pre">-
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>

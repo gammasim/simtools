@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5cdada43"></script>
+    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -410,10 +410,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize metadata collector.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize metadata collector.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observatory</span> <span class="o">=</span> <span class="s2">&quot;cta&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
@@ -433,10 +430,7 @@ document.write(`
 <div class="viewcode-block" id="MetadataCollector.collect_meta_data">
 <a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.collect_meta_data">[docs]</a>
     <span class="k">def</span> <span class="nf">collect_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Collect and verify product metadata from different sources.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect and verify product metadata from different sources.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_contact_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">observatory</span><span class="p">][</span><span class="s2">&quot;contact&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_product_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">observatory</span><span class="p">][</span><span class="s2">&quot;product&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">observatory</span><span class="p">][</span><span class="s2">&quot;activity&quot;</span><span class="p">])</span>
@@ -523,7 +517,7 @@ document.write(`
 <a class="viewcode-back" href="../../data_model.html#data_model.metadata_collector.MetadataCollector.get_site">[docs]</a>
     <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_input_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get site entry from metadata. Allow to get from collected or from input metadata</span>
+<span class="sd">        Get site entry from metadata. Allow to get from collected or from input metadata.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -767,7 +761,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_fill_activity_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activity_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill activity (software) related metadata</span>
+<span class="sd">        Fill activity (software) related metadata.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -878,7 +872,7 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_remove_line_feed</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove all line feeds from a string</span>
+<span class="sd">        Remove all line feeds from a string.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

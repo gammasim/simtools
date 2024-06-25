@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=5cdada43"></script>
+    <script src="../_static/documentation_options.js?v=fbc78938"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -364,9 +364,7 @@ document.write(`
   <h1>Source code for generate_simtel_array_histograms</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Summary</span>
-<span class="sd">    -------</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This application allows to write sim_telarray histograms into pdf and hdf5 files.</span>
 <span class="sd">    It accepts multiple lists of histograms files, a single list or a histogram file.</span>
 <span class="sd">    Each histogram is plotted in a page of the pdf file if the --pdf option is activated.</span>
@@ -426,7 +424,7 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line configuration</span>
+<span class="sd">    Parse command line configuration.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -576,9 +574,7 @@ document.write(`
 <div class="viewcode-block" id="export_to_hdf5">
 <a class="viewcode-back" href="../generate_simtel_array_histograms.html#generate_simtel_array_histograms.export_to_hdf5">[docs]</a>
 <span class="k">def</span> <span class="nf">export_to_hdf5</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Export histograms to an HDF5 file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export histograms to an HDF5 file.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote histograms to the hdf5 file </span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">)</span>
         <span class="n">simtel_histograms</span><span class="o">.</span><span class="n">export_histograms</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>

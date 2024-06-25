@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>corsika.corsika_histograms &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5cdada43"></script>
+    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -526,9 +526,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_version</span>
 
     <span class="k">def</span> <span class="nf">_initialize_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the header.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the header.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_run_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
             <span class="n">run_header</span><span class="o">.</span><span class="n">run_header_types</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_version</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">names</span>
         <span class="p">)</span>
@@ -976,7 +974,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">set_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">individual_telescopes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract the information of the Cherenkov photons from a CORSIKA output IACT file, create</span>
-<span class="sd">         and fill the histograms</span>
+<span class="sd">         and fill the histograms.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1036,9 +1034,7 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">individual_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the individual telescopes as property.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the individual telescopes as property.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_individual_telescopes</span>
 
     <span class="nd">@individual_telescopes</span><span class="o">.</span><span class="n">setter</span>
@@ -1273,7 +1269,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_bins_max_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Auxiliary function to get the number of bins and the max distance to generate the</span>
-<span class="sd">        radial and the density histograms</span>
+<span class="sd">        radial and the density histograms.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1443,16 +1439,12 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_photons_per_event_per_telescope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The number of photons per event per telescope.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of photons per event per telescope.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_photons_per_event_per_telescope</span>
 
     <span class="nd">@num_photons_per_event_per_telescope</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">num_photons_per_event_per_telescope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_photons_per_event_per_telescope_to_set</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the number of photons per event per telescope.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the number of photons per event per telescope.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_photons_per_event_per_telescope</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">num_photons_per_event_per_telescope_to_set</span><span class="p">)</span>
             <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_events</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_indices</span><span class="p">))</span>

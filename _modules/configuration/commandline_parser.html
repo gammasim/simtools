@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=5cdada43"></script>
+    <script src="../../_static/documentation_options.js?v=fbc78938"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -436,10 +436,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_config_files">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_config_files">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize configuration files.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize configuration files.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;configuration&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
@@ -460,9 +457,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_path_arguments">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_path_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize paths.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize paths.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;paths&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--data_path&quot;</span><span class="p">,</span>
@@ -502,9 +497,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_output_arguments">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize application output files(s)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application output files(s).&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--output_file&quot;</span><span class="p">,</span>
@@ -531,9 +524,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_application_execution_arguments">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize application execution arguments.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application execution arguments.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;execution&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--test&quot;</span><span class="p">,</span>
@@ -561,9 +552,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_db_config_arguments">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize DB configuration parameters.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DB configuration parameters.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;MongoDB configuration&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database user&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_pw&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database password&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -597,10 +586,7 @@ document.write(`
 <div class="viewcode-block" id="CommandLineParser.initialize_job_submission_arguments">
 <a class="viewcode-back" href="../../configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_job_submission_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize job submission arguments for simulator.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize job submission arguments for simulator.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;job submission&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--submit_command&quot;</span><span class="p">,</span>
@@ -658,7 +644,7 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Argument parser type to check that a valid site name is given</span>
+<span class="sd">        Argument parser type to check that a valid site name is given.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -685,7 +671,7 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">telescope</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Argument parser type to check that a valid telescope name is given</span>
+<span class="sd">        Argument parser type to check that a valid telescope name is given.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -713,7 +699,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that value is an efficiency</span>
-<span class="sd">        in the interval [0,1]</span>
+<span class="sd">        in the interval [0,1].</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -747,7 +733,7 @@ document.write(`
 <span class="sd">        Argument parser type to check that the zenith angle provided is in the interval [0, 180].</span>
 <span class="sd">        We allow here zenith angles larger than 90 degrees in the improbable case</span>
 <span class="sd">        such simulations are requested. It is not guaranteed that the actual simulation software</span>
-<span class="sd">        supports such angles!</span>
+<span class="sd">        supports such angles!.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

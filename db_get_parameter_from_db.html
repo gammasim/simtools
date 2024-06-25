@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_get_parameter_from_db &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>db_get_parameter_from_db &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -457,7 +457,7 @@ document.write(`
   <section id="module-db_get_parameter_from_db">
 <span id="db-get-parameter-from-db"></span><h1>db_get_parameter_from_db<a class="headerlink" href="#module-db_get_parameter_from_db" title="Link to this heading">#</a></h1>
 <p>Get a parameter entry from DB for a specific telescope or a site.
-The application receives a parameter name, a site, a telescope (if applicable) and     optionally a version. It then prints out the parameter entry.
+The application receives a parameter name, a site, a telescope (if applicable) and optionally a version. It then prints out the parameter entry.
 If no version is provided, the value of the released model is printed..</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
@@ -479,8 +479,8 @@ If no version is provided, the value of the released model is printed..</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Get the mirror_list parameter from the DB.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-parameter-from-db --parameter mirror_list \</span>
-<span class="go">        --site North --telescope LSTN-01 \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-parameter-from-db --parameter mirror_list \\</span>
+<span class="go">        --site North --telescope LSTN-01 \\</span>
 <span class="go">        --model_version prod5</span>
 </pre></div>
 </div>
@@ -491,7 +491,8 @@ If no version is provided, the value of the released model is printed..</p>
 <span class="go"> &#39;Value&#39;: &#39;mirror_CTA-N-LST1_v2019-03-31.dat&#39;,</span>
 <span class="go"> &#39;Version&#39;: &#39;2020-06-28&#39;,</span>
 <span class="go"> &#39;_id&#39;: ObjectId(&#39;608834f257df2db2531b8e78&#39;),</span>
-<span class="go"> &#39;entry_date&#39;: datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=&lt;bson.tz_util.FixedOffset           object at 0x7f601dd51d80&gt;)}</span>
+<span class="go"> &#39;entry_date&#39;: datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=&lt;bson.tz_util.FixedOffset \</span>
+<span class="go">  object at 0x7f601dd51d80&gt;)}</span>
 </pre></div>
 </div>
 </section>

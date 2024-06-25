@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=5cdada43"></script>
+    <script src="../_static/documentation_options.js?v=fbc78938"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -363,9 +363,7 @@ document.write(`
                   
   <h1>Source code for validate_file_using_schema</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Summary</span>
-<span class="sd">    -------</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate a file using a schema.</span>
 <span class="sd">    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</span>
 
@@ -405,7 +403,7 @@ document.write(`
 
 <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line configuration</span>
+<span class="sd">    Parse command line configuration.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -487,10 +485,7 @@ document.write(`
 <div class="viewcode-block" id="validate_data_file">
 <a class="viewcode-back" href="../validate_file_using_schema.html#validate_file_using_schema.validate_data_file">[docs]</a>
 <span class="k">def</span> <span class="nf">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a data file (e.g., in ecsv, json, yaml format)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a data file (e.g., in ecsv, json, yaml format).&quot;&quot;&quot;</span>
     <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
         <span class="n">schema_file</span><span class="o">=</span><span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">),</span>
         <span class="n">data_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span>
@@ -507,10 +502,7 @@ document.write(`
 <div class="viewcode-block" id="validate_metadata">
 <a class="viewcode-back" href="../validate_file_using_schema.html#validate_file_using_schema.validate_metadata">[docs]</a>
 <span class="k">def</span> <span class="nf">validate_metadata</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate metadata.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate metadata.&quot;&quot;&quot;</span>
     <span class="c1"># metadata_collector runs the metadata validation by default, no need to do anything else</span>
     <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">])</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of metadata </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>

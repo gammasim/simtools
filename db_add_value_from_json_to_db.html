@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_add_value_from_json_to_db &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>db_add_value_from_json_to_db &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
@@ -456,11 +455,8 @@ document.write(`
                   
   <section id="db-add-value-from-json-to-db">
 <span id="id1"></span><h1>db_add_value_from_json_to_db<a class="headerlink" href="#db-add-value-from-json-to-db" title="Link to this heading">#</a></h1>
-<section id="summary">
-<span id="module-db_add_value_from_json_to_db"></span><h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
-<p>This application adds a new parameter / value to a collection in the DB using a json
+<p id="module-db_add_value_from_json_to_db">This application adds a new parameter / value to a collection in the DB using a json
 file as input.</p>
-</section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -468,14 +464,14 @@ file as input.</p>
 </dd>
 <dt>db_collection (str, required)</dt><dd><p>The DB collection to which to add the file.</p>
 </dd>
-<dt>db (str)</dt><dd><p>The DB to insert the files to.         The choices are either the default CTA simulation DB or a sandbox for testing.</p>
+<dt>db (str)</dt><dd><p>The DB to insert the files to. The choices are either the default CTA simulation DB or a sandbox for testing.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Upload a file to sites collection:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-value-from-json-to-db \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-value-from-json-to-db \\</span>
 <span class="go">    --file_name new_value.json --db_collection sites</span>
 </pre></div>
 </div>
@@ -527,7 +523,6 @@ file as input.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>

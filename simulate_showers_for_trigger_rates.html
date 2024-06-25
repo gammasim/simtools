@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simulate_showers_for_trigger_rates &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>simulate_showers_for_trigger_rates &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
@@ -456,14 +455,11 @@ document.write(`
                   
   <section id="module-simulate_showers_for_trigger_rates">
 <span id="simulate-showers-for-trigger-rates"></span><h1>simulate_showers_for_trigger_rates<a class="headerlink" href="#module-simulate_showers_for_trigger_rates" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>This application simulates showers to be used in trigger rate calculations.
-Arrays with one or four telescopes can be used, in case of     mono or stereo trigger configurations, respectively.</p>
+Arrays with one or four telescopes can be used, in case of mono or stereo trigger configurations, respectively.</p>
 <p>Simulations are managed by the Simulator module.
-Each run is simulated in a job. Each job is submitted by using the submission     command from the global config settings. The config entry extra_commands can be used     to extra commands to be ran in each job, before the actual simulation.</p>
-<p>At the moment, the shower simulations are performed by CORSIKA, which requires     the zstd package. Please, make sure that the command to set your zstd path is     properly set by the extra_commands in the command line configuration.</p>
-</section>
+Each run is simulated in a job. Each job is submitted by using the submission command from the global config settings. The config entry extra_commands can be used to extra commands to be ran in each job, before the actual simulation.</p>
+<p>At the moment, the shower simulations are performed by CORSIKA, which requires the zstd package. Please, make sure that the command to set your zstd path is properly set by the extra_commands in the command line configuration.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -485,7 +481,7 @@ Each run is simulated in a job. Each job is submitted by using the submission   
 the label is added to the data_directory, such that the output
 will be written to data_directory/label/corsika-data.</p>
 </dd>
-<dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted. Instead, an example of the         run script will be printed.</p>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, no job will be submitted. Instead, an example of the run script will be printed.</p>
 </dd>
 <dt>verbosity (str, optional)</dt><dd><p>Log level to print.</p>
 </dd>
@@ -494,13 +490,15 @@ will be written to data_directory/label/corsika-data.</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Producing a set of proton showers for trigger rate simulations of LST.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \\</span>
 <span class="go">proton --nruns 2 --nevents 10000 --test --submit_command local</span>
 </pre></div>
 </div>
 <p>The output is saved in simtools-output/simulate_showers_for_trigger_rates.</p>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::simulate_showers_for_trigger_rates(l174)::main::List of log files exported to         /workdir/external/simtools/simtools-output/simulate_showers_for_trigger_rates/application-        plots/log_files_proton.list</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::simulate_showers_for_trigger_rates(l174)::main::List of log files exported to \</span>
+<span class="go">/workdir/external/simtools/simtools-output/simulate_showers_for_trigger_rates/application-\</span>
+<span class="go">plots/log_files_proton.list</span>
 <span class="go">INFO::simulator(l646)::get_list_of_log_files::Getting list of log files</span>
 </pre></div>
 </div>
@@ -552,7 +550,6 @@ will be written to data_directory/label/corsika-data.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simulate_prod &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>simulate_prod &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
@@ -456,8 +455,6 @@ document.write(`
                   
   <section id="module-simulate_prod">
 <span id="simulate-prod"></span><h1>simulate_prod<a class="headerlink" href="#module-simulate_prod" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>This application is used to run simulations for productions (typically on the grid).
 It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
 with the provided “prod_tag” simulation configuration (e.g., Prod6)
@@ -470,7 +467,6 @@ The multipipe scripts will be produced as part of this script.</p>
 <p>This script does not provide a mechanism to submit jobs to a batch system like others
 in simtools since it is meant to be executed on a grid node
 (distributed to it by the workload management system).</p>
-</section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -515,9 +511,9 @@ The files are written to the output_path/directory_for_grid_upload directory.</p
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Run the application:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod \</span>
-<span class="go">--production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \</span>
-<span class="go">--site north --primary gamma --azimuth_angle north --zenith_angle 20 \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-prod \\</span>
+<span class="go">--production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \\</span>
+<span class="go">--site north --primary gamma --azimuth_angle north --zenith_angle 20 \\</span>
 <span class="go">--start_run 0 --run 1</span>
 </pre></div>
 </div>
@@ -591,7 +587,6 @@ will be written to data_directory/label/simtel-data.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>

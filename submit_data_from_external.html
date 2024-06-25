@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>submit_data_from_external &#8212; simtools v0.1.dev1+g01e470c Manual</title>
+    <title>submit_data_from_external &#8212; simtools v0.1.dev1+g4288d20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=5cdada43"></script>
+    <script src="_static/documentation_options.js?v=fbc78938"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -133,7 +133,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g01e470c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4288d20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -440,7 +440,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
@@ -456,12 +455,9 @@ document.write(`
                   
   <section id="module-submit_data_from_external">
 <span id="submit-data-from-external"></span><h1>submit_data_from_external<a class="headerlink" href="#module-submit_data_from_external" title="Link to this heading">#</a></h1>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>Submit model parameter (value, table) through the command line.</p>
 <p>Input data and metadata is validated, and if necessary enriched
 and converted following a pre-described schema.</p>
-</section>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -476,15 +472,15 @@ and converted following a pre-described schema.</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Submit mirror measurements with associated metadata:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-data-from-external \</span>
-<span class="go">    --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \</span>
-<span class="go">    --input ./tests/resources/MLTdata-preproduction.ecsv \</span>
-<span class="go">    --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-submit-data-from-external \\</span>
+<span class="go">    --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\</span>
+<span class="go">    --input ./tests/resources/MLTdata-preproduction.ecsv \\</span>
+<span class="go">    --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \\</span>
 <span class="go">    --output_file TEST-submit_data_from_external.ecsv</span>
 </pre></div>
 </div>
 <p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::model_data_writer(l70)::write_data::Writing data to \</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::model_data_writer(l70)::write_data::Writing data to \\</span>
 <span class="go">    /simtools/simtools-output/d-2023-07-31/TEST-submit_data_from_external.ecsv</span>
 </pre></div>
 </div>
@@ -536,7 +532,6 @@ and converted following a pre-described schema.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
