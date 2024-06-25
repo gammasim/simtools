@@ -22,10 +22,11 @@ _logger = logging.getLogger(__name__)
 
 @jsonschema.Draft7Validator.FORMAT_CHECKER.checks("astropy_unit", ValueError)
 def check_astropy_unit(unit_string):
-    if unit_string == "dimensionless":
+    try:
+        u.Unit(unit_string)
         return True
-    u.Unit(unit_string)
-    return True
+    except ValueError:
+        return unit_string == "dimensionless"
 
 
 def validate_schema(data, schema_file):
