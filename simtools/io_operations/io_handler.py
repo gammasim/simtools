@@ -18,6 +18,11 @@ class IOHandlerSingleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
+        """
+        Ensure a single instance of the IOHandlerSingleton class.
+
+        Creates a new instance if it doesn't exist, otherwise returns the existing instance.
+        """
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
