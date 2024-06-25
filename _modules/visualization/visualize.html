@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.visualize &#8212; simtools v0.1.dev1+gcf43653 Manual</title>
+    <title>visualization.visualize &#8212; simtools v0.1.dev1+ga8111bb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=ceddd915"></script>
+    <script src="../../_static/documentation_options.js?v=6315a426"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gcf43653 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga8111bb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -1122,6 +1122,7 @@ document.write(`
 
 
 <span class="k">def</span> <span class="nf">get_telescope_name</span><span class="p">(</span><span class="n">tel_now</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the telescope name from the table row.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1129,16 +1130,19 @@ document.write(`
 
 
 <span class="k">def</span> <span class="nf">update_tel_counters</span><span class="p">(</span><span class="n">tel_counters</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the counter for the given telescope type.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">tel_counters</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">tel_type</span> <span class="ow">in</span> <span class="n">telescope_name</span><span class="p">:</span>
             <span class="n">tel_counters</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 
 
 <span class="k">def</span> <span class="nf">get_sphere_radius</span><span class="p">(</span><span class="n">tel_now</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the sphere radius of the telescope.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="k">if</span> <span class="s2">&quot;sphere_radius&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tel_now</span><span class="o">.</span><span class="n">colnames</span> <span class="k">else</span> <span class="n">tel_now</span><span class="p">[</span><span class="s2">&quot;sphere_radius&quot;</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">update_legend</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">tel_counters</span><span class="p">,</span> <span class="n">legend_objects</span><span class="p">,</span> <span class="n">legend_labels</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the legend with the telescope counts.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">one_telescope</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">get_list_of_telescope_types</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">tel_counters</span><span class="p">[</span><span class="n">one_telescope</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">legend_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">leg_h</span><span class="o">.</span><span class="n">all_telescope_objects</span><span class="p">[</span><span class="n">one_telescope</span><span class="p">]())</span>
@@ -1154,6 +1158,7 @@ document.write(`
 
 
 <span class="k">def</span> <span class="nf">finalize_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">patches</span><span class="p">,</span> <span class="n">x_title</span><span class="p">,</span> <span class="n">y_title</span><span class="p">,</span> <span class="n">axes_range</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finalize the plot by adding titles, setting limits, and adding patches.&quot;&quot;&quot;</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">PatchCollection</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="n">match_original</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>

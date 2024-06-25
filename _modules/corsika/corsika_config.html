@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gcf43653 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+ga8111bb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=ceddd915"></script>
+    <script src="../../_static/documentation_options.js?v=6315a426"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gcf43653 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga8111bb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -507,6 +507,16 @@ document.write(`
 
 
     <span class="k">def</span> <span class="nf">_collect_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">,</span> <span class="n">user_pars</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect and validate user-provided parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        corsika_config_data: dict</span>
+<span class="sd">            User-provided configuration data.</span>
+<span class="sd">        user_pars: dict</span>
+<span class="sd">            CORSIKA user parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key_args</span><span class="p">,</span> <span class="n">value_args</span> <span class="ow">in</span> <span class="n">corsika_config_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">is_identified</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">user_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -522,6 +532,14 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_raise_invalid_input_error</span><span class="p">(</span><span class="n">key_args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_fill_default_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_pars</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill in default parameters for any missing user-provided parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        user_pars: dict</span>
+<span class="sd">            CORSIKA user parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">user_pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">par_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">:</span>
                 <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -533,17 +551,36 @@ document.write(`
                     <span class="bp">self</span><span class="o">.</span><span class="n">_raise_missing_required_error</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_azm_to_phip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert azimuthal angle to phi prime angle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">phip</span> <span class="o">=</span> <span class="mf">180.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;AZM&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">phip</span> <span class="o">=</span> <span class="n">phip</span> <span class="o">+</span> <span class="mf">360.0</span> <span class="k">if</span> <span class="n">phip</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">phip</span>
         <span class="n">phip</span> <span class="o">=</span> <span class="n">phip</span> <span class="o">-</span> <span class="mf">360.0</span> <span class="k">if</span> <span class="n">phip</span> <span class="o">&gt;=</span> <span class="mf">360.0</span> <span class="k">else</span> <span class="n">phip</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s2">&quot;PHIP&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">phip</span><span class="p">,</span> <span class="n">phip</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_raise_invalid_input_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise an error for an invalid input parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key_args: str</span>
+<span class="sd">            Invalid input parameter name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">key_args</span><span class="si">}</span><span class="s2"> cannot be identified.&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_raise_missing_required_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise an error for a missing required parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Missing parameter name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required parameters </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not given (there may be more).&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">MissingRequiredInputInCorsikaConfigDataError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -595,6 +632,23 @@ document.write(`
 
 
     <span class="k">def</span> <span class="nf">_fix_single_value_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fix single value parameters by duplicating them if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        par_info: dict</span>
+<span class="sd">            Parameter information.</span>
+<span class="sd">        values: list</span>
+<span class="sd">            Parameter values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Fixed parameter values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;THETAP&quot;</span><span class="p">,</span> <span class="s2">&quot;AZM&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">values</span> <span class="o">*</span> <span class="mi">2</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">par_name</span> <span class="o">==</span> <span class="s2">&quot;VIEWCONE&quot;</span><span class="p">:</span>
@@ -602,6 +656,21 @@ document.write(`
         <span class="k">return</span> <span class="n">values</span>
 
     <span class="k">def</span> <span class="nf">_handle_special_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle special parameters with specific processing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        values: list</span>
+<span class="sd">            Parameter values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Processed parameter values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">par_name</span> <span class="o">==</span> <span class="s2">&quot;PRMPAR&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">par_name</span> <span class="o">==</span> <span class="s2">&quot;ESLOPE&quot;</span><span class="p">:</span>
@@ -615,6 +684,28 @@ document.write(`
             <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a list of values to the specified units.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        par_name: str</span>
+<span class="sd">            Name of the parameter as used in the CORSIKA input file.</span>
+<span class="sd">        values: list</span>
+<span class="sd">            List of values to be converted.</span>
+<span class="sd">        units: list</span>
+<span class="sd">            List of units to which the values should be converted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of values converted to the specified units.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidCorsikaInputError</span>
+<span class="sd">            If the unit conversion is not possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -653,6 +744,16 @@ document.write(`
 
 <span class="sd">        value_args_in: list</span>
 <span class="sd">            List of values for the parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        any</span>
+<span class="sd">            Validated and converted parameter value.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        InvalidCorsikaInputError</span>
+<span class="sd">            If the input value has the wrong length or unit.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">value_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_quantities</span><span class="p">(</span><span class="n">value_args_in</span><span class="p">)</span>
         <span class="n">value_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fix_single_value_parameters</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value_args</span><span class="p">)</span>
