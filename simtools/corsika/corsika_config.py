@@ -59,12 +59,11 @@ class CorsikaConfig:
 
     def __repr__(self):
         """CorsikaConfig class representation."""
-        text = (
+        return (
             f"<class {self.__class__.__name__}> "
             f"(site={self.array_model.site}, "
             f"layout={self.array_model.layout_name}, label={self.label})"
         )
-        return text
 
     def _load_corsika_default_parameters_file(self):
         """
@@ -155,8 +154,7 @@ class CorsikaConfig:
         """
         phi = 180.0 - az
         phi = phi + 360.0 if phi < 0.0 else phi
-        phi = phi - 360.0 if phi >= 360.0 else phi
-        return phi
+        return phi - 360.0 if phi >= 360.0 else phi
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
@@ -305,7 +303,7 @@ class CorsikaConfig:
             file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
                 run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
-                file.write(f"TELFIL |{str(run_cta_script)}\n")
+                file.write(f"TELFIL |{run_cta_script!s}\n")
             else:
                 file.write(f"TELFIL {_output_generic_file_name}\n")
 
@@ -349,6 +347,7 @@ class CorsikaConfig:
         ------
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
+
         Notes
         -----
         TODO - overlap with runner_services.get_file_name
@@ -373,13 +372,12 @@ class CorsikaConfig:
             return f"corsika_config_{file_name}.input"
         if file_type == "output_generic":
             # The XXXXXX will be replaced by the run number after the pfp step with sed
-            file_name = (
+            return (
                 f"runXXXXXX_"
                 f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
                 f"azm{self.azimuth_angle:03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
-            return file_name
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 

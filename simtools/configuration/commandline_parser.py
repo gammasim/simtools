@@ -266,7 +266,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Initialize default arguments for simulation configuration and simulation software.
 
-
         Parameters
         ----------
         simulation_configuration: list

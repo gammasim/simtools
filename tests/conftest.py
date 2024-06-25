@@ -424,13 +424,12 @@ def corsika_config(io_handler, corsika_config_data, array_model_south):
 
 @pytest.fixture()
 def corsika_runner(corsika_config, io_handler, simtel_path):
-    corsika_runner = CorsikaRunner(
+    return CorsikaRunner(
         corsika_config=corsika_config,
         simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
     )
-    return corsika_runner
 
 
 @pytest.fixture()
