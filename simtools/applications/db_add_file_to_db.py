@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-    This application adds a file to a DB.
+    Add a file to a DB.
 
     The name and location of the file are required.
     This application should complement the ones for updating parameters, \
