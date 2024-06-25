@@ -148,9 +148,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" 2>{self._file_log}"
         command += f" >{self._file_simtel}"
 
-        command = f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
-
-        return command
+        return f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
 
     def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
         """Check run results.
