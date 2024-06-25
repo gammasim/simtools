@@ -1,3 +1,5 @@
+"""Command line parser for applications."""
+
 import argparse
 import logging
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""Plot camera pixel layout."""
+
 import logging
 
 import matplotlib.colors as mcolors

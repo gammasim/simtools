@@ -1,3 +1,5 @@
+"""Definition and modeling of camera."""
+
 import logging
 
 import astropy.units as u
