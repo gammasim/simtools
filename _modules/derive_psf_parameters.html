@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g9456275 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=4748ec0b"></script>
+    <script src="../_static/documentation_options.js?v=793b501f"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9456275 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -532,7 +532,7 @@ document.write(`
     <span class="n">mirror_reflection_2</span><span class="o">=</span><span class="mf">0.035</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Transforms and add parameters to the all_parameters list.</span>
+<span class="sd">    Transform and add parameters to the all_parameters list.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -682,9 +682,7 @@ document.write(`
 <div class="viewcode-block" id="calculate_rmsd">
 <a class="viewcode-back" href="../derive_psf_parameters.html#derive_psf_parameters.calculate_rmsd">[docs]</a>
 <span class="k">def</span> <span class="nf">calculate_rmsd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sim</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the Root Mean Squared Deviation to be used as metric to find the best parameters.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Root Mean Squared Deviation to be used as metric to find the best parameters.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">data</span> <span class="o">-</span> <span class="n">sim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span></div>
 
 
@@ -693,7 +691,7 @@ document.write(`
 <a class="viewcode-back" href="../derive_psf_parameters.html#derive_psf_parameters.run_pars">[docs]</a>
 <span class="k">def</span> <span class="nf">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Runs the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.</span>
+<span class="sd">    Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.</span>
 
 <span class="sd">    Plotting is optional (if plot=True).</span>
 <span class="sd">    &quot;&quot;&quot;</span>

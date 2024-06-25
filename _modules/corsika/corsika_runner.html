@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+gd2c1bd4 Manual</title>
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g9456275 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=4748ec0b"></script>
+    <script src="../../_static/documentation_options.js?v=793b501f"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd2c1bd4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9456275 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -471,7 +471,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_corsika_data_directories</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_load_corsika_config_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reads corsika_config_data, creates corsika_config and corsika_input_file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read corsika_config_data, creates corsika_config and corsika_input_file.&quot;&quot;&quot;</span>
         <span class="n">corsika_data_directory_from_config</span> <span class="o">=</span> <span class="n">corsika_config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_directory&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">corsika_data_directory_from_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># corsika_data_directory not given (or None).</span>
@@ -736,7 +736,7 @@ document.write(`
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_runner.CorsikaRunner.has_file">[docs]</a>
     <span class="k">def</span> <span class="nf">has_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks that the file of file_type for the specified run number exists.</span>
+<span class="sd">        Check that the file of file_type for the specified run number exists.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -802,7 +802,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_validate_run_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the run number from corsika_config in case run_number is None.</span>
+<span class="sd">        Return the run number from corsika_config in case run_number is None.</span>
 
 <span class="sd">        Raise ValueError if run_number is not valid (&lt; 1) or returns run_number</span>
 <span class="sd">        if it is a valid value.</span>
