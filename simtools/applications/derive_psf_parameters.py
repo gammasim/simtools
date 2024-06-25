@@ -228,10 +228,10 @@ def get_previous_values(tel_model, logger):
 
     logger.debug(
         "Previous parameter values:\n"
-        f"MRRA = {str(mrra_0)}\n"
-        f"MRF = {str(mfr_0)}\n"
-        f"MRRA2 = {str(mrra2_0)}\n"
-        f"MAR = {str(mar_0)}\n"
+        f"MRRA = {mrra_0!s}\n"
+        f"MRF = {mfr_0!s}\n"
+        f"MRRA2 = {mrra2_0!s}\n"
+        f"MAR = {mar_0!s}\n"
     )
 
     return mrra_0, mfr_0, mrra2_0, mar_0

@@ -361,7 +361,7 @@ def select_application(args_dict):
     return le_application, args_dict["light_source_setup"]
 
 
-def main():  # noqa: D103
+def main():
     """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)

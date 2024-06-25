@@ -341,7 +341,7 @@ def simulator_config_data_north(tmp_test_directory):
         "common": {
             "site": "North",
             "layout_name": "test_layout",
-            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "data_directory": f"{tmp_test_directory!s}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,
             "primary": "gamma",
@@ -375,7 +375,7 @@ def simulator_config_data_south(tmp_test_directory):
         "common": {
             "site": "South",
             "layout_name": "test_layout",
-            "data_directory": f"{str(tmp_test_directory)}/test-output",
+            "data_directory": f"{tmp_test_directory!s}/test-output",
             "zenith": 20 * u.deg,
             "azimuth": 0 * u.deg,
             "primary": "gamma",

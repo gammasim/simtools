@@ -1102,7 +1102,7 @@ class DatabaseHandler:
         if _cache_key not in DatabaseHandler.model_versions_cached:
             db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
             DatabaseHandler.model_versions_cached[_cache_key] = list(
-                set(post["version"] for post in db_collection.find(query))
+                {post["version"] for post in db_collection.find(query)}
             )
             if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
                 self._logger.warning(

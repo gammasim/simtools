@@ -91,8 +91,8 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     ax.add_collection(
         PatchCollection(
             edge_pixels,
-            facecolor=mcolors.to_rgb("brown") + (0.5,),
-            edgecolor=mcolors.to_rgb("black") + (1,),
+            facecolor=(*mcolors.to_rgb("brown"), 0.5),
+            edgecolor=(*mcolors.to_rgb("black"), 1),
             linewidth=0.2,
         )
     )
