@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g392754d Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+gcf43653 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=d798d06e"></script>
+    <script src="../_static/documentation_options.js?v=ceddd915"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g392754d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gcf43653 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -799,7 +799,7 @@ document.write(`
             <span class="n">output_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
                 <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> (file exists: </span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">!s}</span><span class="s2"> (file exists: </span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_get_runs_and_files_to_submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1060,7 +1060,7 @@ document.write(`
         <span class="n">_resources</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
             <span class="n">_resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(</span><span class="n">run_number</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;runtime&quot;</span> <span class="ow">in</span> <span class="n">_resources</span> <span class="ow">and</span> <span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;runtime&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">_resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runtime&quot;</span><span class="p">):</span>
                 <span class="n">runtime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_resources</span><span class="p">[</span><span class="s2">&quot;runtime&quot;</span><span class="p">])</span>
 
         <span class="n">mean_runtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">runtime</span><span class="p">)</span>
