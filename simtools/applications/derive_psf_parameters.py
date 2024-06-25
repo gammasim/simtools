@@ -391,7 +391,7 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     return best_pars, min_rmsd
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     label = "tune_psf"

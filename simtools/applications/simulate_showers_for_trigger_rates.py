@@ -122,7 +122,7 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"

@@ -134,7 +134,7 @@ def _parse(label=None, description=None):
     )
 
 
-def main():
+def main():  # noqa: D103
     """Print a list of array elements."""
     label = Path(__file__).stem
     data_model_name = "array_coordinates"

@@ -105,6 +105,7 @@ class CorsikaConfig:
         self._is_file_updated = False
 
     def __repr__(self):
+        """CorsikaConfig class representation."""
         text = (
             f"<class {self.__class__.__name__}> "
             f"(site={self.array_model.site}, "
