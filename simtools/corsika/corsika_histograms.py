@@ -1,4 +1,4 @@
-"""Extracts Cherenkov photons information from a CORSIKA IACT file."""
+"""Extract Cherenkov photons information from a CORSIKA IACT file."""
 
 import functools
 import logging
