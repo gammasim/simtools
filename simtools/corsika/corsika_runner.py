@@ -1,3 +1,5 @@
+"""Generate scripts for running CORSIKA air shower simulations."""
+
 import logging
 import os
 from copy import copy
@@ -18,8 +20,10 @@ class MissingRequiredEntryInCorsikaConfigError(Exception):
 
 class CorsikaRunner:
     """
-    CorsikaRunner is responsible for running CORSIKA, through the corsika_autoinputs program \
-    provided by the sim_telarray package. It provides shell scripts to be run externally or by \
+    CorsikaRunner is responsible for running CORSIKA.
+
+    Uses the corsika_autoinputs program provided by the sim_telarray package.
+    It provides shell scripts to be run externally or by \
     the module simulator. Same instance can be used to generate scripts for any given run number.
 
     It uses CorsikaConfig to manage the CORSIKA configuration. User parameters must be given by the\
@@ -78,10 +82,7 @@ class CorsikaRunner:
         corsika_config_data=None,
         use_multipipe=False,
     ):
-        """
-        CorsikaRunner init.
-        """
-
+        """CorsikaRunner init."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaRunner")
 
@@ -103,8 +104,7 @@ class CorsikaRunner:
         self._load_corsika_data_directories()
 
     def _load_corsika_config_data(self, corsika_config_data):
-        """Reads corsika_config_data, creates corsika_config and corsika_input_file."""
-
+        """Read corsika_config_data, creates corsika_config and corsika_input_file."""
         corsika_data_directory_from_config = corsika_config_data.get("data_directory", None)
         if corsika_data_directory_from_config is None:
             # corsika_data_directory not given (or None).
@@ -128,9 +128,9 @@ class CorsikaRunner:
     def _define_corsika_config(self, use_multipipe=False):
         """
         Create the CORSIKA config instance.
+
         This validates the input given in corsika_config_data as well.
         """
-
         try:
             self.corsika_config = CorsikaConfig(
                 label=self.label,
@@ -319,7 +319,6 @@ class CorsikaRunner:
         ValueError
             If file_type is unknown.
         """
-
         file_label = (
             f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
         )
@@ -359,7 +358,7 @@ class CorsikaRunner:
 
     def has_file(self, file_type, run_number=None, mode="out"):
         """
-        Checks that the file of file_type for the specified run number exists.
+        Check that the file of file_type for the specified run number exists.
 
         Parameters
         ----------
@@ -370,7 +369,6 @@ class CorsikaRunner:
             Run number.
 
         """
-
         info_for_file_name = self.get_info_for_file_name(run_number)
         run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
         self._logger.debug(f"Checking if {run_sub_file} exists")
@@ -391,7 +389,6 @@ class CorsikaRunner:
             run time and number of simulated events
 
         """
-
         sub_log_file = self.get_file_name(
             file_type="sub_log", **self.get_info_for_file_name(run_number), mode="out"
         )
@@ -423,8 +420,10 @@ class CorsikaRunner:
 
     def _validate_run_number(self, run_number):
         """
-        Returns the run number from corsika_config in case run_number is None, Raise ValueError if\
-        run_number is not valid (< 1) or returns run_number if it is a valid value.
+        Return the run number from corsika_config in case run_number is None.
+
+        Raise ValueError if run_number is not valid (< 1) or returns run_number
+        if it is a valid value.
         """
         if run_number is None:
             return self.corsika_config.get_user_parameter("RUNNR")

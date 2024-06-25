@@ -155,13 +155,10 @@ class SimtelIOEvents:
         energy_range = self._validate_energy_range(energy_range)
         core_max = self._validate_core_max(core_max)
 
-        is_in_energy_range = list(
-            map(
-                lambda e: energy_range[0] < e < energy_range[1],
-                self.summary_events["energy"],
-            )
-        )
-        is_in_core_range = list(map(lambda r: r < core_max, self.summary_events["r_core"]))
+        is_in_energy_range = [
+            energy_range[0] < e < energy_range[1] for e in self.summary_events["energy"]
+        ]
+        is_in_core_range = [r < core_max for r in self.summary_events["r_core"]]
         return np.sum(np.array(is_in_energy_range) * np.array(is_in_core_range))
 
     @u.quantity_input(core_max=u.m)

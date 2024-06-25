@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application simulates the cumulative PSF and compare with data (if available).
+    Simulate the cumulative PSF and compare with data (if available).
 
     The telescope zenith angle and the source distance can be set by command line arguments.
 
@@ -124,10 +122,7 @@ def _parse(label):
 
 
 def load_data(datafile):
-    """
-    Load the data file with the measured PSF vs radius [cm].
-
-    """
+    """Load the data file with the measured PSF vs radius [cm]."""
     radius_cm = "Radius [cm]"
     relative_intensity = "Relative intensity"
 
@@ -138,7 +133,7 @@ def load_data(datafile):
     return data
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 

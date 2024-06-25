@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application validate the camera efficiency by simulating it using \
-    the testeff program provided by sim_telarray.
+r"""
+    Validate the camera efficiency by simulating it using the sim_telarray testeff program.
 
     The results of camera efficiency for Cherenkov (left) and NSB light (right) as a function\
     of wavelength are plotted. See examples below.
@@ -76,10 +73,7 @@ from simtools.model.telescope_model import TelescopeModel
 
 
 def _parse(label):
-    """
-    Parse command line configuration
-
-    """
+    """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
         description=(
@@ -127,7 +121,7 @@ def _parse(label):
     return _args_dict, _db_config
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, _db_config = _parse(label)
 

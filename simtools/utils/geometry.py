@@ -1,6 +1,4 @@
-"""
-A collection of functions related to geometrical transformations.
-"""
+"""A collection of functions related to geometrical transformations."""
 
 import logging
 
@@ -41,7 +39,6 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
         The bin edges of the 1D histogram with size = int(max_dist/bin_size) + 1.
 
     """
-
     # Check if the histogram will make sense
     bins_step = 2 * max_dist / bins  # in the 2d array, the positive and negative direction count.
     for axis in [xaxis, yaxis]:
@@ -94,9 +91,13 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
 @u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
 def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
-    Transform the x and y coordinates of the telescopes according to two rotations:
-    rotation_angle_around_z_axis gives the rotation on the observation plane (x, y) and
-    rotation_angle_around_y_axis allows to rotate the observation plane in space.
+    Rotate the x and y coordinates of the telescopes.
+
+    The two rotations are:
+
+    - rotation_angle_around_z_axis gives the rotation on the observation plane (x, y)
+    - rotation_angle_around_y_axis allows to rotate the observation plane in space.
+
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise, i.e.,
     the rotation of the coordinate system is clockwise.
@@ -126,7 +127,6 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     UnitsError:
         If the unit of x and y are different.
     """
-
     allowed_types = (list, np.ndarray, u.Quantity, float, int)
     if not all(isinstance(variable, (allowed_types)) for variable in [x, y]):
         raise TypeError("x and y types are not valid! Cannot perform transformation.")

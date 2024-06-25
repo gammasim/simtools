@@ -1,3 +1,5 @@
+"""Definition and modeling of a calibration device."""
+
 import logging
 
 from simtools.model.model_parameter import ModelParameter
@@ -7,7 +9,8 @@ __all__ = ["CalibrationModel"]
 
 class CalibrationModel(ModelParameter):
     """
-    CalibrationModel represents the MC model of an individual calibration device. \
+    CalibrationModel represents the MC model of an individual calibration device.
+
     It provides functionality to read the required parameters from the DB.
 
     Parameters
@@ -32,9 +35,7 @@ class CalibrationModel(ModelParameter):
         model_version,
         label=None,
     ):
-        """
-        Initialize CalibrationModel.
-        """
+        """Initialize CalibrationModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CalibrationModel %s %s", site, calibration_device_model_name)
         ModelParameter.__init__(

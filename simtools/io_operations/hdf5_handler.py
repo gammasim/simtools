@@ -1,3 +1,5 @@
+"""Helper module for reading and writing in hd5 format."""
+
 import logging
 from pathlib import PosixPath
 
@@ -19,6 +21,7 @@ _logger = logging.getLogger(__name__)
 def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data):
     """
     Create and fill an hdf5 table with the histogram information.
+
     It works for both 1D and 2D distributions.
 
     Parameters
@@ -38,7 +41,6 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     meta_data: dict
         Dictionary with the histogram metadata.
     """
-
     # Complement metadata
     if x_label is not None:
         meta_data["x_bin_edges"] = sanitize_name(x_label)

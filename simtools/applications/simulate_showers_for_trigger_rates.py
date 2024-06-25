@@ -1,9 +1,7 @@
 #!/usr/bin/python3
+r"""
+    Simulates showers to be used in trigger rate calculations.
 
-"""
-    Summary
-    -------
-    This application simulates showers to be used in trigger rate calculations.
     Arrays with one or four telescopes can be used, in case of \
     mono or stereo trigger configurations, respectively.
 
@@ -26,8 +24,6 @@
         Name of the primary particle (proton, helium ...).
     nruns (int, optional)
         Number of runs to be simulated.
-    run_number (int, optional)
-        Run number of the starting run.
     nevents (int, optional)
         Number of events simulated per run.
     zenith (float, optional)
@@ -88,7 +84,7 @@ from simtools.utils import general as gen
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -103,7 +99,6 @@ def _parse(label=None, description=None):
         command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--array_layout_name",
@@ -169,7 +164,7 @@ def print_list_into_file(list_of_files, file_name):
             f.write(line + "\n")
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(
         label=label, description="Simulate showers to be used for trigger rate calculations"

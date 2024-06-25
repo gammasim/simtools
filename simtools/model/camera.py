@@ -1,3 +1,5 @@
+"""Definition and modeling of camera."""
+
 import logging
 
 import astropy.units as u
@@ -12,8 +14,9 @@ __all__ = ["Camera"]
 
 class Camera:
     """
-    Camera class, defining pixel layout including rotation, finding neighbor pixels, calculating\
-    FoV and plotting the camera.
+    Camera class, defining pixel layout.
+
+    This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
 
     Parameters
     ----------
@@ -33,10 +36,10 @@ class Camera:
 
     def __init__(self, telescope_model_name, camera_config_file, focal_length):
         """
-        Initialize Camera class, defining pixel layout including rotation, finding neighbor pixels,
-        calculating FoV and plotting the camera.
-        """
+        Initialize Camera class, defining pixel layout.
 
+        This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
+        """
         self._logger = logging.getLogger(__name__)
 
         self.telescope_model_name = telescope_model_name
@@ -76,7 +79,6 @@ class Camera:
         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
         clockwise by 30 degrees with respect to those denoted as 1.
         """
-
         pixels = {}
         pixels["pixel_diameter"] = 9999
         pixels["pixel_shape"] = 9999
@@ -128,6 +130,7 @@ class Camera:
     def _rotate_pixels(self, pixels):
         """
         Rotate the pixels according to the rotation angle given in pixels['rotate_angle'].
+
         Additional rotation is added to get to the camera view of an observer facing the camera.
         The angle for the axes rotation depends on the coordinate system in which the original
         data was provided.
@@ -144,7 +147,6 @@ class Camera:
             The pixels orientation for plotting is added to the dictionary in pixels['orientation'].
             The orientation is determined by the pixel shape (see read_pixel_list for details).
         """
-
         rotate_angle = pixels["rotate_angle"] * u.rad  # So not to change the original angle
         # The original pixel list is given such that
         # x -> North, y -> West, z -> Up in the ground system.
@@ -179,7 +181,6 @@ class Camera:
         int
             number of pixels.
         """
-
         return len(self.pixels["x"])
 
     def get_pixel_diameter(self):
@@ -191,7 +192,6 @@ class Camera:
         float
             Pixel diameter (usually in cm).
         """
-
         return self.pixels["pixel_diameter"]
 
     def get_pixel_active_solid_angle(self):
@@ -203,7 +203,6 @@ class Camera:
         float
             active solid angle of a pixel in sr.
         """
-
         pixel_area = self.get_pixel_diameter() ** 2
         # In case we have hexagonal pixels:
         if self.get_pixel_shape() == 1 or self.get_pixel_shape() == 3:
@@ -212,7 +211,9 @@ class Camera:
 
     def get_pixel_shape(self):
         """
-        Get pixel shape code 1, 2 or 3, where 1 and 3 are hexagonal pixels, where one is rotated by\
+        Get pixel shape code 1, 2 or 3.
+
+        Where 1 and 3 are hexagonal pixels, where one is rotated by\
         30 degrees with respect to the other. A square pixel is denoted as 2.
 
         Returns
@@ -231,7 +232,6 @@ class Camera:
         str
             File name of the light guide efficiency as a function of incidence angle.
         """
-
         return self.pixels["lightguide_efficiency_angle_file"]
 
     def get_lightguide_efficiency_wavelength_file_name(self):
@@ -247,7 +247,7 @@ class Camera:
 
     def get_camera_fill_factor(self):
         """
-        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2
+        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2.
 
         Returns
         -------
@@ -279,7 +279,6 @@ class Camera:
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         """
-
         self._logger.debug("Calculating the FoV")
 
         return self._calc_fov(
@@ -316,7 +315,6 @@ class Camera:
         -----
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         """
-
         self._logger.debug("Calculating the FoV")
 
         average_edge_distance = 0
@@ -331,8 +329,9 @@ class Camera:
     @staticmethod
     def _find_neighbours(x_pos, y_pos, radius):
         """
-        use a KD-Tree to quickly find nearest neighbours (e.g., of the pixels in a camera or mirror\
-        facets)
+        Use a KD-Tree to quickly find nearest neighbours.
+
+        This applies to e.g., of the pixels in a camera or mirror facets.
 
         Parameters
         ----------
@@ -349,7 +348,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each e.g., pixel.
         """
-
         points = np.array([x_pos, y_pos]).T
         indices = np.arange(len(x_pos))
         kdtree = KDTree(points)
@@ -362,8 +360,9 @@ class Camera:
 
     def _find_adjacent_neighbour_pixels(self, x_pos, y_pos, radius, row_coloumn_dist):
         """
-        Find adjacent neighbour pixels in cameras with square pixels. Only directly adjacent \
-        neighbours are allowed, no diagonals.
+        Find adjacent neighbour pixels in cameras with square pixels.
+
+        Only directly adjacent neighbours are allowed, no diagonals.
 
         Parameters
         ----------
@@ -383,7 +382,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
-
         # First find the neighbours with the usual method and the original radius
         # which does not allow for diagonal neighbours.
         neighbours = self._find_neighbours(x_pos, y_pos, radius)
@@ -413,8 +411,9 @@ class Camera:
 
     def _calc_neighbour_pixels(self, pixels):
         """
-        Find adjacent neighbour pixels in cameras with hexagonal or square pixels. Only directly \
-        adjacent neighbours are searched for, no diagonals.
+        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
+
+        Only directly  adjacent neighbours are searched for, no diagonals.
 
         Parameters
         ----------
@@ -426,7 +425,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel
         """
-
         self._logger.debug("Searching for neighbour pixels")
 
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
@@ -451,8 +449,9 @@ class Camera:
 
     def get_neighbour_pixels(self, pixels=None):
         """
-        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary. The \
-        purpose of this function is to ensure the calculation occurs only once and only when \
+        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.
+
+        The purpose of this function is to ensure the calculation occurs only once and only when
         necessary.
 
         Parameters
@@ -465,7 +464,6 @@ class Camera:
         neighbours: numpy.array_like
             Array of neighbour indices in a list for each pixel.
         """
-
         if self._neighbours is None:
             if pixels is None:
                 pixels = self.pixels
@@ -489,7 +487,6 @@ class Camera:
         edge_pixel_indices: numpy.array_like
             Array of edge pixel indices.
         """
-
         self._logger.debug("Searching for edge pixels")
         edge_pixel_indices = []
 
@@ -525,7 +522,6 @@ class Camera:
         edge_pixel_indices: numpy.array_like
             Array of edge pixel indices.
         """
-
         if self._edge_pixel_indices is None:
             if pixels is None:
                 pixels = self.pixels

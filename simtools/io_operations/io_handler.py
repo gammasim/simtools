@@ -1,3 +1,5 @@
+"""Handle input and output paths."""
+
 import datetime
 import logging
 import re
@@ -7,32 +9,30 @@ __all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
 class IncompleteIOHandlerInitError(Exception):
-    """Exception raised when IOHandler is not initialized"""
+    """Exception raised when IOHandler is not initialized."""
 
 
 class IOHandlerSingleton(type):
-    """
-    Singleton base class
-    """
+    """Singleton base class."""
 
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
+        """
+        Ensure a single instance of the IOHandlerSingleton class.
+
+        Creates a new instance if it doesn't exist, otherwise returns the existing instance.
+        """
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
 class IOHandler(metaclass=IOHandlerSingleton):
-    """
-    Handle input and output paths.
-    """
+    """Handle input and output paths."""
 
     def __init__(self):
-        """
-        Initialize IOHandler.
-
-        """
+        """Initialize IOHandler."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init IOHandler")
 
@@ -66,7 +66,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     def get_output_directory(self, label=None, sub_dir=None, dir_type="simtools"):
         """
-        Return path to output directory
+        Return path to output directory.
 
         Parameters
         ----------
@@ -92,7 +92,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
         TypeError
             raised for errors while creating directory name
         """
-
         if self.use_plain_output_path:
             path = Path(self.output_path)
         else:
@@ -117,7 +116,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         try:
             path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
-            self._logger.error(f"Error creating directory {str(path)}")
+            self._logger.error(f"Error creating directory {path!s}")
             raise
 
         return path.absolute()
@@ -152,7 +151,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
     def get_input_data_file(self, parent_dir=None, file_name=None, test=False):
         """
-        Get path of a data file, using data_path
+        Get path of a data file, using data_path.
 
         Parameters
         ----------
@@ -173,7 +172,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
             if data_path is not set
 
         """
-
         if test:
             file_prefix = Path("tests/resources/")
         elif self.data_path is not None:

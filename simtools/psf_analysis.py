@@ -1,8 +1,7 @@
 """
 Module to analyse psf images (e.g. results from ray tracing simulations).
-Main functionalities are: computing centroids, psf containers etc.
 
-Author: Raul R Prado
+Main functionalities are: computing centroids, psf containers etc.
 
 """
 
@@ -36,10 +35,7 @@ class PSFImage:
     """
 
     def __init__(self, focal_length=None, total_scattered_area=None):
-        """
-        Initialize PSFImage class.
-        """
-
+        """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
 
         self._total_photons = None
@@ -151,7 +147,7 @@ class PSFImage:
 
     def get_effective_area(self):
         """
-        Return effective area pre calculated
+        Return effective area pre calculated.
 
         Returns
         -------
@@ -167,7 +163,7 @@ class PSFImage:
 
     def set_effective_area(self, value):
         """
-        Set effective area
+        Set effective area.
 
         Parameters
         ----------
@@ -179,7 +175,7 @@ class PSFImage:
 
     def get_psf(self, fraction=0.8, unit="cm"):
         """
-        Return PSF
+        Return PSF.
 
         Parameters
         ----------
@@ -235,6 +231,7 @@ class PSFImage:
     def _find_psf(self, fraction):
         """
         Try to find PSF by a smart algorithm first.
+
         If it fails, _find_radius_by_scanning is called and do it by brute force.
 
         Parameters
@@ -301,8 +298,9 @@ class PSFImage:
 
         def scan(dr, rad_min, rad_max):
             """
-            Scan the image from rad_min to rad_max in steps of dr until
-            it finds target_number photons inside.
+            Scan the image from rad_min to rad_max until it finds target_number photons inside.
+
+            Scanning is done in steps of dr.
 
             Returns
             -------
@@ -341,9 +339,7 @@ class PSFImage:
         return radius
 
     def _sum_photons_in_radius(self, radius):
-        """
-        Return the number of photons inside a certain radius.
-        """
+        """Return the number of photons inside a certain radius."""
         return np.searchsorted(self.photon_r, radius)
 
     def get_image_data(self, centralized=True):
@@ -419,7 +415,6 @@ class PSFImage:
         -------
         (radius, intensity)
         """
-
         if radius is not None:
             radius_all = radius.to(u.cm).value
         else:
@@ -440,7 +435,8 @@ class PSFImage:
         Parameters
         ----------
         **kwargs:
-            image_* for the histogram plot and psf_* for the psf circle."""
+            image_* for the histogram plot and psf_* for the psf circle.
+        """
         data = self.get_cumulative_data()
         plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
 

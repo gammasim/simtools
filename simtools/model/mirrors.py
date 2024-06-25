@@ -1,3 +1,5 @@
+"""Definition and modeling of mirror panels."""
+
 import logging
 
 import astropy.io.ascii
@@ -25,9 +27,7 @@ class Mirrors:
     """
 
     def __init__(self, mirror_list_file, parameters=None):
-        """
-        Initialize Mirrors.
-        """
+        """Initialize Mirrors."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
 
@@ -42,10 +42,10 @@ class Mirrors:
 
     def _read_mirror_list(self):
         """
-        Read the mirror lists from disk and store the data. Allow reading of mirror lists in \
-        sim_telarray and ecsv format
-        """
+        Read the mirror lists from disk and store the data.
 
+        Allow reading of mirror lists in sim_telarray and ecsv format.
+        """
         if str(self._mirror_list_file).find("ecsv") > 0:
             self._read_mirror_list_from_ecsv()
         else:
@@ -60,7 +60,6 @@ class Mirrors:
         InvalidMirrorListFileError
             If number of mirrors is 0.
         """
-
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
         self.mirror_table = Table.read(self._mirror_list_file, format="ascii.ecsv")
 
@@ -123,6 +122,7 @@ class Mirrors:
     def _read_mirror_list_from_sim_telarray(self):
         """
         Read the mirror list in sim_telarray format and store the data.
+
         Allow to read mirror lists with different number of columns.
 
         Raises
@@ -130,7 +130,6 @@ class Mirrors:
         InvalidMirrorListFileError
             If number of mirrors is 0.
         """
-
         self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
 
         try:
@@ -195,7 +194,6 @@ class Mirrors:
         (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float
             X, Y positions, mirror_diameter, focal length and shape_type.
         """
-
         mask = self.mirror_table["mirror_panel_id"] == number
         if not np.any(mask):
             self._logger.debug(f"Mirror id{number} not in table, using first mirror instead")
@@ -238,6 +236,4 @@ class Mirrors:
         return return_values
 
     def plot_mirror_layout(self):
-        """
-        Plot the mirror layout (not implemented yet).
-        """
+        """Plot the mirror layout (not implemented yet)."""

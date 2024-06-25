@@ -1,8 +1,7 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
+r"""
     Validate a file using a schema.
+
     Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
 
     Command line arguments
@@ -41,7 +40,7 @@ from simtools.data_model import metadata_collector, metadata_model, validate_dat
 
 def _parse(label, description):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -56,7 +55,6 @@ def _parse(label, description):
         application configuration
 
     """
-
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument("--file_name", help="file to be validated", required=True)
     config.parser.add_argument("--schema", help="json schema file", required=False)
@@ -91,7 +89,6 @@ def _get_schema_file_name(args_dict, data_dict=None):
         schema file name
 
     """
-
     schema_file = args_dict.get("schema")
     if schema_file is None and data_dict is not None:
         schema_file = data_dict.get("meta_schema_url")
@@ -106,11 +103,11 @@ def _get_schema_file_name(args_dict, data_dict=None):
 def validate_schema(args_dict, logger):
     """
     Validate a schema file given in yaml or json format.
+
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
     """
-
     try:
         data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
     except FileNotFoundError as exc:
@@ -121,10 +118,7 @@ def validate_schema(args_dict, logger):
 
 
 def validate_data_file(args_dict, logger):
-    """
-    Validate a data file (e.g., in ecsv, json, yaml format)
-
-    """
+    """Validate a data file (e.g., in ecsv, json, yaml format)."""
     data_validator = validate_data.DataValidator(
         schema_file=_get_schema_file_name(args_dict),
         data_file=args_dict["file_name"],
@@ -138,16 +132,13 @@ def validate_data_file(args_dict, logger):
 
 
 def validate_metadata(args_dict, logger):
-    """
-    Validate metadata.
-
-    """
+    """Validate metadata."""
     # metadata_collector runs the metadata validation by default, no need to do anything else
     metadata_collector.MetadataCollector(None, metadata_file_name=args_dict["file_name"])
     logger.info(f"Successful validation of metadata {args_dict['file_name']}")
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label, description="Validate a file (metadata, schema, or data file) using a schema."

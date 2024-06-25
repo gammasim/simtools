@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-"""
-    Summary
-    -------
-    Convert simulation model parameter from sim_telarray format using the corresponding
-    schema file. Check value, type, and range and write a json file
-    ready to be submitted to the model database.
+r"""
+    Convert simulation model parameter from sim_telarray format using the corresponding schema file.
+
+    Check value, type, and range and write a json file ready to be submitted to the model database.
 
     Command line arguments
     ----------------------
@@ -48,7 +46,7 @@ from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 def _parse(label=None, description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -63,7 +61,6 @@ def _parse(label=None, description=None):
         Command line parser object
 
     """
-
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
@@ -90,7 +87,7 @@ def _parse(label=None, description=None):
     return config.initialize(simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
 
     args_dict, _ = _parse(
         label=Path(__file__).stem,

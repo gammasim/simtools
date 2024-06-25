@@ -1,3 +1,5 @@
+"""Configuration of applications."""
+
 import argparse
 import logging
 import os
@@ -51,10 +53,7 @@ class Configurator:
     """
 
     def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
-        """
-        Initialize Configurator.
-        """
-
+        """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
@@ -71,7 +70,7 @@ class Configurator:
 
     def default_config(self, arg_list=None, add_db_config=False):
         """
-        Returns dictionary of default configuration
+        Return dictionary of default configuration.
 
         Parameters
         ----------
@@ -85,7 +84,6 @@ class Configurator:
         dict
             Configuration parameters as dict.
         """
-
         self.parser.initialize_default_arguments()
         simulation_model = None
         if arg_list and "--site" in arg_list:
@@ -109,8 +107,9 @@ class Configurator:
         job_submission=False,
     ):
         """
-        Initialize configuration from command line, configuration file, class config, or \
-        environmental variable.
+        Initialize application configuration.
+
+        Configure from command line, configuration file, class config, or environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -143,7 +142,6 @@ class Configurator:
             Dictionary with DB parameters
 
         """
-
         self.parser.initialize_default_arguments(
             paths=paths,
             output=output,
@@ -172,6 +170,7 @@ class Configurator:
     def _fill_from_command_line(self, arg_list=None, require_command_line=True):
         """
         Fill configuration parameters from command line arguments.
+
         Triggers a print of the help if no command line arguments are given and
         require_command_line is set.
 
@@ -183,7 +182,6 @@ class Configurator:
             Require at least one command line argument.
 
         """
-
         if arg_list is None:
             arg_list = sys.argv[1:]
 
@@ -199,12 +197,12 @@ class Configurator:
     def _reset_required_arguments(self):
         """
         Reset required parser arguments (i.e., arguments added with "required=True").
+
         Includes also mutually exclusive groups.
 
         Access protected attributes of parser (no public method available).
 
         """
-
         for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
             group.required = False
         for action in self.parser._actions:  # pylint: disable=protected-access
@@ -212,8 +210,9 @@ class Configurator:
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
-        Fill configuration parameters from dictionary. Enforce that configuration parameter names\
-         are lower case.
+        Fill configuration parameters from dictionary.
+
+        Enforce that configuration parameter names are lower case.
 
         Parameters
         ----------
@@ -236,8 +235,9 @@ class Configurator:
 
     def _check_parameter_configuration_status(self, key, value):
         """
-        Check if a parameter is already configured and not still set to the default value. Allow \
-        configuration with None values.
+        Check if a parameter is already configured and not still set to the default value.
+
+        Allow configuration with None values.
 
         Parameters
         ----------
@@ -279,7 +279,6 @@ class Configurator:
            if configuration file has not been found.
 
         """
-
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
             _config_dict = gen.collect_data_from_file_or_dict(
@@ -310,11 +309,11 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any configuration parameters which is not already configured (i.e., parameter is None)
-        from environmental variables or from file (default: ".env").
+        Fill any configuration parameters from environmental variables or from file (e.g., ".env").
+
+        Only parameters shich are not already configured are changed (i.e., parameter is None).
 
         """
-
         _env_dict = {}
         try:
             load_dotenv(self.config["env_file"])
@@ -332,10 +331,7 @@ class Configurator:
         self._fill_from_config_dict(_env_dict)
 
     def _initialize_io_handler(self):
-        """
-        Initialize IOHandler with input and output paths.
-
-        """
+        """Initialize IOHandler with input and output paths."""
         _io_handler = io_handler.IOHandler()
         _io_handler.set_paths(
             output_path=self.config.get("output_path", None),
@@ -345,10 +341,7 @@ class Configurator:
         )
 
     def _initialize_output(self):
-        """
-        Initialize default output file names (in case output_file is not configured).
-
-        """
+        """Initialize default output file names (in case output_file is not configured)."""
         if self.config.get("output_file", None) is None:
             self.config["output_file_from_default"] = True
             prefix = "TEST"
@@ -387,7 +380,6 @@ class Configurator:
             Dict keys and values as dict.
 
         """
-
         if isinstance(input_var, dict):
             _list_args = []
             for key, value in input_var.items():
@@ -419,7 +411,6 @@ class Configurator:
             Dictionary with values to be converted.
 
         """
-
         for key, value in input_dict.items():
             input_dict[key] = None if value == "None" else value
 
@@ -435,7 +426,6 @@ class Configurator:
             List or dictionary with configuration updates.
 
         """
-
         self.config = self._convert_stringnone_to_none(
             vars(
                 self.parser.parse_args(
@@ -447,7 +437,7 @@ class Configurator:
 
     def _get_db_parameters(self):
         """
-        Return parameters for DB configuration
+        Return parameters for DB configuration.
 
         Parameters
         ----------
@@ -456,7 +446,6 @@ class Configurator:
 
 
         """
-
         _db_dict = {}
         _db_para = (
             "db_api_user",

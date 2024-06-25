@@ -1,3 +1,5 @@
+"""Default configuration for CORSIKA parameters for the various primary particles."""
+
 from collections import defaultdict
 
 import astropy.units as u
@@ -6,17 +8,16 @@ from scipy.interpolate import interp1d
 
 class CorsikaDefaultConfig:
     """
-    This class contains the default configuration for CORSIKA parameters for
-    the various primary particles. It includes all basic dependencies on zenith angles, etc.
+    Default configuration for CORSIKA parameters for the various primary particles.
+
+    It includes all basic dependencies on zenith angles, etc.
     The default values defined in this class assume the full CTAO arrays are simulated,
     including full CTAO energy range and number of events optimized to run for roughly 24 hours
     on a single node on the grid.
     """
 
     def __init__(self, primary=None, zenith_angle=None):
-        """
-        Initialize CorsikaDefaultConfig.
-        """
+        """Initialize CorsikaDefaultConfig."""
         self.primary = primary
         self.zenith_angle = zenith_angle
         self._energy_slope = -2.0
@@ -111,6 +112,7 @@ class CorsikaDefaultConfig:
     def _define_hardcoded_energy_ranges(self):
         """
         Define the hardcoded energy ranges for the various primaries.
+
         These energy ranges are for the full CTAO energy range (for both sites).
 
         Returns
@@ -118,7 +120,6 @@ class CorsikaDefaultConfig:
         energy_ranges: dict
             Dictionary with the default energy ranges for the various primaries.
         """
-
         energy_ranges = defaultdict(dict)
         energy_ranges["gamma"][20] = [3 * u.GeV, 330 * u.TeV]
         energy_ranges["gamma"][40] = [6 * u.GeV, 660 * u.TeV]
@@ -159,7 +160,6 @@ class CorsikaDefaultConfig:
         number_of_showers: dict
             Dictionary with the default number of showers for the various primaries.
         """
-
         number_of_showers = defaultdict(dict)
         number_of_showers["gamma"][20] = 5000
         number_of_showers["gamma"][40] = 5000
@@ -225,7 +225,6 @@ class CorsikaDefaultConfig:
         energy_range: list
             List with the energy range for the primary particle for the given zenith angle.
         """
-
         zenith_angles_to_interpolate = [*self.energy_ranges[self.primary].keys()]
         min_energy_to_interpolate = [
             energy[0].to_value(u.GeV) for energy in self.energy_ranges[self.primary].values()
@@ -256,7 +255,6 @@ class CorsikaDefaultConfig:
         number_of_showers: int
             Number of showers for the primary particle for the given zenith angle.
         """
-
         zenith_angles_to_interpolate = [*self.energy_ranges[self.primary].keys()]
         number_of_showers = [*self.number_of_showers[self.primary].values()]
 
@@ -269,6 +267,7 @@ class CorsikaDefaultConfig:
     def view_cone_for_primary(self):
         """
         Get the view cone for the primary particle.
+
         All diffuse primaries have a view cone of 10 deg by default.
 
         Returns

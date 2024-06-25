@@ -1,3 +1,5 @@
+"""Interface to workload managers like gridengine or HTCondor."""
+
 import logging
 import os
 from copy import copy
@@ -34,9 +36,7 @@ class JobManager:
     """
 
     def __init__(self, submit_command=None, test=False):
-        """
-        Initialize JobManager
-        """
+        """Initialize JobManager."""
         self._logger = logging.getLogger(__name__)
         self.submit_command = submit_command
         self.test = test
@@ -58,7 +58,6 @@ class JobManager:
         MissingWorkloadManagerError
             if workflow manager is not found.
         """
-
         if self.submit_command is None:
             return
         if self.submit_command.find("qsub") >= 0:
@@ -106,8 +105,7 @@ class JobManager:
 
     def _submit_local(self, log_file):
         """
-        Run a job script on the command line
-        (no submission to a workload manager)
+        Run a job script on the command line (no submission to a workload manager).
 
         Parameters
         ----------
@@ -115,7 +113,6 @@ class JobManager:
             The log file of the actual simulator (CORSIKA or sim_telarray).
             Provided in order to print the log excerpt in case of run time error.
         """
-
         self._logger.info("Running script locally")
 
         shell_command = f"{self.run_script} > {self.run_out_file}.out 2> {self.run_out_file}.err"
@@ -133,11 +130,7 @@ class JobManager:
             self._logger.info("Testing (local)")
 
     def _submit_htcondor(self):
-        """
-        Submit a job described by a shell script to HTcondor
-
-        """
-
+        """Submit a job described by a shell script to HTcondor."""
         _condor_file = self.run_script + ".condor"
         self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
@@ -157,11 +150,7 @@ class JobManager:
             self._logger.info("Testing (HTcondor)")
 
     def _submit_gridengine(self):
-        """
-        Submit a job described by a shell script to gridengine
-
-        """
-
+        """Submit a job described by a shell script to gridengine."""
         this_sub_cmd = copy(self.submit_command)
         this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
         this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"

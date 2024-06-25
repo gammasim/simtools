@@ -46,7 +46,6 @@ marker_scaling : float, optional.
 
 Examples
 --------
-
 Plot layout with the name "test_layout":
 
 .. code-block:: console
@@ -256,7 +255,7 @@ def _get_plot_file_name(figure_name, layout_name, site, coordinate_system, rotat
 
     return (
         f"array_layout_{layout_name}_{site}_{coordinate_system}_"
-        f"{str(round(rotate_angle.to(u.deg).value))}deg"
+        f"{round(rotate_angle.to(u.deg).value)!s}deg"
     )
 
 
