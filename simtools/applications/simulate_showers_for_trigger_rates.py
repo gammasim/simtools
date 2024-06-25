@@ -38,8 +38,6 @@
         View cone in deg.
     scatter_x (float, optional)
         Scatter distance (X axis) in m.
-    scatter_y (float, optional)
-        Scatter distance (Y axis) in m.
     num_use (int, optional)
         Number of use for each shower.
     energy_min (float, optional)
@@ -130,11 +128,9 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--scatter_x", help="Scatter distance (X axis) in m", type=float, default=1500
     )
+
     config.parser.add_argument(
-        "--scatter_y", help="Scatter radius  (Y axis) in m", type=float, default=0
-    )
-    config.parser.add_argument(
-        "--num_use", help="Number of use for each shower", type=int, default=20
+        "--num_use", help="Number of use for each shower", type=int, default=10
     )
     config.parser.add_argument(
         "--energy_min", help="Energy threshold (TeV)", type=float, default=0.01
@@ -158,6 +154,16 @@ def _parse(label=None, description=None):
 
 
 def print_list_into_file(list_of_files, file_name):
+    """
+    Print the list of output files from the simulation into a log file.
+
+    Parameters
+    ----------
+    list_of_files: list
+        list of files to be printed out.
+    file_name: str
+        name of the output file.
+    """
     with open(file_name, "w", encoding="utf-8") as f:
         for line in list_of_files:
             f.write(line + "\n")
@@ -196,7 +202,7 @@ def main():
             "cscat": [
                 args_dict["num_use"],
                 args_dict["scatter_x"] * u.m,
-                args_dict["scatter_y"] * u.m,
+                0 * u.m,
             ],
         },
     }
@@ -210,8 +216,7 @@ def main():
         mongo_db_config=db_config,
         model_version=args_dict.get("model_version", None),
     )
-
-    if args_dict["array_layout_name"] in ["1MST", "1LST", "1SST"]:
+    if shower_simulator.array_model.number_of_telescopes == 1:
         shower_simulator.array_model.site_model.change_parameter(
             "array_triggers", "array_trigger_1MST_lapalma.dat"
         )
