@@ -185,7 +185,7 @@ class Simulator:
                 self._logger.error(msg)
                 raise InvalidRunsToSimulateError
 
-            run_range = np.arange(run_range[0], run_range[1] + 1)
+            run_range = np.arange(run_range[0], run_range[1])
             self._logger.debug(f"run_range: {run_range}")
             validated_runs.extend(list(run_range))
 
@@ -258,7 +258,6 @@ class Simulator:
         ----------
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
-
         """
         self._logger.info(f"Submission command: {self._submit_command}")
 
@@ -270,24 +269,24 @@ class Simulator:
             f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
         )
 
-        for run, file in runs_and_files_to_submit.items():
+        for run_number, input_file in runs_and_files_to_submit.items():
             run_script = self._simulation_runner.prepare_run_script(
-                run_number=run, input_file=file, extra_commands=self._extra_commands
+                run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
             job_manager = JobManager(submit_command=self._submit_command, test=self._test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self.runner_services.get_file_name(
-                    file_type="sub_log", **self.runner_services.get_info_for_file_name(run)
+                    file_type="sub_log", **self.runner_services.get_info_for_file_name(run_number)
                 ),
                 log_file=self.runner_services.get_file_name(
                     file_type=("log"),
-                    **self.runner_services.get_info_for_file_name(run),
+                    **self.runner_services.get_info_for_file_name(run_number),
                 ),
             )
 
-            self._fill_results(file, run)
+            self._fill_results(input_file, run_number)
 
     def file_list(self, input_file_list=None):
         """
@@ -328,7 +327,7 @@ class Simulator:
 
         """
         _runs_and_files = {}
-        self._logger.debug("Getting runs and files to submit ({input_file_list})")
+        self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
         if self.simulation_software == "simtel":
             _file_list = self._enforce_list_type(input_file_list)
