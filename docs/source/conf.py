@@ -20,10 +20,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 
 def get_authors_from_citation_file():
-    """
-    Read list of authors from CITATION.cff file
-
-    """
+    """Read list of authors from CITATION.cff file."""
     with open(Path(__file__).parent / "../../CITATION.cff", encoding="utf-8") as file:
         citation = yaml.safe_load(file)
 
@@ -38,10 +35,7 @@ def get_authors_from_citation_file():
 
 
 def get_python_version_from_pyproject():
-    """
-    Read python version from pyproject.toml file
-
-    """
+    """Read python version from pyproject.toml file."""
     with open(Path(__file__).parent / "../../pyproject.toml") as file:
         pyproject = toml.load(file)
 

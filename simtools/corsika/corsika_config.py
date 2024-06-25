@@ -106,12 +106,11 @@ class CorsikaConfig:
 
     def __repr__(self):
         """CorsikaConfig class representation."""
-        text = (
+        return (
             f"<class {self.__class__.__name__}> "
             f"(site={self.array_model.site}, "
             f"layout={self.array_model.layout_name}, label={self.label})"
         )
-        return text
 
     @staticmethod
     def load_corsika_parameters_file(corsika_parameters_file):
@@ -130,10 +129,7 @@ class CorsikaConfig:
         """
         logger = logging.getLogger(__name__)
         logger.debug(f"Loading CORSIKA parameters from file {corsika_parameters_file}")
-        corsika_parameters = gen.collect_data_from_file_or_dict(
-            file_name=corsika_parameters_file, in_dict=None
-        )
-        return corsika_parameters
+        return gen.collect_data_from_file_or_dict(file_name=corsika_parameters_file, in_dict=None)
 
     def _collect_parameters(self, corsika_config_data, user_pars):
         for key_args, value_args in corsika_config_data.items():
@@ -494,13 +490,12 @@ class CorsikaConfig:
             return f"corsika_config_{file_name}.input"
         if file_type == "output_generic":
             # The XXXXXX will be replaced by the run number after the pfp step with sed
-            file_name = (
+            return (
                 f"corsika_runXXXXXX_"
                 f"{self.primary}_za{int(self._user_parameters['THETAP'][0]):03}deg_"
                 f"azm{int(self._user_parameters['AZM'][0]):03}deg"
                 f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
             )
-            return file_name
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 

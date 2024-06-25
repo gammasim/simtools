@@ -888,8 +888,7 @@ def get_file_age(file_path):
     modification_time = file_stats.st_mtime
     current_time = time.time()
 
-    file_age_minutes = (current_time - modification_time) / 60
-    return file_age_minutes
+    return (current_time - modification_time) / 60
 
 
 def change_dict_keys_case(data_dict, lower_case=True):
@@ -1009,9 +1008,7 @@ def extract_type_of_value(value) -> str:
         return re.sub(r"\d+", "", _type.split("'")[1].split(".")[-1])
     if "astropy" in _type:
         raise NotImplementedError("Astropy types are not supported yet.")
-
-    _type = _type.split("'")[1]
-    return _type
+    return _type.split("'")[1]
 
 
 def get_value_unit_type(value, unit_str=None):
@@ -1098,8 +1095,7 @@ def get_value_as_quantity(value, unit):
     """
     if isinstance(value, u.Quantity):
         try:
-            value = value.to(unit)
-            return value
+            return value.to(unit)
         except u.UnitConversionError:
             _logger.error(f"Cannot convert {value.unit} to {unit}.")
             raise
