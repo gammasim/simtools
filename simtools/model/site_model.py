@@ -116,12 +116,7 @@ class SiteModel(ModelParameter):
         for layout in layouts:
             if layout["name"] == layout_name.lower():
                 return layout["elements"]
-        self._logger.error(
-            "Array layout '%s' not found in '%s' site model. Possible choices are '%s'",
-            layout_name,
-            self.site,
-            [layout["name"] for _, layout in enumerate(layouts)],
-        )
+        self._logger.error("Array layout '%s' not found in '%s' site model.")
         raise ValueError
 
     def get_list_of_array_layouts(self):
