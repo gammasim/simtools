@@ -235,7 +235,7 @@ def validate_application_output(config):
     """
 
     if "INTEGRATION_TESTS" not in config:
-        return 0
+        return
 
     for integration_test in config["INTEGRATION_TESTS"]:
         logger.info(f"Testing application output: {integration_test}")
@@ -273,7 +273,6 @@ def validate_application_output(config):
                     config["CONFIGURATION"]["OUTPUT_FILE"]
                 ),
             )
-    return 0
 
 
 def prepare_configuration(config, output_path, model_version=None):
@@ -383,13 +382,10 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     # output validation for tests with default values
     # executed only for the model version as given in the config file
-    output_status = 0
     if request.config.getoption("--model_version") is None:
-        output_status = validate_application_output(config)
+        validate_application_output(config)
     elif config_file_model_version is not None:
         _from_command_line = request.config.getoption("--model_version")
         _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
-            output_status = validate_application_output(config)
-
-    assert output_status == 0
+            validate_application_output(config)
