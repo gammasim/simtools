@@ -22,6 +22,7 @@ class InvalidModelParameterError(Exception):
 class ModelParameter:
     """
     Base class for model parameters.
+
     Provides methods to read and manipulate parameters from DB.
 
     Parameters
@@ -91,6 +92,7 @@ class ModelParameter:
     def _get_parameter_dict(self, par_name):
         """
         Get model parameter dictionary as stored in the DB.
+
         No conversion to values are applied for the use in simtools
         (e.g., no conversion from the string representation of lists
         to lists).
@@ -123,10 +125,10 @@ class ModelParameter:
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
-        Get the value of a model parameter. List of values stored
-        in strings are returns as lists, so that no knowledge
-        of the database structure is needed when accessing the
-        model parameters.
+        Get the value of a model parameter.
+
+        List of values stored in strings are returns as lists, so that no knowledge
+        of the database structure is needed when accessing the model parameters.
 
         Parameters
         ----------
@@ -164,7 +166,8 @@ class ModelParameter:
 
     def get_parameter_value_with_unit(self, par_name):
         """
-        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.\
+        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
+
         If no unit is provided in the model, the value is returned without a unit.
 
         Parameters
@@ -187,8 +190,7 @@ class ModelParameter:
 
     def get_parameter_type(self, par_name):
         """
-        Get the type of existing parameter of the model
-        (value of 'type' field of DB entry).
+        Get the type of existing parameter of the model (value of 'type' field of DB entry).
 
         Parameters
         ----------
@@ -210,8 +212,7 @@ class ModelParameter:
 
     def get_parameter_file_flag(self, par_name):
         """
-        Get value of parameter file flag of this database entry
-        (boolean 'file' field of DB entry).
+        Get value of parameter file flag of this database entry (boolean 'file' field of DB entry).
 
         Parameters
         ----------
@@ -377,8 +378,9 @@ class ModelParameter:
 
     def change_parameter(self, par_name, value):
         """
-        Change the value of an existing parameter. This function does not modify the \
-        DB, it affects only the current instance.
+        Change the value of an existing parameter.
+
+        This function does not modify the  DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -426,8 +428,9 @@ class ModelParameter:
 
     def change_multiple_parameters(self, **kwargs):
         """
-        Change the value of multiple existing parameters in the model. This function does not \
-        modify the DB, it affects only the current instance.
+        Change the value of multiple existing parameters in the model.
+
+        This function does not modify the DB, it affects only the current instance.
 
         Parameters
         ----------
@@ -498,8 +501,9 @@ class ModelParameter:
 
     def get_config_file(self, no_export=False):
         """
-        Get the path of the config file for sim_telarray. The config file is produced if the file\
-        is not up to date.
+        Get the path of the config file for sim_telarray.
+
+        The config file is produced if the file is not up to date.
 
         Parameters
         ----------

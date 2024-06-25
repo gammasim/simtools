@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 r"""
-    Convert simulation model parameter from sim_telarray format using the corresponding
-    schema file. Check value, type, and range and write a json file
-    ready to be submitted to the model database.
+    Convert simulation model parameter from sim_telarray format using the corresponding schema file.
+
+    Check value, type, and range and write a json file ready to be submitted to the model database.
 
     Command line arguments
     ----------------------

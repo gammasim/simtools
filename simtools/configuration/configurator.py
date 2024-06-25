@@ -105,8 +105,9 @@ class Configurator:
         job_submission=False,
     ):
         """
-        Initialize configuration from command line, configuration file, class config, or \
-        environmental variable.
+        Initialize application configuration.
+
+        Configure from command line, configuration file, class config, or environmental variable.
 
         Priorities in parameter settings.
         1. command line; 2. yaml file; 3. class init; 4. env variables.
@@ -167,6 +168,7 @@ class Configurator:
     def _fill_from_command_line(self, arg_list=None, require_command_line=True):
         """
         Fill configuration parameters from command line arguments.
+
         Triggers a print of the help if no command line arguments are given and
         require_command_line is set.
 
@@ -193,6 +195,7 @@ class Configurator:
     def _reset_required_arguments(self):
         """
         Reset required parser arguments (i.e., arguments added with "required=True").
+
         Includes also mutually exclusive groups.
 
         Access protected attributes of parser (no public method available).
@@ -205,8 +208,9 @@ class Configurator:
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
-        Fill configuration parameters from dictionary. Enforce that configuration parameter names\
-         are lower case.
+        Fill configuration parameters from dictionary.
+
+        Enforce that configuration parameter names are lower case.
 
         Parameters
         ----------
@@ -229,8 +233,9 @@ class Configurator:
 
     def _check_parameter_configuration_status(self, key, value):
         """
-        Check if a parameter is already configured and not still set to the default value. Allow \
-        configuration with None values.
+        Check if a parameter is already configured and not still set to the default value.
+
+        Allow configuration with None values.
 
         Parameters
         ----------
@@ -302,8 +307,9 @@ class Configurator:
 
     def _fill_from_environmental_variables(self):
         """
-        Fill any configuration parameters which is not already configured (i.e., parameter is None)
-        from environmental variables or from file (default: ".env").
+        Fill any configuration parameters from environmental variables or from file (e.g., ".env").
+
+        Only parameters shich are not already configured are changed (i.e., parameter is None).
 
         """
         _env_dict = {}

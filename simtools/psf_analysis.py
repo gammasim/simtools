@@ -1,8 +1,7 @@
 """
 Module to analyse psf images (e.g. results from ray tracing simulations).
-Main functionalities are: computing centroids, psf containers etc.
 
-Author: Raul R Prado
+Main functionalities are: computing centroids, psf containers etc.
 
 """
 
@@ -232,6 +231,7 @@ class PSFImage:
     def _find_psf(self, fraction):
         """
         Try to find PSF by a smart algorithm first.
+
         If it fails, _find_radius_by_scanning is called and do it by brute force.
 
         Parameters
@@ -298,8 +298,9 @@ class PSFImage:
 
         def scan(dr, rad_min, rad_max):
             """
-            Scan the image from rad_min to rad_max in steps of dr until
-            it finds target_number photons inside.
+            Scan the image from rad_min to rad_max until it finds target_number photons inside.
+
+            Scanning is done in steps of dr.
 
             Returns
             -------

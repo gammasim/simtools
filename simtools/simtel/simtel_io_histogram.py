@@ -1,5 +1,7 @@
-"""This module reads the content of either a single histogram (.hdata, or .hdata.zst) or a single
-simtel_array output file (.simtel or .simtel.zst).
+"""
+Reads the content of either a single histogram (.hdata) or a single simtel_array output (.simtel).
+
+Files can be zst compressed.
 """
 
 import copy
@@ -32,6 +34,8 @@ class HistogramIdNotFoundError(Exception):
 
 class SimtelIOHistogram:
     """
+    Reads and generates histograms from sim_telarray output.
+
     Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
     output file (.simtel or .simtel.zst).
 
@@ -295,6 +299,8 @@ class SimtelIOHistogram:
 
     def _set_energy_range(self, energy_range):
         """
+        Set energy range to be used in the simulations.
+
         Parameters
         ----------
         energy_range: list

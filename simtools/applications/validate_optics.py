@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 r"""
-    This application validates the optical model parameters through ray tracing simulations \
-    of the whole telescope, assuming a point-like light source. The output includes PSF (D80), \
+    Validate the optical model parameters through ray tracing simulations of the whole telescope.
+
+    A point-like light source is assumed. The output includes PSF (D80), \
     effective mirror area and effective focal length as a function of the off-axis angle. \
 
     The telescope zenith angle and the source distance can be set by command line arguments.

@@ -1,5 +1,6 @@
 """
 Definition of metadata model for input to and output of simtools.
+
 Follows CTAO top-level data model definition.
 
 * data products submitted to SimPipe ('input')
@@ -61,6 +62,7 @@ def validate_schema(data, schema_file):
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
     """
     Returns metadata schema with default values.
+
     Follows the CTA Top-Level Data Model.
 
     Parameters
@@ -116,6 +118,7 @@ def _load_schema(schema_file=None):
 def _add_array_elements(key, schema):
     """
     Add list of array elements to schema.
+
     This assumes an element [key]['enum'] is a list of elements.
 
     Parameters

@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
 r"""
-    This application allows to write sim_telarray histograms into pdf and hdf5 files.
+    Write sim_telarray histograms into pdf and hdf5 files.
+
     It accepts multiple lists of histograms files, a single list or a histogram file.
     Each histogram is plotted in a page of the pdf file if the --pdf option is activated.
 

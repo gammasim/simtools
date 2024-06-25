@@ -91,9 +91,13 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
 @u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
 def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     """
-    Transform the x and y coordinates of the telescopes according to two rotations:
-    rotation_angle_around_z_axis gives the rotation on the observation plane (x, y) and
-    rotation_angle_around_y_axis allows to rotate the observation plane in space.
+    Rotate the x and y coordinates of the telescopes.
+
+    The two rotations are:
+
+    - rotation_angle_around_z_axis gives the rotation on the observation plane (x, y)
+    - rotation_angle_around_y_axis allows to rotate the observation plane in space.
+
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise, i.e.,
     the rotation of the coordinate system is clockwise.

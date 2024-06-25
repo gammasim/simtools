@@ -15,8 +15,7 @@ __all__ = ["DataValidator"]
 
 class DataValidator:
     """
-    Validate data for type and units following a describing schema; converts or
-    transform data if required.
+    Validate data for type and units following a describing schema; converts or transform data.
 
     Data can be of table or dict format (internally, all data is converted to astropy tables).
 
@@ -88,10 +87,9 @@ class DataValidator:
 
     def validate_data_file(self):
         """
-        Open data file and read data from file
-        (doing this successfully is understood as
-        file validation).
+        Open data file and read data from file.
 
+        Doing this successfully is understood as file validation.
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
@@ -114,8 +112,10 @@ class DataValidator:
 
     def _validate_data_dict(self):
         """
-        Validate values in a dictionary. Handles different types of naming in data dicts
-        (using 'name' or 'parameter' keys for name fields).
+        Validate values in a dictionary.
+
+        Handles different types of naming in data dicts (using 'name' or 'parameter'
+        keys for name fields).
 
         Raises
         ------
@@ -171,7 +171,10 @@ class DataValidator:
 
     def _validate_data_columns(self):
         """
-        Validate that
+        Validate that data columns.
+
+        This includes:
+
         - required data columns are available
         - columns are in the correct units (if necessary apply a unit conversion)
         - ranges (minimum, maximum) are correct.
@@ -212,8 +215,9 @@ class DataValidator:
 
     def _sort_data(self):
         """
-        Sort data according to one data column (if required by any column attribute). Data is
-         either sorted or reverse sorted.
+        Sort data according to one data column (if required by any column attribute).
+
+        Data is either sorted or reverse sorted.
 
         Raises
         ------
@@ -398,8 +402,9 @@ class DataValidator:
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
-        Check that input data have an allowed unit. Convert to reference unit (e.g., Angstrom to
-        nm).
+        Check that input data have an allowed unit.
+
+        Convert to reference unit (e.g., Angstrom to nm).
 
         Note on dimensionless columns:
 
@@ -465,8 +470,9 @@ class DataValidator:
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
-        Check that column data is within allowed range or required range. Assumes that column and
-        ranges have the same units.
+        Check that column data is within allowed range or required range.
+
+        Assumes that column and ranges have the same units.
 
         Parameters
         ----------
@@ -523,8 +529,10 @@ class DataValidator:
     @staticmethod
     def _interval_check(data, axis_range, range_type):
         """
-        Check that values are inside allowed range (range_type='allowed_range') or span at least
-         the given interval (range_type='required_range').
+        Range checking for a given set of data.
+
+        Check that values are inside allowed range or interval. This(range_type='allowed_range')
+        or span at least the given interval (range_type='required_range').
 
         Parameters
         ----------
@@ -589,6 +597,7 @@ class DataValidator:
     def _get_data_description(self, column_name=None, status_test=False):
         """
         Return data description as provided by the schema file.
+
         For tables (type: 'data_table'), return the description of
         the column named 'column_name'. For other types, return
         all data descriptions.
