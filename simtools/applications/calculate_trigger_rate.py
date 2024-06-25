@@ -154,7 +154,7 @@ def _get_simulation_parameters(config_parser):
     return energy_range, view_cone
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     description = (
         "Calculates the simulated and triggered event rate based on simtel_array output files."

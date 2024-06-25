@@ -133,7 +133,7 @@ def load_data(datafile):
     return data
 
 
-def main():
+def main():  # noqa: D103
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
 

@@ -23,6 +23,7 @@ _logger = logging.getLogger(__name__)
 
 @jsonschema.Draft7Validator.FORMAT_CHECKER.checks("astropy_unit", ValueError)
 def check_astropy_unit(unit_string):
+    """Validate astropy units (including dimensionless) for jsonschema."""
     try:
         u.Unit(unit_string)
         return True

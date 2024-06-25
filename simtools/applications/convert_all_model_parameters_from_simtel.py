@@ -359,7 +359,7 @@ def print_list_of_files(args_dict, logger):
             logger.info(f"{file.name}: {model_dict['value']}")
 
 
-def main():
+def main():  # noqa: D103
 
     args_dict, _ = _parse(
         label=Path(__file__).stem,
