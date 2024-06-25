@@ -260,8 +260,7 @@ def distance_list(arg):
         List of distances as astropy quantities.
     """
     try:
-        values = [float(x) * u.m for x in arg]
-        return values
+        return [float(x) * u.m for x in arg]
     except ValueError as exc:
         raise ValueError("Distances must be numeric values") from exc
 

@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 """
-    Summary
-    -------
-    This application adds a file to a DB.
+    Add a file to a DB.
 
     The name and location of the file are required.
     This application should complement the ones for updating parameters, \
@@ -152,7 +150,7 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
         logger.info(f"Aborted, did not insert file{plural} to the {args_dict['db']} DB")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     logger = logging.getLogger()

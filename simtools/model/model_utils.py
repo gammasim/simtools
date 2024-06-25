@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Helper functions calculations related to model parameters."""
 
 import math
 
@@ -12,8 +13,9 @@ __all__ = [
 
 def compute_telescope_transmission(pars, off_axis):
     """
-    Compute telescope transmission (0 < T < 1) for a given set of parameters as defined by \
-    the MC model and for a given off-axis angle.
+    Compute telescope transmission (0 < T < 1) for a given off-axis angle.
+
+    The telescope transmission depends on the MC model used.
 
     Parameters
     ----------
@@ -27,7 +29,6 @@ def compute_telescope_transmission(pars, off_axis):
     float
         Telescope transmission.
     """
-
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
@@ -50,7 +51,6 @@ def is_two_mirror_telescope(telescope_model_name):
     bool
         True if the telescope is a two mirror one.
     """
-
     tel_type = names.get_telescope_type_from_telescope_name(telescope_model_name)
     if "SST" in tel_type or "SCT" in tel_type:
         return True

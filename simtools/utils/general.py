@@ -1,6 +1,4 @@
-"""
-General functions useful across different parts of the code.
-"""
+"""General functions useful across different parts of the code."""
 
 import copy
 import json
@@ -197,9 +195,9 @@ def _process_default_value(par_name, par_info, out_data, _logger):
 
 def validate_config_data(config_data, parameters, ignore_unidentified=False, _logger=None):
     """
-    Validate a generic config_data dict by using the info
-    given by the parameters dict. The entries will be validated
-    in terms of length, units and names.
+    Validate a generic config_data dict by using the info given by the parameters dict.
+
+    The entries will be validated in terms of length, units and names.
 
     See ./tests/resources/test_parameters.yml for an example of the structure
     of the parameters dict.
@@ -276,7 +274,6 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
         validated and converted input data
 
     """
-
     _, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     # Checking if values have unit and raising error, if so.
@@ -296,7 +293,7 @@ def _validate_and_convert_value_without_units(value, value_keys, par_name, par_i
 
 def _check_value_entry_length(value, par_name, par_info):
     """
-    Validate length of user input parameters
+    Validate length of user input parameters.
 
     Parameters
     ----------
@@ -315,7 +312,6 @@ def _check_value_entry_length(value, par_name, par_info):
         state of input list
 
     """
-
     # Checking the entry length
     value_length = len(value)
     _logger.debug(f"Value len of {par_name}: {value_length}")
@@ -353,7 +349,6 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
         validated and converted input data
 
     """
-
     value_length, undefined_length = _check_value_entry_length(value, par_name, par_info)
 
     par_unit = copy_as_list(par_info["unit"])
@@ -401,9 +396,9 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
 def _validate_and_convert_value(par_name, par_info, value_in):
     """
     Validate input user parameter and convert it to the right units, if needed.
+
     Returns the validated arguments in a list.
     """
-
     if isinstance(value_in, dict):
         value = [d for (k, d) in value_in.items()]
         value_keys = [k for (k, d) in value_in.items()]
@@ -420,6 +415,7 @@ def _validate_and_convert_value(par_name, par_info, value_in):
 def join_url_or_path(url_or_path, *args):
     """
     Join URL or path with additional subdirectories and file.
+
     This is the equivalent to Path.join(), with extended functionality
     working also for URLs.
 
@@ -456,7 +452,6 @@ def is_url(url):
         True if url is a valid URL.
 
     """
-
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
@@ -467,6 +462,7 @@ def is_url(url):
 def collect_data_from_http(url):
     """
     Download yaml or json file from url and return it contents as dict.
+
     File is downloaded as a temporary file and deleted afterwards.
 
     Parameters
@@ -487,7 +483,6 @@ def collect_data_from_http(url):
         If downloading the yaml file fails.
 
     """
-
     try:
         with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
@@ -597,6 +592,7 @@ def collect_kwargs(label, in_kwargs):
         Label to be collected in kwargs.
     in_kwargs: dict
         kwargs.
+
     Returns
     -------
     dict
@@ -703,7 +699,6 @@ def get_log_level_from_user(log_level):
     logging.LEVEL
         The requested logging level to be used as input to logging.setLevel().
     """
-
     possible_levels = {
         "info": logging.INFO,
         "debug": logging.DEBUG,
@@ -746,9 +741,10 @@ def copy_as_list(value):
 
 def separate_args_and_config_data(expected_args, **kwargs):
     """
-    Separate kwargs into the arguments expected for instancing a class and the dict to be given as
-    config_data. This function is specific for methods from_kwargs in classes which use the
-    validate_config_data system.
+    Separate kwargs into arguments expected for class instancing class and the config_data dict.
+
+    This function is specific for methods from_kwargs in classes which use the validate_config_data
+    system.
 
     Parameters
     ----------
@@ -774,7 +770,7 @@ def separate_args_and_config_data(expected_args, **kwargs):
 
 def program_is_executable(program):
     """
-    Checks if program exists and is executable
+    Check if program exists and is executable.
 
     Follows https://stackoverflow.com/questions/377017/
 
@@ -874,7 +870,6 @@ def get_log_excerpt(log_file, n_last_lines=30):
     str
         Excerpt from log file with header/footer
     """
-
     return (
         "\n\nRuntime error - See below the relevant part of the log/err file.\n\n"
         f"{log_file}\n"
@@ -885,9 +880,7 @@ def get_log_excerpt(log_file, n_last_lines=30):
 
 
 def get_file_age(file_path):
-    """
-    Get the age of a file in seconds since the last modification.
-    """
+    """Get the age of a file in seconds since the last modification."""
     if not Path(file_path).is_file():
         raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
 
@@ -895,14 +888,15 @@ def get_file_age(file_path):
     modification_time = file_stats.st_mtime
     current_time = time.time()
 
-    file_age_minutes = (current_time - modification_time) / 60
-    return file_age_minutes
+    return (current_time - modification_time) / 60
 
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case. Crawls through the dictionary and changes\
-    all keys. Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case.
+
+    Crawls through the dictionary and changes all keys.
+    Takes into account list of dictionaries, as e.g. found in the top level data model.
 
     Parameters
     ----------
@@ -911,7 +905,6 @@ def change_dict_keys_case(data_dict, lower_case=True):
     lower_case: bool
         Change keys to lower (upper) case if True (False).
     """
-
     _return_dict = {}
     try:
         for key in data_dict.keys():
@@ -939,8 +932,10 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
     """
-    Remove substrings from all strings in a dictionary. Recursively crawls through the dictionary
-    This e.g., allows to remove all newline characters from a dictionary.
+    Remove substrings from all strings in a dictionary.
+
+    Recursively crawls through the dictionary This e.g., allows to remove all newline characters
+    from a dictionary.
 
     Parameters
     ----------
@@ -979,18 +974,18 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
 
 
 def sort_arrays(*args):
-    """Sort arrays
+    """Sort arrays.
 
     Parameters
     ----------
     *args
         Arguments to be sorted.
+
     Returns
     -------
     list
         Sorted args.
     """
-
     if len(args) == 0:
         return args
     order_array = copy.copy(args[0])
@@ -1004,6 +999,7 @@ def sort_arrays(*args):
 def extract_type_of_value(value) -> str:
     """
     Extract the string representation of the the type of a value.
+
     For example, for a string, it returns 'str' rather than '<class 'str'>'.
     Take into account also the case where the value is a numpy type.
     """
@@ -1012,14 +1008,13 @@ def extract_type_of_value(value) -> str:
         return re.sub(r"\d+", "", _type.split("'")[1].split(".")[-1])
     if "astropy" in _type:
         raise NotImplementedError("Astropy types are not supported yet.")
-
-    _type = _type.split("'")[1]
-    return _type
+    return _type.split("'")[1]
 
 
 def get_value_unit_type(value, unit_str=None):
     """
     Get the value, unit and type of a value.
+
     The value is stripped of its unit and the unit is returned
     in its string form (i.e., to_string()).
     The type is returned as a string representation of the type.
@@ -1041,7 +1036,6 @@ def get_value_unit_type(value, unit_str=None):
         Value, unit in string representation (to_string())),
         and string representation of the type of the value.
     """
-
     base_unit = None
     if isinstance(value, str | u.Quantity):
         try:
@@ -1101,8 +1095,7 @@ def get_value_as_quantity(value, unit):
     """
     if isinstance(value, u.Quantity):
         try:
-            value = value.to(unit)
-            return value
+            return value.to(unit)
         except u.UnitConversionError:
             _logger.error(f"Cannot convert {value.unit} to {unit}.")
             raise
@@ -1130,10 +1123,10 @@ def user_confirm():
 
 def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
     """
-    Validate data type of value (scalar, list, np array) or type object against a
-    reference data type. Allow to check for exact data type or allow sub types
-    (e.g. uint is accepted for int).  Take into account 'file' type as used in the
-    model parameter database
+    Validate data type of value or type object against a reference data type.
+
+    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).
+    Take into account 'file' type as used in the model parameter database.
 
     Parameters
     ----------
@@ -1187,7 +1180,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
 
 def convert_list_to_string(data, comma_separated=False):
     """
-    Convert arrays to string (if required)
+    Convert arrays to string (if required).
 
     Parameters
     ----------
@@ -1212,6 +1205,7 @@ def convert_list_to_string(data, comma_separated=False):
 def convert_string_to_list(data_string, is_float=True):
     """
     Convert string (as used e.g. in sim_telarray) to list.
+
     Allow coma or space separated strings.
 
     Parameters
@@ -1226,7 +1220,6 @@ def convert_string_to_list(data_string, is_float=True):
         Return data_string if conversion fails.
 
     """
-
     try:
         if is_float:
             return [float(v) for v in data_string.split()]

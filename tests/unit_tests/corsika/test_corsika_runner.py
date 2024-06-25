@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture()
 def corsika_config_data(tmp_test_directory):
     return {
-        "data_directory": f"{str(tmp_test_directory)}/test-output",
+        "data_directory": f"{tmp_test_directory!s}/test-output",
         "nshow": 10,
         "primary": "gamma",
         "erange": [100 * u.GeV, 1 * u.TeV],
@@ -29,21 +29,19 @@ def corsika_config_data(tmp_test_directory):
 
 @pytest.fixture()
 def corsika_runner(corsika_config_data, io_handler, simtel_path, array_model_south):
-    corsika_runner = CorsikaRunner(
+    return CorsikaRunner(
         simtel_source_path=simtel_path,
         label="test-corsika-runner",
         corsika_config_data=corsika_config_data,
         array_model=array_model_south,
     )
-    return corsika_runner
 
 
 @pytest.fixture()
 def corsika_file(io_handler):
-    corsika_file = io_handler.get_input_data_file(
+    return io_handler.get_input_data_file(
         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
     )
-    return corsika_file
 
 
 def test_prepare_run_script(corsika_runner):

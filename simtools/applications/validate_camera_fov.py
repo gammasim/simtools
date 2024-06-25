@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application calculate the camera FoV of the telescope requested and plot the camera \
-    as seen for an observer facing the camera.
+r"""
+    Calculate the camera FoV of the telescope requested and plot the camera.
+
+    The orientation for the plotting is "as seen for an observer facing the camera".
 
     An example of the camera plot can be found below.
 
@@ -90,7 +89,7 @@ def _parse():
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     label = "validate_camera_fov"
@@ -138,7 +137,7 @@ def main():
     fig = plot_camera.plot_pixel_layout(camera, args_dict["camera_in_sky_coor"], pixel_ids_to_print)
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     for suffix in ["pdf", "png"]:
-        file_name = f"{str(plot_file_prefix)}.{suffix}"
+        file_name = f"{plot_file_prefix!s}.{suffix}"
         fig.savefig(file_name, format=suffix, bbox_inches="tight")
         print(f"\nSaved camera plot in {file_name}\n")
     fig.clf()

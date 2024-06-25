@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This application is used to run simulations for productions (typically on the grid).
+r"""
+    Run simulations for productions (typically on the grid).
+
     It allows to run a Paranal (CTAO-South) or La Palma (CTAO-North) array layout simulation
     with the provided "prod_tag" simulation configuration (e.g., Prod6)
     for a given primary particle, azimuth, and zenith angle.
@@ -107,7 +106,7 @@ from simtools.simulator import Simulator
 
 def _parse(description=None):
     """
-    Parse command line configuration
+    Parse command line configuration.
 
     Parameters
     ----------
@@ -120,7 +119,6 @@ def _parse(description=None):
         Command line parser object.
 
     """
-
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
         "--production_config",
@@ -217,7 +215,7 @@ def _parse(description=None):
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse(description="Run simulations for productions")
 
     logger = logging.getLogger()
@@ -288,7 +286,7 @@ def main():
             # It should be fine for normal production since each run is on a separate node
             # so no files are expected there.
             shutil.move(source_file, destination_file)
-        logger.info(f"Output files for the grid placed in {str(directory_for_grid_upload)}")
+        logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
 
 
 if __name__ == "__main__":

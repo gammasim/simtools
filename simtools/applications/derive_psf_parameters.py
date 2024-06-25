@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
-"""
-    Summary
-    -------
-    This applications derives the parameters mirror_reflection_random_angle, \
-    mirror_align_random_horizontal and mirror_align_random_vertical using \
-    cumulative PSF measurement.
+r"""
+    Derives the mirror alignment parameters using cumulative PSF measurement.
+
+    This includes parameters mirror_reflection_random_angle, \
+    mirror_align_random_horizontal and mirror_align_random_vertical.
 
     The telescope zenith angle and the source distance can be set by command line arguments.
 
@@ -164,10 +163,10 @@ def add_parameters(
     mirror_reflection_2=0.035,
 ):
     """
-    Transforms and add parameters to the all_parameters list.
+    Transform and add parameters to the all_parameters list.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     mirror_reflection : float
         The random angle of mirror reflection.
 
@@ -180,8 +179,8 @@ def add_parameters(
     mirror_reflection_2 : float, optional
         A secondary random angle for mirror reflection. Default is 0.035.
 
-    Returns:
-    --------
+    Returns
+    -------
     None
         Updates the all_parameters list in place.
     """
@@ -229,10 +228,10 @@ def get_previous_values(tel_model, logger):
 
     logger.debug(
         "Previous parameter values:\n"
-        f"MRRA = {str(mrra_0)}\n"
-        f"MRF = {str(mfr_0)}\n"
-        f"MRRA2 = {str(mrra2_0)}\n"
-        f"MAR = {str(mar_0)}\n"
+        f"MRRA = {mrra_0!s}\n"
+        f"MRF = {mfr_0!s}\n"
+        f"MRRA2 = {mrra2_0!s}\n"
+        f"MAR = {mar_0!s}\n"
     )
 
     return mrra_0, mfr_0, mrra2_0, mar_0
@@ -285,7 +284,8 @@ def load_and_process_data(args_dict):
     """
     Load and process data if specified in the command-line arguments.
 
-    Returns:
+    Returns
+    -------
     - data_to_plot: OrderedDict containing loaded and processed data.
     - radius: Radius data from loaded data (if available).
     """
@@ -301,17 +301,15 @@ def load_and_process_data(args_dict):
 
 
 def calculate_rmsd(data, sim):
-    """
-    Calculates the Root Mean Squared Deviation to be used
-    as metric to find the best parameters.
-    """
+    """Calculate Root Mean Squared Deviation to be used as metric to find the best parameters."""
     return np.sqrt(np.mean((data - sim) ** 2))
 
 
 def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     """
-    Runs the tuning for one set of parameters, add a plot to the pdfPages
-    (if plot=True) and returns the RMSD and the D80.
+    Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.
+
+    Plotting is optional (if plot=True).
     """
     cumulative_psf = "Cumulative PSF"
 
@@ -377,7 +375,8 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     """
     Find the best parameters from all parameter sets.
 
-    Returns:
+    Returns
+    -------
     - Tuple of best parameters and their D80 value.
     """
     min_rmsd = 100
@@ -392,7 +391,7 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     return best_pars, min_rmsd
 
 
-def main():
+def main():  # noqa: D103
     args_dict, db_config = _parse()
 
     label = "tune_psf"

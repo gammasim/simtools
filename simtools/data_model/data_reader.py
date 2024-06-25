@@ -1,3 +1,5 @@
+"""Helper module for reading of standardized simtools data products."""
+
 import logging
 
 import astropy.units as u
@@ -16,6 +18,7 @@ _logger = logging.getLogger(__name__)
 def read_table_from_file(file_name, schema_file=None, validate=False, metadata_file=None):
     """
     Read astropy table from file and validate against schema.
+
     Metadata is read from metadata file or from the metadata section of the data file.
     Schema for validation can be given as argument, or is determined
     from the metadata associated to the file.
@@ -42,7 +45,6 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         If file does not exist.
 
     """
-
     try:
         data_table = QTable.read(file_name)
     except (FileNotFoundError, IORegistryError) as exc:
@@ -72,7 +74,9 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
 
 def read_value_from_file(file_name, schema_file=None, validate=False):
     """
-    Read value from file and validate against schema. Expect data to follow the convention for
+    Read value from file and validate against schema.
+
+    Expect data to follow the convention for
     how simulation model parameters are stored in the simulation model database: to be a single
     value stored in the 'value' field (with possible units in the 'units' field).
     Metadata is read from metadata file or from the metadata section of the data file.
@@ -100,7 +104,6 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
         If file does not exist.
 
     """
-
     try:
         data = gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
     except FileNotFoundError as exc:
