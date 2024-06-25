@@ -435,12 +435,11 @@ class SimtelIOHistogram:
             The QTable instance with the trigger rate per energy bin.
         """
         meta = self.produce_trigger_meta_data()
-        trigger_rate_per_energy_bin_table = QTable(
+        return QTable(
             [self.energy_axis[:-1] * u.TeV, (self.trigger_rate_per_energy_bin.to(u.Hz))],
             names=("Energy (TeV)", "Trigger rate (Hz)"),
             meta=meta,
         )
-        return trigger_rate_per_energy_bin_table
 
     def produce_trigger_meta_data(self):
         """

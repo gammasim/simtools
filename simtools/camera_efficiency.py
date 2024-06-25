@@ -283,7 +283,7 @@ class CameraEfficiency:
             if self.config.nsb_spectrum
             else "default sim_telarray spectrum."
         )
-        summary = (
+        return (
             f"Results summary for {self._telescope_model.name} at "
             f"zenith={self.config.zenith_angle:.1f} deg, "
             f"azimuth={self.config.azimuth_angle:.1f} deg\n"
@@ -301,8 +301,6 @@ class CameraEfficiency:
             "Expected NSB pixel rate for the reference NSB: "
             f"{nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
         )
-
-        return summary
 
     def export_results(self):
         """Export results to a ecsv file."""
@@ -343,9 +341,7 @@ class CameraEfficiency:
         masts_factor = self._results["masts"][0]
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
-        tel_efficiency = fill_factor * (c4_sum / (masts_factor * c1_sum))
-
-        return tel_efficiency
+        return fill_factor * (c4_sum / (masts_factor * c1_sum))
 
     def calc_camera_efficiency(self):
         """
@@ -367,9 +363,7 @@ class CameraEfficiency:
         fill_factor = self._telescope_model.camera.get_camera_fill_factor()
 
         cam_efficiency_no_gaps = c4x_sum / c1_sum
-        cam_efficiency = cam_efficiency_no_gaps * fill_factor
-
-        return cam_efficiency
+        return cam_efficiency_no_gaps * fill_factor
 
     def calc_tot_efficiency(self, tel_efficiency):
         """
@@ -412,9 +406,7 @@ class CameraEfficiency:
         # Sum(C2) from 300 - 550 nm:
         c2_reduced_wl = self._results["C2"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
         c2_sum = np.sum(c2_reduced_wl)
-        cher_spec_weighted_reflectivity = c2_sum / c1_sum / self._results["masts"][0]
-
-        return cher_spec_weighted_reflectivity
+        return c2_sum / c1_sum / self._results["masts"][0]
 
     def calc_nsb_rate(self):
         """
@@ -475,14 +467,12 @@ class CameraEfficiency:
         for column_now, column_title in column_titles.items():
             table_to_plot.rename_column(column_now, column_title)
 
-        fig = visualize.plot_table(
+        return visualize.plot_table(
             table_to_plot,
             y_title="Cherenkov light efficiency",
             title=f"{self._telescope_model.name} response to Cherenkov light",
             no_markers=True,
         )
-
-        return fig
 
     def plot_nsb_efficiency(self):
         """

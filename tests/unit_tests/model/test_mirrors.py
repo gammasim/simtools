@@ -17,8 +17,7 @@ def mirror_template_ecsv(io_handler):
         test=True,
     )
     logger.info(f"Using mirror list {mirror_list_file}")
-    mirror_template_ecsv = Mirrors(mirror_list_file)
-    return mirror_template_ecsv
+    return Mirrors(mirror_list_file)
 
 
 @pytest.fixture()
@@ -28,8 +27,7 @@ def mirror_template_simtel(io_handler):
         test=True,
     )
     logger.info(f"Using mirror list with simtel format {mirror_list_file}")
-    mirror_template_simtel = Mirrors(mirror_list_file)
-    return mirror_template_simtel
+    return Mirrors(mirror_list_file)
 
 
 @pytest.fixture()
@@ -40,8 +38,7 @@ def mirror_table_template(io_handler):
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     mirrors = Mirrors(mirror_list_file)
-    mirror_table_template = mirrors.mirror_table.copy()
-    return mirror_table_template
+    return mirrors.mirror_table.copy()
 
 
 def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_table):
@@ -51,11 +48,10 @@ def write_tmp_mirror_list(io_handler, tmp_test_directory, incomplete_mirror_tabl
             format="ascii.ecsv",
             overwrite=True,
         )
-    mirror_list_file = io_handler.get_input_data_file(
+    return io_handler.get_input_data_file(
         file_name=f"{tmp_test_directory}/incomplete_mirror_table.ecsv",
         test=True,
     )
-    return mirror_list_file
 
 
 def test_read_mirror_list_from_sim_telarray(io_handler, mirror_template_simtel, tmp_test_directory):

@@ -508,7 +508,7 @@ class DataValidator:
 
         _entry = self._get_data_description(col_name)
         if range_type not in _entry:
-            return None
+            return
 
         try:
             if not self._interval_check(
@@ -525,8 +525,6 @@ class DataValidator:
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
             raise
-
-        return None
 
     @staticmethod
     def _interval_check(data, axis_range, range_type):
