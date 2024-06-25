@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g6d10324 Manual</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+g392754d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../_static/documentation_options.js?v=a6accbfe"></script>
+    <script src="../_static/documentation_options.js?v=d798d06e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6d10324 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g392754d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -660,7 +660,7 @@ document.write(`
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">nsb_spectrum</span>
             <span class="k">else</span> <span class="s2">&quot;default sim_telarray spectrum.&quot;</span>
         <span class="p">)</span>
-        <span class="n">summary</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Results summary for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> at &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;zenith=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> deg, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;azimuth=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> deg</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -677,9 +677,7 @@ document.write(`
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nsb_pixel_pe_per_ns</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Expected NSB pixel rate for the reference NSB: &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nsb_rate_ref_conditions</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">summary</span></div>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.export_results">
@@ -726,9 +724,7 @@ document.write(`
         <span class="n">masts_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">fill_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_camera_fill_factor</span><span class="p">()</span>
 
-        <span class="n">tel_efficiency</span> <span class="o">=</span> <span class="n">fill_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">c4_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">masts_factor</span> <span class="o">*</span> <span class="n">c1_sum</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">tel_efficiency</span></div>
+        <span class="k">return</span> <span class="n">fill_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">c4_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">masts_factor</span> <span class="o">*</span> <span class="n">c1_sum</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.calc_camera_efficiency">
@@ -753,9 +749,7 @@ document.write(`
         <span class="n">fill_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_camera_fill_factor</span><span class="p">()</span>
 
         <span class="n">cam_efficiency_no_gaps</span> <span class="o">=</span> <span class="n">c4x_sum</span> <span class="o">/</span> <span class="n">c1_sum</span>
-        <span class="n">cam_efficiency</span> <span class="o">=</span> <span class="n">cam_efficiency_no_gaps</span> <span class="o">*</span> <span class="n">fill_factor</span>
-
-        <span class="k">return</span> <span class="n">cam_efficiency</span></div>
+        <span class="k">return</span> <span class="n">cam_efficiency_no_gaps</span> <span class="o">*</span> <span class="n">fill_factor</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.calc_tot_efficiency">
@@ -804,9 +798,7 @@ document.write(`
         <span class="c1"># Sum(C2) from 300 - 550 nm:</span>
         <span class="n">c2_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C2&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
         <span class="n">c2_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c2_reduced_wl</span><span class="p">)</span>
-        <span class="n">cher_spec_weighted_reflectivity</span> <span class="o">=</span> <span class="n">c2_sum</span> <span class="o">/</span> <span class="n">c1_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="n">cher_spec_weighted_reflectivity</span></div>
+        <span class="k">return</span> <span class="n">c2_sum</span> <span class="o">/</span> <span class="n">c1_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.calc_nsb_rate">
@@ -873,14 +865,12 @@ document.write(`
         <span class="k">for</span> <span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span> <span class="ow">in</span> <span class="n">column_titles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">table_to_plot</span><span class="o">.</span><span class="n">rename_column</span><span class="p">(</span><span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span><span class="p">)</span>
 
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_table</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_table</span><span class="p">(</span>
             <span class="n">table_to_plot</span><span class="p">,</span>
             <span class="n">y_title</span><span class="o">=</span><span class="s2">&quot;Cherenkov light efficiency&quot;</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> response to Cherenkov light&quot;</span><span class="p">,</span>
             <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">fig</span></div>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CameraEfficiency.plot_nsb_efficiency">

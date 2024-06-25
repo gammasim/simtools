@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g6d10324 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g392754d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a6accbfe"></script>
+    <script src="../../_static/documentation_options.js?v=d798d06e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6d10324 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g392754d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -478,12 +478,11 @@ document.write(`
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;CorsikaConfig class representation.&quot;&quot;&quot;</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;&lt;class </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt; &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;(site=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;layout=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">, label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">text</span>
 
 <div class="viewcode-block" id="CorsikaConfig.load_corsika_parameters_file">
 <a class="viewcode-back" href="../../corsika.html#corsika.corsika_config.CorsikaConfig.load_corsika_parameters_file">[docs]</a>
@@ -504,10 +503,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading CORSIKA parameters from file </span><span class="si">{</span><span class="n">corsika_parameters_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">corsika_parameters</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-            <span class="n">file_name</span><span class="o">=</span><span class="n">corsika_parameters_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">corsika_parameters</span></div>
+        <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">corsika_parameters_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_collect_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_config_data</span><span class="p">,</span> <span class="n">user_pars</span><span class="p">):</span>
@@ -883,13 +879,12 @@ document.write(`
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;corsika_config_</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.input&quot;</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;output_generic&quot;</span><span class="p">:</span>
             <span class="c1"># The XXXXXX will be replaced by the run number after the pfp step with sed</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="k">return</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;corsika_runXXXXXX_&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="si">}</span><span class="s2">_za</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg_&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;azm</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_parameters</span><span class="p">[</span><span class="s1">&#39;AZM&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">.zst&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">file_name</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;multipipe&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;multi_cta-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">.cfg&quot;</span>
 

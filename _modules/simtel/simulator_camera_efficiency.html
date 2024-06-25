@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+g6d10324 Manual</title>
+    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+g392754d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="../../_static/documentation_options.js?v=a6accbfe"></script>
+    <script src="../../_static/documentation_options.js?v=d798d06e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6d10324 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g392754d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
@@ -515,9 +515,7 @@ document.write(`
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_simtel</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="c1"># Moving to sim_telarray directory before running</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;sim_telarray&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span>
-
-        <span class="k">return</span> <span class="n">command</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;sim_telarray&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">def</span> <span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check run results.</span>
@@ -578,11 +576,9 @@ document.write(`
         <span class="n">new_file_name</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;weighted_average_1D_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">two_dim_parameter</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="n">one_dim_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">export_table_to_model_directory</span><span class="p">(</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">export_table_to_model_directory</span><span class="p">(</span>
             <span class="n">new_file_name</span><span class="p">,</span> <span class="n">distribution_to_export</span>
         <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">one_dim_file</span>
 
     <span class="k">def</span> <span class="nf">_validate_or_fix_nsb_spectrum_file_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsb_spectrum_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
