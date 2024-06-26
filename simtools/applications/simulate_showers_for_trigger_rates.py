@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-
 r"""
-    Simulate showers to be used in trigger rate calculations.
+    Simulates showers to be used in trigger rate calculations.
 
     Arrays with one or four telescopes can be used, in case of \
     mono or stereo trigger configurations, respectively.
@@ -31,13 +30,22 @@ r"""
         Zenith angle in deg.
     azimuth (float, optional)
         Azimuth angle in deg.
+    view_cone (float, optional)
+        View cone in deg.
+    scatter_x (float, optional)
+        Scatter distance (X axis) in m.
+    num_use (int, optional)
+        Number of use for each shower.
+    energy_min (float, optional)
+        Energy threshold (TeV).
+    energy_max (float, optional)
+        Maximum energy (TeV).
+    e_slope (int, optional)
+        Energy slope (spectral index).
     data_directory (str, optional)
         The location of the output directories corsika-data.
         the label is added to the data_directory, such that the output
         will be written to data_directory/label/corsika-data.
-    test (activation mode, optional)
-        If activated, no job will be submitted. Instead, an example of the \
-        run script will be printed.
     verbosity (str, optional)
         Log level to print.
 
@@ -48,7 +56,7 @@ r"""
     .. code-block:: console
 
         simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \\
-        proton --nruns 2 --nevents 10000 --test --submit_command local
+        proton --nruns 2 --nevents 10000 --submit_command local
 
     The output is saved in simtools-output/simulate_showers_for_trigger_rates.
 
@@ -105,9 +113,27 @@ def _parse(label=None, description=None):
         required=True,
     )
     config.parser.add_argument("--nruns", help="Number of runs", type=int, default=100)
+    config.parser.add_argument(
+        "--run_number", help="Run number of the starting run", type=int, default=1
+    )
     config.parser.add_argument("--nevents", help="Number of events/run", type=int, default=100000)
     config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
     config.parser.add_argument("--azimuth", help="Azimuth angle in deg", type=float, default=0)
+    config.parser.add_argument("--view_cone", help="View cone in deg", type=float, default=10)
+    config.parser.add_argument(
+        "--scatter_x", help="Scatter distance (X axis) in m", type=float, default=1500
+    )
+
+    config.parser.add_argument(
+        "--num_use", help="Number of use for each shower", type=int, default=10
+    )
+    config.parser.add_argument(
+        "--energy_min", help="Energy threshold (TeV)", type=float, default=0.01
+    )
+    config.parser.add_argument("--energy_max", help="Maximum energy (TeV)", type=float, default=300)
+    config.parser.add_argument(
+        "--e_slope", help="Energy slope (spectral index)", type=float, default=-2
+    )
     config.parser.add_argument(
         "--data_directory",
         help=(
@@ -120,6 +146,22 @@ def _parse(label=None, description=None):
         default="./simtools-output/",
     )
     return config.initialize(simulation_model="telescope", job_submission=True, db_config=True)
+
+
+def print_list_into_file(list_of_files, file_name):
+    """
+    Print the list of output files from the simulation into a log file.
+
+    Parameters
+    ----------
+    list_of_files: list
+        list of files to be printed out.
+    file_name: str
+        name of the output file.
+    """
+    with open(file_name, "w", encoding="utf-8") as f:
+        for line in list_of_files:
+            f.write(line + "\n")
 
 
 def main():  # noqa: D103
@@ -139,46 +181,46 @@ def main():  # noqa: D103
             "data_directory": Path(args_dict["data_directory"]) / label,
             "site": args_dict["site"],
             "layout_name": args_dict["array_layout_name"],
-            "run_range": [1, args_dict["nruns"] + 1],
+            "run_range": [
+                args_dict["run_number"],
+                args_dict["run_number"] + args_dict["nruns"] - 1,
+            ],
             "nshow": args_dict["nevents"],
             "primary": args_dict["primary"],
             "zenith": args_dict["zenith"] * u.deg,
             "azimuth": args_dict["azimuth"] * u.deg,
         },
         "showers": {
-            "erange": [10 * u.GeV, 300 * u.TeV],
-            "eslope": -2,
-            "viewcone": 10 * u.deg,
-            "cscat": [20, 1500 * u.m, 0],
+            "erange": [args_dict["energy_min"] * u.TeV, args_dict["energy_max"] * u.TeV],
+            "eslope": args_dict["e_slope"],
+            "viewcone": args_dict["view_cone"] * u.deg,
+            "cscat": [
+                args_dict["num_use"],
+                args_dict["scatter_x"] * u.m,
+                0 * u.m,
+            ],
         },
     }
 
     shower_simulator = Simulator(
         label=label,
-        simulation_software="corsika",
+        simulation_software="corsika_simtel",
         simulator_source_path=args_dict.get("simtel_path", None),
         config_data=shower_config_data,
         submit_command=args_dict.get("submit_command", ""),
-        test=args_dict["test"],
         mongo_db_config=db_config,
         model_version=args_dict.get("model_version", None),
     )
+    if shower_simulator.array_model.number_of_telescopes == 1:
+        shower_simulator.array_model.site_model.change_parameter(
+            "array_triggers", "array_trigger_1MST_lapalma.dat"
+        )
 
-    if not args_dict["test"]:
-        shower_simulator.simulate()
-    else:
-        logger.info("Test flag is on - it will not submit any job.")
-        logger.info("This is an example of the run script:")
-        shower_simulator.simulate()
+    shower_simulator.simulate()
 
     # Exporting the list of output/log/input files into the application folder
     output_file_list = output_dir.joinpath(f"output_files_{args_dict['primary']}.list")
     log_file_list = output_dir.joinpath(f"log_files_{args_dict['primary']}.list")
-
-    def print_list_into_file(list_of_files, file_name):
-        with open(file_name, "w", encoding="utf-8") as f:
-            for line in list_of_files:
-                f.write(line + "\n")
 
     logger.info(f"List of output files exported to {output_file_list}")
     print_list_into_file(shower_simulator.get_list_of_output_files(), output_file_list)
