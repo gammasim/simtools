@@ -369,14 +369,14 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         shower_config.add_argument(
             "--erange",
-            help="Energy range of the primary particle (min/max value).",
+            help="Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
             type=CommandLineParser.parse_quantity_pair,
             required=False,
             default=["3 GeV 330 TeV"],
         )
         shower_config.add_argument(
             "--viewcone",
-            help="Viewcone for primary arrival directions (min/max value in degrees).",
+            help="Viewcone for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
             type=CommandLineParser.parse_quantity_pair,
             required=False,
             default=["0 deg 0 deg"],
