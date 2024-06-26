@@ -176,9 +176,7 @@ class CorsikaConfig:
                     self._raise_missing_required_error(par_name)
 
     def _convert_azm_to_phip(self):
-        """
-        Convert azimuthal angle to phi prime angle.
-        """
+        """Convert azimuthal angle to phi prime angle."""
         phip = 180.0 - self._user_parameters["AZM"][0]
         phip = phip + 360.0 if phip < 0.0 else phip
         phip = phip - 360.0 if phip >= 360.0 else phip
