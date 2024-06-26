@@ -331,7 +331,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _configuration_group.add_argument(
             "--nshow",
-            help="Number of showers to simulate.",
+            help="Number of showers per run to simulate.",
             type=int,
             required=False,
         )
