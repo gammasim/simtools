@@ -1,0 +1,757 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+ge9eb844 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=ddc056a6"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/developer_guidelines';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Generating Documentation" href="documentation.html" />
+    <link rel="prev" title="Developer guidelines" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+ge9eb844 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_file_to_db.html">db_add_file_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_inspect_databases.html">db_inspect_databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_array_config.html">generate_array_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_regular_arrays.html">generate_regular_arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_cumulative_psf.html">validate_cumulative_psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_optics.html">validate_optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/developer_guidelines.md?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/developer_guidelines.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/developer-guide/developer_guidelines.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Developer Guidelines</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-setup">Project setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-files">Data files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-validation">Input validation</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="developer-guidelines">
+<span id="guidelines"></span><h1>Developer Guidelines<a class="headerlink" href="#developer-guidelines" title="Link to this heading">#</a></h1>
+<p>This section provides guidelines for developers of simtools.</p>
+<p>If you want to contribute, contact the simtools team using one of the contact points listed at the
+entry page of this documentation.</p>
+<p>Simtools follows generally the development guidelines of CTAO and
+ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html">ctapipe development</a>).</p>
+<section id="project-setup">
+<h2>Project setup<a class="headerlink" href="#project-setup" title="Link to this heading">#</a></h2>
+<p>The main code repository for simtools is on GitHub:</p>
+<p><a class="github reference external" href="https://github.com/gammasim/simtools">gammasim/simtools</a></p>
+<p>The main directories of simtools are:</p>
+<ul class="simple">
+<li><p>root directory: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools">simtools</a></p></li>
+<li><p>applications (simtools:) <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/applications">simtools/applications</a></p></li>
+<li><p>unit and integration tests: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">./tests</a></p></li>
+<li><p>documentation: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs">./docs</a></p></li>
+<li><p>docker files: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">./docker</a></p></li>
+</ul>
+</section>
+<section id="python-version">
+<h2>Python version<a class="headerlink" href="#python-version" title="Link to this heading">#</a></h2>
+<p>The simtools package is currently developed for Python {{ python_min_requires }}.</p>
+</section>
+<section id="contributing-code">
+<h2>Contributing code<a class="headerlink" href="#contributing-code" title="Link to this heading">#</a></h2>
+<p>It is recommended to discuss any code changes with the simtools team before starting to implement them
+(e.g., by opening an issue on GitHub).</p>
+<p>The following steps outline how to contribute code to simtools:</p>
+<ol class="arabic simple">
+<li><p>Set up your coding environment as outlined in the <a class="reference internal" href="#getting_started.md#getting-started"><span class="xref myst">getting started</span></a> section.</p></li>
+<li><p>Start a new feature branch from the main branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">new-branch-name</span></code>).</p></li>
+<li><p>Implement your code changes.</p></li>
+<li><p>Add unit tests for new modules and functions.</p></li>
+<li><p>Commit your code changes (use meaningful commit messages) and push them to GitHub.</p></li>
+<li><p>Create a draft pull request on GitHub when all features are implemented.</p></li>
+<li><p>Wait for the CI tests to finish and address any issues that arise.</p></li>
+<li><p>After successful tests, mark the pull request as ready for review.</p></li>
+<li><p>Wait for a review of your code and address any issues that arise.</p></li>
+<li><p>After successful review, the pull request can be merged into the main branch.</p></li>
+</ol>
+<p>Note the <a class="reference internal" href="pull_requests.html#id1"><span class="std std-ref">guidelines on pull requests</span></a>.</p>
+</section>
+<section id="unit-and-integration-testing">
+<h2>Unit and Integration Testing<a class="headerlink" href="#unit-and-integration-testing" title="Link to this heading">#</a></h2>
+<p>The pytest framework is used for testing:</p>
+<ul class="simple">
+<li><p>unit tests should be written for every module and function</p></li>
+<li><p>integration tests should be written for every application and cover the most important use cases. Integration tests should follow the logic of the existing tests in <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests/">simtools/tests/integration_tests</a>.</p></li>
+</ul>
+<p>The test modules are located in
+<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">simtools/tests</a> separated
+by unit and integration tests.
+It is recommended to write unit tests in parallel with the modules to assure that the code is testable.</p>
+<p>General service functions for tests (e.g., DB connection) can be found in
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/conftest.py">conftest.py</a>.
+This should be used to avoid duplication.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.</p>
+</div>
+<p>The <a class="reference external" href="https://pytest-xdist.readthedocs.io/en/latest/">pytest-xdist</a> plugin is part of the developer environment
+and can be used to run unit and integration tests in parallel (e.g., <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">4</span></code> to run on four cores in parallel).</p>
+<p>Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
+<a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
+<p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span> <span class="pre">--cov</span></code>.
+Add the <code class="docutils literal notranslate"><span class="pre">--cov-report</span> <span class="pre">html</span></code> option to generate a coverage report in HTML format.</p>
+<p>It might be quite useful to test a single application while developing.
+This can be done with e.g. <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run all the integrations tests for the <code class="docutils literal notranslate"><span class="pre">simtools-convert-all-model-parameters-from-simtel</span></code> application.
+Alternatively, run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel_num_gains&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run the tool for the specific test called <code class="docutils literal notranslate"><span class="pre">num_gains</span></code>. Test names are found in the yml files in the <code class="docutils literal notranslate"><span class="pre">tests/integration_tests/config</span></code> directory.</p>
+</section>
+<section id="writing-applications">
+<h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">#</a></h2>
+<p>Applications are command-line tools that should be built of the simtools library.
+Application should not include complex algorithm, this should be done at the module level.</p>
+<p>All applications should follow the same structure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+
+    <span class="c1"># application name</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+    <span class="c1"># short description of the application</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;....&quot;</span>
+    <span class="c1"># short help on how to use the application</span>
+    <span class="n">usage</span> <span class="o">=</span> <span class="s2">&quot;.....&quot;</span>
+
+    <span class="c1"># configuration handling (from command line, config file, etc)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_dict</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+
+    <span class="c1"># generic logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
+
+    <span class="c1"># application code follows</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Application handling should be done using the <a class="reference internal" href="#configuration_module.md#configurationconfigurator"><span class="xref myst">Configurator</span></a> class, which allows to set
+configurations from the command-line options, configuration files, or environmental variables.
+Check the <a class="reference internal" href="#configuration_module.md#configurationcommandline_parser"><span class="xref myst">commandline_parser</span></a> module for generic command-line arguments before introducing new ones in applications</p>
+<p>The documentation of application uses the in-line doc string.</p>
+<p>Adding an applications requires the following changes:</p>
+<ul class="simple">
+<li><p>add application code to the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/applications">simtools/applications</a></p></li>
+<li><p>add integration tests to <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests">tests/integration_tests</a></p></li>
+<li><p>modify <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/pyproject.toml">pyproject.toml file for pip</a> (replace “_” by “-” and add “simtools-” to the application name)</p></li>
+<li><p>add application to documentation in <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/docs/source/applications.rst">docs/sources/applications.rst</a></p></li>
+</ul>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
+<p>Dependencies on external packages should be kept to a minimum.
+Packages are listed twice:</p>
+<ul class="simple">
+<li><p>in the mamba/conda <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/environment.yml">environment file</a></p></li>
+<li><p>in the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/pyproject.toml">pyproject.toml file for pip</a></p></li>
+</ul>
+<p>Some of the packages installed are used for the development only and not needed for executing
+simtools application (see the ordering in sections in pyproject.toml).</p>
+</section>
+<section id="integration-with-corsika-and-sim-telarray">
+<h2>Integration with CORSIKA and sim_telarray<a class="headerlink" href="#integration-with-corsika-and-sim-telarray" title="Link to this heading">#</a></h2>
+<p>CORSIKA and sim_telarray are external tools to simtools.
+Their integration should be
+minimally coupled with the rest of the package. The modules that depend directly on these
+tools should be connected to the rest of the package through interfaces. This way, it
+will be easier to replace these tools in the future.</p>
+<p>One example of this approach is
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/simulator.py">simulator module</a>,
+which connects to the tools used to manage and run simulations.</p>
+</section>
+<section id="data-files">
+<h2>Data files<a class="headerlink" href="#data-files" title="Link to this heading">#</a></h2>
+<p>Data files should be kept outside of the simtools repository with the exception of files required for units tests.
+These files should be kept at minimum and are stored in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/resources">tests/resources</a> directory.</p>
+<p>Data files required by integration tests are downloaded during testing from the simulation model database.</p>
+<p>Some auxiliary files can be found in the
+<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/data">data directory</a>.
+Note that this is under review and might go away in near future.</p>
+</section>
+<section id="input-validation">
+<h2>Input validation<a class="headerlink" href="#input-validation" title="Link to this heading">#</a></h2>
+<p>Any configurable inputs (e.g. physical parameters) to modules
+must have them validated. The validation assures that the units, type and
+format are correct and also allow for default values.</p>
+<p>The configurable input must be passed to classes through a dictionary or a yaml
+file. In the case of a dictionary the parameter is generally called config_data, in the
+case of a yaml file, config_file.</p>
+<p>The function <a class="reference internal" href="../api-reference/utils.html#utilsgeneral"><span class="std std-ref">gen.collect_data_from_yaml_or_dict</span></a>
+must be used to read these arguments. It identifies which case was given and
+reads it accordingly, returning a dictionary. It also raises an exception in case none are
+given and not allow_empty.</p>
+<p>The validation of the input is done by the function gen.validate_config_data, which
+receives the dictionary with the collected input and a parameter dictionary. The parameter
+dictionary is read from a parameter yaml file in the data/parameters directory.
+The file is read through the function io.get_data_file(“parameters”, filename)
+(see data files section).</p>
+<p>Parameter yaml files contain the list of parameters to be validated and its
+properties. See an example below:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">zenith_angle</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="kt">!astropy.units.Unit</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="nv">deg</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="kt">!astropy.units.Quantity</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="kt">!astropy.units.Unit</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="nv">deg</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">names</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;zenith&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;theta&#39;</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>len gives the length of the input. If null, any len is accepted.</p></li>
+<li><p>unit is the astropy unit</p></li>
+<li><p>default must have the same len</p></li>
+<li><p>names is a list of acceptable input names. The key in the returned dict will have the name given at the definition of the block (zenith_angle in this example)</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Developer guidelines</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="documentation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Generating Documentation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-setup">Project setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-files">Data files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-validation">Input validation</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

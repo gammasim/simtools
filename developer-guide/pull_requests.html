@@ -1,0 +1,613 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Pull requests &#8212; simtools v0.1.dev1+ge9eb844 Manual</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=ddc056a6"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/pull_requests';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Coding Guidelines" href="coding_guidelines.html" />
+    <link rel="prev" title="Generating Documentation" href="documentation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">simtools v0.1.dev1+ge9eb844 Manual</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    simtools
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_file_to_db.html">db_add_file_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/db_inspect_databases.html">db_inspect_databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_array_config.html">generate_array_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/generate_regular_arrays.html">generate_regular_arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_cumulative_psf.html">validate_cumulative_psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_optics.html">validate_optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/docker_files.html">Containers (docker files)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/corsika_simtel.html">CORSIKA and sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/psf_analysis.html">PSF Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/visualization.html">Visualization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/pull_requests.md?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/pull_requests.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/developer-guide/pull_requests.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Pull requests</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="pull-requests">
+<span id="id1"></span><h1>Pull requests<a class="headerlink" href="#pull-requests" title="Link to this heading">#</a></h1>
+<p>Pull requests are one of our most important and powerful development tools.
+They help to obtain good quality, homogeneous, and maintainable code.</p>
+<p>Both reviewing pull requests and addressing reviewers’ comments is hard.
+The following thoughts might help to obtain an efficient and pleasant reviewing process.</p>
+<section id="before-issuing-a-pull-request">
+<h2>Before issuing a pull request<a class="headerlink" href="#before-issuing-a-pull-request" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>changes and new features shall be discussed with the team before implementation</p></li>
+<li><p>all tests shall pass</p></li>
+<li><p>no conflicts with ‘main’ (best to do a <code class="docutils literal notranslate"><span class="pre">merge</span> <span class="pre">main</span></code> before the pull request)</p></li>
+<li><p>self-review the changes made (e.g., by using the draft pull request feature)</p></li>
+</ul>
+</section>
+<section id="issuing-a-pull-request">
+<h2>Issuing a pull request<a class="headerlink" href="#issuing-a-pull-request" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>describe clearly the problem or issue solved by the pull request; do not assume full familiarity of the reviewer with the issue</p></li>
+<li><p>indicate if this a new feature, refactoring, or bugfix</p></li>
+<li><p>describe the main logic of the changes</p></li>
+<li><p>guide the reviewer through the changes; indicate for larger pull requests a logical order for reviewing</p></li>
+<li><p>consider adding code or usage examples</p></li>
+<li><p>add any statement helping reviewers (e.g., indicate which files to review first)</p></li>
+<li><p>pull request should focus on one problem and should be short (even though it is easier to make big ones)</p></li>
+<li><p>if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue</p></li>
+</ul>
+</section>
+<section id="reviewing-a-pull-request">
+<h2>Reviewing a pull request<a class="headerlink" href="#reviewing-a-pull-request" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>seek to understand the purpose of the pull request; reach out to the author before reviewing if it is not clear which problem will be solved</p></li>
+<li><p>if you reject the pull request or if you think another approach might be more efficient, request immediately (not after many other patches are implemented); if there is a major issue, focus on that first and indicate that detailed comments will come at a later point</p></li>
+<li><p>indicate on the pull request page (or e.g., in the chat) that you have started reviewing to avoid duplicated reviews</p></li>
+<li><p>propose solutions, not just disagreement; reviewer comments should lead to improvements of the pull request (e.g., a comment saying “I don’t like this” is not helping)</p></li>
+<li><p>accept that there are different solutions (keeping the homogeneity of the code in mind)</p></li>
+<li><p>focus on relevant points</p></li>
+<li><p>discuss the code, not the coder (it is “the code is doing..”, not “you are doing..”). Often logic has been introduced earlier and there is no use of pointing fingers.</p></li>
+<li><p>pull the code locally and execute the new code</p></li>
+<li><p>limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.</p></li>
+<li><p>clearly indicate if you have no time for a review (this is OK if it is known)</p></li>
+<li><p>fix small typos directly</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="documentation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Generating Documentation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="coding_guidelines.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Coding Guidelines</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Raul Prado (DESY), Orel Gueta (DESY), Tobias Kleiner (DESY), Victor Barbosa Martins (DESY), Gernot Maier (DESY)
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
