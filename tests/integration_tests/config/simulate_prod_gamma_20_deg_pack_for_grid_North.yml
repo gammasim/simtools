@@ -3,14 +3,15 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg_north_pack_for_grid
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
+    LABEL: test-production-North-pack-for-grid
     MODEL_VERSION: prod6
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
     PRIMARY: gamma
+    RUN_NUMBER_START: 10
+    NUMBER_OF_RUNS: 1
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
-    START_RUN: 0
-    RUN: 2
     NSHOW: 5
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
