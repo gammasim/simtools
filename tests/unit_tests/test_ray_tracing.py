@@ -21,7 +21,7 @@ def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
 
     ray_tracing_lst = RayTracing(
         telescope_model=telescope_model_lst,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         config_data=config_data,
         label="validate_optics",
     )
@@ -50,7 +50,7 @@ def test_ray_tracing_from_dict(simtel_path, io_handler, telescope_model_mst, cap
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_mst,
-            simtel_source_path=simtel_path,
+            simtel_path=simtel_path,
             config_data=config_data,
         )
 
@@ -58,7 +58,7 @@ def test_ray_tracing_from_dict(simtel_path, io_handler, telescope_model_mst, cap
     assert len(ray.config.off_axis_angle) == 2
     assert "Initializing RayTracing class" in caplog.text
     assert "RayTracing contains a valid TelescopeModel" in caplog.text
-    assert ray._simtel_source_path == simtel_path
+    assert ray._simtel_path == simtel_path
     assert repr(ray) == f"RayTracing(label={telescope_model_mst.label})\n"
 
 
@@ -69,7 +69,7 @@ def test_ray_tracing_from_kwargs(io_handler, simtel_path, telescope_model_mst):
 
     ray = RayTracing.from_kwargs(
         telescope_model=telescope_model_mst,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         source_distance=source_distance,
         zenith_angle=zenith_angle,
         off_axis_angle=off_axis_angle,
@@ -91,7 +91,7 @@ def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_mst,
-            simtel_source_path=simtel_path,
+            simtel_path=simtel_path,
             config_data=config_data,
         )
 
@@ -115,7 +115,7 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
 
     ray = RayTracing(
         telescope_model=telescope_model_mst,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         config_data=config_data,
     )
 
@@ -132,7 +132,7 @@ def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
     with pytest.raises(ValueError):
         RayTracing(
             telescope_model=None,
-            simtel_source_path=simtel_path,
+            simtel_path=simtel_path,
             config_data=config_data,
         )
         assert "Invalid TelescopeModel" in caplog.text
@@ -159,7 +159,7 @@ def test_export_results(simtel_path, telescope_model_lst, caplog):
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
-        simtel_source_path=simtel_path,
+        simtel_path=simtel_path,
         config_data=config_data,
         label="export_results",
     )

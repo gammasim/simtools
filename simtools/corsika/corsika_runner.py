@@ -58,7 +58,7 @@ class CorsikaRunner:
     ----------
     array_model: ArrayModel
         Array model instance.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
@@ -75,7 +75,7 @@ class CorsikaRunner:
     def __init__(
         self,
         array_model,
-        simtel_source_path,
+        simtel_path,
         label=None,
         keep_seeds=False,
         corsika_parameters_file=None,
@@ -91,7 +91,7 @@ class CorsikaRunner:
 
         self._keep_seeds = keep_seeds
 
-        self._simtel_source_path = Path(simtel_source_path)
+        self._simtel_path = Path(simtel_path)
         self.io_handler = io_handler.IOHandler()
         _runner_directory = "corsika_simtel" if use_multipipe else "corsika"
         self._output_directory = self.io_handler.get_output_directory(self.label, _runner_directory)
@@ -136,7 +136,7 @@ class CorsikaRunner:
                 label=self.label,
                 array_model=self.array_model,
                 corsika_config_data=self._corsika_config_data,
-                simtel_source_path=self._simtel_source_path,
+                simtel_path=self._simtel_path,
                 corsika_parameters_file=self._corsika_parameters_file,
             )
             # CORSIKA input file used as template for all runs
@@ -244,20 +244,20 @@ class CorsikaRunner:
 
     def _get_pfp_command(self, input_tmp_file):
         """Get pfp pre-processor command."""
-        cmd = self._simtel_source_path.joinpath("sim_telarray/bin/pfp")
+        cmd = self._simtel_path.joinpath("sim_telarray/bin/pfp")
         cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {self._corsika_input_file}"
         cmd += f" > {input_tmp_file} || exit\n"
         return cmd
 
     def _get_autoinputs_command(self, run_number, input_tmp_file):
         """Get autoinputs command."""
-        corsika_bin_path = self._simtel_source_path.joinpath("corsika-run/corsika")
+        corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
 
         log_file = self.get_file_name(
             file_type="corsika_autoinputs_log", **self.get_info_for_file_name(run_number)
         )
 
-        cmd = self._simtel_source_path.joinpath("sim_telarray/bin/corsika_autoinputs")
+        cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
         cmd += f" -R {run_number}"
         cmd += f" -p {self._corsika_data_dir}"

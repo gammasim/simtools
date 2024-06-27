@@ -49,7 +49,7 @@ class SimulatorRayTracing(SimtelRunner):
         Instance of TelescopeModel class.
     label: str
         Instance label. Important for output file naming.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of sim_telarray installation.
     config_data: dict
         Dict containing the configurable parameters.
@@ -63,7 +63,7 @@ class SimulatorRayTracing(SimtelRunner):
         self,
         telescope_model,
         label=None,
-        simtel_source_path=None,
+        simtel_path=None,
         config_data=None,
         config_file=None,
         force_simulate=False,
@@ -73,7 +73,7 @@ class SimulatorRayTracing(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorRayTracing")
 
-        super().__init__(label=label, simtel_source_path=simtel_source_path)
+        super().__init__(label=label, simtel_path=simtel_path)
 
         self.telescope_model = telescope_model
         self.label = label if label is not None else self.telescope_model.label
@@ -108,7 +108,7 @@ class SimulatorRayTracing(SimtelRunner):
         # This file is not actually needed and does not exist in simtools.
         # However, we need to provide the name of a CORSIKA input file to sim_telarray
         # so it is set up here.
-        self._corsika_file = self._simtel_source_path.joinpath("run9991.corsika.gz")
+        self._corsika_file = self._simtel_path.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
@@ -168,7 +168,7 @@ class SimulatorRayTracing(SimtelRunner):
             )
 
         # RayTracing
-        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.telescope_model.get_config_file()}"
         command += " -I../cfg/CTA"
         command += f" -I{self.telescope_model.config_file_directory}"
