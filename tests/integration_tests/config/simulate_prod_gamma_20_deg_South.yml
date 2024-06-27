@@ -3,25 +3,27 @@ CTA_SIMPIPE:
   TEST_NAME: gamma_20_deg_south
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
+    LABEL: test-production-South
     MODEL_VERSION: prod6
     SITE: South
     ARRAY_LAYOUT_NAME: test_layout
     PRIMARY: gamma
+    RUN_NUMBER_START: 10
+    NUMBER_OF_RUNS: 1
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
-    START_RUN: 0
-    RUN: 2
     NSHOW: 10
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
-    ERANGE: "3 GeV 330 TeV"
+    ERANGE: "100 GeV 1 TeV"
     CORE_SCATTER: "10 1400 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production/simtel-data/South/gamma/data/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production.simtel.zst
+        test-production-South/simtel/data/run000010/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.zst
     - OUTPUT_FILE: |
-        test-production/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production.log.gz
+        test-production-South/simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.log.gz
     - OUTPUT_FILE: |
-        test-production/simtel-data/South/gamma/log/run000002_gamma_za020deg_azm000deg_South_test_layout_test-production.hdata.zst
+        test-production-South/simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.hdata.zst

@@ -12,18 +12,18 @@ CTA_SIMPIPE:
     NUMBER_OF_RUNS: 1
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
-    NSHOW: 5
+    NSHOW: 10
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
-    ERANGE: "3 GeV 330 TeV"
-    CORE_SCATTER: "10 1400 m"
+    ERANGE: "100 GeV 1 TeV"
+    CORE_SCATTER: "10 500 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production/simtel-data/North/gamma/data/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.simtel.zst
+        test-production-North/simtel/data/run000010/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
     - OUTPUT_FILE: |
-        test-production/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.log.gz
+        test-production-North/simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log
     - OUTPUT_FILE: |
-        test-production/simtel-data/North/gamma/log/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.hdata.zst
+        test-production-North/simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.hdata.zst
