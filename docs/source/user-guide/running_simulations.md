@@ -1,5 +1,7 @@
 # Running air shower and detector simulations
 
+TODO - this needs writing.
+
 ## Structure of output directories
 
 ```text
