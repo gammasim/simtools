@@ -199,7 +199,7 @@ class SimtelRunner:
         return f"{input_file}-{run_number}"
 
     @staticmethod
-    def _config_option(par, value=None, weak_option=False):
+    def get_config_option(par, value=None, weak_option=False):
         """
         Build sim_telarray command.
 

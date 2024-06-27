@@ -394,32 +394,32 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
-        command += super()._config_option(
+        command += super().get_config_option(
             "altitude", self._site_model.get_parameter_value("corsika_observation_level")
         )
-        command += super()._config_option(
+        command += super().get_config_option(
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        # command += super()._config_option("show", "all") # for debugging
-        command += super()._config_option("TRIGGER_CURRENT_LIMIT", "20")
-        command += super()._config_option("TRIGGER_TELESCOPES", "1")
-        command += super()._config_option("TELTRIG_MIN_SIGSUM", "7.8")
-        command += super()._config_option("PULSE_ANALYSIS", "-30")
+        # command += super().get_config_option("show", "all") # for debugging
+        command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
+        command += super().get_config_option("TRIGGER_TELESCOPES", "1")
+        command += super().get_config_option("TELTRIG_MIN_SIGSUM", "7.8")
+        command += super().get_config_option("PULSE_ANALYSIS", "-30")
 
         if "real" in self.default_le_config["x_pos"]:
             _, angles = self.calibration_pointing_direction()
-            command += super()._config_option("telescope_theta", f"{angles[0]}")
-            command += super()._config_option("telescope_phi", f"{angles[1]}")
+            command += super().get_config_option("telescope_theta", f"{angles[0]}")
+            command += super().get_config_option("telescope_phi", f"{angles[1]}")
         else:
-            command += super()._config_option("telescope_theta", 0)
-            command += super()._config_option("telescope_phi", 0)
+            command += super().get_config_option("telescope_theta", 0)
+            command += super().get_config_option("telescope_phi", 0)
 
-        command += super()._config_option("power_law", "2.68")
-        command += super()._config_option(
+        command += super().get_config_option("power_law", "2.68")
+        command += super().get_config_option(
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
         )
-        command += super()._config_option(
+        command += super().get_config_option(
             "output_file",
             f"{self.output_directory}/"
             f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n",

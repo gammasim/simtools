@@ -135,6 +135,7 @@ def test_rotate_azimuth_by_180deg(io_handler):
     )
     assert pytest.approx(cc._rotate_azimuth_by_180deg(0.0)) == 180.0
     assert pytest.approx(cc._rotate_azimuth_by_180deg(360.0)) == 180.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(450.0)) == 270.0
     assert pytest.approx(cc._rotate_azimuth_by_180deg(180.0)) == 0.0
     assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
 
