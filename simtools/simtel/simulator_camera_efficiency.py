@@ -70,7 +70,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._file_simtel.exists()
 
-    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
+    def _make_run_command(
+        self, run_number=None, input_file=None
+    ):  # pylint: disable=unused-argument
         """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 
