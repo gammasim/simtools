@@ -160,7 +160,9 @@ class SimulatorRayTracing(SimtelRunner):
         """Tells if simulations should be run again based on the existence of output files."""
         return not self._is_photon_list_file_ok()
 
-    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
+    def _make_run_command(
+        self, run_number=None, input_file=None
+    ):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
         if self.config.single_mirror_mode:
             _mirror_focal_length = float(
@@ -172,46 +174,46 @@ class SimulatorRayTracing(SimtelRunner):
         command += f" -c {self.telescope_model.get_config_file()}"
         command += " -I../cfg/CTA"
         command += f" -I{self.telescope_model.config_file_directory}"
-        command += super()._config_option("random_state", "none")
-        command += super()._config_option("IMAGING_LIST", str(self._photons_file))
-        command += super()._config_option("stars", str(self._stars_file))
-        command += super()._config_option(
+        command += super().get_config_option("random_state", "none")
+        command += super().get_config_option("IMAGING_LIST", str(self._photons_file))
+        command += super().get_config_option("stars", str(self._stars_file))
+        command += super().get_config_option(
             "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
         )
-        command += super()._config_option(
+        command += super().get_config_option(
             "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle
         )
-        command += super()._config_option("star_photons", str(self.photons_per_run))
-        command += super()._config_option("telescope_phi", "0")
-        command += super()._config_option("camera_transmission", "1.0")
-        command += super()._config_option("nightsky_background", "all:0.")
-        command += super()._config_option("trigger_current_limit", "1e10")
-        command += super()._config_option("telescope_random_angle", "0")
-        command += super()._config_option("telescope_random_error", "0")
-        command += super()._config_option("convergent_depth", "0")
-        command += super()._config_option("maximum_telescopes", "1")
-        command += super()._config_option("show", "all")
-        command += super()._config_option("camera_filter", "none")
+        command += super().get_config_option("star_photons", str(self.photons_per_run))
+        command += super().get_config_option("telescope_phi", "0")
+        command += super().get_config_option("camera_transmission", "1.0")
+        command += super().get_config_option("nightsky_background", "all:0.")
+        command += super().get_config_option("trigger_current_limit", "1e10")
+        command += super().get_config_option("telescope_random_angle", "0")
+        command += super().get_config_option("telescope_random_error", "0")
+        command += super().get_config_option("convergent_depth", "0")
+        command += super().get_config_option("maximum_telescopes", "1")
+        command += super().get_config_option("show", "all")
+        command += super().get_config_option("camera_filter", "none")
         if self.config.single_mirror_mode:
-            command += super()._config_option("focus_offset", "all:0.")
-            command += super()._config_option("camera_config_file", "single_pixel_camera.dat")
-            command += super()._config_option("camera_pixels", "1")
-            command += super()._config_option("trigger_pixels", "1")
-            command += super()._config_option("camera_body_diameter", "0")
-            command += super()._config_option(
+            command += super().get_config_option("focus_offset", "all:0.")
+            command += super().get_config_option("camera_config_file", "single_pixel_camera.dat")
+            command += super().get_config_option("camera_pixels", "1")
+            command += super().get_config_option("trigger_pixels", "1")
+            command += super().get_config_option("camera_body_diameter", "0")
+            command += super().get_config_option(
                 "mirror_list",
                 self.telescope_model.get_single_mirror_list_file(
                     self.config.mirror_numbers, self.config.use_random_focal_length
                 ),
             )
-            command += super()._config_option(
+            command += super().get_config_option(
                 "focal_length", self.config.source_distance * u.km.to(u.cm)
             )
-            command += super()._config_option("dish_shape_length", _mirror_focal_length)
-            command += super()._config_option("mirror_focal_length", _mirror_focal_length)
-            command += super()._config_option("parabolic_dish", "0")
-            command += super()._config_option("mirror_align_random_distance", "0.")
-            command += super()._config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
+            command += super().get_config_option("dish_shape_length", _mirror_focal_length)
+            command += super().get_config_option("mirror_focal_length", _mirror_focal_length)
+            command += super().get_config_option("parabolic_dish", "0")
+            command += super().get_config_option("mirror_align_random_distance", "0.")
+            command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsika_file)
         command += " 2>&1 > " + str(self._log_file) + " 2>&1"
 

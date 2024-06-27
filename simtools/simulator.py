@@ -76,7 +76,6 @@ class Simulator:
 
         self.array_model = self._initialize_array_model(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner()
-        self.runner_services = self._simulation_runner.runner_service
 
     @property
     def simulation_software(self):
@@ -277,12 +276,11 @@ class Simulator:
             job_manager = JobManager(submit_command=self._submit_command, test=self._test)
             job_manager.submit(
                 run_script=run_script,
-                run_out_file=self.runner_services.get_file_name(
-                    file_type="sub_log", **self.runner_services.get_info_for_file_name(run_number)
+                run_out_file=self._simulation_runner.get_file_name(
+                    file_type="sub_log", run_number=run_number
                 ),
-                log_file=self.runner_services.get_file_name(
-                    file_type=("log"),
-                    **self.runner_services.get_info_for_file_name(run_number),
+                log_file=self._simulation_runner.get_file_name(
+                    file_type=("log"), run_number=run_number
                 ),
             )
 
@@ -303,8 +301,8 @@ class Simulator:
         )
 
         for run, _ in runs_and_files_to_submit.items():
-            output_file_name = self.runner_services.get_file_name(
-                file_type="output", **self.runner_services.get_info_for_file_name(run)
+            output_file_name = self._simulation_runner.get_file_name(
+                file_type="output", run_number=run
             )
             print(f"{output_file_name!s} (file exists: {Path.exists(output_file_name)})")
 
@@ -388,28 +386,39 @@ class Simulator:
             run number
 
         """
-        info_for_file_name = self.runner_services.get_info_for_file_name(run)
         self._results["output"].append(
-            str(self.runner_services.get_file_name(file_type="output", **info_for_file_name))
+            str(self._simulation_runner.get_file_name(file_type="output", run_number=run))
         )
         self._results["sub_out"].append(
             str(
-                self.runner_services.get_file_name(
-                    file_type="sub_log", **info_for_file_name, mode="out"
+                self._simulation_runner.get_file_name(
+                    file_type="sub_log", run_number=run, mode="out"
                 )
             )
         )
         if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._results["log"].append(
-                str(self.runner_services.get_file_name(file_type="log", **info_for_file_name))
+                str(
+                    self._simulation_runner.get_file_name(
+                        simulation_software="simtel", file_type="log", run_number=run
+                    )
+                )
             )
             self._results["input"].append(str(file))
             self._results["hist"].append(
-                str(self.runner_services.get_file_name(file_type="histogram", **info_for_file_name))
+                str(
+                    self._simulation_runner.get_file_name(
+                        simulation_software="simtel", file_type="histogram", run_number=run
+                    )
+                )
             )
         else:
             self._results["corsika_autoinputs_log"].append(
-                str(self.runner_services.get_file_name(file_type="log", **info_for_file_name))
+                str(
+                    self._simulation_runner.get_file_name(
+                        simulation_software="corsika", file_type="log", run_number=run
+                    )
+                )
             )
             self._results["input"].append(None)
             self._results["hist"].append(None)
@@ -438,8 +447,8 @@ class Simulator:
             runs_to_list = self._get_runs_to_simulate(run_list=run_list, run_range=run_range)
 
             for run in runs_to_list:
-                output_file_name = self.runner_services.get_file_name(
-                    file_type="output", **self.runner_services.get_info_for_file_name(run)
+                output_file_name = self._simulation_runner.get_file_name(
+                    file_type="output", run_number=run
                 )
                 self._results["output"].append(str(output_file_name))
         return self._results["output"]

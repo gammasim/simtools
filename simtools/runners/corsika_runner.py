@@ -24,11 +24,6 @@ class CorsikaRunner:
 
     CorsikaRunner is configured through a CorsikaConfig instance.
 
-    The CORSIKA output directory must be set by the data_directory entry. The following directories\
-    will be created to store the logs and input file:
-    {data_directory}/corsika/$site/$primary/logs
-    {data_directory}/corsika/$site/$primary/scripts
-
     Parameters
     ----------
     corsika_config_data: CorsikaConfig
@@ -64,40 +59,38 @@ class CorsikaRunner:
         self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_simtel" if use_multipipe else "corsika"
-        )
+        self._directory = self.runner_service.load_data_directories("corsika")
 
-    def prepare_run_script(self, use_pfp=True, **kwargs):
+    def prepare_run_script(
+        self, run_number=None, extra_commands=None, input_file=None, use_pfp=True
+    ):
         """
         Get the full path of the run script file for a given run number.
+
+        TODO - handle the unused parameter
 
         Parameters
         ----------
         use_pfp: bool
             Whether to use the preprocessor in preparing the CORSIKA input file
-        kwargs: dict
-            The following optional parameters can be provided:
-                run_number: int
-                    Run number.
-                extra_commands: str
-                    Additional commands for running simulations.
+        run_number: int
+            Run number.
+        extra_commands: str
+            Additional commands for running simulations.
 
         Returns
         -------
         Path:
             Full path of the run script file.
         """
-        kwargs = {
-            "run_number": None,
-            "extra_commands": None,
-            **kwargs,
-        }
-        self.corsika_config.run_number = kwargs["run_number"]
+        if input_file is not None:
+            self._logger.warning(
+                "input_file parameter is not used in CorsikaRunner.prepare_run_script"
+            )
+        self.corsika_config.run_number = run_number
 
-        script_file_path = self.runner_service.get_file_name(
-            file_type="sub_script",
-            **self.runner_service.get_info_for_file_name(self.corsika_config.run_number),
+        script_file_path = self.get_file_name(
+            file_type="sub_script", run_number=self.corsika_config.run_number
         )
         corsika_input_file = self.corsika_config.generate_corsika_input_file(self._use_multipipe)
 
@@ -113,8 +106,8 @@ class CorsikaRunner:
             self.corsika_config.run_number, corsika_input_tmp_file
         )
 
-        extra_commands = kwargs["extra_commands"]
-        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
+        self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
+        self._logger.debug(f"CORSIKA data will be set to {self._directory['data']}")
 
         with open(script_file_path, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")
@@ -130,7 +123,6 @@ class CorsikaRunner:
                 file.write("# End of extras\n\n")
 
             file.write(f"export CORSIKA_DATA={self._directory['data']}\n")
-            file.write("\n# Creating CORSIKA_DATA\n")
             file.write('mkdir -p "$CORSIKA_DATA"\n')
             file.write('cd "$CORSIKA_DATA" || exit 2\n')
             if use_pfp:
@@ -200,9 +192,7 @@ class CorsikaRunner:
         """
         corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
 
-        log_file = self.runner_service.get_file_name(
-            file_type="log", **self.runner_service.get_info_for_file_name(run_number)
-        )
+        log_file = self.get_file_name(file_type="log", run_number=run_number)
 
         cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
@@ -213,3 +203,33 @@ class CorsikaRunner:
         cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"
         return cmd
+
+    def get_file_name(
+        self, simulation_software="corsika", file_type=None, run_number=None, mode=""
+    ):
+        """
+        Get the full path of a file for a given run number.
+
+        Parameters
+        ----------
+        simulation_software: str
+            Simulation software.
+        file_type: str
+            File type.
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        str
+            File name with full path.
+        """
+        if simulation_software != "corsika":
+            raise ValueError(
+                f"simulation_software ({simulation_software}) is not supported in CorsikaRunner"
+            )
+        return self.runner_service.get_file_name(
+            file_type=file_type,
+            mode=mode,
+            **self.runner_service.get_info_for_file_name(run_number),
+        )

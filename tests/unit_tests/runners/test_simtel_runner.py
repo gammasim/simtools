@@ -13,8 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture()
 def simtel_runner(simtel_path):
-    simtel_runner = SimtelRunner(simtel_path=simtel_path, label="test")
-    return simtel_runner
+    return SimtelRunner(simtel_path=simtel_path, label="test")
 
 
 def test_repr(simtel_runner):
@@ -71,11 +70,11 @@ def test_simtel_execution_error(simtel_runner):
         simtel_runner._raise_simtel_error()
 
 
-def test_config_option(simtel_runner):
-    assert simtel_runner._config_option("test", "value") == " -C test=value"
-    assert simtel_runner._config_option("test", "value", weak_option=True) == " -W test=value"
-    assert simtel_runner._config_option("test", "value", weak_option=False) == " -C test=value"
-    assert simtel_runner._config_option("test") == " -C test"
+def testget_config_option(simtel_runner):
+    assert simtel_runner.get_config_option("test", "value") == " -C test=value"
+    assert simtel_runner.get_config_option("test", "value", weak_option=True) == " -W test=value"
+    assert simtel_runner.get_config_option("test", "value", weak_option=False) == " -C test=value"
+    assert simtel_runner.get_config_option("test") == " -C test"
 
 
 def test_raise_simtel_error(simtel_runner):

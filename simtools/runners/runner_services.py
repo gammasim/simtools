@@ -12,6 +12,12 @@ class RunnerServices:
     """
     Base services for simulation runners.
 
+    Parameters
+    ----------
+    corsika_config : CorsikaConfig
+        Configuration parameters for CORSIKA.
+    label : str
+        Label.
     """
 
     def __init__(self, corsika_config, label=None):
@@ -24,7 +30,7 @@ class RunnerServices:
 
     def get_info_for_file_name(self, run_number):
         """
-        Get a dictionary with the info necessary for building the CORSIKA runner file names.
+        Return dictionary for building the file names for simulation output files.
 
         Parameters
         ----------
@@ -34,7 +40,7 @@ class RunnerServices:
         Returns
         -------
         dict
-            Dictionary with the keys necessary for building the CORSIKA runner file names.
+            Dictionary with the keys or building the file names for simulation output files.
         """
         return {
             "run": self.corsika_config.validate_run_number(run_number),
@@ -45,6 +51,25 @@ class RunnerServices:
             "zenith": self.corsika_config.zenith_angle,
             "azimuth": self.corsika_config.azimuth_angle,
         }
+
+    @staticmethod
+    def _get_simulation_software_list(simulation_software):
+        """
+        Return a list of simulation software based on the input string.
+
+        Args:
+            simulation_software: String representing the desired software.
+
+        Returns
+        -------
+            List of simulation software names.
+        """
+        software_map = {
+            "corsika": ["corsika"],
+            "simtel": ["simtel"],
+            "corsika_simtel": ["corsika", "simtel"],
+        }
+        return software_map.get(simulation_software, [])
 
     def load_data_directories(self, simulation_software):
         """
@@ -58,15 +83,19 @@ class RunnerServices:
         Returns
         -------
         dict
-            Dictionary containing paths to output, data, input, and log directories.
+            Dictionary containing paths requires for simulation configuration.
         """
-        self.directory["output"] = io_handler.IOHandler().get_output_directory(
-            self.label, simulation_software
-        )
+        self.directory["output"] = io_handler.IOHandler().get_output_directory(self.label)
         _logger.debug(f"Creating output dir {self.directory['output']}")
-        for dir_name in ["data", "inputs", "logs", "sub_scripts", "sub_logs"]:
+        for dir_name in ["sub_scripts", "sub_logs"]:
             self.directory[dir_name] = self.directory["output"].joinpath(dir_name)
             self.directory[dir_name].mkdir(parents=True, exist_ok=True)
+        for _simulation_software in self._get_simulation_software_list(simulation_software):
+            for dir_name in ["data", "inputs", "logs"]:
+                self.directory[dir_name] = self.directory["output"].joinpath(
+                    _simulation_software, dir_name
+                )
+                self.directory[dir_name].mkdir(parents=True, exist_ok=True)
         self._logger.debug(f"Data directories for {simulation_software}: {self.directory}")
         return self.directory
 
@@ -89,9 +118,7 @@ class RunnerServices:
 
     def get_file_name(self, file_type, **kwargs):
         """
-        Get a CORSIKA/sim_telarray style file name for various file types.
-
-        TODO - overlap with corsika_config.get_corsika_config_file_name
+        Get a CORSIKA/sim_telarray style file name for various log and data file types.
 
         Parameters
         ----------
@@ -122,46 +149,43 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        file_label = (
-            f"_{kwargs['label']}" if "label" in kwargs and kwargs["label"] is not None else ""
-        )
+        file_label = f"_{kwargs.get('label', '')}" if kwargs.get("label") is not None else ""
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
         run_dir = self._get_run_number_string(kwargs["run"])
         file_name = (
             f"{run_dir}_{kwargs['primary']}_"
-            f"za{round(zenith):03}deg_azm{azimuth:03}deg_"
+            f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
             f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
         )
+
+        log_suffixes = {
+            "log": ".log.gz",
+            "histogram": ".hdata.zst",
+        }
+        if file_type in log_suffixes:
+            return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
+
         data_suffixes = {
             "output": ".zst",
             "corsika_output": ".zst",
             "corsika_log": ".log",
             "simtel_output": ".simtel.zst",
         }
-        log_suffixes = {
-            "log": ".log.gz",
-            "histogram": ".hdata.zst",
-        }
-
-        if file_type in log_suffixes:
-            return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
         if file_type in data_suffixes:
-            return (
-                self.directory["data"]
-                .joinpath(run_dir)
-                .joinpath(f"{file_name}{data_suffixes[file_type]}")
-            )
+            data_run_dir = self.directory["data"].joinpath(run_dir)
+            data_run_dir.mkdir(parents=True, exist_ok=True)
+            return data_run_dir.joinpath(f"{file_name}{data_suffixes[file_type]}")
+
         if file_type in ("sub_log", "sub_script"):
             suffix = ".log" if file_type == "sub_log" else ".sh"
-            if "mode" in kwargs and kwargs["mode"] != "":
+            if kwargs and kwargs.get("mode") != "":
                 suffix = f".{kwargs['mode']}"
             sub_log_file_dir = self.directory["output"].joinpath(f"{file_type}s")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
             return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
 
-        msg = f"The requested file type ({file_type}) is unknown"
-        raise ValueError(msg)
+        raise ValueError(f"The requested file type ({file_type}) is unknown")
 
     @staticmethod
     def _get_run_number_string(run_number):

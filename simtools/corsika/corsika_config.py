@@ -152,9 +152,7 @@ class CorsikaConfig:
         float
             Azimuth angle in degrees in the CORSIKA coordinate system.
         """
-        phi = 180.0 - az
-        phi = phi + 360.0 if phi < 0.0 else phi
-        return phi - 360.0 if phi >= 360.0 else phi
+        return (az + 180) % 360
 
     def _convert_primary_input_and_store_primary_name(self, value):
         """
@@ -320,7 +318,7 @@ class CorsikaConfig:
 
     def get_corsika_config_file_name(self, file_type, run_number=None):
         """
-        Get a CORSIKA config style file name for various file types.
+        Get a CORSIKA config style file name for various configuration file types.
 
         Parameters
         ----------
@@ -334,49 +332,46 @@ class CorsikaConfig:
         -------
         str
             for file_type="config_tmp":
-                Get the CORSIKA input file for one specific run.
+                Return CORSIKA input file name for one specific run.
                 This is the input file after being pre-processed by sim_telarray (pfp).
             for file_type="config":
-                Get a general CORSIKA config inputs file.
+                Return generic CORSIKA config input file name.
             for file_type="output_generic"
-                Get a generic file name for the TELFIL option in the CORSIKA inputs file.
+                Return generic file name for the TELFIL option in the CORSIKA inputs file.
             for file_type="multipipe"
-                Get a multipipe "file name" for the TELFIL option in the CORSIKA inputs file.
+                Return multipipe "file name" for the TELFIL option in the CORSIKA inputs file.
 
         Raises
         ------
         ValueError
             If file_type is unknown or if the run number is not given for file_type==config_tmp.
-
-        Notes
-        -----
-        TODO - overlap with runner_services.get_file_name
         """
         file_label = f"_{self.label}" if self.label is not None else ""
-        view_cone = ""
-        if self.config["VIEWCONE"][0] != 0 or self.config["VIEWCONE"][1] != 0:
-            view_cone = (
-                f"_cone{int(self.config['VIEWCONE'][0]):d}-" f"{int(self.config['VIEWCONE'][1]):d}"
-            )
-        file_name = (
+
+        view_cone = (
+            f"_cone{int(self.config['VIEWCONE'][0]):d}-{int(self.config['VIEWCONE'][1]):d}"
+            if self.config["VIEWCONE"][0] != 0 or self.config["VIEWCONE"][1] != 0
+            else ""
+        )
+
+        base_name = (
             f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
             f"za{int(self.config['THETAP'][0]):03}-"
             f"azm{self.azimuth_angle:03}deg"
             f"{view_cone}{file_label}"
         )
+
         if file_type == "config_tmp":
-            if run_number is not None:
-                return f"corsika_config_run{run_number:06}_{file_name}.txt"
-            raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+            if run_number is None:
+                raise ValueError("Must provide a run number for a temporary CORSIKA config file")
+            return f"corsika_config_run{run_number:06}_{base_name}.txt"
         if file_type == "config":
-            return f"corsika_config_{file_name}.input"
+            return f"corsika_config_{base_name}.input"
         if file_type == "output_generic":
             # The XXXXXX will be replaced by the run number after the pfp step with sed
             return (
-                f"runXXXXXX_"
-                f"{self.primary}_za{int(self.config['THETAP'][0]):03}deg_"
-                f"azm{self.azimuth_angle:03}deg"
-                f"_{self.array_model.site}_{self.array_model.layout_name}{file_label}.zst"
+                f"runXXXXXX_{base_name}_{self.array_model.site}_"
+                f"{self.array_model.layout_name}{file_label}.zst"
             )
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
