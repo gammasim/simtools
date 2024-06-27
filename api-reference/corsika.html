@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CORSIKA &#8212; simtools v0.1.dev1+g57be74d Manual</title>
+    <title>CORSIKA &#8212; simtools v0.1.dev1+ge11df9e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b93e9524"></script>
+    <script src="../_static/documentation_options.js?v=dbf91ea1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g57be74d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge11df9e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -573,7 +573,7 @@ document.write(`
 <p id="module-corsika.corsika_config"><span id="corsika-config-1"></span>Configuration of CORSIKA simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">CorsikaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">CorsikaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig" title="Link to this definition">#</a></dt>
 <dd><p>Configuration of CORSIKA simulations.</p>
 <p>User parameters must be given by  the corsika_config_data or corsika_config_file arguments.
 An example of corsika_config_data follows below.</p>
@@ -604,7 +604,7 @@ An example of corsika_config_data follows below.</p>
 </dd>
 <dt><strong>corsika_parameters_file: str</strong></dt><dd><p>Name of the yaml file to set remaining CORSIKA parameters.</p>
 </dd>
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
 </dd>
 </dl>
 </dd>
@@ -2022,7 +2022,7 @@ spherical representation of the telescopes.</p>
 <p id="module-corsika.corsika_runner"><span id="corsika-runner-1"></span>Generate scripts for running CORSIKA air shower simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="corsika.corsika_runner.CorsikaRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_runner.html#CorsikaRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_parameters_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_runner.html#CorsikaRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_runner.CorsikaRunner" title="Link to this definition">#</a></dt>
 <dd><p>CorsikaRunner is responsible for running CORSIKA.</p>
 <p>Uses the corsika_autoinputs program provided by the sim_telarray package.
 It provides shell scripts to be run externally or by     the module simulator. Same instance can be used to generate scripts for any given run number.</p>
@@ -2050,7 +2050,7 @@ It provides shell scripts to be run externally or by     the module simulator. S
 <dd class="field-odd"><dl class="simple">
 <dt><strong>array_model: ArrayModel</strong></dt><dd><p>Array model instance.</p>
 </dd>
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of source of the sim_telarray/CORSIKA package.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>

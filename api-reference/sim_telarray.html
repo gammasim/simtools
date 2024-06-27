@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g57be74d Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+ge11df9e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b93e9524"></script>
+    <script src="../_static/documentation_options.js?v=dbf91ea1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g57be74d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge11df9e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1350,12 +1350,12 @@ Only filled if stack_files is False.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_runner.SimtelRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">SimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_runner.html#SimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner.SimtelRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">SimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_runner.html#SimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_runner.SimtelRunner" title="Link to this definition">#</a></dt>
 <dd><p>SimtelRunner is the base class of the sim_telarray interfaces.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
@@ -1416,7 +1416,7 @@ Only filled if stack_files is False.</p>
 <p id="module-simtel.simulator_array"><span id="simulate-array-1"></span>Simulation runner for array simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
 <dd><p>SimulatorArray is the interface with sim_telarray to perform array simulations.</p>
 <dl class="simple">
 <dt>Configurable parameters:</dt><dd><dl class="simple">
@@ -1445,7 +1445,7 @@ default: 0 deg</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
 <dt><strong>config_data: dict</strong></dt><dd><p>Dict containing the configurable parameters.</p>
 </dd>
@@ -1563,7 +1563,7 @@ Choices are log, histogram, output or sub_log.</p>
 <p id="module-simtel.simulator_camera_efficiency"><span id="simulate-camera-efficiency-1"></span>Simulation runner for camera efficiency calculations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_camera_efficiency.SimulatorCameraEfficiency">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">SimulatorCameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_simtel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsb_spectrum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_camera_efficiency.html#SimulatorCameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">SimulatorCameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_simtel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsb_spectrum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_camera_efficiency.html#SimulatorCameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency" title="Link to this definition">#</a></dt>
 <dd><p>Interface with the testeff tool of sim_telarray to perform camera efficiency simulations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1572,7 +1572,7 @@ Choices are log, histogram, output or sub_log.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
 <dt><strong>file_simtel: str or Path</strong></dt><dd><p>Location of the sim_telarray testeff tool output file.</p>
 </dd>
@@ -1597,7 +1597,7 @@ Choices are log, histogram, output or sub_log.</p>
 <p id="module-simtel.simulator_ray_tracing"><span id="simulate-ray-tracing-1"></span>Simulation runner for ray tracing simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_ray_tracing.SimulatorRayTracing">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimulatorRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_source_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_ray_tracing.html#SimulatorRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_ray_tracing.SimulatorRayTracing" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimulatorRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_ray_tracing.html#SimulatorRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_ray_tracing.SimulatorRayTracing" title="Link to this definition">#</a></dt>
 <dd><p>SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.</p>
 <dl class="simple">
 <dt>Configurable parameters:</dt><dd><dl class="simple">
@@ -1632,7 +1632,7 @@ default: 1</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
-<dt><strong>simtel_source_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
 <dt><strong>config_data: dict</strong></dt><dd><p>Dict containing the configurable parameters.</p>
 </dd>

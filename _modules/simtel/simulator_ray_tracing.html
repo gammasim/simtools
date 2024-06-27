@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+g57be74d Manual</title>
+    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+ge11df9e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b93e9524"></script>
+    <script src="../../_static/documentation_options.js?v=dbf91ea1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g57be74d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge11df9e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -423,7 +423,7 @@ document.write(`
 <span class="sd">        Instance of TelescopeModel class.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label. Important for output file naming.</span>
-<span class="sd">    simtel_source_path: str or Path</span>
+<span class="sd">    simtel_path: str or Path</span>
 <span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    config_data: dict</span>
 <span class="sd">        Dict containing the configurable parameters.</span>
@@ -437,7 +437,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">simtel_source_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">force_simulate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -447,7 +447,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimulatorRayTracing&quot;</span><span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">simtel_source_path</span><span class="o">=</span><span class="n">simtel_source_path</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">simtel_path</span><span class="o">=</span><span class="n">simtel_path</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="n">telescope_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">label</span>
@@ -482,7 +482,7 @@ document.write(`
         <span class="c1"># This file is not actually needed and does not exist in simtools.</span>
         <span class="c1"># However, we need to provide the name of a CORSIKA input file to sim_telarray</span>
         <span class="c1"># so it is set up here.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;run9991.corsika.gz&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;run9991.corsika.gz&quot;</span><span class="p">)</span>
 
         <span class="c1"># Loop to define and remove existing files.</span>
         <span class="c1"># Files will be named _base_file = self.__dict__[&#39;_&#39; + base + &#39;File&#39;]</span>
@@ -542,7 +542,7 @@ document.write(`
             <span class="p">)</span>
 
         <span class="c1"># RayTracing</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/sim_telarray&quot;</span><span class="p">))</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/sim_telarray&quot;</span><span class="p">))</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -I../cfg/CTA&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span>

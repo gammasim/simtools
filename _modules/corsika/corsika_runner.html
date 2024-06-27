@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+g57be74d Manual</title>
+    <title>corsika.corsika_runner &#8212; simtools v0.1.dev1+ge11df9e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b93e9524"></script>
+    <script src="../../_static/documentation_options.js?v=dbf91ea1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g57be74d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge11df9e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -435,7 +435,7 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    array_model: ArrayModel</span>
 <span class="sd">        Array model instance.</span>
-<span class="sd">    simtel_source_path: str or Path</span>
+<span class="sd">    simtel_path: str or Path</span>
 <span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label.</span>
@@ -452,7 +452,7 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array_model</span><span class="p">,</span>
-        <span class="n">simtel_source_path</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">keep_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">corsika_parameters_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -468,7 +468,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_keep_seeds</span> <span class="o">=</span> <span class="n">keep_seeds</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_source_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="n">_runner_directory</span> <span class="o">=</span> <span class="s2">&quot;corsika_simtel&quot;</span> <span class="k">if</span> <span class="n">use_multipipe</span> <span class="k">else</span> <span class="s2">&quot;corsika&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">_runner_directory</span><span class="p">)</span>
@@ -513,7 +513,7 @@ document.write(`
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
                 <span class="n">array_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="p">,</span>
                 <span class="n">corsika_config_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_config_data</span><span class="p">,</span>
-                <span class="n">simtel_source_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="p">,</span>
+                <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="p">,</span>
                 <span class="n">corsika_parameters_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_parameters_file</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># CORSIKA input file used as template for all runs</span>
@@ -624,20 +624,20 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_get_pfp_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pfp pre-processor command.&quot;&quot;&quot;</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/pfp&quot;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/pfp&quot;</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; -V -DWITHOUT_MULTIPIPE - &lt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_input_file</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">input_tmp_file</span><span class="si">}</span><span class="s2"> || exit</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">cmd</span>
 
     <span class="k">def</span> <span class="nf">_get_autoinputs_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get autoinputs command.&quot;&quot;&quot;</span>
-        <span class="n">corsika_bin_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;corsika-run/corsika&quot;</span><span class="p">)</span>
+        <span class="n">corsika_bin_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;corsika-run/corsika&quot;</span><span class="p">)</span>
 
         <span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_autoinputs_log&quot;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">get_info_for_file_name</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/corsika_autoinputs&quot;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/corsika_autoinputs&quot;</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; --run </span><span class="si">{</span><span class="n">corsika_bin_path</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -R </span><span class="si">{</span><span class="n">run_number</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -p </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_corsika_data_dir</span><span class="si">}</span><span class="s2">&quot;</span>

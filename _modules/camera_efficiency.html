@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+g57be74d Manual</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+ge11df9e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b93e9524"></script>
+    <script src="../_static/documentation_options.js?v=dbf91ea1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g57be74d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge11df9e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -402,7 +402,7 @@ document.write(`
 <span class="sd">        Instance of the TelescopeModel class.</span>
 <span class="sd">    site_model: SiteModel</span>
 <span class="sd">        Instance of the SiteModel class.</span>
-<span class="sd">    simtel_source_path: str (or Path)</span>
+<span class="sd">    simtel_path: str (or Path)</span>
 <span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label, optional.</span>
@@ -418,7 +418,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">simtel_source_path</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -427,7 +427,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the CameraEfficiency class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span> <span class="o">=</span> <span class="n">simtel_source_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">simtel_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_telescope_model</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span> <span class="o">=</span> <span class="n">site_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">label</span>
@@ -478,7 +478,7 @@ document.write(`
                 <span class="s2">&quot;telescope_model&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;site_model&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;label&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;simtel_source_path&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;simtel_path&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;test&quot;</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -546,7 +546,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Simulating CameraEfficiency&quot;</span><span class="p">)</span>
 
         <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorCameraEfficiency</span><span class="p">(</span>
-            <span class="n">simtel_source_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_source_path</span><span class="p">,</span>
+            <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="p">,</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">,</span>
             <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
             <span class="n">file_simtel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">],</span>
