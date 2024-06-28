@@ -37,7 +37,7 @@ class SimulatorArray(SimtelRunner):
         Instance of ArrayModel class.
     label: str
         Instance label. Important for output file naming.
-    simtel_source_path: str or Path
+    simtel_path: str or Path
         Location of sim_telarray installation.
     config_data: dict
         Dict containing the configurable parameters.
@@ -49,7 +49,7 @@ class SimulatorArray(SimtelRunner):
         self,
         array_model,
         label=None,
-        simtel_source_path=None,
+        simtel_path=None,
         config_data=None,
         config_file=None,
     ):
@@ -57,7 +57,7 @@ class SimulatorArray(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorArray")
 
-        super().__init__(label=label, simtel_source_path=simtel_source_path)
+        super().__init__(label=label, simtel_path=simtel_path)
 
         self.array_model = array_model
         self.label = label if label is not None else self.array_model.label
@@ -261,7 +261,7 @@ class SimulatorArray(SimtelRunner):
         output_file = self.get_file_name(file_type="output", **info_for_file_name)
 
         # Array
-        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
         command += f" -I{self.array_model.get_config_directory()}"
         command += super()._config_option("telescope_theta", self.config.zenith_angle)
