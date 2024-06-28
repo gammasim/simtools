@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gf52adc1 Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g9df5d2e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=61461e4e"></script>
+    <script src="../../_static/documentation_options.js?v=7ba868fa"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf52adc1 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9df5d2e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -374,6 +374,7 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
@@ -410,6 +411,7 @@ document.write(`
         <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">simulation_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simulation_configuration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">job_submission</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -425,12 +427,15 @@ document.write(`
 <span class="sd">        simulation_model: list</span>
 <span class="sd">            List of simulation model configuration parameters to add to list of args</span>
 <span class="sd">            (use: &#39;version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
+<span class="sd">        simulation_configuration: list</span>
+<span class="sd">            List of simulation software configuration parameters to add to list of args.</span>
 <span class="sd">        db_config: bool</span>
 <span class="sd">            Add database configuration parameters to list of args.</span>
 <span class="sd">        job_submission: bool</span>
 <span class="sd">            Add job submission configuration parameters to list of args.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initialize_simulation_model_arguments</span><span class="p">(</span><span class="n">simulation_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="n">simulation_configuration</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">job_submission</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">initialize_job_submission_arguments</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">db_config</span><span class="p">:</span>
@@ -563,7 +568,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DB configuration parameters.&quot;&quot;&quot;</span>
-        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;MongoDB configuration&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;database configuration&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database user&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_pw&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database password&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_port&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database port&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -628,27 +633,222 @@ document.write(`
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        model_options: list</span>
-<span class="sd">            Options to be set: &quot;telescope&quot;, &quot;site&quot;</span>
+<span class="sd">            Options to be set: &quot;telescope&quot;, &quot;site&quot;, &quot;layout&quot;, &quot;layout_file&quot;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">model_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation model&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;site&quot;</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="ow">or</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
-                <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-                    <span class="s2">&quot;--site&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;site (e.g., North, South)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
-                <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-                    <span class="s2">&quot;--telescope&quot;</span><span class="p">,</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;telescope model name (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
-                    <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-                <span class="s2">&quot;--model_version&quot;</span><span class="p">,</span>
-                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;model version&quot;</span><span class="p">,</span>
-                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span>
-            <span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">model_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
 
+        <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation model&quot;</span><span class="p">)</span>
+        <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--model_version&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;model version&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Released&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">option</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;layout_file&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_option_site</span><span class="p">(</span><span class="n">_job_group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;telescope&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--telescope&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;telescope model name (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;layout&quot;</span> <span class="ow">in</span> <span class="n">model_options</span> <span class="ow">or</span> <span class="s2">&quot;layout_file&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
+            <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_option_layout</span><span class="p">(</span><span class="n">_job_group</span><span class="p">,</span> <span class="s2">&quot;layout_file&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.initialize_simulation_configuration_arguments">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_configuration_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_configuration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize default arguments for simulation configuration and simulation software.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_configuration: list</span>
+<span class="sd">            List of simulation software configuration parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">simulation_configuration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s2">&quot;software&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_software</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;corsika_configuration&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_shower_configuration</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_initialize_simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize simulation software arguments.&quot;&quot;&quot;</span>
+        <span class="n">_software_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation software&quot;</span><span class="p">)</span>
+        <span class="n">_software_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--simulation_software&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Simulation software steps.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">],</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;corsika_simtel&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_simulation_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize simulation configuration arguments.&quot;&quot;&quot;</span>
+        <span class="n">_configuration_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation configuration&quot;</span><span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--primary&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Primary particle to simulate.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gamma_diffuse&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;electron&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;proton&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;muon&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;helium&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;nitrogen&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;silicon&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;iron&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--azimuth_angle&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Telescope pointing direction in azimuth. &quot;</span>
+                <span class="s2">&quot;It can be in degrees between 0 and 360 or one of north, south, east or west &quot;</span>
+                <span class="s2">&quot;North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).&quot;</span>
+            <span class="p">),</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--zenith_angle&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--nshow&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of showers per run to simulate.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--run_number_start&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run number for the first run.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--number_of_runs&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of runs to be simulated.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--event_number_first_shower&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Event number of first shower&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_shower_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize shower configuration arguments.&quot;&quot;&quot;</span>
+        <span class="n">shower_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;shower parameters&quot;</span><span class="p">)</span>
+        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--eslope&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Slope of the energy spectrum.&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--erange&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Energy range of the primary particle (min/max value, e&#39;g&#39;, &#39;10 GeV 5 TeV&#39;).&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;3 GeV 330 TeV&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--viewcone&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Viewcone for primary arrival directions (min/max value, e.g. &#39;0 deg 5 deg&#39;).&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;0 deg 0 deg&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--core_scatter&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Scatter radius for shower cores (number of use; scatter radius).&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;10 1400 m&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_model_option_layout</span><span class="p">(</span><span class="n">job_group</span><span class="p">,</span> <span class="n">add_layout_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add layout option to the job group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_group: argparse.ArgumentParser</span>
+<span class="sd">            Job group</span>
+<span class="sd">        add_layout_file: bool</span>
+<span class="sd">            Add layout file option</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        argparse.ArgumentParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_layout_group</span> <span class="o">=</span> <span class="n">job_group</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--array_layout_name&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;array layout name (e.g., alpha, subsystem_msts)&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--array_element_list&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;list of array elements (e.g., LSTN-01, LSTN-02, MSTN).&quot;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">add_layout_file</span><span class="p">:</span>
+            <span class="n">_layout_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+                <span class="s2">&quot;--array_layout_file&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file(s) with the list of array elements (astropy table format).&quot;</span><span class="p">,</span>
+                <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_group</span>
+
+    <span class="k">def</span> <span class="nf">_add_model_option_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_group</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add site option to the job group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_group: argparse.ArgumentParser</span>
+<span class="sd">            Job group</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        argparse.ArgumentParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--site&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;site (e.g., North, South)&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_group</span>
 
 <div class="viewcode-block" id="CommandLineParser.site">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.site">[docs]</a>
@@ -671,7 +871,6 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        argparse.ArgumentTypeError</span>
 <span class="sd">            for invalid sites</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
@@ -698,7 +897,6 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        argparse.ArgumentTypeError</span>
 <span class="sd">            for invalid telescope</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
@@ -725,8 +923,6 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        argparse.ArgumentTypeError</span>
 <span class="sd">            When value is outside of the interval [0,1]</span>
-
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fvalue</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">fvalue</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">fvalue</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -760,8 +956,6 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        argparse.ArgumentTypeError</span>
 <span class="sd">            When angle is outside of the interval [0, 180]</span>
-
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -780,7 +974,6 @@ document.write(`
                 <span class="sa">f</span><span class="s2">&quot;The provided zenith angle, </span><span class="si">{</span><span class="n">angle</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">, &quot;</span>
                 <span class="s2">&quot;is outside of the allowed [0, 180] interval&quot;</span>
             <span class="p">)</span>
-
         <span class="k">return</span> <span class="n">fangle</span></div>
 
 
@@ -808,8 +1001,6 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        argparse.ArgumentTypeError</span>
 <span class="sd">            When angle is outside of the interval [0, 360] or not in (north, south, east, west)</span>
-
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -826,6 +1017,9 @@ document.write(`
                 <span class="s2">&quot;The azimuth angle provided is not a valid numeric value. &quot;</span>
                 <span class="s2">&quot;Will check if it is an astropy.Quantity instead&quot;</span>
             <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The azimuth angle provided is not a valid numerical or string value.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
@@ -833,25 +1027,78 @@ document.write(`
                 <span class="s2">&quot;The azimuth angle provided is not a valid astropy.Quantity. &quot;</span>
                 <span class="s2">&quot;Will check if it is (north, south, east, west) instead&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="o">==</span> <span class="s2">&quot;north&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="o">==</span> <span class="s2">&quot;south&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="o">==</span> <span class="s2">&quot;east&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
-            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="o">==</span> <span class="s2">&quot;west&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
-            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
-                <span class="s2">&quot;The azimuth angle can only be a number or one of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;The azimuth value provided, </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">, is not a valid number &quot;</span>
-            <span class="s2">&quot;nor one of (north, south, east, west).&quot;</span>
-        <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span></div>
+        <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+            <span class="s2">&quot;The azimuth angle can only be one of &quot;</span> <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.parse_quantity_pair">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_quantity_pair">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_quantity_pair</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a string representing a pair of astropy quantities separated by a space.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            string: The input string (e.g., &quot;0 deg 1.5 deg&quot;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            tuple: A tuple containing two astropy.units.Quantity objects.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">            ValueError: If the string is not formatted correctly (e.g., missing space).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\d+\.?\d*)\s*([a-zA-Z]+)&quot;</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input string does not contain exactly two quantities.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandLineParser.parse_integer_and_quantity">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_integer_and_quantity">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_integer_and_quantity</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a string representing an integer and a quantity with units.</span>
+
+<span class="sd">        This is e.g., used for the &#39;core_scatter&#39; argument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_string: str</span>
+<span class="sd">            The input string (e.g., &quot;5 1500 m&quot;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple: A tuple containing an integer and an astropy.units.Quantity object.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError: If the input string does not match the required format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input string does not contain an integer and a astropy quantity.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span></div>
 </div>
 
 </pre></div>
