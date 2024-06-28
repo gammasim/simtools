@@ -224,12 +224,12 @@ class CorsikaRunner:
         str
             File name with full path.
         """
-        if simulation_software != "corsika":
+        if simulation_software.lower() != "corsika":
             raise ValueError(
                 f"simulation_software ({simulation_software}) is not supported in CorsikaRunner"
             )
         return self.runner_service.get_file_name(
             file_type=file_type,
+            run_number=run_number,
             mode=mode,
-            **self.runner_service.get_info_for_file_name(run_number),
         )

@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 
 import simtools.utils.general as gen
-from simtools.corsika.corsika_runner import CorsikaRunner
-from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.model.array_model import ArrayModel
+from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
@@ -340,7 +340,7 @@ def test_make_resources_report(
         f"tests/resources/{log_file_name}",
         shower_simulator._simulation_runner.get_file_name(
             file_type="sub_log",
-            **shower_simulator._simulation_runner.get_info_for_file_name(1),
+            run_number=1,
             mode="out",
         ),
     )

@@ -132,8 +132,6 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # TODO - remember viewcone, erange, cscat split (improve??)
-    # TODO - introduce more groups in command line
     simulator = Simulator(
         label=args_dict.get("label"),
         args_dict=args_dict,

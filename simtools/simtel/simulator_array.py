@@ -113,12 +113,10 @@ class SimulatorArray(SimtelRunner):
         str
             File name with full path.
         """
-        if simulation_software != "simtel":
+        if simulation_software.lower() != "simtel":
             raise ValueError(
                 f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
             )
         return self.runner_service.get_file_name(
-            file_type=file_type,
-            mode=mode,
-            **self.runner_service.get_info_for_file_name(run_number),
+            file_type=file_type, run_number=run_number, mode=mode
         )
