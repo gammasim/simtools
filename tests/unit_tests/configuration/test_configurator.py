@@ -184,8 +184,8 @@ def test_arglist_from_config():
     )
 
 
-def test_convert_stringnone_to_none():
-    assert {} == Configurator._convert_stringnone_to_none({})
+def test_convert_string_none_to_none():
+    assert {} == Configurator._convert_string_none_to_none({})
 
     _tmp_dict = {
         "a": 1.0,
@@ -196,7 +196,7 @@ def test_convert_stringnone_to_none():
     _tmp_none = copy(_tmp_dict)
     _tmp_none["d"] = None
 
-    assert _tmp_none == Configurator._convert_stringnone_to_none(_tmp_dict)
+    assert _tmp_none == Configurator._convert_string_none_to_none(_tmp_dict)
 
 
 def test_get_db_parameters_from_env(configurator, args_dict):
@@ -308,6 +308,20 @@ def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_te
 
     assert configurator.config["label"] == "test_label"
     assert configurator.config["config"] == "test_config_file_env"
+
+
+def test_default_config_with_site():
+    configurator = Configurator(config={})
+    configurator.default_config(arg_list=["--site", "North"])
+    assert "site" in configurator.config
+    assert "telescope" not in configurator.config
+
+
+def test_default_config_with_telescope():
+    configurator = Configurator(config={})
+    configurator.default_config(arg_list=["--telescope", "LSTN-01"])
+    assert "telescope" in configurator.config
+    assert "site" in configurator.config
 
 
 def test_get_db_parameters():
