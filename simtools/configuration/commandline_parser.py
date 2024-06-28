@@ -383,7 +383,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         shower_config.add_argument(
             "--core_scatter",
-            help="Scatter area for shower cores (number of use; scatter radius).",
+            help="Scatter radiusfor shower cores (number of use; scatter radius).",
             type=CommandLineParser.parse_integer_and_quantity,
             required=False,
             default=["10 1400 m"],
