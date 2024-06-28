@@ -656,7 +656,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         Parse a string representing an integer and a quantity with units.
 
-        This si e.g., used for the 'core_scatter" argument.
+        This is e.g., used for the 'core_scatter' argument.
 
         Parameters
         ----------
