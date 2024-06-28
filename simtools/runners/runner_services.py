@@ -28,9 +28,9 @@ class RunnerServices:
         self.corsika_config = corsika_config
         self.directory = {}
 
-    def get_info_for_file_name(self, run_number):
+    def _get_info_for_file_name(self, run_number):
         """
-        Return dictionary for building the file names for simulation output files.
+        Return dictionary for building names for simulation output files.
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class RunnerServices:
             "simtel": ["simtel"],
             "corsika_simtel": ["corsika", "simtel"],
         }
-        return software_map.get(simulation_software, [])
+        return software_map.get(simulation_software.lower(), [])
 
     def load_data_directories(self, simulation_software):
         """
@@ -111,33 +111,22 @@ class RunnerServices:
             Run number.
 
         """
-        info_for_file_name = self.get_info_for_file_name(run_number)
-        run_sub_file = self.get_file_name(file_type, **info_for_file_name, mode=mode)
+        run_sub_file = self.get_file_name(file_type, run_number=run_number, mode=mode)
         _logger.debug(f"Checking if {run_sub_file} exists")
         return Path(run_sub_file).is_file()
 
-    def get_file_name(self, file_type, **kwargs):
+    def get_file_name(self, file_type, run_number=None, mode=None):
         """
         Get a CORSIKA/sim_telarray style file name for various log and data file types.
 
         Parameters
         ----------
-        file_type: str
+        file_type : str
             The type of file (determines the file suffix).
-        kwargs: dict
-            The dictionary must include the following parameters (unless listed as optional):
-                run: int
-                    Run number.
-                primary: str
-                    Primary particle (e.g gamma, proton etc).
-                site: str
-                    Site name (usually North/South or Paranal/LaPalma).
-                array_name: str
-                    Array name.
-                label: str
-                    Instance label (optional).
-                mode: str
-                    out or err (optional, relevant only for sub_log).
+        run_number : int
+            Run number.
+        mode: str
+            out or err (optional, relevant only for sub_log).
 
         Returns
         -------
@@ -149,14 +138,19 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        file_label = f"_{kwargs.get('label', '')}" if kwargs.get("label") is not None else ""
+        info_for_file_name = self._get_info_for_file_name(run_number)
+        file_label = (
+            f"_{info_for_file_name.get('label', '')}"
+            if info_for_file_name.get("label") is not None
+            else ""
+        )
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
-        run_dir = self._get_run_number_string(kwargs["run"])
+        run_dir = self._get_run_number_string(info_for_file_name["run_number"])
         file_name = (
-            f"{run_dir}_{kwargs['primary']}_"
+            f"{run_dir}_{info_for_file_name['primary']}_"
             f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            f"{kwargs['site']}_{kwargs['array_name']}{file_label}"
+            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}{file_label}"
         )
 
         log_suffixes = {
@@ -179,8 +173,8 @@ class RunnerServices:
 
         if file_type in ("sub_log", "sub_script"):
             suffix = ".log" if file_type == "sub_log" else ".sh"
-            if kwargs and kwargs.get("mode") != "":
-                suffix = f".{kwargs['mode']}"
+            if mode and mode != "":
+                suffix = f".{mode}"
             sub_log_file_dir = self.directory["output"].joinpath(f"{file_type}s")
             sub_log_file_dir.mkdir(parents=True, exist_ok=True)
             return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
@@ -221,10 +215,7 @@ class RunnerServices:
         dict
             run time and number of simulated events
         """
-        sub_log_file = self.get_file_name(
-            file_type="sub_log", **self.get_info_for_file_name(run_number), mode="out"
-        )
-
+        sub_log_file = self.get_file_name(file_type="sub_log", run_number=run_number, mode="out")
         _logger.debug(f"Reading resources from {sub_log_file}")
 
         _resources = {}
