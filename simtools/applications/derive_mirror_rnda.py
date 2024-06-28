@@ -354,7 +354,7 @@ def main():  # noqa: D103
                 if args_dict["test"]
                 else "all"
             ),
-            simtel_source_path=args_dict.get("simtel_path", None),
+            simtel_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
         ray.simulate(test=args_dict["test"], force=True)  # force has to be True, always

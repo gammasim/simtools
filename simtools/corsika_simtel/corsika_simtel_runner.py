@@ -28,7 +28,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
 
         common_args = {
             'label': 'test-production',
-            'simtel_source_path': '/workdir/sim_telarray/',
+            'simtel_path': '/workdir/sim_telarray/',
         }
 
     Parameters
@@ -112,7 +112,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
             "run_cta_multipipe"
         )
         with open(multipipe_executable, "w", encoding="utf-8") as file:
-            multipipe_command = Path(self._simtel_source_path).joinpath(
+            multipipe_command = Path(self._simtel_path).joinpath(
                 "sim_telarray/bin/multipipe_corsika "
                 f"-c {multipipe_file}"
                 " || echo 'Fan-out failed'"
@@ -139,7 +139,7 @@ class CorsikaSimtelRunner(CorsikaRunner, SimulatorArray):
         info_for_file_name = SimulatorArray.get_info_for_file_name(self, kwargs["run_number"])
         weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
 
-        command = str(self._simtel_source_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.array_model.get_config_file()}"
         command += f" -I{self.array_model.get_config_directory()}"
         command += super()._config_option(
