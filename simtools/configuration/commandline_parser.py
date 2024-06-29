@@ -680,4 +680,3 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
->>>>>>> main
