@@ -110,8 +110,8 @@ class CorsikaConfig:
             ],
             "ESLOPE": [self.args_dict["eslope"]],
             "ERANGE": [
-                self.args_dict["erange"][0].to("GeV"),
-                self.args_dict["erange"][1].to("GeV"),
+                self.args_dict["erange"][0].to("GeV").value,
+                self.args_dict["erange"][1].to("GeV").value,
             ],
             "THETAP": [
                 float(self.args_dict["zenith_angle"].to("deg").value),
@@ -122,12 +122,12 @@ class CorsikaConfig:
                 self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
             ],
             "VIEWCONE": [
-                self.args_dict["viewcone"][0].to("deg"),
-                self.args_dict["viewcone"][1].to("deg"),
+                self.args_dict["viewcone"][0].to("deg").value,
+                self.args_dict["viewcone"][1].to("deg").value,
             ],
             "CSCAT": [
                 self.args_dict["core_scatter"][0],
-                self.args_dict["core_scatter"][1].to("cm"),
+                self.args_dict["core_scatter"][1].to("cm").value,
                 0.0,
             ],
         }
