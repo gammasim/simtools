@@ -71,6 +71,7 @@ def test_zenith_angle(caplog):
         assert "The zenith angle provided is not a valid numeric value" in caplog.text
 
 
+<<<<<<< HEAD
 def test_energy_range(caplog):
     assert parser.CommandLineParser.energy_range("100 GeV 5 TeV") == "100.0 GeV 5000.0 GeV"
     caplog.set_level(logging.ERROR)
@@ -102,6 +103,38 @@ def test_core_scatter(caplog):
     assert any(
         "Core scatter argument must be given in the form" in message for message in caplog.messages
     )
+=======
+def test_parse_quantity_pair(caplog):
+    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100GeV 5 TeV"]:
+        e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
+        assert pytest.approx(e_pair[0].value) == 100.0
+        assert e_pair[0].unit == u.GeV
+        assert pytest.approx(e_pair[1].value) == 5.0
+        assert e_pair[1].unit == u.TeV
+
+    with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
+        parser.CommandLineParser.parse_quantity_pair("100 GeV 5 TeV 20 PeV")
+
+    with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
+        parser.CommandLineParser.parse_quantity_pair("100 GeV 5 abc")
+
+    with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
+        parser.CommandLineParser.parse_quantity_pair("a GeV 5 TeV")
+
+
+def test_parse_integer_and_quantity(caplog):
+    for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m"]:
+        c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
+        assert c_pair[0] == 5
+        assert pytest.approx(c_pair[1].value) == 1500.0
+        assert c_pair[1].unit == u.m
+
+    with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
+        parser.CommandLineParser.parse_integer_and_quantity("5 5 abc")
+    with pytest.raises(
+        ValueError, match=r"Input string does not contain an integer and a astropy quantity."
+    ):
+        parser.CommandLineParser.parse_integer_and_quantity("0 m 5 m")
 
 
 def test_azimuth_angle(caplog):
@@ -133,7 +166,7 @@ def test_azimuth_angle(caplog):
         assert "The azimuth angle can only be a number or one of" in caplog.text
     with pytest.raises(TypeError):
         parser.CommandLineParser.azimuth_angle([0, 10])
-        assert "is not a valid number nor one of (north, south, east, west)" in caplog.text
+        assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 
 def test_initialize_default_arguments():
@@ -222,3 +255,17 @@ def test_initialize_default_arguments():
             assert any(action.dest == "array_layout_name" for action in group._group_actions)
             assert any(action.dest == "array_element_list" for action in group._group_actions)
             assert any(action.dest == "array_layout_file" for action in group._group_actions)
+
+    # simulation configuration
+    _parser_9 = parser.CommandLineParser()
+    _parser_9.initialize_default_arguments(
+        simulation_configuration=["software", "corsika_configuration"]
+    )
+    job_groups = _parser_9._action_groups
+    for group in job_groups:
+        if str(group.title) == "simulation software":
+            assert any(action.dest == "simulation_software" for action in group._group_actions)
+        if str(group.title) == "simulation configuration":
+            assert any(action.dest == "primary" for action in group._group_actions)
+        if str(group.title) == "shower parameters":
+            assert any(action.dest == "viewcone" for action in group._group_actions)
