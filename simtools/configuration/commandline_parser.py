@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import re
 from pathlib import Path
 
 import astropy.units as u
@@ -317,8 +318,7 @@ class CommandLineParser(argparse.ArgumentParser):
             help=(
                 "Telescope pointing direction in azimuth. "
                 "It can be in degrees between 0 and 360 or one of north, south, east or west "
-                "(case insensitive). Note that North is 0 degrees and "
-                "the azimuth grows clockwise, so East is 90 degrees."
+                "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
             ),
             type=CommandLineParser.azimuth_angle,
             required=True,
@@ -331,7 +331,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _configuration_group.add_argument(
             "--nshow",
-            help="Number of showers to simulate.",
+            help="Number of showers per run to simulate.",
             type=int,
             required=False,
         )
@@ -369,22 +369,22 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         shower_config.add_argument(
             "--erange",
-            help="Energy range of the primary particle (min/max value).",
-            type=CommandLineParser.energy_range,
+            help="Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
+            type=CommandLineParser.parse_quantity_pair,
             required=False,
             default=["3 GeV 330 TeV"],
         )
         shower_config.add_argument(
             "--viewcone",
-            help="Viewcone for primary arrival directions (min/max value in degrees).",
-            type=CommandLineParser.viewcone,
+            help="Viewcone for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
+            type=CommandLineParser.parse_quantity_pair,
             required=False,
             default=["0 deg 0 deg"],
         )
         shower_config.add_argument(
             "--core_scatter",
-            help="Scatter area for shower cores (number of use; scatter radius).",
-            type=CommandLineParser.core_scatter,
+            help="Scatter radius for shower cores (number of use; scatter radius).",
+            type=CommandLineParser.parse_integer_and_quantity,
             required=False,
             default=["10 1400 m"],
         )
@@ -468,7 +468,6 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         argparse.ArgumentTypeError
             for invalid sites
-
         """
         names.validate_site_name(str(value))
         return str(value)
@@ -492,7 +491,6 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         argparse.ArgumentTypeError
             for invalid telescope
-
         """
         names.validate_telescope_name(str(value))
         return str(value)
@@ -516,8 +514,6 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         argparse.ArgumentTypeError
             When value is outside of the interval [0,1]
-
-
         """
         fvalue = float(value)
         if fvalue < 0.0 or fvalue > 1.0:
@@ -548,8 +544,6 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         argparse.ArgumentTypeError
             When angle is outside of the interval [0, 180]
-
-
         """
         logger = logging.getLogger(__name__)
 
@@ -592,8 +586,6 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         argparse.ArgumentTypeError
             When angle is outside of the interval [0, 360] or not in (north, south, east, west)
-
-
         """
         logger = logging.getLogger(__name__)
         try:
@@ -610,6 +602,9 @@ class CommandLineParser(argparse.ArgumentParser):
                 "The azimuth angle provided is not a valid numeric value. "
                 "Will check if it is an astropy.Quantity instead"
             )
+        except TypeError as exc:
+            logger.error("The azimuth angle provided is not a valid numerical or string value.")
+            raise exc
         try:
             return u.Quantity(angle).to("deg")
         except TypeError:
@@ -633,109 +628,56 @@ class CommandLineParser(argparse.ArgumentParser):
         return None
 
     @staticmethod
-    def energy_range(energy_range, energy_unit="GeV"):
+    def parse_quantity_pair(string):
         """
-        Argument parser type for energy ranges.
+        Parse a string representing a pair of astropy quantities separated by a space.
 
-        Energy ranges are given as string in following the example "10 GeV 200 PeV".
-
-        Parameters
-        ----------
-        energy_range : str
-            energy range string
-        energy_unit : str
-            default energy unit to use
+        Args:
+            string: The input string (e.g., "0 deg 1.5 deg").
 
         Returns
         -------
-        string
-            energy range  (min, max)
-        """
-        logger = logging.getLogger(__name__)
+            tuple: A tuple containing two astropy.units.Quantity objects.
 
-        parts = energy_range.split()
-        if len(parts) != 4:
-            logger.error(
-                "Energy range must be given in the form 'E1 unit E1 unit' (e.g., '10 GeV 100 TeV')"
-            )
-            raise TypeError
-        value1, unit1, value2, unit2 = parts
-        try:
-            energy1 = float(value1) * u.Unit(unit1)
-            energy2 = float(value2) * u.Unit(unit2)
-        except ValueError as exc:
-            logger.error(f"Invalid energy values: {value1} {unit1} {value2} {unit2}")
-            raise exc
-        return f"{energy1.to(energy_unit)} {energy2.to(energy_unit)}"
+        Raises
+        ------
+            ValueError: If the string is not formatted correctly (e.g., missing space).
+        """
+        pattern = r"(\d+\.?\d*)\s*([a-zA-Z]+)"
+        matches = re.findall(pattern, string)
+        if len(matches) != 2:
+            raise ValueError("Input string does not contain exactly two quantities.")
+
+        return (
+            u.Quantity(float(matches[0][0]), matches[0][1]),
+            u.Quantity(float(matches[1][0]), matches[1][1]),
+        )
 
     @staticmethod
-    def viewcone(viewcone):
+    def parse_integer_and_quantity(input_string):
         """
-        Argument parser type for viewcone argument.
+        Parse a string representing an integer and a quantity with units.
 
-        Viewcone is given as string in the form "min max" where min and max are in degrees.
+        This is e.g., used for the 'core_scatter' argument.
 
         Parameters
         ----------
-        viewcone: str
-            viewcone string
+        input_string: str
+            The input string (e.g., "5 1500 m").
 
         Returns
         -------
-        string
-            viewcone (min, max)
+        tuple: A tuple containing an integer and an astropy.units.Quantity object.
+
+        Raises
+        ------
+        ValueError: If the input string does not match the required format.
         """
-        logger = logging.getLogger(__name__)
+        pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
+        match = re.match(pattern, input_string.strip())
 
-        parts = viewcone.split()
-        if len(parts) != 4:
-            logger.error(
-                "Viewcone must be given in the form 'min deg max deg ' (e.g., '0 deg 5 deg')"
-            )
-            raise TypeError
-        value1, unit1, value2, unit2 = parts
-        try:
-            viewcone_min = float(value1) * u.Unit(unit1)
-            viewcone_max = float(value2) * u.Unit(unit2)
-        except ValueError as exc:
-            logger.error(f"Invalid viewcone  values: {value1} {unit1} {value2} {unit2}")
-            raise exc
-        return f"{viewcone_min.to('deg')} {viewcone_max.to('deg')}"
+        if not match:
+            raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
-    @staticmethod
-    def core_scatter(core_scatter):
-        """
-        Argument parser type for core scatter argument for multiple use of events.
-
-        Arguments are given as string with two values separated by a space:
-
-        - Number of uses of each event
-        - Radius of scatter area
-
-        Parameters
-        ----------
-        core_scatter: str
-            core scatter string
-
-        Returns
-        -------
-        string
-            Core scatter string.
-        """
-        logger = logging.getLogger(__name__)
-
-        parts = core_scatter.split()
-        if len(parts) != 3:
-            logger.error(
-                "Core scatter argument must be given in the form "
-                "'n_scatter radius (m)' (e.g., '0 1500 m')"
-            )
-            raise TypeError
-        value1, value2, unit2 = parts
-        try:
-            n_scatter = int(value1)
-            core_radius = float(value2) * u.Unit(unit2)
-        except ValueError as exc:
-            logger.error(f"Invalid core scatter argument: {value1} {value2} {unit2}")
-            raise exc
-        return f"{n_scatter} {core_radius.to('m')}"
+        return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+>>>>>>> main

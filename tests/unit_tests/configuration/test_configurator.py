@@ -310,6 +310,20 @@ def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_te
     assert configurator.config["config"] == "test_config_file_env"
 
 
+def test_default_config_with_site():
+    configurator = Configurator(config={})
+    configurator.default_config(arg_list=["--site", "North"])
+    assert "site" in configurator.config
+    assert "telescope" not in configurator.config
+
+
+def test_default_config_with_telescope():
+    configurator = Configurator(config={})
+    configurator.default_config(arg_list=["--telescope", "LSTN-01"])
+    assert "telescope" in configurator.config
+    assert "site" in configurator.config
+
+
 def test_get_db_parameters():
     # default config
     configurator = Configurator(config={})
