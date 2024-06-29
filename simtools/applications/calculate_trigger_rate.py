@@ -99,20 +99,17 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--energy_range",
-        help="Energy range (TeV) passed as a list of floats, the minimum and maximum, "
-        "respectively.",
+        help="Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
         required=False,
-        nargs=2,
-        type=str,
+        type=config.parser.parse_quantity_pair,
         default=None,
     )
 
     config.parser.add_argument(
         "--view_cone",
-        help="View cone radius (deg) passed as two floats, the minimum and maximum, respectively.",
-        nargs=2,
+        help="Viewcone radius for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
         required=False,
-        type=str,
+        type=config.parser.parse_quantity_pair,
         default=None,
     )
 
@@ -123,7 +120,7 @@ def _parse(label, description):
 
 def _get_simulation_parameters(config_parser):
     """
-    Get the energy range and view cone in the correct form to use in the simtel classes.
+    Get energy range and viewcone in the correct form to use in the simtel classes.
 
     Parameters
     ----------
@@ -135,19 +132,21 @@ def _get_simulation_parameters(config_parser):
     list:
         The energy range used in the simulation.
     list:
-        The view cone used in the simulation.
+        The viewcone used in the simulation.
 
     """
     if config_parser["energy_range"] is not None:
-        emin = float(config_parser["energy_range"][0])
-        emax = float(config_parser["energy_range"][1])
-        energy_range = [emin, emax]
+        energy_range = [
+            config_parser["energy_range"][0].to("TeV").value,
+            config_parser["energy_range"][1].to("TeV").value,
+        ]
     else:
         energy_range = None
     if config_parser["view_cone"] is not None:
-        cone_min = float(config_parser["view_cone"][0])
-        cone_max = float(config_parser["view_cone"][1])
-        view_cone = [cone_min, cone_max]
+        view_cone = [
+            config_parser["view_cone"][0].to("deg").value,
+            config_parser["view_cone"][1].to("deg").value,
+        ]
     else:
         view_cone = None
 
