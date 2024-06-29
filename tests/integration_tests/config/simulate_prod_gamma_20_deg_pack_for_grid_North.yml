@@ -15,11 +15,12 @@ CTA_SIMPIPE:
     NSHOW: 5
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
-    ERANGE: "3 GeV 330 TeV"
-    CORE_SCATTER: "10 1400 m"
+    ERANGE: "100 GeV 1 TeV"
+    CORE_SCATTER: "10 500 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
         directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.log_hist.tar.gz
