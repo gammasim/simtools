@@ -67,8 +67,6 @@ class CorsikaRunner:
         """
         Get the full path of the run script file for a given run number.
 
-        TODO - handle the unused parameter
-
         Parameters
         ----------
         use_pfp: bool
