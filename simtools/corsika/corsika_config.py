@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
@@ -103,11 +102,6 @@ class CorsikaConfig:
         self.azimuth_angle = int(self.args_dict["azimuth_angle"].to("deg").value)
         self.zenith_angle = self.args_dict["zenith_angle"].to("deg").value
 
-        # lists provides as strings
-        e_range = self.args_dict["erange"].split(" ")
-        view_cone = self.args_dict["viewcone"].split(" ")
-        core_scatter = self.args_dict["core_scatter"].split(" ")
-
         return {
             "EVTNR": [self.args_dict["event_number_first_shower"]],
             "NSHOW": [self.args_dict["nshow"]],
@@ -116,8 +110,8 @@ class CorsikaConfig:
             ],
             "ESLOPE": [self.args_dict["eslope"]],
             "ERANGE": [
-                float(e_range[0]) * u.Unit(e_range[1]).to("GeV"),
-                float(e_range[2]) * u.Unit(e_range[3]).to("GeV"),
+                self.args_dict["erange"][0].to("GeV"),
+                self.args_dict["erange"][1].to("GeV"),
             ],
             "THETAP": [
                 float(self.args_dict["zenith_angle"].to("deg").value),
@@ -128,12 +122,12 @@ class CorsikaConfig:
                 self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
             ],
             "VIEWCONE": [
-                float(view_cone[0]) * u.Unit(view_cone[1]).to("deg"),
-                float(view_cone[2]) * u.Unit(view_cone[3]).to("deg"),
+                self.args_dict["viewcone"][0].to("deg"),
+                self.args_dict["viewcone"][1].to("deg"),
             ],
             "CSCAT": [
-                int(core_scatter[0]),
-                float(core_scatter[1]) * u.Unit(core_scatter[2]).to("cm"),
+                self.args_dict["core_scatter"][0],
+                self.args_dict["core_scatter"][1].to("cm"),
                 0.0,
             ],
         }

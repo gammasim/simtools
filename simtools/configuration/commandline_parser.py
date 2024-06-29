@@ -663,7 +663,8 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         input_string: str
-            The input string (e.g., "5 1500 m").
+            The input string (e.g., "5 1500 m") or
+            a tuple converted to string (e.g., "(5, <Quantity 1500 m>)").
 
         Returns
         -------
@@ -673,8 +674,14 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         ValueError: If the input string does not match the required format.
         """
-        pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
-        match = re.match(pattern, input_string.strip())
+        # tuple converted to string: "(5, <Quantity 1500 m>)"
+        if all(char in input_string for char in ["(", ")", ","]):
+            pattern = r"\((\d+), <Quantity ([\d.]+) (.+)>\)"
+            match = re.match(pattern, input_string)
+        # string with integer and quantity: "5 1500 m"
+        else:
+            pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
+            match = re.match(pattern, input_string.strip())
 
         if not match:
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
