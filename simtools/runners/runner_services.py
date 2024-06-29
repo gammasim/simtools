@@ -43,7 +43,7 @@ class RunnerServices:
             Dictionary with the keys or building the file names for simulation output files.
         """
         return {
-            "run": self.corsika_config.validate_run_number(run_number),
+            "run_number": self.corsika_config.validate_run_number(run_number),
             "primary": self.corsika_config.primary,
             "array_name": self.corsika_config.array_model.layout_name,
             "site": self.corsika_config.array_model.site,
