@@ -4,9 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SIMTEL_FILE_NAMES: |
       ./tests/resources/run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst
-    VIEW_CONE:
-      - "0"
-      - "10"
-    ENERGY_RANGE:
-      - "0.008"
-      - "300"
+    VIEW_CONE: "0 deg 10 deg"
+    ENERGY_RANGE: "8 GeV 300 TeV"
