@@ -206,28 +206,20 @@ class Simulator:
             label=self.label,
             args_dict=self.args_dict,
         )
-        # TODO - repetitive - simplify
-        if self.simulation_software == "corsika":
-            return CorsikaRunner(
+
+        runner_class = {
+            "corsika": CorsikaRunner,
+            "simtel": SimulatorArray,
+            "corsika_simtel": CorsikaSimtelRunner,
+        }.get(self.simulation_software)
+
+        if runner_class:
+            return runner_class(
                 label=self.label,
                 corsika_config=corsika_config,
                 simtel_path=self.args_dict.get("simtel_path"),
                 keep_seeds=False,
-                use_multipipe=False,
-            )
-        if self.simulation_software == "simtel":
-            return SimulatorArray(
-                label=self.label,
-                corsika_config=corsika_config,
-                simtel_path=self.args_dict.get("simtel_path"),
-                use_multipipe=False,
-            )
-        if self.simulation_software == "corsika_simtel":
-            return CorsikaSimtelRunner(
-                label=self.label,
-                corsika_config=corsika_config,
-                simtel_path=self.args_dict.get("simtel_path"),
-                use_multipipe=True,
+                use_multipipe=runner_class is CorsikaSimtelRunner,
             )
         return None
 
