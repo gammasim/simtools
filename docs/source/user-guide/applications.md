@@ -48,7 +48,7 @@ db_get_parameter_from_db <applications/db_get_parameter_from_db>
 db_inspect_databases <applications/db_inspect_databases>
 derive_mirror_rnda <applications/derive_mirror_rnda>
 derive_psf_parameters <applications/derive_psf_parameters>
-generate_array_configuration <applications/generate_array_configuration>
+generate_array_config <applications/generate_array_config>
 generate_corsika_histograms <applications/generate_corsika_histograms>
 generate_default_metadata <applications/generate_default_metadata>
 generate_simtel_array_histograms <applications/generate_simtel_array_histograms>
