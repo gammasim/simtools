@@ -16,6 +16,17 @@ def test_repr(corsika_config):
     assert "site" in repr(corsika_config)
 
 
+def test_load_corsika_default_parameters_file(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    corsika_parameters = cc._load_corsika_default_parameters_file()
+    assert isinstance(corsika_parameters, dict)
+    assert "CHERENKOV_EMISSION_PARAMETERS" in corsika_parameters
+
+
 def test_setup_configuration(io_handler, corsika_config_data):
     cc = CorsikaConfig(
         array_model=None,
@@ -32,6 +43,34 @@ def test_setup_configuration(io_handler, corsika_config_data):
     assert isinstance(cc.setup_configuration(), dict)
     cc.args_dict = None
     assert cc.setup_configuration() is None
+
+
+def test_rotate_azimuth_by_180deg(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(0.0)) == 180.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(360.0)) == 180.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(450.0)) == 270.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(180.0)) == 0.0
+    assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
+
+
+def test_convert_primary_input_and_store_primary_name(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert cc._convert_primary_input_and_store_primary_name("Gamma") == 1
+    assert cc._convert_primary_input_and_store_primary_name("proton") == 14
+    assert cc._convert_primary_input_and_store_primary_name("Helium") == 402
+    assert cc._convert_primary_input_and_store_primary_name("IRON") == 5626
+
+    with pytest.raises(InvalidCorsikaInputError):
+        cc._convert_primary_input_and_store_primary_name("banana")
 
 
 def test_get_config_parameter(io_handler, corsika_config_data, caplog):
@@ -51,6 +90,21 @@ def test_print_config_parameter(corsika_config, capsys):
     logger.info("test_print_config_parameter")
     corsika_config.print_config_parameter()
     assert "NSHOW" in capsys.readouterr().out
+
+
+def test_get_text_single_line(io_handler):
+    cc = CorsikaConfig(
+        array_model=None,
+        label="test-corsika-config",
+        args_dict=None,
+    )
+    assert cc._get_text_single_line({"EVTNR": [1], "RUNNR": [10]}) == "EVTNR 1 \nRUNNR 10 \n"
+    assert (
+        cc._get_text_single_line(
+            {"SPLIT_AUTO": ["15M"], "IO_BUFFER": ["800MB"], "MAX_BUNCHES": ["1000000"]}, "IACT "
+        )
+        == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
+    )
 
 
 def test_generate_corsika_input_file(corsika_config):
@@ -91,7 +145,8 @@ def test_get_corsika_config_file_name(corsika_config, io_handler):
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
     assert corsika_config.get_corsika_config_file_name("output_generic") == (
-        "corsika_runXXXXXX_proton_za020deg_azm000deg_South_test_layout_test-corsika-config.zst"
+        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
+        "-corsika-config_South_test_layout_test-corsika-config.zst"
     )
     assert (
         corsika_config.get_corsika_config_file_name("multipipe")
@@ -101,66 +156,12 @@ def test_get_corsika_config_file_name(corsika_config, io_handler):
         corsika_config.get_corsika_config_file_name("foobar")
 
 
-def test_convert_primary_input_and_store_primary_name(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert cc._convert_primary_input_and_store_primary_name("Gamma") == 1
-    assert cc._convert_primary_input_and_store_primary_name("proton") == 14
-    assert cc._convert_primary_input_and_store_primary_name("Helium") == 402
-    assert cc._convert_primary_input_and_store_primary_name("IRON") == 5626
-
-    with pytest.raises(InvalidCorsikaInputError):
-        cc._convert_primary_input_and_store_primary_name("banana")
-
-
-def test_load_corsika_default_parameters_file(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    corsika_parameters = cc._load_corsika_default_parameters_file()
-    assert isinstance(corsika_parameters, dict)
-    assert "CHERENKOV_EMISSION_PARAMETERS" in corsika_parameters
-
-
-def test_rotate_azimuth_by_180deg(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(0.0)) == 180.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(360.0)) == 180.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(450.0)) == 270.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(180.0)) == 0.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
-
-
-def test_get_text_single_line(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert cc._get_text_single_line({"EVTNR": [1], "RUNNR": [10]}) == "EVTNR 1 \nRUNNR 10 \n"
-    assert (
-        cc._get_text_single_line(
-            {"SPLIT_AUTO": ["15M"], "IO_BUFFER": ["800MB"], "MAX_BUNCHES": ["1000000"]}, "IACT "
-        )
-        == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
-    )
-
-
 def test_set_output_file_and_directory(corsika_config):
     cc = corsika_config
-    output_file = cc._set_output_file_and_directory()
-    assert (
-        str(output_file)
-        == "corsika_runXXXXXX_proton_za020deg_azm000deg_South_test_layout_test-corsika-config.zst"
+    output_file = cc.set_output_file_and_directory()
+    assert str(output_file) == (
+        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
+        "-corsika-config_South_test_layout_test-corsika-config.zst"
     )
     assert isinstance(cc.config_file_path, pathlib.Path)
 
