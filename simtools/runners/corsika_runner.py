@@ -139,7 +139,6 @@ class CorsikaRunner:
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        # Changing permissions
         os.system(f"chmod ug+x {script_file_path}")
 
         return script_file_path

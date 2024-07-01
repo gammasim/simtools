@@ -15,12 +15,16 @@ class SimulatorArray(SimtelRunner):
 
     Parameters
     ----------
-    array_model: str
-        Instance of ArrayModel class.
-    label: str
-        Instance label. Important for output file naming.
+    corsika_config_data: CorsikaConfig
+        CORSIKA configuration.
     simtel_path: str or Path
-        Location of sim_telarray installation.
+        Location of source of the sim_telarray/CORSIKA package.
+    label: str
+        Instance label.
+    keep_seeds: bool
+        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
+    use_multipipe: bool
+        Use multipipe to run CORSIKA and sim_telarray.
     """
 
     def __init__(
@@ -28,6 +32,7 @@ class SimulatorArray(SimtelRunner):
         corsika_config,
         simtel_path,
         label=None,
+        keep_seeds=False,
         use_multipipe=False,
     ):
         """Initialize SimulatorArray."""
@@ -38,16 +43,12 @@ class SimulatorArray(SimtelRunner):
         self.corsika_config = corsika_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
+        self.keep_seeds = keep_seeds
 
         self.runner_service = RunnerServices(corsika_config, label)
         self._directory = self.runner_service.load_data_directories(
             "corsika_simtel" if use_multipipe else "simtel"
         )
-
-    def _shall_run(self, **kwargs):
-        """Tells if simulations should be run again based on the existence of output files."""
-        output_file = self.get_file_name(file_type="output", run_number=kwargs["run_number"])
-        return not output_file.exists()
 
     def _make_run_command(self, run_number=None, input_file=None):
         """
@@ -55,12 +56,15 @@ class SimulatorArray(SimtelRunner):
 
         Parameters
         ----------
-        kwargs: dict
-            The dictionary must include the following parameters (unless listed as optional):
-                input_file: str
-                    Full path of the input CORSIKA file
-                run_number: int (optional)
-                    run number
+        input_file: str
+            Full path of the input CORSIKA file
+        run_number: int (optional)
+            run number
+
+        Returns
+        -------
+        str
+            Command to run sim_telarray.
         """
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
@@ -82,14 +86,32 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):
-        """Check run results."""
-        output_file = self.get_file_name(file_type="output", run_number=kwargs["run_number"])
+    def _check_run_result(self, run_number=None):
+        """
+        Check if simtel output file exists.
+
+        Parameters
+        ----------
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        bool
+            True if simtel output file exists.
+
+        Raises
+        ------
+        InvalidOutputFileError
+            If simtel output file does not exist.
+        """
+        output_file = self.get_file_name(file_type="output", run_number=run_number)
         if not output_file.exists():
             msg = f"sim_telarray output file {output_file} does not exist."
             self._logger.error(msg)
             raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
+        return True
 
     def get_resources(self, run_number=None):
         """Return computing resources used."""
