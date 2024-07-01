@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import math
 import shutil
-from copy import copy
 from pathlib import Path
 
 import pytest
@@ -35,46 +35,128 @@ def corsika_file():
 
 
 @pytest.fixture()
-def array_simulator(
-    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
-):
+def simulations_args_dict(corsika_config_data, model_version, simtel_path):
+    """Return a dictionary with the simulation command line arguments."""
+    args_dict = copy.deepcopy(corsika_config_data)
+    args_dict["simulation_software"] = "simtel"
+    args_dict["simtel_path"] = simtel_path
+    args_dict["model_version"] = model_version
+    args_dict["label"] = "test-array-simulator"
+    args_dict["array_layout_name"] = "test_layout"
+    args_dict["site"] = "North"
+    args_dict["keep_seeds"] = False
+    args_dict["run_number_start"] = 1
+    args_dict["nshow"] = 10
+    return args_dict
+
+
+@pytest.fixture()
+def array_simulator(io_handler, db_config, simulations_args_dict):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "simtel"
+
     return Simulator(
-        simulation_software="simtel",
-        simulator_source_path=simtel_path,
-        label=label,
-        config_data=simulator_config_data_north,
+        label=args_dict["label"],
+        args_dict=args_dict,
+        submit_command="local",
         mongo_db_config=db_config,
-        model_version=model_version,
     )
 
 
 @pytest.fixture()
-def shower_simulator(
-    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
-):
+def shower_simulator(io_handler, db_config, simulations_args_dict):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "corsika"
+    args_dict["label"] = "test-shower-simulator"
 
     return Simulator(
-        simulation_software="corsika",
-        simulator_source_path=simtel_path,
-        label=label,
-        config_data=simulator_config_data_north,
+        label=args_dict["label"],
+        args_dict=args_dict,
+        submit_command="local",
         mongo_db_config=db_config,
-        model_version=model_version,
     )
 
 
 @pytest.fixture()
-def shower_array_simulator(
-    label, simulator_config_data_north, io_handler, db_config, model_version, simtel_path
-):
+def shower_array_simulator(io_handler, db_config, simulations_args_dict):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "corsika_simtel"
+    args_dict["label"] = "test-shower-array-simulator"
     return Simulator(
-        simulation_software="corsika_simtel",
-        simulator_source_path=simtel_path,
-        label=label,
-        config_data=simulator_config_data_north,
+        label=args_dict["label"],
+        args_dict=args_dict,
+        submit_command="local",
         mongo_db_config=db_config,
-        model_version=model_version,
     )
+
+
+def test_init_simulator(shower_simulator, array_simulator, shower_array_simulator):
+
+    assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
+    assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
+    assert isinstance(array_simulator._simulation_runner, SimulatorArray)
+
+
+def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator, caplog):
+    assert array_simulator.simulation_software == "simtel"
+    assert shower_simulator.simulation_software == "corsika"
+    assert shower_array_simulator.simulation_software == "corsika_simtel"
+
+    # setting
+    test_array_simulator = copy.deepcopy(array_simulator)
+    test_array_simulator.simulation_software = "corsika"
+    assert test_array_simulator.simulation_software == "corsika"
+
+    with pytest.raises(gen.InvalidConfigDataError):
+        with caplog.at_level(logging.ERROR):
+            test_array_simulator.simulation_software = "this_simulator_is_not_there"
+        assert "Invalid simulation software" in caplog.text
+
+
+def test_initialize_array_model(shower_simulator, db_config):
+    assert isinstance(
+        shower_simulator._initialize_array_model(mongo_db_config=db_config),
+        ArrayModel,
+    )
+
+
+def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
+    for simulator_now in [shower_simulator, shower_array_simulator]:
+        assert not simulator_now._validate_run_list_and_range(None, None)
+
+        run_list = [1, 24, 3]
+
+        assert simulator_now._validate_run_list_and_range(run_list=run_list, run_range=None) == [
+            1,
+            3,
+            24,
+        ]
+
+        with pytest.raises(InvalidRunsToSimulateError):
+            simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
+
+        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
+            3,
+            4,
+            5,
+        ]
+
+        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
+
+        with pytest.raises(InvalidRunsToSimulateError):
+            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
+
+        with pytest.raises(InvalidRunsToSimulateError):
+            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
+
+
+def test_fill_results_without_run(array_simulator, input_file_list):
+    array_simulator._fill_results_without_run(input_file_list=[])
+    assert isinstance(array_simulator.runs, list)
+
+    array_simulator.runs = []
+    array_simulator._fill_results_without_run(input_file_list=input_file_list)
+    assert array_simulator.runs == [1, 22, 2]
 
 
 def test_guess_run_from_file(array_simulator):
@@ -91,20 +173,6 @@ def test_guess_run_from_file(array_simulator):
 
     # add test for 'Error creating output directory'
     # (not sure how to test a failed mkdir)
-
-
-def test_set_simulator(array_simulator, shower_simulator, shower_array_simulator):
-    array_simulator.simulation_software = "simtel"
-    assert array_simulator.simulation_software == "simtel"
-
-    shower_simulator.simulation_software = "corsika"
-    assert shower_simulator.simulation_software == "corsika"
-
-    shower_array_simulator.simulation_software = "corsika_simtel"
-    assert shower_array_simulator.simulation_software == "corsika_simtel"
-
-    with pytest.raises(gen.InvalidConfigDataError):
-        shower_simulator.simulation_software = "this_simulator_is_not_there"
 
 
 def test_load_configuration_and_simulation_model(array_simulator, simulator_config_data_north):
@@ -148,37 +216,6 @@ def test_load_shower_array_config_and_model(shower_array_simulator, simulator_co
     )
 
 
-def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
-    for simulator_now in [shower_simulator, shower_array_simulator]:
-        assert not simulator_now._validate_run_list_and_range(None, None)
-
-        run_list = [1, 24, 3]
-
-        assert simulator_now._validate_run_list_and_range(run_list=run_list, run_range=None) == [
-            1,
-            3,
-            24,
-        ]
-
-        with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=[1, "a", 4], run_range=None)
-
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 6]) == [
-            3,
-            4,
-            5,
-            6,
-        ]
-
-        assert simulator_now._validate_run_list_and_range(run_list=None, run_range=[6, 3]) == []
-
-        with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, "b"])
-
-        with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list_and_range(run_list=None, run_range=[3, 4, 5])
-
-
 def test_collect_array_model_parameters(array_simulator, simulator_config_data_north):
     _rest_data = array_simulator._collect_array_model_parameters(
         config_data=simulator_config_data_north
@@ -194,40 +231,35 @@ def test_set_simulation_runner(array_simulator, shower_simulator, shower_array_s
     assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
 
 
-def test_fill_results_without_run(array_simulator, input_file_list):
-    array_simulator._fill_results_without_run(input_file_list=[])
-    assert isinstance(array_simulator.runs, list)
-
-    array_simulator.runs = []
-    array_simulator._fill_results_without_run(input_file_list=input_file_list)
-    assert array_simulator.runs == [1, 22, 2]
-
-
-def test_submitting(shower_simulator, array_simulator, corsika_file):
-    shower_simulator.test = True
+def test_submitting_shower_simulator(shower_simulator):
+    shower_simulator._test = True
     shower_simulator._submit_command = "local"
     shower_simulator.simulate()
-
-    shower_simulator.print_list_of_output_files()
-    shower_simulator.print_list_of_log_files()
-    shower_simulator.print_list_of_input_files()
-
+    assert len(shower_simulator._results["output"]) > 0
+    assert len(shower_simulator._results["sub_out"]) > 0
     run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
-
     assert Path(run_script).exists()
 
-    array_simulator.test = True
+
+def test_submitting_array_simulator(array_simulator, corsika_file):
+    array_simulator._test = True
     array_simulator._submit_command = "local"
     array_simulator.simulate(input_file_list=corsika_file)
 
-    array_simulator.print_list_of_output_files()
-    array_simulator.print_list_of_log_files()
-    array_simulator.print_list_of_input_files()
-
-    input_files = array_simulator.get_list_of_input_files()
-    assert str(input_files[0]) == str(corsika_file)
+    assert len(array_simulator._results["output"]) > 0
+    assert len(array_simulator._results["sub_out"]) > 0
 
 
+def test_submitting_shower_array_simulator(shower_array_simulator):
+    shower_array_simulator._test = True
+    shower_array_simulator._submit_command = "local"
+    shower_array_simulator.simulate()
+
+    assert len(shower_array_simulator._results["output"]) > 0
+    assert len(shower_array_simulator._results["sub_out"]) > 0
+
+
+# TODO
 def test_get_runs_and_files_to_submit(
     array_simulator, shower_simulator, shower_array_simulator, input_file_list
 ):

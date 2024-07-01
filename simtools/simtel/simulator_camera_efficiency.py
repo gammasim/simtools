@@ -66,10 +66,6 @@ class SimulatorCameraEfficiency(SimtelRunner):
         else:
             self._nsb_spectrum = None
 
-    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
-        """Tells if simulations should be run again based on the existence of output files."""
-        return not self._file_simtel.exists()
-
     def _make_run_command(
         self, run_number=None, input_file=None
     ):  # pylint: disable=unused-argument
@@ -152,7 +148,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
 
         return f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
 
-    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
+    def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.
 
         Raises

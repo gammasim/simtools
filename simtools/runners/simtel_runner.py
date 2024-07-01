@@ -40,7 +40,6 @@ class SimtelRunner:
         self._simtel_path = Path(simtel_path)
         self.label = label
         self._script_dir = None
-        self._script_file = None
         self._base_directory = None
 
         self.runs_per_set = 1
@@ -70,25 +69,19 @@ class SimtelRunner:
             Full path of the run script.
         """
         self._logger.debug("Creating run bash script")
+        self._logger.debug(f"Run number: {run_number} {self.corsika_config.run_number}")
 
-        self._script_dir = self._base_directory.joinpath("scripts")
-        self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(
-            f"run{run_number if run_number is not None else ''}-simtel"
-        )
-        self._logger.debug(f"Run bash script - {self._script_file}")
+        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
+
+        self._logger.debug(f"Run bash script - {script_file_path}")
 
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         command = self._make_run_command(run_number=run_number, input_file=input_file)
-        with self._script_file.open("w", encoding="utf-8") as file:
+        with script_file_path.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
-
-            # Make sure to exit on failed commands and report their error code
             file.write("set -e\n")
             file.write("set -o pipefail\n")
-
-            # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
 
             if extra_commands is not None:
@@ -101,13 +94,12 @@ class SimtelRunner:
             for _ in range(n):
                 file.write(f"{command}\n\n")
 
-            # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system(f"chmod ug+x {self._script_file}")
-        return self._script_file
+        os.system(f"chmod ug+x {script_file_path}")
+        return script_file_path
 
-    def run(self, test=False, force=False, input_file=None, run_number=None):
+    def run(self, test=False, input_file=None, run_number=None):
         """
         Make run command and run sim_telarray.
 
@@ -115,18 +107,12 @@ class SimtelRunner:
         ----------
         test: bool
             If True, make simulations faster.
-        force: bool
-            If True, remove possible existing output files and run again.
         input_file: str or Path
             Full path of the input CORSIKA file.
         run_number: int
             Run number.
         """
         self._logger.debug("Running sim_telarray")
-
-        if not self._shall_run() and not force:
-            self._logger.info("Skipping because output exists and force = False")
-            return
 
         command = self._make_run_command(run_number=run_number, input_file=input_file)
 
@@ -181,13 +167,6 @@ class SimtelRunner:
         sys_output = os.system(command)
         if self._simtel_failed(sys_output):
             self._raise_simtel_error()
-
-    def _shall_run(self):
-        self._logger.debug(
-            "shall_run is being called from the base class - returning False -"
-            "it should be implemented in the sub class"
-        )
-        return False
 
     def _make_run_command(self, run_number=None, input_file=None):
         self._logger.debug(

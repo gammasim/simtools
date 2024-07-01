@@ -86,9 +86,3 @@ def test_make_run_command(simtel_runner, caplog):
     with caplog.at_level(logging.DEBUG):
         assert simtel_runner._make_run_command("test", "5") == "test-5"
     assert "make_run_command is being called from the base class" in caplog.text
-
-
-def test_shall_run(simtel_runner, caplog):
-    with caplog.at_level(logging.DEBUG):
-        assert not simtel_runner._shall_run()
-    assert "shall_run is being called from the base class" in caplog.text

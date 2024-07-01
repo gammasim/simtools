@@ -156,10 +156,6 @@ class SimulatorRayTracing(SimtelRunner):
                     f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
                 )
 
-    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
-        """Tells if simulations should be run again based on the existence of output files."""
-        return not self._is_photon_list_file_ok()
-
     def _make_run_command(
         self, run_number=None, input_file=None
     ):  # pylint: disable=unused-argument
@@ -219,7 +215,7 @@ class SimulatorRayTracing(SimtelRunner):
 
         return command
 
-    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
+    def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.
 
         Raises
