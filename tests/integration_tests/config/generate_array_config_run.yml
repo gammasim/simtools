@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-generate-array-configuration
+  APPLICATION: simtools-generate-array-config
   TEST_NAME: run
   CONFIGURATION:
     SITE: North
