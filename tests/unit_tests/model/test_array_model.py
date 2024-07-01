@@ -123,11 +123,14 @@ def test_get_telescope_position_parameter(array_model, io_handler):
     }
 
 
-def test_set_config_file_directory(array_model, io_handler):
+def test_get_config_file(array_model, io_handler):
     am = array_model
-    _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
-    am._set_config_file_directory()
-    assert _config_dir_1.is_dir()
+    assert am.get_config_file().name == "CTA-test_layout-North-2024-02-01_test.cfg"
+
+
+def test_get_config_directory(array_model, io_handler):
+    am = array_model
+    assert am.get_config_directory().is_dir()
 
 
 def test_export_array_elements_as_table(array_model, io_handler):
