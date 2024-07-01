@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import pathlib
 import shutil
@@ -14,6 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture()
 def runner_service(corsika_runner):
+    """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
         corsika_config=corsika_runner.corsika_config, label="test-corsika-runner"
     )
@@ -23,10 +25,17 @@ def runner_service(corsika_runner):
 
 @pytest.fixture()
 def runner_service_config_only(corsika_config):
+    """Runner services object with simplified config."""
     return runner_services.RunnerServices(
         corsika_config=corsika_config,
         label="test-corsika-runner",
     )
+
+
+@pytest.fixture()
+def file_base_name():
+    """Base name for simulation test file."""
+    return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner"
 
 
 def test_init_runner_services(runner_service_config_only):
@@ -37,7 +46,7 @@ def test_init_runner_services(runner_service_config_only):
 
 def test_get_info_for_file_name(runner_service_config_only):
     info_for_file_name = runner_service_config_only._get_info_for_file_name(run_number=1)
-    assert info_for_file_name["run"] == 1
+    assert info_for_file_name["run_number"] == 1
     assert info_for_file_name["primary"] == "proton"
     assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "South"
@@ -46,56 +55,125 @@ def test_get_info_for_file_name(runner_service_config_only):
     assert info_for_file_name["azimuth"] == pytest.approx(0)
 
 
-def test_load_corsika_data_directories(runner_service_config_only):
-    assert isinstance(runner_service_config_only.directory, dict)
+def test_get_simulation_software_list(runner_service_config_only):
+    runner_service_config_only._get_simulation_software_list("corsika") == ["corsika"]
+    runner_service_config_only._get_simulation_software_list("CoRsIka") == ["corsika"]
+    runner_service_config_only._get_simulation_software_list("simtel") == ["simtel"]
+    runner_service_config_only._get_simulation_software_list("corsika_simtel") == [
+        "corsika",
+        "simtel",
+    ]
+    runner_service_config_only._get_simulation_software_list("something_else") == []
 
-    # TODO - is dict actually empty as load_data_directories is not called?
+
+def test_load_corsika_data_directories(runner_service_config_only):
+    runner_service_config_only.load_data_directories("corsika")
+    assert isinstance(runner_service_config_only.directory, dict)
 
     for item in runner_service_config_only.directory.values():
         assert isinstance(item, pathlib.Path)
 
 
-def test_get_file_name(runner_service, corsika_runner, io_handler):
-    file_name = "run000001_proton_za020deg_azm000deg_South_test_layout_test-corsika-runner"
+def test_has_file(io_handler, runner_service):
+    corsika_file = io_handler.get_input_data_file(
+        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
+    )
+    # Copying the corsika file to the expected location and
+    # changing its name for the sake of this test.
+    # This should not affect the efficiency of this test.
+    output_directory = runner_service.directory["data"].joinpath(
+        runner_service._get_run_number_string(1)
+    )
+    output_directory.mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        corsika_file,
+        output_directory.joinpath(
+            "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner.zst"
+        ),
+    )
+    assert runner_service.has_file(file_type="corsika_output", run_number=1)
+    assert not runner_service.has_file(file_type="log", run_number=1234)
 
-    # log.gz file
-    assert runner_service.get_file_name("log", run_number=1) == corsika_runner._directory[
+
+def test_get_file_basename(runner_service, file_base_name):
+    assert runner_service._get_file_basename(1) == file_base_name
+    _runner_service_copy = copy.deepcopy(runner_service)
+    _runner_service_copy.label = ""
+    assert _runner_service_copy._get_file_basename(1) == (
+        "run000001_proton_za20deg_azm000deg_South_test_layout"
+    )
+
+
+def test_get_log_file_path(runner_service, corsika_runner, file_base_name):
+    # log.gz
+    assert runner_service._get_log_file_path("log", file_base_name) == corsika_runner._directory[
         "logs"
-    ].joinpath(f"{file_name}.log.gz")
+    ].joinpath(f"{file_base_name}.log.gz")
 
-    assert runner_service.get_file_name("corsika_log", run_number=1) == corsika_runner._directory[
-        "data"
-    ].joinpath(runner_service._get_run_number_string(1)).joinpath("run1.log")
+    # hdata.zst
+    assert runner_service._get_log_file_path(
+        "histogram", file_base_name
+    ) == corsika_runner._directory["logs"].joinpath(f"{file_base_name}.hdata.zst")
 
-    script_file_dir = io_handler.get_output_directory("test-corsika-runner", "corsika").joinpath(
-        "scripts"
-    )
-    assert runner_service.get_file_name("script", run_number=1) == script_file_dir.joinpath(
-        f"{file_name}.sh"
-    )
 
-    file_name_for_output = (
-        "run000001_proton_za020deg_azm000deg_South_test_layout_test-corsika-runner.zst"
-    )
-    assert runner_service.get_file_name(
-        "corsika_output", run_number=1
+def test_get_data_file_path(runner_service, corsika_runner, file_base_name):
+    # corsika log
+    assert runner_service._get_data_file_path(
+        file_type="corsika_log", file_name=file_base_name, run_number=1
     ) == corsika_runner._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
     ).joinpath(
-        file_name_for_output
+        f"{file_base_name}.log"
     )
 
-    sub_log_file_dir = io_handler.get_output_directory("test-corsika-runner", "corsika").joinpath(
-        "logs"
+    # corsika output
+    assert runner_service._get_data_file_path(
+        file_type="corsika_output", file_name=file_base_name, run_number=1
+    ) == corsika_runner._directory["data"].joinpath(
+        runner_service._get_run_number_string(1)
+    ).joinpath(
+        f"{file_base_name}.zst"
     )
-    assert runner_service.get_file_name(
-        "sub_log", run_number=1, mode="out"
-    ) == sub_log_file_dir.joinpath(f"log_sub_{file_name}.out")
+
+    # simtel output
+    assert runner_service._get_data_file_path(
+        file_type="simtel_output", file_name=file_base_name, run_number=1
+    ) == corsika_runner._directory["data"].joinpath(
+        runner_service._get_run_number_string(1)
+    ).joinpath(
+        f"{file_base_name}.simtel.zst"
+    )
+
+
+def test_get_sub_file_path(runner_service, file_base_name, io_handler):
+    script_file_dir = io_handler.get_output_directory("test-corsika-runner").joinpath("scripts")
+    assert runner_service._get_sub_file_path(
+        file_type="script",
+        file_name=file_base_name,
+        mode=None,
+    ) == script_file_dir.joinpath(f"sub_{file_base_name}.sh")
+    assert runner_service._get_sub_file_path(
+        file_type="script",
+        file_name=file_base_name,
+        mode="err",
+    ) == script_file_dir.joinpath(f"sub_{file_base_name}.err")
+
+    log_file_dir = io_handler.get_output_directory("test-corsika-runner").joinpath("sub_logs")
+    assert runner_service._get_sub_file_path(
+        file_type="sub_log",
+        file_name=file_base_name,
+        mode=None,
+    ) == log_file_dir.joinpath(f"sub_{file_base_name}.log")
+
+
+def test_get_file_name(runner_service):
+
+    assert isinstance(runner_service.get_file_name("log", run_number=1), pathlib.Path)
+    assert isinstance(runner_service.get_file_name("output", run_number=1), pathlib.Path)
+    assert isinstance(runner_service.get_file_name("sub_log", run_number=1), pathlib.Path)
+
     with pytest.raises(ValueError):
         runner_service.get_file_name("foobar", run_number=1, mode="out")
-    assert runner_service.get_file_name(
-        "sub_log", run_number=1, mode=""
-    ) == sub_log_file_dir.joinpath(f"log_sub_{file_name}.log")
 
 
 def test_get_run_number_string(runner_service_config_only):
@@ -125,35 +203,3 @@ def test_get_resources(runner_service, caplog):
         resources = runner_service.get_resources()
     assert resources["runtime"] is None
     assert "RUNTIME was not found in run log file" in caplog.text
-
-
-def test_has_file(io_handler, runner_service):
-    corsika_file = io_handler.get_input_data_file(
-        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
-    )
-    # Copying the corsika file to the expected location and
-    # changing its name for the sake of this test.
-    # This should not affect the efficiency of this test.
-    output_directory = runner_service.directory["data"].joinpath(
-        runner_service._get_run_number_string(1)
-    )
-    output_directory.mkdir(parents=True, exist_ok=True)
-    shutil.copy(
-        corsika_file,
-        output_directory.joinpath(
-            "run000001_proton_za020deg_azm000deg_South_test_layout_test-corsika-runner.zst"
-        ),
-    )
-    assert runner_service.has_file(file_type="corsika_output", run_number=1)
-    assert not runner_service.has_file(file_type="log", run_number=1234)
-
-
-def test_get_simulation_software_list(runner_service_config_only):
-    runner_service_config_only._get_simulation_software_list("corsika") == ["corsika"]
-    runner_service_config_only._get_simulation_software_list("CoRsIka") == ["corsika"]
-    runner_service_config_only._get_simulation_software_list("simtel") == ["simtel"]
-    runner_service_config_only._get_simulation_software_list("corsika_simtel") == [
-        "corsika",
-        "simtel",
-    ]
-    runner_service_config_only._get_simulation_software_list("something_else") == []
