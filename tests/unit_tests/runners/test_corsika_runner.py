@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+import re
 
 import pytest
 
@@ -37,6 +38,15 @@ def test_prepare_run_script(corsika_runner):
         assert "corsika_autoinputs" in script_content
         assert "sim_telarray/bin/pfp" in script_content
         assert "-R 3" in script_content
+
+
+def test_prepare_run_script_with_input_file(corsika_runner, caplog):
+    with caplog.at_level("WARNING"):
+        corsika_runner.prepare_run_script(input_file="test")
+    assert any(
+        "input_file parameter is not used in CorsikaRunner.prepare_run_script" in message
+        for message in caplog.messages
+    )
 
 
 def test_prepare_run_script_with_invalid_run(corsika_runner):
@@ -86,3 +96,15 @@ def test_get_autoinputs_command(corsika_runner):
         run_number=3, input_tmp_file="tmp_file"
     )
     assert "--keep-seeds" in autoinputs_command_with_seeds
+
+
+def test_get_resources(corsika_runner):
+    with pytest.raises(FileNotFoundError):
+        corsika_runner.get_resources()
+
+
+def test_get_file_name(corsika_runner):
+    with pytest.raises(
+        ValueError, match=re.escape("simulation_software (test) is not supported in CorsikaRunner")
+    ):
+        corsika_runner.get_file_name(simulation_software="test")
