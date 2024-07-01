@@ -395,6 +395,7 @@ def simulator_config_data_south(tmp_test_directory):
 
 @pytest.fixture()
 def corsika_config_data():
+    """Corsika configuration data (as given by CorsikaConfig)."""
     return {
         "nshow": 100,
         "run_number_start": 0,
@@ -402,10 +403,10 @@ def corsika_config_data():
         "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,
-        "viewcone": "0.0 deg 5.0 deg",
-        "erange": "10.0 GeV 10.0 TeV",
+        "viewcone": (0.0 * u.deg, 5.0 * u.deg),
+        "erange": (10.0 * u.GeV, 10.0 * u.TeV),
         "eslope": -2,
-        "core_scatter": "10 1400.0 m",
+        "core_scatter": (10, 1400.0 * u.m),
         "primary": "proton",
         "data_directory": "simtools-output",
     }
@@ -413,6 +414,7 @@ def corsika_config_data():
 
 @pytest.fixture()
 def corsika_config(io_handler, corsika_config_data, array_model_south):
+    """Corsika configuration object (using array model South)."""
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
         label="test-corsika-config",

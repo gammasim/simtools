@@ -29,6 +29,12 @@ def runner_service_config_only(corsika_config):
     )
 
 
+def test_init_runner_services(runner_service_config_only):
+    assert runner_service_config_only.label == "test-corsika-runner"
+    assert runner_service_config_only.corsika_config.primary == "proton"
+    assert runner_service_config_only.directory == {}
+
+
 def test_get_info_for_file_name(runner_service_config_only):
     info_for_file_name = runner_service_config_only._get_info_for_file_name(run_number=1)
     assert info_for_file_name["run"] == 1
