@@ -258,6 +258,11 @@ testpaths = "tests/unit_tests/"
 # Ignore the warning about fontTools.misc.py23
 filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
 
+[tool.coverage.report]
+exclude_also = [
+  "if __name__ == \"__main__\":",
+]
+
 [tool.coverage.run]
 relative_files = true
 source = [
