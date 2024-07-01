@@ -77,7 +77,7 @@ class CorsikaSimtelRunner:
         Path:
             Full path of the run script file.
         """
-        self.export_multipipe_script(run_number)
+        self._export_multipipe_script(run_number)
         return self.corsika_runner.prepare_run_script(
             run_number=run_number,
             input_file=input_file,
@@ -85,7 +85,7 @@ class CorsikaSimtelRunner:
             use_pfp=use_pfp,
         )
 
-    def export_multipipe_script(self, run_number):
+    def _export_multipipe_script(self, run_number):
         """
         Write the multipipe script used in piping CORSIKA to sim_telarray.
 
@@ -109,9 +109,9 @@ class CorsikaSimtelRunner:
         with open(multipipe_file, "w", encoding="utf-8") as file:
             file.write(f"{run_command}")
         self._logger.info(f"Multipipe script: {multipipe_file}")
-        self._export_multipipe_script(multipipe_file)
+        self._write_multipipe_script(multipipe_file)
 
-    def _export_multipipe_script(self, multipipe_file):
+    def _write_multipipe_script(self, multipipe_file):
         """
         Write script used to call the multipipe_corsika command.
 
@@ -207,10 +207,11 @@ class CorsikaSimtelRunner:
         str
             File name with full path.
         """
-        if simulation_software is None and self.corsika_runner:
-            simulation_software = "corsika"
-        if simulation_software is None and self.simulator_array:
-            simulation_software = "simtel"
+        if simulation_software is None:
+            if self.simulator_array:  # preference to simtel output (multipipe)
+                simulation_software = "simtel"
+            elif self.corsika_runner:
+                simulation_software = "corsika"
 
         if simulation_software == "corsika":
             return self.corsika_runner.get_file_name(
