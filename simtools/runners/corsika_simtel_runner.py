@@ -211,11 +211,5 @@ class CorsikaSimtelRunner:
             # preference to simtel output (multipipe)
             simulation_software = "simtel" if self.simulator_array else "corsika"
 
-        if simulation_software == "corsika":
-            return self.corsika_runner.get_file_name(
-                file_type=file_type, run_number=run_number, mode=mode
-            )
-
-        return self.simulator_array.get_file_name(
-            file_type=file_type, run_number=run_number, mode=mode
-        )
+        runner = self.corsika_runner if simulation_software == "corsika" else self.simulator_array
+        return runner.get_file_name(file_type=file_type, run_number=run_number, mode=mode)
