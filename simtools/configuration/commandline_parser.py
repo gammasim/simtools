@@ -612,18 +612,20 @@ class CommandLineParser(argparse.ArgumentParser):
                 "The azimuth angle provided is not a valid astropy.Quantity. "
                 "Will check if it is (north, south, east, west) instead"
             )
-        azimuth_map = {
-            "north": 0 * u.deg,
-            "south": 180 * u.deg,
-            "east": 90 * u.deg,
-            "west": 270 * u.deg,
-        }
-        azimuth_angle = angle.lower()
-        if azimuth_angle in azimuth_map:
-            return azimuth_map[azimuth_angle]
-        raise argparse.ArgumentTypeError(
-            "The azimuth angle can only be one of " f"(north, south, east, west), not {angle}"
-        )
+        if isinstance(angle, str):
+            azimuth_map = {
+                "north": 0 * u.deg,
+                "south": 180 * u.deg,
+                "east": 90 * u.deg,
+                "west": 270 * u.deg,
+            }
+            azimuth_angle = angle.lower()
+            if azimuth_angle in azimuth_map:
+                return azimuth_map[azimuth_angle]
+            raise argparse.ArgumentTypeError(
+                "The azimuth angle can only be one of " f"(north, south, east, west), not {angle}"
+            )
+        return None
 
     @staticmethod
     def parse_quantity_pair(string):
@@ -661,7 +663,8 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         input_string: str
-            The input string (e.g., "5 1500 m").
+            The input string (e.g., "5 1500 m") or
+            a tuple converted to string (e.g., "(5, <Quantity 1500 m>)").
 
         Returns
         -------
@@ -671,8 +674,14 @@ class CommandLineParser(argparse.ArgumentParser):
         ------
         ValueError: If the input string does not match the required format.
         """
-        pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
-        match = re.match(pattern, input_string.strip())
+        # tuple converted to string: "(5, <Quantity 1500 m>)"
+        if all(char in input_string for char in ["(", ")", ","]):
+            pattern = r"\((\d+), <Quantity ([\d.]+) (.+)>\)"
+            match = re.match(pattern, input_string)
+        # string with integer and quantity: "5 1500 m"
+        else:
+            pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
+            match = re.match(pattern, input_string.strip())
 
         if not match:
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
