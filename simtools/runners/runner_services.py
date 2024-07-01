@@ -115,6 +115,108 @@ class RunnerServices:
         _logger.debug(f"Checking if {run_sub_file} exists")
         return Path(run_sub_file).is_file()
 
+    def _get_file_basename(self, run_number):
+        """
+        Get the base name for the simulation files.
+
+        Parameters
+        ----------
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        str
+            Base name for the simulation files.
+        """
+        info_for_file_name = self._get_info_for_file_name(run_number)
+        file_label = f"{info_for_file_name.get('label', '')}"
+        file_label = f"_{file_label}" if file_label else ""
+        zenith = self.corsika_config.get_config_parameter("THETAP")[0]
+        azimuth = self.corsika_config.azimuth_angle
+        run_dir = self._get_run_number_string(info_for_file_name["run_number"])
+        return (
+            f"{run_dir}_{info_for_file_name['primary']}_"
+            f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
+            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}{file_label}"
+        )
+
+    def _get_log_file_path(self, file_type, file_name):
+        """
+        Return path for log files.
+
+        Parameters
+        ----------
+        file_type : str
+            File type.
+        file_name : str
+            File name.
+
+        Returns
+        -------
+        Path
+            Path for log files.
+        """
+        log_suffixes = {
+            "log": ".log.gz",
+            "histogram": ".hdata.zst",
+        }
+        return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
+
+    def _get_data_file_path(self, file_type, file_name, run_number):
+        """
+        Return path for data files.
+
+        Parameters
+        ----------
+        file_type : str
+            File type.
+        file_name : str
+            File name.
+        run_number : int
+            Run number.
+
+        Returns
+        -------
+        Path
+            Path for data files.
+        """
+        data_suffixes = {
+            "output": ".zst",
+            "corsika_output": ".zst",
+            "corsika_log": ".log",
+            "simtel_output": ".simtel.zst",
+        }
+        run_dir = self._get_run_number_string(run_number)
+        data_run_dir = self.directory["data"].joinpath(run_dir)
+        data_run_dir.mkdir(parents=True, exist_ok=True)
+        return data_run_dir.joinpath(f"{file_name}{data_suffixes[file_type]}")
+
+    def _get_sub_file_path(self, file_type, file_name, mode):
+        """
+        Return path for submission files.
+
+        Parameters
+        ----------
+        file_type : str
+            File type.
+        file_name : str
+            File name.
+        mode : str
+            Mode (out or err).
+
+        Returns
+        -------
+        Path
+            Path for submission files.
+        """
+        suffix = ".log" if file_type == "sub_log" else ".sh"
+        if mode and mode != "":
+            suffix = f".{mode}"
+        sub_log_file_dir = self.directory["output"].joinpath(f"{file_type}s")
+        sub_log_file_dir.mkdir(parents=True, exist_ok=True)
+        return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
+
     def get_file_name(self, file_type, run_number=None, mode=None):
         """
         Get a CORSIKA/sim_telarray style file name for various log and data file types.
@@ -138,46 +240,16 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        info_for_file_name = self._get_info_for_file_name(run_number)
-        file_label = (
-            f"_{info_for_file_name.get('label', '')}"
-            if info_for_file_name.get("label") is not None
-            else ""
-        )
-        zenith = self.corsika_config.get_config_parameter("THETAP")[0]
-        azimuth = self.corsika_config.azimuth_angle
-        run_dir = self._get_run_number_string(info_for_file_name["run_number"])
-        file_name = (
-            f"{run_dir}_{info_for_file_name['primary']}_"
-            f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}{file_label}"
-        )
+        file_name = self._get_file_basename(run_number)
 
-        log_suffixes = {
-            "log": ".log.gz",
-            "histogram": ".hdata.zst",
-        }
-        if file_type in log_suffixes:
-            return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
+        if file_type in ["log", "histogram"]:
+            return self._get_log_file_path(file_type, file_name)
 
-        data_suffixes = {
-            "output": ".zst",
-            "corsika_output": ".zst",
-            "corsika_log": ".log",
-            "simtel_output": ".simtel.zst",
-        }
-        if file_type in data_suffixes:
-            data_run_dir = self.directory["data"].joinpath(run_dir)
-            data_run_dir.mkdir(parents=True, exist_ok=True)
-            return data_run_dir.joinpath(f"{file_name}{data_suffixes[file_type]}")
+        if file_type in ["output", "corsika_output", "corsika_log", "simtel_output"]:
+            return self._get_data_file_path(file_type, file_name, run_number)
 
         if file_type in ("sub_log", "sub_script"):
-            suffix = ".log" if file_type == "sub_log" else ".sh"
-            if mode and mode != "":
-                suffix = f".{mode}"
-            sub_log_file_dir = self.directory["output"].joinpath(f"{file_type}s")
-            sub_log_file_dir.mkdir(parents=True, exist_ok=True)
-            return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
+            return self._get_sub_file_path(file_type, file_name, mode)
 
         raise ValueError(f"The requested file type ({file_type}) is unknown")
 
