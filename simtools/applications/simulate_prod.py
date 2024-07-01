@@ -126,6 +126,42 @@ def _parse(description=None):
     )
 
 
+def pack_for_register(logger, simulator, args_dict):
+    """
+    Pack the output files for registering on the grid.
+
+    Parameters
+    ----------
+    logger: logging.Logger
+        Logger object.
+    simulator: Simulator
+        Simulator object.
+
+    """
+    logger.info("Packing the output files for registering on the grid")
+    output_files = simulator.get_file_list(file_type="output")
+    log_files = simulator.get_file_list(file_type="log")
+    histogram_files = simulator.get_file_list(file_type="hist")
+    tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
+
+    with tarfile.open(tar_file_name, "w:gz") as tar:
+        files_to_tar = log_files[:1] + histogram_files[:1]
+        for file_to_tar in files_to_tar:
+            tar.add(file_to_tar, arcname=Path(file_to_tar).name)
+    directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
+        "directory_for_grid_upload"
+    )
+    directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
+    for file_to_move in [*output_files, tar_file_name]:
+        source_file = Path(file_to_move)
+        destination_file = directory_for_grid_upload / source_file.name
+        # Note that this will overwrite previous files which exist in the directory
+        # It should be fine for normal production since each run is on a separate node
+        # so no files are expected there.
+        shutil.move(source_file, destination_file)
+    logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+
+
 def main():  # noqa: D103
     args_dict, db_config = _parse(description="Run simulations for productions")
 
@@ -150,27 +186,7 @@ def main():  # noqa: D103
     )
 
     if args_dict["pack_for_grid_register"]:
-        logger.info("Packing the output files for registering on the grid")
-        output_files = simulator.get_list_of_output_files()
-        log_files = simulator.get_list_of_log_files()
-        histogram_files = simulator.get_list_of_histogram_files()
-        tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
-        with tarfile.open(tar_file_name, "w:gz") as tar:
-            files_to_tar = log_files[:1] + histogram_files[:1]
-            for file_to_tar in files_to_tar:
-                tar.add(file_to_tar, arcname=Path(file_to_tar).name)
-        directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
-            "directory_for_grid_upload"
-        )
-        directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
-        for file_to_move in [*output_files, tar_file_name]:
-            source_file = Path(file_to_move)
-            destination_file = directory_for_grid_upload / source_file.name
-            # Note that this will overwrite previous files which exist in the directory
-            # It should be fine for normal production since each run is on a separate node
-            # so no files are expected there.
-            shutil.move(source_file, destination_file)
-        logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+        pack_for_register(logger, simulator, args_dict)
 
 
 if __name__ == "__main__":
