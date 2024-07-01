@@ -1,58 +1,35 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 from pathlib import Path
 
 import pytest
 
-from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.runners.corsika_simtel_runner import (
+    CorsikaRunner,
+    CorsikaSimtelRunner,
+    SimulatorArray,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def common_args(simtel_path):
-    return {
-        "label": "test-corsika-simtel-runner",
-        "simtel_path": simtel_path,
-    }
-
-
-@pytest.fixture()
-def corsika_args(
-    array_model_north,
-    shower_config_data_north,
-):
-    # Remove the keys which are not necessary for general CORSIKA configuration
-    for key_to_pop in ["site", "run_list", "run_range", "layout_name"]:
-        shower_config_data_north.pop(key_to_pop, None)
-    return {
-        "array_model": array_model_north,
-        "corsika_config_data": shower_config_data_north,
-    }
-
-
-@pytest.fixture()
-def simtel_config_data(tmp_test_directory, simulator_config_data_north):
-    return {
-        "simtel_data_directory": str(tmp_test_directory) + "/test-output",
-        "primary": simulator_config_data_north["common"]["primary"],
-        "zenith_angle": simulator_config_data_north["common"]["zenith"],
-        "azimuth_angle": simulator_config_data_north["common"]["azimuth"],
-    }
-
-
-@pytest.fixture()
-def simtel_args(array_model_north, simtel_config_data):
-    return {"array_model": array_model_north, "config_data": simtel_config_data}
-
-
-@pytest.fixture()
-def corsika_simtel_runner(common_args, corsika_args, simtel_args):
+def corsika_simtel_runner(io_handler, corsika_config, simtel_path):
     return CorsikaSimtelRunner(
-        common_args=common_args, corsika_args=corsika_args, simtel_args=simtel_args
+        corsika_config=corsika_config,
+        simtel_path=simtel_path,
+        label="test-corsika-simtel-runner",
+        use_multipipe=True,
     )
+
+
+def test_corsika_simtel_runner(corsika_simtel_runner):
+
+    assert isinstance(corsika_simtel_runner.corsika_runner, CorsikaRunner)
+    assert isinstance(corsika_simtel_runner.simulator_array, SimulatorArray)
 
 
 def test_prepare_run_script(corsika_simtel_runner):
@@ -81,15 +58,15 @@ def test_prepare_run_script(corsika_simtel_runner):
 
 
 def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
-    for run in [-2, "test"]:
+    for run_number in [-2, "test"]:
         with pytest.raises(ValueError):
-            _ = corsika_simtel_runner.prepare_run_script(run_number=run)
+            _ = corsika_simtel_runner.prepare_run_script(run_number=run_number)
 
 
 def test_export_multipipe_script(corsika_simtel_runner):
-    corsika_simtel_runner.export_multipipe_script()
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
     script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.corsika_config.get_file_name("multipipe")
+        corsika_simtel_runner.corsika_config.get_corsika_config_file_name("multipipe")
     )
 
     assert script.exists()
@@ -101,12 +78,12 @@ def test_export_multipipe_script(corsika_simtel_runner):
         assert "-C show=all" in script_content
 
 
-def test_export_multipipe_executable(corsika_simtel_runner):
-    corsika_simtel_runner.export_multipipe_script()
+def test_write_multipipe_script(corsika_simtel_runner):
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
     multipipe_file = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.corsika_config.get_file_name("multipipe")
+        corsika_simtel_runner.corsika_config.get_corsika_config_file_name("multipipe")
     )
-    corsika_simtel_runner._export_multipipe_executable(multipipe_file)
+    corsika_simtel_runner._write_multipipe_script(multipipe_file)
     script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
         "run_cta_multipipe"
     )
@@ -125,14 +102,55 @@ def test_make_run_command(corsika_simtel_runner):
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
     assert "-C show=all" in command
-    assert "run000001_gamma_za020deg_azm000deg_North_test_layout_test" in command
+    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+
+    _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
+    _test_corsika_simtel_runner.label = None
+    command = _test_corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+    assert "-W" not in command
 
 
 def test_make_run_command_divergent(corsika_simtel_runner):
     corsika_simtel_runner.label = "test-corsika-simtel-runner-divergent-pointing"
     command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
     assert "bin/sim_telarray" in command
-    assert "-W telescope_theta=20" in command
+    assert "-W telescope_theta=20" in command  # -W is for pointing
     assert "-W telescope_phi=0" in command
     assert "-C show=all" in command
-    assert "run000001_gamma_za020deg_azm000deg_North_test_layout_test" in command
+    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+
+
+def test_get_file_name(corsika_simtel_runner):
+
+    assert (
+        corsika_simtel_runner.get_file_name(
+            simulation_software="corsika", file_type="log", run_number=1
+        ).name
+        == "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner.log.gz"
+    )
+
+    assert (
+        corsika_simtel_runner.get_file_name(
+            simulation_software="simtel", file_type="simtel_output", run_number=1
+        ).name
+        == "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner.simtel.zst"
+    )
+
+    # preference given to simtel runner
+    assert (
+        corsika_simtel_runner.get_file_name(
+            simulation_software=None, file_type="simtel_output", run_number=1
+        ).name
+        == "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner.simtel.zst"
+    )
+
+    # no simulator_array
+    _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
+    _test_corsika_simtel_runner.simulator_array = None
+
+    assert (
+        _test_corsika_simtel_runner.get_file_name(
+            simulation_software=None, file_type="simtel_output", run_number=1
+        ).name
+        == "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner.simtel.zst"
+    )

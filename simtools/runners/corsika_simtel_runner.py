@@ -208,20 +208,14 @@ class CorsikaSimtelRunner:
             File name with full path.
         """
         if simulation_software is None:
-            if self.simulator_array:  # preference to simtel output (multipipe)
-                simulation_software = "simtel"
-            elif self.corsika_runner:
-                simulation_software = "corsika"
+            # preference to simtel output (multipipe)
+            simulation_software = "simtel" if self.simulator_array else "corsika"
 
         if simulation_software == "corsika":
             return self.corsika_runner.get_file_name(
                 file_type=file_type, run_number=run_number, mode=mode
             )
-        if simulation_software == "simtel":
-            return self.simulator_array.get_file_name(
-                file_type=file_type, run_number=run_number, mode=mode
-            )
 
-        raise ValueError(
-            f"Invalid simulation software: {simulation_software} or ill-defined runner"
+        return self.simulator_array.get_file_name(
+            file_type=file_type, run_number=run_number, mode=mode
         )
