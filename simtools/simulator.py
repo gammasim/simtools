@@ -99,6 +99,7 @@ class Simulator:
 
         """
         if simulation_software not in ["simtel", "corsika", "corsika_simtel"]:
+            self._logger.error(f"Invalid simulation software: {simulation_software}")
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
 
@@ -213,15 +214,13 @@ class Simulator:
             "corsika_simtel": CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
-        if runner_class:
-            return runner_class(
-                label=self.label,
-                corsika_config=corsika_config,
-                simtel_path=self.args_dict.get("simtel_path"),
-                keep_seeds=False,
-                use_multipipe=runner_class is CorsikaSimtelRunner,
-            )
-        return None
+        return runner_class(
+            label=self.label,
+            corsika_config=corsika_config,
+            simtel_path=self.args_dict.get("simtel_path"),
+            keep_seeds=False,
+            use_multipipe=runner_class is CorsikaSimtelRunner,
+        )
 
     def _fill_results_without_run(self, input_file_list):
         """
