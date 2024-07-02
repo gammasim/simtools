@@ -83,7 +83,7 @@ from simtools.ray_tracing import RayTracing
 
 
 def _parse(label):
-    """Parse command line configuratio."""
+    """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
         description=(

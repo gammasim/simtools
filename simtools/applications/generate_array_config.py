@@ -1,82 +1,30 @@
 #!/usr/bin/python3
 """
-    Generate sim_telarray config files for a given array.
+    Generate sim_telarray configuration files for a given array.
 
-    All the input required has to be given as a yaml file by the command
-    line argument array_config.
+    The applications generates the sim_telarray configuration files for a given array, site,
+    and model_version using the model parameters stored in the database.
 
-    The required entries in the array_config file are:
-
-    'site': South or North
-
-    'layout_name': name of an array layout.
-
-    'model_version': model version.
-
-    'default': telescope model names to be assigned to each telescope size by default.
-
-    As optional data, specific telescope models can be assigned to individual telescopes.
-    This is done by the entries with the name of the telescope (as used by the layout
-    definition, ex. LSTN-01, MSTN-05, SSTS-10).
-
-    Each telescope model can be set in two ways.
-
-    a) A single str with the name of telescope model
-    Ex. 'MSTN-05': 'NectarCam-D'
-
-    b) A dict containing a 'name' key with the name of the telescope model and further keys
-    with model parameters to be changed from the original model.
-    Ex.:
-
-    .. code-block:: python
-
-        'MSTN-05': {
-                'name': 'design',
-                'fadc_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat',
-                'discriminator_pulse_shape': 'Pulse_template_nectarCam_17042020-noshift.dat'
-            }
-
-    This is an example of the content of an array_config file.
-
-    .. code-block:: python
-
-        site: North,
-        layout_name: Prod5
-        model_version: Prod5
-        default:
-            LST: 'D234'  # Design model for the LSTs
-            MST: FlashCam-D  # Design model for the MST-FlashCam
-        LST-01: '1'  # Model of LST-01 in the LaPalma site.
-        MST-05:
-            name: NectarCam-D
-            # Parameters to be changed
-            fadc_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
-            discriminator_pulse_shape: Pulse_template_nectarCam_17042020-noshift.dat
+    To change model parameters, clone the model parameters repository and apply the changes.
+    Forward the path to the repository to the application using the ``--db_simulation_model_url``
+    argument.
 
     Command line arguments
     ----------------------
-    label (str, optional)
-        Label to identify the output files/directories.
-    array_config (str, required)
-        Path to a yaml file with the array config data.
-    verbosity (str, optional)
-        Log level to print.
+    site : str
+        Site name (e.g., North, South).
+    array_layout_name : str
+        Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
+    array_element_list : list
+        List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 
     Example
     -------
-    North - Prod5, simple example
-
-    Get the array configuration from DB:
+    North - Prod5:
 
     .. code-block:: console
 
-        simtools-db-get-file-from-db --file_name array_config_test.yml
-
-    Run the application. Runtime < 1 min.
-
-    .. code-block:: console
-
-        simtools-generate-array-config --label test --array_config array_config_test.yml
+        simtools-generate-array-config --site North --array_layout_name alpha --model_version prod5
 
     The output is saved in simtools-output/test/model.
 """
@@ -89,41 +37,44 @@ from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
 
-def _parse():
-    config = configurator.Configurator(
+def _parse(label, description):
+    """
+    Parse command line configuration.
+
+    Parameters
+    ----------
+    label : str
+        Label describing the application.
+    description : str
+        Description of the application.
+
+    Returns
+    -------
+    CommandLineParser
+        Command line parser object.
+    """
+    config = configurator.Configurator(label=label, description=description)
+    return config.initialize(db_config=True, simulation_model=["site", "layout"])
+
+
+def main():
+    """Generate sim_telarray configuration files for a given array."""
+    args_dict, db_config = _parse(
         label=Path(__file__).stem,
-        description=("Example of how to generate sim_telarray config files for a given array."),
+        description=("Generate sim_telarray configuration files for a given array."),
     )
-    config.parser.add_argument(
-        "--array_config",
-        help="Yaml file with array config data.",
-        type=str,
-        required=True,
-    )
-    return config.initialize(db_config=True, simulation_model="version")
-
-
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
-
     logger = logging.getLogger("simtools")
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    array_config_data = gen.collect_data_from_file_or_dict(args_dict["array_config"], None)
 
     array_model = ArrayModel(
         label=args_dict["label"],
         model_version=args_dict["model_version"],
         mongo_db_config=db_config,
-        site=array_config_data["common"].get("site"),
-        layout_name=array_config_data["common"].get("layout_name"),
-        parameters_to_change=array_config_data.get("array"),
+        site=args_dict.get("site"),
+        layout_name=args_dict.get("array_layout_name"),
+        array_elements=args_dict.get("array_elements"),
     )
-
-    # Printing list of telescope for quick inspection.
     array_model.print_telescope_list()
-
-    # Exporting config files.
     array_model.export_all_simtel_config_files()
 
 

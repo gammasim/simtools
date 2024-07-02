@@ -311,7 +311,7 @@ class Configurator:
         """
         Fill any configuration parameters from environmental variables or from file (e.g., ".env").
 
-        Only parameters shich are not already configured are changed (i.e., parameter is None).
+        Only parameters which are not already configured are changed (i.e., parameter is None).
 
         """
         _env_dict = {}
