@@ -8,7 +8,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner
 
 __all__ = ["SimulatorLightEmission"]
 
@@ -394,32 +394,31 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -DNUM_TELESCOPES=1"
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
-        command += super()._config_option(
+        command += super().get_config_option(
             "altitude", self._site_model.get_parameter_value("corsika_observation_level")
         )
-        command += super()._config_option(
+        command += super().get_config_option(
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        # command += super()._config_option("show", "all") # for debugging
-        command += super()._config_option("TRIGGER_CURRENT_LIMIT", "20")
-        command += super()._config_option("TRIGGER_TELESCOPES", "1")
-        command += super()._config_option("TELTRIG_MIN_SIGSUM", "7.8")
-        command += super()._config_option("PULSE_ANALYSIS", "-30")
+        command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
+        command += super().get_config_option("TRIGGER_TELESCOPES", "1")
+        command += super().get_config_option("TELTRIG_MIN_SIGSUM", "7.8")
+        command += super().get_config_option("PULSE_ANALYSIS", "-30")
 
         if "real" in self.default_le_config["x_pos"]:
             _, angles = self.calibration_pointing_direction()
-            command += super()._config_option("telescope_theta", f"{angles[0]}")
-            command += super()._config_option("telescope_phi", f"{angles[1]}")
+            command += super().get_config_option("telescope_theta", f"{angles[0]}")
+            command += super().get_config_option("telescope_phi", f"{angles[1]}")
         else:
-            command += super()._config_option("telescope_theta", 0)
-            command += super()._config_option("telescope_phi", 0)
+            command += super().get_config_option("telescope_theta", 0)
+            command += super().get_config_option("telescope_phi", 0)
 
-        command += super()._config_option("power_law", "2.68")
-        command += super()._config_option(
+        command += super().get_config_option("power_law", "2.68")
+        command += super().get_config_option(
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
         )
-        command += super()._config_option(
+        command += super().get_config_option(
             "output_file",
             f"{self.output_directory}/"
             f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n",
@@ -493,15 +492,15 @@ class SimulatorLightEmission(SimtelRunner):
         """
         self._logger.debug("Creating run bash script")
 
-        self._script_dir = self.output_directory.joinpath("scripts")
-        self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(f"{self.le_application[0]}-lightemission.sh")
-        self._logger.debug(f"Run bash script - {self._script_file}")
+        _script_dir = self.output_directory.joinpath("scripts")
+        _script_dir.mkdir(parents=True, exist_ok=True)
+        _script_file = _script_dir.joinpath(f"{self.le_application[0]}-lightemission.sh")
+        self._logger.debug(f"Run bash script - {_script_file}")
 
         command_le = self._make_light_emission_script()
         command_simtel = self._make_simtel_script()
 
-        with self._script_file.open("w", encoding="utf-8") as file:
+        with _script_file.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
             file.write(f"{command_le}\n\n")
@@ -514,5 +513,5 @@ class SimulatorLightEmission(SimtelRunner):
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
 
-        os.system(f"chmod ug+x {self._script_file}")
-        return self._script_file
+        os.system(f"chmod ug+x {_script_file}")
+        return _script_file

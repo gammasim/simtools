@@ -161,7 +161,7 @@ def main():  # noqa: D103
             "nsb_spectrum": args_dict["nsb_spectrum"],
         },
     )
-    ce.simulate(force=True)
+    ce.simulate()
     ce.analyze(force=True)
 
     # Plotting the camera efficiency for Cherenkov light

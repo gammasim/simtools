@@ -1,9 +1,9 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg_north
+  TEST_NAME: gamma_20_deg_north_pack_for_grid
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
-    LABEL: test-production-North
+    LABEL: test-production-North-pack-for-grid
     MODEL_VERSION: prod6
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
@@ -12,18 +12,17 @@ CTA_SIMPIPE:
     NUMBER_OF_RUNS: 1
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
-    NSHOW: 10
+    NSHOW: 5
     ESLOPE: -2.
     VIEWCONE: "0 deg 0 deg"
     ERANGE: "100 GeV 1 TeV"
     CORE_SCATTER: "10 500 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
+    PACK_FOR_GRID_REGISTER: true
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        simtel/data/run000010/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-pack-for-grid.log_hist.tar.gz
     - OUTPUT_FILE: |
-        simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log.gz
-    - OUTPUT_FILE: |
-        simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.hdata.zst
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-pack-for-grid.zst

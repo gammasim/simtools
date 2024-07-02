@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from simtools.model.model_parameter import InvalidModelParameterError
-from simtools.simtel.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner
 
 __all__ = ["SimulatorCameraEfficiency"]
 
@@ -66,11 +66,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         else:
             self._nsb_spectrum = None
 
-    def _shall_run(self, **kwargs):  # pylint: disable=unused-argument; applies only to this line
-        """Tells if simulations should be run again based on the existence of output files."""
-        return not self._file_simtel.exists()
-
-    def _make_run_command(self, **kwargs):  # pylint: disable=unused-argument
+    def _make_run_command(
+        self, run_number=None, input_file=None
+    ):  # pylint: disable=unused-argument
         """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 
@@ -148,10 +146,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" 2>{self._file_log}"
         command += f" >{self._file_simtel}"
 
-        # Moving to sim_telarray directory before running
         return f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
 
-    def _check_run_result(self, **kwargs):  # pylint: disable=unused-argument
+    def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.
 
         Raises

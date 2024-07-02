@@ -59,16 +59,6 @@ def test_load_required_files(simulator_ray_tracing):
     assert simulator_ray_tracing._stars_file.exists()
 
 
-def test_shall_run(simulator_ray_tracing):
-    """
-    Testing here that the file does not exist because no simulations
-    are run in unit tests. This function is tested for the positive case
-    in the integration tests.
-    """
-
-    assert simulator_ray_tracing._shall_run()
-
-
 def test_make_run_command(simulator_ray_tracing, model_version):
     command = simulator_ray_tracing._make_run_command()
 

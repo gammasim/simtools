@@ -1,42 +1,3 @@
-USER_PARAMETERS:
-  RUNNR:
-    len: 1
-    names: ['RUNNUMBER', 'NRUN']
-    default: 1
-  EVTNR:
-    len: 1
-    names: ['EVENTNR', 'EVENTNUMBER']
-    default: 1
-  NSHOW:
-    len: 1
-    names: ['NSHOWERS']
-  PRMPAR:
-    len: 1
-    names: ['PRIMARY']
-  ERANGE:
-    len: 2
-    names: ['ENRANGE', 'ENERGYRANGE']
-    unit: ['GeV', 'GeV']
-  ESLOPE:
-    len: 1
-    names: ['ENSLOPE', 'ENERGYSLOPE']
-  THETAP:
-    len: 2
-    names: ['THETA', 'ZENITH']
-    unit: ['deg', 'deg']
-  AZM:
-    len: 2
-    names: ['PHI', 'AZIMUTH']
-    unit: ['deg', 'deg']
-  VIEWCONE:
-    len: 2
-    names: ['CONE']
-    unit: ['deg', 'deg']
-  CSCAT:
-    len: 3
-    names: ['SCAT']
-    unit: [null, 'cm', null]
-
 PRIMARIES:
   GAMMA:
     number: 1
@@ -70,7 +31,6 @@ INTERACTION_FLAGS:
   LONGI: ['T', 20., 'F', 'F']
   MAXPRT: [0]
   ECTMAP: [1.e6]
-#  STEPFC: [1.0]
 
 CHERENKOV_EMISSION_PARAMETERS:
   CERSIZ: [5.]
@@ -83,8 +43,6 @@ DEBUGGING_OUTPUT_PARAMETERS:
   DIRECT: ['/dev/null']
 
 IACT_TUNING_PARAMETERS:
-  IACT: [
-    ['SPLIT_AUTO', '15M'],
-    ['IO_BUFFER', '800MB'],
-    ['MAX_BUNCHES', '1000000']
-  ]
+  SPLIT_AUTO: ['15M']
+  IO_BUFFER: ['800MB']
+  MAX_BUNCHES: ['1000000']
