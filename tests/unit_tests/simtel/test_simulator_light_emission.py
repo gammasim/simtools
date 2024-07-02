@@ -69,7 +69,6 @@ def default_config_fixture():
 def mock_simulator(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -105,7 +104,6 @@ def mock_simulator(
 def mock_simulator_variable(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -141,7 +139,6 @@ def mock_simulator_variable(
 def mock_simulator_laser(
     db_config, default_config, label, model_version, simtel_path, site_model_north, io_handler
 ):
-    simtel_path = simtel_path
     telescope_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
