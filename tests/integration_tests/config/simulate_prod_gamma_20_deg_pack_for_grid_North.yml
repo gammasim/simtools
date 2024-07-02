@@ -23,6 +23,6 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.log_hist.tar.gz
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-pack-for-grid.log_hist.tar.gz
     - OUTPUT_FILE: |
-        directory_for_grid_upload/run000002_gamma_za020deg_azm000deg_North_test_layout_test-production.simtel.zst
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-pack-for-grid.zst

@@ -22,8 +22,8 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production-South/simtel/data/run000010/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.zst
+        simtel/data/run000010/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.zst
     - OUTPUT_FILE: |
-        test-production-South/simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.log.gz
+        simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.log.gz
     - OUTPUT_FILE: |
-        test-production-South/simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.hdata.zst
+        simtel/logs/run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South.hdata.zst

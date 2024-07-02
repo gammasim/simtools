@@ -193,7 +193,7 @@ class RayTracing:
                     },
                     force_simulate=force,
                 )
-                simtel.run(test=test, force=force)
+                simtel.run(test=test)
 
                 photons_file_name = names.generate_file_name(
                     file_type="photons",
