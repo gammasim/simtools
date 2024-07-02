@@ -206,22 +206,22 @@ def model_version():
 
 
 @pytest.fixture()
-def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
+def array_model_north(io_handler, db_config, model_version):
     return ArrayModel(
         label="test-lst-array",
-        site=simulator_config_data_north["common"]["site"],
-        layout_name=simulator_config_data_north["common"]["layout_name"],
+        site="North",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
 
 
 @pytest.fixture()
-def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
+def array_model_south(io_handler, db_config, model_version):
     return ArrayModel(
         label="test-lst-array",
-        site=simulator_config_data_south["common"]["site"],
-        layout_name=simulator_config_data_south["common"]["layout_name"],
+        site="South",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -335,62 +335,6 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
 def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
     corsika_histograms_instance.set_histograms()
     return corsika_histograms_instance
-
-
-# TODO remove
-@pytest.fixture()
-def simulator_config_data_north(tmp_test_directory):
-    return {
-        "common": {
-            "site": "North",
-            "layout_name": "test_layout",
-            "data_directory": f"{tmp_test_directory!s}/test-output",
-            "zenith": 20 * u.deg,
-            "azimuth": 0 * u.deg,
-            "primary": "gamma",
-        },
-        "showers": {
-            "eslope": -2.5,
-            "viewcone": [0 * u.deg, 0 * u.deg],
-            "nshow": 10,
-            "erange": [100 * u.GeV, 1 * u.TeV],
-            "cscat": [10, 1400 * u.m, 0],
-            "run_list": [3, 4],
-            "run_range": [6, 10],
-        },
-        "array": {},
-    }
-
-
-# TODO remove
-@pytest.fixture()
-def shower_config_data_north(simulator_config_data_north):
-    return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
-
-
-# TODO remove
-@pytest.fixture()
-def simulator_config_data_south(tmp_test_directory):
-    return {
-        "common": {
-            "site": "South",
-            "layout_name": "test_layout",
-            "data_directory": f"{tmp_test_directory!s}/test-output",
-            "zenith": 20 * u.deg,
-            "azimuth": 0 * u.deg,
-            "primary": "gamma",
-        },
-        "showers": {
-            "eslope": -2.5,
-            "viewcone": [0 * u.deg, 0 * u.deg],
-            "nshow": 10,
-            "erange": [100 * u.GeV, 1 * u.TeV],
-            "cscat": [10, 1400 * u.m, 0],
-            "run_list": [3, 4],
-            "run_range": [6, 10],
-        },
-        "array": {},
-    }
 
 
 @pytest.fixture()

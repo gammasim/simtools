@@ -401,7 +401,6 @@ class SimulatorLightEmission(SimtelRunner):
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        # command += super().get_config_option("show", "all") # for debugging
         command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
         command += super().get_config_option("TRIGGER_TELESCOPES", "1")
         command += super().get_config_option("TELTRIG_MIN_SIGSUM", "7.8")

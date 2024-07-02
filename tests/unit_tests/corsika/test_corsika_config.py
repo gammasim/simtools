@@ -210,9 +210,10 @@ def test_validate_run_number(corsika_config):
     assert corsika_config.validate_run_number(123456)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):
         corsika_config.validate_run_number("test")
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+    invalid_run_number = r"^Invalid type of run number"
+    with pytest.raises(ValueError, match=invalid_run_number):
         corsika_config.validate_run_number(1.5)
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+    with pytest.raises(ValueError, match=invalid_run_number):
         corsika_config.validate_run_number(-1)
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+    with pytest.raises(ValueError, match=invalid_run_number):
         corsika_config.validate_run_number(123456789)
