@@ -140,8 +140,8 @@ CORSIKA and sim_telarray are external tools to simtools and are required depende
 Recommended is to use the Docker environment, see description in  [Docker Environment for Developers].
 
 For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
-CTA users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
-(CTA password applies) and install the package with:
+CTAO users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
+(CTAO password applies) and install the package with:
 
 ```console
 tar -czf corsika7.7_simtelarray.tar.gz
