@@ -3,7 +3,6 @@
 import logging
 
 from simtools.io_operations import io_handler
-from simtools.runners.runner_services import RunnerServices
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
 
 __all__ = ["SimulatorArray"]
@@ -38,17 +37,17 @@ class SimulatorArray(SimtelRunner):
         """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorArray")
-        super().__init__(label=label, simtel_path=simtel_path)
+        super().__init__(
+            label=label,
+            simtel_path=simtel_path,
+            corsika_config=corsika_config,
+            use_multipipe=use_multipipe,
+        )
 
         self.corsika_config = corsika_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
         self.keep_seeds = keep_seeds
-
-        self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_simtel" if use_multipipe else "simtel"
-        )
 
     def _make_run_command(self, run_number=None, input_file=None):
         """
@@ -112,33 +111,3 @@ class SimulatorArray(SimtelRunner):
             raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
         return True
-
-    def get_resources(self, run_number=None):
-        """Return computing resources used."""
-        return self.runner_service.get_resources(run_number)
-
-    def get_file_name(self, simulation_software="simtel", file_type=None, run_number=None, mode=""):
-        """
-        Get the full path of a file for a given run number.
-
-        Parameters
-        ----------
-        simulation_software: str
-            Simulation software.
-        file_type: str
-            File type.
-        run_number: int
-            Run number.
-
-        Returns
-        -------
-        str
-            File name with full path.
-        """
-        if simulation_software.lower() != "simtel":
-            raise ValueError(
-                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
-            )
-        return self.runner_service.get_file_name(
-            file_type=file_type, run_number=run_number, mode=mode
-        )

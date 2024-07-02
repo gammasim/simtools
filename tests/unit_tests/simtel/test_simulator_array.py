@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import re
 from pathlib import Path
 
 import pytest
@@ -46,20 +45,3 @@ def test_check_run_result(simtel_runner):
     expected_pattern = r"sim_telarray output file .+ does not exist\."
     with pytest.raises(InvalidOutputFileError, match=expected_pattern):
         assert simtel_runner._check_run_result(run_number=3)
-
-
-def test_get_resources(simtel_runner):
-    with pytest.raises(FileNotFoundError):
-        simtel_runner.get_resources()
-
-
-def test_get_file_name(simtel_runner):
-    with pytest.raises(
-        ValueError, match=re.escape("simulation_software (test) is not supported in SimulatorArray")
-    ):
-        simtel_runner.get_file_name(simulation_software="test")
-
-    assert isinstance(
-        simtel_runner.get_file_name(simulation_software="simtel", file_type="output", run_number=3),
-        Path,
-    )
