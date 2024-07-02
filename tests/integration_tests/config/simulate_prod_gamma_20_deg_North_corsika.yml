@@ -22,8 +22,8 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        test-production-North-corsika/corsika/data/run000010/run000010_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika_North_test_layout_test-production-North-corsika.zst
+        corsika/data/run000010/run000010_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika_North_test_layout_test-production-North-corsika.zst
     - OUTPUT_FILE: |
-        test-production-North-corsika/corsika/data/run000011/run000011_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika_North_test_layout_test-production-North-corsika.zst
+        corsika/data/run000011/run000011_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika_North_test_layout_test-production-North-corsika.zst
     - OUTPUT_FILE: |
-        test-production-North-corsika/corsika/data/run000010/run10.log
+        corsika/data/run000010/run10.log

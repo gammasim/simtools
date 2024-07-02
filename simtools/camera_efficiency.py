@@ -155,15 +155,8 @@ class CameraEfficiency:
             )
             self._file[label] = self._base_directory.joinpath(file_name)
 
-    def simulate(self, force=False):
-        """
-        Simulate camera efficiency using testeff.
-
-        Parameters
-        ----------
-        force: bool
-            Force flag will remove existing files and simulate again.
-        """
+    def simulate(self):
+        """Simulate camera efficiency using testeff."""
         self._logger.info("Simulating CameraEfficiency")
 
         simtel = SimulatorCameraEfficiency(
@@ -175,7 +168,7 @@ class CameraEfficiency:
             label=self.label,
             nsb_spectrum=self.config.nsb_spectrum,
         )
-        simtel.run(test=self.test, force=force)
+        simtel.run(test=self.test)
 
     def analyze(self, export=True, force=False):
         """
