@@ -182,7 +182,7 @@ def test_get_run_number_string(runner_service_config_only):
     run_directory = runner_service_config_only._get_run_number_string(123456)
     assert run_directory == "run123456"
     with pytest.raises(ValueError, match=r"^Run number cannot have more than 6 digits"):
-        run_directory = runner_service_config_only._get_run_number_string(1234567)
+        runner_service_config_only._get_run_number_string(1234567)
 
 
 def test_get_resources(runner_service, caplog):
