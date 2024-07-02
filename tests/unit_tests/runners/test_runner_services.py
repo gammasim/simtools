@@ -56,14 +56,14 @@ def test_get_info_for_file_name(runner_service_config_only):
 
 
 def test_get_simulation_software_list(runner_service_config_only):
-    runner_service_config_only._get_simulation_software_list("corsika") == ["corsika"]
-    runner_service_config_only._get_simulation_software_list("CoRsIka") == ["corsika"]
-    runner_service_config_only._get_simulation_software_list("simtel") == ["simtel"]
-    runner_service_config_only._get_simulation_software_list("corsika_simtel") == [
+    assert runner_service_config_only._get_simulation_software_list("corsika") == ["corsika"]
+    assert runner_service_config_only._get_simulation_software_list("CoRsIka") == ["corsika"]
+    assert runner_service_config_only._get_simulation_software_list("simtel") == ["simtel"]
+    assert runner_service_config_only._get_simulation_software_list("corsika_simtel") == [
         "corsika",
         "simtel",
     ]
-    runner_service_config_only._get_simulation_software_list("something_else") == []
+    assert runner_service_config_only._get_simulation_software_list("something_else") == []
 
 
 def test_load_corsika_data_directories(runner_service_config_only):
