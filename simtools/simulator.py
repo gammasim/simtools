@@ -127,12 +127,17 @@ class Simulator:
 
     def _initialize_run_list(self):
         """
-        Initialize run list.
+        Initialize run list using the configuration values 'run_number_start' and 'number_of_runs'.
 
         Returns
         -------
         list
             List of run numbers.
+
+        Raises
+        ------
+        KeyError
+            If 'run_number_start' or 'number_of_runs' are not found in the configuration.
         """
         try:
             return self._validate_run_list_and_range(
@@ -143,7 +148,9 @@ class Simulator:
                 ],
             )
         except KeyError as exc:
-            self._logger.error(f"Error in initializing run list: {exc}")
+            self._logger.error(
+                "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
+            )
             raise exc
 
     def _validate_run_list_and_range(self, run_list, run_range):
@@ -195,7 +202,7 @@ class Simulator:
 
     def _initialize_simulation_runner(self):
         """
-        Initialize simulation runners.
+        Initialize corsika configuration and simulation runners.
 
         Returns
         -------
@@ -224,13 +231,12 @@ class Simulator:
 
     def _fill_results_without_run(self, input_file_list):
         """
-        Fill in the results dict without calling submit.
+        Fill results dict without calling submit (e.g., for testing).
 
         Parameters
         ----------
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
-
         """
         input_file_list = self._enforce_list_type(input_file_list)
 
@@ -277,26 +283,6 @@ class Simulator:
 
             self._fill_results(input_file, run_number)
 
-    def file_list(self, input_file_list=None):
-        """
-        List output files obtained with simulation run.
-
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
-
-        """
-        runs_and_files_to_submit = self._get_runs_and_files_to_submit(
-            input_file_list=input_file_list
-        )
-
-        for run, _ in runs_and_files_to_submit.items():
-            output_file_name = self._simulation_runner.get_file_name(
-                file_type="output", run_number=run
-            )
-            print(f"{output_file_name!s} (file exists: {Path.exists(output_file_name)})")
-
     def _get_runs_and_files_to_submit(self, input_file_list=None):
         """
         Return a dictionary with run numbers and simulation files.
@@ -319,24 +305,30 @@ class Simulator:
         self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
         if self.simulation_software == "simtel":
-            _file_list = self._enforce_list_type(input_file_list)
-            for file in _file_list:
-                _runs_and_files[self._guess_run_from_file(file)] = file
-        if self.simulation_software in ["corsika", "corsika_simtel"]:
-            _run_list = self._get_runs_to_simulate()
-            for run in _run_list:
-                _runs_and_files[run] = None
+            input_file_list = self._enforce_list_type(input_file_list)
+            _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
+        elif self.simulation_software in ["corsika", "corsika_simtel"]:
+            _runs_and_files = {run: None for run in self._get_runs_to_simulate()}
         return _runs_and_files
 
     @staticmethod
     def _enforce_list_type(input_file_list):
-        """Enforce the input list to be a list."""
+        """
+        Enforce the input list to be a list.
+
+        Parameters
+        ----------
+        input_file_list: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        list
+            List of input files.
+        """
         if not input_file_list:
             return []
-        if not isinstance(input_file_list, list):
-            return [input_file_list]
-
-        return input_file_list
+        return input_file_list if isinstance(input_file_list, list) else [input_file_list]
 
     def _guess_run_from_file(self, file):
         """
@@ -361,37 +353,37 @@ class Simulator:
             run_str = re.search(r"run\d*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
-            msg = f"Run number could not be guessed from {file_name} using run = 1"
-            self._logger.warning(msg)
+            self._logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
             return 1
 
-    def _fill_results(self, file, run):
+    def _fill_results(self, file, run_number):
         """
-        Fill the results dict with input, output and log files.
+        Fill the results dict with input, output, hist, and log files.
 
         Parameters
         ----------
         file: str
             input file name
-        run: int
+        run_number: int
             run number
 
         """
         self._results["output"].append(
-            str(self._simulation_runner.get_file_name(file_type="output", run_number=run))
+            str(self._simulation_runner.get_file_name(file_type="output", run_number=run_number))
         )
         self._results["sub_out"].append(
             str(
                 self._simulation_runner.get_file_name(
-                    file_type="sub_log", run_number=run, mode="out"
+                    file_type="sub_log", run_number=run_number, mode="out"
                 )
             )
         )
+
         if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._results["log"].append(
                 str(
                     self._simulation_runner.get_file_name(
-                        simulation_software="simtel", file_type="log", run_number=run
+                        simulation_software="simtel", file_type="log", run_number=run_number
                     )
                 )
             )
@@ -399,7 +391,7 @@ class Simulator:
             self._results["hist"].append(
                 str(
                     self._simulation_runner.get_file_name(
-                        simulation_software="simtel", file_type="histogram", run_number=run
+                        simulation_software="simtel", file_type="histogram", run_number=run_number
                     )
                 )
             )
@@ -407,7 +399,7 @@ class Simulator:
             self._results["corsika_autoinputs_log"].append(
                 str(
                     self._simulation_runner.get_file_name(
-                        simulation_software="corsika", file_type="log", run_number=run
+                        simulation_software="corsika", file_type="log", run_number=run_number
                     )
                 )
             )
@@ -421,6 +413,7 @@ class Simulator:
 
         Options are "input", "output", "hist", "log".
         Not all file types are available for all simulation types.
+        Returns an empty list for an unknown file type.
 
         Parameters
         ----------
@@ -434,12 +427,7 @@ class Simulator:
 
         """
         self._logger.info(f"Getting list of {file_type} files")
-
-        try:
-            return self._results[file_type]
-        except KeyError as exc:
-            self._logger.error(f"Invalid file type {file_type}")
-            raise exc
+        return self._results[file_type]
 
     def print_list_of_files(self, file_type="output"):
         """
@@ -454,18 +442,12 @@ class Simulator:
 
         """
         self._logger.info(f"Printing list of {file_type} files")
-        try:
-            for file in self._results[file_type]:
-                print(file)
-        except KeyError as exc:
-            self._logger.error(f"Invalid file type {file_type}")
-            raise exc
+        for file in self._results[file_type]:
+            print(file)
 
     def _make_resources_report(self, input_file_list):
         """
-        Prepare a simple report on computing resources used.
-
-        Includes wall clock time per run only at this point.
+        Prepare a simple report on computing wall clock time used in the simulations.
 
         Parameters
         ----------
@@ -540,9 +522,5 @@ class Simulator:
 
         """
         if run_list is None and run_range is None:
-            if self.runs is None:
-                msg = "Runs to simulate were not given - aborting"
-                self._logger.error(msg)
-                return []
-            return self.runs
+            return [] if self.runs is None else self.runs
         return self._validate_run_list_and_range(run_list, run_range)

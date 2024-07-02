@@ -5,12 +5,9 @@ import os
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.runners.runner_services import RunnerServices
 
 __all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
-
-# pylint: disable=no-member
-# The line above is needed because there are methods which are used in this class
-# but are implemented in the classes inheriting from it.
 
 
 class SimtelExecutionError(Exception):
@@ -33,16 +30,20 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, simtel_path, label=None):
+    def __init__(self, simtel_path, label=None, corsika_config=None, use_multipipe=False):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_path = Path(simtel_path)
         self.label = label
-        self._script_dir = None
         self._base_directory = None
 
         self.runs_per_set = 1
+
+        self.runner_service = RunnerServices(corsika_config, label)
+        self._directory = self.runner_service.load_data_directories(
+            "corsika_simtel" if use_multipipe else "simtel"
+        )
 
     def __repr__(self):
         """Return a string representation of the SimtelRunner object."""
@@ -69,7 +70,6 @@ class SimtelRunner:
             Full path of the run script.
         """
         self._logger.debug("Creating run bash script")
-        self._logger.debug(f"Run number: {run_number} {self.corsika_config.run_number}")
 
         script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
 
@@ -126,16 +126,9 @@ class SimtelRunner:
 
         self._check_run_result(run_number=run_number)
 
-    @staticmethod
-    def _simtel_failed(sys_output):
-        """Test if simtel process ended successfully.
-
-        Returns
-        -------
-        bool
-            1 if sys_output is different than 0, and 1 otherwise.
-        """
-        return sys_output != 0
+    def _check_run_result(self, run_number=None):  # pylint: disable=all
+        """Check if simtel output file exists."""
+        pass
 
     def _raise_simtel_error(self):
         """
@@ -164,8 +157,7 @@ class SimtelRunner:
         SimtelExecutionError
             if run was not successful.
         """
-        sys_output = os.system(command)
-        if self._simtel_failed(sys_output):
+        if os.system(command) != 0:
             self._raise_simtel_error()
 
     def _make_run_command(self, run_number=None, input_file=None):
@@ -200,3 +192,33 @@ class SimtelRunner:
         c = f" {option_syntax} {par}"
         c += f"={value}" if value is not None else ""
         return c
+
+    def get_resources(self, run_number=None):
+        """Return computing resources used."""
+        return self.runner_service.get_resources(run_number)
+
+    def get_file_name(self, simulation_software="simtel", file_type=None, run_number=None, mode=""):
+        """
+        Get the full path of a file for a given run number.
+
+        Parameters
+        ----------
+        simulation_software: str
+            Simulation software.
+        file_type: str
+            File type.
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        str
+            File name with full path.
+        """
+        if simulation_software.lower() != "simtel":
+            raise ValueError(
+                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
+            )
+        return self.runner_service.get_file_name(
+            file_type=file_type, run_number=run_number, mode=mode
+        )
