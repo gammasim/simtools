@@ -148,11 +148,13 @@ def test_get_file_name(corsika_simtel_runner, simulation_file):
         == simulation_file + ".log.gz"
     )
 
+    simtel_simulation_file = simulation_file + ".simtel.zst"
+
     assert (
         corsika_simtel_runner.get_file_name(
             simulation_software="simtel", file_type="simtel_output", run_number=1
         ).name
-        == simulation_file + ".simtel.zst"
+        == simtel_simulation_file
     )
 
     # preference given to simtel runner
@@ -160,7 +162,7 @@ def test_get_file_name(corsika_simtel_runner, simulation_file):
         corsika_simtel_runner.get_file_name(
             simulation_software=None, file_type="simtel_output", run_number=1
         ).name
-        == simulation_file + ".simtel.zst"
+        == simtel_simulation_file
     )
 
     # no simulator_array
@@ -171,5 +173,5 @@ def test_get_file_name(corsika_simtel_runner, simulation_file):
         _test_corsika_simtel_runner.get_file_name(
             simulation_software=None, file_type="simtel_output", run_number=1
         ).name
-        == simulation_file + ".simtel.zst"
+        == simtel_simulation_file
     )
