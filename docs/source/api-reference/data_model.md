@@ -3,7 +3,7 @@
 # Data Model
 
 Modules in the `data_model` sections provide functionality for reading, writing, and validation of data.
-Data products ingested or produced by simtools generally follows the CTA data model.
+Data products ingested or produced by simtools generally follows the CTAO data model.
 
 (datareader)=
 

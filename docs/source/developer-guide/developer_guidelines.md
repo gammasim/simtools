@@ -38,7 +38,7 @@ The following steps outline how to contribute code to simtools:
 01. Set up your coding environment as outlined in the [getting started](getting_started.md#getting-started) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
-04. Add unit tests for new modules and functions.
+04. Add unit tests for new modules and functions (see [unit test section](testing.md#unit-tests)).
 05. Commit your code changes (use meaningful commit messages) and push them to GitHub.
 06. Create a draft pull request on GitHub when all features are implemented.
 07. Wait for the CI tests to finish and address any issues that arise.
@@ -48,38 +48,6 @@ The following steps outline how to contribute code to simtools:
 
 Note the [guidelines on pull requests](pull_requests.md#pull-requests).
 
-## Unit and Integration Testing
-
-The pytest framework is used for testing:
-
-- unit tests should be written for every module and function
-- integration tests should be written for every application and cover the most important use cases. Integration tests should follow the logic of the existing tests in [simtools/tests/integration_tests](https://github.com/gammasim/simtools/tree/main/tests/integration_tests/).
-
-The test modules are located in
-[simtools/tests](https://github.com/gammasim/simtools/tree/main/tests) separated
-by unit and integration tests.
-It is recommended to write unit tests in parallel with the modules to assure that the code is testable.
-
-General service functions for tests (e.g., DB connection) can be found in
-[conftest.py](https://github.com/gammasim/simtools/blob/main/tests/conftest.py).
-This should be used to avoid duplication.
-
-:::{note}
-Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.
-:::
-
-The [pytest-xdist](https://pytest-xdist.readthedocs.io/en/latest/) plugin is part of the developer environment
-and can be used to run unit and integration tests in parallel (e.g., `pytest -n 4` to run on four cores in parallel).
-
-Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
-[pytest-random-order](https://pypi.org/project/pytest-random-order/) plugin with `pytest --random-order`.
-
-Check the test coverage with `pytest -vv -n auto tests/unit_tests/ tests/integration_tests/ --cov`.
-Add the `--cov-report html` option to generate a coverage report in HTML format.
-
-It might be quite useful to test a single application while developing.
-This can be done with e.g. `pytest -v -k "simtools-convert-all-model-parameters-from-simtel" tests/integration_tests/test_applications_from_config.py` to run all the integrations tests for the `simtools-convert-all-model-parameters-from-simtel` application.
-Alternatively, run `pytest -v -k "simtools-convert-all-model-parameters-from-simtel_num_gains" tests/integration_tests/test_applications_from_config.py` to run the tool for the specific test called `num_gains`. Test names are found in the yml files in the `tests/integration_tests/config` directory.
 ## Writing Applications
 
 Applications are command-line tools that should be built of the simtools library.
