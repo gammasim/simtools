@@ -40,7 +40,7 @@ Schema CI is define in [CI-schema-validation.yml](.github/workflows/CI-schema-va
 ## CI Documentation
 
 Documentation is built using sphinx after every merge to main.
-The documentation is built in the [CI-docs.yml](.github/workflows/CI-docs.yml) workflow.
+The documentation is built into the [CI-docs.yml](.github/workflows/CI-docs.yml) workflow.
 
 ## CI Binary builds
 
