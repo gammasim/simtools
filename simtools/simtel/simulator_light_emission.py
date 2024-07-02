@@ -493,15 +493,15 @@ class SimulatorLightEmission(SimtelRunner):
         """
         self._logger.debug("Creating run bash script")
 
-        self._script_dir = self.output_directory.joinpath("scripts")
-        self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(f"{self.le_application[0]}-lightemission.sh")
-        self._logger.debug(f"Run bash script - {self._script_file}")
+        _script_dir = self.output_directory.joinpath("scripts")
+        _script_dir.mkdir(parents=True, exist_ok=True)
+        _script_file = _script_dir.joinpath(f"{self.le_application[0]}-lightemission.sh")
+        self._logger.debug(f"Run bash script - {_script_file}")
 
         command_le = self._make_light_emission_script()
         command_simtel = self._make_simtel_script()
 
-        with self._script_file.open("w", encoding="utf-8") as file:
+        with _script_file.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
 
             file.write(f"{command_le}\n\n")
@@ -514,5 +514,5 @@ class SimulatorLightEmission(SimtelRunner):
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
 
-        os.system(f"chmod ug+x {self._script_file}")
-        return self._script_file
+        os.system(f"chmod ug+x {_script_file}")
+        return _script_file
