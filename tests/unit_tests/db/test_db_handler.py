@@ -7,6 +7,8 @@ import uuid
 import pytest
 from astropy import units as u
 
+from simtools.db import db_handler
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -14,6 +16,12 @@ logger.setLevel(logging.DEBUG)
 @pytest.fixture()
 def random_id():
     return uuid.uuid4().hex
+
+
+@pytest.fixture()
+def db_no_config_file():
+    """Database object (without configuration)."""
+    return db_handler.DatabaseHandler(mongo_db_config=None)
 
 
 @pytest.fixture()
