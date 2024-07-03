@@ -165,6 +165,11 @@ def db(db_config):
 
 
 @pytest.fixture()
+def pytest_addoption(parser):  # noqa: PT004
+    """Model version command line parameter."""
+    parser.addoption("--model_version", action="store", default=None)
+
+
 def model_version():
     """Simulation model version used in tests."""
     return "2024-02-01"
