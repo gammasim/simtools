@@ -63,7 +63,6 @@ class DatabaseHandler:
 
         """
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Initialize DatabaseHandler")
 
         self.mongo_db_config = mongo_db_config
         self.io_handler = io_handler.IOHandler()
@@ -226,12 +225,10 @@ class DatabaseHandler:
 
         """
         if self.mongo_db_config:
-            self._logger.debug("Exporting model files from MongoDB")
             for info in parameters.values():
                 if not info or not info.get("file") or info["value"] is None:
                     continue
                 if Path(dest).joinpath(info["value"]).exists():
-                    self._logger.debug(f"File {info['value']} already exists in {dest}")
                     continue
                 file = self._get_file_mongo_db(self._get_db_name(), info["value"])
                 self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file)
@@ -339,10 +336,6 @@ class DatabaseHandler:
         """
         _site, _, _model_version = self._validate_model_input(site, None, model_version)
         _db_name = self._get_db_name()
-        self._logger.debug(
-            f"Getting {site} parameters from MongoDB {_db_name}"
-            f" {model_version} {only_applicable}"
-        )
         _site_cache_key = self._parameter_cache_key(site, None, model_version)
         try:
             return DatabaseHandler.site_parameters_cached[_site_cache_key]

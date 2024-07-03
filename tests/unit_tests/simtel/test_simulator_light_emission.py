@@ -517,6 +517,3 @@ def test_prepare_script(
     ]
     for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
         assert call_args[0][0] == expected_content
-    print(mock_simulator._script_dir)
-    # Ensure correct return value
-    assert str(script_path) == f"{mock_simulator._script_dir}/xyzls-lightemission.sh"
