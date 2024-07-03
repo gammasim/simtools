@@ -66,13 +66,29 @@ def test_submit_local(mock_gen, job_submitter, mocker):
 @patch("simtools.utils.general")
 def test_submit_htcondor(mock_gen, job_submitter, mocker):
     job_submitter.submit_engine = "htcondor"
-    mocker.patch("builtins.open", mocker.mock_open())
+    mock_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_file)
     mock_execute = mocker.patch.object(job_submitter, "_execute")
 
     job_submitter.submit("script.sh", "output.log", "logfile.log")
 
     mock_execute.assert_called_with(
         "htcondor", job_submitter.engines["htcondor"] + " script.sh.condor"
+    )
+    mock_file().write.has_calls(
+        ["Executable = script.sh\n", "Output = output.out\n"],
+    )
+
+    # extra submit options
+    job_submitter.extra_submit_options = "max_materialize = 800, priority = 5"
+    job_submitter.submit("script.sh", "output.log", "logfile.log")
+    mock_file().write.has_calls(
+        [
+            "Executable = script.sh\n",
+            "Output = output.out\n",
+            "max_materialize = 800\n",
+            "priority = 5\n",
+        ],
     )
 
 

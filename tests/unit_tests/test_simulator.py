@@ -48,6 +48,7 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     args_dict["run_number_start"] = 1
     args_dict["nshow"] = 10
     args_dict["submit_engine"] = submit_engine
+    args_dict["extra_commands"] = None
     return args_dict
 
 
