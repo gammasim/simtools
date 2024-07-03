@@ -56,7 +56,7 @@ r"""
     .. code-block:: console
 
         simtools-simulate-showers-for-trigger-rates --array 4LST --site North --primary \\
-        proton --nruns 2 --nevents 10000 --submit_command local
+        proton --nruns 2 --nevents 10000 --submit_engine local
 
     The output is saved in simtools-output/simulate_showers_for_trigger_rates.
 
@@ -207,7 +207,7 @@ def main():  # noqa: D103
         simulation_software="corsika_simtel",
         simulator_source_path=args_dict.get("simtel_path", None),
         config_data=shower_config_data,
-        submit_command=args_dict.get("submit_command", ""),
+        submit_engine=args_dict.get("submit_engine", ""),
         mongo_db_config=db_config,
         model_version=args_dict.get("model_version", None),
     )

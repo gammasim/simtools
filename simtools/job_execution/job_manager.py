@@ -2,76 +2,88 @@
 
 import logging
 import os
-from copy import copy
 from pathlib import Path
 
 import simtools.utils.general as gen
 
-__all__ = ["JobManager", "MissingWorkloadManagerError", "JobExecutionError"]
-
-
-class MissingWorkloadManagerError(Exception):
-    """Exception for missing work load manager."""
+__all__ = ["JobManager", "JobExecutionError"]
 
 
 class JobExecutionError(Exception):
-    """Exception for job execution error (usually CORSIKA or sim_telarray)."""
+    """Job execution error."""
 
 
 class JobManager:
     """
-    JobManager provides an interface to workload managers like gridengine or HTCondor.
+    Interface to workload managers like gridengine or HTCondor.
+
+    Expects that jobs are described by shell scripts.
 
     Parameters
     ----------
-    submit_command: str
-        Job submission command.
-    test: bool
+    submit_engine : str
+        Job submission system. Default is local.
+    test : bool
         Testing mode without sub submission.
-
-    Raises
-    ------
-    MissingWorkloadManagerError
-        if requested workflow manager not found.
     """
 
-    def __init__(self, submit_command=None, test=False):
+    engines = {
+        "gridengine": "qsub",
+        "htcondor": "condor_submit",
+        "local": "",
+        "test_wms": "test_wms",  # used for testing only
+    }
+
+    def __init__(self, submit_engine=None, test=False):
         """Initialize JobManager."""
         self._logger = logging.getLogger(__name__)
-        self.submit_command = submit_command
+        self.submit_engine = submit_engine
         self.test = test
         self.run_script = None
         self.run_out_file = None
 
-        try:
-            self.test_submission_system()
-        except MissingWorkloadManagerError:
-            self._logger.error(f"Requested workflow manager not found: {self.submit_command}")
-            raise
+        self.check_submission_system()
 
-    def test_submission_system(self):
+    @property
+    def submit_engine(self):
+        """Get the submit command."""
+        return self._submit_engine
+
+    @submit_engine.setter
+    def submit_engine(self, value):
         """
-        Check that the requested workload manager exist on the system this script is executed.
+        Set the submit command.
+
+        Parameters
+        ----------
+        value : str
+            Name of submit engine.
+
+        Raises
+        ------
+        ValueError
+            if invalid submit engine.
+        """
+        if value is None:
+            value = "local"
+        if value not in self.engines:
+            raise ValueError(f"Invalid submit command: {value}")
+        self._submit_engine = value
+
+    def check_submission_system(self):
+        """
+        Check that the requested workload manager exist on the system.
 
         Raises
         ------
         MissingWorkloadManagerError
             if workflow manager is not found.
         """
-        if self.submit_command is None:
-            return
-        if self.submit_command.find("qsub") >= 0:
-            if gen.program_is_executable("qsub"):
-                return
-            raise MissingWorkloadManagerError
-        if self.submit_command.find("condor_submit") >= 0:
-            if gen.program_is_executable("condor_submit"):
-                return
-            raise MissingWorkloadManagerError
-        if self.submit_command.find("local") >= 0:
+        if self.submit_engine is None or self.submit_engine == "local":
             return
 
-        raise MissingWorkloadManagerError
+        if gen.program_is_executable(self.engines[self.submit_engine]):
+            return
 
     def submit(self, run_script=None, run_out_file=None, log_file=None):
         """
@@ -96,11 +108,11 @@ class JobManager:
         self._logger.info(f"Job error stream {self.run_out_file + '.err'}")
         self._logger.info(f"Job log stream {self.run_out_file + '.job'}")
 
-        if self.submit_command.find("qsub") >= 0:
+        if self.submit_engine == "gridengine":
             self._submit_gridengine()
-        elif self.submit_command.find("condor_submit") >= 0:
+        elif self.submit_engine == "htcondor":
             self._submit_htcondor()
-        elif self.submit_command.find("local") >= 0:
+        elif self.submit_engine == "local":
             self._submit_local(log_file)
 
     def _submit_local(self, log_file):
@@ -132,7 +144,6 @@ class JobManager:
     def _submit_htcondor(self):
         """Submit a job described by a shell script to HTcondor."""
         _condor_file = self.run_script + ".condor"
-        self._logger.info(f"Submitting script to HTCondor ({_condor_file})")
         try:
             with open(_condor_file, "w", encoding="utf-8") as file:
                 file.write(f"Executable = {self.run_script}\n")
@@ -140,27 +151,35 @@ class JobManager:
                 file.write(f"Error = {self.run_out_file + '.err'}\n")
                 file.write(f"Log = {self.run_out_file + '.job'}\n")
                 file.write("queue 1\n")
-        except FileNotFoundError:
+        except FileNotFoundError as exc:
             self._logger.error(f"Failed creating condor submission file {_condor_file}")
+            raise JobExecutionError from exc
 
-        shell_command = self.submit_command + " " + _condor_file
-        if not self.test:
-            os.system(shell_command)
-        else:
-            self._logger.info("Testing (HTcondor)")
+        self._execute(self.submit_engine, self.engines[self.submit_engine] + " " + _condor_file)
 
     def _submit_gridengine(self):
         """Submit a job described by a shell script to gridengine."""
-        this_sub_cmd = copy(self.submit_command)
+        this_sub_cmd = self.engines[self.submit_engine]
         this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
         this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"
 
-        self._logger.info("Submitting script to gridengine")
+        self._execute(self.submit_engine, this_sub_cmd + " " + self.run_script)
 
-        shell_command = this_sub_cmd + " " + self.run_script
+    def _execute(self, engine, shell_command):
+        """
+        Execute a shell command using a specific engine.
+
+        Parameters
+        ----------
+        engine : str
+            Engine to use.
+        shell_command : str
+            Shell command to execute.
+        """
+        self._logger.info(f"Submitting script to {engine}")
         self._logger.debug(shell_command)
         if not self.test:
             os.system(shell_command)
         else:
-            self._logger.info("Testing (gridengine)")
+            self._logger.info(f"Testing ({engine})")
             self._logger.info(shell_command)

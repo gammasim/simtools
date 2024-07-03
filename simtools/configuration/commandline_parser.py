@@ -210,7 +210,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """Initialize job submission arguments for simulator."""
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
-            "--submit_command",
+            "--submit_engine",
             help="job submission command",
             type=str,
             required=True,

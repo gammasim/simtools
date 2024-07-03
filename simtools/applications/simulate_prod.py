@@ -250,7 +250,7 @@ def main():  # noqa: D103
         simulation_software=args_dict["simulation_software"],
         simulator_source_path=args_dict["simtel_path"],
         config_data=config_data,
-        submit_command="local",
+        submit_engine="local",
         test=args_dict["test"],
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
