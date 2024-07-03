@@ -80,7 +80,7 @@ def test_submit_htcondor(mock_gen, job_submitter, mocker):
     )
 
     # extra submit options
-    job_submitter.extra_submit_options = "max_materialize = 800, priority = 5"
+    job_submitter.submit_options = "max_materialize = 800, priority = 5"
     job_submitter.submit("script.sh", "output.log", "logfile.log")
     mock_file().write.assert_has_calls(
         [
