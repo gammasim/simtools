@@ -222,7 +222,7 @@ class CommandLineParser(argparse.ArgumentParser):
             default="local",
         )
         _job_group.add_argument(
-            "--extra_submit_options",
+            "--submit_options",
             help="additional options (comma separated) for submission command",
             type=str,
             required=False,
