@@ -268,7 +268,7 @@ class Simulator:
             job_manager = JobManager(
                 submit_engine=self._submit_engine,
                 submit_options=self._submit_options,
-                test=self._test
+                test=self._test,
             )
             job_manager.submit(
                 run_script=run_script,
