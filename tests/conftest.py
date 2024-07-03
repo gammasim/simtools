@@ -164,8 +164,7 @@ def db(db_config):
     return db_handler.DatabaseHandler(mongo_db_config=db_config)
 
 
-@pytest.fixture()
-def pytest_addoption(parser):  # noqa: PT004
+def pytest_addoption(parser):
     """Model version command line parameter."""
     parser.addoption("--model_version", action="store", default=None)
 
