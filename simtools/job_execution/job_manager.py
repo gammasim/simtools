@@ -34,10 +34,11 @@ class JobManager:
         "test_wms": "test_wms",  # used for testing only
     }
 
-    def __init__(self, submit_engine=None, test=False):
+    def __init__(self, submit_engine=None, extra_submit_options=None, test=False):
         """Initialize JobManager."""
         self._logger = logging.getLogger(__name__)
         self.submit_engine = submit_engine
+        self.extra_submit_options = extra_submit_options
         self.test = test
         self.run_script = None
         self.run_out_file = None
@@ -150,6 +151,10 @@ class JobManager:
                 file.write(f"Output = {self.run_out_file + '.out'}\n")
                 file.write(f"Error = {self.run_out_file + '.err'}\n")
                 file.write(f"Log = {self.run_out_file + '.job'}\n")
+                if self.extra_submit_options:
+                    submit_option_list = self.extra_submit_options.split(",")
+                    for option in submit_option_list:
+                        file.write(option + "\n")
                 file.write("queue 1\n")
         except FileNotFoundError as exc:
             self._logger.error(f"Failed creating condor submission file {_condor_file}")
