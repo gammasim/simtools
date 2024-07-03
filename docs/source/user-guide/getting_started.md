@@ -137,7 +137,7 @@ pip install -e .
 ## Installation of CORSIKA and sim_telarray
 
 CORSIKA and sim_telarray are external tools to simtools and are required dependencies for many applications.
-Recommended is to use the Docker environment, see description in  [Docker Environment for Developers].
+Recommended is to use the Docker environment, see description in [Docker Environment for Developers](docker_files.md).
 
 For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
 CTA users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
