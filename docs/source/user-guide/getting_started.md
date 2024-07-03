@@ -80,38 +80,12 @@ The git installation method requires to install CORSIKA/sim_telarray separately,
 
 (dockerinstallation)=
 
-### Container Installation
+### Container (docker)
 
-The container `simtools-prod` includes all software required to run simtools applications:
+OCI-compatible images are available for simtools users, developers, and for CORSIKA/sim_telarray from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+These allows to skip all installation steps and run simtools applications directly.
 
-- corsika and sim_telarray
-- python packages required by simtools
-- simtools
-
-Containers are tested with docker, podman, and apptainer. Replace `docker` with the container system of your choice.
-
-To run bash in the [simtools-prod container](https://github.com/gammasim/simtools/pkgs/container/simtools-prod):
-
-```console
-docker run --rm -it --env-file .env \
-    -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod:latest bash
-```
-
-In the container, simtools applications are installed and can be called directly (e.g., `simtools-convert-geo-coordinates-of-array-elements -h`).
-This example uses the docker syntax to mount your local directory.
-
-The following example runs an application inside the container and writes the output into a directory of the local files system,
-
-```console
-docker run --rm -it --env-file .env \
-    -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod:latest \
-    simtools-convert-geo-coordinates-of-array-elements \
-    --array_element_list ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
-    --export corsika --use_corsika_telescope_height \
-    --output_path /workdir/external/
-```
+See the [Docker description](docker_files.md) for more details.
 
 (installationfordevelopers)=
 
