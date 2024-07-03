@@ -205,7 +205,7 @@ def test_fill_results_without_run(array_simulator, input_file_list):
 
 def test_submitting(shower_simulator, array_simulator, corsika_file):
     shower_simulator.test = True
-    shower_simulator._submit_command = "local"
+    shower_simulator._submit_engine = "local"
     shower_simulator.simulate()
 
     shower_simulator.print_list_of_output_files()
@@ -217,7 +217,7 @@ def test_submitting(shower_simulator, array_simulator, corsika_file):
     assert Path(run_script).exists()
 
     array_simulator.test = True
-    array_simulator._submit_command = "local"
+    array_simulator._submit_engine = "local"
     array_simulator.simulate(input_file_list=corsika_file)
 
     array_simulator.print_list_of_output_files()

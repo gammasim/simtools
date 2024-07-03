@@ -87,7 +87,7 @@ class Simulator:
         Instance label.
     config_data: dict
         Simulator configuration data.
-    submit_command: str
+    submit_engine: str
         Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command,
@@ -105,7 +105,7 @@ class Simulator:
         simulator_source_path,
         config_data,
         label=None,
-        submit_command=None,
+        submit_engine=None,
         extra_commands=None,
         mongo_db_config=None,
         model_version=None,
@@ -132,7 +132,7 @@ class Simulator:
             self.label, self.simulation_software
         )
         self._simulator_source_path = Path(simulator_source_path)
-        self._submit_command = submit_command
+        self._submit_engine = submit_engine
         self._extra_commands = extra_commands
         self._mongo_db_config = mongo_db_config
         self._model_version = model_version
@@ -376,7 +376,7 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
-        self._logger.info(f"Submission command: {self._submit_command}")
+        self._logger.info(f"Submission command: {self._submit_engine}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
@@ -391,7 +391,7 @@ class Simulator:
                 run_number=run, input_file=file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(submit_command=self._submit_command, test=self.test)
+            job_manager = JobManager(submit_engine=self._submit_engine, test=self.test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(

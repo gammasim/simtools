@@ -8,7 +8,7 @@ CTA_SIMPIPE:
     MODEL_VERSION: prod6
     NRUNS: 2
     NEVENTS: 2
-    SUBMIT_COMMAND: local
+    SUBMIT_ENGINE: local
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
