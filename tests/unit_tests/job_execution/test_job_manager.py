@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, call, mock_open, patch
 
 import pytest
 
@@ -82,13 +82,14 @@ def test_submit_htcondor(mock_gen, job_submitter, mocker):
     # extra submit options
     job_submitter.extra_submit_options = "max_materialize = 800, priority = 5"
     job_submitter.submit("script.sh", "output.log", "logfile.log")
-    mock_file().write.has_calls(
+    mock_file().write.assert_has_calls(
         [
-            "Executable = script.sh\n",
-            "Output = output.out\n",
-            "max_materialize = 800\n",
-            "priority = 5\n",
+            call("Executable = script.sh\n"),
+            call("Output = output.out\n"),
+            call("max_materialize = 800\n"),
+            call("priority = 5\n"),
         ],
+        any_order=True,
     )
 
 

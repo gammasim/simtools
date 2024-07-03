@@ -154,7 +154,7 @@ class JobManager:
                 if self.submit_options:
                     submit_option_list = self.submit_options.split(",")
                     for option in submit_option_list:
-                        file.write(option + "\n")
+                        file.write(option.lstrip() + "\n")
                 file.write("queue 1\n")
         except FileNotFoundError as exc:
             self._logger.error(f"Failed creating condor submission file {_condor_file}")
