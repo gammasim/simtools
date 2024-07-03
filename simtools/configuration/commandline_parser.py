@@ -216,9 +216,10 @@ class CommandLineParser(argparse.ArgumentParser):
             required=True,
             choices=[
                 "qsub",
-                "condor_submit",
+                "htcondor",
                 "local",
             ],
+            default="local",
         )
         _job_group.add_argument(
             "--extra_submit_options",
