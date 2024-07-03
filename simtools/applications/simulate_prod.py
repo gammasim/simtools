@@ -212,7 +212,7 @@ def _parse(description=None):
         required=False,
         default=False,
     )
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, job_submission=True, simulation_model="telescope")
 
 
 def main():  # noqa: D103
@@ -250,7 +250,7 @@ def main():  # noqa: D103
         simulation_software=args_dict["simulation_software"],
         simulator_source_path=args_dict["simtel_path"],
         config_data=config_data,
-        submit_engine="local",
+        submit_engine=args_dict["submit_engine"],
         test=args_dict["test"],
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
