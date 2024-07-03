@@ -169,6 +169,7 @@ def pytest_addoption(parser):
     parser.addoption("--model_version", action="store", default=None)
 
 
+@pytest.fixture()
 def model_version():
     """Simulation model version used in tests."""
     return "2024-02-01"
